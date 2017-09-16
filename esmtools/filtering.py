@@ -31,8 +31,18 @@ def find_indices(xgrid, ygrid, xpoint, ypoint):
 
     Examples
     --------
-    >>> from esmtools import filtering as etf
-    >>> 
+    >>> import esmtools as et
+    >>> import numpy as np
+    >>> x = np.linspace(0, 360, 37)
+    >>> y = np.linspace(-90, 90, 19)
+    >>> xx, yy = np.meshgrid(x, y)
+    >>> xp = 20
+    >>> yp = -20
+    >>> i, j = et.filtering.find_indices(x, y, xp, yp)
+    >>> print(xx[i, j])
+    20.0
+    >>> print(yy[i, j])
+    -20.0
 
     """
     dx = xgrid - xpoint

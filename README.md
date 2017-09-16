@@ -3,8 +3,9 @@
 Toolbox of functions for analyzing, processing, and plotting ESM output, with an emphasis on ocean model output. 
 
 ## Installation
-
+```shell
 >>> pip install git+https://github.com/bradyrx/esmtools
+```
 
 ## Modules
 

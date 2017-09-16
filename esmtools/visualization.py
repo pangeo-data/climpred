@@ -24,7 +24,7 @@ def discrete_cmap(levels, base_cmap=None):
     discrete_cmap : 
     """
     base = plt.cm.get_cmap(base_cmap)
-    color_list = base(np.linspace(0, 1, N))
-    cmap_name = base.name + str(N)
-    discrete_cmap = base.from_list(cmap_name, color_list, N)
+    color_list = base(np.linspace(0, 1, levels))
+    cmap_name = base.name + str(levels)
+    discrete_cmap = base.from_list(cmap_name, color_list, levels)
     return discrete_cmap

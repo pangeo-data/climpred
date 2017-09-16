@@ -8,7 +8,7 @@ Color
 import numpy as np
 import matplotlib.pyplot as plt
 
-def discrete_cmap(levels, base_cmap=None):
+def discrete_cmap(levels, base_cmap):
     """
     Returns a discretized colormap based on the specified input colormap.
 
@@ -21,7 +21,19 @@ def discrete_cmap(levels, base_cmap=None):
 
     Returns
     ------
-    discrete_cmap : 
+    discrete_cmap : LinearSegmentedColormap
+           Discretized colormap for plotting
+
+    Examples
+    --------
+    import numpy as np
+    import matplotlib.pyplot as plt
+    import esmtools as et
+    data = np.random.randn(50,50)
+    plt.pcolor(data, vmin=-3, vmax=3, cmap=et.visualization.discrete_cmap(10,
+               "RdBu"))
+    plt.colorbar()
+    plt.show()
     """
     base = plt.cm.get_cmap(base_cmap)
     color_list = base(np.linspace(0, 1, levels))

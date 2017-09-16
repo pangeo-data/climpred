@@ -5,7 +5,7 @@ Color
 -----
 - `discrete_cmap` : Create a discrete colorbar for the visualization.
 """
-
+import numpy as np
 import matplotlib.pyplot as plt
 
 def discrete_cmap(levels, base_cmap=None):

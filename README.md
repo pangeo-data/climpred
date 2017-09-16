@@ -13,9 +13,13 @@ filtering
 
 Functions for filtering output over space and time.
 
-mapping
+visualization
 
-Functions for projecting data globally or regionally.
+Functions for colorbars, coloarmaps, and projecting data globally or regionally.
+
+statistics
+
+Functions for time series and spatial statistics
 
 ## Contact
 Developed and maintained by Riley Brady.

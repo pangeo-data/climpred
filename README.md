@@ -9,13 +9,17 @@ Toolbox of functions for analyzing, processing, and plotting ESM output, with an
 
 ## Modules
 
-- filtering
+filtering
+
 Functions for filtering output over space and time.
 
-- mapping
+mapping
+
 Functions for projecting data globally or regionally.
 
 ## Contact
 Developed and maintained by Riley Brady.
+
 email: riley.brady@colorado.edu
+
 web: https://www.rileyxbrady.com

@@ -29,6 +29,15 @@ def remove_polynomial_fit(data, order):
     -------
     detrended_ts : array_like
          Time series with declared order polynomial removed.
+
+    Examples
+    --------
+    import numpy as np
+    import esmtools as et
+    slope = np.arange(0, 100, 1) * 3
+    noise = np.random.randn(100,)
+    data = slope + noise
+    detrended = es.statistics.remove_polynomial_fit(data, 4)
     """
     x = np.arange(0, len(data), 1)
     coefs = poly.polyfit(x, data, order)

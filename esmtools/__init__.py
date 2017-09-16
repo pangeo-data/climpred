@@ -16,5 +16,6 @@ with cartopy.
 
 """
 
-
-
+from . import filtering
+from . import mapping
+from . import statistics

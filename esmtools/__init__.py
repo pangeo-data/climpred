@@ -17,5 +17,5 @@ of global or regional projections.
 """
 
 from . import filtering
-from . import visualization 
-from . import statistics
+from . import vis 
+from . import stats

@@ -3,12 +3,17 @@ Objects dealing with anything visualization.
 
 Color
 -----
+- `deseam` : Get rid of the seam that occurs around the Prime Meridian.
 - `discrete_cmap` : Create a discrete colorbar for the visualization.
+- `make_cartopy` : Create a global Cartopy projection.
+- `pcolormesh` : Create a pcolormesh plot.
+- `add_box` : Add a box to highlight an area in a Cartopy plot.
 """
 import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from shapely.geometry.polygon import LinearRing
 
 def deseam(lon, lat, data):
     """
@@ -74,7 +79,7 @@ def discrete_cmap(levels, base_cmap):
     import matplotlib.pyplot as plt
     import esmtools as et
     data = np.random.randn(50,50)
-    plt.pcolor(data, vmin=-3, vmax=3, cmap=et.visualization.discrete_cmap(10,
+    plt.pcolor(data, vmin=-3, vmax=3, cmap=et.vis.discrete_cmap(10,
                "RdBu"))
     plt.colorbar()
     plt.show()
@@ -111,7 +116,7 @@ def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3
     --------
     import esmtools as et
     import cartopy.crs as ccrs
-    f, ax, gl = et.visualization.make_cartopy(land_color='#D3D3D3', projection=ccrs.Mercator()))
+    f, ax, gl = et.vis.make_cartopy(land_color='#D3D3D3', projection=ccrs.Mercator()))
     """
     fig, ax = plt.subplots(figsize=figsize, subplot_kw=dict(projection=projection))
     ax.gridlines(draw_labels=False, color=grid_color)
@@ -144,8 +149,8 @@ def pcolormesh(ax, lon, lat, data, global_field=True, extent=None,
     Examples
     --------
     import esmtools as et
-    fig, ax, gl = et.visualization.make_cartopy()
-    pc, cb = et.visualization.pcolormesh(ax, ds.lon, ds.lat, ds.data)
+    fig, ax, gl = et.vis.make_cartopy()
+    pc, cb = et.vis.pcolormesh(ax, ds.lon, ds.lat, ds.data)
 
     """
     if global_field == True:
@@ -159,4 +164,33 @@ def pcolormesh(ax, lon, lat, data, global_field=True, extent=None,
     if extent != None:
         ax.set_extent(extent)
     return pc, cb
-   
+ 
+def add_box(ax, x0, x1, y0, y1, **kwargs):
+    """
+    Add a polygon/box to any cartopy projection. 
+ 
+    Parameters
+    ----------
+    ax : axes instance (should be from make_cartopy command)
+    x0: float; western longitude bound of box.
+    x1: float; eastern longitude bound of box.
+    y0: float; southern latitude bound of box.
+    y1: float; northern latitude bound of box.
+    **kwargs: optional keywords
+        Will modify the color, etc. of the bounding box.
+ 
+    Returns
+    -------
+    None
+ 
+    Examples
+    --------
+    import esmtools as et
+    fig, ax = et.vis.make_cartopy()
+    et.visualization.add_box(ax, [-150, -110, 30, 50], edgecolor='k', facecolor='#D3D3D3',
+                             linewidth=2, alpha=0.5)
+    """
+    lons = [x0, x0, x1, x1]
+    lats = [y0, y1, y1, y0]
+    ring = LinearRing(list(zip(lons, lats)))
+    ax.add_geometries([ring], ccrs.PlateCarree(), **kwargs)

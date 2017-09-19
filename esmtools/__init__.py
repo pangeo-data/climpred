@@ -19,4 +19,4 @@ of global or regional projections.
 from . import filtering
 from . import vis 
 from . import stats
-import esmtools.ebus 
+from . import ebus

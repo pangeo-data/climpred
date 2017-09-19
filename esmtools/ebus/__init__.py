@@ -5,4 +5,4 @@ of Eastern Boundary Upwelling Systems.
 
 """
 
-from . import boundaries
+from .boundaries import *

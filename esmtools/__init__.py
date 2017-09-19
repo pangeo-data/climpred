@@ -13,10 +13,11 @@ filtering of output.
 2. vis: Contains definitions for colorbars, color maps, and any sort
 of global or regional projections.
 3. stats: Contains definitions for computing general statistics on output.
-
+4. ebus: Contains functions specific to working with Eastern Boundary Upwelling
+Systems.
 """
 
 from . import filtering
 from . import vis 
 from . import stats
-import esmtools.ebus
+from . import ebus

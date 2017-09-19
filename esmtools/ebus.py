@@ -1,6 +1,5 @@
 """
 Objects dealing with EBUS boundaries for plotting, statistics, etc.
-
 """
 
 def visual_bounds(EBC, std_lon=False):

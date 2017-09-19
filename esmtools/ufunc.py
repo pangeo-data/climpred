@@ -115,7 +115,14 @@ def seasonal_magnitude(ds):
     if ds.min().isnull():
         return xr.DataArray(np.nan)
     else:
-        detrended = remove_polynomial_fit(ds)
-        climatology = detrended.groupby('time.month').mean()
+        # Could obviously do this chain of events with the above
+        # remove_polynomial_fit ufunc, but I get some errors when
+        # passing one .apply() func to another. Safe to do it
+        # this way for now.
+        x = np.arange(0, len(ds), 1)
+        coefs = poly.polyfit(x, ds, 4)
+        poly_fit = poly.polyval(x, coefs)
+        seasonality = (ds - poly_fit)
+        climatology = seasonality.groupby('time.month').mean()
         magnitude = climatology.std()
         return xr.DataArray(magnitude)

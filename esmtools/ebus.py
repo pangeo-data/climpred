@@ -41,10 +41,10 @@ def visual_bounds(EBC, std_lon=False):
     x1,x2,y1,y2 = ebus.visual_bounds('CalCS')
     """
     if EBC == 'CalCS':
-        lat1 = 25
+        lat1 = 32
         lat2 = 45
-        lon1 = -133
-        lon2 = -110
+        lon1 = -135
+        lon2 = -115
     elif EBC == 'HumCS':
         lat1 = -20
         lat2 = 0
@@ -64,7 +64,7 @@ def visual_bounds(EBC, std_lon=False):
         raise ValueError('\n' + 'Must select from the following EBUS strings:' \
                          + '\n' + 'CalCS' + '\n' + 'CanCS' + '\n' + 'BenCS' + \
                          '\n' + 'HumCS')
-    if (std_lon == True) & (EBC != 'BenCS'):
+    if (std_lon == False) & (EBC != 'BenCS'):
         lon1 = lon1 + 360
         lon2 = lon2 + 360
     return lon1,lon2,lat1,lat2

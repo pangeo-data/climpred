@@ -60,3 +60,48 @@ def visual_bounds(EBC, std_lon=False):
         lon2 = lon2 + 360
     return lon1,lon2,lat1,lat2
 
+def latitude_bounds(EBC):
+    """
+    Returns the standard 10 degrees of latitude to be analyzed for each system. 
+    For the CalCS, HumCS, and BenCS, this comes from the Chavez 2009 EBUS Comparison
+    paper. For the CanCS, this comes from the Aristegui 2009 CanCS paper. These
+    bounds are used in the EBUS CO2 Flux comparison study to standardize latitude.
+
+    Parameters 
+    ----------
+    EBC : str
+        Identifier for the boundary current.
+        'CalCS' : California Current
+        'HumCS' : Humboldt Current
+        'CanCS' : Canary Current
+        'BenCS' : Benguela Current
+
+    Returns
+    -------
+    lat1 : int
+        Minimum latitude bound.
+    lat2 : int
+        Maximum latitude bound.
+
+    Examples
+    --------
+    import esmtools.ebus as eb
+    y1,y2 = eb.boundaries.latitude_bounds('HumCS')
+    """
+    if EBC == 'CalCS':
+        lat1 = 34
+        lat2 = 44
+    elif EBC == 'HumCS':
+        lat1 = -16
+        lat2 = -6
+    elif EBC == 'CanCS':
+        lat1 = 21
+        lat2 = 31
+    elif EBC == 'BenCS':
+        lat1 = -28
+        lat2 = -18
+    else:
+        raise ValueError('\n' + 'Must select from the following EBUS strings:'
+                         + '\n' + 'CalCS' + '\n' + 'CanCS' + '\n' + 'BenCS' +
+                         '\n' + 'HumCS')
+    return lat1, lat2

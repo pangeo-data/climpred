@@ -12,6 +12,7 @@ Functions
 
 import numpy as np
 import numpy.polynomial.polynomial as poly
+import xarray as xr
 
 def remove_polynomial_fit(ds):
     """

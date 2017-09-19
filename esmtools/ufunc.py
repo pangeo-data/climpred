@@ -1,5 +1,10 @@
 """
 Objects optimized for using in .apply() functions in xarray datasets. 
+
+To add:
+1. Calculate seasonal magnitude
+2. Calculate value of linear slope
+
 """
 
 import numpy as np
@@ -51,7 +56,7 @@ def remove_linear_fit(ds):
     # Deals with cases where it is a NaN time series
     # which would otherwise break the fitting.
     if ds.min().isnull():
-        return xr.DataArray(np.nan.)
+        return xr.DataArray(np.nan)
     else:
         x = np.arange(0, len(ds), 1)
         coefs = poly.polyfit(x, ds, 1)

@@ -92,7 +92,7 @@ def discrete_cmap(levels, base_cmap):
     return discrete_cmap
 
 def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3',
-                 grid_lines=True, figsize=(12,8)):
+                 grid_lines=True, figsize=(12,8), frameon=True):
     """
     Returns a global cartopy projection with the defined projection style.
 
@@ -108,7 +108,9 @@ def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3
             Color string for the color of the grid lines
     grid_lines : boolean (optional)
             Whether or not to plot gridlines.
-    
+    frameon : boolean (optional)
+            Whether or not to have a frame around the projection.
+
     Returns
     -------
     fig : Figure instance
@@ -124,6 +126,8 @@ def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3
     if grid_lines == True:
         ax.gridlines(draw_labels=False, color=grid_color)
     ax.add_feature(cfeature.LAND, facecolor=land_color)
+    if frameon == False:
+        ax.outline_patch.set_edgecolor('white')
     return fig, ax
 
 def pcolormesh(ax, lon, lat, data, global_field=True, extent=None,

@@ -6,7 +6,6 @@ Color
 - `deseam` : Get rid of the seam that occurs around the Prime Meridian.
 - `discrete_cmap` : Create a discrete colorbar for the visualization.
 - `make_cartopy` : Create a global Cartopy projection.
-- `pcolormesh` : Create a pcolormesh plot.
 - `add_box` : Add a box to highlight an area in a Cartopy plot.
 - `savefig` : Matplotlib savefig command with all the right features.
 """
@@ -130,48 +129,6 @@ def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3
         ax.outline_patch.set_edgecolor('white')
     return fig, ax
 
-def pcolormesh(ax, lon, lat, data, global_field=True, extent=None,
-               **kwargs):
-    """
-    Plots a pcolormesh map, given a lon, lat, and data structure. 
-
-    Parameters
-    ----------
-    ax : axes instance (should be from make_cartopy command)
-    lon : 2D longitude array
-    lat : 2D latitude array
-    data : 2D data array
-    global_field : boolean (optional)
-        Set to False if only regional data is being plotted.
-    extent : array (optional)
-        [x0, x1, y0, y1] to set bounds of regional projection
-    **kwargs : optional keyword arguments
-        Any arguments that could be passed to plt.pcolormesh
-
-    Returns
-    -------
-    pc : pcolor plot instance
-    cb : colorbar instance
-
-    Examples
-    --------
-    import esmtools as et
-    fig, ax, gl = et.vis.make_cartopy()
-    pc, cb = et.vis.pcolormesh(ax, ds.lon, ds.lat, ds.data)
-
-    """
-    if global_field == True:
-        lon, lat, data = deseam(lon, lat, data)
-    else:
-        # Need to mask it manually if we aren't deseaming.
-        data = np.ma.array(data, mask=np.isnan(data))
-    pc = plt.pcolormesh(lon, lat, data, transform=ccrs.PlateCarree(),
-                        **kwargs)
-    cb = plt.colorbar(pc, ax=ax, orientation='horizontal', pad=0.05)
-    if extent != None:
-        ax.set_extent(extent)
-    return pc, cb
- 
 def add_box(ax, x0, x1, y0, y1, **kwargs):
     """
     Add a polygon/box to any cartopy projection. 

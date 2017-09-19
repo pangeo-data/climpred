@@ -13,13 +13,17 @@ filtering
 
 Functions for filtering output over space and time.
 
-visualization
+vis
 
 Functions for colorbars, coloarmaps, and projecting data globally or regionally.
 
-statistics
+stats
 
 Functions for time series and spatial statistics
+
+ufunc
+
+Functions optimized for the .apply() function on xarray Datasets
 
 ## Contact
 Developed and maintained by Riley Brady.

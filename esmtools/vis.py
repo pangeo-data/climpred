@@ -8,6 +8,7 @@ Color
 - `make_cartopy` : Create a global Cartopy projection.
 - `pcolormesh` : Create a pcolormesh plot.
 - `add_box` : Add a box to highlight an area in a Cartopy plot.
+- `savefig` : Matplotlib savefig command with all the right features.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -196,3 +197,34 @@ def add_box(ax, x0, x1, y0, y1, **kwargs):
     lats = [y0, y1, y1, y0]
     ring = LinearRing(list(zip(lons, lats)))
     ax.add_geometries([ring], ccrs.PlateCarree(), **kwargs)
+
+def savefig(filename, directory=None, extension='.png', transparent=True,
+           dpi=300):
+    """
+    Save a publication-ready figure.
+
+    Parameters
+    ----------
+    filename : str
+        The name of the file (without the extension)
+    directory : str (optional)
+        Identify a directory to place the file. Otherwise it will be placed locally.
+    extension : str (optional)
+        Identify a filetype. Defaults to .png
+    transparent : boolean (optional)
+        Whether or not to save with a transparent background. Default is True.
+    dpi : int (optional)
+        Dots per inch, or resolution. Defaults to 300.
+
+    Returns
+    -------
+    A saved file.
+    """
+    # Need to identify a directory to place the file.
+    if  directory != None:
+        plt.savefig(directory + filename + extension, bbox_inches='tight',
+                    pad_inches=1, transparent=transparent, dpi=dpi)
+    else:
+        plt.savefig(filename + extension, bbox_inches='tight', pad_inches=1,
+                    transparent=transparent, dpi=dpi)
+

@@ -1,5 +1,15 @@
 """
 Objects dealing with EBUS boundaries for plotting, statistics, etc.
+
+Functions
+---------
+- `visual_bounds` : lat/lon bounds for close-up shots of our regions.
+- `latitude_bounds` : lat bounds for statistical analysis
+
+To do
+-----
+- `full_scope_bounds` : regions pulled from Chavez paper for lat/lon to show full
+system for validation
 """
 
 def visual_bounds(EBC, std_lon=False):
@@ -46,7 +56,7 @@ def visual_bounds(EBC, std_lon=False):
         lon1 = -25
         lon2 = -5
     elif EBC == 'BenCS':
-        lat1 = -35
+        lat1 = -30
         lat2 = -15
         lon1 = 5
         lon2 = 20

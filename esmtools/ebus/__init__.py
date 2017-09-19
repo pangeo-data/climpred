@@ -5,4 +5,4 @@ of Eastern Boundary Upwelling Systems.
 
 """
 
-__all__ = ['boundaries']
+from . import boundaries

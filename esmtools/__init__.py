@@ -10,9 +10,9 @@ Available Modules:
 
 1. filtering: Contains definitions that assist in spatial and temporal
 filtering of output.
-2. visualization: Contains definitions for colorbars, color maps, and any sort
+2. vis: Contains definitions for colorbars, color maps, and any sort
 of global or regional projections.
-3. statistics: Contains definitions for computing general statistics on output.
+3. stats: Contains definitions for computing general statistics on output.
 
 """
 

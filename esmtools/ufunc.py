@@ -13,6 +13,7 @@ Functions
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import xarray as xr
+from scipy import stats
 
 def remove_polynomial_fit(ds):
     """
@@ -73,6 +74,8 @@ def compute_slope(ds):
     Calculates the value of the linear slope over the inputted timeseries.
     Returns a 2D grid of slope values, which can be multiplied to get
     the total change over the period of interest.
+    
+    NOTE : This only returns a slope if it is significant with p <= 0.05.
 
     Parameters
     ----------
@@ -89,9 +92,11 @@ def compute_slope(ds):
         return xr.DataArray(np.nan)
     else:
         x = np.arange(0, len(ds), 1)
-        coefs = poly.polyfit(x, ds, 1)
-        m = coefs[1]
-        return xr.DataArray(m)
+        m, _, _, p, _ = stats.linregress(x, ds)
+        if p <= 0.05:
+            return xr.DataArray(m)
+        else:
+            return xr.DataArray(np.nan)
 
 def seasonal_magnitude(ds):
     """

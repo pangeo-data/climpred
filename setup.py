@@ -7,5 +7,5 @@ setup(name='esmtools',
       author='Riley X. Brady',
       author_email='riley.brady@colorado.edu',
       license='MIT',
-      zip_safe=False
+      not_zip_safe=True
      )

@@ -16,7 +16,7 @@ of global or regional projections.
 4. ebus: Contains functions specific to working with Eastern Boundary Upwelling
 Systems.
 5. unfunc: Contains definitions to use on xarray .apply()
-
+6. colormaps: Custom colormaps from NCL.
 """
 
 from . import filtering
@@ -24,3 +24,4 @@ from . import vis
 from . import stats
 from . import ebus
 from . import ufunc
+from . import colormaps

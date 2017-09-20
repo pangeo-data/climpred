@@ -7,5 +7,6 @@ setup(name='esmtools',
       author='Riley X. Brady',
       author_email='riley.brady@colorado.edu',
       license='MIT',
-      not_zip_safe=True
+      packages=['esmtools'],
+      zip_safe=False
      )

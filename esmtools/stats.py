@@ -74,12 +74,18 @@ def smooth_series(x, length, center=False):
     x = np.random.rand(100)
     smoothed = et.stats.smooth_series(x, 12)
     """
+    if isinstance(x, xr.DataArray):
+        da = True
+        x = np.asarray(x)
     x = pd.DataFrame(x)
     smoothed = pd.rolling_mean(x, length, center=center)
     smoothed = smoothed.dropna()
     smoothed = np.asarray(smoothed)
-    return smoothed
-
+    if da == True:
+        return xr.DataArray(smoothed).squeeze()
+    else:
+        return smoothed.squeeze()
+    
 def linear_regression(x, y):
     """
     Performs a simple least-squares linear regression.

@@ -8,6 +8,7 @@ Color
 - `make_cartopy` : Create a global Cartopy projection.
 - `add_box` : Add a box to highlight an area in a Cartopy plot.
 - `savefig` : Matplotlib savefig command with all the right features.
+- `meshgrid` : Take a 1D lon/lat grid and save as a meshgrid in the dataset.
 """
 import numpy as np
 import matplotlib.pyplot as plt
@@ -188,4 +189,27 @@ def savefig(filename, directory=None, extension='.png', transparent=True,
     else:
         plt.savefig(filename + extension, bbox_inches='tight', pad_inches=1,
                     transparent=transparent, dpi=dpi)
+
+def meshgrid(x, y, d):
+    """
+    Returns a Dataset or DataArray with a 2D lat/lon field.
+
+    Parameters
+    ----------
+    x : array_like
+        1D longitude array
+    y : array_like
+        1D latitude array
+    d : xr.Dataset or xr.DataArray
+        Structure to tack the gridded lat/lon onto.
+
+    Returns
+    -------
+    d : xr.Dataset or xr.DataArray
+        Original structure with appended gridded lat/lon coordinates.
+    """
+    (xx, yy) = np.meshgrid(x, y)
+    d.coords['gridlon'] = (('lat', 'lon'), xx)
+    d.coords['gridlat'] = (('lat', 'lon'), yy)
+    return d
 

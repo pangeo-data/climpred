@@ -157,6 +157,7 @@ def pearsonr(x, y, two_sided=True):
     xauto, _ = pr(xa[1:], xa[:-1])
     yauto, _ = pr(ya[1:], ya[:-1])
     n_eff = n * (1 - xauto*yauto)/(1 + xauto*yauto)
+    n_eff = np.floor(n_eff)
     # Compute t-statistic.
     t = r * np.sqrt((n_eff - 2)/(1 - r**2))
     # Compute p-value.

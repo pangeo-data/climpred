@@ -9,6 +9,7 @@ Time Series
 removed.
 `smooth_series` : Returns a smoothed time series.
 `linear_regression` : Performs a least-squares linear regression.
+`pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
 
 """
 import pandas as pd
@@ -16,6 +17,27 @@ import numpy as np
 import numpy.polynomial.polynomial as poly
 import xarray as xr
 from scipy import stats
+import scipy.stats as ss
+
+def _correlate(x, y):
+    """
+    Performs a Pearson linear correlation on two equal-length arrays x and y.
+
+    Returns
+    -------
+    r : r-value
+
+    Formula from Wilks (2011) Statistical Methods in the Atmospheric Sciences
+    Chapter 3.5.2
+    """
+    x, y = xr.DataArray(x), xr.DataArray(y)
+    xa, ya = x - x.mean(), y - y.mean()
+    num = (xa*ya).sum()
+    sq_x, sq_y = np.sqrt((xa**2).sum()), np.sqrt((ya**2).sum())
+    den = sq_x * sq_y
+    r = num/den
+    r = np.asarray(r)
+    return r
 
 def remove_polynomial_fit(data, order):
     """
@@ -113,3 +135,57 @@ def linear_regression(x, y):
     """
     m, b, r, p, e = stats.linregress(x, y)
     return m, b, r, p, e
+
+def pearsonr(x, y, two_sided=True):
+    """
+    Computes the Pearson product-moment coefficient of linear correlation. This
+    version calculates the effective degrees of freedom, accounting for autocorrelation
+    within each time series that could fluff the significance of the correlation.
+    
+    Parameters
+    ----------
+    x : array; independent variable
+    y : array; predicted variable
+    two_sided : boolean (optional); Whether or not the t-test should be two sided.
+
+    Returns
+    -------
+    r     : r-value of correlation
+    p     : p-value for significance
+    n_eff : effective degrees of freedom
+
+    References:
+    ---------- 
+    1. Wilks, Daniel S. Statistical methods in the atmospheric sciences. 
+    Vol. 100. Academic press, 2011.
+    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode 
+    on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
+
+    Examples
+    --------
+    import numpy as np
+    import esmtools as et
+    x = np.random.randn(100,)
+    y = np.random.randn(100,)
+    r, p, n = et.stats.pearsonr(x, y)
+    """
+    if len(x) != len(y):
+        raise ValueError("Arrays x and y must be the same length.")
+    r = _correlate(x, y)
+    # Compute effective sample size.
+    n = len(x)
+    xa, ya = x - np.mean(x), y - np.mean(y)
+    xauto = _correlate(xa[1:], xa[:-1])
+    yauto = _correlate(ya[1:], ya[:-1])
+    n_eff = n * (1 - xauto*yauto)/(1 + xauto*yauto)
+    # Compute t-statistic.
+    t = r * np.sqrt((n_eff - 2)/(1 - r**2))
+    # Compute p-value.
+    if two_sided:
+        p = ss.t.sf(np.abs(t), n_eff-1)*2
+    else:
+        p = ss.t.sf(np.abs(t), n_eff-1)
+    return r, p, n_eff
+    
+
+    

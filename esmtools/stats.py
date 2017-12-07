@@ -18,6 +18,7 @@ import numpy.polynomial.polynomial as poly
 import xarray as xr
 from scipy import stats
 import scipy.stats as ss
+from scipy.stats.stats import pearsonr
 
 def _correlate(x, y):
     """
@@ -169,14 +170,12 @@ def pearsonr(x, y, two_sided=True):
     y = np.random.randn(100,)
     r, p, n = et.stats.pearsonr(x, y)
     """
-    if len(x) != len(y):
-        raise ValueError("Arrays x and y must be the same length.")
-    r = _correlate(x, y)
+    r, _ = pearsonr(x, y)
     # Compute effective sample size.
     n = len(x)
     xa, ya = x - np.mean(x), y - np.mean(y)
-    xauto = _correlate(xa[1:], xa[:-1])
-    yauto = _correlate(ya[1:], ya[:-1])
+    xauto, _ = pearsonr(xa[1:], xa[:-1])
+    yauto, _ = pearsonr(ya[1:], ya[:-1])
     n_eff = n * (1 - xauto*yauto)/(1 + xauto*yauto)
     # Compute t-statistic.
     t = r * np.sqrt((n_eff - 2)/(1 - r**2))

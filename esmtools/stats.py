@@ -18,27 +18,7 @@ import numpy.polynomial.polynomial as poly
 import xarray as xr
 from scipy import stats
 import scipy.stats as ss
-from scipy.stats.stats import pearsonr
-
-def _correlate(x, y):
-    """
-    Performs a Pearson linear correlation on two equal-length arrays x and y.
-
-    Returns
-    -------
-    r : r-value
-
-    Formula from Wilks (2011) Statistical Methods in the Atmospheric Sciences
-    Chapter 3.5.2
-    """
-    x, y = xr.DataArray(x), xr.DataArray(y)
-    xa, ya = x - x.mean(), y - y.mean()
-    num = (xa*ya).sum()
-    sq_x, sq_y = np.sqrt((xa**2).sum()), np.sqrt((ya**2).sum())
-    den = sq_x * sq_y
-    r = num/den
-    r = np.asarray(r)
-    return r
+from scipy.stats.stats import pearsonr as pr
 
 def remove_polynomial_fit(data, order):
     """
@@ -170,12 +150,12 @@ def pearsonr(x, y, two_sided=True):
     y = np.random.randn(100,)
     r, p, n = et.stats.pearsonr(x, y)
     """
-    r, _ = pearsonr(x, y)
+    r, _ = pr(x, y)
     # Compute effective sample size.
     n = len(x)
     xa, ya = x - np.mean(x), y - np.mean(y)
-    xauto, _ = pearsonr(xa[1:], xa[:-1])
-    yauto, _ = pearsonr(ya[1:], ya[:-1])
+    xauto, _ = pr(xa[1:], xa[:-1])
+    yauto, _ = pr(ya[1:], ya[:-1])
     n_eff = n * (1 - xauto*yauto)/(1 + xauto*yauto)
     # Compute t-statistic.
     t = r * np.sqrt((n_eff - 2)/(1 - r**2))

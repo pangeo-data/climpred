@@ -9,13 +9,21 @@ Toolbox of functions for analyzing, processing, and plotting ESM output, with an
 
 ## Modules
 
+carbon
+
+Functions for the carbon cycle and carbonate chemistry.
+
+colormaps
+
+Load in a custom colormap (see below).
+
 filtering
 
 Functions for filtering output over space and time.
 
-vis
+physics
 
-Functions for colorbars, coloarmaps, and projecting data globally or regionally.
+Functions related to physical conversions.
 
 stats
 
@@ -25,9 +33,9 @@ ufunc
 
 Functions optimized for the .apply() function on xarray Datasets
 
-colormaps
+vis
 
-Load in a custom colormap (see below).
+Functions for colorbars, coloarmaps, and projecting data globally or regionally.
 
 ## Colormaps
 

@@ -3,11 +3,18 @@ Objects dealing with anything visualization.
 
 Color
 -----
-- `deseam` : Get rid of the seam that occurs around the Prime Meridian.
 - `discrete_cmap` : Create a discrete colorbar for the visualization.
-- `make_cartopy` : Create a global Cartopy projection.
-- `add_box` : Add a box to highlight an area in a Cartopy plot.
+
+Figures
+-------
+- `outer_legend` : Add a legend in the upper right outside of the figure.
 - `savefig` : Matplotlib savefig command with all the right features.
+
+Mapping
+-------
+- `add_box` : Add a box to highlight an area in a Cartopy plot.
+- `deseam` : Get rid of the seam that occurs around the Prime Meridian.
+- `make_cartopy` : Create a global Cartopy projection.
 - `meshgrid` : Take a 1D lon/lat grid and save as a meshgrid in the dataset.
 """
 import numpy as np
@@ -213,3 +220,8 @@ def meshgrid(x, y, d):
     d.coords['gridlat'] = (('lat', 'lon'), yy)
     return d
 
+def outer_legend():
+    """
+    Creates a legend outside of the figure in the upper right.
+    """
+    plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)

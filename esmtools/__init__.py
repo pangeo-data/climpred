@@ -17,6 +17,7 @@ of global or regional projections.
 Systems.
 5. unfunc: Contains definitions to use on xarray .apply()
 6. colormaps: Custom colormaps from NCL.
+7. carbon: Contains definitions related to the carbon cycle and carbonate chemistry.
 """
 
 from . import filtering
@@ -25,3 +26,5 @@ from . import stats
 from . import ebus
 from . import ufunc
 from . import colormaps
+from . import carbon
+from . import physics

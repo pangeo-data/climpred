@@ -7,17 +7,17 @@ on ocean model output in particular.
 
 Available Modules:
 -----------------
-
-1. filtering: Contains definitions that assist in spatial and temporal
-filtering of output.
-2. vis: Contains definitions for colorbars, color maps, and any sort
-of global or regional projections.
-3. stats: Contains definitions for computing general statistics on output.
-4. ebus: Contains functions specific to working with Eastern Boundary Upwelling
+1. carbon: Contains definitions related to the carbon cycle and carbonate chemistry.
+2. colormaps: Custom colormaps from NCL.
+3. ebus: Contains functions specific to working with Eastern Boundary Upwelling
 Systems.
-5. unfunc: Contains definitions to use on xarray .apply()
-6. colormaps: Custom colormaps from NCL.
-7. carbon: Contains definitions related to the carbon cycle and carbonate chemistry.
+4. filtering: Contains definitions that assist in spatial and temporal
+filtering of output.
+5. physics: Contains definitions related to physical conversions.
+6. stats: Contains definitions for computing general statistics on output.
+7. unfunc: Contains definitions to use on xarray .apply()
+8. vis: Contains definitions for colorbars, color maps, and any sort
+of global or regional projections.
 """
 
 from . import filtering

@@ -220,8 +220,14 @@ def meshgrid(x, y, d):
     d.coords['gridlat'] = (('lat', 'lon'), yy)
     return d
 
-def outer_legend():
+def outer_legend(fontsize=12):
     """
     Creates a legend outside of the figure in the upper right.
+    
+    Parameters
+    ----------
+    fontsize : int
+               Size of text within the legend.
     """
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
+    plt.setp(plt.gca().get_legend().get_texts(), fontsize=fontsize)

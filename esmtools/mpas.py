@@ -18,7 +18,8 @@ import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from esmtools.vis import make_cartopy
 
-def scatter(lon, lat, data, cmap, stride=5, projection=ccrs.Robinson()):
+def scatter(lon, lat, data, cmap, vmin, vmax, stride=5, projection=ccrs.Robinson(),
+        colorbar=True):
     """
     Create a cartopy map of MPAS output on the native unstructured grid, using
     matplotlib's scatter function.
@@ -33,10 +34,17 @@ def scatter(lon, lat, data, cmap, stride=5, projection=ccrs.Robinson()):
         1D da of output data
     cmap : str
         Native matplotlib colormap or cmocean colormap
+    vmin : double
+        Minimum color bound
+    vmax : double
+        Maximum color bound
     stride : int
         Stride in plotting data to avoid plotting too much
     projection : ccrs map projection
         Map projection to use 
+    colorbar : logical
+        Whether or not to add a colorbar to the figure. Generally want to set this 
+        to off and do it manually if you need more advanced changes to it.
 
     Examples
     --------
@@ -45,11 +53,13 @@ def scatter(lon, lat, data, cmap, stride=5, projection=ccrs.Robinson()):
     ds = xr.open_dataset('some_BGC_output.nc')
     scatter(ds['lonCell'], ds['latCell'], ds['FG_CO2'], "RdBu_r")
     """
-    f, ax = make_cartopy(projection=projection, grid_lines=False)
+    f, ax = make_cartopy(projection=projection, grid_lines=False, frameon=False)
     lon = lon[0::stride]
     lat = lat[0::stride]
     data = data[0::stride]
 
-    p = ax.scatter(lon, lat, s=1, c=data, cmap=cmap, transform=ccrs.PlateCarree())
-    plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.08)
+    p = ax.scatter(lon, lat, s=1, c=data, cmap=cmap, transform=ccrs.PlateCarree(),
+            vmin=vmin, vmax=vmax)
+    if colorbar:
+        plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.08)
 

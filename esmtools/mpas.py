@@ -40,7 +40,10 @@ def scatter(lon, lat, data, cmap, stride=5, projection=ccrs.Robinson()):
 
     Examples
     --------
-
+    from esmtools.mpas import scatter
+    import xarray as xr
+    ds = xr.open_dataset('some_BGC_output.nc')
+    scatter(ds['lonCell'], ds['latCell'], ds['FG_CO2'], "RdBu_r")
     """
     f, ax = make_cartopy(projection=projection, grid_lines=False)
     lon = lon[0::stride]

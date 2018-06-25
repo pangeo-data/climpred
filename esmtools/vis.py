@@ -16,16 +16,20 @@ Mapping
 - `deseam` : Get rid of the seam that occurs around the Prime Meridian.
 - `make_cartopy` : Create a global Cartopy projection.
 - `meshgrid` : Take a 1D lon/lat grid and save as a meshgrid in the dataset.
+- `quick_pcolor` : Plot a pcolormesh map with a colorbar on a cartopy
+                   projection.
 """
 import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 import cartopy.feature as cfeature
+from cartopy.util import add_cyclic_point
 from shapely.geometry.polygon import LinearRing
+
 
 def deseam(lon, lat, data):
     """
-    Returns a "bookended" longitude, latitude, and data array that 
+    Returns a "bookended" longitude, latitude, and data array that
     gets rid of the seam around the Prime Meridian.
 
     Parameters
@@ -45,7 +49,7 @@ def deseam(lon, lat, data):
         2D array of appended latitude values.
     new_data : numpy array
         2D array of appended data values.
-    
+
     Examples
     --------
 
@@ -64,6 +68,7 @@ def deseam(lon, lat, data):
     new_data[:, -1] = data[:, 0]
     new_data = np.ma.array(new_data, mask=np.isnan(new_data))
     return new_lon, new_lat, new_data
+
 
 def discrete_cmap(levels, base_cmap):
     """
@@ -95,11 +100,13 @@ def discrete_cmap(levels, base_cmap):
     base = plt.cm.get_cmap(base_cmap)
     color_list = base(np.linspace(0, 1, levels))
     cmap_name = base.name + str(levels)
-    discrete_cmap = base.from_list(cmap_name, color_list, levels)
-    return discrete_cmap
+    d_cmap = base.from_list(cmap_name, color_list, levels)
+    return d_cmap
 
-def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3',
-                 grid_lines=True, figsize=(12,8), frameon=True):
+
+def make_cartopy(projection=ccrs.Robinson(), land_color='k',
+                 grid_color='#D3D3D3', grid_lines=True, figsize=(12, 8),
+                 frameon=True):
     """
     Returns a global cartopy projection with the defined projection style.
 
@@ -122,25 +129,28 @@ def make_cartopy(projection=ccrs.Robinson(), land_color='k', grid_color='#D3D3D3
     -------
     fig : Figure instance
     ax : Axes instance
-    
+
     Examples
     --------
     import esmtools as et
     import cartopy.crs as ccrs
-    f, ax, gl = et.vis.make_cartopy(land_color='#D3D3D3', projection=ccrs.Mercator()))
+    f, ax, gl = et.vis.make_cartopy(land_color='#D3D3D3',
+                                    projection=ccrs.Mercator()))
     """
-    fig, ax = plt.subplots(figsize=figsize, subplot_kw=dict(projection=projection))
-    if grid_lines == True:
+    fig, ax = plt.subplots(figsize=figsize,
+                           subplot_kw=dict(projection=projection))
+    if grid_lines:
         ax.gridlines(draw_labels=False, color=grid_color)
     ax.add_feature(cfeature.LAND, facecolor=land_color)
-    if frameon == False:
+    if not frameon:
         ax.outline_patch.set_edgecolor('white')
     return fig, ax
 
+
 def add_box(ax, x0, x1, y0, y1, **kwargs):
     """
-    Add a polygon/box to any cartopy projection. 
- 
+    Add a polygon/box to any cartopy projection.
+
     Parameters
     ----------
     ax : axes instance (should be from make_cartopy command)
@@ -150,25 +160,26 @@ def add_box(ax, x0, x1, y0, y1, **kwargs):
     y1: float; northern latitude bound of box.
     **kwargs: optional keywords
         Will modify the color, etc. of the bounding box.
- 
+
     Returns
     -------
     None
- 
+
     Examples
     --------
     import esmtools as et
     fig, ax = et.vis.make_cartopy()
-    et.visualization.add_box(ax, [-150, -110, 30, 50], edgecolor='k', facecolor='#D3D3D3',
-                             linewidth=2, alpha=0.5)
+    et.visualization.add_box(ax, [-150, -110, 30, 50], edgecolor='k',
+                             facecolor='#D3D3D3', linewidth=2, alpha=0.5)
     """
     lons = [x0, x0, x1, x1]
     lats = [y0, y1, y1, y0]
     ring = LinearRing(list(zip(lons, lats)))
     ax.add_geometries([ring], ccrs.PlateCarree(), **kwargs)
 
+
 def savefig(filename, directory=None, extension='.png', transparent=True,
-           dpi=300):
+            dpi=300):
     """
     Save a publication-ready figure.
 
@@ -177,7 +188,8 @@ def savefig(filename, directory=None, extension='.png', transparent=True,
     filename : str
         The name of the file (without the extension)
     directory : str (optional)
-        Identify a directory to place the file. Otherwise it will be placed locally.
+        Identify a directory to place the file. Otherwise it will be placed
+        locally.
     extension : str (optional)
         Identify a filetype. Defaults to .png
     transparent : boolean (optional)
@@ -190,12 +202,13 @@ def savefig(filename, directory=None, extension='.png', transparent=True,
     A saved file.
     """
     # Need to identify a directory to place the file.
-    if  directory != None:
+    if directory is not None:
         plt.savefig(directory + filename + extension, bbox_inches='tight',
                     pad_inches=1, transparent=transparent, dpi=dpi)
     else:
         plt.savefig(filename + extension, bbox_inches='tight', pad_inches=1,
                     transparent=transparent, dpi=dpi)
+
 
 def meshgrid(x, y, d):
     """
@@ -220,10 +233,11 @@ def meshgrid(x, y, d):
     d.coords['gridlat'] = (('lat', 'lon'), yy)
     return d
 
+
 def outer_legend(fontsize=12):
     """
     Creates a legend outside of the figure in the upper right.
-    
+
     Parameters
     ----------
     fontsize : int
@@ -231,3 +245,47 @@ def outer_legend(fontsize=12):
     """
     plt.legend(bbox_to_anchor=(1.05, 1), loc=2, borderaxespad=0.)
     plt.setp(plt.gca().get_legend().get_texts(), fontsize=fontsize)
+
+
+def quick_pcolor(da, lon='lon', lat='lat', cyclic=True, add_colorbar=True,
+                 cartopy={}, pcolor={}):
+    """
+    Plots a nice looking pcolormesh cartopy map of an xarray DataArray.
+
+    Parameters
+    ----------
+    da : xarray DataArray
+        2-D data to plot
+    lon : str (optional)
+        Name of longitude coordinate in da if not 'lon'
+    lat : str (optional)
+        Name of latitude coordinate in da if not 'lat'
+    cyclic : boolean (optional)
+        If true (usually global data), wrap data to avoid seam
+    add_colorbar : boolean (optional)
+        If true, add colorbar below plot
+    cartopy : dict (optional)
+        Keywords to pass to make_cartopy() function
+            - projection (ccrs projection object)
+            - land_color (hex)
+            - grid_color (hex)
+            - grid_lines (boolean)
+            - figsize (tuple)
+            - frameon (boolean)
+    pcolor : dict (optional)
+        Keywords to pass to plt.pcolormesh()
+
+    Returns
+    -------
+    p : plt.pcolormesh() object
+    """
+    data = da.values
+    lon = da[lon]
+    lat = da[lat]
+    if cyclic:
+        data, lon = add_cyclic_point(data, coord=lon)
+    f, ax = make_cartopy(**cartopy)
+    p = plt.pcolormesh(lon, lat, data, transform=ccrs.PlateCarree(), **pcolor)
+    if add_colorbar:
+        plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.05)
+    return p

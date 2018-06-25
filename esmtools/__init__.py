@@ -18,6 +18,7 @@ filtering of output.
 7. unfunc: Contains definitions to use on xarray .apply()
 8. vis: Contains definitions for colorbars, color maps, and any sort
 of global or regional projections.
+9. mpas: Contains definitions for visualization and processing on MPAS output.
 """
 
 from . import filtering
@@ -28,3 +29,4 @@ from . import ufunc
 from . import colormaps
 from . import carbon
 from . import physics
+from . import mpas

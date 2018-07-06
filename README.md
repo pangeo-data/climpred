@@ -21,6 +21,10 @@ filtering
 
 Functions for filtering output over space and time.
 
+mpas
+
+Functions related to output from MPAS-O.
+
 physics
 
 Functions related to physical conversions.

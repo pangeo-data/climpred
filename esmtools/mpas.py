@@ -9,14 +9,20 @@ MPAS-Ocean: Ringler, T., Petersen, M., Higdon, R. L., Jacobsen, D.,
 Jones, P. W., & Maltrud, M. (2013). Ocean Modelling. Ocean Modelling, 69(C), 
 211–232. doi:10.1016/j.ocemod.2013.04.010. 
 
+Conversion
+----------
+`xyz_to_lat_lon` : Converts xyz coordinate output to lat/lon coordinates.
+
 Visualization
 -------------
 `scatter` : Plots output onto a global (or regional) cartopy map.
 
 """
+import numpy as np
 import matplotlib.pyplot as plt
 import cartopy.crs as ccrs
 from esmtools.vis import make_cartopy
+
 
 def scatter(lon, lat, data, cmap, vmin, vmax, stride=5, projection=ccrs.Robinson(),
         colorbar=True):
@@ -63,3 +69,42 @@ def scatter(lon, lat, data, cmap, vmin, vmax, stride=5, projection=ccrs.Robinson
     if colorbar:
         plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.08)
 
+
+def xyz_to_lat_lon(x, y, z, radians=False):
+    """
+    Convert xyz output (e.g. from Lagrangian Particle Tracking) to conventional
+    lat/lon coordinates.
+
+    Input
+    -----
+    x : array_like
+        Array of x values
+    y : array_like
+        Array of y values
+    z : array_like
+        Array of z values
+    radians : boolean (optional)
+        If true, return lat/lon as radians
+
+    Returns
+    -------
+    lon : array_like
+        Array of longitude values
+    lat : array_like
+        Array of latitude values
+
+    Examples
+    --------
+    from esmtools.mpas import xyz_to_lat_lon
+    import xarray as xr
+    ds = xr.open_dataset('particle_output.nc')
+    lon, lat = xyz_to_lat_lon(ds.xParticle, ds.yParticle, ds.zParticle)
+    """
+    sq = np.sqrt(x**2 + y**2 + z**2)
+    lat = np.arcsin(z / sq)
+    lon = np.arctan2(y, x)
+    if radians:
+        return lon, lat
+    else:
+        return lat * 180./np.pi, \
+               lon * 180./np.pi

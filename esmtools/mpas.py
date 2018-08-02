@@ -106,5 +106,5 @@ def xyz_to_lat_lon(x, y, z, radians=False):
     if radians:
         return lon, lat
     else:
-        return lat * 180./np.pi, \
-               lon * 180./np.pi
+        return lon * 180./np.pi, \
+               lat * 180./np.pi

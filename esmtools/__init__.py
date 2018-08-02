@@ -19,6 +19,7 @@ filtering of output.
 8. vis: Contains definitions for colorbars, color maps, and any sort
 of global or regional projections.
 9. mpas: Contains definitions for visualization and processing on MPAS output.
+10. conversions: Contains definitions for unit conversions.
 """
 
 from . import filtering
@@ -30,3 +31,4 @@ from . import colormaps
 from . import carbon
 from . import physics
 from . import mpas
+from . import conversions

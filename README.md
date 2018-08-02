@@ -7,6 +7,12 @@ Toolbox of functions for analyzing, processing, and plotting ESM output, with an
 >>> pip install git+https://github.com/bradyrx/esmtools
 ```
 
+Otherwise, clone the repository and run 
+
+```python
+python setup.py install
+```
+
 ## Modules
 
 carbon
@@ -16,6 +22,10 @@ Functions for the carbon cycle and carbonate chemistry.
 colormaps
 
 Load in a custom colormap (see below).
+
+conversions
+
+Nifty unit conversions.
 
 filtering
 

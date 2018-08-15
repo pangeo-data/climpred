@@ -3,6 +3,10 @@ Objects dealing with timeseries and ensemble statistics. All functions will
 auto-check for type DataArray. If it is a DataArray, it will return a type
 DataArray to ensure .apply() function from xarray can be applied.
 
+Gridded Data
+------------
+`reg_aw` : Area-weights data on a regular (e.g. 180x360) grid.
+
 Time Series
 -----------
 `remove_polynomial_fit` : Returns a time series with some order polynomial
@@ -19,6 +23,40 @@ import xarray as xr
 from scipy import stats
 import scipy.stats as ss
 from scipy.stats.stats import pearsonr as pr
+
+def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
+    """
+    Area-weights data on a regular (e.g. 360x180) grid that does not come with
+    cell areas. Uses cosine-weighting.
+
+    Parameters
+    ----------
+    da : DataArray with longitude and latitude
+    lat_coord : str (optional)
+        Name of latitude coordinate
+    lon_coord : str (optional)
+        Name of longitude coordinate
+    one_dimensional : bool (optional)
+        If true, assumes that lat and lon are 1D (i.e. not a meshgrid)
+    Returns
+    -------
+    aw_da : Area-weighted DataArray
+
+    Examples
+    --------
+    import esmtools as et
+    da_aw = et.stats.reg_aw(SST)
+    """
+    if one_dimensional:
+        lon, lat = np.meshgrid(da[lon_coord], da[lat_coord])
+    else:
+        lat = da[lat_coord]
+    # NaN out land to not go into area-weighting
+    lat[np.isnan(da)] = np.nan
+    cos_lat = np.cos(np.deg2rad(lat))
+    aw_da = (da * cos_lat).sum() / np.nansum(np.cos(np.deg2rad(lat)))
+    return aw_da
+
 
 def remove_polynomial_fit(data, order):
     """

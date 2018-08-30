@@ -13,6 +13,7 @@ Time Series
 removed.
 `smooth_series` : Returns a smoothed time series.
 `linear_regression` : Performs a least-squares linear regression.
+`vectorized_regression` : Preforms a linear regression on a grid of data.
 `pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
 
 """
@@ -204,6 +205,45 @@ def pearsonr(x, y, two_sided=True):
     else:
         p = ss.t.sf(np.abs(t), n_eff-1)
     return r, p, n_eff
+
+
+def vectorized_regression(x, y):
+    """
+    Vectorized function for regressing many time series onto a fixed time 
+    series. Most commonly used for regressing a grid of data onto some 
+    time series.
     
+    Input
+    -----
+    x : array_like
+      Time series of independent values (time, climate index, etc.)
+    y : array_like
+      Grid of time series to act as dependent values (SST, FG_CO2, etc.)
+
+    Returns
+    -------
+    m : array_like
+      Grid of slopes from linear regression
+    """
+    print("Make sure that time is the first dimension in your inputs.")
+    if np.isnan(x).any():
+        raise ValueError("Please supply an independent axis (x) without nans.")
+    # convert to numpy array if xarray
+    if isinstance(y, xr.DataArray):
+        XARRAY = True
+        dim1 = y.dims[1]
+        dim2 = y.dims[2]
+        y = np.asarray(y)
+    data_shape = y.shape
+    y = y.reshape((data_shape[0], -1))
+    # NaNs screw up vectorized regression; just fill with zeros.
+    y[np.isnan(y)] = 0
+    coefs = poly.polyfit(x, y, deg=1)
+    m = coefs[1].reshape((data_shape[1], data_shape[2]))
+    m[m == 0] = np.nan
+    if XARRAY:
+        m = xr.DataArray(m, dims=[dim1, dim2])
+    return m
+
 
     

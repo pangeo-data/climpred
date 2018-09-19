@@ -25,6 +25,7 @@ import cartopy.crs as ccrs
 import cartopy.feature as cfeature
 from cartopy.util import add_cyclic_point
 from shapely.geometry.polygon import LinearRing
+from matplotlib.colors import LinearSegmentedColormap
 
 
 def deseam(lon, lat, data):
@@ -74,6 +75,9 @@ def discrete_cmap(levels, base_cmap):
     """
     Returns a discretized colormap based on the specified input colormap.
 
+    NOTE: Input the full colormap object, i.e., `matplotlib.cm.RdBu` as
+    opposed to the string form, i.e., "RdBu."
+
     Parameters
     ----------
     levels : int
@@ -93,15 +97,14 @@ def discrete_cmap(levels, base_cmap):
     import esmtools as et
     data = np.random.randn(50,50)
     plt.pcolor(data, vmin=-3, vmax=3, cmap=et.vis.discrete_cmap(10,
-               "RdBu"))
+               plt.cm.RdBu))
     plt.colorbar()
     plt.show()
     """
     base = plt.cm.get_cmap(base_cmap)
     color_list = base(np.linspace(0, 1, levels))
     cmap_name = base.name + str(levels)
-    d_cmap = base.from_list(cmap_name, color_list, levels)
-    return d_cmap
+    return LinearSegmentedColormap.from_list(cmap_name, color_list, levels) 
 
 
 def make_cartopy(projection=ccrs.Robinson(), land_color='k',

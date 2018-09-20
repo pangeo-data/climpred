@@ -39,6 +39,10 @@ physics
 
 Functions related to physical conversions.
 
+prediction
+
+Functions for decadal climate prediction.
+
 stats
 
 Functions for time series and spatial statistics

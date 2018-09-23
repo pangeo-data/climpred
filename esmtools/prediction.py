@@ -4,6 +4,9 @@ specific to decadal prediction -- skill, persistence forecasting, etc.
 """
 
 
+import xarray as xr
+import numpy as np
+
 # damped persistence forecast based on lag1 autocorrelation
 def df_autocorr(df, lag=1, axis=0):
     """Compute full-sample column-wise autocorrelation for a DataFrame."""

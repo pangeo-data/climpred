@@ -13,7 +13,9 @@ Time Series
 removed.
 `smooth_series` : Returns a smoothed time series.
 `linear_regression` : Performs a least-squares linear regression.
-`vectorized_regression` : Preforms a linear regression on a grid of data.
+`vectorized_regression` : Performs a linear regression on a grid of data.
+`remove_polynomial_vectorized` : Returns a time series with some order
+polynomial removed. Useful for a grid, since it's vectorized.
 `pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
 
 """
@@ -237,6 +239,7 @@ def vectorized_regression(x, y):
         dim1 = y.dims[1]
         dim2 = y.dims[2]
         y = np.asarray(y)
+    x = np.arange(0, len(x), 1)
     data_shape = y.shape
     y = y.reshape((data_shape[0], -1))
     # NaNs screw up vectorized regression; just fill with zeros.
@@ -249,4 +252,50 @@ def vectorized_regression(x, y):
     return m
 
 
-    
+def remove_polynomial_vectorized(x, y, order=1):
+    """
+    Vectorized function for removing a polynomial fit from many (e.g. gridded)
+    time series.
+
+    Input
+    -----
+    x : array_like
+      Time series of independent values (generally time)
+    y : array_like
+      Grid of tiem series to act as dependent values (SST, FG_CO2, etc.)
+    order : int (optional)
+      Order of polynomial to be removed. Defaults to 1 (linear).
+
+    Returns
+    -------
+    y_detrended : array_like
+      Grid of detrended time series.
+
+    Examples
+    --------
+
+    """
+    print("Make sure that time is the first dimension in your inputs.")
+    if np.isnan(x).any():
+        raise ValueError("Please supply an independent axis (x) without NaNs.")
+    # convert to numpy array if xarray
+    if isinstance(y, xr.DataArray):
+        XARRAY = True
+        dim1 = y.dims[1]
+        dim2 = y.dims[2]
+        y = np.asarray(y)
+    x = np.arange(0, len(x), 1)
+    data_shape = y.shape
+    y = y.reshape((data_shape[0], -1))
+    # NaNs screw up vectorized regression; just fill with zeros.
+    y[np.isnan(y)] = 0
+    coefs = poly.polyfit(x, y, order)
+    fit = poly.polyval(x, coefs)
+    if not fit.shape == y.shape:
+        fit = fit.transpose()
+    y_detrend = y - fit
+    y_detrend = y_detrend.reshape((data_shape[0], data_shape[1], data_shape[2]))
+    y_detrend[y_detrend == 0] = np.nan
+    if XARRAY:
+        y_detrend = xr.DataArray(y_detrend, dims=['time', dim1, dim2])
+    return y_detrend

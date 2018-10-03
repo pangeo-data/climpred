@@ -231,8 +231,11 @@ def vectorized_regression(x, y):
     --------
     """
     print("Make sure that time is the first dimension in your inputs.")
-    if np.isnan(x).any():
-        raise ValueError("Please supply an independent axis (x) without nans.")
+    try: 
+        if np.isnan(x).any():
+            raise ValueError("Please supply an independent axis (x) without nans.")
+    except TypeError:
+        print("It's probably best to pass x as an array of integers.")
     # convert to numpy array if xarray
     if isinstance(y, xr.DataArray):
         XARRAY = True
@@ -276,8 +279,11 @@ def remove_polynomial_vectorized(x, y, order=1):
 
     """
     print("Make sure that time is the first dimension in your inputs.")
-    if np.isnan(x).any():
-        raise ValueError("Please supply an independent axis (x) without NaNs.")
+    try:
+        if np.isnan(x).any():
+            raise ValueError("Please supply an independent axis (x) without NaNs.")
+    except TypeError:
+        print("It's probably best to pass x as an array of integers.")
     # convert to numpy array if xarray
     if isinstance(y, xr.DataArray):
         XARRAY = True

@@ -224,6 +224,9 @@ def vectorized_regression(x, y):
     -------
     m : array_like
       Grid of slopes from linear regression
+
+    Examples
+    --------
     """
     print("Make sure that time is the first dimension in your inputs.")
     if np.isnan(x).any():

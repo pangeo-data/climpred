@@ -20,8 +20,14 @@ Structure
     - normalized ensemble variance (NEV)
     - prognostic potential predictability (PPP)
     - anomlay correlation coefficient (ACC) (missing)
+        - intra-ensemble
+        - against mean
     - root mean square error (RMSE) (=MSE^0.5) (missing)
+    - normalized root mean square error (NRMSE) (=1-MSE^0.5/RMSE_control) (missing)
     - Diagnostic Potential Predictability (DPP)
+    - Relative Entropy (Kleeman 2002; Branstator and Teng 2010) (missing)
+    - Mutual information (DelSole)
+    - Average Predictability Time (APT) (DelSole)
     - requires: ensembles at different start years from control run
 
 - Persistence Forecasts
@@ -80,11 +86,31 @@ Time dimensions is called Years and is integer. (Original data was year 3000-330
 
 """
 
-# unsure whether the implicit imports reflect PEP8
+
 ### general imports
 import xarray as xr
 import pandas as pd
 import numpy as np
+import os
+from six.moves.urllib.request import urlopen, urlretrieve
+from six.moves.http_client import HTTPException
+
+
+def get_data_home(data_home=None):
+    """Return the path of the seaborn data directory.
+    This is used by the ``load_dataset`` function.
+    If the ``data_home`` argument is not specified, the default location
+    is ``~/seaborn-data``.
+    Alternatively, a different default location can be specified using the
+    environment variable ``SEABORN_DATA``.
+    """
+    if data_home is None:
+        data_home = os.environ.get('HOME','~')
+
+    data_home = os.path.expanduser(data_home)
+    if not os.path.exists(data_home):
+        os.makedirs(data_home)
+    return data_home
 
 def get_dataset_names():
     """Report available example datasets, useful for reporting issues."""
@@ -92,8 +118,9 @@ def get_dataset_names():
     # copied from seaborn 
     from bs4 import BeautifulSoup
     http = urlopen('https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
+    print('Load from URL:',http)
     gh_list = BeautifulSoup(http)
-
+    
     return [l.text.replace('.nc', '')
             for l in gh_list.find_all("a", {"class": "js-navigation-open"})
             if l.text.endswith('.nc')]
@@ -116,7 +143,8 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     """
     path = ("https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
     
-    full_path = path_ds.format(name)
+    full_path = path.format(name)
+    print('Load from URL:',full_path)
 
     if cache:
         cache_path = os.path.join(get_data_home(data_home),

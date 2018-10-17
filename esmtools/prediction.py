@@ -80,10 +80,55 @@ Time dimensions is called Years and is integer. (Original data was year 3000-330
 
 """
 
+# unsure whether the implicit imports reflect PEP8
 ### general imports
 import xarray as xr
 import pandas as pd
 import numpy as np
+
+def get_dataset_names():
+    """Report available example datasets, useful for reporting issues."""
+    # delayed import to not demand bs4 unless this function is actually used
+    # copied from seaborn 
+    from bs4 import BeautifulSoup
+    http = urlopen('https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
+    gh_list = BeautifulSoup(http)
+
+    return [l.text.replace('.nc', '')
+            for l in gh_list.find_all("a", {"class": "js-navigation-open"})
+            if l.text.endswith('.nc')]
+
+
+def load_dataset(name, cache=True, data_home=None, **kws):
+    """Load a datasets ds and control from the online repository (requires internet).
+    Parameters
+    ----------
+    name : str
+        Name of the dataset (`ds`.nc on
+        https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction).  You can obtain list of
+        available datasets using :func:`get_dataset_names`
+    cache : boolean, optional
+        If True, then cache data locally and use the cache on subsequent calls
+    data_home : string, optional
+        The directory in which to cache data. By default, uses ~/seaborn-data/
+    kws : dict, optional
+        Passed to pandas.read_csv
+    """
+    path = ("https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
+    
+    full_path = path_ds.format(name)
+
+    if cache:
+        cache_path = os.path.join(get_data_home(data_home),
+                                  os.path.basename(full_path))
+        if not os.path.exists(cache_path):
+            urlretrieve(full_path, cache_path)
+        full_path = cache_path
+
+    df = xr.open_dataset(full_path, **kws)
+    
+    return df
+
 
 
 ### Diagnostic Potential Predictability (DPP) 
@@ -112,6 +157,8 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     Example
     -------
     import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ds_chunked_into_30yr_chunks = et.prediction.chunking(ds,chunk_length=30)
     ds_chunked_into_30_chunks = et.prediction.chunking(ds,number_chunks=30)
     """

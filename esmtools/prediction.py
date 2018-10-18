@@ -12,16 +12,21 @@ Structure
     - anomlay correlation coefficient (ACC) (missing)
     - requires: hindcast simulations: ensembles initialised each year
     
-- Perfect-model predictability metrics
+- Perfect-model (PM) predictability metrics
     - ensemble variance against: (=MSE)
         - ensemble mean
         - control 
         - each member
-    - normalized ensemble variance (NEV)
-    - prognostic potential predictability (PPP)
-    - anomlay correlation coefficient (ACC) (missing)
+    - normalized ensemble variance (NEV) (Griffies)
+    - prognostic potential predictability (PPP) (Pohlmann 2004)
+    - PM anomlay correlation coefficient (ACC) (Bushuk 2018) (missing)
+    - PM  mean square skill score (MSSS) (Bushuk 2018)
+    - unbiased ACC (Bushuk 2018)
     - root mean square error (RMSE) (=MSE^0.5) (missing)
-    - Diagnostic Potential Predictability (DPP)
+    - Diagnostic Potential Predictability (DPP) (Boer 2004, Resplandy 2015/Seferian 2018)
+    - predictability horizon:
+        - linear breakpoint fit (Seferian 2018)
+        - f-test significant test (Pohlmann 2004, Griffies 1997)
     - requires: ensembles at different start years from control run
 
 - Persistence Forecasts
@@ -341,6 +346,125 @@ def PPP_from_nvar(nvar):
     """
     return 1-nvar
 
+
+### Perfect-model (PM) predictability scores from Bushuk 2018
+
+def PM_MSSS(ds,control):
+    """
+    Calculated the perfect-model (PM) mean square skill score (MSSS) as in Bushuk et al. 2018. This is the same as PPP from Pohlmann et al. (2004).
+    
+    Formula
+    -------
+    MSSS_{PM} = 1 - MSE/sigma_c  
+    
+    References
+    ----------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    
+    Parameters
+    ---------- 
+    (TODO: Test whether this works for 3D data)
+    msss : DataArray with year dimension (optional spatial coordinates)
+        Input ensemble data
+    control : DataArray with year dimension (optional spatial coordinates)
+        Input control run data
+    Returns
+    -------
+    msss : DataArray
+        Output data
+    
+    Example
+    -------
+    import esmtools as et
+    ds = 
+    control = 
+    pm_msss = PM_MSSS(ds,control)
+    """
+    import esmtools as et
+    ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
+    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean)
+    PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
+    return PPP_mean
+
+def PM_ACC_U(msss):
+    """
+    Calculated the perfect-model (PM) unbiased anomaly correlation coefficient as in Bushuk et al. 2018. 
+    
+    Formula
+    -------
+    ACC_{U} = sqrt{MSSS}  
+    
+    References
+    ----------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    
+    Parameters
+    ---------- 
+    (TODO: Test whether this works for 3D data)
+    msss : DataArray with year dimension (optional spatial coordinates)
+        Input msss data
+    Returns
+    -------
+    ACC_U : DataArray
+        Output ACC_U data
+    
+    Example
+    -------
+    import esmtools as et
+    ds = 
+    control = 
+    pm_msss = PM_MSSS(ds,control)
+    pm_acc_u = PM_ACC_U(pm_msss)
+    """
+    return msss.sqrt()
+
+def PM_ACC(ds):
+    """
+    Calculated the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
+    Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
+    
+    Formula
+    -------
+    ACC = pd.corrwith() 
+    
+    References
+    ----------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    
+    Parameters
+    ---------- 
+    (TODO: Test whether this works for 3D data)
+    ds : xr.DataArray with year dimension (optional spatial coordinates)
+        Input ensemble data
+    Returns
+    -------
+    ACC : pd.DataArray
+        ACC
+    
+    Example
+    -------
+    import esmtools as et
+    ds = 
+    control = 
+    pm_acc = PM_ACC(ds.sel(area=area,period=period))
+    pm_acc.plot()
+    """
+    sv = ds.to_dataframe()[varname].unstack() # super vector (sv) should be one variable,region,period
+    acc_l = pd.DataFrame(index=ds.year)
+    for j in range(ds.member.size): #let every member be the observation vector
+        svobs = sv.copy()
+        for i in range(10): #fill the obs super vector with the jth member timeseries #dirty
+            for t in starting_years: #create observations vector
+                svobs.loc[t].loc[i] = svobs.loc[t].loc[j]
+
+        ACC = sv.corrwith(svobs)
+        acc_l[j] = ACC
+    return acc_l
+
+
+#TODO: Significance for ACC
+# T test Bushuk
+# pseudo-ensemble (uninit) ACC
 
 
 ### Persistence

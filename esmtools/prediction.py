@@ -106,6 +106,11 @@ import os
 from six.moves.urllib.request import urlopen, urlretrieve
 from six.moves.http_client import HTTPException
 
+# standard setup for load dataset and examples
+varname='tos'
+period='ym'
+area='North_Atlantic'
+
 
 def get_data_home(data_home=None):
     """Return the path of the data directory.

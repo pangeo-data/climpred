@@ -17,7 +17,6 @@ Structure
         - ensemble mean
         - control 
         - each member
-<<<<<<< HEAD
     - normalized ensemble variance (NEV) (Griffies)
     - prognostic potential predictability (PPP) (Pohlmann 2004)
     - PM anomlay correlation coefficient (ACC) (Bushuk 2018) (missing)
@@ -25,10 +24,10 @@ Structure
     - unbiased ACC (Bushuk 2018)
     - root mean square error (RMSE) (=MSE^0.5) (missing)
     - Diagnostic Potential Predictability (DPP) (Boer 2004, Resplandy 2015/Seferian 2018)
-    - predictability horizon:
+    - predictability horizon: (missing)
         - linear breakpoint fit (Seferian 2018)
         - f-test significant test (Pohlmann 2004, Griffies 1997)
-=======
+        - bootstrapping limit
     - normalized ensemble variance (NEV)
     - prognostic potential predictability (PPP)
     - anomlay correlation coefficient (ACC) (missing)
@@ -40,7 +39,6 @@ Structure
     - Relative Entropy (Kleeman 2002; Branstator and Teng 2010) (missing)
     - Mutual information (DelSole)
     - Average Predictability Time (APT) (DelSole)
->>>>>>> af6bce61cc982cbf5456442be92cda5f888b3328
     - requires: ensembles at different start years from control run
 
 - Persistence Forecasts
@@ -110,12 +108,10 @@ from six.moves.http_client import HTTPException
 
 
 def get_data_home(data_home=None):
-    """Return the path of the seaborn data directory.
+    """Return the path of the data directory.
     This is used by the ``load_dataset`` function.
     If the ``data_home`` argument is not specified, the default location
     is ``~/seaborn-data``.
-    Alternatively, a different default location can be specified using the
-    environment variable ``SEABORN_DATA``.
     """
     if data_home is None:
         data_home = os.environ.get('HOME','~')
@@ -150,7 +146,7 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     cache : boolean, optional
         If True, then cache data locally and use the cache on subsequent calls
     data_home : string, optional
-        The directory in which to cache data. By default, uses ~/seaborn-data/
+        The directory in which to cache data. By default, uses ~/.
     kws : dict, optional
         Passed to pandas.read_csv
     """

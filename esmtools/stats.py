@@ -305,3 +305,40 @@ def remove_polynomial_vectorized(x, y, order=1):
     if XARRAY:
         y_detrend = xr.DataArray(y_detrend, dims=['time', dim1, dim2])
     return y_detrend
+
+
+def vectorized_rm_poly(y,order=1):
+    """
+    Vectorized function for removing a order-th order polynomial fit of a time
+    series
+
+    Input
+    -----
+    y : array_like
+      Grid of time series to act as dependent values (SST, FG_CO2, etc.)
+
+    Returns
+    -------
+    detrended_ts : array_like
+      Grid of detrended time series
+    """
+    print("Make sure that time is the first dimension in your inputs.")
+    if np.isnan(y).any():
+        raise ValueError("Please supply an independent axis (y) without nans.")
+    # convert to numpy array if xarray
+    if isinstance(y, xr.DataArray):
+        XARRAY = True
+        dims=y.dims
+        y = np.asarray(y)
+    data_shape = y.shape
+    y = y.reshape((20, -1))
+    # NaNs screw up vectorized regression; just fill with zeros.
+    y[np.isnan(y)] = 0
+    x = np.arange(0, len(y), 1)
+    coefs = poly.polyfit(x, y, order)
+    fit = poly.polyval(x, coefs)
+    detrended_ts = (y - fit.T)
+    detrended_ts = detrended_ts.reshape(data_shape)
+    if XARRAY:
+        detrended_ts = xr.DataArray(detrended_ts, dims=dims)
+    return detrended_ts

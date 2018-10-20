@@ -30,7 +30,7 @@ Structure
         - bootstrapping limit
     - normalized ensemble variance (NEV)
     - prognostic potential predictability (PPP)
-    - anomlay correlation coefficient (ACC) (missing)
+    - anomaly correlation coefficient (ACC) (missing)
         - intra-ensemble
         - against mean
     - root mean square error (RMSE) (=MSE^0.5) (missing)
@@ -259,9 +259,11 @@ def DPP(ds, m=10, chunk=True, return_s=True, output=False):
     -------
     DPP : DataArray as ds without time/year dimension
     
-    Example
-    -------
+    Example 1D
+    ----------
     import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ds_DPPm10 = et.prediction.chunking(ds,m=10,chunk=True)
     """
     
@@ -323,6 +325,7 @@ def ens_var_against_mean(ds):
     Example
     -------
     import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds') 
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
     # display as dataframe 
     ens_var_against_mean.to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
@@ -373,6 +376,8 @@ def normalize_var(var,control,fac=1,running=True,m=20):
     Example
     -------
     import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
     nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
     
@@ -419,8 +424,10 @@ def PPP_from_nvar(nvar):
     Example
     -------
     import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean)
+    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
     PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
     """
     return 1-nvar
@@ -455,13 +462,13 @@ def PM_MSSS(ds,control):
     Example
     -------
     import esmtools as et
-    ds = 
-    control = 
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     pm_msss = PM_MSSS(ds,control)
     """
     import esmtools as et
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean)
+    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_meani,control)
     PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
     return PPP_mean
 
@@ -471,7 +478,7 @@ def PM_ACC_U(msss):
     
     Formula
     -------
-    ACC_{U} = sqrt{MSSS}  
+    ACC_{U} = sqrt{MSSS} = sqrt{PPP}  
     
     References
     ----------
@@ -490,16 +497,17 @@ def PM_ACC_U(msss):
     Example
     -------
     import esmtools as et
-    ds = 
-    control = 
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     pm_msss = PM_MSSS(ds,control)
     pm_acc_u = PM_ACC_U(pm_msss)
     """
     return msss.sqrt()
 
-def PM_ACC(ds):
+
+def PM_ACC(ds,anomaly=True):
     """
-    Calculated the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
+    Calculates the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
     Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
     
     Formula
@@ -515,6 +523,8 @@ def PM_ACC(ds):
     (TODO: Test whether this works for 3D data)
     ds : xr.DataArray with year dimension (optional spatial coordinates)
         Input ensemble data
+    anomaly: bool
+        create anomaly
     Returns
     -------
     ACC : pd.DataArray
@@ -523,28 +533,110 @@ def PM_ACC(ds):
     Example
     -------
     import esmtools as et
-    ds = 
-    control = 
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
+    varname='tos'
+    period='ym'
+    area='North_Atlantic'
     pm_acc = PM_ACC(ds.sel(area=area,period=period))
     pm_acc.plot()
     """
-    sv = ds.to_dataframe()[varname].unstack() # super vector (sv) should be one variable,region,period
+    if anomaly:
+        ds = ds - control.mean('year')
+    sv = ds.to_dataframe()[varname].unstack()
     acc_l = pd.DataFrame(index=ds.year)
-    for j in range(ds.member.size): #let every member be the observation vector
+    member = sv.index.get_level_values(level=1).unique().values
+    ensemble = sv.index.get_level_values(level=0).unique().values 
+    for j in range(len(member)): #let every member be the observation vector
         svobs = sv.copy()
-        for i in range(10): #fill the obs super vector with the jth member timeseries #dirty
-            for t in starting_years: #create observations vector
+        for i in range(len(member)):
+            for t in ensemble: #create observations vector
                 svobs.loc[t].loc[i] = svobs.loc[t].loc[j]
 
         ACC = sv.corrwith(svobs)
         acc_l[j] = ACC
     return acc_l
 
-
-#TODO: Significance for ACC
 # T test Bushuk
-# pseudo-ensemble (uninit) ACC
 
+def pseudo_ens(control,varname=varname,period=period,area=area,nens=20,nm=20):
+    """ 
+    Create a pseudo-ensemble to apply PM_ACC on for bootstrapping a significance level
+    Takes randomly 20yr segments from control and rearranges them into ensemble and member dimensions
+ 
+    Parameters
+    ---------- 
+    control : xr.DataArray with year dimension 
+        Input ensemble data
+    nens: int
+        Number of start dates for pseudo ensemble
+    nm: int
+        Number of ensemble members per start date for pseudo ensemble
+    Returns
+    -------
+    ds_e : xr.DataArray with year, ensemble, member dimension
+        pseudo-ensemble generated from control run
+
+    Example
+    -------
+    import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
+    varname='tos'
+    period='ym'
+    area='North_Atlantic'    
+    ds_e = et.prediction.pseudo_ens(control)
+    print(sig,'% significance level at',np.percentile(et.prediction.PM_ACC(ds=pseudo_ens(control)).values,q=sig/100))
+    """
+    ds_c = control.copy()
+    length=ds.year.size
+    c_start = control.year[0]
+    c_end = control.year[-1]
+    elist = []
+    year=ds.year
+    for j in range(nens):
+        mlist = []
+        for i in range(nm):
+            start = np.random.randint(c_start,c_end-length-1)
+            random_ds = ds_c.sel(year=slice(start,start+length-1))
+            random_ds['year']=year
+            random_ds.expand_dims('member')
+            random_ds['member']=i
+            mlist.append(random_ds)
+        ds_m = xr.concat(mlist,'member')
+        ds_m.expand_dims('ensemble')
+        ds_m['ensemble']=j
+        elist.append(ds_m)
+    ds_e = xr.concat(elist,'ensemble')
+    return ds_e
+
+def PM_ACC_sig(control,sig=95):
+    """
+    Returns sig-th percentile of pseudo ensemble generated from control.   
+
+    Parameters
+    ----------
+    control : xr.DataArray with year dimension
+        Input ensemble data
+    sig: int
+        Significance level for bootstrapping from pseudo ensemble
+    Returns
+    -------
+    sig_level : float
+        significance level value 
+
+    Example
+    -------
+    import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
+    varname='tos'
+    period='ym'
+    area='North_Atlantic'
+    print(sig,'% significance level at',et.prediction.PM_ACC_sig(ds_e))
+    """ 
+    ACC_pseudo_ens = et.prediction.PM_ACC(ds=et.prediction.pseudo_ens(control)).values
+    return np.percentile(ACC_pseudo_ens,q=sig/100)
 
 ### Persistence
 

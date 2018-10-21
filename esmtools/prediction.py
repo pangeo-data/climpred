@@ -107,10 +107,14 @@ from six.moves.urllib.request import urlopen, urlretrieve
 from six.moves.http_client import HTTPException
 
 # standard setup for load dataset and examples
+#import esmtools as et
+print("ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')")
+print("control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')")
+#ds = load_dataset('PM_MPI-ESM-LR_ds')
+#control = load_dataset('PM_MPI-ESM-LR_control')
 varname='tos'
 period='ym'
 area='North_Atlantic'
-
 
 def get_data_home(data_home=None):
     """Return the path of the data directory.
@@ -510,7 +514,7 @@ def PM_ACC_U(msss):
     return msss.sqrt()
 
 
-def PM_ACC(ds,anomaly=True):
+def PM_ACC(ds,control,anomaly=True):
     """
     Calculates the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
     Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
@@ -543,7 +547,7 @@ def PM_ACC(ds,anomaly=True):
     varname='tos'
     period='ym'
     area='North_Atlantic'
-    pm_acc = PM_ACC(ds.sel(area=area,period=period))
+    pm_acc = PM_ACC(ds.sel(area=area,period=period),control)
     pm_acc.plot()
     """
     if anomaly:
@@ -564,7 +568,7 @@ def PM_ACC(ds,anomaly=True):
 
 # T test Bushuk
 
-def pseudo_ens(control,varname=varname,period=period,area=area,nens=20,nm=20):
+def pseudo_ens(control,ds,varname=varname,period=period,area=area,nens=20,nm=20):
     """ 
     Create a pseudo-ensemble to apply PM_ACC on for bootstrapping a significance level
     Takes randomly 20yr segments from control and rearranges them into ensemble and member dimensions
@@ -590,8 +594,9 @@ def pseudo_ens(control,varname=varname,period=period,area=area,nens=20,nm=20):
     varname='tos'
     period='ym'
     area='North_Atlantic'    
-    ds_e = et.prediction.pseudo_ens(control)
-    print(sig,'% significance level at',np.percentile(et.prediction.PM_ACC(ds=pseudo_ens(control)).values,q=sig/100))
+    ds_e = et.prediction.pseudo_ens(control,ds)
+    sig=90
+    print(sig,'% significance level at',np.percentile(et.prediction.PM_ACC(ds=pseudo_ens(control,ds)).values,q=sig/100))
     """
     ds_c = control.copy()
     length=ds.year.size
@@ -615,7 +620,7 @@ def pseudo_ens(control,varname=varname,period=period,area=area,nens=20,nm=20):
     ds_e = xr.concat(elist,'ensemble')
     return ds_e
 
-def PM_ACC_sig(control,sig=95):
+def PM_ACC_sig(control,ds,sig=95):
     """
     Returns sig-th percentile of pseudo ensemble generated from control.   
 
@@ -638,9 +643,11 @@ def PM_ACC_sig(control,sig=95):
     varname='tos'
     period='ym'
     area='North_Atlantic'
+    ds_e = et.prediction.pseudo_ens(control,ds)
     print(sig,'% significance level at',et.prediction.PM_ACC_sig(ds_e))
     """ 
-    ACC_pseudo_ens = et.prediction.PM_ACC(ds=et.prediction.pseudo_ens(control)).values
+    ds_e = pseudo_ens(control,ds)
+    ACC_pseudo_ens = PM_ACC(ds_e,control).values
     return np.percentile(ACC_pseudo_ens,q=sig/100)
 
 ### Persistence

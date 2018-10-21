@@ -107,7 +107,7 @@ Time dimensions is called Years and is integer. (Original data was year 3000-330
 """
 
 
-### general imports
+# general imports
 import xarray as xr
 import pandas as pd
 import numpy as np
@@ -116,14 +116,12 @@ from six.moves.urllib.request import urlopen, urlretrieve
 from six.moves.http_client import HTTPException
 
 # standard setup for load dataset and examples
-#import esmtools as et
 print("ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')")
 print("control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')")
-#ds = load_dataset('PM_MPI-ESM-LR_ds')
-#control = load_dataset('PM_MPI-ESM-LR_control')
-varname='tos'
-period='ym'
-area='North_Atlantic'
+varname = 'tos'
+period = 'ym'
+area = 'North_Atlantic'
+
 
 def get_data_home(data_home=None):
     """Return the path of the data directory.
@@ -132,20 +130,22 @@ def get_data_home(data_home=None):
     is ``~/seaborn-data``.
     """
     if data_home is None:
-        data_home = os.environ.get('HOME','~')
+        data_home = os.environ.get('HOME', '~')
 
     data_home = os.path.expanduser(data_home)
     if not os.path.exists(data_home):
         os.makedirs(data_home)
     return data_home
 
+
 def get_dataset_names():
     """Report available example datasets, useful for reporting issues."""
     # delayed import to not demand bs4 unless this function is actually used
     # copied from seaborn
     from bs4 import BeautifulSoup
-    http = urlopen('https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
-    print('Load from URL:',http)
+    http = urlopen(
+        'https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
+    print('Load from URL:', http)
     gh_list = BeautifulSoup(http)
 
     return [l.text.replace('.nc', '')
@@ -168,10 +168,11 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     kws : dict, optional
         Passed to pandas.read_csv
     """
-    path = ("https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
+    path = (
+        "https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
 
     full_path = path.format(name)
-    print('Load from URL:',full_path)
+    print('Load from URL:', full_path)
 
     if cache:
         cache_path = os.path.join(get_data_home(data_home),
@@ -184,7 +185,8 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 
     return df
 
-def ds2df(ds,area=area,varname=varname,period=period):
+
+def ds2df(ds, area=area, varname=varname, period=period):
     """
     Take a dataset, selects wanted variable, area, period and transforms it into a dataframe
     Parameters
@@ -204,12 +206,11 @@ def ds2df(ds,area=area,varname=varname,period=period):
     PM_MSSS = et.prediction.PM_MSSS(ds,control)
     et.prediction.ds2df(PM_MSSS).plot()
     """
-    df = ds.sel(area=area,period=period).to_dataframe()[varname].unstack().T
+    df = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T
     return df
 
 
-
-### Diagnostic Potential Predictability (DPP)
+# Diagnostic Potential Predictability (DPP)
 
 def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     """
@@ -253,23 +254,28 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
         raise ValueError('set number_chunks or chunk_length to True')
 
     if output:
-        print(number_chunks, 'chunks of length', chunk_length, 'from', cmin, 'to', cmax)
-        print('0', cmin, cmin+chunk_length-1)
-    c = ds.sel(year=slice(cmin, cmin+chunk_length-1))
+        print(number_chunks, 'chunks of length',
+              chunk_length, 'from', cmin, 'to', cmax)
+        print('0', cmin, cmin + chunk_length - 1)
+    c = ds.sel(year=slice(cmin, cmin + chunk_length - 1))
     c = c.expand_dims('c')
     c['c'] = [0]
     year = c.year
     for i in range(1, number_chunks):
         if output:
-            print(i, cmin+chunk_length*i, cmin+(i+1)*chunk_length-1)
-        c2 = ds.sel(year=slice(cmin+chunk_length*i, cmin+(i+1)*chunk_length-1))
+            print(i, cmin + chunk_length * i,
+                  cmin + (i + 1) * chunk_length - 1)
+        c2 = ds.sel(year=slice(cmin + chunk_length * i,
+                               cmin + (i + 1) * chunk_length - 1))
         c2 = c2.expand_dims('c')
         c2['c'] = [i]
         c2['year'] = year
         c = xr.concat([c, c2], 'c')
     return c
 
-#DDP_boer_b
+# DDP_boer_b
+
+
 def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     """
     Calculate Diagnostic Potential Predictability (DPP) as potentially predictable
@@ -308,13 +314,13 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     ds_DPPm10 = et.prediction.DPP(ds,m=10,chunk=True)
     """
 
-    if ds.size > 5000: #dirty way of figuring out which data
+    if ds.size > 5000:  # dirty way of figuring out which data
         data3D = True
         print('3D data')
     else:
         data3D = False
     if output:
-        print(m,ds.dims,chunk)
+        print(m, ds.dims, chunk)
 
     if not chunk:
         s2v = ds.rolling(year=m, min_periods=1, center=True).mean().var('year')
@@ -324,21 +330,21 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
 
     if chunk:
         # first chunk
-        chunked_means = chunking(ds,chunk_length=m).mean('year')
+        chunked_means = chunking(ds, chunk_length=m).mean('year')
         # sub means in chunks
-        chunked_deviations = chunking(ds,chunk_length=m) - chunked_means
+        chunked_deviations = chunking(ds, chunk_length=m) - chunked_means
 
         s2v = chunked_means.var('c')
         if var_all_e:
-            s2e = chunked_deviations.var(['year','c'])
+            s2e = chunked_deviations.var(['year', 'c'])
         else:
             s2e = chunked_deviations.var('year').mean('c')
         s2 = s2v + s2e
 
-    DPP = (s2v - s2/(m))/(s2)
+    DPP = (s2v - s2 / (m)) / (s2)
 
     if output:
-        print(DPP,s2v, s2e, s2)
+        print(DPP, s2v, s2e, s2)
 
     if data3D:
         return DPP
@@ -348,7 +354,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
         return DPP, s2v, s2e, s2
 
 
-### Prognostic Potential Predictability Griffies & Bryan 1997
+# Prognostic Potential Predictability Griffies & Bryan 1997
 
 # 3 different ways of calculation ensemble spread:
 def ens_var_against_mean(ds):
@@ -373,26 +379,29 @@ def ens_var_against_mean(ds):
     """
     return ds.var('member')
 
+
 def ens_var_against_control(ds):
     """
     See ens_var_against_mean(ds). Only difference is that now distance is evaluated against member=0 which is the control run.
     """
-    var=ds.copy()
-    var = ((ds - ds.sel(member=0))**2).sum('member')/(ds.member.size-2)
+    var = ds.copy()
+    var = ((ds - ds.sel(member=0))**2).sum('member') / (ds.member.size - 2)
     return var
+
 
 def ens_var_against_every(ds):
     """    See ens_var_against_mean(ds). Only difference is that now distance is evaluated against each ensemble member and then averaged.
     """
-    var=ds.copy()
-    for i in range(0,ds.member.size):
-        var_a = ((ds-ds.sel(member=i))**2).sum(dim='member')/ds.member.size
-        var = xr.concat([var,var_a],'member')
-    var=var.sel(member=slice(ds.member.size,2*ds.member.size)).mean('member')
+    var = ds.copy()
+    for i in range(0, ds.member.size):
+        var_a = ((ds - ds.sel(member=i))**2).sum(dim='member') / ds.member.size
+        var = xr.concat([var, var_a], 'member')
+    var = var.sel(member=slice(ds.member.size, 2
+                               * ds.member.size)).mean('member')
     return var
 
 
-def normalize_var(var,control,fac=1,running=True,m=20):
+def normalize_var(var, control, fac=1, running=True, m=20):
     """
     Normalizes the ensemble spread with the temporal spread of the control run.
     Note 1: Ensemble spread against ensemble mean is half the ensemble spread any member.
@@ -435,13 +444,14 @@ def normalize_var(var,control,fac=1,running=True,m=20):
     nvar_mean = normalize_var(var_mean)
     """
     if not running:
-        control_var = control.var('year')#.mean('year')
-        var2 = var/control_var/fac
+        control_var = control.var('year')  # .mean('year')
+        var2 = var / control_var / fac
         return var2
     if running:
         control_var_running = control.rolling(year=m).var().mean('year')
-        var2 = var/control_var_running/fac
+        var2 = var / control_var_running / fac
         return var2
+
 
 def PPP_from_nvar(nvar):
     """
@@ -471,12 +481,12 @@ def PPP_from_nvar(nvar):
     nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
     PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
     """
-    return 1-nvar
+    return 1 - nvar
 
 
-### Perfect-model (PM) predictability scores from Bushuk 2018
+# Perfect-model (PM) predictability scores from Bushuk 2018
 
-def PM_MSSS(ds,control):
+def PM_MSSS(ds, control):
     """
     Calculated the perfect-model (PM) mean square skill score (MSSS) as in Bushuk et al. 2018. This is the same as PPP from Pohlmann et al. (2004).
 
@@ -509,9 +519,11 @@ def PM_MSSS(ds,control):
     """
     import esmtools as et
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
+    nens_var_against_mean = et.prediction.normalize_var(
+        ens_var_against_mean, control)
     PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
     return PPP_mean
+
 
 def PM_ACC_U(msss):
     """
@@ -546,8 +558,7 @@ def PM_ACC_U(msss):
     return msss ** .5
 
 
-def PM_ACC(ds,control,anomaly=True,varname=varname,area=area,period=period,ens=False,control_member=0,m=False,against_mean=False):
-
+def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period, ens=False, control_member=0, m=False, against_mean=False):
     """
     Calculates the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
     Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
@@ -585,44 +596,49 @@ def PM_ACC(ds,control,anomaly=True,varname=varname,area=area,period=period,ens=F
     """
     if anomaly:
         ds = ds - control.mean('year')
-    if (m != False) and control_member in m: # if control_member is in m combination
-        return pd.Series([np.nan]*12)
-    #if (ens != False) and len(ens)==1: # if single ens, somehow gives near 0 ACC
+    if (m is not False) and control_member in m:  # if control_member is in m combination
+        return pd.Series([np.nan] * 12)
+    # if (ens != False) and len(ens)==1: # if single ens, somehow gives near 0 ACC
     #    return pd.Series([np.nan])
     else:
-        sv = ds.sel(area=area,period=period).to_dataframe()[varname].unstack().T.reorder_levels([1,0],axis=1).drop(columns=control_member).reorder_levels([1,0],axis=1).T
-        obs = ds.sel(area=area,period=period).to_dataframe()[varname].unstack().T.reorder_levels([1,0],axis=1)[control_member].T
+        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T.reorder_levels(
+            [1, 0], axis=1).drop(columns=control_member).reorder_levels([1, 0], axis=1).T
+        obs = ds.sel(area=area, period=period).to_dataframe()[
+            varname].unstack().T.reorder_levels([1, 0], axis=1)[control_member].T
 
-        #subselections
+        # subselections
         if ens and not m:
-            sv = sv.T[ens].T # fewer ensembles
-            obs = obs.T[ens].T # fewer ensembles
+            sv = sv.T[ens].T  # fewer ensembles
+            obs = obs.T[ens].T  # fewer ensembles
         elif m and not ens:
-            sv = sv.T.reorder_levels([1,0],axis=1)[m].reorder_levels([1,0],axis=1).sortlevel(axis=1).T # fewer members
+            sv = sv.T.reorder_levels([1, 0], axis=1)[m].reorder_levels(
+                [1, 0], axis=1).sortlevel(axis=1).T  # fewer members
             obs = obs
         elif not m and not ens:
             sv = sv
             obs = obs
         elif m and ens:
-            sv = sv.T[ens].reorder_levels([1,0],axis=1)[m].reorder_levels([1,0],axis=1).sortlevel(axis=1).T
+            sv = sv.T[ens].reorder_levels([1, 0], axis=1)[m].reorder_levels([
+                1, 0], axis=1).sortlevel(axis=1).T
             obs = obs.T[ens].T
 
-        if against_mean: #correlation against ensemble mean
-            sv = sv.mean(axis=0,level=0)
+        if against_mean:  # correlation against ensemble mean
+            sv = sv.mean(axis=0, level=0)
             return sv.corrwith(obs)
-        else: # correlation against each member
+        else:  # correlation against each member
             member = sv.index.get_level_values(level=1).unique().values
             ensemble = sv.index.get_level_values(level=0).unique().values
             svobs = sv.copy()
             for i in member:
-                for t in ensemble: #create observations vector
-                    svobs.T[t,i]=obs.T[t]
+                for t in ensemble:  # create observations vector
+                    svobs.T[t, i] = obs.T[t]
             ACC = sv.corrwith(svobs)
             return ACC
 
 # T test Bushuk
 
-def pseudo_ens(control,ds,varname=varname,period=period,area=area,nens=12,nm=10):
+
+def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, nm=10):
     """
     Create a pseudo-ensemble to apply PM_ACC on for bootstrapping a significance level
     Takes randomly 20yr segments from control and rearranges them into ensemble and member dimensions
@@ -651,28 +667,29 @@ def pseudo_ens(control,ds,varname=varname,period=period,area=area,nens=12,nm=10)
     ds_e = et.prediction.pseudo_ens(control,ds)
     """
     ds_c = control.copy()
-    length=ds.year.size
+    length = ds.year.size
     c_start = control.year[0]
     c_end = control.year[-1]
     elist = []
-    year=ds.year
+    year = ds.year
     for j in range(nens):
         mlist = []
         for i in range(nm):
-            start = np.random.randint(c_start,c_end-length-1)
-            random_ds = ds_c.sel(year=slice(start,start+length-1))
-            random_ds['year']=year
+            start = np.random.randint(c_start, c_end - length - 1)
+            random_ds = ds_c.sel(year=slice(start, start + length - 1))
+            random_ds['year'] = year
             random_ds.expand_dims('member')
-            random_ds['member']=i
+            random_ds['member'] = i
             mlist.append(random_ds)
-        ds_m = xr.concat(mlist,'member')
+        ds_m = xr.concat(mlist, 'member')
         ds_m.expand_dims('ensemble')
-        ds_m['ensemble']=j
+        ds_m['ensemble'] = j
         elist.append(ds_m)
-    ds_e = xr.concat(elist,'ensemble')
+    ds_e = xr.concat(elist, 'ensemble')
     return ds_e
 
-def PM_ACC_sig(control,ds,sig=95,it=20):
+
+def PM_ACC_sig(control, ds, sig=95, it=20):
     """
     Returns sig-th percentile of pseudo ensemble generated from control.
 
@@ -700,20 +717,23 @@ def PM_ACC_sig(control,ds,sig=95,it=20):
     print(sig,'% significance level at',et.prediction.PM_ACC_sig(control,ds,sig=sig))
     """
     from tqdm import trange
-    x=[]
+    x = []
     for i in trange(it):
-        ds_e = pseudo_ens(control,ds)
-        x.append(PM_ACC(ds_e,control).values)
-    ACC_sig_level =np.percentile(x,q=sig)
+        ds_e = pseudo_ens(control, ds)
+        x.append(PM_ACC(ds_e, control).values)
+    ACC_sig_level = np.percentile(x, q=sig)
     del x
     return ACC_sig_level
 
-### Persistence
+# Persistence
 
 # damped persistence forecast based on lag1 autocorrelation
+
+
 def df_autocorr(df, lag=1, axis=0):
     """Compute full-sample column-wise autocorrelation for a pandas DataFrame."""
     return df.apply(lambda col: col.autocorr(lag), axis=axis)
+
 
 def calc_tau(alpha):
     """
@@ -738,10 +758,10 @@ def calc_tau(alpha):
     alpha = .8
     tau = et.prediction.calc_tau(alpha)
     """
-    return (1+alpha)/(1-alpha)
+    return (1 + alpha) / (1 - alpha)
 
 
-def generate_predictability_persistence(s,kind='PPP',percentile=True,length=20):
+def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
     """
     Calculates the PPP (or NEV) damped persistence mean and range. Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be indicated as +- std or 5-95-percentile.
 
@@ -780,40 +800,40 @@ def generate_predictability_persistence(s,kind='PPP',percentile=True,length=20):
     plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,color='gray',alpha=.3,label='persistence range')
     plt.axhline(y=0,color='black')
     """
-    #bootstrapping persistence
-    it = 50 # iterations
-    l = 100 # length of chunks of control run to take lag1 autocorr
+    # bootstrapping persistence
+    it = 50  # iterations
+    l = 100  # length of chunks of control run to take lag1 autocorr
     data = np.zeros(it)
     from random import randint
     for i in range(it):
-        #np.random.shuffle(control)
-        ran = randint(1900,2200-l)
-        data[i] = s.loc[str(ran):str(ran+l)].autocorr()
+        # np.random.shuffle(control)
+        ran = randint(1900, 2200 - l)
+        data[i] = s.loc[str(ran):str(ran + l)].autocorr()
 
     alpha_0 = np.mean(data)
-    alpha_minus = np.mean(data)-np.std(data)
-    alpha_plus = np.mean(data)+np.std(data)
+    alpha_minus = np.mean(data) - np.std(data)
+    alpha_plus = np.mean(data) + np.std(data)
     if percentile:
-        alpha_minus = np.percentile(data,5)
-        alpha_plus = np.percentile(data,95)
+        alpha_minus = np.percentile(data, 5)
+        alpha_plus = np.percentile(data, 95)
 
-    #persistence function
-    def generate_PPP_persistence(alpha,t):
-        return np.exp(-2*alpha*t) #Griffies 1997
-    t = np.arange(0,length+1,1.)
-    PPP_persistence_0 = generate_PPP_persistence(alpha_0,t)
-    PPP_persistence_minus = generate_PPP_persistence(alpha_plus,t)
-    PPP_persistence_plus = generate_PPP_persistence(alpha_minus,t)
+    # persistence function
+    def generate_PPP_persistence(alpha, t):
+        return np.exp(-2 * alpha * t)  # Griffies 1997
+    t = np.arange(0, length + 1, 1.)
+    PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
+    PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
+    PPP_persistence_plus = generate_PPP_persistence(alpha_minus, t)
 
-    if kind in ['nvar','NEV']:
-        PPP_persistence_0 = 1-PPP_persistence_0
-        PPP_persistence_minus = 1-PPP_persistence_minus
-        PPP_persistence_plus = 1-PPP_persistence_plus
+    if kind in ['nvar', 'NEV']:
+        PPP_persistence_0 = 1 - PPP_persistence_0
+        PPP_persistence_minus = 1 - PPP_persistence_minus
+        PPP_persistence_plus = 1 - PPP_persistence_plus
 
     return PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus
 
 
-def generate_damped_persistence_forecast(control,startyear,length=20):
+def generate_damped_persistence_forecast(control, startyear, length=20):
     """
     Reference
     ---------
@@ -846,15 +866,15 @@ def generate_damped_persistence_forecast(control,startyear,length=20):
     plt.legend()
     """
 
-    anom=(control.loc[startyear]-control.mean())
-    t=np.arange(0.,length+1,1)
+    anom = (control.loc[startyear] - control.mean())
+    t = np.arange(0., length + 1, 1)
     alpha = control.autocorr()
-    exp=anom*np.exp(-alpha*t) # exp. decay towards mean
-    ar1=exp+control.mean()
-    ar50=0.7*control.std()*np.sqrt(1-np.exp(-2*alpha*t))
-    ar90=1.7*control.std()*np.sqrt(1-np.exp(-2*alpha*t))
+    exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
+    ar1 = exp + control.mean()
+    ar50 = 0.7 * control.std() * np.sqrt(1 - np.exp(-2 * alpha * t))
+    ar90 = 1.7 * control.std() * np.sqrt(1 - np.exp(-2 * alpha * t))
 
-    index = control.loc[startyear:startyear+length].index
+    index = control.loc[startyear:startyear + length].index
     ar1 = pd.Series(ar1, index=index)
     ar50 = pd.Series(ar50, index=index)
     ar90 = pd.Series(ar90, index=index)

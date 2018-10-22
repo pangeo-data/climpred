@@ -30,16 +30,16 @@ Structure
         - ensemble mean
         - control
         - each member
-    - normalized ensemble variance (NEV) (Griffies)
+    - normalized ensemble variance (NEV) (Griffies) (missing)
     - prognostic potential predictability (PPP) (Pohlmann 2004)
     - PM anomlay correlation coefficient (ACC) (Bushuk 2018)
-    - PM mean square skill score (MSSS) (Bushuk 2018)
+    - PM mean square skill score (MSSS)
     - unbiased ACC (Bushuk 2018)
     - root mean square error (RMSE) (=MSE^0.5) (missing)
     - Diagnostic Potential Predictability (DPP) (Boer 2004, Resplandy 2015/Seferian 2018)
-    - predictability horizon: (missing)
-        - linear breakpoint fit (Seferian 2018)
-        - f-test significant test (Pohlmann 2004, Griffies 1997)
+    - predictability horizon:
+        - linear breakpoint fit (Seferian 2018) (missing)
+        - f-test significant test (Pohlmann 2004, Griffies 1997) (missing)
         - bootstrapping limit
     - root mean square error (RMSE) (=MSE^0.5) (missing)
     - normalized root mean square error (NRMSE) (=1-MSE^0.5/RMSE_control) (missing)
@@ -102,10 +102,10 @@ Data variables:
 ...
 
 This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model) netcdf output.
-Time dimensions is called Years and is integer. (Original data was year 3000-3300, now 3600. Had problems with datetime[ns] limits and xr.to_netcdf()!)
+Time dimensions is called Years and is integer. (Original data was year
+3000-3300, now 3600. Had problems with datetime[ns] limits and xr.to_netcdf()!)
 
 """
-
 
 # general imports
 import xarray as xr
@@ -113,11 +113,8 @@ import pandas as pd
 import numpy as np
 import os
 from six.moves.urllib.request import urlopen, urlretrieve
-from six.moves.http_client import HTTPException
 
 # standard setup for load dataset and examples
-print("ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')")
-print("control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')")
 varname = 'tos'
 period = 'ym'
 area = 'North_Atlantic'
@@ -159,8 +156,8 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     ----------
     name : str
         Name of the dataset (`ds`.nc on
-        https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction).  You can obtain list of
-        available datasets using :func:`get_dataset_names`
+        https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction).
+        You can obtain list of available datasets using :func:`get_dataset_names`
     cache : boolean, optional
         If True, then cache data locally and use the cache on subsequent calls
     data_home : string, optional
@@ -188,7 +185,9 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 
 def ds2df(ds, area=area, varname=varname, period=period):
     """
-    Take a dataset, selects wanted variable, area, period and transforms it into a dataframe
+    Take a dataset, selects wanted variable, area, period and transforms it
+    into a dataframe.
+
     Parameters
     ----------
     ds : Dataset
@@ -231,7 +230,8 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     Returns
     -------
     c : DataArray
-        Output data as ds, but with additional dimension c and all same time coordinates
+        Output data as ds, but with additional dimension c and
+        all same time coordinates
 
     Example
     -------
@@ -273,8 +273,6 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
         c = xr.concat([c, c2], 'c')
     return c
 
-# DDP_boer_b
-
 
 def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     """
@@ -285,9 +283,16 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
 
     References
     ----------
-    - Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004): 29–44. https://doi.org/10/csjjbh.
-    - Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and O2 Fluxes: What Can We Learn from Centuries-Long Climate Models Simulations?” Journal of Geophysical Research: Oceans 120, no. 1 (January 2015): 384–404. https://doi.org/10/f63c3h.
-    - Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
+    - Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
+        Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004):
+        29–44. https://doi.org/10/csjjbh.
+    - Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and
+        O2 Fluxes: What Can We Learn from Centuries-Long Climate Models
+        Simulations?” Journal of Geophysical Research: Oceans 120, no. 1
+        (January 2015): 384–404. https://doi.org/10/f63c3h.
+    - Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the
+        Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical
+        Research Letters, March 15, 2018. https://doi.org/10/gdb424.
 
     Parameters
     ----------
@@ -359,7 +364,8 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
 # 3 different ways of calculation ensemble spread:
 def ens_var_against_mean(ds):
     """
-    Calculated the ensemble spread (ensemble variance (sqaured difference between each ensemble member and the ensemble mean) as a function of time).
+    Calculated the ensemble spread (ensemble variance (sqaured difference
+    between each ensemble member and the ensemble mean) as a function of time).
     Parameters
     ----------
     ds : DataArray with year dimension (optional spatial coordinates)
@@ -382,7 +388,8 @@ def ens_var_against_mean(ds):
 
 def ens_var_against_control(ds):
     """
-    See ens_var_against_mean(ds). Only difference is that now distance is evaluated against member=0 which is the control run.
+    See ens_var_against_mean(ds). Only difference is that now distance is
+    evaluated against member=0 which is the control run.
     """
     var = ds.copy()
     var = ((ds - ds.sel(member=0))**2).sum('member') / (ds.member.size - 2)
@@ -390,7 +397,9 @@ def ens_var_against_control(ds):
 
 
 def ens_var_against_every(ds):
-    """    See ens_var_against_mean(ds). Only difference is that now distance is evaluated against each ensemble member and then averaged.
+    """
+    See ens_var_against_mean(ds). Only difference is that now distance
+    is evaluated against each ensemble member and then averaged.
     """
     var = ds.copy()
     for i in range(0, ds.member.size):
@@ -460,8 +469,13 @@ def PPP_from_nvar(nvar):
 
     References
     ----------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004): 4463–72. https://doi.org/10/d2qf62.
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
 
     Parameters
     ----------
@@ -486,9 +500,10 @@ def PPP_from_nvar(nvar):
 
 # Perfect-model (PM) predictability scores from Bushuk 2018
 
-def PM_MSSS(ds, control):
+def PM_MSSS(ds, control, kind='', running=True, m=20):
     """
-    Calculated the perfect-model (PM) mean square skill score (MSSS) as in Bushuk et al. 2018. This is the same as PPP from Pohlmann et al. (2004).
+    Calculated the perfect-model (PM) mean square skill score (MSSS) as
+    in Pohlmann et al. (2004). It is identical to PPP.
 
     Formula
     -------
@@ -496,15 +511,23 @@ def PM_MSSS(ds, control):
 
     References
     ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
 
     Parameters
     ----------
-    (TODO: Test whether this works for 3D data)
-    msss : DataArray with year dimension (optional spatial coordinates)
+    ds : DataArray with year dimension (optional spatial coordinates)
         Input ensemble data
     control : DataArray with year dimension (optional spatial coordinates)
         Input control run data
+    kind : string
+        how to calculate ensemble variance: against ["mean","control","every"]
+    running : boolean
+        if true against running m-yr variance
+    m : int
+        see running
     Returns
     -------
     msss : DataArray
@@ -515,14 +538,85 @@ def PM_MSSS(ds, control):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control)
+    pm_msss = PM_MSSS(ds,control,kind='control',running=True,m=30)
     """
+    if kind == 'mean':
+        ens_var = ens_var_against_mean(ds)
+        fac = 1
+    elif kind == 'control':
+        ens_var = ens_var_against_control(ds)
+        fac = 2
+    elif kind == 'every':
+        ens_var = ens_var_against_every(ds)
+        fac = 2
+    else:
+        raise ValueError('Select kind from ["mean","control","every"].')
+    nens_var_against_mean = normalize_var(
+        ens_var, control, running=running, m=m, fac=fac)
+    msss = PPP_from_nvar(nens_var_against_mean)
+    return msss
+
+
+def PM_NRMSE(ds, control, kind='', running=True, m=20):
+    """
+    Calculated the perfect-model (PM) normalised root mean square error as in
+    Hawkins et al. (2016) or NRMSE+1 in Bushuk et al. (2018).
+
+    Formula
+    -------
+    NRMSE = 1 - RMSE_ens/std_c
+
+    References
+    ----------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+        Prediction: Potential versus Operational Seasonal Forecast Skill.”
+        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+        Journal of the Royal Meteorological Society 142, no. 695
+        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+
+    Parameters
+    ----------
+    ds : DataArray with year dimension (optional spatial coordinates)
+        Input ensemble data
+    control : DataArray with year dimension (optional spatial coordinates)
+        Input control run data
+    kind : string
+        how to calculate ensemble variance: against ["mean","control","every"]
+    running : boolean
+        if true against running m-yr variance
+    m : int
+        see running
+    Returns
+    -------
+    nrmse : DataArray
+        Output data
+
+    Example
+    -------
     import esmtools as et
-    ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(
-        ens_var_against_mean, control)
-    PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
-    return PPP_mean
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
+    pm_nrmse = et.prediction.PM_NRMSE(ds,control,kind='control',running=True,m=30)
+    """
+    if kind == 'mean':
+        ens_var = ens_var_against_mean(ds)
+        fac = 1
+    elif kind == 'control':
+        ens_var = ens_var_against_control(ds)
+        fac = 2
+    elif kind == 'every':
+        ens_var = ens_var_against_every(ds)
+        fac = 2
+    else:
+        raise ValueError('Select kind from ["mean","control","every"].')
+    nens_var_against_mean = normalize_var(
+        ens_var, control, running=running, m=m, fac=fac)
+    nrmse = PPP_from_nvar(nens_var_against_mean**.5)
+    return nrmse
 
 
 def PM_ACC_U(msss):
@@ -531,7 +625,7 @@ def PM_ACC_U(msss):
 
     Formula
     -------
-    ACC_{U} = sqrt{MSSS} = sqrt{PPP}
+    ACC_{U} = sqrt{MSSS} = sqrt{PPP} or sqrt{NRMSE}
 
     References
     ----------
@@ -552,13 +646,13 @@ def PM_ACC_U(msss):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control)
+    pm_msss = PM_MSSS(ds,control,kind='mean')
     pm_acc_u = PM_ACC_U(pm_msss)
     """
     return msss ** .5
 
 
-def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period, ens=False, control_member=0, m=False, against_mean=False):
+def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period, ens=False, control_member=0, m=False, against_mean=False, against_every=False):
     """
     Calculates the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
     Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
@@ -622,12 +716,21 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
                 1, 0], axis=1).sortlevel(axis=1).T
             obs = obs.T[ens].T
 
-        if against_mean:  # correlation against ensemble mean
+        member = sv.index.get_level_values(level=1).unique().values
+        ensemble = sv.index.get_level_values(level=0).unique().values
+
+        if against_mean:  # correlation control member against ensemble mean
             sv = sv.mean(axis=0, level=0)
             return sv.corrwith(obs)
-        else:  # correlation against each member
-            member = sv.index.get_level_values(level=1).unique().values
-            ensemble = sv.index.get_level_values(level=0).unique().values
+        elif against_every:  # correlation of every member against every member
+            s = []
+            for i in range(len(member)):
+                s.append(PM_ACC(ds, control, anomaly=True, varname=varname,
+                                area=area, period=period, ens=False, control_member=i, m=False,
+                                against_mean=False))
+            return pd.concat(s, axis=1).mean(axis=1)
+
+        else:  # correlation each member against control member
             svobs = sv.copy()
             for i in member:
                 for t in ensemble:  # create observations vector
@@ -689,9 +792,9 @@ def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, 
     return ds_e
 
 
-def PM_ACC_sig(control, ds, sig=95, it=20):
+def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
     """
-    Returns sig-th percentile of pseudo ensemble generated from control.
+    Returns sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
     Parameters
     ----------
@@ -714,16 +817,59 @@ def PM_ACC_sig(control, ds, sig=95, it=20):
     varname='tos'
     period='ym'
     area='North_Atlantic'
-    print(sig,'% significance level at',et.prediction.PM_ACC_sig(control,ds,sig=sig))
+    print(sig,'% significance level at',et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
     """
     from tqdm import trange
     x = []
     for i in trange(it):
         ds_e = pseudo_ens(control, ds)
-        x.append(PM_ACC(ds_e, control).values)
-    ACC_sig_level = np.percentile(x, q=sig)
+
+        if func == 'ACC_control':
+            x.append(PM_ACC(ds_e, control, against_mean=False).values)
+
+        elif func == 'ACC_mean':
+            x.append(PM_ACC(ds_e, control, against_mean=True).values)
+
+        elif func == 'ACC_every':
+            x.append(PM_ACC(ds_e, control, against_every=True).values)
+
+        elif func == 'ACC_U_control':
+            ps_ACC_U = PM_ACC_U(PM_NRMSE(ds_e, control, kind='control'))
+            x.append(ds2df(ps_ACC_U).values)
+
+        elif func == 'ACC_U_mean':
+            ps_ACC_U = PM_ACC_U(PM_NRMSE(ds_e, control, kind='mean'))
+            x.append(ds2df(ps_ACC_U).values)
+
+        elif func == 'PPP_mean':
+            ps_PPP = PM_MSSS(ds_e, control, kind='mean', **kwargs)
+            x.append(ds2df(ps_PPP).values)
+
+        elif func == 'PPP_control':
+            ps_PPP = PM_MSSS(ds_e, control, kind='control', **kwargs)
+            x.append(ds2df(ps_PPP).values)
+
+        elif func == 'NRMSE_mean':
+            ps_PPP = PM_NRMSE(ds_e, control, kind='mean', **kwargs)
+            x.append(ds2df(ps_PPP).values)
+
+        elif func == 'NRMSE_control':
+            ps_PPP = PM_NRMSE(ds_e, control, kind='control', **kwargs)
+            x.append(ds2df(ps_PPP).values)
+
+        else:
+            raise ValueError('please select proper func string')
+
+    sig_level = np.nanpercentile(x, q=sig)
     del x
-    return ACC_sig_level
+    return sig_level
+
+
+def get_predictability_horizon(s, lim):
+    first_index = s.index[0]
+    ph = (s > lim).idxmin() - first_index - 1
+    return ph
+
 
 # Persistence
 

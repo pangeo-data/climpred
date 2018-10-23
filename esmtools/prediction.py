@@ -652,7 +652,8 @@ def PM_ACC_U(msss):
     return msss ** .5
 
 
-def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period, ens=False, control_member=0, m=False, against_mean=False, against_every=False):
+def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
+        ens=False, control_member=0, m=False, against='mean'):
     """
     Calculates the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
     Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
@@ -695,10 +696,11 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
     # if (ens != False) and len(ens)==1: # if single ens, somehow gives near 0 ACC
     #    return pd.Series([np.nan])
     else:
-        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T.reorder_levels(
-            [1, 0], axis=1).drop(columns=control_member).reorder_levels([1, 0], axis=1).T
-        obs = ds.sel(area=area, period=period).to_dataframe()[
-            varname].unstack().T.reorder_levels([1, 0], axis=1)[control_member].T
+        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack()
+        obs = ds.sel(area=area, period=period).to_dataframe()[varname].unstack()
+        if not against in ['every','mean_every']:
+            sv = sv.T.reorder_levels([1, 0], axis=1).drop(columns=control_member).reorder_levels([1, 0], axis=1).T
+            obs = obs.T.reorder_levels([1, 0], axis=1)[control_member].T
 
         # subselections
         if ens and not m:
@@ -716,27 +718,42 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
                 1, 0], axis=1).sortlevel(axis=1).T
             obs = obs.T[ens].T
 
-        member = sv.index.get_level_values(level=1).unique().values
-        ensemble = sv.index.get_level_values(level=0).unique().values
-
-        if against_mean:  # correlation control member against ensemble mean
+        # how to compute ACC: compare forecast against ...
+        if against == 'mean':  # correlation control member against ensemble mean
             sv = sv.mean(axis=0, level=0)
             return sv.corrwith(obs)
-        elif against_every:  # correlation of every member against every member
-            s = []
-            for i in range(len(member)):
-                s.append(PM_ACC(ds, control, anomaly=True, varname=varname,
-                                area=area, period=period, ens=False, control_member=i, m=False,
-                                against_mean=False))
-            return pd.concat(s, axis=1).mean(axis=1)
-
-        else:  # correlation each member against control member
-            svobs = sv.copy()
+        elif against == 'every':  # correlation of every member against every member
+            obsl=[] # create larger supervector with all members being once truth
+            svl=[]
+            member = list(sv.index.get_level_values(level=1).unique().values)
             for i in member:
-                for t in ensemble:  # create observations vector
-                    svobs.T[t, i] = obs.T[t]
-            ACC = sv.corrwith(svobs)
+                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
+                members_left = list(sv.index.get_level_values(level=1).unique().values)
+                members_left.remove(i)
+                obsl.append(pd.concat([d]*len(members_left),keys=members_left))
+                svl.append(sv.T.reorder_levels([1, 0], axis=1).drop(columns=i).reorder_levels([1, 0], axis=1).T)
+            SV = pd.concat(svl).sort_index()
+            OBS = pd.concat(obsl).reorder_levels([1,0],axis=0).sort_index()
+            ACC = SV.corrwith(OBS)
             return ACC
+        elif against == 'mean_every': # ensemble mean against ACC_every
+            obsl = [] # create larger supervector with all members being once truth
+            svl=[]
+            member = list(sv.index.get_level_values(level=1).unique().values)
+            for i in member:
+                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
+                obsl.append(d)
+                svll = sv.T.reorder_levels([1, 0], axis=1).drop(columns=i).reorder_levels([1, 0], axis=1).T
+                svl.append(svll.mean(axis=0, level=0))
+            SV = pd.concat(svl)
+            OBS = pd.concat(obsl)
+            ACC = SV.corrwith(OBS)
+            return ACC
+        elif against == 'control':  # correlation each member against control member
+            ACC = sv.corrwith(obs)
+            return ACC
+        else:
+            raise ValueError('Specify ["mean","every","control"]')
 
 # T test Bushuk
 
@@ -825,13 +842,16 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
         ds_e = pseudo_ens(control, ds)
 
         if func == 'ACC_control':
-            x.append(PM_ACC(ds_e, control, against_mean=False).values)
+            x.append(PM_ACC(ds_e, control, against='control').values)
 
         elif func == 'ACC_mean':
-            x.append(PM_ACC(ds_e, control, against_mean=True).values)
+            x.append(PM_ACC(ds_e, control, against='mean').values)
 
         elif func == 'ACC_every':
-            x.append(PM_ACC(ds_e, control, against_every=True).values)
+            x.append(PM_ACC(ds_e, control, against='every').values)
+
+        elif func == 'ACC_mean_every':
+            x.append(PM_ACC(ds_e, control, against='mean_every').values)
 
         elif func == 'ACC_U_control':
             ps_ACC_U = PM_ACC_U(PM_NRMSE(ds_e, control, kind='control'))

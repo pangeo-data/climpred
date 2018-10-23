@@ -107,11 +107,11 @@ Time dimensions is called Years and is integer. (Original data was year
 
 """
 
-# general imports
-import xarray as xr
-import pandas as pd
-import numpy as np
 import os
+
+import numpy as np
+import pandas as pd
+import xarray as xr
 from six.moves.urllib.request import urlopen, urlretrieve
 
 # standard setup for load dataset and examples
@@ -121,10 +121,13 @@ area = 'North_Atlantic'
 
 
 def get_data_home(data_home=None):
-    """Return the path of the data directory.
+    """
+    Return the path of the data directory.
+
     This is used by the ``load_dataset`` function.
     If the ``data_home`` argument is not specified, the default location
     is ``~/seaborn-data``.
+
     """
     if data_home is None:
         data_home = os.environ.get('HOME', '~')
@@ -151,7 +154,9 @@ def get_dataset_names():
 
 
 def load_dataset(name, cache=True, data_home=None, **kws):
-    """Load a datasets ds and control from the online repository (requires internet).
+    """
+    Load a datasets ds and control from the online repository (requires internet).
+
     Parameters
     ----------
     name : str
@@ -164,6 +169,7 @@ def load_dataset(name, cache=True, data_home=None, **kws):
         The directory in which to cache data. By default, uses ~/.
     kws : dict, optional
         Passed to pandas.read_csv
+
     """
     path = (
         "https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
@@ -185,13 +191,13 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 
 def ds2df(ds, area=area, varname=varname, period=period):
     """
-    Take a dataset, selects wanted variable, area, period and transforms it
-    into a dataframe.
+    Take a dataset, selects wanted variable, area, period and transforms it into a dataframe.
 
     Parameters
     ----------
     ds : Dataset
         Input data
+
     Returns
     -------
     c : DataFrame
@@ -204,6 +210,7 @@ def ds2df(ds, area=area, varname=varname, period=period):
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     PM_MSSS = et.prediction.PM_MSSS(ds,control)
     et.prediction.ds2df(PM_MSSS).plot()
+
     """
     df = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T
     return df
@@ -213,7 +220,8 @@ def ds2df(ds, area=area, varname=varname, period=period):
 
 def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     """
-    Separates data into chunks and reshapes chunks in a c dimension.
+    Separate data into chunks and reshapes chunks in a c dimension.
+
     Specify either the number chunks or the length of chunks.
     Needed for DPP.
 
@@ -227,6 +235,7 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
         Length of chunks
     output : boolean (optional)
         Debugging prints
+
     Returns
     -------
     c : DataArray
@@ -240,8 +249,8 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     control_chunked_into_30yr_chunks = et.prediction.chunking(control,chunk_length=30)
     control_chunked_into_30_chunks = et.prediction.chunking(control,number_chunks=30)
-    """
 
+    """
     if number_chunks and not chunk_length:
         chunk_length = np.floor(ds.year.size / number_chunks)
         cmin = int(ds.year.min())
@@ -276,8 +285,8 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
 
 def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     """
-    Calculate Diagnostic Potential Predictability (DPP) as potentially predictable
-    variance fraction (ppvf) in Boer 2004.
+    Calculate Diagnostic Potential Predictability (DPP) as potentially predictable variance fraction (ppvf) in Boer 2004.
+
     Note: Different way of calculating it than in Seferian 2018 or Resplandy 2015,
     but quite similar results.
 
@@ -307,6 +316,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
         decide whether to return also intermediate results
     output : boolean (optional)
         Debugging prints
+
     Returns
     -------
     DPP : DataArray as ds without time/year dimension
@@ -317,8 +327,8 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ds_DPPm10 = et.prediction.DPP(ds,m=10,chunk=True)
-    """
 
+    """
     if ds.size > 5000:  # dirty way of figuring out which data
         data3D = True
         print('3D data')
@@ -364,12 +374,13 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
 # 3 different ways of calculation ensemble spread:
 def ens_var_against_mean(ds):
     """
-    Calculated the ensemble spread (ensemble variance (sqaured difference
-    between each ensemble member and the ensemble mean) as a function of time).
+    Calculate the ensemble spread (ensemble variance (squared difference between each ensemble member and the ensemble mean) as a function of time).
+
     Parameters
     ----------
     ds : DataArray with year dimension (optional spatial coordinates)
         Input data
+
     Returns
     -------
     c : DataArray as ds reduced by member dimension
@@ -382,13 +393,16 @@ def ens_var_against_mean(ds):
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
     # display as dataframe
     ens_var_against_mean.to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
+
     """
     return ds.var('member')
 
 
 def ens_var_against_control(ds):
     """
-    See ens_var_against_mean(ds). Only difference is that now distance is
+    See ens_var_against_mean(ds).
+
+    Only difference is that now distance is
     evaluated against member=0 which is the control run.
     """
     var = ds.copy()
@@ -398,21 +412,24 @@ def ens_var_against_control(ds):
 
 def ens_var_against_every(ds):
     """
-    See ens_var_against_mean(ds). Only difference is that now distance
+    See ens_var_against_mean(ds).
+
+    Only difference is that now distance
     is evaluated against each ensemble member and then averaged.
     """
     var = ds.copy()
     for i in range(0, ds.member.size):
         var_a = ((ds - ds.sel(member=i))**2).sum(dim='member') / ds.member.size
         var = xr.concat([var, var_a], 'member')
-    var = var.sel(member=slice(ds.member.size, 2
-                               * ds.member.size)).mean('member')
+    var = var.sel(member=slice(ds.member.size, 2 *
+                               ds.member.size)).mean('member')
     return var
 
 
 def normalize_var(var, control, fac=1, running=True, m=20):
     """
-    Normalizes the ensemble spread with the temporal spread of the control run.
+    Normalize the ensemble spread with the temporal spread of the control run.
+
     Note 1: Ensemble spread against ensemble mean is half the ensemble spread any member.
     Note 2: Which variance should be normalized against?
             running=False evaluates against the variance of the whole temporal domain whereas
@@ -427,6 +444,7 @@ def normalize_var(var, control, fac=1, running=True, m=20):
     running : boolean
     m : int
         if running, then this marks the time window in years for the variance calc
+
     Returns
     -------
     c : DataArray as ds
@@ -451,6 +469,7 @@ def normalize_var(var, control, fac=1, running=True, m=20):
             return (var.stack(level=0).stack(level=0).stack(level=1).to_xarray()/control_var/fac).to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
     var_mean = et.prediction.ens_var_against_mean(ds)..to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
     nvar_mean = normalize_var(var_mean)
+
     """
     if not running:
         control_var = control.var('year')  # .mean('year')
@@ -464,8 +483,7 @@ def normalize_var(var, control, fac=1, running=True, m=20):
 
 def PPP_from_nvar(nvar):
     """
-    Calculated Prognostic Potential Predictability (PPP) as in Pohlmann 2004
-    or Griffies 1997.
+    Calculate Prognostic Potential Predictability (PPP) as in Pohlmann 2004 or Griffies 1997.
 
     References
     ----------
@@ -481,6 +499,7 @@ def PPP_from_nvar(nvar):
     ----------
     ds : DataArray with year dimension (optional spatial coordinates)
         Input data
+
     Returns
     -------
     c : DataArray
@@ -494,6 +513,7 @@ def PPP_from_nvar(nvar):
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
     nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
     PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
+
     """
     return 1 - nvar
 
@@ -502,8 +522,7 @@ def PPP_from_nvar(nvar):
 
 def PM_MSSS(ds, control, kind='', running=True, m=20):
     """
-    Calculated the perfect-model (PM) mean square skill score (MSSS) as
-    in Pohlmann et al. (2004). It is identical to PPP.
+    Calculate the perfect-model (PM) mean square skill score (MSSS). It is identical to Prognostic Potential Predictability (PPP) in Pohlmann et al. (2004).
 
     Formula
     -------
@@ -528,6 +547,7 @@ def PM_MSSS(ds, control, kind='', running=True, m=20):
         if true against running m-yr variance
     m : int
         see running
+
     Returns
     -------
     msss : DataArray
@@ -539,6 +559,7 @@ def PM_MSSS(ds, control, kind='', running=True, m=20):
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     pm_msss = PM_MSSS(ds,control,kind='control',running=True,m=30)
+
     """
     if kind == 'mean':
         ens_var = ens_var_against_mean(ds)
@@ -559,8 +580,7 @@ def PM_MSSS(ds, control, kind='', running=True, m=20):
 
 def PM_NRMSE(ds, control, kind='', running=True, m=20):
     """
-    Calculated the perfect-model (PM) normalised root mean square error as in
-    Hawkins et al. (2016) or NRMSE+1 in Bushuk et al. (2018).
+    Calculate the perfect-model (PM) normalised root mean square error as in Hawkins et al. (2016) or NRMSE+1 in Bushuk et al. (2018).
 
     Formula
     -------
@@ -590,6 +610,7 @@ def PM_NRMSE(ds, control, kind='', running=True, m=20):
         if true against running m-yr variance
     m : int
         see running
+
     Returns
     -------
     nrmse : DataArray
@@ -601,6 +622,7 @@ def PM_NRMSE(ds, control, kind='', running=True, m=20):
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     pm_nrmse = et.prediction.PM_NRMSE(ds,control,kind='control',running=True,m=30)
+
     """
     if kind == 'mean':
         ens_var = ens_var_against_mean(ds)
@@ -621,7 +643,7 @@ def PM_NRMSE(ds, control, kind='', running=True, m=20):
 
 def PM_ACC_U(msss):
     """
-    Calculated the perfect-model (PM) unbiased anomaly correlation coefficient as in Bushuk et al. 2018.
+    Calculate the perfect-model (PM) unbiased anomaly correlation coefficient as in Bushuk et al. 2018.
 
     Formula
     -------
@@ -636,6 +658,7 @@ def PM_ACC_U(msss):
     (TODO: Test whether this works for 3D data)
     msss : DataArray with year dimension (optional spatial coordinates)
         Input msss data
+
     Returns
     -------
     ACC_U : DataArray
@@ -648,14 +671,18 @@ def PM_ACC_U(msss):
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     pm_msss = PM_MSSS(ds,control,kind='mean')
     pm_acc_u = PM_ACC_U(pm_msss)
+
     """
     return msss ** .5
 
 
-def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period, ens=False, control_member=0, m=False, against_mean=False, against_every=False):
+def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
+           ens=False, control_member=0, m=False, against='mean'):
     """
-    Calculates the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
-    Create a supervectors (dims=(N*M,length)) for ensemble and observations (each member at the turn becomes obs). Returns M ACC timeseries.
+    Calculate the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
+
+    Create a supervectors (dims=(N*M,length)) for ensemble and observations
+    (each member at the turn becomes obs). Returns M ACC timeseries.
 
     Formula
     -------
@@ -672,6 +699,7 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
         Input ensemble data
     anomaly: bool
         create anomaly
+
     Returns
     -------
     ACC : pd.DataArray
@@ -687,6 +715,7 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
     area='North_Atlantic'
     pm_acc = et.prediction.PM_ACC(ds.sel(area=area,period=period),control)
     pm_acc.plot()
+
     """
     if anomaly:
         ds = ds - control.mean('year')
@@ -695,10 +724,13 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
     # if (ens != False) and len(ens)==1: # if single ens, somehow gives near 0 ACC
     #    return pd.Series([np.nan])
     else:
-        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T.reorder_levels(
-            [1, 0], axis=1).drop(columns=control_member).reorder_levels([1, 0], axis=1).T
+        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack()
         obs = ds.sel(area=area, period=period).to_dataframe()[
-            varname].unstack().T.reorder_levels([1, 0], axis=1)[control_member].T
+            varname].unstack()
+        if against not in ['every', 'mean_every']:
+            sv = sv.T.reorder_levels([1, 0], axis=1).drop(
+                columns=control_member).reorder_levels([1, 0], axis=1).T
+            obs = obs.T.reorder_levels([1, 0], axis=1)[control_member].T
 
         # subselections
         if ens and not m:
@@ -716,35 +748,57 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
                 1, 0], axis=1).sortlevel(axis=1).T
             obs = obs.T[ens].T
 
-        member = sv.index.get_level_values(level=1).unique().values
-        ensemble = sv.index.get_level_values(level=0).unique().values
-
-        if against_mean:  # correlation control member against ensemble mean
+        # how to compute ACC: compare forecast against ...
+        if against == 'mean':  # correlation control member against ensemble mean
             sv = sv.mean(axis=0, level=0)
             return sv.corrwith(obs)
-        elif against_every:  # correlation of every member against every member
-            s = []
-            for i in range(len(member)):
-                s.append(PM_ACC(ds, control, anomaly=True, varname=varname,
-                                area=area, period=period, ens=False, control_member=i, m=False,
-                                against_mean=False))
-            return pd.concat(s, axis=1).mean(axis=1)
-
-        else:  # correlation each member against control member
-            svobs = sv.copy()
+        elif against == 'every':  # correlation of every member against every member
+            obsl = []  # create larger supervector with all members being once truth
+            svl = []
+            member = list(sv.index.get_level_values(level=1).unique().values)
             for i in member:
-                for t in ensemble:  # create observations vector
-                    svobs.T[t, i] = obs.T[t]
-            ACC = sv.corrwith(svobs)
+                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
+                members_left = list(
+                    sv.index.get_level_values(level=1).unique().values)
+                members_left.remove(i)
+                obsl.append(
+                    pd.concat([d] * len(members_left), keys=members_left))
+                svl.append(sv.T.reorder_levels([1, 0], axis=1).drop(
+                    columns=i).reorder_levels([1, 0], axis=1).T)
+            SV = pd.concat(svl).sort_index()
+            OBS = pd.concat(obsl).reorder_levels([1, 0], axis=0).sort_index()
+            ACC = SV.corrwith(OBS)
             return ACC
+        elif against == 'mean_every':  # ensemble mean against ACC_every
+            obsl = []  # create larger supervector with all members being once truth
+            svl = []
+            member = list(sv.index.get_level_values(level=1).unique().values)
+            for i in member:
+                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
+                obsl.append(d)
+                svll = sv.T.reorder_levels([1, 0], axis=1).drop(
+                    columns=i).reorder_levels([1, 0], axis=1).T
+                svl.append(svll.mean(axis=0, level=0))
+            SV = pd.concat(svl)
+            OBS = pd.concat(obsl)
+            ACC = SV.corrwith(OBS)
+            return ACC
+        elif against == 'control':  # correlation each member against control member
+            ACC = sv.corrwith(obs)
+            return ACC
+        else:
+            raise ValueError('Specify ["mean","every","control"]')
 
 # T test Bushuk
 
 
 def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, nm=10):
     """
-    Create a pseudo-ensemble to apply PM_ACC on for bootstrapping a significance level
-    Takes randomly 20yr segments from control and rearranges them into ensemble and member dimensions
+    Create a pseudo-ensemble from control run.
+
+    Needed for bootstrapping confidence intervals of a metric.
+    Takes randomly 20yr segments from control and rearranges them into ensemble
+    and member dimensions.
 
     Parameters
     ----------
@@ -768,6 +822,7 @@ def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, 
     period='ym'
     area='North_Atlantic'
     ds_e = et.prediction.pseudo_ens(control,ds)
+
     """
     ds_c = control.copy()
     length = ds.year.size
@@ -794,7 +849,7 @@ def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, 
 
 def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
     """
-    Returns sig-th percentile of function to be choosen from pseudo ensemble generated from control.
+    Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
     Parameters
     ----------
@@ -804,6 +859,7 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
         Significance level for bootstrapping from pseudo ensemble
     it: int
         number of iterations for ACC(pseudo_ens)
+
     Returns
     -------
     sig_level : float
@@ -818,6 +874,7 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
     period='ym'
     area='North_Atlantic'
     print(sig,'% significance level at',et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
+
     """
     from tqdm import trange
     x = []
@@ -825,13 +882,16 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
         ds_e = pseudo_ens(control, ds)
 
         if func == 'ACC_control':
-            x.append(PM_ACC(ds_e, control, against_mean=False).values)
+            x.append(PM_ACC(ds_e, control, against='control').values)
 
         elif func == 'ACC_mean':
-            x.append(PM_ACC(ds_e, control, against_mean=True).values)
+            x.append(PM_ACC(ds_e, control, against='mean').values)
 
         elif func == 'ACC_every':
-            x.append(PM_ACC(ds_e, control, against_every=True).values)
+            x.append(PM_ACC(ds_e, control, against='every').values)
+
+        elif func == 'ACC_mean_every':
+            x.append(PM_ACC(ds_e, control, against='mean_every').values)
 
         elif func == 'ACC_U_control':
             ps_ACC_U = PM_ACC_U(PM_NRMSE(ds_e, control, kind='control'))
@@ -865,9 +925,10 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
     return sig_level
 
 
-def get_predictability_horizon(s, lim):
+def get_predictability_horizon(s, threshold):
+    """Get predictability horizon of series form threshold value."""
     first_index = s.index[0]
-    ph = (s > lim).idxmin() - first_index - 1
+    ph = (s > threshold).idxmin() - first_index - 1
     return ph
 
 
@@ -883,7 +944,7 @@ def df_autocorr(df, lag=1, axis=0):
 
 def calc_tau(alpha):
     """
-    Calculates the decorrelation time tau.
+    Calculate the decorrelation time tau.
 
     Reference
     ---------
@@ -903,13 +964,17 @@ def calc_tau(alpha):
     import esmtools as et
     alpha = .8
     tau = et.prediction.calc_tau(alpha)
+
     """
     return (1 + alpha) / (1 - alpha)
 
 
 def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
     """
-    Calculates the PPP (or NEV) damped persistence mean and range. Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be indicated as +- std or 5-95-percentile.
+    Calculate the PPP (or NEV) damped persistence mean and range.
+
+    Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be
+    indicated as +- std or 5-95-percentile.
 
     Reference
     ---------
@@ -945,16 +1010,17 @@ def generate_predictability_persistence(s, kind='PPP', percentile=True, length=2
     plt.plot(PPP_persistence_0,color='black',linestyle='--',label='persistence mean')
     plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,color='gray',alpha=.3,label='persistence range')
     plt.axhline(y=0,color='black')
+
     """
     # bootstrapping persistence
-    it = 50  # iterations
-    l = 100  # length of chunks of control run to take lag1 autocorr
-    data = np.zeros(it)
+    iterations = 50  # iterations
+    chunk_length = 100  # length of chunks of control run to take lag1 autocorr
+    data = np.zeros(iterations)
     from random import randint
-    for i in range(it):
-        # np.random.shuffle(control)
-        ran = randint(1900, 2200 - l)
-        data[i] = s.loc[str(ran):str(ran + l)].autocorr()
+    for i in range(iterations):
+        random_start_year = randint(1900, 2200 - chunk_length)
+        data[i] = s.loc[str(random_start_year):str(
+            random_start_year + chunk_length)].autocorr()
 
     alpha_0 = np.mean(data)
     alpha_minus = np.mean(data) - np.std(data)
@@ -981,6 +1047,8 @@ def generate_predictability_persistence(s, kind='PPP', percentile=True, length=2
 
 def generate_damped_persistence_forecast(control, startyear, length=20):
     """
+    Generate damped persistence forecast.
+
     Reference
     ---------
     - missing: got a script from a collegue
@@ -1010,8 +1078,8 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,color='gray',label='90% forecast range')
     s.loc[1919:1939].plot(label='control')
     plt.legend()
-    """
 
+    """
     anom = (control.loc[startyear] - control.mean())
     t = np.arange(0., length + 1, 1)
     alpha = control.autocorr()
@@ -1025,3 +1093,33 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     ar50 = pd.Series(ar50, index=index)
     ar90 = pd.Series(ar90, index=index)
     return ar1, ar50, ar90
+
+# utils for xr.Datasets
+
+
+def drop_ensembles(ds, rmd_ensemble=[0]):
+    if all(ens in ds.ensemble.values for ens in rmd_ensemble):
+        ensemble_list = list(ds.ensemble.values)
+        for ens in rmd_ensemble:
+            ensemble_list.remove(ens)
+    else:
+        raise ValueError('select from ensemble starting years', rmd_ensemble)
+    return ds.sel(ensemble=ensemble_list)
+
+
+def drop_members(ds, rmd_member=[0]):
+    if all(ens in ds.member.values for ens in rmd_member):
+        member_list = list(ds.member.values)
+        for ens in rmd_member:
+            member_list.remove(ens)
+    else:
+        raise ValueError('select availbale from members', rmd_member)
+    return ds.sel(member=member_list)
+
+
+def select_members_ensembles(ds, m=None, e=None):
+    if m is None:
+        m = ds.member.values
+    if e is None:
+        e = ds.ensemble.values
+    return ds.sel(member=m, ensemble=e)

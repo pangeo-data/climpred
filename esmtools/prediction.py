@@ -111,7 +111,6 @@ import os
 
 import numpy as np
 import pandas as pd
-# general imports
 import xarray as xr
 from six.moves.urllib.request import urlopen, urlretrieve
 
@@ -211,6 +210,7 @@ def ds2df(ds, area=area, varname=varname, period=period):
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     PM_MSSS = et.prediction.PM_MSSS(ds,control)
     et.prediction.ds2df(PM_MSSS).plot()
+
     """
     df = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T
     return df
@@ -249,8 +249,8 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     control_chunked_into_30yr_chunks = et.prediction.chunking(control,chunk_length=30)
     control_chunked_into_30_chunks = et.prediction.chunking(control,number_chunks=30)
-    """
 
+    """
     if number_chunks and not chunk_length:
         chunk_length = np.floor(ds.year.size / number_chunks)
         cmin = int(ds.year.min())
@@ -1093,3 +1093,33 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     ar50 = pd.Series(ar50, index=index)
     ar90 = pd.Series(ar90, index=index)
     return ar1, ar50, ar90
+
+# utils for xr.Datasets
+
+
+def drop_ensembles(ds, rmd_ensemble=[0]):
+    if all(ens in ds.ensemble.values for ens in rmd_ensemble):
+        ensemble_list = list(ds.ensemble.values)
+        for ens in rmd_ensemble:
+            ensemble_list.remove(ens)
+    else:
+        raise ValueError('select from ensemble starting years', rmd_ensemble)
+    return ds.sel(ensemble=ensemble_list)
+
+
+def drop_members(ds, rmd_member=[0]):
+    if all(ens in ds.member.values for ens in rmd_member):
+        member_list = list(ds.member.values)
+        for ens in rmd_member:
+            member_list.remove(ens)
+    else:
+        raise ValueError('select availbale from members', rmd_member)
+    return ds.sel(member=member_list)
+
+
+def select_members_ensembles(ds, m=None, e=None):
+    if m is None:
+        m = ds.member.values
+    if e is None:
+        e = ds.ensemble.values
+    return ds.sel(member=m, ensemble=e)

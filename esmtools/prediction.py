@@ -422,8 +422,8 @@ def ens_var_against_every(ds):
     for i in range(0, ds.member.size):
         var_a = ((ds - ds.sel(member=i))**2).sum(dim='member') / ds.member.size
         var = xr.concat([var, var_a], 'member')
-    var = var.sel(member=slice(ds.member.size, 2
-                               * ds.member.size)).mean('member')
+    var = var.sel(member=slice(ds.member.size, 2 *
+                               ds.member.size)).mean('member')
     return var
 
 
@@ -963,14 +963,6 @@ def qplot(test, threshold, period=period, area=area):
         test.mean('ensemble'), threshold_here), c='gray', lw=3, ls='-.')
     set_integer_xaxis(ax)
     ax.set_xticks(test.year.values)
-
-
-#qplot(test, threshold)
-
-
-# vectorized_predictability_horizon(test, threshold).to_dataframe()[
-#    varname].unstack()[period].unstack().T
-# _.mean(axis=0)
 
 
 def get_predictability_horizon(s, threshold):

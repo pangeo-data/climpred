@@ -1,5 +1,14 @@
-"""
-Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
+import os
+
+import esmtools as et
+import matplotlib.pyplot as plt
+import numpy as np
+import pandas as pd
+import xarray as xr
+from matplotlib.ticker import MaxNLocator
+from six.moves.urllib.request import urlopen, urlretrieve
+
+"""Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
 ToDos
 -----
@@ -106,14 +115,6 @@ Time dimensions is called Years and is integer. (Original data was year
 3000-3300, now 3600. Had problems with datetime[ns] limits and xr.to_netcdf()!)
 
 """
-
-import os
-
-import numpy as np
-import pandas as pd
-import xarray as xr
-from six.moves.urllib.request import urlopen, urlretrieve
-
 # standard setup for load dataset and examples
 varname = 'tos'
 period = 'ym'
@@ -145,7 +146,7 @@ def get_dataset_names():
     from bs4 import BeautifulSoup
     http = urlopen(
         'https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
-    print('Load from URL:', http)
+    #print('Load from URL:', http)
     gh_list = BeautifulSoup(http)
 
     return [l.text.replace('.nc', '')
@@ -175,7 +176,7 @@ def load_dataset(name, cache=True, data_home=None, **kws):
         "https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
 
     full_path = path.format(name)
-    print('Load from URL:', full_path)
+    #print('Load from URL:', full_path)
 
     if cache:
         cache_path = os.path.join(get_data_home(data_home),
@@ -406,7 +407,7 @@ def ens_var_against_control(ds):
     evaluated against member=0 which is the control run.
     """
     var = ds.copy()
-    var = ((ds - ds.sel(member=0))**2).sum('member') / (ds.member.size - 2)
+    var = ((ds - ds.sel(member=0))**2).sum('member') / (ds.member.size - 0)
     return var
 
 
@@ -421,9 +422,22 @@ def ens_var_against_every(ds):
     for i in range(0, ds.member.size):
         var_a = ((ds - ds.sel(member=i))**2).sum(dim='member') / ds.member.size
         var = xr.concat([var, var_a], 'member')
-    var = var.sel(member=slice(ds.member.size, 2 *
-                               ds.member.size)).mean('member')
+    var = var.sel(member=slice(ds.member.size, 2
+                               * ds.member.size)).mean('member')
     return var
+
+
+def rmse(ds, kind='mean'):
+    """Calculate root-mean-square-error (RMSE)."""
+    if kind == 'mean':
+        ens_var = ens_var_against_mean(ds)
+    elif kind == 'control':
+        ens_var = ens_var_against_control(ds)
+    elif kind == 'every':
+        ens_var = ens_var_against_every(ds)
+    else:
+        raise ValueError('Select kind from ["mean","control","every"].')
+    return ens_var**.5
 
 
 def normalize_var(var, control, fac=1, running=True, m=20):
@@ -879,7 +893,8 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
     from tqdm import trange
     x = []
     for i in trange(it):
-        ds_e = pseudo_ens(control, ds)
+        ds_e = pseudo_ens(control, ds, nens=ds.ensemble.size,
+                          nm=ds.member.size)
 
         if func == 'ACC_control':
             x.append(PM_ACC(ds_e, control, against='control').values)
@@ -903,7 +918,8 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
 
         elif func == 'PPP_mean':
             ps_PPP = PM_MSSS(ds_e, control, kind='mean', **kwargs)
-            x.append(ds2df(ps_PPP).values)
+            # x.append(ds2df(ps_PPP).values)
+            x.append(ps_PPP)
 
         elif func == 'PPP_control':
             ps_PPP = PM_MSSS(ds_e, control, kind='control', **kwargs)
@@ -919,18 +935,54 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
 
         else:
             raise ValueError('please select proper func string')
-
-    sig_level = np.nanpercentile(x, q=sig)
-    del x
+    iteration_dim_name = 'it'
+    x2 = xr.concat(x, dim=iteration_dim_name)
+    sig_level = x2.quantile(
+        q=sig / 100, dim=[iteration_dim_name, 'year', 'ensemble'], keep_attrs=True)
     return sig_level
 
 
+def set_integer_xaxis(ax=False):
+    if not ax:
+        ax = plt.figure().gca()
+    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
+
+
+def qplot(test, threshold, period=period, area=area):
+    fig, ax = plt.subplots(figsize=(8, 5))
+    test['year'] = np.arange(1, 21)
+    test = test.sel(area=area, period=period)[varname]
+    test.to_dataframe()[
+        varname].unstack().plot(ax=ax, title=period + ' ' + area, label='nolegend')
+    test.mean('ensemble').to_dataframe()[varname].plot(ax=ax, c='k', lw=3)
+    ax.legend(ncol=3)
+    ax.set_ylim([-.5, 1])
+    threshold_here = threshold.sel(area=area, period=period)[varname]
+    ax.axhline(y=threshold_here, c='k', ls='--', alpha=.2)
+    ax.axvline(x=vectorized_predictability_horizon(
+        test.mean('ensemble'), threshold_here), c='gray', lw=3, ls='-.')
+    set_integer_xaxis(ax)
+    ax.set_xticks(test.year.values)
+
+
+#qplot(test, threshold)
+
+
+# vectorized_predictability_horizon(test, threshold).to_dataframe()[
+#    varname].unstack()[period].unstack().T
+# _.mean(axis=0)
+
+
 def get_predictability_horizon(s, threshold):
-    """Get predictability horizon of series form threshold value."""
+    """Get predictability horizon of series from threshold value."""
     first_index = s.index[0]
     ph = (s > threshold).idxmin() - first_index - 1
     return ph
 
+
+def vectorized_predictability_horizon(ds, threshold, dim='year'):
+    """Get predictability horizons of dataset form threshold dataset."""
+    return (ds > threshold).argmin('year')
 
 # Persistence
 

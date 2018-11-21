@@ -1,3 +1,13 @@
+import numpy as np
+import numpy.polynomial.polynomial as poly
+import pandas as pd
+import scipy.stats as ss
+import xarray as xr
+from scipy import stats as ss
+from scipy.stats import linregress
+from scipy.stats.stats import pearsonr as pr
+
+
 """
 Objects dealing with timeseries and ensemble statistics. All functions will
 auto-check for type DataArray. If it is a DataArray, it will return a type
@@ -17,13 +27,7 @@ removed.
 `pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
 
 """
-import pandas as pd
-import numpy as np
-import numpy.polynomial.polynomial as poly
-import xarray as xr
-from scipy import stats
-import scipy.stats as ss
-from scipy.stats.stats import pearsonr as pr
+
 
 def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     """
@@ -92,7 +96,8 @@ def remove_polynomial_fit(data, order):
     if isinstance(data, xr.DataArray):
         return xr.DataArray(detrended_ts)
     else:
-        return detrended_ts 
+        return detrended_ts
+
 
 def smooth_series(x, length, center=False):
     """
@@ -105,7 +110,7 @@ def smooth_series(x, length, center=False):
     center : boolean
         Whether to center the smoothing filter or start from the beginning..
 
-    Returns 
+    Returns
     -------
     smoothed : numpy array, smoothed timeseries
 
@@ -127,11 +132,12 @@ def smooth_series(x, length, center=False):
         return xr.DataArray(smoothed).squeeze()
     else:
         return smoothed.squeeze()
-    
+
+
 def linear_regression(x, y):
     """
     Performs a simple least-squares linear regression.
-    
+
     Parameters
     ----------
     x : array; independent variable
@@ -156,12 +162,13 @@ def linear_regression(x, y):
     m, b, r, p, e = stats.linregress(x, y)
     return m, b, r, p, e
 
+
 def pearsonr(x, y, two_sided=True):
     """
     Computes the Pearson product-moment coefficient of linear correlation. This
     version calculates the effective degrees of freedom, accounting for autocorrelation
     within each time series that could fluff the significance of the correlation.
-    
+
     Parameters
     ----------
     x : array; independent variable
@@ -175,10 +182,10 @@ def pearsonr(x, y, two_sided=True):
     n_eff : effective degrees of freedom
 
     References:
-    ---------- 
-    1. Wilks, Daniel S. Statistical methods in the atmospheric sciences. 
+    ----------
+    1. Wilks, Daniel S. Statistical methods in the atmospheric sciences.
     Vol. 100. Academic press, 2011.
-    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode 
+    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode
     on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
 
     Examples
@@ -195,24 +202,24 @@ def pearsonr(x, y, two_sided=True):
     xa, ya = x - np.mean(x), y - np.mean(y)
     xauto, _ = pr(xa[1:], xa[:-1])
     yauto, _ = pr(ya[1:], ya[:-1])
-    n_eff = n * (1 - xauto*yauto)/(1 + xauto*yauto)
+    n_eff = n * (1 - xauto * yauto) / (1 + xauto * yauto)
     n_eff = np.floor(n_eff)
     # Compute t-statistic.
-    t = r * np.sqrt((n_eff - 2)/(1 - r**2))
+    t = r * np.sqrt((n_eff - 2) / (1 - r**2))
     # Compute p-value.
     if two_sided:
-        p = ss.t.sf(np.abs(t), n_eff-1)*2
+        p = ss.t.sf(np.abs(t), n_eff - 1) * 2
     else:
-        p = ss.t.sf(np.abs(t), n_eff-1)
+        p = ss.t.sf(np.abs(t), n_eff - 1)
     return r, p, n_eff
 
 
 def vectorized_regression(x, y):
     """
-    Vectorized function for regressing many time series onto a fixed time 
-    series. Most commonly used for regressing a grid of data onto some 
+    Vectorized function for regressing many time series onto a fixed time
+    series. Most commonly used for regressing a grid of data onto some
     time series.
-    
+
     Input
     -----
     x : array_like
@@ -225,7 +232,7 @@ def vectorized_regression(x, y):
     m : array_like
       Grid of slopes from linear regression
     """
-    print("Make sure that time is the first dimension in your inputs.")
+    #print("Make sure that time is the first dimension in your inputs.")
     if np.isnan(x).any():
         raise ValueError("Please supply an independent axis (x) without nans.")
     # convert to numpy array if xarray
@@ -246,7 +253,7 @@ def vectorized_regression(x, y):
     return m
 
 
-def vectorized_rm_poly(y,order=1):
+def vectorized_rm_poly(y, order=1):
     """
     Vectorized function for removing a order-th order polynomial fit of a time
     series
@@ -267,7 +274,7 @@ def vectorized_rm_poly(y,order=1):
     # convert to numpy array if xarray
     if isinstance(y, xr.DataArray):
         XARRAY = True
-        dims=y.dims
+        dims = y.dims
         y = np.asarray(y)
     data_shape = y.shape
     y = y.reshape((20, -1))
@@ -283,6 +290,13 @@ def vectorized_rm_poly(y,order=1):
     return detrended_ts
 
 
+def vec_linregress(ds, dim='time'):
+    """Linear trend of a dataset against dimension.
 
-
-
+    Slow on lon,lat data
+    Works on High-dim datasets without lon,lat
+    """
+    return xr.apply_ufunc(linregress, ds[dim], ds,
+                          input_core_dims=[[dim], [dim]],
+                          output_core_dims=[[], [], [], [], []],
+                          vectorize=True)

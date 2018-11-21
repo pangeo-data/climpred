@@ -6,7 +6,9 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from matplotlib.ticker import MaxNLocator
+from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
+from xskillscore import pearson_r, rmse
 
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
@@ -146,7 +148,7 @@ def get_dataset_names():
     from bs4 import BeautifulSoup
     http = urlopen(
         'https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
-    #print('Load from URL:', http)
+    # print('Load from URL:', http)
     gh_list = BeautifulSoup(http)
 
     return [l.text.replace('.nc', '')
@@ -176,7 +178,7 @@ def load_dataset(name, cache=True, data_home=None, **kws):
         "https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
 
     full_path = path.format(name)
-    #print('Load from URL:', full_path)
+    # print('Load from URL:', full_path)
 
     if cache:
         cache_path = os.path.join(get_data_home(data_home),
@@ -248,8 +250,10 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    control_chunked_into_30yr_chunks = et.prediction.chunking(control,chunk_length=30)
-    control_chunked_into_30_chunks = et.prediction.chunking(control,number_chunks=30)
+    control_chunked_into_30yr_chunks = et.prediction.chunking(
+        control,chunk_length=30)
+    control_chunked_into_30_chunks = et.prediction.chunking(
+        control,number_chunks=30)
 
     """
     if number_chunks and not chunk_length:
@@ -396,7 +400,8 @@ def ens_var_against_mean(ds):
     ens_var_against_mean.to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
 
     """
-    return ds.var('member')
+#    return ds.var('member')
+    return ds.var('member').mean('ensemble')
 
 
 def ens_var_against_control(ds):
@@ -408,7 +413,7 @@ def ens_var_against_control(ds):
     """
     var = ds.copy()
     var = ((ds - ds.sel(member=0))**2).sum('member') / (ds.member.size - 0)
-    return var
+    return var.mean('ensemble')
 
 
 def ens_var_against_every(ds):
@@ -419,24 +424,27 @@ def ens_var_against_every(ds):
     is evaluated against each ensemble member and then averaged.
     """
     var = ds.copy()
-    for i in range(0, ds.member.size):
-        var_a = ((ds - ds.sel(member=i))**2).sum(dim='member') / ds.member.size
+    m = ds.member.size
+    for i in range(0, m):
+        var_a = ((ds - ds.sel(member=i))**2).sum(dim='member') / m
         var = xr.concat([var, var_a], 'member')
-    var = var.sel(member=slice(ds.member.size, 2 *
-                               ds.member.size)).mean('member')
-    return var
+    var = var.sel(member=slice(m, 2 * m)).mean('member')
+    return var.mean('ensemble')
 
 
-def rmse(ds, kind='mean'):
+def rmse_v(ds, control, against=None, comparison=None):
     """Calculate root-mean-square-error (RMSE)."""
-    if kind == 'mean':
+    kind = comparison.__name__
+    if kind == 'm2e':
         ens_var = ens_var_against_mean(ds)
-    elif kind == 'control':
+    elif kind == 'm2c':
         ens_var = ens_var_against_control(ds)
-    elif kind == 'every':
+    elif kind == 'm2m':
         ens_var = ens_var_against_every(ds)
+    elif kind == 'e2c':
+        ens_var = ensmean_against_control(ds)
     else:
-        raise ValueError('Select kind from ["mean","control","every"].')
+        raise ValueError('Select against from .')
     return ens_var**.5
 
 
@@ -470,10 +478,12 @@ def normalize_var(var, control, fac=1, running=True, m=20):
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
+    nens_var_against_mean = et.prediction.normalize_var(
+        ens_var_against_mean,control)
 
     ens_var_against_control = et.prediction.ens_var_against_control(ds)
-    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_control,control,fac=2)
+    nens_var_against_mean = et.prediction.normalize_var(
+        ens_var_against_control,control,fac=2)
 
     # dataframe # works nice for many variances in dataframe view
     def normalize_var(var,fac=1,running=True):
@@ -525,7 +535,8 @@ def PPP_from_nvar(nvar):
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(ens_var_against_mean,control)
+    nens_var_against_mean = et.prediction.normalize_var(
+        ens_var_against_mean,control)
     PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
 
     """
@@ -534,7 +545,7 @@ def PPP_from_nvar(nvar):
 
 # Perfect-model (PM) predictability scores from Bushuk 2018
 
-def PM_MSSS(ds, control, kind='', running=True, m=20):
+def PM_MSSS(ds, control, against='', running=True, m=20):
     """
     Calculate the perfect-model (PM) mean square skill score (MSSS). It is identical to Prognostic Potential Predictability (PPP) in Pohlmann et al. (2004).
 
@@ -572,27 +583,27 @@ def PM_MSSS(ds, control, kind='', running=True, m=20):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control,kind='control',running=True,m=30)
+    pm_msss = PM_MSSS(ds,control,against='control',running=True,m=30)
 
     """
-    if kind == 'mean':
+    if against == 'mean':
         ens_var = ens_var_against_mean(ds)
         fac = 1
-    elif kind == 'control':
+    elif against == 'control':
         ens_var = ens_var_against_control(ds)
         fac = 2
-    elif kind == 'every':
+    elif against == 'every':
         ens_var = ens_var_against_every(ds)
         fac = 2
     else:
-        raise ValueError('Select kind from ["mean","control","every"].')
+        raise ValueError('Select against from ["mean","control","every"].')
     nens_var_against_mean = normalize_var(
         ens_var, control, running=running, m=m, fac=fac)
     msss = PPP_from_nvar(nens_var_against_mean)
     return msss
 
 
-def PM_NRMSE(ds, control, kind='', running=True, m=20):
+def PM_NRMSE(ds, control, against=None, running=True, m=20):
     """
     Calculate the perfect-model (PM) normalised root mean square error as in Hawkins et al. (2016) or NRMSE+1 in Bushuk et al. (2018).
 
@@ -635,20 +646,22 @@ def PM_NRMSE(ds, control, kind='', running=True, m=20):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_nrmse = et.prediction.PM_NRMSE(ds,control,kind='control',running=True,m=30)
+    pm_nrmse = et.prediction.PM_NRMSE(
+        ds,control,against='control',running=True,m=30)
 
     """
-    if kind == 'mean':
+    against = against.__name__
+    if against == 'mean':
         ens_var = ens_var_against_mean(ds)
         fac = 1
-    elif kind == 'control':
+    elif against == 'control':
         ens_var = ens_var_against_control(ds)
         fac = 2
-    elif kind == 'every':
+    elif against == 'every':
         ens_var = ens_var_against_every(ds)
         fac = 2
     else:
-        raise ValueError('Select kind from ["mean","control","every"].')
+        raise ValueError('Select against from ["mean","control","every"].')
     nens_var_against_mean = normalize_var(
         ens_var, control, running=running, m=m, fac=fac)
     nrmse = PPP_from_nvar(nens_var_against_mean**.5)
@@ -683,7 +696,7 @@ def PM_ACC_U(msss):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control,kind='mean')
+    pm_msss = PM_MSSS(ds,control,against='mean')
     pm_acc_u = PM_ACC_U(pm_msss)
 
     """
@@ -806,7 +819,7 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
 # T test Bushuk
 
 
-def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, nm=10):
+def pseudo_ens_old(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -818,10 +831,7 @@ def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, 
     ----------
     control : xr.DataArray with year dimension
         Input ensemble data
-    nens: int
-        Number of start dates for pseudo ensemble
-    nm: int
-        Number of ensemble members per start date for pseudo ensemble
+
     Returns
     -------
     ds_e : xr.DataArray with year, ensemble, member dimension
@@ -838,46 +848,40 @@ def pseudo_ens(control, ds, varname=varname, period=period, area=area, nens=12, 
     ds_e = et.prediction.pseudo_ens(control,ds)
 
     """
-    ds_c = control.copy()
+    nens = ds.ensemble.size
+    nm = ds.member.size
     length = ds.year.size
     c_start = control.year[0]
     c_end = control.year[-1]
-    elist = []
     year = ds.year
-    for j in range(nens):
-        mlist = []
-        for i in range(nm):
-            start = np.random.randint(c_start, c_end - length - 1)
-            random_ds = ds_c.sel(year=slice(start, start + length - 1))
-            random_ds['year'] = year
-            random_ds.expand_dims('member')
-            random_ds['member'] = i
-            mlist.append(random_ds)
-        ds_m = xr.concat(mlist, 'member')
-        ds_m.expand_dims('ensemble')
-        ds_m['ensemble'] = j
-        elist.append(ds_m)
-    ds_e = xr.concat(elist, 'ensemble')
-    return ds_e
+
+    def sel_years(control, year_s, m=None, length=length):
+        new = control.sel(year=slice(year_s, year_s + length - 1))
+        new['year'] = year
+        return new
+
+    def create_pseudo_members(control):
+        startlist = np.random.randint(c_start, c_end - length - 1, nm)
+        return xr.concat([sel_years(control, start)
+                          for start in startlist], 'member')
+    return xr.concat([create_pseudo_members(control) for _ in range(nens)], 'ensemble')
 
 
-def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
+def pseudo_ens(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
     """
-    Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
+    Create a pseudo-ensemble from control run in the form of ensemble ds.
+
+    Needed for bootstrapping confidence intervals of a metric.
 
     Parameters
     ----------
     control : xr.DataArray with year dimension
         Input ensemble data
-    sig: int
-        Significance level for bootstrapping from pseudo ensemble
-    it: int
-        number of iterations for ACC(pseudo_ens)
 
     Returns
     -------
-    sig_level : float
-        significance level value
+    ds_e : xr.DataArray with year, ensemble, member dimension
+        pseudo-ensemble generated from control run
 
     Example
     -------
@@ -887,58 +891,190 @@ def PM_sig(control, ds, func='ACC', sig=95, it=50, **kwargs):
     varname='tos'
     period='ym'
     area='North_Atlantic'
-    print(sig,'% significance level at',et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
+    ds_e = et.prediction.pseudo_ens(control,ds)
 
     """
-    from tqdm import trange
-    x = []
-    for i in trange(it):
-        ds_e = pseudo_ens(control, ds, nens=ds.ensemble.size,
-                          nm=ds.member.size)
+    control3d2 = control3d.copy()
+    if varname is not None:
+        control3d2 = control3d2[varname]
 
-        if func == 'ACC_control':
-            x.append(PM_ACC(ds_e, control, against='control').values)
+    ensembles = ds3d.ensemble
+    members = ds3d.member
+    length = int(control3d.year.size / ensembles.size / members.size)
 
-        elif func == 'ACC_mean':
-            x.append(PM_ACC(ds_e, control, against='mean').values)
+    if bootstrap is not None:
+        control_year_values = np.copy(control3d2.year.values)
+        needed_repetitions = int(bootstrap / length)
+        new_control_years = np.concatenate(
+            (control_year_values,) * needed_repetitions)
+        control3d2 = control3d2.sel(year=new_control_years)
+        control3d2['year'] = np.arange(1900, 1900 + control3d2.year.size)
+    else:
+        bootstrap = length
 
-        elif func == 'ACC_every':
-            x.append(PM_ACC(ds_e, control, against='every').values)
+    if shuffle:
+        time_before = np.copy(control3d2.year.values)
+        np.random.shuffle(time_before)
+        control3d2 = control3d2.sel(year=time_before)
 
-        elif func == 'ACC_mean_every':
-            x.append(PM_ACC(ds_e, control, against='mean_every').values)
+    length = bootstrap
+    #print('bootstrapping iterations:', length)
+    input_time = control3d2.year[:int(length * ensembles.size * members.size)]
+    new_time = control3d.year[:length]
+    ny = control3d.y.size
+    nx = control3d.x.size
+    # sel fewer years for dimsizes to match
+    control3d2 = control3d2.sel(year=input_time)
 
-        elif func == 'ACC_U_control':
-            ps_ACC_U = PM_ACC_U(PM_NRMSE(ds_e, control, kind='control'))
-            x.append(ds2df(ps_ACC_U).values)
+    coords = [new_time, ensembles, members, ds3d.y.values, ds3d.x.values]
+    dims = ['year', 'ensemble', 'member', 'y', 'x']
 
-        elif func == 'ACC_U_mean':
-            ps_ACC_U = PM_ACC_U(PM_NRMSE(ds_e, control, kind='mean'))
-            x.append(ds2df(ps_ACC_U).values)
+    new_order = (length, ensembles.size, members.size,
+                 ds3d.y.size, ds3d.x.size)
 
-        elif func == 'PPP_mean':
-            ps_PPP = PM_MSSS(ds_e, control, kind='mean', **kwargs)
-            # x.append(ds2df(ps_PPP).values)
-            x.append(ps_PPP)
+    reshaped = np.reshape(control3d2.values, new_order)
+    new = xr.DataArray(reshaped, dims=dims, coords=coords)
+    return new
 
-        elif func == 'PPP_control':
-            ps_PPP = PM_MSSS(ds_e, control, kind='control', **kwargs)
-            x.append(ds2df(ps_PPP).values)
 
-        elif func == 'NRMSE_mean':
-            ps_PPP = PM_NRMSE(ds_e, control, kind='mean', **kwargs)
-            x.append(ds2df(ps_PPP).values)
+def m2m(ds, supervector_dim):
+    """Create two supervectors to compare members to all other members."""
+    truth_list = []
+    fct_list = []
+    for m in ds.member.values:
+        # drop the member being truth
+        ds_reduced = drop_members(ds, rmd_member=[m])
+        truth = ds.sel(member=m)
+        for m2 in ds_reduced.member:
+            for e in ds.ensemble:
+                truth_list.append(truth.sel(ensemble=e))
+                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
+    return fct, truth
 
-        elif func == 'NRMSE_control':
-            ps_PPP = PM_NRMSE(ds_e, control, kind='control', **kwargs)
-            x.append(ds2df(ps_PPP).values)
 
-        else:
-            raise ValueError('please select proper func string')
-    iteration_dim_name = 'it'
-    x2 = xr.concat(x, dim=iteration_dim_name)
-    sig_level = x2.quantile(
-        q=sig / 100, dim=[iteration_dim_name, 'year', 'ensemble'], keep_attrs=True)
+def m2e(ds3d, supervector_dim):
+    """Create two supervectors to compare members to all other members."""
+    truth_list = []
+    fct_list = []
+    for m in range(ds3d.member.size):
+        for e in ds3d.ensemble:
+            truth_list.append(ds3d.sel(ensemble=e).mean('member'))
+            fct_list.append(ds3d.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
+    return fct, truth
+
+
+def m2c(ds3d, supervector_dim, control_member=0):
+    """Create two supervectors to compare members to control."""
+    ds3d2 = ds3d.copy()
+
+    all_fct_members = drop_members(ds3d2, rmd_member=[control_member])
+    new_shape = (ds3d.year.size, ds3d.ensemble.size
+                 * (ds3d.member.size-1), ds3d.y.size, ds3d.x.size)
+    new_dim = ['year', supervector_dim, 'y', 'x']
+    new_coords = [ds3d.year, np.arange(
+        ds3d.ensemble.size * (ds3d.member.size-1)), ds3d.y, ds3d.x]
+    reshaped = np.reshape(all_fct_members.values, new_shape)
+    fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+
+    nm = ds3d.member.size-1
+    control_m = ds3d2.sel(member=[control_member] * nm)
+    reshaped = np.reshape(control_m.values, new_shape)
+    truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+
+    return fct, truth
+
+
+def e2c(ds, supervector_dim, control_member=0):
+    """Create two supervectors to compare ensemble mean to control."""
+    truth = ds.sel(member=control_member)
+    truth = truth.rename({'ensemble': supervector_dim})
+    # drop the member being truth
+    ds = drop_members(ds, rmd_member=[control_member])
+    fct = ds.mean('member')
+    fct = fct.rename({'ensemble': supervector_dim})
+    return fct, truth
+
+
+def ensmean_against_control(ds, control_member=0):
+    # drop the member being truth
+    truth = ds.sel(member=control_member)
+    ds = drop_members(ds, rmd_member=[control_member])
+    return ((ds.mean('member') - truth)**2).mean('ensemble')
+
+
+def mse(ds):
+    """dummy for ensvar_against."""
+    pass  # ugly
+
+
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,varname=None):
+    if metric.__name__ not in ['pearson_r', 'rmse', 'rmse_v', 'mse']:
+        raise ValueError('specify metric argument')
+    if comparison.__name__ not in ['m2m', 'm2c', 'm2e', 'e2c']:
+        raise ValueError('specify comparison argument')
+    supervector_dim = 'svd'
+    time_dim = 'year'
+    if metric.__name__ in ['pearson_r', 'rmse']:
+        fct, truth = comparison(ds, supervector_dim)
+        if anomaly:
+            fct = fct - control.mean(time_dim)
+            truth = truth - control.mean(time_dim)
+        return metric(fct, truth, dim=supervector_dim)
+    elif metric.__name__ in ['mse']:
+        if comparison.__name__ is 'm2e':
+            return ens_var_against_mean(ds)
+        if comparison.__name__ is 'm2c':
+            return ens_var_against_control(ds)
+        if comparison.__name__ is 'm2m':
+            return ens_var_against_every(ds)
+        if comparison.__name__ is 'e2c':
+            return ensmean_against_control(ds)
+
+
+def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
+    """
+    Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
+
+    Parameters
+    ----------
+    control : xr.DataArray/Dataset with year dimension
+        input control data
+    ds : xr.DataArray/Dataset with year, ensemble and member dimensions
+        input ensemble data
+    func : function
+        function to calculate metric
+    against : str
+        specify against which truth
+    sig: int
+        Significance level for bootstrapping from pseudo ensemble
+    it: int
+        number of iterations for ACC(pseudo_ens)
+
+    Returns
+    -------
+    sig_level : xr.DataArray/Dataset as inputs
+        significance level without year, ensemble and member dimensions
+
+    Example
+    -------
+    import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
+    varname='tos'
+    period='ym'
+    area='North_Atlantic'
+    print(sig,'% significance level at',
+          et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
+
+    """
+    ds_pseudo = pseudo_ens(ds, control, bootstrap=bootstrap)
+    ds_pseudo_metric = compute(
+        ds_pseudo, control, metric=metric, comparison=comparison)
+    sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
     return sig_level
 
 
@@ -948,12 +1084,12 @@ def set_integer_xaxis(ax=False):
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
 
-def qplot(test, threshold, period=period, area=area):
+def qplot(test, threshold, varname=varname, period=period, area=area):
     fig, ax = plt.subplots(figsize=(8, 5))
     test['year'] = np.arange(1, 21)
     test = test.sel(area=area, period=period)[varname]
     test.to_dataframe()[
-        varname].unstack().plot(ax=ax, title=period + ' ' + area, label='nolegend')
+        varname].unstack().plot(ax=ax, title=(' ').join((varname, period, area)), label='nolegend')
     test.mean('ensemble').to_dataframe()[varname].plot(ax=ax, c='k', lw=3)
     ax.legend(ncol=3)
     ax.set_ylim([-.5, 1])
@@ -968,13 +1104,70 @@ def qplot(test, threshold, period=period, area=area):
 def get_predictability_horizon(s, threshold):
     """Get predictability horizon of series from threshold value."""
     first_index = s.index[0]
-    ph = (s > threshold).idxmin() - first_index - 1
+    ph = (s > threshold).idxmin() - first_index
     return ph
 
 
-def vectorized_predictability_horizon(ds, threshold, dim='year'):
+def vectorized_predictability_horizon(ds, threshold, limit='upper', dim='year'):
     """Get predictability horizons of dataset form threshold dataset."""
-    return (ds > threshold).argmin('year')
+    if limit is 'upper':
+        return (ds > threshold).argmin('year')
+    if limit is 'lower':
+        return (ds < threshold).argmin('year')
+
+
+
+def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
+    if dim is None:
+        x = df.index
+    result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta
+    if timestamp_location is 'middle':
+        result.index = result.index - int(window / 2)
+    if timestamp_location is 'first':
+        result.index = result.index - int(window - 1)
+    if timestamp_location is 'last':
+        pass
+    if rename:
+        result = result.rename(
+            columns={'feature1': '_'.join((varname, 'trend', str(window)))})
+    else:
+        result = result.rename(columns={'feature1': varname})
+    return result
+
+
+def trend_over_numeric_varnames(df, **kwargs):
+    list = []
+    for col in df.columns:
+        if np.issubdtype(df[col], np.number):
+            list.append(trend(df, col, **kwargs))
+    all_column_trends = pd.concat(list, axis=1)
+    return all_column_trends
+
+
+def normalize(ds, dim=None):
+    return (ds - ds.mean(dim)) / ds.std(dim)
+
+
+def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, period=period):
+    s = control.sel(area=area, period=period).to_dataframe()[varname]
+    snorm = normalize(s)
+    ensemble_starting_years = ds.ensemble.values
+    shift = 1101  # index shift 1900 to 3000
+    starting_states = snorm.loc[ensemble_starting_years - shift]
+    anomalous_states = starting_states[starting_states > threshold].index
+    return anomalous_states + shift
+
+
+def PPP_mean_anomalous(ds, control, varname='sos', area='North_Atlantic', period='ym', threshold=.66, it=50, sig=95, against='mean', func='PPP_mean'):
+    anomalous_years = get_anomalous_states(
+        ds, control, varname=varname, area=area, threshold=threshold)
+    ds_anomalous = select_members_ensembles(
+        ds, e=anomalous_years)
+    threshold_anomalous = PM_sig(
+        control, ds_anomalous, func=func, it=it, sig=sig)
+    PPP_anomalous = PM_MSSS(ds_anomalous, control, against=against)
+    return PPP_anomalous, threshold_anomalous
+
 
 # Persistence
 
@@ -1047,12 +1240,15 @@ def generate_predictability_persistence(s, kind='PPP', percentile=True, length=2
     Example
     -------
     import esmtools as et
-    #s = pd.Series(np.sin(range(1000)+np.cos(range(1000))+np.random.randint(.1,1000)))
+    # s = pd.Series(np.sin(range(1000)+np.cos(range(1000))+np.random.randint(.1,1000)))
     s = control.sel(area=area,period=period).to_dataframe()[varname]
-    PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = et.prediction.generate_predictability_persistence(s)
+    PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = et.prediction.generate_predictability_persistence(
+        s)
     t = np.arange(0,20+1,1.)
-    plt.plot(PPP_persistence_0,color='black',linestyle='--',label='persistence mean')
-    plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,color='gray',alpha=.3,label='persistence range')
+    plt.plot(PPP_persistence_0,color='black',
+             linestyle='--',label='persistence mean')
+    plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,
+                     color='gray',alpha=.3,label='persistence range')
     plt.axhline(y=0,color='black')
 
     """
@@ -1074,8 +1270,11 @@ def generate_predictability_persistence(s, kind='PPP', percentile=True, length=2
         alpha_plus = np.percentile(data, 95)
 
     # persistence function
+
     def generate_PPP_persistence(alpha, t):
-        return np.exp(-2 * alpha * t)  # Griffies 1997
+        values = np.exp(-2 * alpha * t)  # Griffies 1997
+        s = pd.Series(values, index=t)
+        return s
     t = np.arange(0, length + 1, 1.)
     PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
     PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
@@ -1116,10 +1315,13 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     Example
     -------
     import esmtools as et
-    ar1, ar50, ar90 = et.prediction.generate_damped_persistence_forecast(s,1919)
+    ar1, ar50, ar90 = et.prediction.generate_damped_persistence_forecast(
+        s,1919)
     ar1.plot(label='damped persistence forecast')
-    plt.fill_between(ar1.index,ar1-ar50,ar1+ar50,alpha=.2,color='gray',label='50% forecast range')
-    plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,color='gray',label='90% forecast range')
+    plt.fill_between(ar1.index,ar1-ar50,ar1+ar50,alpha=.2,
+                     color='gray',label='50% forecast range')
+    plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,
+                     color='gray',label='90% forecast range')
     s.loc[1919:1939].plot(label='control')
     plt.legend()
 
@@ -1152,7 +1354,7 @@ def drop_ensembles(ds, rmd_ensemble=[0]):
 
 
 def drop_members(ds, rmd_member=[0]):
-    if all(ens in ds.member.values for ens in rmd_member):
+    if all(m in ds.member.values for m in rmd_member):
         member_list = list(ds.member.values)
         for ens in rmd_member:
             member_list.remove(ens)

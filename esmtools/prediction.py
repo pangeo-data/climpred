@@ -886,11 +886,18 @@ def m2m(ds, supervector_dim):
     truth_list = []
     fct_list = []
     for m in range(ds.member.size):
+        # drop the member being truth
+        ds2 = drop_members(ds, rmd_member=[m])
         for m2 in range(ds.member.size):
             for e in ds.ensemble:
-                truth_list.append(ds.sel(member=m, ensemble=e))
-                fct_list.append(ds.sel(member=m2, ensemble=e))
+                truth_list.append(ds2.sel(member=m, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
+    for m in range(ds.member.size):
+        # drop the member being truth
+        ds2 = drop_members(ds, rmd_member=[m])
+        for m2 in range(ds.member.size):
+            for e in ds.ensemble:
+                fct_list.append(ds2.sel(member=m2, ensemble=e))
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
@@ -902,8 +909,11 @@ def m2e(ds, supervector_dim):
     for m in range(ds.member.size):
         for e in ds.ensemble:
             truth_list.append(ds.sel(member=m, ensemble=e))
-            fct_list.append(ds.sel(ensemble=e).mean('member'))
     truth = xr.concat(truth_list, supervector_dim)
+    mean = ds.mean('member')
+    for m in range(ds.member.size):
+        for e in ds.ensemble:
+            fct_list.append(mean.sel(ensemble=e))
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
@@ -912,26 +922,36 @@ def m2c(ds, supervector_dim, control_member=0):
     """Create two supervectors to compare members to control."""
     truth_list = []
     fct_list = []
+    truth = ds.sel(member=control_member)
+    # drop the member being truth
+    ds = drop_members(ds, rmd_member=[rmd_member])
     for m in range(ds.member.size):
         for e in ds.ensemble:
             truth_list.append(ds.sel(member=m, ensemble=e))
-            fct_list.append(ds.sel(ensemble=e, member=control_member))
     truth = xr.concat(truth_list, supervector_dim)
+    for m in range(ds.member.size):
+        for e in ds.ensemble:
+            fct_list.append(truth.sel(ensemble=e))
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
 
 def e2c(ds, supervector_dim, control_member=0):
     """Create two supervectors to compare ensemble mean to control."""
-    truth = ds.mean('member')
-    fct = ds.sel(member=control_member)
-    truth = truth.rename({'ensemble': supervector_dim})
-    fct = fct.rename({'ensemble': supervector_dim})
+    truth = ds.sel(member=control_member)
+    truth = fct.rename({'ensemble': supervector_dim})
+    # drop the member being truth
+    ds = drop_members(ds, rmd_member=[rmd_member])
+    fct = ds.mean('member')
+    fct = truth.rename({'ensemble': supervector_dim})
     return fct, truth
 
 
 def ensmean_against_control(ds, control_member=0):
-    return ((ds.mean('member') - ds.sel(member=control_member))**2).mean('ensemble')
+    # drop the member being truth
+    truth = ds.sel(member=control_member)
+    ds = drop_members(ds, rmd_member=[rmd_member])
+    return ((ds.mean('member') - truth)**2).mean('ensemble')
 
 
 def mse(ds):

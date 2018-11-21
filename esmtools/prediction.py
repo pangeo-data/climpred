@@ -888,16 +888,12 @@ def m2m(ds, supervector_dim):
     for m in range(ds.member.size):
         # drop the member being truth
         ds2 = drop_members(ds, rmd_member=[m])
+        truth2 = ds.sel(member=m)
         for m2 in range(ds.member.size):
             for e in ds.ensemble:
-                truth_list.append(ds2.sel(member=m, ensemble=e))
+                truth_list.append(truth2.sel(ensemble=e))
+                fct_list.append(ds.sel(member=m2, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
-    for m in range(ds.member.size):
-        # drop the member being truth
-        ds2 = drop_members(ds, rmd_member=[m])
-        for m2 in range(ds.member.size):
-            for e in ds.ensemble:
-                fct_list.append(ds2.sel(member=m2, ensemble=e))
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
@@ -927,12 +923,12 @@ def m2c(ds, supervector_dim, control_member=0):
     ds = drop_members(ds, rmd_member=[control_member])
     for m in range(ds.member.size):
         for e in ds.ensemble:
-            truth_list.append(ds.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    for m in range(ds.member.size):
-        for e in ds.ensemble:
             fct_list.append(truth.sel(ensemble=e))
     fct = xr.concat(fct_list, supervector_dim)
+    for m in range(ds.member.size):
+        for e in ds.ensemble:
+            truth_list.append(ds.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
     return fct, truth
 
 

@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from matplotlib.ticker import MaxNLocator
-from pyfinance import ols
+#from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
 
@@ -855,30 +855,21 @@ def pseudo_ens(ds, control):
     """
     nens = ds.ensemble.size
     nm = ds.member.size
-    ds_c = control.copy()
     length = ds.year.size
     c_start = control.year[0]
     c_end = control.year[-1]
-    elist = []
     year = ds.year
 
-    def sel_years(ds_c, year_s, m=None, length=length):
-        new = ds_c.sel(year=slice(year_s, year_s + length - 1))
+    def sel_years(control, year_s, m=None, length=length):
+        new = control.sel(year=slice(year_s, year_s + length - 1))
         new['year'] = year
-        # if m is not None:
-        #    new = new.expand_dims('member')
-        #    new['member'] = [m]
         return new
 
-    for j in range(nens):
+    def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nm)
-        ds_m = xr.concat([sel_years(ds_c, start)
+        return xr.concat([sel_years(control, start)
                           for start in startlist], 'member')
-        ds_m.expand_dims('ensemble')
-        ds_m['ensemble'] = j
-        elist.append(ds_m)
-    ds_e = xr.concat(elist, 'ensemble')
-    return ds_e
+    return xr.concat([create_pseudo_members(control) for _ in range(nens)], 'ensemble')
 
 
 def m2m(ds, supervector_dim):
@@ -888,10 +879,10 @@ def m2m(ds, supervector_dim):
     for m in range(ds.member.size):
         # drop the member being truth
         ds2 = drop_members(ds, rmd_member=[m])
-        truth2 = ds.sel(member=m)
+        truth = ds.sel(member=m)
         for m2 in range(ds.member.size):
             for e in ds.ensemble:
-                truth_list.append(truth2.sel(ensemble=e))
+                truth_list.append(truth.sel(ensemble=e))
                 fct_list.append(ds.sel(member=m2, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
@@ -902,15 +893,13 @@ def m2e(ds, supervector_dim):
     """Create two supervectors to compare members to ensemble mean."""
     truth_list = []
     fct_list = []
-    for m in range(ds.member.size):
-        for e in ds.ensemble:
-            truth_list.append(ds.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
     mean = ds.mean('member')
     for m in range(ds.member.size):
         for e in ds.ensemble:
+            truth_list.append(ds.sel(member=m, ensemble=e))
             fct_list.append(mean.sel(ensemble=e))
     fct = xr.concat(fct_list, supervector_dim)
+    truth = xr.concat(truth_list, supervector_dim)
     return fct, truth
 
 
@@ -924,11 +913,9 @@ def m2c(ds, supervector_dim, control_member=0):
     for m in range(ds.member.size):
         for e in ds.ensemble:
             fct_list.append(truth.sel(ensemble=e))
-    fct = xr.concat(fct_list, supervector_dim)
-    for m in range(ds.member.size):
-        for e in ds.ensemble:
             truth_list.append(ds.sel(member=m, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
 
@@ -1061,22 +1048,22 @@ def vectorized_predictability_horizon(ds, threshold, dim='year'):
     return (ds > threshold).argmin('year')
 
 
-def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
-    if dim is None:
-        x = df.index
-    result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta
-    if timestamp_location is 'middle':
-        result.index = result.index - int(window / 2)
-    if timestamp_location is 'first':
-        result.index = result.index - int(window - 1)
-    if timestamp_location is 'last':
-        pass
-    if rename:
-        result = result.rename(
-            columns={'feature1': '_'.join((varname, 'trend', str(window)))})
-    else:
-        result = result.rename(columns={'feature1': varname})
-    return result
+# def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
+#    if dim is None:
+#        x = df.index
+#    result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta
+#    if timestamp_location is 'middle':
+#        result.index = result.index - int(window / 2)
+#    if timestamp_location is 'first':
+#        result.index = result.index - int(window - 1)
+#    if timestamp_location is 'last':
+#        pass
+#    if rename:
+#        result = result.rename(
+#            columns={'feature1': '_'.join((varname, 'trend', str(window)))})
+#    else:
+#        result = result.rename(columns={'feature1': varname})
+#    return result
 
 
 def trend_over_numeric_varnames(df, **kwargs):

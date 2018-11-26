@@ -6,7 +6,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 from matplotlib.ticker import MaxNLocator
-#from pyfinance import ols
+from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
 
@@ -121,6 +121,9 @@ Time dimensions is called Years and is integer. (Original data was year
 varname = 'tos'
 period = 'ym'
 area = 'North_Atlantic'
+#ds = load_dataset('PM_MPI-ESM-LR_ds')
+#ds = ds.assign(member=np.arange(10))
+#control = load_dataset('PM_MPI-ESM-LR_control')
 
 
 def get_data_home(data_home=None):
@@ -819,12 +822,7 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
 # T test Bushuk
 
 
-ds = load_dataset('PM_MPI-ESM-LR_ds')
-ds = ds.assign(member=np.arange(10))
-control = load_dataset('PM_MPI-ESM-LR_control')
-
-
-def pseudo_ens(ds, control):
+def pseudo_ens_old(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -870,6 +868,76 @@ def pseudo_ens(ds, control):
         return xr.concat([sel_years(control, start)
                           for start in startlist], 'member')
     return xr.concat([create_pseudo_members(control) for _ in range(nens)], 'ensemble')
+
+
+def pseudo_ens(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
+    """
+    Create a pseudo-ensemble from control run in the form of ensemble ds.
+
+    Needed for bootstrapping confidence intervals of a metric.
+
+    Parameters
+    ----------
+    control : xr.DataArray with year dimension
+        Input ensemble data
+
+    Returns
+    -------
+    ds_e : xr.DataArray with year, ensemble, member dimension
+        pseudo-ensemble generated from control run
+
+    Example
+    -------
+    import esmtools as et
+    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
+    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
+    varname='tos'
+    period='ym'
+    area='North_Atlantic'
+    ds_e = et.prediction.pseudo_ens(control,ds)
+
+    """
+    control3d2 = control3d.copy()
+    if varname is not None:
+        control3d2 = control3d2[varname]
+
+    ensembles = ds3d.ensemble
+    members = ds3d.member
+    length = int(control3d.year.size / ensembles.size / members.size)
+
+    if bootstrap is not None:
+        control_year_values = np.copy(control3d2.year.values)
+        needed_repetitions = int(bootstrap / length)
+        new_control_years = np.concatenate(
+            (control_year_values,) * needed_repetitions)
+        control3d2 = control3d2.sel(year=new_control_years)
+        control3d2['year'] = np.arange(1900, 1900 + control3d2.year.size)
+    else:
+        bootstrap = length
+
+    if shuffle:
+        time_before = np.copy(control3d2.year.values)
+        np.random.shuffle(time_before)
+        control3d2 = control3d2.sel(year=time_before)
+
+    length = bootstrap
+    print('bootstrapping iterations:', length)
+    input_time = control3d2.year[:int(length * ensembles.size * members.size)]
+    new_time = control3d.year[:length]
+    ny = control3d.y.size
+    nx = control3d.x.size
+    # sel fewer years for dimsizes to match
+    control3d2 = control3d2.sel(year=input_time)
+
+    coords = [new_time, ensembles, members, ds3d.y.values, ds3d.x.values]
+    dims = ['year', 'ensemble', 'member', 'y', 'x']
+
+    new_order = (length, ensembles.size, members.size,
+                 ds3d.y.size, ds3d.x.size)
+
+    reshaped = np.reshape(control3d2.values, new_order)
+    new = xr.DataArray(reshaped, dims=dims, coords=coords)
+    return new
 
 
 def m2m(ds, supervector_dim):
@@ -967,7 +1035,7 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False):
             return ensmean_against_control(ds)
 
 
-def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, it=5):
+def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
@@ -1003,13 +1071,12 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, it=5):
           et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
 
     """
-    iteration_dim_name = 'it'
-    ds_pseudo = xr.concat([pseudo_ens(ds, control)
-                           for _ in range(it)], dim=iteration_dim_name)
+    #iteration_dim_name = 'it'
+    ds_pseudo = pseudo_ens(ds, control, bootstrap=bootstrap)
     ds_pseudo_metric = compute(
         ds_pseudo, control, metric=metric, comparison=comparison)
     sig_level = ds_pseudo_metric.quantile(
-        q=sig / 100, dim=[iteration_dim_name, 'year'], keep_attrs=True)
+        q=sig / 100, dim='year')  # , keep_attrs=True)
     return sig_level
 
 
@@ -1048,22 +1115,22 @@ def vectorized_predictability_horizon(ds, threshold, dim='year'):
     return (ds > threshold).argmin('year')
 
 
-# def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
-#    if dim is None:
-#        x = df.index
-#    result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta
-#    if timestamp_location is 'middle':
-#        result.index = result.index - int(window / 2)
-#    if timestamp_location is 'first':
-#        result.index = result.index - int(window - 1)
-#    if timestamp_location is 'last':
-#        pass
-#    if rename:
-#        result = result.rename(
-#            columns={'feature1': '_'.join((varname, 'trend', str(window)))})
-#    else:
-#        result = result.rename(columns={'feature1': varname})
-#    return result
+def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
+    if dim is None:
+        x = df.index
+    result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta
+    if timestamp_location is 'middle':
+        result.index = result.index - int(window / 2)
+    if timestamp_location is 'first':
+        result.index = result.index - int(window - 1)
+    if timestamp_location is 'last':
+        pass
+    if rename:
+        result = result.rename(
+            columns={'feature1': '_'.join((varname, 'trend', str(window)))})
+    else:
+        result = result.rename(columns={'feature1': varname})
+    return result
 
 
 def trend_over_numeric_varnames(df, **kwargs):

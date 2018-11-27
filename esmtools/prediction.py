@@ -1031,13 +1031,13 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,varname
         raise ValueError('specify comparison argument')
     supervector_dim = 'svd'
     time_dim = 'year'
-    fct, truth = comparison(ds, supervector_dim,varname=varname)
     if metric.__name__ in ['pearson_r', 'rmse']:
+        fct, truth = comparison(ds, supervector_dim,varname=varname)
         if anomaly:
             fct = fct - control.mean(time_dim)
             truth = truth - control.mean(time_dim)
         return metric(fct, truth, dim=supervector_dim)
-    if metric.__name__ in ['mse']:
+    elif metric.__name__ in ['mse']:
         if comparison.__name__ is 'm2e':
             return ens_var_against_mean(ds)
         if comparison.__name__ is 'm2c':
@@ -1123,9 +1123,13 @@ def get_predictability_horizon(s, threshold):
     return ph
 
 
-def vectorized_predictability_horizon(ds, threshold, dim='year'):
+def vectorized_predictability_horizon(ds, threshold, limit='upper', dim='year'):
     """Get predictability horizons of dataset form threshold dataset."""
-    return (ds > threshold).argmin('year')
+    if limit is 'upper':
+        return (ds > threshold).argmin('year')
+    if limit is 'lower':
+        return (ds < threshold).argmin('year')
+
 
 
 def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):

@@ -121,9 +121,6 @@ Time dimensions is called Years and is integer. (Original data was year
 varname = 'tos'
 period = 'ym'
 area = 'North_Atlantic'
-#ds = load_dataset('PM_MPI-ESM-LR_ds')
-#ds = ds.assign(member=np.arange(10))
-#control = load_dataset('PM_MPI-ESM-LR_control')
 
 
 def get_data_home(data_home=None):
@@ -940,7 +937,7 @@ def pseudo_ens(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
     return new
 
 
-def m2m(ds, supervector_dim):
+def m2m(ds, supervector_dim, varname=None):
     """Create two supervectors to compare members to all other members."""
     truth_list = []
     fct_list = []
@@ -960,37 +957,34 @@ def m2m(ds, supervector_dim):
 def m2e(ds3d, supervector_dim, varname=None):
     """Create two supervectors to compare members to ensemble mean."""
     if varname is not None:
-        fct = ds3d[varname].copy()
+        ds3d2 = ds3d[varname].copy()
     else:
-        fct = ds3d.copy()
+        ds3d2 = ds3d.copy()
     new_shape = (ds3d.year.size, ds3d.ensemble.size
                  * ds3d.member.size, ds3d.y.size, ds3d.x.size)
     new_dim = ['year', supervector_dim, 'y', 'x']
     new_coords = [ds3d.year, np.arange(
         ds3d.ensemble.size * ds3d.member.size), ds3d.y, ds3d.x]
-    reshaped = np.reshape(fct.values, new_shape)
+    reshaped = np.reshape(ds3d2.values, new_shape)
     fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
-    if varname is not None:
-        mean = ds3d[varname].mean('member').expand_dims('member')
-    else:
-        mean = ds3d.mean('member').expand_dims('member')
+
+    mean = ds3d2.mean('member').expand_dims('member')
     nm = ds3d.member.size
-    mean = mean.sel(member=[0] * nm)
-    reshaped = np.reshape(mean.values, new_shape)
+    mean_m = mean.sel(member=[0] * nm)
+    reshaped = np.reshape(mean_m.values, new_shape)
     truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
 
     return fct, truth
 
 
-
 def m2c(ds3d, supervector_dim, control_member=0, varname=None):
     """Create two supervectors to compare members to control."""
     if varname is not None:
-        ds3d = ds3d[varname].copy()
+        ds3d2 = ds3d[varname].copy()
     else:
-        ds3d = ds3d.copy()
+        ds3d2 = ds3d.copy()
 
-    all_fct_members = drop_members(ds3d, rmd_member=[control_member])
+    all_fct_members = drop_members(ds3d2, rmd_member=[control_member])
     new_shape = (ds3d.year.size, ds3d.ensemble.size
                  * (ds3d.member.size-1), ds3d.y.size, ds3d.x.size)
     new_dim = ['year', supervector_dim, 'y', 'x']
@@ -1000,14 +994,14 @@ def m2c(ds3d, supervector_dim, control_member=0, varname=None):
     fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
 
     nm = ds3d.member.size-1
-    control_m = ds3d.sel(member=[control_member] * nm)
+    control_m = ds3d2.sel(member=[control_member] * nm)
     reshaped = np.reshape(control_m.values, new_shape)
     truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
 
     return fct, truth
 
 
-def e2c(ds, supervector_dim, control_member=0):
+def e2c(ds, supervector_dim, control_member=0, varname=None):
     """Create two supervectors to compare ensemble mean to control."""
     truth = ds.sel(member=control_member)
     truth = truth.rename({'ensemble': supervector_dim})
@@ -1030,16 +1024,15 @@ def mse(ds):
     pass  # ugly
 
 
-def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False):
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,varname=None):
     if metric.__name__ not in ['pearson_r', 'rmse', 'rmse_v', 'mse']:
         raise ValueError('specify metric argument')
     if comparison.__name__ not in ['m2m', 'm2c', 'm2e', 'e2c']:
         raise ValueError('specify comparison argument')
     supervector_dim = 'svd'
     time_dim = 'year'
-    fct, truth = comparison(ds, supervector_dim)
+    fct, truth = comparison(ds, supervector_dim,varname=varname)
     if metric.__name__ in ['pearson_r', 'rmse']:
-        anomaly = anomaly
         if anomaly:
             fct = fct - control.mean(time_dim)
             truth = truth - control.mean(time_dim)

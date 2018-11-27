@@ -921,7 +921,7 @@ def pseudo_ens(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
         control3d2 = control3d2.sel(year=time_before)
 
     length = bootstrap
-    print('bootstrapping iterations:', length)
+    #print('bootstrapping iterations:', length)
     input_time = control3d2.year[:int(length * ensembles.size * members.size)]
     new_time = control3d.year[:length]
     ny = control3d.y.size
@@ -957,33 +957,53 @@ def m2m(ds, supervector_dim):
     return fct, truth
 
 
-def m2e(ds, supervector_dim):
+def m2e(ds3d, supervector_dim, varname=None):
     """Create two supervectors to compare members to ensemble mean."""
-    truth_list = []
-    fct_list = []
-    mean = ds.mean('member')
-    for m in range(ds.member.size):
-        for e in ds.ensemble:
-            truth_list.append(ds.sel(member=m, ensemble=e))
-            fct_list.append(mean.sel(ensemble=e))
-    fct = xr.concat(fct_list, supervector_dim)
-    truth = xr.concat(truth_list, supervector_dim)
+    if varname is not None:
+        fct = ds3d[varname].copy()
+    else:
+        fct = ds3d.copy()
+    new_shape = (ds3d.year.size, ds3d.ensemble.size
+                 * ds3d.member.size, ds3d.y.size, ds3d.x.size)
+    new_dim = ['year', supervector_dim, 'y', 'x']
+    new_coords = [ds3d.year, np.arange(
+        ds3d.ensemble.size * ds3d.member.size), ds3d.y, ds3d.x]
+    reshaped = np.reshape(fct.values, new_shape)
+    fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+    if varname is not None:
+        mean = ds3d[varname].mean('member').expand_dims('member')
+    else:
+        mean = ds3d.mean('member').expand_dims('member')
+    nm = ds3d.member.size
+    mean = mean.sel(member=[0] * nm)
+    reshaped = np.reshape(mean.values, new_shape)
+    truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+
     return fct, truth
 
 
-def m2c(ds, supervector_dim, control_member=0):
+
+def m2c(ds3d, supervector_dim, control_member=0, varname=None):
     """Create two supervectors to compare members to control."""
-    truth_list = []
-    fct_list = []
-    truth = ds.sel(member=control_member)
-    # drop the member being truth
-    ds = drop_members(ds, rmd_member=[control_member])
-    for m in range(ds.member.size):
-        for e in ds.ensemble:
-            fct_list.append(truth.sel(ensemble=e))
-            truth_list.append(ds.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
+    if varname is not None:
+        ds3d = ds3d[varname].copy()
+    else:
+        ds3d = ds3d.copy()
+
+    all_fct_members = drop_members(ds3d, rmd_member=[control_member])
+    new_shape = (ds3d.year.size, ds3d.ensemble.size
+                 * (ds3d.member.size-1), ds3d.y.size, ds3d.x.size)
+    new_dim = ['year', supervector_dim, 'y', 'x']
+    new_coords = [ds3d.year, np.arange(
+        ds3d.ensemble.size * (ds3d.member.size-1)), ds3d.y, ds3d.x]
+    reshaped = np.reshape(all_fct_members.values, new_shape)
+    fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+
+    nm = ds3d.member.size-1
+    control_m = ds3d.sel(member=[control_member] * nm)
+    reshaped = np.reshape(control_m.values, new_shape)
+    truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+
     return fct, truth
 
 

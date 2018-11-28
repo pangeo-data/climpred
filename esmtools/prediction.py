@@ -943,12 +943,12 @@ def m2m(ds, supervector_dim, varname=None):
     fct_list = []
     for m in range(ds.member.size):
         # drop the member being truth
-        ds2 = drop_members(ds, rmd_member=[m])
+        ds_reduced = drop_members(ds, rmd_member=[m])
         truth = ds.sel(member=m)
-        for m2 in range(ds.member.size):
+        for m2 in range(ds_reduced.member.size):
             for e in ds.ensemble:
                 truth_list.append(truth.sel(ensemble=e))
-                fct_list.append(ds.sel(member=m2, ensemble=e))
+                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
@@ -1084,12 +1084,10 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
           et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
 
     """
-    #iteration_dim_name = 'it'
     ds_pseudo = pseudo_ens(ds, control, bootstrap=bootstrap)
     ds_pseudo_metric = compute(
         ds_pseudo, control, metric=metric, comparison=comparison)
-    sig_level = ds_pseudo_metric.quantile(
-        q=sig / 100, dim='year')  # , keep_attrs=True)
+    sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
     return sig_level
 
 

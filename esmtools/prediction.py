@@ -937,7 +937,7 @@ def pseudo_ens(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
     return new
 
 
-def m2m(ds, supervector_dim, varname=None):
+def m2m(ds, supervector_dim):
     """Create two supervectors to compare members to all other members."""
     truth_list = []
     fct_list = []
@@ -954,35 +954,22 @@ def m2m(ds, supervector_dim, varname=None):
     return fct, truth
 
 
-def m2e(ds3d, supervector_dim, varname=None):
-    """Create two supervectors to compare members to ensemble mean."""
-    if varname is not None:
-        ds3d2 = ds3d[varname].copy()
-    else:
-        ds3d2 = ds3d.copy()
-    new_shape = (ds3d.year.size, ds3d.ensemble.size
-                 * ds3d.member.size, ds3d.y.size, ds3d.x.size)
-    new_dim = ['year', supervector_dim, 'y', 'x']
-    new_coords = [ds3d.year, np.arange(
-        ds3d.ensemble.size * ds3d.member.size), ds3d.y, ds3d.x]
-    reshaped = np.reshape(ds3d2.values, new_shape)
-    fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
-
-    mean = ds3d2.mean('member').expand_dims('member')
-    nm = ds3d.member.size
-    mean_m = mean.sel(member=[0] * nm)
-    reshaped = np.reshape(mean_m.values, new_shape)
-    truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
-
+def m2e(ds3d, supervector_dim):
+    """Create two supervectors to compare members to all other members."""
+    truth_list = []
+    fct_list = []
+    for m in range(ds3d.member.size):
+        for e in ds3d.ensemble:
+            truth_list.append(ds3d.sel(ensemble=e).mean('member'))
+            fct_list.append(ds3d.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
 
-def m2c(ds3d, supervector_dim, control_member=0, varname=None):
+def m2c(ds3d, supervector_dim, control_member=0):
     """Create two supervectors to compare members to control."""
-    if varname is not None:
-        ds3d2 = ds3d[varname].copy()
-    else:
-        ds3d2 = ds3d.copy()
+    ds3d2 = ds3d.copy()
 
     all_fct_members = drop_members(ds3d2, rmd_member=[control_member])
     new_shape = (ds3d.year.size, ds3d.ensemble.size
@@ -1001,7 +988,7 @@ def m2c(ds3d, supervector_dim, control_member=0, varname=None):
     return fct, truth
 
 
-def e2c(ds, supervector_dim, control_member=0, varname=None):
+def e2c(ds, supervector_dim, control_member=0):
     """Create two supervectors to compare ensemble mean to control."""
     truth = ds.sel(member=control_member)
     truth = truth.rename({'ensemble': supervector_dim})
@@ -1032,7 +1019,7 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,varname
     supervector_dim = 'svd'
     time_dim = 'year'
     if metric.__name__ in ['pearson_r', 'rmse']:
-        fct, truth = comparison(ds, supervector_dim,varname=varname)
+        fct, truth = comparison(ds, supervector_dim)
         if anomaly:
             fct = fct - control.mean(time_dim)
             truth = truth - control.mean(time_dim)

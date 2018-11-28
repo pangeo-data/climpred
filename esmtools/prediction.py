@@ -941,11 +941,11 @@ def m2m(ds, supervector_dim):
     """Create two supervectors to compare members to all other members."""
     truth_list = []
     fct_list = []
-    for m in range(ds.member.size):
+    for m in ds.member:
         # drop the member being truth
         ds_reduced = drop_members(ds, rmd_member=[m])
         truth = ds.sel(member=m)
-        for m2 in range(ds_reduced.member.size):
+        for m2 in ds_reduced.member:
             for e in ds.ensemble:
                 truth_list.append(truth.sel(ensemble=e))
                 fct_list.append(ds_reduced.sel(member=m2, ensemble=e))

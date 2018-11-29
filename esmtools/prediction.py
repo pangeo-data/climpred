@@ -1068,7 +1068,7 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
     return sig_level
 
-def PM_sig_slow(ds, control, metric=rmse, comparison=m2m, sig=95,bootstrap=30):
+def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95,bootstrap=30):
     x=[]
     for _ in range(1+int(bootstrap/ds.year.size)):
         ds_pseudo = pseudo_ens(ds, control)

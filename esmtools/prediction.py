@@ -1059,17 +1059,6 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     sig_level : xr.DataArray/Dataset as inputs
         significance level without year, ensemble and member dimensions
 
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    varname='tos'
-    period='ym'
-    area='North_Atlantic'
-    print(sig,'% significance level at',
-          et.prediction.PM_ACC_sig(control,ds,func='ACC',sig=sig))
-
     """
     ds_pseudo = pseudo_ens(ds, control, bootstrap=bootstrap)
     ds_pseudo_metric = compute(

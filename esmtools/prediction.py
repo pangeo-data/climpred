@@ -816,10 +816,8 @@ def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
         else:
             raise ValueError('Specify ["mean","every","control"]')
 
-# T test Bushuk
 
-
-def pseudo_ens_old(ds, control):
+def pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -867,7 +865,7 @@ def pseudo_ens_old(ds, control):
     return xr.concat([create_pseudo_members(control) for _ in range(nens)], 'ensemble')
 
 
-def pseudo_ens(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
+def pseudo_ens_fast(ds3d, control3d, varname=None, shuffle=True, bootstrap=None):
     """
     Create a pseudo-ensemble from control run in the form of ensemble ds.
 
@@ -1035,7 +1033,7 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,varname
             return ensmean_against_control(ds)
 
 
-def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
+def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
@@ -1060,12 +1058,30 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
         significance level without year, ensemble and member dimensions
 
     """
-    ds_pseudo = pseudo_ens(ds, control, bootstrap=bootstrap)
+    ds_pseudo = pseudo_ens_fast(ds, control, bootstrap=bootstrap)
     ds_pseudo_metric = compute(
         ds_pseudo, control, metric=metric, comparison=comparison)
+    if isinstance(sig,list):
+        qsig=[x / 100 for x in sig]
+    else:
+        qsig=sig/100
     sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
     return sig_level
 
+def PM_sig_slow(ds, control, metric=rmse, comparison=m2m, sig=95,bootstrap=30):
+    x=[]
+    for _ in range(1+int(bootstrap/ds.year.size)):
+        ds_pseudo = pseudo_ens(ds, control)
+        ds_pseudo_metric = compute(
+            ds_pseudo, control, metric=metric, comparison=comparison)
+        x.append(ds_pseudo_metric)
+    ds_pseudo_metric = xr.concat(x,dim='it')
+    if isinstance(sig,list):
+        qsig=[x / 100 for x in sig]
+    else:
+        qsig=sig/100
+    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=['year','it'])
+    return sig_level
 
 def set_integer_xaxis(ax=False):
     if not ax:

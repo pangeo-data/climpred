@@ -1,14 +1,20 @@
 import os
 
-import esmtools as et
+import cartopy as cp
+import cartopy.crs as ccrs
+import cmocean
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sb
 import xarray as xr
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
+
+import esmtools as et
 
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
@@ -211,8 +217,7 @@ def ds2df(ds, area=area, varname=varname, period=period):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    PM_MSSS = et.prediction.PM_MSSS(ds,control)
-    et.prediction.ds2df(PM_MSSS).plot()
+    ds2df(ds,area='North_Atlantic',period='ym',varname='tos')
 
     """
     df = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T
@@ -400,7 +405,6 @@ def ens_var_against_mean(ds):
     ens_var_against_mean.to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
 
     """
-#    return ds.var('member')
     return ds.var('member').mean('ensemble')
 
 
@@ -485,15 +489,6 @@ def normalize_var(var, control, fac=1, running=True, m=20):
     nens_var_against_mean = et.prediction.normalize_var(
         ens_var_against_control,control,fac=2)
 
-    # dataframe # works nice for many variances in dataframe view
-    def normalize_var(var,fac=1,running=True):
-        if running:
-            return (var.stack(level=0).stack(level=0).stack(level=1).to_xarray()/control_var_running/fac).to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-        else:
-            return (var.stack(level=0).stack(level=0).stack(level=1).to_xarray()/control_var/fac).to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-    var_mean = et.prediction.ens_var_against_mean(ds)..to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-    nvar_mean = normalize_var(var_mean)
-
     """
     if not running:
         control_var = control.var('year')  # .mean('year')
@@ -505,7 +500,7 @@ def normalize_var(var, control, fac=1, running=True, m=20):
         return var2
 
 
-def PPP_from_nvar(nvar):
+def PPP(ds, control):
     """
     Calculate Prognostic Potential Predictability (PPP) as in Pohlmann 2004 or Griffies 1997.
 
@@ -523,6 +518,7 @@ def PPP_from_nvar(nvar):
     ----------
     ds : DataArray with year dimension (optional spatial coordinates)
         Input data
+    control :
 
     Returns
     -------
@@ -534,13 +530,10 @@ def PPP_from_nvar(nvar):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(
-        ens_var_against_mean,control)
-    PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
+    PPP_mean = et.prediction.PPP(ds,control)
 
     """
-    return 1 - nvar
+    return 1
 
 
 # Perfect-model (PM) predictability scores from Bushuk 2018
@@ -562,28 +555,6 @@ def PM_MSSS(ds, control, against='', running=True, m=20):
 
     Parameters
     ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
-        Input ensemble data
-    control : DataArray with year dimension (optional spatial coordinates)
-        Input control run data
-    kind : string
-        how to calculate ensemble variance: against ["mean","control","every"]
-    running : boolean
-        if true against running m-yr variance
-    m : int
-        see running
-
-    Returns
-    -------
-    msss : DataArray
-        Output data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control,against='control',running=True,m=30)
 
     """
     if against == 'mean':
@@ -667,154 +638,6 @@ def PM_NRMSE(ds, control, against=None, running=True, m=20):
     nrmse = PPP_from_nvar(nens_var_against_mean**.5)
     return nrmse
 
-
-def PM_ACC_U(msss):
-    """
-    Calculate the perfect-model (PM) unbiased anomaly correlation coefficient as in Bushuk et al. 2018.
-
-    Formula
-    -------
-    ACC_{U} = sqrt{MSSS} = sqrt{PPP} or sqrt{NRMSE}
-
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
-    Parameters
-    ----------
-    (TODO: Test whether this works for 3D data)
-    msss : DataArray with year dimension (optional spatial coordinates)
-        Input msss data
-
-    Returns
-    -------
-    ACC_U : DataArray
-        Output ACC_U data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control,against='mean')
-    pm_acc_u = PM_ACC_U(pm_msss)
-
-    """
-    return msss ** .5
-
-
-def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
-           ens=False, control_member=0, m=False, against='mean'):
-    """
-    Calculate the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
-
-    Create a supervectors (dims=(N*M,length)) for ensemble and observations
-    (each member at the turn becomes obs). Returns M ACC timeseries.
-
-    Formula
-    -------
-    ACC = pd.corrwith()
-
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
-    Parameters
-    ----------
-    (TODO: Test whether this works for 3D data)
-    ds : xr.DataArray with year dimension (optional spatial coordinates)
-        Input ensemble data
-    anomaly: bool
-        create anomaly
-
-    Returns
-    -------
-    ACC : pd.DataArray
-        ACC
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    varname='tos'
-    period='ym'
-    area='North_Atlantic'
-    pm_acc = et.prediction.PM_ACC(ds.sel(area=area,period=period),control)
-    pm_acc.plot()
-
-    """
-    if anomaly:
-        ds = ds - control.mean('year')
-    if (m is not False) and control_member in m:  # if control_member is in m combination
-        return pd.Series([np.nan] * 12)
-    # if (ens != False) and len(ens)==1: # if single ens, somehow gives near 0 ACC
-    #    return pd.Series([np.nan])
-    else:
-        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack()
-        obs = ds.sel(area=area, period=period).to_dataframe()[
-            varname].unstack()
-        if against not in ['every', 'mean_every']:
-            sv = sv.T.reorder_levels([1, 0], axis=1).drop(
-                columns=control_member).reorder_levels([1, 0], axis=1).T
-            obs = obs.T.reorder_levels([1, 0], axis=1)[control_member].T
-
-        # subselections
-        if ens and not m:
-            sv = sv.T[ens].T  # fewer ensembles
-            obs = obs.T[ens].T  # fewer ensembles
-        elif m and not ens:
-            sv = sv.T.reorder_levels([1, 0], axis=1)[m].reorder_levels(
-                [1, 0], axis=1).sortlevel(axis=1).T  # fewer members
-            obs = obs
-        elif not m and not ens:
-            sv = sv
-            obs = obs
-        elif m and ens:
-            sv = sv.T[ens].reorder_levels([1, 0], axis=1)[m].reorder_levels([
-                1, 0], axis=1).sortlevel(axis=1).T
-            obs = obs.T[ens].T
-
-        # how to compute ACC: compare forecast against ...
-        if against == 'mean':  # correlation control member against ensemble mean
-            sv = sv.mean(axis=0, level=0)
-            return sv.corrwith(obs)
-        elif against == 'every':  # correlation of every member against every member
-            obsl = []  # create larger supervector with all members being once truth
-            svl = []
-            member = list(sv.index.get_level_values(level=1).unique().values)
-            for i in member:
-                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
-                members_left = list(
-                    sv.index.get_level_values(level=1).unique().values)
-                members_left.remove(i)
-                obsl.append(
-                    pd.concat([d] * len(members_left), keys=members_left))
-                svl.append(sv.T.reorder_levels([1, 0], axis=1).drop(
-                    columns=i).reorder_levels([1, 0], axis=1).T)
-            SV = pd.concat(svl).sort_index()
-            OBS = pd.concat(obsl).reorder_levels([1, 0], axis=0).sort_index()
-            ACC = SV.corrwith(OBS)
-            return ACC
-        elif against == 'mean_every':  # ensemble mean against ACC_every
-            obsl = []  # create larger supervector with all members being once truth
-            svl = []
-            member = list(sv.index.get_level_values(level=1).unique().values)
-            for i in member:
-                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
-                obsl.append(d)
-                svll = sv.T.reorder_levels([1, 0], axis=1).drop(
-                    columns=i).reorder_levels([1, 0], axis=1).T
-                svl.append(svll.mean(axis=0, level=0))
-            SV = pd.concat(svl)
-            OBS = pd.concat(obsl)
-            ACC = SV.corrwith(OBS)
-            return ACC
-        elif against == 'control':  # correlation each member against control member
-            ACC = sv.corrwith(obs)
-            return ACC
-        else:
-            raise ValueError('Specify ["mean","every","control"]')
 
 
 def pseudo_ens(ds, control):
@@ -956,9 +779,10 @@ def m2e(ds3d, supervector_dim):
     """Create two supervectors to compare members to all other members."""
     truth_list = []
     fct_list = []
+    mean = ds3d.mean('member')
     for m in range(ds3d.member.size):
         for e in ds3d.ensemble:
-            truth_list.append(ds3d.sel(ensemble=e).mean('member'))
+            truth_list.append(mean.sel(ensemble=e))
             fct_list.append(ds3d.sel(member=m, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
@@ -967,21 +791,17 @@ def m2e(ds3d, supervector_dim):
 
 def m2c(ds3d, supervector_dim, control_member=0):
     """Create two supervectors to compare members to control."""
-    ds3d2 = ds3d.copy()
-
-    all_fct_members = drop_members(ds3d2, rmd_member=[control_member])
-    new_shape = (ds3d.year.size, ds3d.ensemble.size
-                 * (ds3d.member.size-1), ds3d.y.size, ds3d.x.size)
-    new_dim = ['year', supervector_dim, 'y', 'x']
-    new_coords = [ds3d.year, np.arange(
-        ds3d.ensemble.size * (ds3d.member.size-1)), ds3d.y, ds3d.x]
-    reshaped = np.reshape(all_fct_members.values, new_shape)
-    fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
-
-    nm = ds3d.member.size-1
-    control_m = ds3d2.sel(member=[control_member] * nm)
-    reshaped = np.reshape(control_m.values, new_shape)
-    truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+    truth_list = []
+    fct_list = []
+    truth = ds3d.sel(member=control_member)
+    # drop the member being truth
+    ds3d_dropped = drop_members(ds3d, rmd_member=[control_member])
+    for m in ds3d_dropped.member:
+        for e in ds3d_dropped.ensemble:
+            fct_list.append(truth.sel(ensemble=e))
+            truth_list.append(ds3d_dropped.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
 
     return fct, truth
 
@@ -1068,7 +888,7 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
     return sig_level
 
-def PM_sig_slow(ds, control, metric=rmse, comparison=m2m, sig=95,bootstrap=30):
+def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95,bootstrap=30):
     x=[]
     for _ in range(1+int(bootstrap/ds.year.size)):
         ds_pseudo = pseudo_ens(ds, control)
@@ -1209,6 +1029,42 @@ def calc_tau(alpha):
 
     """
     return (1 + alpha) / (1 - alpha)
+
+
+def persistence_forecast(ds, control, varname=varname, area=area, period=period, comparison=m2e):
+    """Generate persistence forecast timeseries."""
+    starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
+    anom = (control.sel(year=starting_years) - control.mean())
+    t = np.arange(1, ds.year.size + 1)
+    tds = np.arange(1900, 1900 + ds.year.size)
+    alpha = control.to_series().autocorr()
+    persistence_forecast_list = []
+    for year in anom.year:
+        ar1 = anom.sel(year=year).values * \
+            np.exp(-alpha * t) + control.mean().values
+        pf = xr.DataArray(data=ar1, coords=[tds], dims='year')
+        pf = pf.expand_dims('ensemble')
+        pf['ensemble'] = [year + 1100 + 1]
+        persistence_forecast_list.append(pf)
+    return xr.concat(persistence_forecast_list, dim='ensemble')
+
+
+def compute_persistence(ds, control, metric=rmse, comparison=m2e):
+    """Compute skill for persistence forecast."""
+    persistence_forecasts = persistence_forecast(ds, control)
+    if comparison.__name__ == 'm2e':
+        result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
+    elif comparison.__name__ == 'm2m':
+        persistence_forecasts = persistence_forecasts.expand_dims('member')
+        all_persistence_forecasts = persistence_forecasts.sel(
+            member=[0] * ds.member.size)
+        fct = m2e(all_persistence_forecasts, 'svd')[0]
+        truth = m2e(ds_, 'svd')[0]
+        result = metric(fct, truth, 'svd')
+    else:
+        raise ValueError('not defined')
+    return result
+
 
 
 def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
@@ -1374,3 +1230,46 @@ def select_members_ensembles(ds, m=None, e=None):
     if e is None:
         e = ds.ensemble.values
     return ds.sel(member=m, ensemble=e)
+
+# plotting
+def set_lon_lat_axis(ax, talk=False, projection=ccrs.PlateCarree()):
+    """Add longitude and latitude coordinates."""
+    ax.set_xticks([-180, -120, -60, 0, 60, 120, 180], crs=projection)
+    ax.set_yticks([-60, -30, 0, 30, 60, 90], crs=projection)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax.xaxis.set_major_formatter(lon_formatter)
+    ax.yaxis.set_major_formatter(lat_formatter)
+    if talk:
+        ax.outline_patch.set_edgecolor('black')
+        ax.outline_patch.set_linewidth('1.5')
+        ax.tick_params(labelsize=15)
+        ax.tick_params(width=1.5)
+
+
+def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, **kwargs):
+    """Wrap xr.plot."""
+    plt.figure(figsize=(10, 5))
+    ax = plt.subplot(projection=projection)
+    data.plot.pcolormesh('lon', 'lat', ax=ax,
+                         transform=ccrs.PlateCarree(), **kwargs)
+    ax.coastlines(color=coastline_color, linewidth=1.5)
+    if curv:
+        ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
+    if projection == ccrs.PlateCarree():
+        set_lon_lat_axis(ax)
+
+
+def my_facetgrid(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, col='year', col_wrap=2, **kwargs):
+    """Wrap facetgrid."""
+    transform = ccrs.PlateCarree()
+    p = data.plot.pcolormesh('lon', 'lat', transform=transform, col=col, col_wrap=col_wrap,
+                            subplot_kws={'projection': projection}, **kwargs)
+    for ax in p.axes.flat:
+        if curv:
+            ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
+        if projection == ccrs.PlateCarree():
+            set_lon_lat_axis(ax)
+        ax.coastlines()
+        #ax.set_extent([-160, -30, 5, 75])
+        ax.set_aspect('equal', 'box-forced')

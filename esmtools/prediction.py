@@ -1229,7 +1229,7 @@ def select_members_ensembles(ds, m=None, e=None):
     return ds.sel(member=m, ensemble=e)
 
 # plotting
-def set_lon_lat_axis(ax, talk=False):
+def set_lon_lat_axis(ax, talk=False,projection=ccrs.PlateCarree()):
     """Add longitude and latitude coordinates."""
     ax.set_xticks([-180, -120, -60, 0, 60, 120, 180], crs=projection)
     ax.set_yticks([-60, -30, 0, 30, 60, 90], crs=projection)
@@ -1252,4 +1252,4 @@ def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=Fa
     ax.coastlines(color=coastline_color, linewidth=1.5)
     if curv:
         ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
-    set_lon_lat_axis(ax)
+    set_lon_lat_axis(ax,projection=projection)

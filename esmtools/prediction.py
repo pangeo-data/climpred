@@ -1406,3 +1406,29 @@ def select_members_ensembles(ds, m=None, e=None):
     if e is None:
         e = ds.ensemble.values
     return ds.sel(member=m, ensemble=e)
+
+# plotting
+def set_lon_lat_axis(ax, talk=False):
+    """Add longitude and latitude coordinates."""
+    ax.set_xticks([-180, -120, -60, 0, 60, 120, 180], crs=projection)
+    ax.set_yticks([-60, -30, 0, 30, 60, 90], crs=projection)
+    lon_formatter = LongitudeFormatter(zero_direction_label=True)
+    lat_formatter = LatitudeFormatter()
+    ax.xaxis.set_major_formatter(lon_formatter)
+    ax.yaxis.set_major_formatter(lat_formatter)
+    if talk:
+        ax.outline_patch.set_edgecolor('black')
+        ax.outline_patch.set_linewidth('1.5')
+        ax.tick_params(labelsize=15)
+        ax.tick_params(width=1.5)
+
+
+def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, **kwargs):
+    """Wrap xr.plot."""
+    plt.figure(figsize=(10, 5))
+    ax = plt.subplot(projection=projection)
+    data.plot.pcolormesh('lon', 'lat', ax=ax, **kwargs)
+    ax.coastlines(color=coastline_color, linewidth=1.5)
+    if curv:
+        ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
+    set_lon_lat_axis(ax)

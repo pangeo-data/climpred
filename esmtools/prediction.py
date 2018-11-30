@@ -1,10 +1,14 @@
 import os
 
+import cartopy as cp
+import cartopy.crs as ccrs
 import esmtools as et
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sb
 import xarray as xr
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
@@ -211,8 +215,7 @@ def ds2df(ds, area=area, varname=varname, period=period):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    PM_MSSS = et.prediction.PM_MSSS(ds,control)
-    et.prediction.ds2df(PM_MSSS).plot()
+    ds2df(ds,area='North_Atlantic',period='ym',varname='tos')
 
     """
     df = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T
@@ -400,7 +403,6 @@ def ens_var_against_mean(ds):
     ens_var_against_mean.to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
 
     """
-#    return ds.var('member')
     return ds.var('member').mean('ensemble')
 
 
@@ -485,15 +487,6 @@ def normalize_var(var, control, fac=1, running=True, m=20):
     nens_var_against_mean = et.prediction.normalize_var(
         ens_var_against_control,control,fac=2)
 
-    # dataframe # works nice for many variances in dataframe view
-    def normalize_var(var,fac=1,running=True):
-        if running:
-            return (var.stack(level=0).stack(level=0).stack(level=1).to_xarray()/control_var_running/fac).to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-        else:
-            return (var.stack(level=0).stack(level=0).stack(level=1).to_xarray()/control_var/fac).to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-    var_mean = et.prediction.ens_var_against_mean(ds)..to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-    nvar_mean = normalize_var(var_mean)
-
     """
     if not running:
         control_var = control.var('year')  # .mean('year')
@@ -505,7 +498,7 @@ def normalize_var(var, control, fac=1, running=True, m=20):
         return var2
 
 
-def PPP_from_nvar(nvar):
+def PPP(ds, control):
     """
     Calculate Prognostic Potential Predictability (PPP) as in Pohlmann 2004 or Griffies 1997.
 
@@ -523,6 +516,7 @@ def PPP_from_nvar(nvar):
     ----------
     ds : DataArray with year dimension (optional spatial coordinates)
         Input data
+    control :
 
     Returns
     -------
@@ -534,13 +528,10 @@ def PPP_from_nvar(nvar):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(
-        ens_var_against_mean,control)
-    PPP_mean = et.prediction.PPP_from_nvar(nens_var_against_mean)
+    PPP_mean = et.prediction.PPP(ds,control)
 
     """
-    return 1 - nvar
+    return 1
 
 
 # Perfect-model (PM) predictability scores from Bushuk 2018
@@ -562,28 +553,6 @@ def PM_MSSS(ds, control, against='', running=True, m=20):
 
     Parameters
     ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
-        Input ensemble data
-    control : DataArray with year dimension (optional spatial coordinates)
-        Input control run data
-    kind : string
-        how to calculate ensemble variance: against ["mean","control","every"]
-    running : boolean
-        if true against running m-yr variance
-    m : int
-        see running
-
-    Returns
-    -------
-    msss : DataArray
-        Output data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control,against='control',running=True,m=30)
 
     """
     if against == 'mean':
@@ -667,154 +636,6 @@ def PM_NRMSE(ds, control, against=None, running=True, m=20):
     nrmse = PPP_from_nvar(nens_var_against_mean**.5)
     return nrmse
 
-
-def PM_ACC_U(msss):
-    """
-    Calculate the perfect-model (PM) unbiased anomaly correlation coefficient as in Bushuk et al. 2018.
-
-    Formula
-    -------
-    ACC_{U} = sqrt{MSSS} = sqrt{PPP} or sqrt{NRMSE}
-
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
-    Parameters
-    ----------
-    (TODO: Test whether this works for 3D data)
-    msss : DataArray with year dimension (optional spatial coordinates)
-        Input msss data
-
-    Returns
-    -------
-    ACC_U : DataArray
-        Output ACC_U data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_msss = PM_MSSS(ds,control,against='mean')
-    pm_acc_u = PM_ACC_U(pm_msss)
-
-    """
-    return msss ** .5
-
-
-def PM_ACC(ds, control, anomaly=True, varname=varname, area=area, period=period,
-           ens=False, control_member=0, m=False, against='mean'):
-    """
-    Calculate the perfect-model (PM) anomaly correlation coefficient as in Bushuk et al. 2018.
-
-    Create a supervectors (dims=(N*M,length)) for ensemble and observations
-    (each member at the turn becomes obs). Returns M ACC timeseries.
-
-    Formula
-    -------
-    ACC = pd.corrwith()
-
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
-    Parameters
-    ----------
-    (TODO: Test whether this works for 3D data)
-    ds : xr.DataArray with year dimension (optional spatial coordinates)
-        Input ensemble data
-    anomaly: bool
-        create anomaly
-
-    Returns
-    -------
-    ACC : pd.DataArray
-        ACC
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    varname='tos'
-    period='ym'
-    area='North_Atlantic'
-    pm_acc = et.prediction.PM_ACC(ds.sel(area=area,period=period),control)
-    pm_acc.plot()
-
-    """
-    if anomaly:
-        ds = ds - control.mean('year')
-    if (m is not False) and control_member in m:  # if control_member is in m combination
-        return pd.Series([np.nan] * 12)
-    # if (ens != False) and len(ens)==1: # if single ens, somehow gives near 0 ACC
-    #    return pd.Series([np.nan])
-    else:
-        sv = ds.sel(area=area, period=period).to_dataframe()[varname].unstack()
-        obs = ds.sel(area=area, period=period).to_dataframe()[
-            varname].unstack()
-        if against not in ['every', 'mean_every']:
-            sv = sv.T.reorder_levels([1, 0], axis=1).drop(
-                columns=control_member).reorder_levels([1, 0], axis=1).T
-            obs = obs.T.reorder_levels([1, 0], axis=1)[control_member].T
-
-        # subselections
-        if ens and not m:
-            sv = sv.T[ens].T  # fewer ensembles
-            obs = obs.T[ens].T  # fewer ensembles
-        elif m and not ens:
-            sv = sv.T.reorder_levels([1, 0], axis=1)[m].reorder_levels(
-                [1, 0], axis=1).sortlevel(axis=1).T  # fewer members
-            obs = obs
-        elif not m and not ens:
-            sv = sv
-            obs = obs
-        elif m and ens:
-            sv = sv.T[ens].reorder_levels([1, 0], axis=1)[m].reorder_levels([
-                1, 0], axis=1).sortlevel(axis=1).T
-            obs = obs.T[ens].T
-
-        # how to compute ACC: compare forecast against ...
-        if against == 'mean':  # correlation control member against ensemble mean
-            sv = sv.mean(axis=0, level=0)
-            return sv.corrwith(obs)
-        elif against == 'every':  # correlation of every member against every member
-            obsl = []  # create larger supervector with all members being once truth
-            svl = []
-            member = list(sv.index.get_level_values(level=1).unique().values)
-            for i in member:
-                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
-                members_left = list(
-                    sv.index.get_level_values(level=1).unique().values)
-                members_left.remove(i)
-                obsl.append(
-                    pd.concat([d] * len(members_left), keys=members_left))
-                svl.append(sv.T.reorder_levels([1, 0], axis=1).drop(
-                    columns=i).reorder_levels([1, 0], axis=1).T)
-            SV = pd.concat(svl).sort_index()
-            OBS = pd.concat(obsl).reorder_levels([1, 0], axis=0).sort_index()
-            ACC = SV.corrwith(OBS)
-            return ACC
-        elif against == 'mean_every':  # ensemble mean against ACC_every
-            obsl = []  # create larger supervector with all members being once truth
-            svl = []
-            member = list(sv.index.get_level_values(level=1).unique().values)
-            for i in member:
-                d = sv.T.reorder_levels([1, 0], axis=1)[i].T
-                obsl.append(d)
-                svll = sv.T.reorder_levels([1, 0], axis=1).drop(
-                    columns=i).reorder_levels([1, 0], axis=1).T
-                svl.append(svll.mean(axis=0, level=0))
-            SV = pd.concat(svl)
-            OBS = pd.concat(obsl)
-            ACC = SV.corrwith(OBS)
-            return ACC
-        elif against == 'control':  # correlation each member against control member
-            ACC = sv.corrwith(obs)
-            return ACC
-        else:
-            raise ValueError('Specify ["mean","every","control"]')
 
 
 def pseudo_ens(ds, control):

@@ -1229,7 +1229,7 @@ def select_members_ensembles(ds, m=None, e=None):
     return ds.sel(member=m, ensemble=e)
 
 # plotting
-def set_lon_lat_axis(ax, talk=False,projection=ccrs.PlateCarree()):
+def set_lon_lat_axis(ax, talk=False, projection=ccrs.PlateCarree()):
     """Add longitude and latitude coordinates."""
     ax.set_xticks([-180, -120, -60, 0, 60, 120, 180], crs=projection)
     ax.set_yticks([-60, -30, 0, 30, 60, 90], crs=projection)
@@ -1248,18 +1248,20 @@ def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=Fa
     """Wrap xr.plot."""
     plt.figure(figsize=(10, 5))
     ax = plt.subplot(projection=projection)
-    data.plot.pcolormesh('lon', 'lat', ax=ax, transform=ccrs.PlateCarree(),**kwargs)
+    data.plot.pcolormesh('lon', 'lat', ax=ax,
+                         transform=ccrs.PlateCarree(), **kwargs)
     ax.coastlines(color=coastline_color, linewidth=1.5)
     if curv:
         ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
     if projection == ccrs.PlateCarree():
         set_lon_lat_axis(ax)
 
+
 def my_facetgrid(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, col='year', col_wrap=2, **kwargs):
     """Wrap facetgrid."""
     transform = ccrs.PlateCarree()
     p = var.plot.pcolormesh('lon', 'lat', transform=transform, col=col, col_wrap=col_wrap,
-             subplot_kws={'projection': projection}, **kwargs)
+                            subplot_kws={'projection': projection}, **kwargs)
     for ax in p.axes.flat:
         if curv:
             ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')

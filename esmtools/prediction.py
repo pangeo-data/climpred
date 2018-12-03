@@ -1,19 +1,18 @@
 import os
 
+import cartopy as cp
+import cartopy.crs as ccrs
 import esmtools as et
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
+import seaborn as sb
 import xarray as xr
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
-import cartopy.crs as ccrs
-from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
-import seaborn as sb
-import cartopy as cp
-import cartopy.crs as ccrs
 
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
@@ -1249,8 +1248,23 @@ def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=Fa
     """Wrap xr.plot."""
     plt.figure(figsize=(10, 5))
     ax = plt.subplot(projection=projection)
-    data.plot.pcolormesh('lon', 'lat', ax=ax, **kwargs)
+    data.plot.pcolormesh('lon', 'lat', ax=ax, transform=ccrs.PlateCarree(),**kwargs)
     ax.coastlines(color=coastline_color, linewidth=1.5)
     if curv:
         ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
-    set_lon_lat_axis(ax,projection=projection)
+    if projection == ccrs.PlateCarree():
+        set_lon_lat_axis(ax)
+
+def my_facetgrid(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, col='year', col_wrap=2, **kwargs):
+    """Wrap facetgrid."""
+    transform = ccrs.PlateCarree()
+    p = var.plot.pcolormesh('lon', 'lat', transform=transform, col=col, col_wrap=col_wrap,
+             subplot_kws={'projection': projection}, **kwargs)
+    for ax in p.axes.flat:
+        if curv:
+            ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
+        if projection == ccrs.PlateCarree():
+            set_lon_lat_axis(ax)
+        ax.coastlines()
+        #ax.set_extent([-160, -30, 5, 75])
+        ax.set_aspect('equal', 'box-forced')

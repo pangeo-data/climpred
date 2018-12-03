@@ -268,7 +268,7 @@ def vectorized_rm_poly(y, order=1):
     detrended_ts : array_like
       Grid of detrended time series
     """
-    print("Make sure that time is the first dimension in your inputs.")
+    #print("Make sure that time is the first dimension in your inputs.")
     if np.isnan(y).any():
         raise ValueError("Please supply an independent axis (y) without nans.")
     # convert to numpy array if xarray
@@ -300,3 +300,8 @@ def vec_linregress(ds, dim='time'):
                           input_core_dims=[[dim], [dim]],
                           output_core_dims=[[], [], [], [], []],
                           vectorize=True)
+
+def vec_rm_trend(ds,dim='year'):
+    s, i, _,_,_=et.stats.vec_linregress(ds,dim)
+    new = ds-(s*(ds[dim]-ds[dim].values[0]))
+    return new

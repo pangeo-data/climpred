@@ -881,31 +881,54 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     ds_pseudo = pseudo_ens_fast(ds, control, bootstrap=bootstrap)
     ds_pseudo_metric = compute(
         ds_pseudo, control, metric=metric, comparison=comparison)
-    if isinstance(sig,list):
-        qsig=[x / 100 for x in sig]
+    if isinstance(sig, list):
+        qsig = [x / 100 for x in sig]
     else:
-        qsig=sig/100
+        qsig = sig / 100
     sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
     return sig_level
 
-def PM_sig(ds, control, metric=rmse, comparison=m2m, sig=95,bootstrap=30):
-    x=[]
-    for _ in range(1+int(bootstrap/ds.year.size)):
-        ds_pseudo = pseudo_ens(ds, control)
-        ds_pseudo_metric = compute(
-            ds_pseudo, control, metric=metric, comparison=comparison)
-        x.append(ds_pseudo_metric)
-    ds_pseudo_metric = xr.concat(x,dim='it')
-    if isinstance(sig,list):
-        qsig=[x / 100 for x in sig]
+
+def control_for_reference_period(control, detrend=False, reference_period='MK', obs_years=40):
+    """Modifies control according to knowledge approach, see Hawkins 2016."""
+    if detrend:
+        _control = et.stats.vec_rm_trend(control, dim='year')
     else:
-        qsig=sig/100
-    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=['year','it'])
+        _control = control
+
+    if reference_period == 'MK':
+        _control = _control
+    elif reference_period == 'OP_full_length':
+        _control = _control - \
+            _control.rolling(year=obs_years, min_periods=1,
+                             center=True).mean() + control.mean('year')
+    elif reference_period == 'OP':
+        # take last
+        pass
+    else:
+        raise ValueError("choose a reference period")
+    return _control
+
+
+def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=95, bootstrap=30):
+    x = []
+    _control = control_for_reference_period(
+        control, reference_period=reference_period)
+    for _ in range(1 + int(bootstrap / ds.year.size)):
+        ds_pseudo = pseudo_ens(ds, _control)
+        ds_pseudo_metric = compute(
+            ds_pseudo, _control, metric=metric, comparison=comparison)
+        x.append(ds_pseudo_metric)
+    ds_pseudo_metric = xr.concat(x, dim='it')
+    if isinstance(sig, list):
+        qsig = [x / 100 for x in sig]
+    else:
+        qsig = sig / 100
+    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=['year', 'it'])
     return sig_level
 
-def set_integer_xaxis(ax=False):
-    if not ax:
-        ax = plt.figure().gca()
+
+def set_integer_xaxis(ax):
     ax.xaxis.set_major_locator(MaxNLocator(integer=True))
 
 
@@ -939,7 +962,6 @@ def vectorized_predictability_horizon(ds, threshold, limit='upper', dim='year'):
         return (ds > threshold).argmin('year')
     if limit is 'lower':
         return (ds < threshold).argmin('year')
-
 
 
 def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):

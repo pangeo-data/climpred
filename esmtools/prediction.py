@@ -1032,36 +1032,40 @@ def calc_tau(alpha):
     return (1 + alpha) / (1 - alpha)
 
 
-def persistence_forecast(ds,control,varname=varname,area=area,period=period,comparison=m2e):
+def persistence_forecast(ds, control, varname=varname, area=area, period=period, comparison=m2e):
     """Generate persistence forecast timeseries."""
-    starting_years=[x-1100-1 for x in ds.ensemble.values]
+    starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
     anom = (control.sel(year=starting_years) - control.mean())
-    t = np.arange(1, ds.year.size+1)
-    tds = np.arange(1900,1900+ds.year.size)
+    t = np.arange(1, ds.year.size + 1)
+    tds = np.arange(1900, 1900 + ds.year.size)
     alpha = control.to_series().autocorr()
-    persistence_forecast_list=[]
+    persistence_forecast_list = []
     for year in anom.year:
-        ar1=anom.sel(year=year).values*np.exp(-alpha*t)+ control.mean().values
-        pf = xr.DataArray(data=ar1,coords=[tds],dims='year')
+        ar1 = anom.sel(year=year).values * \
+            np.exp(-alpha * t) + control.mean().values
+        pf = xr.DataArray(data=ar1, coords=[tds], dims='year')
         pf = pf.expand_dims('ensemble')
-        pf['ensemble']=[year+1100+1]
+        pf['ensemble'] = [year + 1100 + 1]
         persistence_forecast_list.append(pf)
-    return xr.concat(persistence_forecast_list,dim='ensemble')
+    return xr.concat(persistence_forecast_list, dim='ensemble')
 
-def compute_persistence(ds,control,metric=rmse,comparison=m2e):
+
+def compute_persistence(ds, control, metric=rmse, comparison=m2e):
     """Compute skill for persistence forecast."""
-    persistence_forecasts = persistence_forecast(ds,control)
+    persistence_forecasts = persistence_forecast(ds, control)
     if comparison.__name__ == 'm2e':
-        result=metric(persistence_forecasts,ds.mean('member'),'ensemble')
+        result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
     elif comparison.__name__ == 'm2m':
         persistence_forecasts = persistence_forecasts.expand_dims('member')
-        all_persistence_forecasts = persistence_forecasts.sel(member=[0]*ds.member.size)
-        fct = m2e(all_persistence_forecasts,'svd')[0]
-        truth = m2e(ds_,'svd')[0]
-        result=metric(fct, truth,'svd')
+        all_persistence_forecasts = persistence_forecasts.sel(
+            member=[0] * ds.member.size)
+        fct = m2e(all_persistence_forecasts, 'svd')[0]
+        truth = m2e(ds_, 'svd')[0]
+        result = metric(fct, truth, 'svd')
     else:
         raise ValueError('not defined')
     return result
+
 
 
 def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
@@ -1260,7 +1264,7 @@ def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=Fa
 def my_facetgrid(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, col='year', col_wrap=2, **kwargs):
     """Wrap facetgrid."""
     transform = ccrs.PlateCarree()
-    p = var.plot.pcolormesh('lon', 'lat', transform=transform, col=col, col_wrap=col_wrap,
+    p = data.plot.pcolormesh('lon', 'lat', transform=transform, col=col, col_wrap=col_wrap,
                             subplot_kws={'projection': projection}, **kwargs)
     for ax in p.axes.flat:
         if curv:

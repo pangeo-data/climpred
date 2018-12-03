@@ -1,18 +1,19 @@
 import os
 
-import cartopy as cp
-import cartopy.crs as ccrs
 import esmtools as et
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sb
 import xarray as xr
-from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
 from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
+import cartopy.crs as ccrs
+from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
+import seaborn as sb
+import cartopy as cp
+import cartopy.crs as ccrs
 
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 

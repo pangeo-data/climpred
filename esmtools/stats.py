@@ -301,7 +301,7 @@ def vec_linregress(ds, dim='time'):
                           output_core_dims=[[], [], [], [], []],
                           vectorize=True)
 
-def vec_rm_trend(ds,dim='year'):
-    s, i, _,_,_=et.stats.vec_linregress(ds,dim)
-    new = ds-(s*(ds[dim]-ds[dim].values[0]))
+def vec_rm_trend(ds, dim='year'):
+    s, i, _, _, _ = et.stats.vec_linregress(ds, dim)
+    new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new

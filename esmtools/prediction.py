@@ -2,7 +2,7 @@ import os
 
 import cartopy as cp
 import cartopy.crs as ccrs
-import esmtools as et
+import cmocean
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -13,6 +13,8 @@ from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
+
+import esmtools as et
 
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
@@ -777,9 +779,10 @@ def m2e(ds3d, supervector_dim):
     """Create two supervectors to compare members to all other members."""
     truth_list = []
     fct_list = []
+    mean = ds3d.mean('member')
     for m in range(ds3d.member.size):
         for e in ds3d.ensemble:
-            truth_list.append(ds3d.sel(ensemble=e).mean('member'))
+            truth_list.append(mean.sel(ensemble=e))
             fct_list.append(ds3d.sel(member=m, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
@@ -788,21 +791,17 @@ def m2e(ds3d, supervector_dim):
 
 def m2c(ds3d, supervector_dim, control_member=0):
     """Create two supervectors to compare members to control."""
-    ds3d2 = ds3d.copy()
-
-    all_fct_members = drop_members(ds3d2, rmd_member=[control_member])
-    new_shape = (ds3d.year.size, ds3d.ensemble.size
-                 * (ds3d.member.size-1), ds3d.y.size, ds3d.x.size)
-    new_dim = ['year', supervector_dim, 'y', 'x']
-    new_coords = [ds3d.year, np.arange(
-        ds3d.ensemble.size * (ds3d.member.size-1)), ds3d.y, ds3d.x]
-    reshaped = np.reshape(all_fct_members.values, new_shape)
-    fct = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
-
-    nm = ds3d.member.size-1
-    control_m = ds3d2.sel(member=[control_member] * nm)
-    reshaped = np.reshape(control_m.values, new_shape)
-    truth = xr.DataArray(reshaped, dims=new_dim, coords=new_coords)
+    truth_list = []
+    fct_list = []
+    truth = ds3d.sel(member=control_member)
+    # drop the member being truth
+    ds3d_dropped = drop_members(ds3d, rmd_member=[control_member])
+    for m in ds3d_dropped.member:
+        for e in ds3d_dropped.ensemble:
+            fct_list.append(truth.sel(ensemble=e))
+            truth_list.append(ds3d_dropped.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
 
     return fct, truth
 

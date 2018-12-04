@@ -336,9 +336,10 @@ def vectorized_rm_poly(y, order=1):
     if isinstance(y, xr.DataArray):
         XARRAY = True
         dims = y.dims
+        coords = y.coords
         y = np.asarray(y)
     data_shape = y.shape
-    y = y.reshape((20, -1))
+    y = y.reshape((data_shape[0], -1))
     # NaNs screw up vectorized regression; just fill with zeros.
     y[np.isnan(y)] = 0
     x = np.arange(0, len(y), 1)
@@ -347,7 +348,7 @@ def vectorized_rm_poly(y, order=1):
     detrended_ts = (y - fit.T)
     detrended_ts = detrended_ts.reshape(data_shape)
     if XARRAY:
-        detrended_ts = xr.DataArray(detrended_ts, dims=dims)
+        detrended_ts = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     return detrended_ts
 
 
@@ -363,6 +364,75 @@ def vec_linregress(ds, dim='time'):
                           vectorize=True)
 
 def vec_rm_trend(ds, dim='year'):
-    s, i, _, _, _ = et.stats.vec_linregress(ds, dim)
+    """Remove linear trend from a high-dim dataset."""
+    s, i, _, _, _ = vec_linregress(ds, dim)
     new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new
+
+def taper(x, p):
+    from scipy.signal import tukey
+    window = tukey(len(x), p)
+    y = x * window
+    return y
+
+def create_power_spectrum(s, pLow=0.05):
+    """Create power spectrum with CI for a given pd.series.
+
+    Reference
+    ---------
+    - /ncl-6.4.0-gccsys/lib/ncarg/nclscripts/csm/shea_util.ncl
+
+    Parameters
+    ----------
+    s : pd.series
+        input time series
+    pLow : float (default 0.05)
+        significance interval for markov red-noise spectrum
+
+    Returns
+    -------
+    p : np.ndarray
+        period
+    Pxx_den : np.ndarray
+        power spectrum
+    markov : np.ndarray
+        theoretical markov red noise spectrum
+    low_ci : np.ndarray
+        lower confidence interval
+    high_ci : np.ndarray
+        upper confidence interval
+    """
+    from scipy.stats import chi2
+    from scipy.signal import detrend, periodogram
+    # input parameters
+    # pct: percent of the series to be tapered (0.0 <= pct <= 1.0). If pct =0.0, no tapering will be done. If pct = 1.0, the whole series is affected. A value of 0.10 is common (tapering should always be done).
+    pct = 0.1  # 0--1
+    jave = 1  # smoothing ### DOESNT WORK HERE FOR VALUES OTHER THAN 1 !!!
+    tapcf = 0.5 * (128 - 93 * pct) / (8 - 5 * pct)**2
+    wgts = np.linspace(1., 1., jave)
+    sdof = 2 / (tapcf * np.sum(wgts**2))
+    pHigh = 1 - pLow
+    data = s - s.mean()
+    # detrend
+    data = detrend(data)
+    data = taper(data, pct)
+    # periodigram
+    timestep = 1
+    frequency, power_spectrum = periodogram(data, timestep)
+    Period = 1 / frequency
+    power_spectrum_smoothed = pd.Series(power_spectrum).rolling(jave, 1).mean()
+    # markov theo red noise spectrum
+    twopi = 2. * np.pi
+    r = s.autocorr()
+    temp = r * 2. * np.cos(twopi * frequency)  # vector
+    mkov = 1. / (1 + r**2 - temp)  # Markov model
+    sum1 = np.sum(mkov)
+    sum2 = np.sum(power_spectrum_smoothed)
+    scale = sum2 / sum1
+    xLow = chi2.ppf(pLow, sdof) / sdof
+    xHigh = chi2.ppf(pHigh, sdof) / sdof
+    # output
+    markov = mkov * scale  # theor Markov spectrum
+    low_ci = markov * xLow  # confidence
+    high_ci = markov * xHigh  # interval
+    return Period, power_spectrum_smoothed, markov, low_ci, high_ci

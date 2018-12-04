@@ -638,7 +638,6 @@ def PM_NRMSE(ds, control, against=None, running=True, m=20):
     return nrmse
 
 
-
 def pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
@@ -738,11 +737,8 @@ def pseudo_ens_fast(ds3d, control3d, varname=None, shuffle=True, bootstrap=None)
         control3d2 = control3d2.sel(year=time_before)
 
     length = bootstrap
-    #print('bootstrapping iterations:', length)
     input_time = control3d2.year[:int(length * ensembles.size * members.size)]
     new_time = control3d.year[:length]
-    ny = control3d.y.size
-    nx = control3d.x.size
     # sel fewer years for dimsizes to match
     control3d2 = control3d2.sel(year=input_time)
 
@@ -930,27 +926,6 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=
     return sig_level
 
 
-def set_integer_xaxis(ax):
-    ax.xaxis.set_major_locator(MaxNLocator(integer=True))
-
-
-def qplot(test, threshold, varname=varname, period=period, area=area):
-    fig, ax = plt.subplots(figsize=(8, 5))
-    test['year'] = np.arange(1, 21)
-    test = test.sel(area=area, period=period)[varname]
-    test.to_dataframe()[
-        varname].unstack().plot(ax=ax, title=(' ').join((varname, period, area)), label='nolegend')
-    test.mean('ensemble').to_dataframe()[varname].plot(ax=ax, c='k', lw=3)
-    ax.legend(ncol=3)
-    ax.set_ylim([-.5, 1])
-    threshold_here = threshold.sel(area=area, period=period)[varname]
-    ax.axhline(y=threshold_here, c='k', ls='--', alpha=.2)
-    ax.axvline(x=vectorized_predictability_horizon(
-        test.mean('ensemble'), threshold_here), c='gray', lw=3, ls='-.')
-    set_integer_xaxis(ax)
-    ax.set_xticks(test.year.values)
-
-
 def get_predictability_horizon(s, threshold):
     """Get predictability horizon of series from threshold value."""
     first_index = s.index[0]
@@ -988,7 +963,7 @@ def trend_over_numeric_varnames(df, **kwargs):
     list = []
     for col in df.columns:
         if np.issubdtype(df[col], np.number):
-            list.append(trend(df, col, **kwargs))
+            list.append(running_trend(df, col, **kwargs))
     all_column_trends = pd.concat(list, axis=1)
     return all_column_trends
 
@@ -1083,12 +1058,11 @@ def compute_persistence(ds, control, metric=rmse, comparison=m2e):
         all_persistence_forecasts = persistence_forecasts.sel(
             member=[0] * ds.member.size)
         fct = m2e(all_persistence_forecasts, 'svd')[0]
-        truth = m2e(ds_, 'svd')[0]
+        truth = m2e(ds, 'svd')[0]
         result = metric(fct, truth, 'svd')
     else:
         raise ValueError('not defined')
     return result
-
 
 
 def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
@@ -1255,6 +1229,7 @@ def select_members_ensembles(ds, m=None, e=None):
         e = ds.ensemble.values
     return ds.sel(member=m, ensemble=e)
 
+
 # plotting
 def set_lon_lat_axis(ax, talk=False, projection=ccrs.PlateCarree()):
     """Add longitude and latitude coordinates."""
@@ -1295,5 +1270,5 @@ def my_facetgrid(data, projection=ccrs.PlateCarree(), coastline_color='gray', cu
         if projection == ccrs.PlateCarree():
             set_lon_lat_axis(ax)
         ax.coastlines()
-        #ax.set_extent([-160, -30, 5, 75])
+        # ax.set_extent([-160, -30, 5, 75])
         ax.set_aspect('equal', 'box-forced')

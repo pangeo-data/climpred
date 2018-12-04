@@ -161,7 +161,7 @@ def linear_regression(x, y):
     y = np.random.randn(100)
     m,b,r,p,e = et.stats.linear_regression(x,y)
     """
-    m, b, r, p, e = stats.linregress(x, y)
+    m, b, r, p, e = linregress(x, y)
     return m, b, r, p, e
 
 
@@ -329,7 +329,7 @@ def vectorized_rm_poly(y, order=1):
     detrended_ts : array_like
       Grid of detrended time series
     """
-    #print("Make sure that time is the first dimension in your inputs.")
+    # print("Make sure that time is the first dimension in your inputs.")
     if np.isnan(y).any():
         raise ValueError("Please supply an independent axis (y) without nans.")
     # convert to numpy array if xarray
@@ -363,17 +363,20 @@ def vec_linregress(ds, dim='time'):
                           output_core_dims=[[], [], [], [], []],
                           vectorize=True)
 
+
 def vec_rm_trend(ds, dim='year'):
     """Remove linear trend from a high-dim dataset."""
     s, i, _, _, _ = vec_linregress(ds, dim)
     new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new
 
+
 def taper(x, p):
     from scipy.signal import tukey
     window = tukey(len(x), p)
     y = x * window
     return y
+
 
 def create_power_spectrum(s, pLow=0.05):
     """Create power spectrum with CI for a given pd.series.
@@ -436,3 +439,24 @@ def create_power_spectrum(s, pLow=0.05):
     low_ci = markov * xLow  # confidence
     high_ci = markov * xHigh  # interval
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
+
+
+def vec_varweighted_mean_period(control3d, varname):
+    """Calculate the variance weighted mean period of a control run vectorized.
+
+    Reference
+    ---------
+    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
+      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
+      6292–6311. https://doi.org/10/bwq92h.
+
+    """
+    from scipy.signal import periodogram
+    f, Pxx = periodogram(control3d[varname], axis=0, scaling='spectrum')
+    F = xr.DataArray(f)
+    PSD = xr.DataArray(Pxx)
+    T = PSD.sum('dim_0') / ((PSD * F).sum('dim_0'))
+    coords = control3d[varname].isel(year=0).coords
+    dims = control3d[varname].isel(year=0).dims
+    T = xr.DataArray(data=T.values, coords=coords, dims=dims)
+    return T

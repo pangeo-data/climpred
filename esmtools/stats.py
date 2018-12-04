@@ -275,9 +275,10 @@ def vectorized_rm_poly(y, order=1):
     if isinstance(y, xr.DataArray):
         XARRAY = True
         dims = y.dims
+        coords = y.coords
         y = np.asarray(y)
     data_shape = y.shape
-    y = y.reshape((20, -1))
+    y = y.reshape((data_shape[0], -1))
     # NaNs screw up vectorized regression; just fill with zeros.
     y[np.isnan(y)] = 0
     x = np.arange(0, len(y), 1)
@@ -286,7 +287,7 @@ def vectorized_rm_poly(y, order=1):
     detrended_ts = (y - fit.T)
     detrended_ts = detrended_ts.reshape(data_shape)
     if XARRAY:
-        detrended_ts = xr.DataArray(detrended_ts, dims=dims)
+        detrended_ts = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     return detrended_ts
 
 
@@ -302,6 +303,7 @@ def vec_linregress(ds, dim='time'):
                           vectorize=True)
 
 def vec_rm_trend(ds, dim='year'):
+    """Remove linear trend from a high-dim dataset."""
     s, i, _, _, _ = vec_linregress(ds, dim)
     new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new
@@ -360,7 +362,6 @@ def create_power_spectrum(s, pLow=0.05):
     power_spectrum_smoothed = pd.Series(power_spectrum).rolling(jave, 1).mean()
     # markov theo red noise spectrum
     twopi = 2. * np.pi
-    N_freq = len(power_spectrum_smoothed)
     r = s.autocorr()
     temp = r * 2. * np.cos(twopi * frequency)  # vector
     mkov = 1. / (1 + r**2 - temp)  # Markov model

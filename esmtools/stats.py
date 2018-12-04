@@ -375,3 +375,23 @@ def create_power_spectrum(s, pLow=0.05):
     low_ci = markov * xLow  # confidence
     high_ci = markov * xHigh  # interval
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
+
+def vec_varweighted_mean_period(control3d, varname):
+    """Calculate the variance weighted mean period of a control run vectorized.
+
+    Reference
+    ---------
+    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
+      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
+      6292–6311. https://doi.org/10/bwq92h.
+
+    """
+    from scipy.signal import periodogram
+    f, Pxx = periodogram(control3d[varname], axis=0, scaling='spectrum')
+    F = xr.DataArray(f)
+    PSD = xr.DataArray(Pxx)
+    T = PSD.sum('dim_0') / ((PSD * F).sum('dim_0'))
+    coords = control3d[varname].isel(year=0).coords
+    dims = control3d[varname].isel(year=0).dims
+    T = xr.DataArray(data=T.values, coords=coords, dims=dims)
+    return T

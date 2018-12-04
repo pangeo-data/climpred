@@ -302,17 +302,20 @@ def vec_linregress(ds, dim='time'):
                           output_core_dims=[[], [], [], [], []],
                           vectorize=True)
 
+
 def vec_rm_trend(ds, dim='year'):
     """Remove linear trend from a high-dim dataset."""
     s, i, _, _, _ = vec_linregress(ds, dim)
     new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new
 
+
 def taper(x, p):
     from scipy.signal import tukey
     window = tukey(len(x), p)
     y = x * window
     return y
+
 
 def create_power_spectrum(s, pLow=0.05):
     """Create power spectrum with CI for a given pd.series.

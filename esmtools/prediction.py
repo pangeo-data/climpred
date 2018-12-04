@@ -3,6 +3,7 @@ import os
 import cartopy as cp
 import cartopy.crs as ccrs
 import cmocean
+import esmtools as et
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
@@ -13,8 +14,6 @@ from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
-
-import esmtools as et
 
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
@@ -829,28 +828,36 @@ def mse(ds):
     pass  # ugly
 
 
-def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,varname=None):
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detrend=False, varname=None):
+    supervector_dim = 'svd'
+    time_dim = 'year'
+    if anomaly:
+        _ds = ds - control.mean(time_dim)
+        _control = control - control.mean(time_dim)
+    else:
+        _ds = ds
+        _control = control
+    if detrend:
+        s, i, _, _, _ = et.stats.vec_linregress(_control, time_dim)
+        _control = _control - \
+            (s * _control[time_dim] - _control[time_dim].values[0])
+        _ds = _ds - (s * _ds[time_dim] - _ds[time_dim].values[0])
     if metric.__name__ not in ['pearson_r', 'rmse', 'rmse_v', 'mse']:
         raise ValueError('specify metric argument')
     if comparison.__name__ not in ['m2m', 'm2c', 'm2e', 'e2c']:
         raise ValueError('specify comparison argument')
-    supervector_dim = 'svd'
-    time_dim = 'year'
     if metric.__name__ in ['pearson_r', 'rmse']:
-        fct, truth = comparison(ds, supervector_dim)
-        if anomaly:
-            fct = fct - control.mean(time_dim)
-            truth = truth - control.mean(time_dim)
+        fct, truth = comparison(_ds, supervector_dim)
         return metric(fct, truth, dim=supervector_dim)
     elif metric.__name__ in ['mse']:
         if comparison.__name__ is 'm2e':
-            return ens_var_against_mean(ds)
+            return ens_var_against_mean(_ds)
         if comparison.__name__ is 'm2c':
-            return ens_var_against_control(ds)
+            return ens_var_against_control(_ds)
         if comparison.__name__ is 'm2m':
-            return ens_var_against_every(ds)
+            return ens_var_against_every(_ds)
         if comparison.__name__ is 'e2c':
-            return ensmean_against_control(ds)
+            return ensmean_against_control(_ds)
 
 
 def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
@@ -889,18 +896,13 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
     return sig_level
 
 
-def control_for_reference_period(control, detrend=False, reference_period='MK', obs_years=40):
+def control_for_reference_period(control, reference_period='MK', obs_years=40):
     """Modifies control according to knowledge approach, see Hawkins 2016."""
-    if detrend:
-        _control = et.stats.vec_rm_trend(control, dim='year')
-    else:
-        _control = control
-
     if reference_period == 'MK':
-        _control = _control
+        _control = control
     elif reference_period == 'OP_full_length':
-        _control = _control - \
-            _control.rolling(year=obs_years, min_periods=1,
+        _control = control - \
+            control.rolling(year=obs_years, min_periods=1,
                              center=True).mean() + control.mean('year')
     elif reference_period == 'OP':
         # take last
@@ -964,7 +966,7 @@ def vectorized_predictability_horizon(ds, threshold, limit='upper', dim='year'):
         return (ds < threshold).argmin('year')
 
 
-def trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
+def running_trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
     if dim is None:
         x = df.index
     result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta

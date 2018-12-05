@@ -159,7 +159,7 @@ def linear_regression(x, y):
     y = np.random.randn(100)
     m,b,r,p,e = et.stats.linear_regression(x,y)
     """
-    m, b, r, p, e = stats.linregress(x, y)
+    m, b, r, p, e = linregress(x, y)
     return m, b, r, p, e
 
 
@@ -232,7 +232,7 @@ def vectorized_regression(x, y):
     m : array_like
       Grid of slopes from linear regression
     """
-    #print("Make sure that time is the first dimension in your inputs.")
+    # print("Make sure that time is the first dimension in your inputs.")
     if np.isnan(x).any():
         raise ValueError("Please supply an independent axis (x) without nans.")
     # convert to numpy array if xarray
@@ -268,7 +268,7 @@ def vectorized_rm_poly(y, order=1):
     detrended_ts : array_like
       Grid of detrended time series
     """
-    #print("Make sure that time is the first dimension in your inputs.")
+    # print("Make sure that time is the first dimension in your inputs.")
     if np.isnan(y).any():
         raise ValueError("Please supply an independent axis (y) without nans.")
     # convert to numpy array if xarray
@@ -378,6 +378,7 @@ def create_power_spectrum(s, pLow=0.05):
     low_ci = markov * xLow  # confidence
     high_ci = markov * xHigh  # interval
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
+
 
 def vec_varweighted_mean_period(control3d, varname):
     """Calculate the variance weighted mean period of a control run vectorized.

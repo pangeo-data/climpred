@@ -380,8 +380,8 @@ def create_power_spectrum(s, pLow=0.05):
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
 
 
-def vec_varweighted_mean_period(control3d, varname):
-    """Calculate the variance weighted mean period of a control run vectorized.
+def vec_varweighted_mean_period(ds):
+    """Calculate the variance weighted mean period of an xr.DataArray.
 
     Reference
     ---------
@@ -391,11 +391,21 @@ def vec_varweighted_mean_period(control3d, varname):
 
     """
     from scipy.signal import periodogram
-    f, Pxx = periodogram(control3d[varname], axis=0, scaling='spectrum')
+    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
     F = xr.DataArray(f)
     PSD = xr.DataArray(Pxx)
     T = PSD.sum('dim_0') / ((PSD * F).sum('dim_0'))
-    coords = control3d[varname].isel(year=0).coords
-    dims = control3d[varname].isel(year=0).dims
+    coords = ds.isel(year=0).coords
+    dims = ds.isel(year=0).dims
     T = xr.DataArray(data=T.values, coords=coords, dims=dims)
     return T
+
+def xr_corr(ds,lag=1,dim='year'):
+    """Calculated lagged correlation of a xr.Dataset."""
+    from xskillscore import pearson_r
+    first = ds[dim].values[0]
+    last = ds[dim].values[-1]
+    normal = ds.sel(year=slice(first,last-lag))
+    shifted = ds.sel(year=slice(first+lag,last))
+    shifted['year']=normal.year
+    return pearson_r(normal,shifted,dim)

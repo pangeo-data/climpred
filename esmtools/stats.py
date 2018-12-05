@@ -400,12 +400,27 @@ def vec_varweighted_mean_period(ds):
     T = xr.DataArray(data=T.values, coords=coords, dims=dims)
     return T
 
-def xr_corr(ds,lag=1,dim='year'):
+def xr_corr(ds, lag=1, dim='year'):
     """Calculated lagged correlation of a xr.Dataset."""
     from xskillscore import pearson_r
     first = ds[dim].values[0]
     last = ds[dim].values[-1]
-    normal = ds.sel(year=slice(first,last-lag))
-    shifted = ds.sel(year=slice(first+lag,last))
-    shifted['year']=normal.year
-    return pearson_r(normal,shifted,dim)
+    normal = ds.sel(year=slice(first, last - lag))
+    shifted = ds.sel(year=slice(first + lag, last))
+    shifted['year'] = normal.year
+    return pearson_r(normal, shifted, dim)
+
+
+def vec_tau_d(da, r=20, dim='year'):
+    """Calculate decorrelation time of an xr.DataArray.
+
+    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)
+
+    Reference
+    ---------
+    - Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+    Research. Cambridge ; New York: Cambridge University Press, 1999., p.373
+
+    """
+    one = da.mean(dim) / da.mean(dim)
+    return one + 2 * xr.concat([xr_corr(da, lag=i) for i in range(1, r)], 'it').sum('it')

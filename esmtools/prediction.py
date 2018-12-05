@@ -1,16 +1,9 @@
 import os
 
-import cartopy as cp
-import cartopy.crs as ccrs
-import cmocean
 import esmtools as et
-import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
-import seaborn as sb
 import xarray as xr
-from cartopy.mpl.ticker import LatitudeFormatter, LongitudeFormatter
-from matplotlib.ticker import MaxNLocator
 from pyfinance import ols
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
@@ -19,7 +12,6 @@ from xskillscore import pearson_r, rmse
 
 ToDos
 -----
-- add missing functions
 - how to treat for 1D timeseries and 3D maps?
     - different functions
     - arguments
@@ -30,40 +22,47 @@ ToDos
     - global keywords?
 
 
-Structure
----------
-- General metrics
-    - Mean Square Error (MSE) = Mean Square Difference (MSD) (missing)
-    - Relative Entropy (Kleeman 2002; Branstator and Teng 2010) (missing)
-    - anomlay correlation coefficient (ACC) (missing)
+Concept of calculating predictability skill
+-------------------------------------------
+- metric: how is skill calculated, eg. rmse
+- comparison: how forecasts and observation/truth are compared, eg. m2m
+- compute: computes the predictability skill according to metric and comparison
+    - compute(ds, control, metric=rmse, comparison=m2m)
+- bootstrap from uninitialized ensemble:
+    - PM-sig(ds, control, metric=rmse, comparison=m2m, bootstrap=500, sig=99)
+    - threshold to determine predictability horizon
 
-- Decadal prediction metrics
-    - anomlay correlation coefficient (ACC) (missing)
-    - requires: hindcast simulations: ensembles initialised each year
+Metrics
+-------
+- MSE: Mean Square Error
+- NEV: Normalized Ensemble Variance
+- MSSS: Mean Square Skill Score = PPP: Prognostic Potential Predictability
+- RMSE: Root-Mean Square Error
+- NRMSE: Normalized Root-Mean Square Error
+- ACC: Anomaly correlation coefficient
+- uACC: unbiased ACC (Bushuk et al. 2018)
 
-- Perfect-model (PM) predictability metrics
-    - ensemble variance against: (=MSE)
-        - ensemble mean
-        - control
-        - each member
-    - normalized ensemble variance (NEV) (Griffies) (missing)
-    - prognostic potential predictability (PPP) (Pohlmann 2004)
-    - PM anomlay correlation coefficient (ACC) (Bushuk 2018)
-    - PM mean square skill score (MSSS)
-    - unbiased ACC (Bushuk 2018)
-    - root mean square error (RMSE) (=MSE^0.5) (missing)
-    - Diagnostic Potential Predictability (DPP) (Boer 2004, Resplandy 2015/Seferian 2018)
-    - predictability horizon:
-        - linear breakpoint fit (Seferian 2018) (missing)
-        - f-test significant test (Pohlmann 2004, Griffies 1997) (missing)
-        - bootstrapping limit
-    - root mean square error (RMSE) (=MSE^0.5) (missing)
-    - normalized root mean square error (NRMSE) (=1-MSE^0.5/RMSE_control) (missing)
-    - Diagnostic Potential Predictability (DPP)
-    - Relative Entropy (Kleeman 2002; Branstator and Teng 2010) (missing)
-    - Mutual information (DelSole) (missing)
-    - Average Predictability Time (APT) (DelSole) (missing)
-    - requires: ensembles at different start years from control run
+Comparisons
+-----------
+- m2c: many forecasts vs. control truth
+- m2e: many forecasts vs. ensemble mean truth
+- m2m: many forecasts vs. many truths in turn
+- e2c: ensemble mean forecast vs. control truth
+
+Missing
+-------
+- Relative Entropy (Kleeman 2002; Branstator and Teng 2010)
+- Mutual information (DelSole)
+- Average Predictability Time (APT) (DelSole)
+- persistence forecast
+
+Also
+----
+- Diagnostic Potential Predictability (DPP) (Boer 2004, Resplandy 2015/Seferian 2018)
+- predictability horizon:
+    - linear breakpoint fit (Seferian 2018) (missing)
+    - f-test significant test (Pohlmann 2004, Griffies 1997) (missing)
+    - bootstrapping limit
 
 - Persistence Forecasts
     - persistence (missing)
@@ -79,8 +78,7 @@ This module works on xr.Datasets with the following dimensions and coordinates:
     - year (as in Lead Year)
     - period (time averaging: yearmean, seasonal mean)
 
-Example ds via et.prediction.load_dataset('PM_MPI-ESM-LR_ds'):
-ds
+Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
 <xarray.Dataset>
 Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5, year: 20)
 Coordinates:
@@ -93,15 +91,13 @@ Data variables:
     atmco2                   (period, year, area, ensemble, member) float32 ...
 ...
 
-
 - 3D (Predictability maps):
     - ensemble
     - lon, lat
     - year (as in Lead Year)
     - period (time averaging: yearmean, seasonal mean)
 
-Example:
-ds
+Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
 <xarray.Dataset>
 Dimensions:      (bnds: 2, ensemble: 11, member: 9, vertices: 4, x: 256, y: 220, year: 21)
 Coordinates:
@@ -139,7 +135,6 @@ def get_data_home(data_home=None):
     """
     if data_home is None:
         data_home = os.environ.get('HOME', '~')
-
     data_home = os.path.expanduser(data_home)
     if not os.path.exists(data_home):
         os.makedirs(data_home)
@@ -155,7 +150,6 @@ def get_dataset_names():
         'https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
     # print('Load from URL:', http)
     gh_list = BeautifulSoup(http)
-
     return [l.text.replace('.nc', '')
             for l in gh_list.find_all("a", {"class": "js-navigation-open"})
             if l.text.endswith('.nc')]
@@ -181,50 +175,19 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     """
     path = (
         "https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
-
     full_path = path.format(name)
     # print('Load from URL:', full_path)
-
     if cache:
         cache_path = os.path.join(get_data_home(data_home),
                                   os.path.basename(full_path))
         if not os.path.exists(cache_path):
             urlretrieve(full_path, cache_path)
         full_path = cache_path
-
     df = xr.open_dataset(full_path, **kws)
-
-    return df
-
-
-def ds2df(ds, area=area, varname=varname, period=period):
-    """
-    Take a dataset, selects wanted variable, area, period and transforms it into a dataframe.
-
-    Parameters
-    ----------
-    ds : Dataset
-        Input data
-
-    Returns
-    -------
-    c : DataFrame
-        Output data as df
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    ds2df(ds,area='North_Atlantic',period='ym',varname='tos')
-
-    """
-    df = ds.sel(area=area, period=period).to_dataframe()[varname].unstack().T
     return df
 
 
 # Diagnostic Potential Predictability (DPP)
-
 def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     """
     Separate data into chunks and reshapes chunks in a c dimension.
@@ -240,8 +203,6 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
         Number of chunks in the return data
     chunk_length : boolean
         Length of chunks
-    output : boolean (optional)
-        Debugging prints
 
     Returns
     -------
@@ -263,18 +224,11 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     if number_chunks and not chunk_length:
         chunk_length = np.floor(ds.year.size / number_chunks)
         cmin = int(ds.year.min())
-        cmax = int(ds.year.max())
     elif not number_chunks and chunk_length:
         cmin = int(ds.year.min())
-        cmax = int(ds.year.max())
         number_chunks = int(np.floor(ds.year.size / chunk_length))
     else:
         raise ValueError('set number_chunks or chunk_length to True')
-
-    if output:
-        print(number_chunks, 'chunks of length',
-              chunk_length, 'from', cmin, 'to', cmax)
-        print('0', cmin, cmin + chunk_length - 1)
     c = ds.sel(year=slice(cmin, cmin + chunk_length - 1))
     c = c.expand_dims('c')
     c['c'] = [0]
@@ -292,7 +246,7 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     return c
 
 
-def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
+def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False):
     """
     Calculate Diagnostic Potential Predictability (DPP) as potentially predictable variance fraction (ppvf) in Boer 2004.
 
@@ -321,10 +275,6 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     chunk : boolean
         Whether chunking is applied. Default: True.
         If False, then uses Resplandy 2015 / Seferian 2018 method.
-    return_s : boolean (optional)
-        decide whether to return also intermediate results
-    output : boolean (optional)
-        Debugging prints
 
     Returns
     -------
@@ -338,48 +288,27 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False, output=False):
     ds_DPPm10 = et.prediction.DPP(ds,m=10,chunk=True)
 
     """
-    if ds.size > 5000:  # dirty way of figuring out which data
-        data3D = True
-        print('3D data')
-    else:
-        data3D = False
-    if output:
-        print(m, ds.dims, chunk)
-
     if not chunk:
         s2v = ds.rolling(year=m, min_periods=1, center=True).mean().var('year')
         s2e = (ds - ds.rolling(year=m, min_periods=1,
                                center=True).mean()).var('year')
         s2 = s2v + s2e
-
     if chunk:
         # first chunk
         chunked_means = chunking(ds, chunk_length=m).mean('year')
         # sub means in chunks
         chunked_deviations = chunking(ds, chunk_length=m) - chunked_means
-
         s2v = chunked_means.var('c')
         if var_all_e:
             s2e = chunked_deviations.var(['year', 'c'])
         else:
             s2e = chunked_deviations.var('year').mean('c')
         s2 = s2v + s2e
-
     DPP = (s2v - s2 / (m)) / (s2)
-
-    if output:
-        print(DPP, s2v, s2e, s2)
-
-    if data3D:
-        return DPP
-    if not return_s:
-        return DPP
-    if return_s:
-        return DPP, s2v, s2e, s2
+    return DPP
 
 
 # Prognostic Potential Predictability Griffies & Bryan 1997
-
 # 3 different ways of calculation ensemble spread:
 def ens_var_against_mean(ds):
     """
@@ -568,7 +497,7 @@ def m2m(ds, supervector_dim):
 
 
 def m2e(ds3d, supervector_dim):
-    """Create two supervectors to compare members to all other members."""
+    """Create two supervectors to compare members to ensemble mean."""
     truth_list = []
     fct_list = []
     mean = ds3d.mean('member')
@@ -637,7 +566,7 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detren
     if metric.__name__ in ['pearson_r', 'rmse']:
         fct, truth = comparison(_ds, supervector_dim)
         return metric(fct, truth, dim=supervector_dim)
-    elif metric.__name__ in ['mse', 'rmse_v', 'nrmse', 'nvar', 'ppp', 'PPP', 'PM_MSSS']:
+    elif metric.__name__ in ['mse', 'rmse_v', 'nrmse', 'nev', 'ppp', 'PPP', 'MSSS', 'uACC']:
         return metric(ds, control, comparison, running)
     else:
         raise ValueError('specify metric argument')
@@ -710,8 +639,16 @@ def nrmse(ds, control, comparison, running):
     return (ens / var / fac) ** .5
 
 
-def nvar(ds, control, comparison, running):
-    """Normalized variance metric."""
+def nev(ds, control, comparison, running):
+    """Normalized Ensemble Variance (NEV) metric.
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+
+    """
     var = get_variance(control, running=running)
     ens = choose_comparison(ds, comparison)
     fac = get_norm_factor(comparison)
@@ -747,12 +684,30 @@ def PPP(ds, control, comparison, running):
     return ppp(ds, control, comparison, running)
 
 
-def PM_MSSS(ds, control, comparison, running):
+def uACC(ds, control, comparison, running):
+    """Unbiased ACC (uACC) metric.
+
+    Formula
+    -------
+    - uACC = PPP ** .5 = MSSS ** .5
+
+    Reference
+    ---------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+      Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+      Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate
+      Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+
+    """
+    return ppp(ds, control, comparison, running) ** .5
+
+
+def MSSS(ds, control, comparison, running):
     """Wraps ppp.
 
     Formula
     -------
-    MSSS_{PM} = 1 - MSE/sigma_control
+    MSSS = 1 - MSE_ens / var_control
 
     References
     ----------
@@ -774,19 +729,16 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
         input control data
     ds : xr.DataArray/Dataset with year, ensemble and member dimensions
         input ensemble data
-    func : function
-        function to calculate metric
-    against : str
-        specify against which truth
-    sig: int
+    sig: int or list
         Significance level for bootstrapping from pseudo ensemble
-    it: int
-        number of iterations for ACC(pseudo_ens)
+    bootstrap: int
+        number of iterations
 
     Returns
     -------
     sig_level : xr.DataArray/Dataset as inputs
         significance level without year, ensemble and member dimensions
+        as many sig_level as listitems in sig
 
     """
     ds_pseudo = pseudo_ens_fast(ds, control, bootstrap=bootstrap)
@@ -796,7 +748,7 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
         qsig = [x / 100 for x in sig]
     else:
         qsig = sig / 100
-    sig_level = ds_pseudo_metric.quantile(q=sig / 100, dim='year')
+    sig_level = ds_pseudo_metric.quantile(q=qsig / 100, dim='year')
     return sig_level
 
 
@@ -817,6 +769,27 @@ def control_for_reference_period(control, reference_period='MK', obs_years=40):
 
 
 def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=95, bootstrap=30):
+    """
+    Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
+
+    Parameters
+    ----------
+    control : xr.DataArray/Dataset with year dimension
+        input control data
+    ds : xr.DataArray/Dataset with year, ensemble and member dimensions
+        input ensemble data
+    sig: int or list
+        Significance level for bootstrapping from pseudo ensemble
+    bootstrap: int
+        number of iterations
+
+    Returns
+    -------
+    sig_level : xr.DataArray/Dataset as inputs
+        significance level without year, ensemble and member dimensions
+        as many sig_level as listitems in sig
+
+    """
     x = []
     _control = control_for_reference_period(
         control, reference_period=reference_period)
@@ -850,6 +823,11 @@ def vectorized_predictability_horizon(ds, threshold, limit='upper', dim='year'):
 
 
 def running_trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
+    """Calculate running trend of a pd.DataFrame.
+
+    Requires pyfinance
+
+    """
     if dim is None:
         x = df.index
     result = ols.PandasRollingOLS(y=df[varname], x=x, window=10).beta
@@ -868,6 +846,7 @@ def running_trend(df, varname, dim=None, window=10, timestamp_location='middle',
 
 
 def trend_over_numeric_varnames(df, **kwargs):
+    """Calc running trend over numeric variables."""
     list = []
     for col in df.columns:
         if np.issubdtype(df[col], np.number):
@@ -881,6 +860,7 @@ def normalize(ds, dim=None):
 
 
 def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, period=period):
+    """Get ensemble starting years with anomalous states."""
     s = control.sel(area=area, period=period).to_dataframe()[varname]
     snorm = normalize(s)
     ensemble_starting_years = ds.ensemble.values
@@ -890,54 +870,19 @@ def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, p
     return anomalous_states + shift
 
 
-def PPP_mean_anomalous(ds, control, varname='sos', area='North_Atlantic', period='ym', threshold=.66, it=50, sig=95, against='mean', func='PPP_mean'):
+def compute_anomalous(ds, control, varname='sos', area='North_Atlantic', period='ym', threshold=1, bootstrap=50, sig=99, metric=rmse, comparison=m2e):
+    """Compute skill score for anomalous start years."""
     anomalous_years = get_anomalous_states(
         ds, control, varname=varname, area=area, threshold=threshold)
     ds_anomalous = select_members_ensembles(
         ds, e=anomalous_years)
     threshold_anomalous = PM_sig(
-        control, ds_anomalous, func=func, it=it, sig=sig)
-    PPP_anomalous = PM_MSSS(ds_anomalous, control, against=against)
-    return PPP_anomalous, threshold_anomalous
+        control, ds_anomalous, metric=metric, bootstrap=bootstrap, sig=sig)
+    skill_anomalous = compute(ds_anomalous, control, metric=metric, comparison=comparison)
+    return skill_anomalous, threshold_anomalous
 
 
 # Persistence
-
-# damped persistence forecast based on lag1 autocorrelation
-
-
-def df_autocorr(df, lag=1, axis=0):
-    """Compute full-sample column-wise autocorrelation for a pandas DataFrame."""
-    return df.apply(lambda col: col.autocorr(lag), axis=axis)
-
-
-def calc_tau(alpha):
-    """
-    Calculate the decorrelation time tau.
-
-    Reference
-    ---------
-    Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate Research. Cambridge ; New York: Cambridge University Press, 1999., page 373
-
-    Parameters
-    ----------
-    alpha : float
-        lag1 autocorrelation coefficient
-    Returns
-    -------
-    tau : float
-        decorrelation time
-
-    Example
-    -------
-    import esmtools as et
-    alpha = .8
-    tau = et.prediction.calc_tau(alpha)
-
-    """
-    return (1 + alpha) / (1 - alpha)
-
-
 def persistence_forecast(ds, control, varname=varname, area=area, period=period, comparison=m2e):
     """Generate persistence forecast timeseries."""
     starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
@@ -1037,11 +982,11 @@ def generate_predictability_persistence(s, kind='PPP', percentile=True, length=2
         alpha_plus = np.percentile(data, 95)
 
     # persistence function
-
     def generate_PPP_persistence(alpha, t):
         values = np.exp(-2 * alpha * t)  # Griffies 1997
         s = pd.Series(values, index=t)
         return s
+
     t = np.arange(0, length + 1, 1.)
     PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
     PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
@@ -1107,10 +1052,10 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     ar90 = pd.Series(ar90, index=index)
     return ar1, ar50, ar90
 
+
 # utils for xr.Datasets
-
-
 def drop_ensembles(ds, rmd_ensemble=[0]):
+    """Drop ensembles from ds."""
     if all(ens in ds.ensemble.values for ens in rmd_ensemble):
         ensemble_list = list(ds.ensemble.values)
         for ens in rmd_ensemble:
@@ -1121,6 +1066,7 @@ def drop_ensembles(ds, rmd_ensemble=[0]):
 
 
 def drop_members(ds, rmd_member=[0]):
+    """Drop members from ds."""
     if all(m in ds.member.values for m in rmd_member):
         member_list = list(ds.member.values)
         for ens in rmd_member:
@@ -1131,52 +1077,9 @@ def drop_members(ds, rmd_member=[0]):
 
 
 def select_members_ensembles(ds, m=None, e=None):
+    """Subselect ensembles and members from ds."""
     if m is None:
         m = ds.member.values
     if e is None:
         e = ds.ensemble.values
     return ds.sel(member=m, ensemble=e)
-
-
-# plotting
-def set_lon_lat_axis(ax, talk=False, projection=ccrs.PlateCarree()):
-    """Add longitude and latitude coordinates."""
-    ax.set_xticks([-180, -120, -60, 0, 60, 120, 180], crs=projection)
-    ax.set_yticks([-60, -30, 0, 30, 60, 90], crs=projection)
-    lon_formatter = LongitudeFormatter(zero_direction_label=True)
-    lat_formatter = LatitudeFormatter()
-    ax.xaxis.set_major_formatter(lon_formatter)
-    ax.yaxis.set_major_formatter(lat_formatter)
-    if talk:
-        ax.outline_patch.set_edgecolor('black')
-        ax.outline_patch.set_linewidth('1.5')
-        ax.tick_params(labelsize=15)
-        ax.tick_params(width=1.5)
-
-
-def my_plot(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, **kwargs):
-    """Wrap xr.plot."""
-    plt.figure(figsize=(10, 5))
-    ax = plt.subplot(projection=projection)
-    data.plot.pcolormesh('lon', 'lat', ax=ax,
-                         transform=ccrs.PlateCarree(), **kwargs)
-    ax.coastlines(color=coastline_color, linewidth=1.5)
-    if curv:
-        ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
-    if projection == ccrs.PlateCarree():
-        set_lon_lat_axis(ax)
-
-
-def my_facetgrid(data, projection=ccrs.PlateCarree(), coastline_color='gray', curv=False, col='year', col_wrap=2, **kwargs):
-    """Wrap facetgrid."""
-    transform = ccrs.PlateCarree()
-    p = data.plot.pcolormesh('lon', 'lat', transform=transform, col=col, col_wrap=col_wrap,
-                            subplot_kws={'projection': projection}, **kwargs)
-    for ax in p.axes.flat:
-        if curv:
-            ax.add_feature(cp.feature.LAND, zorder=100, edgecolor='k')
-        if projection == ccrs.PlateCarree():
-            set_lon_lat_axis(ax)
-        ax.coastlines()
-        # ax.set_extent([-160, -30, 5, 75])
-        ax.set_aspect('equal', 'box-forced')

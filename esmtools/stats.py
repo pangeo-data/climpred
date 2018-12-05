@@ -441,8 +441,8 @@ def create_power_spectrum(s, pLow=0.05):
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
 
 
-def vec_varweighted_mean_period(control3d, varname):
-    """Calculate the variance weighted mean period of a control run vectorized.
+def vec_varweighted_mean_period(ds):
+    """Calculate the variance weighted mean period of an xr.DataArray.
 
     Reference
     ---------
@@ -452,11 +452,36 @@ def vec_varweighted_mean_period(control3d, varname):
 
     """
     from scipy.signal import periodogram
-    f, Pxx = periodogram(control3d[varname], axis=0, scaling='spectrum')
+    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
     F = xr.DataArray(f)
     PSD = xr.DataArray(Pxx)
     T = PSD.sum('dim_0') / ((PSD * F).sum('dim_0'))
-    coords = control3d[varname].isel(year=0).coords
-    dims = control3d[varname].isel(year=0).dims
+    coords = ds.isel(year=0).coords
+    dims = ds.isel(year=0).dims
     T = xr.DataArray(data=T.values, coords=coords, dims=dims)
     return T
+
+def xr_corr(ds, lag=1, dim='year'):
+    """Calculated lagged correlation of a xr.Dataset."""
+    from xskillscore import pearson_r
+    first = ds[dim].values[0]
+    last = ds[dim].values[-1]
+    normal = ds.sel(year=slice(first, last - lag))
+    shifted = ds.sel(year=slice(first + lag, last))
+    shifted['year'] = normal.year
+    return pearson_r(normal, shifted, dim)
+
+
+def vec_tau_d(da, r=20, dim='year'):
+    """Calculate decorrelation time of an xr.DataArray.
+
+    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)
+
+    Reference
+    ---------
+    - Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+    Research. Cambridge ; New York: Cambridge University Press, 1999., p.373
+
+    """
+    one = da.mean(dim) / da.mean(dim)
+    return one + 2 * xr.concat([xr_corr(da, lag=i) for i in range(1, r)], 'it').sum('it')

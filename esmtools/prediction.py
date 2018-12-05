@@ -435,209 +435,6 @@ def ens_var_against_every(ds):
     return var.mean('ensemble')
 
 
-def rmse_v(ds, control, against=None, comparison=None):
-    """Calculate root-mean-square-error (RMSE)."""
-    kind = comparison.__name__
-    if kind == 'm2e':
-        ens_var = ens_var_against_mean(ds)
-    elif kind == 'm2c':
-        ens_var = ens_var_against_control(ds)
-    elif kind == 'm2m':
-        ens_var = ens_var_against_every(ds)
-    elif kind == 'e2c':
-        ens_var = ensmean_against_control(ds)
-    else:
-        raise ValueError('Select against from .')
-    return ens_var**.5
-
-
-def normalize_var(var, control, fac=1, running=True, m=20):
-    """
-    Normalize the ensemble spread with the temporal spread of the control run.
-
-    Note 1: Ensemble spread against ensemble mean is half the ensemble spread any member.
-    Note 2: Which variance should be normalized against?
-            running=False evaluates against the variance of the whole temporal domain whereas
-            running=True evaluates against a running variance
-
-    Parameters
-    ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
-        Input data
-    fac : int
-        factor for ensemble spread (2 for ensemble variance against every/control, 1 for mean)
-    running : boolean
-    m : int
-        if running, then this marks the time window in years for the variance calc
-
-    Returns
-    -------
-    c : DataArray as ds
-        Output data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    nens_var_against_mean = et.prediction.normalize_var(
-        ens_var_against_mean,control)
-
-    ens_var_against_control = et.prediction.ens_var_against_control(ds)
-    nens_var_against_mean = et.prediction.normalize_var(
-        ens_var_against_control,control,fac=2)
-
-    """
-    if not running:
-        control_var = control.var('year')  # .mean('year')
-        var2 = var / control_var / fac
-        return var2
-    if running:
-        control_var_running = control.rolling(year=m).var().mean('year')
-        var2 = var / control_var_running / fac
-        return var2
-
-
-def PPP(ds, control):
-    """
-    Calculate Prognostic Potential Predictability (PPP) as in Pohlmann 2004 or Griffies 1997.
-
-    References
-    ----------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-
-    Parameters
-    ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
-        Input data
-    control :
-
-    Returns
-    -------
-    c : DataArray
-        Output data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    PPP_mean = et.prediction.PPP(ds,control)
-
-    """
-    return 1
-
-
-# Perfect-model (PM) predictability scores from Bushuk 2018
-
-def PM_MSSS(ds, control, against='', running=True, m=20):
-    """
-    Calculate the perfect-model (PM) mean square skill score (MSSS). It is identical to Prognostic Potential Predictability (PPP) in Pohlmann et al. (2004).
-
-    Formula
-    -------
-    MSSS_{PM} = 1 - MSE/sigma_c
-
-    References
-    ----------
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-
-    Parameters
-    ----------
-
-    """
-    if against == 'mean':
-        ens_var = ens_var_against_mean(ds)
-        fac = 1
-    elif against == 'control':
-        ens_var = ens_var_against_control(ds)
-        fac = 2
-    elif against == 'every':
-        ens_var = ens_var_against_every(ds)
-        fac = 2
-    else:
-        raise ValueError('Select against from ["mean","control","every"].')
-    nens_var_against_mean = normalize_var(
-        ens_var, control, running=running, m=m, fac=fac)
-    msss = PPP_from_nvar(nens_var_against_mean)
-    return msss
-
-
-def PM_NRMSE(ds, control, against=None, running=True, m=20):
-    """
-    Calculate the perfect-model (PM) normalised root mean square error as in Hawkins et al. (2016) or NRMSE+1 in Bushuk et al. (2018).
-
-    Formula
-    -------
-    NRMSE = 1 - RMSE_ens/std_c
-
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-        Prediction: Potential versus Operational Seasonal Forecast Skill.”
-        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
-        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-        Journal of the Royal Meteorological Society 142, no. 695
-        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-
-    Parameters
-    ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
-        Input ensemble data
-    control : DataArray with year dimension (optional spatial coordinates)
-        Input control run data
-    kind : string
-        how to calculate ensemble variance: against ["mean","control","every"]
-    running : boolean
-        if true against running m-yr variance
-    m : int
-        see running
-
-    Returns
-    -------
-    nrmse : DataArray
-        Output data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    pm_nrmse = et.prediction.PM_NRMSE(
-        ds,control,against='control',running=True,m=30)
-
-    """
-    against = against.__name__
-    if against == 'mean':
-        ens_var = ens_var_against_mean(ds)
-        fac = 1
-    elif against == 'control':
-        ens_var = ens_var_against_control(ds)
-        fac = 2
-    elif against == 'every':
-        ens_var = ens_var_against_every(ds)
-        fac = 2
-    else:
-        raise ValueError('Select against from ["mean","control","every"].')
-    nens_var_against_mean = normalize_var(
-        ens_var, control, running=running, m=m, fac=fac)
-    nrmse = PPP_from_nvar(nens_var_against_mean**.5)
-    return nrmse
-
-
 def pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
@@ -819,12 +616,7 @@ def ensmean_against_control(ds, control_member=0):
     return ((ds.mean('member') - truth)**2).mean('ensemble')
 
 
-def mse(ds):
-    """dummy for ensvar_against."""
-    pass  # ugly
-
-
-def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detrend=False, varname=None):
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detrend=False, running=None, varname=None):
     supervector_dim = 'svd'
     time_dim = 'year'
     if anomaly:
@@ -838,22 +630,138 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detren
         _control = _control - \
             (s * _control[time_dim] - _control[time_dim].values[0])
         _ds = _ds - (s * _ds[time_dim] - _ds[time_dim].values[0])
-    if metric.__name__ not in ['pearson_r', 'rmse', 'rmse_v', 'mse']:
-        raise ValueError('specify metric argument')
+
     if comparison.__name__ not in ['m2m', 'm2c', 'm2e', 'e2c']:
         raise ValueError('specify comparison argument')
+
     if metric.__name__ in ['pearson_r', 'rmse']:
         fct, truth = comparison(_ds, supervector_dim)
         return metric(fct, truth, dim=supervector_dim)
-    elif metric.__name__ in ['mse']:
-        if comparison.__name__ is 'm2e':
-            return ens_var_against_mean(_ds)
-        if comparison.__name__ is 'm2c':
-            return ens_var_against_control(_ds)
-        if comparison.__name__ is 'm2m':
-            return ens_var_against_every(_ds)
-        if comparison.__name__ is 'e2c':
-            return ensmean_against_control(_ds)
+    elif metric.__name__ in ['mse', 'rmse_v', 'nrmse', 'nvar', 'ppp', 'PPP', 'PM_MSSS']:
+        return metric(ds, control, comparison, running)
+    else:
+        raise ValueError('specify metric argument')
+
+
+def get_variance(control, running=None):
+    """Get running variance."""
+    if isinstance(running, int):
+        var = control.rolling(year=running).var().mean('year')
+    else:
+        var = control.var('year')
+    return var
+
+
+def choose_comparison(ds, comparison):
+    """Choose comparison for any mse-style metric."""
+    comparison_name = comparison.__name__
+    if comparison_name is 'm2e':
+        return ens_var_against_mean(ds)
+    if comparison_name is 'm2c':
+        return ens_var_against_control(ds)
+    if comparison_name is 'm2m':
+        return ens_var_against_every(ds)
+    if comparison_name is 'e2c':
+        return ensmean_against_control(ds)
+
+
+def get_norm_factor(comparison):
+    """Get normalization factor for ppp, nvar, nrmse."""
+    comparison_name = comparison.__name__
+    if comparison_name is 'm2e':
+        return 1
+    if comparison_name in ['m2c', 'm2m', 'e2c']:
+        return 2
+
+
+def mse(ds, control, comparison, running):
+    """Mean Square Error (MSE) metric."""
+    return choose_comparison(ds, comparison)
+
+
+def rmse_v(ds, control, comparison, running):
+    """Root Mean Square Error (RMSE) metric."""
+    return choose_comparison(ds, comparison) ** .5
+
+
+def nrmse(ds, control, comparison, running):
+    """Normalized Root Mean Square Error (NRMSE) metric.
+
+    Formula
+    -------
+    NRMSE = 1 - RMSE_ens / std_control = 1 - (var_ens / var_control ) ** .5
+
+    References
+    ----------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+        Prediction: Potential versus Operational Seasonal Forecast Skill.”
+        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+        Journal of the Royal Meteorological Society 142, no. 695
+        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+
+    """
+    var = get_variance(control, running=running)
+    ens = choose_comparison(ds, comparison)
+    fac = get_norm_factor(comparison)
+    return (ens / var / fac) ** .5
+
+
+def nvar(ds, control, comparison, running):
+    """Normalized variance metric."""
+    var = get_variance(control, running=running)
+    ens = choose_comparison(ds, comparison)
+    fac = get_norm_factor(comparison)
+    return ens / var / fac
+
+
+def ppp(ds, control, comparison, running):
+    """Prognostic Potential Predictability (PPP) metric.
+
+    Formula
+    -------
+    PPP = 1 - MSE / std_control
+
+    References
+    ----------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
+
+        """
+    var = get_variance(control, running=running)
+    ens = choose_comparison(ds, comparison)
+    fac = get_norm_factor(comparison)
+    return 1 - ens / var / fac
+
+
+def PPP(ds, control, comparison, running):
+    """Wraps ppp."""
+    return ppp(ds, control, comparison, running)
+
+
+def PM_MSSS(ds, control, comparison, running):
+    """Wraps ppp.
+
+    Formula
+    -------
+    MSSS_{PM} = 1 - MSE/sigma_control
+
+    References
+    ----------
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
+    """
+    return ppp(ds, control, comparison, running)
 
 
 def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):

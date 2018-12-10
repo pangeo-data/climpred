@@ -188,7 +188,7 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 
 
 # Diagnostic Potential Predictability (DPP)
-def chunking(ds, number_chunks=False, chunk_length=False, output=False):
+def chunking(ds, number_chunks=False, chunk_length=False, output=False, time_dim='year'):
     """
     Separate data into chunks and reshapes chunks in a c dimension.
 
@@ -232,7 +232,6 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
     c = ds.sel(year=slice(cmin, cmin + chunk_length - 1))
     c = c.expand_dims('c')
     c['c'] = [0]
-    year = c.year
     for i in range(1, number_chunks):
         if output:
             print(i, cmin + chunk_length * i,
@@ -241,12 +240,12 @@ def chunking(ds, number_chunks=False, chunk_length=False, output=False):
                                cmin + (i + 1) * chunk_length - 1))
         c2 = c2.expand_dims('c')
         c2['c'] = [i]
-        c2['year'] = year
+        c2[time_dim] = c[time_dim]
         c = xr.concat([c, c2], 'c')
     return c
 
 
-def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False):
+def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim='year'):
     """
     Calculate Diagnostic Potential Predictability (DPP) as potentially predictable variance fraction (ppvf) in Boer 2004.
 
@@ -289,20 +288,20 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, return_s=False):
 
     """
     if not chunk:
-        s2v = ds.rolling(year=m, min_periods=1, center=True).mean().var('year')
+        s2v = ds.rolling(year=m, min_periods=1, center=True).mean().var(time_dim)
         s2e = (ds - ds.rolling(year=m, min_periods=1,
-                               center=True).mean()).var('year')
+                               center=True).mean()).var(time_dim)
         s2 = s2v + s2e
     if chunk:
         # first chunk
-        chunked_means = chunking(ds, chunk_length=m).mean('year')
+        chunked_means = chunking(ds, chunk_length=m).mean(time_dim)
         # sub means in chunks
         chunked_deviations = chunking(ds, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
         if var_all_e:
-            s2e = chunked_deviations.var(['year', 'c'])
+            s2e = chunked_deviations.var([time_dim, 'c'])
         else:
-            s2e = chunked_deviations.var('year').mean('c')
+            s2e = chunked_deviations.var(time_dim).mean('c')
         s2 = s2v + s2e
     DPP = (s2v - s2 / (m)) / (s2)
     return DPP
@@ -364,7 +363,7 @@ def ens_var_against_every(ds):
     return var.mean('ensemble')
 
 
-def pseudo_ens(ds, control):
+def pseudo_ens(ds, control, time_dim='year'):
     """
     Create a pseudo-ensemble from control run.
 
@@ -398,11 +397,11 @@ def pseudo_ens(ds, control):
     length = ds.year.size
     c_start = control.year[0]
     c_end = control.year[-1]
-    year = ds.year
+    year = ds[time_dim]
 
-    def sel_years(control, year_s, m=None, length=length):
+    def sel_years(control, year_s, m=None, length=length, time_dim=time_dim):
         new = control.sel(year=slice(year_s, year_s + length - 1))
-        new['year'] = year
+        new[time_dim] = year
         return new
 
     def create_pseudo_members(control):
@@ -565,19 +564,23 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detren
 
     if metric.__name__ in ['pearson_r', 'rmse']:
         fct, truth = comparison(_ds, supervector_dim)
-        return metric(fct, truth, dim=supervector_dim)
+        res = metric(fct, truth, dim=supervector_dim)
+        res[time_dim]=np.arange(1,res[time_dim].size+1)
+        return res
     elif metric.__name__ in ['mse', 'rmse_v', 'nrmse', 'nev', 'ppp', 'PPP', 'MSSS', 'uACC']:
-        return metric(ds, control, comparison, running)
+        res = metric(ds, control, comparison, running)
+        res[time_dim]=np.arange(1,res[time_dim].size+1)
+        return res
     else:
         raise ValueError('specify metric argument')
 
 
-def get_variance(control, running=None):
+def get_variance(control, running=None, time_dim='year'):
     """Get running variance."""
     if isinstance(running, int):
-        var = control.rolling(year=running).var().mean('year')
+        var = control.rolling(year=running).var().mean(time_dim)
     else:
-        var = control.var('year')
+        var = control.var(time_dim)
     return var
 
 
@@ -719,7 +722,7 @@ def MSSS(ds, control, comparison, running):
     return ppp(ds, control, comparison, running)
 
 
-def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
+def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10, time_dim='year'):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
@@ -748,27 +751,26 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10):
         qsig = [x / 100 for x in sig]
     else:
         qsig = sig / 100
-    sig_level = ds_pseudo_metric.quantile(q=qsig / 100, dim='year')
+    sig_level = ds_pseudo_metric.quantile(q=qsig / 100, dim=time_dim)
     return sig_level
 
 
-def control_for_reference_period(control, reference_period='MK', obs_years=40):
+def control_for_reference_period(control, reference_period='MK', obs_years=40, time_dim='year'):
     """Modifies control according to knowledge approach, see Hawkins 2016."""
     if reference_period == 'MK':
         _control = control
     elif reference_period == 'OP_full_length':
         _control = control - \
             control.rolling(year=obs_years, min_periods=1,
-                             center=True).mean() + control.mean('year')
+                             center=True).mean() + control.mean(time_dim)
     elif reference_period == 'OP':
-        # take last
-        pass
+        raise ValueError('not yet implemented')
     else:
         raise ValueError("choose a reference period")
     return _control
 
 
-def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=95, bootstrap=30):
+def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=95, bootstrap=30, time_dim='year'):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
@@ -803,7 +805,7 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=
         qsig = [x / 100 for x in sig]
     else:
         qsig = sig / 100
-    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=['year', 'it'])
+    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=[time_dim, 'it'])
     return sig_level
 
 
@@ -814,12 +816,12 @@ def get_predictability_horizon(s, threshold):
     return ph
 
 
-def vectorized_predictability_horizon(ds, threshold, limit='upper', dim='year'):
+def vectorized_predictability_horizon(ds, threshold, limit='upper', time_dim='year'):
     """Get predictability horizons of dataset form threshold dataset."""
     if limit is 'upper':
-        return (ds > threshold).argmin('year')
+        return (ds > threshold).argmin(time_dim)
     if limit is 'lower':
-        return (ds < threshold).argmin('year')
+        return (ds < threshold).argmin(time_dim)
 
 
 def running_trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
@@ -883,7 +885,7 @@ def compute_anomalous(ds, control, varname='sos', area='North_Atlantic', period=
 
 
 # Persistence
-def persistence_forecast(ds, control, varname=varname, area=area, period=period, comparison=m2e):
+def persistence_forecast(ds, control, varname=varname, area=area, period=period, comparison=m2e, time_dim='year'):
     """Generate persistence forecast timeseries."""
     starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
     anom = (control.sel(year=starting_years) - control.mean())
@@ -894,7 +896,7 @@ def persistence_forecast(ds, control, varname=varname, area=area, period=period,
     for year in anom.year:
         ar1 = anom.sel(year=year).values * \
             np.exp(-alpha * t) + control.mean().values
-        pf = xr.DataArray(data=ar1, coords=[tds], dims='year')
+        pf = xr.DataArray(data=ar1, coords=[tds], dims=time_dim)
         pf = pf.expand_dims('ensemble')
         pf['ensemble'] = [year + 1100 + 1]
         persistence_forecast_list.append(pf)

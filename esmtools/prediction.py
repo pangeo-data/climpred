@@ -544,9 +544,8 @@ def ensmean_against_control(ds, control_member=0):
     return ((ds.mean('member') - truth)**2).mean('ensemble')
 
 
-def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detrend=False, running=None, varname=None):
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detrend=False, running=None, varname=None, time_dim='year'):
     supervector_dim = 'svd'
-    time_dim = 'year'
     if anomaly:
         _ds = ds - control.mean(time_dim)
         _control = control - control.mean(time_dim)

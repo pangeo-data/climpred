@@ -888,10 +888,10 @@ def persistence_forecast(ds, control, varname=varname, area=area, period=period,
     """Generate persistence forecast timeseries."""
     starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
     anom = (control.sel(year=starting_years) - control.mean())
-    t = np.arange(1, ds[time_dim].size + 1)
+    t = np.arange(1, ds.year.size + 1)
     alpha = control.to_series().autocorr()
     persistence_forecast_list = []
-    for year in anom[time_dim]:
+    for year in anom.year:
         ar1 = anom.sel(year=year).values * \
             np.exp(-alpha * t) + control.mean().values
         pf = xr.DataArray(data=ar1, coords=[t], dims=time_dim)

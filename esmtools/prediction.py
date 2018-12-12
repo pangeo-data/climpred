@@ -1,13 +1,3 @@
-import os
-
-import esmtools as et
-import numpy as np
-import pandas as pd
-import xarray as xr
-from pyfinance import ols
-from six.moves.urllib.request import urlopen, urlretrieve
-from xskillscore import pearson_r, rmse
-
 """Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
 
 ToDos
@@ -118,6 +108,17 @@ Time dimensions is called Years and is integer. (Original data was year
 3000-3300, now 3600. Had problems with datetime[ns] limits and xr.to_netcdf()!)
 
 """
+import os
+import esmtools as et
+import numpy as np
+import pandas as pd
+import xarray as xr
+from pyfinance import ols
+from six.moves.urllib.request import urlopen, urlretrieve
+from xskillscore import pearson_r, rmse
+from bs4 import BeautifulSoup
+from random import randint
+
 # standard setup for load dataset and examples
 varname = 'tos'
 period = 'ym'
@@ -142,10 +143,10 @@ def get_data_home(data_home=None):
 
 
 def get_dataset_names():
-    """Report available example datasets, useful for reporting issues."""
+    """
+    Report available example datasets, useful for reporting issues."""
     # delayed import to not demand bs4 unless this function is actually used
     # copied from seaborn
-    from bs4 import BeautifulSoup
     http = urlopen(
         'https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
     # print('Load from URL:', http)
@@ -390,7 +391,6 @@ def pseudo_ens(ds, control, time_dim='year'):
     period='ym'
     area='North_Atlantic'
     ds_e = et.prediction.pseudo_ens(control,ds)
-
     """
     nens = ds.ensemble.size
     nm = ds.member.size
@@ -479,7 +479,9 @@ def pseudo_ens_fast(ds3d, control3d, varname=None, shuffle=True, bootstrap=None)
 
 
 def m2m(ds, supervector_dim):
-    """Create two supervectors to compare members to all other members."""
+    """
+    Create two supervectors to compare members to all other members.
+    """
     truth_list = []
     fct_list = []
     for m in ds.member.values:
@@ -496,7 +498,9 @@ def m2m(ds, supervector_dim):
 
 
 def m2e(ds3d, supervector_dim):
-    """Create two supervectors to compare members to ensemble mean."""
+    """
+    Create two supervectors to compare members to ensemble mean.
+    """
     truth_list = []
     fct_list = []
     mean = ds3d.mean('member')
@@ -510,7 +514,9 @@ def m2e(ds3d, supervector_dim):
 
 
 def m2c(ds3d, supervector_dim, control_member=0):
-    """Create two supervectors to compare members to control."""
+    """
+    Create two supervectors to compare members to control.
+    """
     truth_list = []
     fct_list = []
     truth = ds3d.sel(member=control_member)
@@ -527,7 +533,9 @@ def m2c(ds3d, supervector_dim, control_member=0):
 
 
 def e2c(ds, supervector_dim, control_member=0):
-    """Create two supervectors to compare ensemble mean to control."""
+    """
+    Create two supervectors to compare ensemble mean to control.
+    """
     truth = ds.sel(member=control_member)
     truth = truth.rename({'ensemble': supervector_dim})
     # drop the member being truth
@@ -538,13 +546,20 @@ def e2c(ds, supervector_dim, control_member=0):
 
 
 def ensmean_against_control(ds, control_member=0):
+    """
+    Add description here.
+    """
     # drop the member being truth
     truth = ds.sel(member=control_member)
     ds = drop_members(ds, rmd_member=[control_member])
     return ((ds.mean('member') - truth)**2).mean('ensemble')
 
 
-def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detrend=False, running=None, varname=None, time_dim='year'):
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, 
+            detrend=False, running=None, varname=None, time_dim='year'):
+    """
+    Add description here.
+    """
     supervector_dim = 'svd'
     if anomaly:
         _ds = ds - control.mean(time_dim)
@@ -575,7 +590,9 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, detren
 
 
 def get_variance(control, running=None, time_dim='year'):
-    """Get running variance."""
+    """
+    Get running variance.
+    """
     if isinstance(running, int):
         var = control.rolling(year=running).var().mean(time_dim)
     else:
@@ -584,7 +601,9 @@ def get_variance(control, running=None, time_dim='year'):
 
 
 def choose_comparison(ds, comparison):
-    """Choose comparison for any mse-style metric."""
+    """
+    Choose comparison for any mse-style metric.
+    """
     comparison_name = comparison.__name__
     if comparison_name is 'm2e':
         return ens_var_against_mean(ds)
@@ -597,7 +616,9 @@ def choose_comparison(ds, comparison):
 
 
 def get_norm_factor(comparison):
-    """Get normalization factor for ppp, nvar, nrmse."""
+    """
+    Get normalization factor for ppp, nvar, nrmse.
+    """
     comparison_name = comparison.__name__
     if comparison_name is 'm2e':
         return 1
@@ -606,17 +627,22 @@ def get_norm_factor(comparison):
 
 
 def mse(ds, control, comparison, running):
-    """Mean Square Error (MSE) metric."""
+    """
+    Mean Square Error (MSE) metric.
+    """
     return choose_comparison(ds, comparison)
 
 
 def rmse_v(ds, control, comparison, running):
-    """Root Mean Square Error (RMSE) metric."""
+    """
+    Root Mean Square Error (RMSE) metric.
+    """
     return choose_comparison(ds, comparison) ** .5
 
 
 def nrmse(ds, control, comparison, running):
-    """Normalized Root Mean Square Error (NRMSE) metric.
+    """
+    Normalized Root Mean Square Error (NRMSE) metric.
 
     Formula
     -------
@@ -642,14 +668,14 @@ def nrmse(ds, control, comparison, running):
 
 
 def nev(ds, control, comparison, running):
-    """Normalized Ensemble Variance (NEV) metric.
+    """
+    Normalized Ensemble Variance (NEV) metric.
 
     Reference
     ---------
     - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
       Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
       (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-
     """
     var = get_variance(control, running=running)
     ens = choose_comparison(ds, comparison)
@@ -658,7 +684,8 @@ def nev(ds, control, comparison, running):
 
 
 def ppp(ds, control, comparison, running):
-    """Prognostic Potential Predictability (PPP) metric.
+    """
+    Prognostic Potential Predictability (PPP) metric.
 
     Formula
     -------
@@ -673,8 +700,7 @@ def ppp(ds, control, comparison, running):
         Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
         Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
         4463–72. https://doi.org/10/d2qf62.
-
-        """
+    """
     var = get_variance(control, running=running)
     ens = choose_comparison(ds, comparison)
     fac = get_norm_factor(comparison)
@@ -682,12 +708,15 @@ def ppp(ds, control, comparison, running):
 
 
 def PPP(ds, control, comparison, running):
-    """Wraps ppp."""
+    """
+    Wraps ppp.
+    """
     return ppp(ds, control, comparison, running)
 
 
 def uACC(ds, control, comparison, running):
-    """Unbiased ACC (uACC) metric.
+    """
+    Unbiased ACC (uACC) metric.
 
     Formula
     -------
@@ -699,13 +728,13 @@ def uACC(ds, control, comparison, running):
       Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
       Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate
       Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
     """
     return ppp(ds, control, comparison, running) ** .5
 
 
 def MSSS(ds, control, comparison, running):
-    """Wraps ppp.
+    """
+    Wraps ppp.
 
     Formula
     -------
@@ -755,7 +784,9 @@ def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10, 
 
 
 def control_for_reference_period(control, reference_period='MK', obs_years=40, time_dim='year'):
-    """Modifies control according to knowledge approach, see Hawkins 2016."""
+    """
+    Modifies control according to knowledge approach, see Hawkins 2016.
+    """
     if reference_period == 'MK':
         _control = control
     elif reference_period == 'OP_full_length':
@@ -809,7 +840,9 @@ def PM_sig(ds, control, metric=rmse, comparison=m2m, reference_period='MK', sig=
 
 
 def get_predictability_horizon(s, threshold):
-    """Get predictability horizon of series from threshold value."""
+    """
+    Get predictability horizon of series from threshold value.
+    """
     first_index = s.index[0]
     ph = (s > threshold).idxmin() - first_index
     return ph
@@ -824,10 +857,10 @@ def vectorized_predictability_horizon(ds, threshold, limit='upper', time_dim='ye
 
 
 def running_trend(df, varname, dim=None, window=10, timestamp_location='middle', rename=True):
-    """Calculate running trend of a pd.DataFrame.
+    """
+    Calculate running trend of a pd.DataFrame.
 
-    Requires pyfinance
-
+    Requires pyfinance (NOTE: We should remove this dependency)
     """
     if dim is None:
         x = df.index
@@ -847,7 +880,9 @@ def running_trend(df, varname, dim=None, window=10, timestamp_location='middle',
 
 
 def trend_over_numeric_varnames(df, **kwargs):
-    """Calc running trend over numeric variables."""
+    """
+    Calc running trend over numeric variables.
+    """
     list = []
     for col in df.columns:
         if np.issubdtype(df[col], np.number):
@@ -857,11 +892,17 @@ def trend_over_numeric_varnames(df, **kwargs):
 
 
 def normalize(ds, dim=None):
+    """
+    Add description.
+    """
     return (ds - ds.mean(dim)) / ds.std(dim)
 
 
-def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, period=period):
-    """Get ensemble starting years with anomalous states."""
+def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, 
+                         period=period):
+    """
+    Get ensemble starting years with anomalous states.
+    """
     s = control.sel(area=area, period=period).to_dataframe()[varname]
     snorm = normalize(s)
     ensemble_starting_years = ds.ensemble.values
@@ -871,8 +912,12 @@ def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, p
     return anomalous_states + shift
 
 
-def compute_anomalous(ds, control, varname='sos', area='North_Atlantic', period='ym', threshold=1, bootstrap=50, sig=99, metric=rmse, comparison=m2e):
-    """Compute skill score for anomalous start years."""
+def compute_anomalous(ds, control, varname='sos', area='North_Atlantic', 
+                      period='ym', threshold=1, bootstrap=50, sig=99, 
+                      metric=rmse, comparison=m2e):
+    """
+    Compute skill score for anomalous start years.
+    """
     anomalous_years = get_anomalous_states(
         ds, control, varname=varname, area=area, threshold=threshold)
     ds_anomalous = select_members_ensembles(
@@ -884,8 +929,11 @@ def compute_anomalous(ds, control, varname='sos', area='North_Atlantic', period=
 
 
 # Persistence
-def persistence_forecast(ds, control, varname=varname, area=area, period=period, comparison=m2e, time_dim='year'):
-    """Generate persistence forecast timeseries."""
+def persistence_forecast(ds, control, varname=varname, area=area, period=period, 
+                         comparison=m2e, time_dim='year'):
+    """
+    Generate persistence forecast timeseries.
+    """
     starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
     anom = (control.sel(year=starting_years) - control.mean())
     t = np.arange(1, ds.year.size + 1)
@@ -903,7 +951,9 @@ def persistence_forecast(ds, control, varname=varname, area=area, period=period,
 
 
 def compute_persistence(ds, control, metric=rmse, comparison=m2e, time_dim='year'):
-    """Compute skill for persistence forecast."""
+    """
+    Compute skill for persistence forecast.
+    """
     persistence_forecasts = persistence_forecast(ds, control)
     if comparison.__name__ == 'm2e':
         result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
@@ -970,7 +1020,6 @@ def generate_predictability_persistence(s, kind='PPP', percentile=True, length=2
     iterations = 50  # iterations
     chunk_length = 100  # length of chunks of control run to take lag1 autocorr
     data = np.zeros(iterations)
-    from random import randint
     for i in range(iterations):
         random_start_year = randint(1900, 2200 - chunk_length)
         data[i] = s.loc[str(random_start_year):str(

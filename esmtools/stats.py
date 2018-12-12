@@ -1,18 +1,3 @@
-import numpy as np
-import numpy.polynomial.polynomial as poly
-import pandas as pd
-import scipy.stats as ss
-import xarray as xr
-from scipy import stats as ss
-from scipy.stats import linregress
-from scipy.stats.stats import pearsonr as pr
-from scipy.signal import periodogram
-from scipy.signal import tukey
-from scipy.stats import chi2
-from scipy.signal import detrend, periodogram
-from xskillscore import pearson_r
-
-
 """
 Objects dealing with timeseries and ensemble statistics. All functions will
 auto-check for type DataArray. If it is a DataArray, it will return a type
@@ -32,8 +17,20 @@ removed.
 `remove_polynomial_vectorized` : Returns a time series with some order
 polynomial removed. Useful for a grid, since it's vectorized.
 `pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
-
 """
+import numpy as np
+import numpy.polynomial.polynomial as poly
+import pandas as pd
+import scipy.stats as ss
+import xarray as xr
+from scipy import stats as ss
+from scipy.stats import linregress
+from scipy.stats.stats import pearsonr as pr
+from scipy.signal import periodogram
+from scipy.signal import tukey
+from scipy.stats import chi2
+from scipy.signal import detrend, periodogram
+from xskillscore import pearson_r
 
 
 def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
@@ -68,42 +65,6 @@ def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     cos_lat = np.cos(np.deg2rad(lat))
     aw_da = (da * cos_lat).sum() / np.nansum(np.cos(np.deg2rad(lat)))
     return aw_da
-
-
-def remove_polynomial_fit(data, order):
-    """
-    Removes any order polynomial fit from a time series (including a linear
-    fit). Returns the detrended time series.
-
-    Parameters
-    ----------
-    data : array_like, can be an xr.DataArray type.
-         Unfiltered time series.
-    order : int
-         Order of polynomial to be removed.
-
-    Returns
-    -------
-    detrended_ts : array_like
-         Time series with declared order polynomial removed.
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    slope = np.arange(0, 100, 1) * 3
-    noise = np.random.randn(100,)
-    data = slope + noise
-    detrended = es.stats.remove_polynomial_fit(data, 4)
-    """
-    x = np.arange(0, len(data), 1)
-    coefs = poly.polyfit(x, data, order)
-    fit = poly.polyval(x, coefs)
-    detrended_ts = (data - fit)
-    if isinstance(data, xr.DataArray):
-        return xr.DataArray(detrended_ts)
-    else:
-        return detrended_ts
 
 
 def smooth_series(x, length, center=False):

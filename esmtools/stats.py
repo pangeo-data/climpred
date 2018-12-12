@@ -1,15 +1,3 @@
-import numpy as np
-import numpy.polynomial.polynomial as poly
-import pandas as pd
-import scipy.stats as ss
-import xarray as xr
-from scipy import stats as ss
-from scipy.stats import linregress
-from scipy.stats.stats import pearsonr as pr
-from scipy.signal import periodogram
-from xskillscore import pearson_r
-
-
 """
 Objects dealing with timeseries and ensemble statistics. All functions will
 auto-check for type DataArray. If it is a DataArray, it will return a type
@@ -29,8 +17,20 @@ removed.
 `remove_polynomial_vectorized` : Returns a time series with some order
 polynomial removed. Useful for a grid, since it's vectorized.
 `pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
-
 """
+import numpy as np
+import numpy.polynomial.polynomial as poly
+import pandas as pd
+import scipy.stats as ss
+import xarray as xr
+from scipy import stats as ss
+from scipy.stats import linregress
+from scipy.stats.stats import pearsonr as pr
+from scipy.signal import periodogram
+from scipy.signal import tukey
+from scipy.stats import chi2
+from scipy.signal import detrend, periodogram
+from xskillscore import pearson_r
 
 
 def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
@@ -65,42 +65,6 @@ def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     cos_lat = np.cos(np.deg2rad(lat))
     aw_da = (da * cos_lat).sum() / np.nansum(np.cos(np.deg2rad(lat)))
     return aw_da
-
-
-def remove_polynomial_fit(data, order):
-    """
-    Removes any order polynomial fit from a time series (including a linear
-    fit). Returns the detrended time series.
-
-    Parameters
-    ----------
-    data : array_like, can be an xr.DataArray type.
-         Unfiltered time series.
-    order : int
-         Order of polynomial to be removed.
-
-    Returns
-    -------
-    detrended_ts : array_like
-         Time series with declared order polynomial removed.
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    slope = np.arange(0, 100, 1) * 3
-    noise = np.random.randn(100,)
-    data = slope + noise
-    detrended = es.stats.remove_polynomial_fit(data, 4)
-    """
-    x = np.arange(0, len(data), 1)
-    coefs = poly.polyfit(x, data, order)
-    fit = poly.polyval(x, coefs)
-    detrended_ts = (data - fit)
-    if isinstance(data, xr.DataArray):
-        return xr.DataArray(detrended_ts)
-    else:
-        return detrended_ts
 
 
 def smooth_series(x, length, center=False):
@@ -218,52 +182,6 @@ def pearsonr(x, y, two_sided=True):
     return r, p, n_eff
 
 
-def vectorized_regression(x, y):
-    """
-    Vectorized function for regressing many time series onto a fixed time
-    series. Most commonly used for regressing a grid of data onto some
-    time series.
-
-    Input
-    -----
-    x : array_like
-      Time series of independent values (time, climate index, etc.)
-    y : array_like
-      Grid of time series to act as dependent values (SST, FG_CO2, etc.)
-
-    Returns
-    -------
-    m : array_like
-      Grid of slopes from linear regression
-
-    Examples
-    --------
-    """
-    print("Make sure that time is the first dimension in your inputs.")
-    try: 
-        if np.isnan(x).any():
-            raise ValueError("Please supply an independent axis (x) without nans.")
-    except TypeError:
-        print("It's probably best to pass x as an array of integers.")
-    # convert to numpy array if xarray
-    if isinstance(y, xr.DataArray):
-        XARRAY = True
-        dim1 = y.dims[1]
-        dim2 = y.dims[2]
-        y = np.asarray(y)
-    x = np.arange(0, len(x), 1)
-    data_shape = y.shape
-    y = y.reshape((data_shape[0], -1))
-    # NaNs screw up vectorized regression; just fill with zeros.
-    y[np.isnan(y)] = 0
-    coefs = poly.polyfit(x, y, deg=1)
-    m = coefs[1].reshape((data_shape[1], data_shape[2]))
-    m[m == 0] = np.nan
-    if XARRAY:
-        m = xr.DataArray(m, dims=[dim1, dim2])
-    return m
-
-
 def vectorized_rm_poly(y, order=1):
     """
     Vectorized function for removing a order-th order polynomial fit of a time
@@ -303,7 +221,9 @@ def vectorized_rm_poly(y, order=1):
 
 
 def vec_linregress(ds, dim='time'):
-    """Linear trend of a dataset against dimension.
+    """
+    Vectorized function for computing the linear trend of a dataset against 
+    some other dimension.
 
     Slow on lon,lat data
     Works on High-dim datasets without lon,lat
@@ -315,21 +235,27 @@ def vec_linregress(ds, dim='time'):
 
 
 def vec_rm_trend(ds, dim='year'):
-    """Remove linear trend from a high-dim dataset."""
+    """
+    Vectorized function for removing a linear trend from a high-dimensional
+    dataset.
+    """
     s, i, _, _, _ = vec_linregress(ds, dim)
     new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new
 
 
 def taper(x, p):
-    from scipy.signal import tukey
+    """
+    Description needed here.
+    """
     window = tukey(len(x), p)
     y = x * window
     return y
 
 
-def create_power_spectrum(s, pLow=0.05):
-    """Create power spectrum with CI for a given pd.series.
+def create_power_spectrum(s, pct=0.1, pLow=0.05):
+    """
+    Create power spectrum with CI for a given pd.series.
 
     Reference
     ---------
@@ -339,6 +265,10 @@ def create_power_spectrum(s, pLow=0.05):
     ----------
     s : pd.series
         input time series
+    pct : float (default 0.10)
+        percent of the time series to be tapered. (0 <= pct <= 1). If pct = 0,
+        no tapering will be done. If pct = 1, the whole series is tapered. 
+        Tapering should always be done.
     pLow : float (default 0.05)
         significance interval for markov red-noise spectrum
 
@@ -355,11 +285,7 @@ def create_power_spectrum(s, pLow=0.05):
     high_ci : np.ndarray
         upper confidence interval
     """
-    from scipy.stats import chi2
-    from scipy.signal import detrend, periodogram
-    # input parameters
-    # pct: percent of the series to be tapered (0.0 <= pct <= 1.0). If pct =0.0, no tapering will be done. If pct = 1.0, the whole series is affected. A value of 0.10 is common (tapering should always be done).
-    pct = 0.1  # 0--1
+    # A value of 0.10 is common (tapering should always be done).
     jave = 1  # smoothing ### DOESNT WORK HERE FOR VALUES OTHER THAN 1 !!!
     tapcf = 0.5 * (128 - 93 * pct) / (8 - 5 * pct)**2
     wgts = np.linspace(1., 1., jave)
@@ -392,14 +318,14 @@ def create_power_spectrum(s, pLow=0.05):
 
 
 def vec_varweighted_mean_period(ds):
-    """Calculate the variance weighted mean period of an xr.DataArray.
+    """
+    Calculate the variance weighted mean period of an xr.DataArray.
 
     Reference
     ---------
     - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
       Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
       6292–6311. https://doi.org/10/bwq92h.
-
     """
     f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
     F = xr.DataArray(f)
@@ -411,17 +337,32 @@ def vec_varweighted_mean_period(ds):
     return T
 
 def xr_corr(ds, lag=1, dim='year'):
-    """Calculated lagged correlation of a xr.Dataset."""
+    """
+    Calculated lagged correlation of a xr.Dataset.
+
+    Parameters
+    ----------
+    ds : xarray dataset
+    lag : int (default 1)
+        number of time steps to lag correlate.
+    dim : str (default 'year')
+        name of time dimension
+
+    Returns
+    -------
+    r : Pearson correlation coefficient
+    """
     first = ds[dim].values[0]
     last = ds[dim].values[-1]
-    normal = ds.sel(year=slice(first, last - lag))
-    shifted = ds.sel(year=slice(first + lag, last))
-    shifted['year'] = normal.year
+    normal = ds.sel(dim=slice(first, last - lag))
+    shifted = ds.sel(dim=slice(first + lag, last))
+    shifted[dim] = normal.dim
     return pearson_r(normal, shifted, dim)
 
 
 def vec_tau_d(da, r=20, dim='year'):
-    """Calculate decorrelation time of an xr.DataArray.
+    """
+    Calculate decorrelation time of an xr.DataArray.
 
     tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)
 

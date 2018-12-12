@@ -8,7 +8,7 @@ setup(name='esmtools',
       author_email='riley.brady@colorado.edu',
       license='MIT',
       packages=['esmtools'],
-      # Needed for dependencies. Currently do not like the pyfinance dependency.
-      install_requires = ['xarray', 'numpy', 'pyfinance'],
+      # Needed for dependencies. Currently do not like the pyfinance or xskillscore dependency.
+      install_requires = ['xarray', 'numpy', 'pyfinance', 'xskillscore'],
       zip_safe=False
      )

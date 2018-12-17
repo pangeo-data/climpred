@@ -4,7 +4,7 @@ Toolbox of functions for analyzing, processing, and plotting ESM output, with an
 
 ## Installation
 ```shell
->>> pip install git+https://github.com/bradyrx/esmtools
+pip install git+https://github.com/bradyrx/esmtools --process-dependency-links
 ```
 
 Otherwise, clone the repository and run 

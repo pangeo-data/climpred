@@ -100,11 +100,13 @@ def xyz_to_lat_lon(x, y, z, radians=False):
     ds = xr.open_dataset('particle_output.nc')
     lon, lat = xyz_to_lat_lon(ds.xParticle, ds.yParticle, ds.zParticle)
     """
-    sq = np.sqrt(x**2 + y**2 + z**2)
-    lat = np.arcsin(z / sq)
-    lon = np.arctan2(y, x)
+    x, y, z = np.asarray(x), np.asarray(y), np.asarray(z)
+    plat = np.arcsin(z / np.sqrt(x**2 + y**2 + z**2))
+    plon = np.arctan2(y, x)
+    # longitude adjustment
+    plon[plon < 0.0] = 2*np.pi + plon[plon < 0.0]
     if radians:
-        return lon, lat
+        return plon, plat
     else:
-        return lon * 180./np.pi, \
-               lat * 180./np.pi
+        return plon * 180./np.pi, \
+               plat * 180./np.pi

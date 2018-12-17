@@ -15,41 +15,47 @@ python setup.py install
 
 ## Modules
 
-carbon
+`carbon`
 
 Functions for the carbon cycle and carbonate chemistry.
 
-colormaps
+`colormaps`
 
 Load in a custom colormap (see below).
 
-conversions
+`conversions`
 
 Nifty unit conversions.
 
-filtering
+`filtering`
 
 Functions for filtering output over space and time.
 
-mpas
+`mpas`
 
 Functions related to output from MPAS-O.
 
-physics
+`physics`
 
 Functions related to physical conversions.
 
-stats
+`prediction`
+
+Functions for decadal climate prediction.
+
+`stats`
 
 Functions for time series and spatial statistics
 
-ufunc
+`ufunc`
 
 Functions optimized for the .apply() function on xarray Datasets
 
-vis
+`vis`
 
 Functions for colorbars, coloarmaps, and projecting data globally or regionally.
+
+**Note**: Little development in the future will go towards visualization. We suggest [proplot](https://github.com/lukelbd/proplot) to users for a phenomenal `matplotlib` wrapper.
 
 ## Colormaps
 

@@ -20,6 +20,7 @@ filtering of output.
 of global or regional projections.
 9. mpas: Contains definitions for visualization and processing on MPAS output.
 10. conversions: Contains definitions for unit conversions.
+11. prediction: Contains definitions for decadal climate prediction.
 """
 
 from . import filtering
@@ -32,3 +33,4 @@ from . import carbon
 from . import physics
 from . import mpas
 from . import conversions
+from . import prediction

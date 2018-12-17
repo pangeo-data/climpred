@@ -7,12 +7,6 @@ Toolbox of functions for analyzing, processing, and plotting ESM output, with an
 pip install git+https://github.com/bradyrx/esmtools --process-dependency-links
 ```
 
-Otherwise, clone the repository and run 
-
-```python
-python setup.py install
-```
-
 ## Modules
 
 `carbon`

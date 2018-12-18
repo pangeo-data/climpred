@@ -33,6 +33,25 @@ from xskillscore import pearson_r
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools.
 #--------------------------------------------#
+def _check_xarray(x):
+    """
+    Check if the object being submitted to a given function is either a 
+    Dataset or DataArray. This is important since `esmtools` is built as an
+    xarray wrapper.
+
+    TODO: Move this to a generalized util.py module with any other functions
+    that are being called in other submodules.
+    """
+    if not (isinstance(x, xr.DataArray) or isinstance(x, xr.Dataset)):
+        typecheck = type(x)
+        raise IOError(f"""The input data is not an xarray object (an xarray
+            DataArray or Dataset). esmtools is built to wrap xarray to make
+            use of its awesome features. Please input an xarray object and
+            retry the function.
+
+            Your input was of type: {typecheck}""")
+    
+
 def _get_dims(da):
     """
     Simple function to retrieve dimensions from a given dataset/datarray.
@@ -82,6 +101,7 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     import esmtools as et
     da_aw = et.stats.reg_aw(SST)
     """
+    _check_xarray(da)
     if one_dimensional:
         lon, lat = np.meshgrid(da[lon_coord], da[lat_coord])
     else:
@@ -119,6 +139,7 @@ def xr_area_weight(da, area_coord='area'):
     -------
     aw_da : Area-weighted DataArray
     """
+    _check_xarray(da)
     area = da[area_coord]
     # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
     # or land.
@@ -169,6 +190,7 @@ def xr_smooth_series(da, dim, length, center=True):
     -------
     smoothed : smoothed DataArray object 
     """
+    _check_xarray(da)
     return da.rolling({dim: length}, center=center).mean()
 
 
@@ -190,6 +212,7 @@ def xr_linregress(da, dim='time'):
         the linear regression. Excludes the dimension the regression was
         computed over.
     """
+    _check_xarray(da)
     results = xr.apply_ufunc(linregress, da[dim], da,
                           input_core_dims=[[dim], [dim]],
                           output_core_dims=[[], [], [], [], []],
@@ -240,6 +263,7 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
     2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode
     on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
     """
+    _check_xarray(ds)
     def ufunc_pr(x, y, dim):
         """
         Internal ufunc to compute pearsonr over every grid cell.

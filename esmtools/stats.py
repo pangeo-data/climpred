@@ -5,15 +5,13 @@ DataArray to ensure .apply() function from xarray can be applied.
 
 Area-weighting
 ------------
-`xr_reg_aw`: Area-weights output or observations without grid cell area
-             information.
+`xr_cos_weight`: Area-weights output or observations without grid cell area
+                 information using cosine weighting.
 `xr_area_weight`: Area-weights output with grid cell area information.
 
 Time Series
 -----------
-`remove_polynomial_fit` : Returns a time series with some order polynomial
-removed.
-`smooth_series` : Returns a smoothed time series.
+`xr_smooth_series` : Returns a smoothed time series.
 `linear_regression` : Performs a least-squares linear regression.
 `vectorized_regression` : Performs a linear regression on a grid of data.
 `remove_polynomial_vectorized` : Returns a time series with some order
@@ -33,8 +31,6 @@ from scipy.signal import tukey
 from scipy.stats import chi2
 from scipy.signal import detrend, periodogram
 from xskillscore import pearson_r
-
-
 #--------------------------------------------#
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools.
@@ -53,7 +49,7 @@ def _get_dims(da):
 # Functions related to area-weighting on grids with and without area
 # information.
 #-------------------------------------------------------------------#
-def xr_reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
+def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     """
     Area-weights data on a regular (e.g. 360x180) grid that does not come with
     cell areas. Uses cosine-weighting.
@@ -141,43 +137,33 @@ def xr_area_weight(da, area_coord='area'):
     return aw_da
 
 
-#-------------------------#
-# OTHER FUNCTIONS
-# Need to organize these.
-#-------------------------#
-def smooth_series(x, length, center=False):
+#----------------------------------#
+# TIME SERIES 
+# Functions related to time series. 
+#---------------------------------#
+def xr_smooth_series(da, dim, length, center=True):
     """
     Returns a smoothed version of the input timeseries.
+    
+    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
+    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
+    this might be altered in the future.
 
     Parameters
     ----------
-    x : array_like, unsmoothed timeseries.
-    length : int, number of time steps to smooth over
-    center : boolean
-        Whether to center the smoothing filter or start from the beginning..
+    da : xarray DataArray
+    dim : str
+        dimension to smooth over (e.g. 'time')
+    length : int
+        number of steps to smooth over for the given dim
+    center : boolean (default to True)
+        whether to center the smoothing filter or start from the beginning
 
     Returns
     -------
-    smoothed : numpy array, smoothed timeseries
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    x = np.random.rand(100)
-    smoothed = et.stats.smooth_series(x, 12)
+    smoothed : smoothed DataArray object 
     """
-    if isinstance(x, xr.DataArray):
-        da = True
-        x = np.asarray(x)
-    x = pd.DataFrame(x)
-    smoothed = pd.rolling_mean(x, length, center=center)
-    smoothed = smoothed.dropna()
-    smoothed = np.asarray(smoothed)
-    if da == True:
-        return xr.DataArray(smoothed).squeeze()
-    else:
-        return smoothed.squeeze()
+    return da.rolling({dim: length}, center=center).mean()
 
 
 def linear_regression(x, y):

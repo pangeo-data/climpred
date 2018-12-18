@@ -284,7 +284,7 @@ def xr_linregress(da, dim='time'):
     for i, l in enumerate(labels):
         results[i].name = l
         ds = xr.merge([ds, results[i]])
-        return ds
+    return ds
 
 
 def vec_rm_trend(ds, dim='year'):

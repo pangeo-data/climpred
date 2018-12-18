@@ -285,14 +285,15 @@ def quick_pcolor(da, lon='lon', lat='lat', cyclic=True, add_colorbar=True,
     p : plt.pcolormesh() object
     ax : axis object
     cb : colorbar object
+    gl : gridlines object
     """
     data = da.values
     lon = da[lon]
     lat = da[lat]
     if cyclic:
         data, lon = add_cyclic_point(data, coord=lon)
-    f, ax = make_cartopy(**cartopy)
+    f, ax, gl = make_cartopy(**cartopy)
     p = plt.pcolormesh(lon, lat, data, transform=ccrs.PlateCarree(), **pcolor)
     if add_colorbar:
         cb = plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.05)
-    return p, ax, cb
+    return p, ax, cb, gl

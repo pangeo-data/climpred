@@ -12,7 +12,7 @@ Area-weighting
 Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
-`linear_regression` : Performs a least-squares linear regression.
+`xr_linregress` : Returns results of linear regression over input dataarray.
 `vectorized_regression` : Performs a linear regression on a grid of data.
 `remove_polynomial_vectorized` : Returns a time series with some order
 polynomial removed. Useful for a grid, since it's vectorized.
@@ -23,10 +23,8 @@ import numpy.polynomial.polynomial as poly
 import pandas as pd
 import scipy.stats as ss
 import xarray as xr
-from scipy import stats as ss
 from scipy.stats import linregress
 from scipy.stats.stats import pearsonr as pr
-from scipy.signal import periodogram
 from scipy.signal import tukey
 from scipy.stats import chi2
 from scipy.signal import detrend, periodogram
@@ -113,7 +111,7 @@ def xr_area_weight(da, area_coord='area'):
     -------
     aw_da : Area-weighted DataArray
     """
-    area = da[area_dim]
+    area = da[area_coord]
     # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
     # or land.
     dimlist = _get_dims(da)
@@ -140,7 +138,7 @@ def xr_area_weight(da, area_coord='area'):
 #----------------------------------#
 # TIME SERIES 
 # Functions related to time series. 
-#---------------------------------#
+#----------------------------------#
 def xr_smooth_series(da, dim, length, center=True):
     """
     Returns a smoothed version of the input timeseries.
@@ -166,33 +164,36 @@ def xr_smooth_series(da, dim, length, center=True):
     return da.rolling({dim: length}, center=center).mean()
 
 
-def linear_regression(x, y):
+def xr_linregress(da, dim='time'):
     """
-    Performs a simple least-squares linear regression.
+    Computes the least-squares linear regression of a dataarray over some
+    dimension (typically time).
 
     Parameters
     ----------
-    x : array; independent variable
-    y : array; predictor variable
+    da : xarray DataArray
+    dim : str (default to 'time')
+        dimension over which to compute the linear regression.
 
     Returns
     -------
-    m : slope
-    b : intercept
-    r : r-value
-    p : p-value
-    e : standard error
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    x = np.random.randn(100)
-    y = np.random.randn(100)
-    m,b,r,p,e = et.stats.linear_regression(x,y)
+    ds : xarray Dataset
+        Dataset containing slope, intercept, rvalue, pvalue, stderr from
+        the linear regression. Excludes the dimension the regression was
+        computed over.
     """
-    m, b, r, p, e = linregress(x, y)
-    return m, b, r, p, e
+    results = xr.apply_ufunc(linregress, da[dim], da,
+                          input_core_dims=[[dim], [dim]],
+                          output_core_dims=[[], [], [], [], []],
+                          vectorize=True, dask='parallelized')
+    # Force into a cleaner dataset. The above function returns a dataset
+    # with no clear labeling.
+    ds = xr.Dataset()
+    labels = ['slope', 'intercept', 'rvalue', 'pvalue', 'stderr']
+    for i, l in enumerate(labels):
+        results[i].name = l
+        ds = xr.merge([ds, results[i]])
+    return ds
 
 
 def pearsonr(x, y, two_sided=True):
@@ -282,20 +283,6 @@ def vectorized_rm_poly(y, order=1):
     if XARRAY:
         detrended_ts = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     return detrended_ts
-
-
-def vec_linregress(ds, dim='time'):
-    """
-    Vectorized function for computing the linear trend of a dataset against 
-    some other dimension.
-
-    Slow on lon,lat data
-    Works on High-dim datasets without lon,lat
-    """
-    return xr.apply_ufunc(linregress, ds[dim], ds,
-                          input_core_dims=[[dim], [dim]],
-                          output_core_dims=[[], [], [], [], []],
-                          vectorize=True)
 
 
 def vec_rm_trend(ds, dim='year'):

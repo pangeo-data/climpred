@@ -13,10 +13,10 @@ Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
 `xr_linregress` : Returns results of linear regression over input dataarray.
+`xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
 `vectorized_regression` : Performs a linear regression on a grid of data.
 `remove_polynomial_vectorized` : Returns a time series with some order
 polynomial removed. Useful for a grid, since it's vectorized.
-`pearsonr` : Performs a Pearson linear correlation accounting for autocorrelation.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -42,6 +42,14 @@ def _get_dims(da):
     """
     return list(da.dims)
 
+def _get_vars(ds):
+    """
+    Simple function to retrieve variables from a given dataset.
+
+    Currently returns as a list, but can add keyword to select tuple or
+    list if desired for any reason.
+    """
+    return (list(ds.variables))
 #-------------------------------------------------------------------#
 # AREA-WEIGHTING
 # Functions related to area-weighting on grids with and without area
@@ -196,23 +204,34 @@ def xr_linregress(da, dim='time'):
     return ds
 
 
-def pearsonr(x, y, two_sided=True):
+def xr_eff_pearsonr(ds, dim='time', two_sided=True):
     """
     Computes the Pearson product-moment coefficient of linear correlation. This
-    version calculates the effective degrees of freedom, accounting for autocorrelation
-    within each time series that could fluff the significance of the correlation.
+    version calculates the effective degrees of freedom, accounting for 
+    autocorrelation within each time series that could fluff the significance
+    of the correlation.
+
+    This function is written to accept a dataset of arbitrary number of
+    dimensions (e.g., lat, lon, depth).
+
+    TODO: Add functionality for an ensemble.
 
     Parameters
     ----------
-    x : array; independent variable
-    y : array; predicted variable
-    two_sided : boolean (optional); Whether or not the t-test should be two sided.
+    ds : xarray Dataset
+        Dataset containing exactly two variables of the time series to be 
+        correlated (e.g., ds.x and ds.y). This can contain any arbitrary
+        number of dimensions in addition to the correlation dimension.
+    dim : str (default 'time')
+        The dimension over which to compute the correlation.
+    two_sided : boolean (default True)
+        Whether or not to do a two-sided t-test.
 
     Returns
     -------
-    r     : r-value of correlation
-    p     : p-value for significance
-    n_eff : effective degrees of freedom
+    result : xarray Dataset
+        Results of the linear correlation with r, p, and the effective 
+        sample size for each time series being correlated.
 
     References:
     ----------
@@ -220,31 +239,57 @@ def pearsonr(x, y, two_sided=True):
     Vol. 100. Academic press, 2011.
     2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode
     on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    x = np.random.randn(100,)
-    y = np.random.randn(100,)
-    r, p, n = et.stats.pearsonr(x, y)
     """
-    r, _ = pr(x, y)
-    # Compute effective sample size.
-    n = len(x)
-    xa, ya = x - np.mean(x), y - np.mean(y)
-    xauto, _ = pr(xa[1:], xa[:-1])
-    yauto, _ = pr(ya[1:], ya[:-1])
+    def ufunc_pr(x, y, dim):
+        """
+        Internal ufunc to compute pearsonr over every grid cell.
+        """
+        return xr.apply_ufunc(pr, x, y,
+                              input_core_dims=[[dim], [dim]],
+                              output_core_dims=[[], []],
+                              vectorize=True, dask='parallelized')
+
+
+    varlist = _get_vars(ds)
+    x, y = varlist[0], varlist[1]
+    if len(varlist) < 2 or len(varlist) > 2:
+        """
+        The philosophy behind this function is to have a dataset containing
+        gridded time series for two elements to be correlated.
+        """
+        raise ValueError("""Please supply an xarray dataset containing the two
+            variables you would like correlated. In other words, it should have
+            something like ds.x and ds.y that are either individual time series
+            or a grid of time series.""")
+    # Find raw pearson r. The effective sample size simply changes the threshold
+    # for this to be significant.
+    r, _ = ufunc_pr(ds[x], ds[y], dim)
+    # Compute effective sample size
+    n = len(ds[dim])
+    # Find autocorrelation
+    xa, ya = ds[x] - ds[x].mean(dim), ds[y] - ds[y].mean(dim)
+    xauto, _ = ufunc_pr(xa.isel({dim: slice(1, n)}),
+                        xa.isel({dim: slice(0, n-1)}), dim)
+    yauto, _ = ufunc_pr(ya.isel({dim: slice(1, n)}),
+                        ya.isel({dim: slice(0, n-1)}), dim)
     n_eff = n * (1 - xauto * yauto) / (1 + xauto * yauto)
     n_eff = np.floor(n_eff)
-    # Compute t-statistic.
+    # constrain n_eff to be at maximum the total number of samples.
+    n_eff = n_eff.where(n_eff <= n, n)
+    # compute t-statistic
     t = r * np.sqrt((n_eff - 2) / (1 - r**2))
-    # Compute p-value.
     if two_sided:
-        p = ss.t.sf(np.abs(t), n_eff - 1) * 2
+        p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1) * 2)
     else:
-        p = ss.t.sf(np.abs(t), n_eff - 1)
-    return r, p, n_eff
+        p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1))
+    # return as a nice dataset
+    # fix p dimension names
+    dimlist = _get_dims(r)
+    for i in range(len(dimlist)):
+        p = p.rename({'dim_' + str(i): dimlist[i]})
+    r.name, p.name, n_eff.name = 'r', 'p', 'n_eff'
+    result = xr.merge([r, p, n_eff])
+    return result 
 
 
 def vectorized_rm_poly(y, order=1):

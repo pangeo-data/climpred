@@ -91,15 +91,17 @@ def xr_reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     return aw_da
 
 
-def xr_area_weight(da, time_dim='time', area_coord='area'):
+def xr_area_weight(da, area_coord='area'):
     """
-    Returns an area-weighted time series from the input xarray dataarray. See
-    `reg_aw` if you have a regular (e.g. 360x180) grid that does not contain
-    cell areas.
+    Returns an area-weighted time series from the input xarray dataarray. This
+    automatically figures out spatial dimensions vs. other dimensions. I.e.,
+    this function works for just a single realization or for many realizations.
+    
+    See `reg_aw` if you have a regular (e.g. 360x180) grid that does not 
+    contain cell areas.
 
-    NOTE: This currently does not support full ensembles or datasets (of 
-    multiple variables). The latter can be alleviated by using the
-    .apply() function to a dataset.
+    NOTE: This currently does not support datasets (of multiple variables)
+    The user can alleviate this by using the .apply() function.
 
     NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
     definitions. Since `esmtools` is supposed to be a wrapper for xarray,
@@ -108,8 +110,6 @@ def xr_area_weight(da, time_dim='time', area_coord='area'):
     Parameters
     ----------
     da : DataArray
-    time_dim : str (defaults to 'time')
-        Name of time coordinate if different from 'time'
     area_coord : str (defaults to 'area')
         Name of area coordinate if different from 'area' 
 
@@ -117,19 +117,23 @@ def xr_area_weight(da, time_dim='time', area_coord='area'):
     -------
     aw_da : Area-weighted DataArray
     """
-    # Mask area coordinate in case you only have a subset of non-NaN data.
-    # First check if there is a time component that needs to be avoided.
-    if time_dim in _get_dims(da[area_coord]):
-        area = da[area_coord].isel({time_dim: 0})
-    else:
-        area = da[area_coord]
-    # Now mask the area coordinate.
-    masked_area = da[area_coord].where(da.isel({time_dim: 0}).notnull())
+    area = da[area_dim]
+    # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
+    # or land.
+    dimlist = _get_dims(da)
+    # Pull out coordinates that aren't spatial. Time, ensemble members, etc.
+    non_spatial = [i for i in dimlist if i not in _get_dims(area)]
+    filter_dict = {}
+    while len(non_spatial) > 0:
+        filter_dict.update({non_spatial[0]: 0})
+        non_spatial.pop(0)
+    masked_area = area.where(da.isel(filter_dict).notnull())
     # Compute area-weighting.
     dimlist = _get_dims(masked_area)
     aw_da = da * masked_area
     # Sum over arbitrary number of dimensions.
     while len(dimlist) > 0:
+        print(f'Summing over {dimlist[0]}')
         aw_da = aw_da.sum(dimlist[0])
         dimlist.pop(0)
     # Finish area-weighting by dividing by sum of area coordinate.

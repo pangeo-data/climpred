@@ -3,15 +3,15 @@ Objects dealing with timeseries and ensemble statistics. All functions will
 auto-check for type DataArray. If it is a DataArray, it will return a type
 DataArray to ensure .apply() function from xarray can be applied.
 
-Gridded Data
+Area-weighting
 ------------
-`reg_aw` : Area-weights data on a regular (e.g. 180x360) grid.
+`xr_cos_weight`: Area-weights output or observations without grid cell area
+                 information using cosine weighting.
+`xr_area_weight`: Area-weights output with grid cell area information.
 
 Time Series
 -----------
-`remove_polynomial_fit` : Returns a time series with some order polynomial
-removed.
-`smooth_series` : Returns a smoothed time series.
+`xr_smooth_series` : Returns a smoothed time series.
 `linear_regression` : Performs a least-squares linear regression.
 `vectorized_regression` : Performs a linear regression on a grid of data.
 `remove_polynomial_vectorized` : Returns a time series with some order
@@ -31,12 +31,32 @@ from scipy.signal import tukey
 from scipy.stats import chi2
 from scipy.signal import detrend, periodogram
 from xskillscore import pearson_r
+#--------------------------------------------#
+# HELPER FUNCTIONS
+# Should only be used internally by esmtools.
+#--------------------------------------------#
+def _get_dims(da):
+    """
+    Simple function to retrieve dimensions from a given dataset/datarray.
 
+    Currently returns as a list, but can add keyword to select tuple or 
+    list if desired for any reason.
+    """
+    return list(da.dims)
 
-def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
+#-------------------------------------------------------------------#
+# AREA-WEIGHTING
+# Functions related to area-weighting on grids with and without area
+# information.
+#-------------------------------------------------------------------#
+def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     """
     Area-weights data on a regular (e.g. 360x180) grid that does not come with
     cell areas. Uses cosine-weighting.
+    
+    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
+    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
+    this might be altered in the future.
 
     Parameters
     ----------
@@ -67,39 +87,83 @@ def reg_aw(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     return aw_da
 
 
-def smooth_series(x, length, center=False):
+def xr_area_weight(da, area_coord='area'):
     """
-    Returns a smoothed version of the input timeseries.
+    Returns an area-weighted time series from the input xarray dataarray. This
+    automatically figures out spatial dimensions vs. other dimensions. I.e.,
+    this function works for just a single realization or for many realizations.
+    
+    See `reg_aw` if you have a regular (e.g. 360x180) grid that does not 
+    contain cell areas.
+
+    NOTE: This currently does not support datasets (of multiple variables)
+    The user can alleviate this by using the .apply() function.
+
+    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
+    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
+    this might be altered in the future.
 
     Parameters
     ----------
-    x : array_like, unsmoothed timeseries.
-    length : int, number of time steps to smooth over
-    center : boolean
-        Whether to center the smoothing filter or start from the beginning..
+    da : DataArray
+    area_coord : str (defaults to 'area')
+        Name of area coordinate if different from 'area' 
 
     Returns
     -------
-    smoothed : numpy array, smoothed timeseries
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    x = np.random.rand(100)
-    smoothed = et.stats.smooth_series(x, 12)
+    aw_da : Area-weighted DataArray
     """
-    if isinstance(x, xr.DataArray):
-        da = True
-        x = np.asarray(x)
-    x = pd.DataFrame(x)
-    smoothed = pd.rolling_mean(x, length, center=center)
-    smoothed = smoothed.dropna()
-    smoothed = np.asarray(smoothed)
-    if da == True:
-        return xr.DataArray(smoothed).squeeze()
-    else:
-        return smoothed.squeeze()
+    area = da[area_dim]
+    # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
+    # or land.
+    dimlist = _get_dims(da)
+    # Pull out coordinates that aren't spatial. Time, ensemble members, etc.
+    non_spatial = [i for i in dimlist if i not in _get_dims(area)]
+    filter_dict = {}
+    while len(non_spatial) > 0:
+        filter_dict.update({non_spatial[0]: 0})
+        non_spatial.pop(0)
+    masked_area = area.where(da.isel(filter_dict).notnull())
+    # Compute area-weighting.
+    dimlist = _get_dims(masked_area)
+    aw_da = da * masked_area
+    # Sum over arbitrary number of dimensions.
+    while len(dimlist) > 0:
+        print(f'Summing over {dimlist[0]}')
+        aw_da = aw_da.sum(dimlist[0])
+        dimlist.pop(0)
+    # Finish area-weighting by dividing by sum of area coordinate.
+    aw_da = aw_da / masked_area.sum()
+    return aw_da
+
+
+#----------------------------------#
+# TIME SERIES 
+# Functions related to time series. 
+#---------------------------------#
+def xr_smooth_series(da, dim, length, center=True):
+    """
+    Returns a smoothed version of the input timeseries.
+    
+    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
+    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
+    this might be altered in the future.
+
+    Parameters
+    ----------
+    da : xarray DataArray
+    dim : str
+        dimension to smooth over (e.g. 'time')
+    length : int
+        number of steps to smooth over for the given dim
+    center : boolean (default to True)
+        whether to center the smoothing filter or start from the beginning
+
+    Returns
+    -------
+    smoothed : smoothed DataArray object 
+    """
+    return da.rolling({dim: length}, center=center).mean()
 
 
 def linear_regression(x, y):

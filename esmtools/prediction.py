@@ -568,7 +568,7 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,
         _ds = ds
         _control = control
     if detrend:
-        s, i, _, _, _ = et.stats.vec_linregress(_control, time_dim)
+        s, i, _, _, _ = et.stats.xr_linregress(_control, time_dim)
         _control = _control - \
             (s * _control[time_dim] - _control[time_dim].values[0])
         _ds = _ds - (s * _ds[time_dim] - _ds[time_dim].values[0])

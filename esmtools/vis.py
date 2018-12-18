@@ -143,11 +143,13 @@ def make_cartopy(projection=ccrs.Robinson(), land_color='k',
     fig, ax = plt.subplots(figsize=figsize,
                            subplot_kw=dict(projection=projection))
     if grid_lines:
-        ax.gridlines(draw_labels=False, color=grid_color)
+        gl = ax.gridlines(draw_labels=False, color=grid_color)
+    else:
+        gl = None # still need to return object
     ax.add_feature(cfeature.LAND, facecolor=land_color)
     if not frameon:
         ax.outline_patch.set_edgecolor('white')
-    return fig, ax
+    return fig, ax, gl
 
 
 def add_box(ax, x0, x1, y0, y1, **kwargs):
@@ -281,6 +283,8 @@ def quick_pcolor(da, lon='lon', lat='lat', cyclic=True, add_colorbar=True,
     Returns
     -------
     p : plt.pcolormesh() object
+    ax : axis object
+    cb : colorbar object
     """
     data = da.values
     lon = da[lon]
@@ -290,5 +294,5 @@ def quick_pcolor(da, lon='lon', lat='lat', cyclic=True, add_colorbar=True,
     f, ax = make_cartopy(**cartopy)
     p = plt.pcolormesh(lon, lat, data, transform=ccrs.PlateCarree(), **pcolor)
     if add_colorbar:
-        plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.05)
-    return p
+        cb = plt.colorbar(p, orientation='horizontal', pad=0.05, fraction=0.05)
+    return p, ax, cb

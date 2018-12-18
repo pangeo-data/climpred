@@ -12,7 +12,7 @@ Area-weighting
 Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
-`linear_regression` : Performs a least-squares linear regression.
+`xr_linregress` : Returns results of linear regression over input dataarray.
 `vectorized_regression` : Performs a linear regression on a grid of data.
 `remove_polynomial_vectorized` : Returns a time series with some order
 polynomial removed. Useful for a grid, since it's vectorized.
@@ -255,18 +255,36 @@ def vectorized_rm_poly(y, order=1):
     return detrended_ts
 
 
-def vec_linregress(ds, dim='time'):
+def xr_linregress(da, dim='time'):
     """
-    Vectorized function for computing the linear trend of a dataset against 
-    some other dimension.
+    Computes the least-squares linear regression of a dataarray over some
+    dimension (typically time).
 
-    Slow on lon,lat data
-    Works on High-dim datasets without lon,lat
+    Parameters
+    ----------
+    da : xarray DataArray
+    dim : str (default to 'time')
+        dimension over which to compute the linear regression.
+
+    Returns
+    -------
+    ds : xarray Dataset
+        Dataset containing slope, intercept, rvalue, pvalue, stderr from
+        the linear regression. Excludes the dimension the regression was
+        computed over.
     """
-    return xr.apply_ufunc(linregress, ds[dim], ds,
+    results = xr.apply_ufunc(linregress, da[dim], da,
                           input_core_dims=[[dim], [dim]],
                           output_core_dims=[[], [], [], [], []],
-                          vectorize=True)
+                          vectorize=True, dask='parallelized')
+    # Force into a cleaner dataset. The above function returns a dataset
+    # with no clear labeling.
+    ds = xr.Dataset()
+    labels = ['slope', 'intercept', 'rvalue', 'pvalue', 'stderr']
+    for i, l in enumerate(labels):
+        results[i].name = l
+        ds = xr.merge([ds, results[i]])
+        return ds
 
 
 def vec_rm_trend(ds, dim='year'):

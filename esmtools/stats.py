@@ -113,7 +113,7 @@ def xr_area_weight(da, area_coord='area'):
     -------
     aw_da : Area-weighted DataArray
     """
-    area = da[area_dim]
+    area = da[area_coord]
     # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
     # or land.
     dimlist = _get_dims(da)

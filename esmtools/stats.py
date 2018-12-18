@@ -23,10 +23,8 @@ import numpy.polynomial.polynomial as poly
 import pandas as pd
 import scipy.stats as ss
 import xarray as xr
-from scipy import stats as ss
 from scipy.stats import linregress
 from scipy.stats.stats import pearsonr as pr
-from scipy.signal import periodogram
 from scipy.signal import tukey
 from scipy.stats import chi2
 from scipy.signal import detrend, periodogram
@@ -166,6 +164,38 @@ def xr_smooth_series(da, dim, length, center=True):
     return da.rolling({dim: length}, center=center).mean()
 
 
+def xr_linregress(da, dim='time'):
+    """
+    Computes the least-squares linear regression of a dataarray over some
+    dimension (typically time).
+
+    Parameters
+    ----------
+    da : xarray DataArray
+    dim : str (default to 'time')
+        dimension over which to compute the linear regression.
+
+    Returns
+    -------
+    ds : xarray Dataset
+        Dataset containing slope, intercept, rvalue, pvalue, stderr from
+        the linear regression. Excludes the dimension the regression was
+        computed over.
+    """
+    results = xr.apply_ufunc(linregress, da[dim], da,
+                          input_core_dims=[[dim], [dim]],
+                          output_core_dims=[[], [], [], [], []],
+                          vectorize=True, dask='parallelized')
+    # Force into a cleaner dataset. The above function returns a dataset
+    # with no clear labeling.
+    ds = xr.Dataset()
+    labels = ['slope', 'intercept', 'rvalue', 'pvalue', 'stderr']
+    for i, l in enumerate(labels):
+        results[i].name = l
+        ds = xr.merge([ds, results[i]])
+    return ds
+
+
 def pearsonr(x, y, two_sided=True):
     """
     Computes the Pearson product-moment coefficient of linear correlation. This
@@ -253,38 +283,6 @@ def vectorized_rm_poly(y, order=1):
     if XARRAY:
         detrended_ts = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     return detrended_ts
-
-
-def xr_linregress(da, dim='time'):
-    """
-    Computes the least-squares linear regression of a dataarray over some
-    dimension (typically time).
-
-    Parameters
-    ----------
-    da : xarray DataArray
-    dim : str (default to 'time')
-        dimension over which to compute the linear regression.
-
-    Returns
-    -------
-    ds : xarray Dataset
-        Dataset containing slope, intercept, rvalue, pvalue, stderr from
-        the linear regression. Excludes the dimension the regression was
-        computed over.
-    """
-    results = xr.apply_ufunc(linregress, da[dim], da,
-                          input_core_dims=[[dim], [dim]],
-                          output_core_dims=[[], [], [], [], []],
-                          vectorize=True, dask='parallelized')
-    # Force into a cleaner dataset. The above function returns a dataset
-    # with no clear labeling.
-    ds = xr.Dataset()
-    labels = ['slope', 'intercept', 'rvalue', 'pvalue', 'stderr']
-    for i, l in enumerate(labels):
-        results[i].name = l
-        ds = xr.merge([ds, results[i]])
-    return ds
 
 
 def vec_rm_trend(ds, dim='year'):

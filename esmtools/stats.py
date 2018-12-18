@@ -140,7 +140,7 @@ def xr_area_weight(da, area_coord='area'):
 #----------------------------------#
 # TIME SERIES 
 # Functions related to time series. 
-#---------------------------------#
+#----------------------------------#
 def xr_smooth_series(da, dim, length, center=True):
     """
     Returns a smoothed version of the input timeseries.
@@ -164,35 +164,6 @@ def xr_smooth_series(da, dim, length, center=True):
     smoothed : smoothed DataArray object 
     """
     return da.rolling({dim: length}, center=center).mean()
-
-
-def linear_regression(x, y):
-    """
-    Performs a simple least-squares linear regression.
-
-    Parameters
-    ----------
-    x : array; independent variable
-    y : array; predictor variable
-
-    Returns
-    -------
-    m : slope
-    b : intercept
-    r : r-value
-    p : p-value
-    e : standard error
-
-    Examples
-    --------
-    import numpy as np
-    import esmtools as et
-    x = np.random.randn(100)
-    y = np.random.randn(100)
-    m,b,r,p,e = et.stats.linear_regression(x,y)
-    """
-    m, b, r, p, e = linregress(x, y)
-    return m, b, r, p, e
 
 
 def pearsonr(x, y, two_sided=True):

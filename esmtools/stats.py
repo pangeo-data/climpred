@@ -182,7 +182,7 @@ def pearsonr(x, y, two_sided=True):
     return r, p, n_eff
 
 
-def vectorized_rm_poly(y, order=1):
+def xr_rm_poly(y, order=1):
     """
     Vectorized function for removing a order-th order polynomial fit of a time
     series
@@ -220,7 +220,7 @@ def vectorized_rm_poly(y, order=1):
     return detrended_ts
 
 
-def vec_linregress(ds, dim='time'):
+def xr_linregress(ds, dim='time'):
     """
     Vectorized function for computing the linear trend of a dataset against 
     some other dimension.
@@ -234,12 +234,12 @@ def vec_linregress(ds, dim='time'):
                           vectorize=True)
 
 
-def vec_rm_trend(ds, dim='year'):
+def xr_rm_trend(ds, dim='year'):
     """
     Vectorized function for removing a linear trend from a high-dimensional
     dataset.
     """
-    s, i, _, _, _ = vec_linregress(ds, dim)
+    s, i, _, _, _ = xr_linregress(ds, dim)
     new = ds - (s * (ds[dim] - ds[dim].values[0]))
     return new
 
@@ -317,7 +317,7 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
 
 
-def vec_varweighted_mean_period(ds):
+def xr_varweighted_mean_period(ds):
     """
     Calculate the variance weighted mean period of an xr.DataArray.
 
@@ -339,7 +339,7 @@ def vec_varweighted_mean_period(ds):
 def xr_corr(ds, lag=1, dim='year'):
     """
     Calculated lagged correlation of a xr.Dataset.
-
+    
     Parameters
     ----------
     ds : xarray dataset
@@ -351,20 +351,25 @@ def xr_corr(ds, lag=1, dim='year'):
     Returns
     -------
     r : Pearson correlation coefficient
+
+    TODO: adapt for generic dim
     """
     first = ds[dim].values[0]
     last = ds[dim].values[-1]
-    normal = ds.sel(dim=slice(first, last - lag))
-    shifted = ds.sel(dim=slice(first + lag, last))
-    shifted[dim] = normal.dim
+    #normal = ds.sel(dim=slice(first, last - lag))
+    #shifted = ds.sel(dim=slice(first + lag, last))
+    normal = ds.sel(year=slice(first, last - lag))
+    shifted = ds.sel(year=slice(first + lag, last))
+    #shifted[dim] = normal.dim
+    shifted[dim] = normal.year
     return pearson_r(normal, shifted, dim)
 
 
-def vec_tau_d(da, r=20, dim='year'):
+def xr_decorrelation_time(da, r=20, dim='year'):
     """
     Calculate decorrelation time of an xr.DataArray.
 
-    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)
+    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)^k
 
     Reference
     ---------
@@ -373,4 +378,4 @@ def vec_tau_d(da, r=20, dim='year'):
 
     """
     one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([xr_corr(da, lag=i) for i in range(1, r)], 'it').sum('it')
+    return one + 2 * xr.concat([xr_corr(da, lag=i) ** i for i in range(1, r)], 'it').sum('it')

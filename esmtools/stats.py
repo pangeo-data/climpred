@@ -14,9 +14,8 @@ Time Series
 `xr_smooth_series` : Returns a smoothed time series.
 `xr_linregress` : Returns results of linear regression over input dataarray.
 `xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
+`xr_rm_poly` : Returns time series with polynomial fit removed.
 `vectorized_regression` : Performs a linear regression on a grid of data.
-`remove_polynomial_vectorized` : Returns a time series with some order
-polynomial removed. Useful for a grid, since it's vectorized.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -61,6 +60,7 @@ def _get_dims(da):
     """
     return list(da.dims)
 
+
 def _get_vars(ds):
     """
     Simple function to retrieve variables from a given dataset.
@@ -69,6 +69,8 @@ def _get_vars(ds):
     list if desired for any reason.
     """
     return (list(ds.variables))
+
+
 #-------------------------------------------------------------------#
 # AREA-WEIGHTING
 # Functions related to area-weighting on grids with and without area
@@ -316,30 +318,31 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
     return result 
 
 
-def vectorized_rm_poly(y, order=1):
+def xr_rm_poly(da, order):
     """
-    Vectorized function for removing a order-th order polynomial fit of a time
-    series
+    Returns xarray object with nth-order fit removed from every time series.
 
     Input
     -----
-    y : array_like
-      Grid of time series to act as dependent values (SST, FG_CO2, etc.)
+    da : xarray DataArray
+        Single time series or many gridded time series of object to be 
+        detrended
+    order : int 
+        Order of polynomial fit to be removed. If 1, this is functionally
+        the same as calling `xr_rm_trend`
 
     Returns
     -------
-    detrended_ts : array_like
-      Grid of detrended time series
+    detrended_ts : xarray DataArray
+        DataArray with detrended time series.
     """
-    # print("Make sure that time is the first dimension in your inputs.")
-    if np.isnan(y).any():
-        raise ValueError("Please supply an independent axis (y) without nans.")
-    # convert to numpy array if xarray
-    if isinstance(y, xr.DataArray):
-        XARRAY = True
-        dims = y.dims
-        coords = y.coords
-        y = np.asarray(y)
+    _check_xarray(da)
+    def _get_metadata(da):
+        dims = da.dims
+        coords = da.coords
+        return dims, coords
+
+    y = np.asarray(da)
     data_shape = y.shape
     y = y.reshape((data_shape[0], -1))
     # NaNs screw up vectorized regression; just fill with zeros.
@@ -347,11 +350,11 @@ def vectorized_rm_poly(y, order=1):
     x = np.arange(0, len(y), 1)
     coefs = poly.polyfit(x, y, order)
     fit = poly.polyval(x, coefs)
-    detrended_ts = (y - fit.T)
-    detrended_ts = detrended_ts.reshape(data_shape)
-    if XARRAY:
-        detrended_ts = xr.DataArray(detrended_ts, dims=dims, coords=coords)
-    return detrended_ts
+    detrended_ts = (y - fit.T).reshape(data_shape)
+    # Replace NaNs.
+    detrended_ts[detrended_ts == 0] = np.nan
+    dims, coords = _get_metadata(da)
+    return xr.DataArray(detrended_ts, dims=dims, coords=coords)
 
 
 def vec_rm_trend(ds, dim='year'):

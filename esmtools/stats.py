@@ -16,6 +16,12 @@ Time Series
 `xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
+`xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
+`xr_autocorr` : Calculates the autocorrelation of time series over some lag.
+
+Generate Time Series Data
+-------------------------
+`create_power_spectrum` : Creates power spectrum with CI for a given pd.series.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -27,7 +33,6 @@ from scipy.stats.stats import pearsonr as pr
 from scipy.signal import tukey
 from scipy.stats import chi2
 from scipy.signal import detrend, periodogram
-from xskillscore import pearson_r
 #--------------------------------------------#
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools.
@@ -49,7 +54,17 @@ def _check_xarray(x):
             retry the function.
 
             Your input was of type: {typecheck}""")
-    
+
+
+def _get_coords(da):
+    """
+    Simple function to retrieve dimensions from a given dataset/dataarray.
+
+    Currently returns as a list, but can add keyword to select tuple or
+    list if desired for any reason.
+    """
+    return list(da.coords)
+
 
 def _get_dims(da):
     """
@@ -68,9 +83,16 @@ def _get_vars(ds):
     Currently returns as a list, but can add keyword to select tuple or
     list if desired for any reason.
     """
-    return (list(ds.variables))
+    return list(ds.variables)
 
 
+def _taper(x, p):
+    """
+    Description needed here.
+    """
+    window = tukey(len(x), p)
+    y = x * window
+    return y
 #-------------------------------------------------------------------#
 # AREA-WEIGHTING
 # Functions related to area-weighting on grids with and without area
@@ -393,15 +415,66 @@ def xr_rm_trend(da, dim='time'):
     return xr_rm_poly(da, 1, dim=dim) 
 
 
-def taper(x, p):
+def xr_varweighted_mean_period(ds, time_dim='time'):
     """
-    Description needed here.
+    Calculate the variance weighted mean period of an xr.DataArray.
+
+    Reference
+    ---------
+    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
+      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
+      6292–6311. https://doi.org/10/bwq92h.
     """
-    window = tukey(len(x), p)
-    y = x * window
-    return y
+    _check_xarray(ds)
+    def _create_dataset(ds, f, Pxx, time_dim):
+        """
+        Organize results of periodogram into clean dataset.
+        """
+        dimlist = [i for i in _get_dims(ds) if i not in time_dim]
+        PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
+        PSD.coords['freq'] = f
+        return PSD
+
+    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
+    PSD = _create_dataset(ds, f, Pxx, time_dim)
+    T = PSD.sum('freq') / ((PSD * PSD.freq).sum('freq'))
+    return xr.DataArray(T, coords=ds.isel({time_dim: 0}).coords) 
 
 
+def xr_autocorr(da, lag=1, dim='time'):
+    """
+    Calculated lagged correlation of a xr.Dataset.
+
+    Parameters
+    ----------
+    da : xarray dataset/dataarray
+    lag : int (default 1)
+        number of time steps to lag correlate.
+    dim : str (default 'time')
+        name of time dimension
+
+    Returns
+    -------
+    r : Pearson correlation coefficient
+    p : p-value
+    """
+    _check_xarray(da)
+    N = len(da[dim])
+    da1 = da.isel({dim: slice(0, N - lag)})
+    da2 = da.isel({dim: slice(0 + lag, N)})
+    r, p = xr.apply_ufunc(pr, da1, da2,
+                          input_core_dims=[[dim], [dim]],
+                          output_core_dims=[[], []],
+                          vectorize=True,
+                          dask='parallelized')
+    return r, p 
+
+
+#--------------------------------------------#
+# GENERATE TIME SERIES DATA
+# Functions that create time series data
+# for testing, etc.
+#--------------------------------------------#
 def create_power_spectrum(s, pct=0.1, pLow=0.05):
     """
     Create power spectrum with CI for a given pd.series.
@@ -443,7 +516,7 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     data = s - s.mean()
     # detrend
     data = detrend(data)
-    data = taper(data, pct)
+    data = _taper(data, pct)
     # periodigram
     timestep = 1
     frequency, power_spectrum = periodogram(data, timestep)
@@ -466,47 +539,6 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
 
 
-def vec_varweighted_mean_period(ds):
-    """
-    Calculate the variance weighted mean period of an xr.DataArray.
-
-    Reference
-    ---------
-    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
-      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
-      6292–6311. https://doi.org/10/bwq92h.
-    """
-    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
-    F = xr.DataArray(f)
-    PSD = xr.DataArray(Pxx)
-    T = PSD.sum('dim_0') / ((PSD * F).sum('dim_0'))
-    coords = ds.isel(year=0).coords
-    dims = ds.isel(year=0).dims
-    T = xr.DataArray(data=T.values, coords=coords, dims=dims)
-    return T
-
-def xr_corr(ds, lag=1, dim='year'):
-    """
-    Calculated lagged correlation of a xr.Dataset.
-
-    Parameters
-    ----------
-    ds : xarray dataset
-    lag : int (default 1)
-        number of time steps to lag correlate.
-    dim : str (default 'year')
-        name of time dimension
-
-    Returns
-    -------
-    r : Pearson correlation coefficient
-    """
-    first = ds[dim].values[0]
-    last = ds[dim].values[-1]
-    normal = ds.sel(dim=slice(first, last - lag))
-    shifted = ds.sel(dim=slice(first + lag, last))
-    shifted[dim] = normal.dim
-    return pearson_r(normal, shifted, dim)
 
 
 def vec_tau_d(da, r=20, dim='year'):

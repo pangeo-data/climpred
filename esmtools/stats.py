@@ -15,7 +15,7 @@ Time Series
 `xr_linregress` : Returns results of linear regression over input dataarray.
 `xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
-`vectorized_regression` : Performs a linear regression on a grid of data.
+`xr_rm_trend` : Returns detrended (first order) time series.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -326,7 +326,7 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
     return result 
 
 
-def xr_rm_poly(da, order):
+def xr_rm_poly(da, order, dim='time'):
     """
     Returns xarray object with nth-order fit removed from every time series.
 
@@ -338,6 +338,8 @@ def xr_rm_poly(da, order):
     order : int 
         Order of polynomial fit to be removed. If 1, this is functionally
         the same as calling `xr_rm_trend`
+    dim : str (default 'time')
+        Dimension over which to remove the polynomial fit.
 
     Returns
     -------
@@ -350,7 +352,27 @@ def xr_rm_poly(da, order):
         coords = da.coords
         return dims, coords
 
+    def _swap_axes(y):
+        """
+        Push the independent axis up to the first dimension if needed. E.g.,
+        the user submits a DataArray with dimensions ('lat','lon','time'), but
+        wants the regression performed over time. This function expects the
+        leading dimension to be the independent axis, so this subfunction just
+        moves it up front.
+        """
+        dims, coords = _get_metadata(da)
+        if dims[0] != dim:
+            idx = dims.index(dim)
+            y = np.swapaxes(y, 0, idx)
+            dims = list(dims)
+            dims[0], dims[idx] = dims[idx], dims[0]
+            dims = tuple(dims)
+        return y, dims, coords
+
+
     y = np.asarray(da)
+    # Force independent axis to be leading dimension.
+    y, dims, coords = _swap_axes(y)
     data_shape = y.shape
     y = y.reshape((data_shape[0], -1))
     # NaNs screw up vectorized regression; just fill with zeros.
@@ -361,18 +383,14 @@ def xr_rm_poly(da, order):
     detrended_ts = (y - fit.T).reshape(data_shape)
     # Replace NaNs.
     detrended_ts[detrended_ts == 0] = np.nan
-    dims, coords = _get_metadata(da)
     return xr.DataArray(detrended_ts, dims=dims, coords=coords)
 
 
-def vec_rm_trend(ds, dim='year'):
+def xr_rm_trend(da, dim='time'):
     """
-    Vectorized function for removing a linear trend from a high-dimensional
-    dataset.
+    Calls xr_rm_poly with an order 1 argument.
     """
-    s, i, _, _, _ = vec_linregress(ds, dim)
-    new = ds - (s * (ds[dim] - ds[dim].values[0]))
-    return new
+    return xr_rm_poly(da, 1, dim=dim) 
 
 
 def taper(x, p):

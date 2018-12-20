@@ -16,6 +16,7 @@ Time Series
 `xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
+`xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
 
 Generate Time Series Data
 -------------------------
@@ -53,7 +54,17 @@ def _check_xarray(x):
             retry the function.
 
             Your input was of type: {typecheck}""")
-    
+
+
+def _get_coords(da):
+    """
+    Simple function to retrieve dimensions from a given dataset/dataarray.
+
+    Currently returns as a list, but can add keyword to select tuple or
+    list if desired for any reason.
+    """
+    return list(da.coords)
+
 
 def _get_dims(da):
     """
@@ -72,7 +83,7 @@ def _get_vars(ds):
     Currently returns as a list, but can add keyword to select tuple or
     list if desired for any reason.
     """
-    return (list(ds.variables))
+    return list(ds.variables)
 
 
 def _taper(x, p):
@@ -404,6 +415,31 @@ def xr_rm_trend(da, dim='time'):
     return xr_rm_poly(da, 1, dim=dim) 
 
 
+def xr_varweighted_mean_period(ds, time_dim='time'):
+    """
+    Calculate the variance weighted mean period of an xr.DataArray.
+
+    Reference
+    ---------
+    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
+      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
+      6292–6311. https://doi.org/10/bwq92h.
+    """
+    _check_xarray(ds)
+    def _create_dataset(ds, f, Pxx, time_dim):
+        """
+        Organize results of periodogram into clean dataset.
+        """
+        dimlist = [i for i in _get_dims(ds) if i not in time_dim]
+        PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
+        PSD.coords['freq'] = f
+        return PSD
+
+    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
+    PSD = _create_dataset(ds, f, Pxx, time_dim)
+    T = PSD.sum('freq') / ((PSD * PSD.freq).sum('freq'))
+    return xr.DataArray(T, coords=ds.isel({time_dim: 0}).coords) 
+
 #--------------------------------------------#
 # GENERATE TIME SERIES DATA
 # Functions that create time series data
@@ -472,25 +508,6 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     high_ci = markov * xHigh  # interval
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
 
-
-def vec_varweighted_mean_period(ds):
-    """
-    Calculate the variance weighted mean period of an xr.DataArray.
-
-    Reference
-    ---------
-    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
-      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
-      6292–6311. https://doi.org/10/bwq92h.
-    """
-    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
-    F = xr.DataArray(f)
-    PSD = xr.DataArray(Pxx)
-    T = PSD.sum('dim_0') / ((PSD * F).sum('dim_0'))
-    coords = ds.isel(year=0).coords
-    dims = ds.isel(year=0).dims
-    T = xr.DataArray(data=T.values, coords=coords, dims=dims)
-    return T
 
 def xr_corr(ds, lag=1, dim='year'):
     """

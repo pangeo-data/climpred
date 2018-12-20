@@ -196,7 +196,7 @@ def xr_smooth_series(da, dim, length, center=True):
     return da.rolling({dim: length}, center=center).mean()
 
 
-def xr_linregress(da, dim='time'):
+def xr_linregress(da, dim='time', compact=True):
     """
     Computes the least-squares linear regression of a dataarray over some
     dimension (typically time).
@@ -206,13 +206,17 @@ def xr_linregress(da, dim='time'):
     da : xarray DataArray
     dim : str (default to 'time')
         dimension over which to compute the linear regression.
+    compact : boolean (default to True)
+        If true, return all results of linregress as a single dataset. 
+        If false, return results as five separate DataArrays.
 
     Returns
     -------
     ds : xarray Dataset
         Dataset containing slope, intercept, rvalue, pvalue, stderr from
         the linear regression. Excludes the dimension the regression was
-        computed over.
+        computed over. If compact is False, these five parameters are
+        returned separately.
     """
     _check_xarray(da)
     results = xr.apply_ufunc(linregress, da[dim], da,
@@ -226,7 +230,11 @@ def xr_linregress(da, dim='time'):
     for i, l in enumerate(labels):
         results[i].name = l
         ds = xr.merge([ds, results[i]])
-    return ds
+    if compact:
+        return ds
+    else:
+        return ds['slope'], ds['intercept'], ds['rvalue'], ds['pvalue'], \
+               ds['stderr']
 
 
 def xr_eff_pearsonr(ds, dim='time', two_sided=True):

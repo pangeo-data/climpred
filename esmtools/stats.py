@@ -16,6 +16,10 @@ Time Series
 `xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
+
+Generate Time Series Data
+-------------------------
+`create_power_spectrum` : Creates power spectrum with CI for a given pd.series.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -71,6 +75,13 @@ def _get_vars(ds):
     return (list(ds.variables))
 
 
+def _taper(x, p):
+    """
+    Description needed here.
+    """
+    window = tukey(len(x), p)
+    y = x * window
+    return y
 #-------------------------------------------------------------------#
 # AREA-WEIGHTING
 # Functions related to area-weighting on grids with and without area
@@ -393,15 +404,11 @@ def xr_rm_trend(da, dim='time'):
     return xr_rm_poly(da, 1, dim=dim) 
 
 
-def taper(x, p):
-    """
-    Description needed here.
-    """
-    window = tukey(len(x), p)
-    y = x * window
-    return y
-
-
+#--------------------------------------------#
+# GENERATE TIME SERIES DATA
+# Functions that create time series data
+# for testing, etc.
+#--------------------------------------------#
 def create_power_spectrum(s, pct=0.1, pLow=0.05):
     """
     Create power spectrum with CI for a given pd.series.
@@ -443,7 +450,7 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     data = s - s.mean()
     # detrend
     data = detrend(data)
-    data = taper(data, pct)
+    data = _taper(data, pct)
     # periodigram
     timestep = 1
     frequency, power_spectrum = periodogram(data, timestep)

@@ -124,7 +124,10 @@ varname = 'tos'
 period = 'ym'
 area = 'North_Atlantic'
 
-
+#--------------------------------------------#
+# HELPER FUNCTIONS
+# Should only be used internally by esmtools
+#--------------------------------------------#
 def get_data_home(data_home=None):
     """
     Return the path of the data directory.

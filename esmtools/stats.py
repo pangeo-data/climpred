@@ -441,7 +441,7 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     return xr.DataArray(T, coords=ds.isel({time_dim: 0}).coords) 
 
 
-def xr_autocorr(d, lag=1, dim='time'):
+def xr_autocorr(da, lag=1, dim='time'):
     """
     Calculated lagged correlation of a xr.Dataset.
 

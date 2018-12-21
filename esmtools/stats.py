@@ -17,6 +17,7 @@ Time Series
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
 `xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
+`xr_autocorr` : Calculates the autocorrelation of time series over some lag.
 
 Generate Time Series Data
 -------------------------
@@ -32,7 +33,6 @@ from scipy.stats.stats import pearsonr as pr
 from scipy.signal import tukey
 from scipy.stats import chi2
 from scipy.signal import detrend, periodogram
-from xskillscore import pearson_r
 #--------------------------------------------#
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools.
@@ -440,6 +440,36 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     T = PSD.sum('freq') / ((PSD * PSD.freq).sum('freq'))
     return xr.DataArray(T, coords=ds.isel({time_dim: 0}).coords) 
 
+
+def xr_autocorr(d, lag=1, dim='time'):
+    """
+    Calculated lagged correlation of a xr.Dataset.
+
+    Parameters
+    ----------
+    da : xarray dataset/dataarray
+    lag : int (default 1)
+        number of time steps to lag correlate.
+    dim : str (default 'time')
+        name of time dimension
+
+    Returns
+    -------
+    r : Pearson correlation coefficient
+    p : p-value
+    """
+    _check_xarray(da)
+    N = len(da[dim])
+    da1 = da.isel({dim: slice(0, N - lag)})
+    da2 = da.isel({dim: slice(0 + lag, N)})
+    r, p = xr.apply_ufunc(pr, da1, da2,
+                          input_core_dims=[[dim], [dim]],
+                          output_core_dims=[[], []],
+                          vectorize=True,
+                          dask='parallelized')
+    return r, p 
+
+
 #--------------------------------------------#
 # GENERATE TIME SERIES DATA
 # Functions that create time series data
@@ -509,28 +539,6 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
 
 
-def xr_corr(ds, lag=1, dim='year'):
-    """
-    Calculated lagged correlation of a xr.Dataset.
-
-    Parameters
-    ----------
-    ds : xarray dataset
-    lag : int (default 1)
-        number of time steps to lag correlate.
-    dim : str (default 'year')
-        name of time dimension
-
-    Returns
-    -------
-    r : Pearson correlation coefficient
-    """
-    first = ds[dim].values[0]
-    last = ds[dim].values[-1]
-    normal = ds.sel(dim=slice(first, last - lag))
-    shifted = ds.sel(dim=slice(first + lag, last))
-    shifted[dim] = normal.dim
-    return pearson_r(normal, shifted, dim)
 
 
 def vec_tau_d(da, r=20, dim='year'):

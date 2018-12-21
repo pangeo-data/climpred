@@ -17,10 +17,6 @@ Functions for the carbon cycle and carbonate chemistry.
 
 Load in a custom colormap (see below).
 
-`conversions`
-
-Nifty unit conversions.
-
 `filtering`
 
 Functions for filtering output over space and time.

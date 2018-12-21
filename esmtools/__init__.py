@@ -15,22 +15,18 @@ Systems.
 filtering of output.
 5. physics: Contains definitions related to physical conversions.
 6. stats: Contains definitions for computing general statistics on output.
-7. unfunc: Contains definitions to use on xarray .apply()
-8. vis: Contains definitions for colorbars, color maps, and any sort
+7. vis: Contains definitions for colorbars, color maps, and any sort
 of global or regional projections.
-9. mpas: Contains definitions for visualization and processing on MPAS output.
-10. conversions: Contains definitions for unit conversions.
-11. prediction: Contains definitions for decadal climate prediction.
+8. conversions: Contains definitions for unit conversions.
+9. prediction: Contains definitions for decadal climate prediction.
 """
 
 from . import filtering
 from . import vis 
 from . import stats
 from . import ebus
-from . import ufunc
 from . import colormaps
 from . import carbon
 from . import physics
-from . import mpas
 from . import conversions
 from . import prediction

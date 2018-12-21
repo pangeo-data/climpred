@@ -24,12 +24,9 @@ import pandas as pd
 import scipy.stats as ss
 import xarray as xr
 from scipy import stats as ss
-from scipy.stats import linregress
+from scipy.signal import detrend, periodogram, tukey
+from scipy.stats import chi2, linregress
 from scipy.stats.stats import pearsonr as pr
-from scipy.signal import periodogram
-from scipy.signal import tukey
-from scipy.stats import chi2
-from scipy.signal import detrend, periodogram
 from xskillscore import pearson_r
 
 
@@ -222,7 +219,7 @@ def xr_rm_poly(y, order=1):
 
 def xr_linregress(ds, dim='time'):
     """
-    Vectorized function for computing the linear trend of a dataset against 
+    Vectorized function for computing the linear trend of a dataset against
     some other dimension.
 
     Slow on lon,lat data
@@ -267,7 +264,7 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
         input time series
     pct : float (default 0.10)
         percent of the time series to be tapered. (0 <= pct <= 1). If pct = 0,
-        no tapering will be done. If pct = 1, the whole series is tapered. 
+        no tapering will be done. If pct = 1, the whole series is tapered.
         Tapering should always be done.
     pLow : float (default 0.05)
         significance interval for markov red-noise spectrum
@@ -339,7 +336,7 @@ def xr_varweighted_mean_period(ds):
 def xr_corr(ds, lag=1, dim='year'):
     """
     Calculated lagged correlation of a xr.Dataset.
-    
+
     Parameters
     ----------
     ds : xarray dataset
@@ -356,12 +353,9 @@ def xr_corr(ds, lag=1, dim='year'):
     """
     first = ds[dim].values[0]
     last = ds[dim].values[-1]
-    #normal = ds.sel(dim=slice(first, last - lag))
-    #shifted = ds.sel(dim=slice(first + lag, last))
-    normal = ds.sel(year=slice(first, last - lag))
-    shifted = ds.sel(year=slice(first + lag, last))
-    #shifted[dim] = normal.dim
-    shifted[dim] = normal.year
+    normal = ds.sel({dim:slice(first, last - lag)})
+    shifted = ds.sel({dim:slice(first + lag, last)})
+    shifted[dim] = normal[dim]
     return pearson_r(normal, shifted, dim)
 
 

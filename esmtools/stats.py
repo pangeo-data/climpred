@@ -18,6 +18,7 @@ Time Series
 `xr_rm_trend` : Returns detrended (first order) time series.
 `xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
 `xr_autocorr` : Calculates the autocorrelation of time series over some lag.
+`xr_tau_d` : Calculates the decorrelation time of a time series.
 
 Generate Time Series Data
 -------------------------
@@ -441,7 +442,7 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     return xr.DataArray(T, coords=ds.isel({time_dim: 0}).coords) 
 
 
-def xr_autocorr(da, lag=1, dim='time'):
+def xr_autocorr(da, lag=1, dim='time', r_only=False):
     """
     Calculated lagged correlation of a xr.Dataset.
 
@@ -452,6 +453,9 @@ def xr_autocorr(da, lag=1, dim='time'):
         number of time steps to lag correlate.
     dim : str (default 'time')
         name of time dimension
+    r_only : boolean (default False)
+       If true, return just the correlation coefficient.
+       If false, return both the correlation coefficient and p-value.
 
     Returns
     -------
@@ -467,9 +471,35 @@ def xr_autocorr(da, lag=1, dim='time'):
                           output_core_dims=[[], []],
                           vectorize=True,
                           dask='parallelized')
-    return r, p 
+    if r_only:
+        return r
+    else:
+        return r, p 
 
 
+def xr_tau_d(da, r=20, dim='time'):
+    """
+    Calculate decorrelation time of an xr.DataArray.
+    
+    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)
+
+    Parameters
+    ----------
+    da : xarray object 
+    r : int (default 20)
+        Number of iterations to run of the above formula
+    dim : str (default 'time')
+        Time dimension for xarray object
+
+    Reference
+    ---------
+    - Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+    Research. Cambridge ; New York: Cambridge University Press, 1999., p.373
+
+    """
+    _check_xarray(da)
+    one = da.mean(dim) / da.mean(dim)
+    return one + 2 * xr.concat([xr_autocorr(da, lag=i, r_only=True) for i in range(1, r)], 'it').sum('it')
 #--------------------------------------------#
 # GENERATE TIME SERIES DATA
 # Functions that create time series data
@@ -537,21 +567,3 @@ def create_power_spectrum(s, pct=0.1, pLow=0.05):
     low_ci = markov * xLow  # confidence
     high_ci = markov * xHigh  # interval
     return Period, power_spectrum_smoothed, markov, low_ci, high_ci
-
-
-
-
-def vec_tau_d(da, r=20, dim='year'):
-    """
-    Calculate decorrelation time of an xr.DataArray.
-
-    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)
-
-    Reference
-    ---------
-    - Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
-    Research. Cambridge ; New York: Cambridge University Press, 1999., p.373
-
-    """
-    one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([xr_corr(da, lag=i) for i in range(1, r)], 'it').sum('it')

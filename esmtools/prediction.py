@@ -124,8 +124,18 @@ varname = 'tos'
 period = 'ym'
 area = 'North_Atlantic'
 
+#--------------------------------------------#
+# HELPER FUNCTIONS
+# Should only be used internally by esmtools
+#--------------------------------------------#
 
-def get_data_home(data_home=None):
+
+#--------------------------------------------#
+# SAMPLE DATA  
+# Definitions related to loading sample
+# datasets.
+#--------------------------------------------#
+def _get_data_home(data_home=None):
     """
     Return the path of the data directory.
 
@@ -148,9 +158,8 @@ def get_dataset_names():
     # delayed import to not demand bs4 unless this function is actually used
     # copied from seaborn
     http = urlopen(
-        'https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/')
-    # print('Load from URL:', http)
-    gh_list = BeautifulSoup(http)
+        'https://github.com/bradyrx/esmtools/tree/master/sample_data/prediction')
+    gh_list = BeautifulSoup(http, features='lxml')
     return [l.text.replace('.nc', '')
             for l in gh_list.find_all("a", {"class": "js-navigation-open"})
             if l.text.endswith('.nc')]
@@ -175,11 +184,11 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 
     """
     path = (
-        "https://github.com/aaronspring/esmtools/raw/develop/sample_data/prediction/{}.nc")
+        'https://github.com/bradyrx/esmtools/tree/master/sample_data/prediction/{}.nc')
     full_path = path.format(name)
     # print('Load from URL:', full_path)
     if cache:
-        cache_path = os.path.join(get_data_home(data_home),
+        cache_path = os.path.join(_get_data_home(data_home),
                                   os.path.basename(full_path))
         if not os.path.exists(cache_path):
             urlretrieve(full_path, cache_path)

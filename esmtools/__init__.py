@@ -9,28 +9,19 @@ Available Modules:
 -----------------
 1. carbon: Contains definitions related to the carbon cycle and carbonate chemistry.
 2. colormaps: Custom colormaps from NCL.
-3. ebus: Contains functions specific to working with Eastern Boundary Upwelling
-Systems.
-4. filtering: Contains definitions that assist in spatial and temporal
+3. filtering: Contains definitions that assist in spatial and temporal
 filtering of output.
-5. physics: Contains definitions related to physical conversions.
-6. stats: Contains definitions for computing general statistics on output.
-7. unfunc: Contains definitions to use on xarray .apply()
-8. vis: Contains definitions for colorbars, color maps, and any sort
+4. physics: Contains definitions related to physical conversions.
+5. stats: Contains definitions for computing general statistics on output.
+6. vis: Contains definitions for colorbars, color maps, and any sort
 of global or regional projections.
-9. mpas: Contains definitions for visualization and processing on MPAS output.
-10. conversions: Contains definitions for unit conversions.
-11. prediction: Contains definitions for decadal climate prediction.
+7. prediction: Contains definitions for decadal climate prediction.
 """
 
 from . import filtering
 from . import vis 
 from . import stats
-from . import ebus
-from . import ufunc
 from . import colormaps
 from . import carbon
 from . import physics
-from . import mpas
-from . import conversions
 from . import prediction

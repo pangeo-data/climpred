@@ -17,17 +17,9 @@ Functions for the carbon cycle and carbonate chemistry.
 
 Load in a custom colormap (see below).
 
-`conversions`
-
-Nifty unit conversions.
-
 `filtering`
 
 Functions for filtering output over space and time.
-
-`mpas`
-
-Functions related to output from MPAS-O.
 
 `physics`
 
@@ -40,10 +32,6 @@ Functions for decadal climate prediction.
 `stats`
 
 Functions for time series and spatial statistics
-
-`ufunc`
-
-Functions optimized for the .apply() function on xarray Datasets
 
 `vis`
 

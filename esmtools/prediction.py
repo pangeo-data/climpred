@@ -165,6 +165,44 @@ def _get_norm_factor(comparison):
         return 2
 
 
+def _normalize(ds, dim=None):
+    """
+    Add description.
+    """
+    return (ds - ds.mean(dim)) / ds.std(dim)
+
+
+def _drop_ensembles(ds, rmd_ensemble=[0]):
+    """Drop ensembles from ds."""
+    if all(ens in ds.ensemble.values for ens in rmd_ensemble):
+        ensemble_list = list(ds.ensemble.values)
+        for ens in rmd_ensemble:
+            ensemble_list.remove(ens)
+    else:
+        raise ValueError('select from ensemble starting years', rmd_ensemble)
+    return ds.sel(ensemble=ensemble_list)
+
+
+def _drop_members(ds, rmd_member=[0]):
+    """Drop members from ds."""
+    if all(m in ds.member.values for m in rmd_member):
+        member_list = list(ds.member.values)
+        for ens in rmd_member:
+            member_list.remove(ens)
+    else:
+        raise ValueError('select availbale from members', rmd_member)
+    return ds.sel(member=member_list)
+
+
+def _select_members_ensembles(ds, m=None, e=None):
+    """Subselect ensembles and members from ds."""
+    if m is None:
+        m = ds.member.values
+    if e is None:
+        e = ds.ensemble.values
+    return ds.sel(member=m, ensemble=e)
+
+
 #--------------------------------------------#
 # SAMPLE DATA  
 # Definitions related to loading sample
@@ -232,7 +270,7 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     return df
 
 #--------------------------------------------#
-# COMPUTE PREDICTABILITY
+# COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
 # predictability.
 #--------------------------------------------#
@@ -268,6 +306,182 @@ def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False,
         return res
     else:
         raise ValueError('specify metric argument')
+
+
+def generate_damped_persistence_forecast(control, startyear, length=20):
+    """
+    Generate damped persistence forecast.
+
+    Reference
+    ---------
+    - missing: got a script from a collegue
+
+    Parameters
+    ----------
+    control : pandas.series
+        input timeseries from control run
+    startyear : int
+        year damped persistence forecast should start from
+
+    Returns
+    -------
+    ar1 : pandas.series
+        mean damped persistence
+    ar50 : pandas.series
+        50% damped persistence range
+    ar90 : pandas.series
+        90% damped persistence range
+
+    Example
+    -------
+    import esmtools as et
+    ar1, ar50, ar90 = et.prediction.generate_damped_persistence_forecast(
+        s,1919)
+    ar1.plot(label='damped persistence forecast')
+    plt.fill_between(ar1.index,ar1-ar50,ar1+ar50,alpha=.2,
+                     color='gray',label='50% forecast range')
+    plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,
+                     color='gray',label='90% forecast range')
+    s.loc[1919:1939].plot(label='control')
+    plt.legend()
+
+    """
+    anom = (control.loc[startyear] - control.mean())
+    t = np.arange(0., length + 1, 1)
+    alpha = control.autocorr()
+    exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
+    ar1 = exp + control.mean()
+    ar50 = 0.7 * control.std() * np.sqrt(1 - np.exp(-2 * alpha * t))
+    ar90 = 1.7 * control.std() * np.sqrt(1 - np.exp(-2 * alpha * t))
+
+    index = control.loc[startyear:startyear + length].index
+    ar1 = pd.Series(ar1, index=index)
+    ar50 = pd.Series(ar50, index=index)
+    ar90 = pd.Series(ar90, index=index)
+    return ar1, ar50, ar90
+
+
+def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
+    """
+    Calculate the PPP (or NEV) damped persistence mean and range.
+
+    Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be
+    indicated as +- std or 5-95-percentile.
+
+    Reference
+    ---------
+    Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. Appendix
+
+    Parameters
+    ----------
+    s : pandas.series
+        input timeseries from control run
+    kind : str
+        determine kind of damped persistence. 'PPP' or 'NEV' (normalized ensemlbe variance)
+    percentile : bool
+        use percentiles for alpha range
+    length : int
+        length of the output timeseries
+
+    Returns
+    -------
+    PPP_persistence_0 : pandas.series
+        mean damped persistence
+    PPP_persistence_minus : pandas.series
+        lower range damped persistence
+    PP_persistence_plus : pandas.series
+        upper range damped persistence
+
+    Example
+    -------
+    import esmtools as et
+    # s = pd.Series(np.sin(range(1000)+np.cos(range(1000))+np.random.randint(.1,1000)))
+    s = control.sel(area=area,period=period).to_dataframe()[varname]
+    PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = et.prediction.generate_predictability_persistence(
+        s)
+    t = np.arange(0,20+1,1.)
+    plt.plot(PPP_persistence_0,color='black',
+             linestyle='--',label='persistence mean')
+    plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,
+                     color='gray',alpha=.3,label='persistence range')
+    plt.axhline(y=0,color='black')
+
+    """
+    # bootstrapping persistence
+    iterations = 50  # iterations
+    chunk_length = 100  # length of chunks of control run to take lag1 autocorr
+    data = np.zeros(iterations)
+    for i in range(iterations):
+        random_start_year = randint(1900, 2200 - chunk_length)
+        data[i] = s.loc[str(random_start_year):str(
+            random_start_year + chunk_length)].autocorr()
+
+    alpha_0 = np.mean(data)
+    alpha_minus = np.mean(data) - np.std(data)
+    alpha_plus = np.mean(data) + np.std(data)
+    if percentile:
+        alpha_minus = np.percentile(data, 5)
+        alpha_plus = np.percentile(data, 95)
+
+    # persistence function
+    def generate_PPP_persistence(alpha, t):
+        values = np.exp(-2 * alpha * t)  # Griffies 1997
+        s = pd.Series(values, index=t)
+        return s
+
+    t = np.arange(0, length + 1, 1.)
+    PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
+    PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
+    PPP_persistence_plus = generate_PPP_persistence(alpha_minus, t)
+
+    if kind in ['nvar', 'NEV']:
+        PPP_persistence_0 = 1 - PPP_persistence_0
+        PPP_persistence_minus = 1 - PPP_persistence_minus
+        PPP_persistence_plus = 1 - PPP_persistence_plus
+
+    return PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus
+
+
+def persistence_forecast(ds, control, varname=varname, area=area, period=period, 
+                         comparison=m2e, time_dim='year'):
+    """
+    Generate persistence forecast timeseries.
+    """
+    starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
+    anom = (control.sel(year=starting_years) - control.mean())
+    t = np.arange(1, ds.year.size + 1)
+    tds = np.arange(1900, 1900 + ds.year.size)
+    alpha = control.to_series().autocorr()
+    persistence_forecast_list = []
+    for year in anom.year:
+        ar1 = anom.sel(year=year).values * \
+            np.exp(-alpha * t) + control.mean().values
+        pf = xr.DataArray(data=ar1, coords=[tds], dims=time_dim)
+        pf = pf.expand_dims('ensemble')
+        pf['ensemble'] = [year + 1100 + 1]
+        persistence_forecast_list.append(pf)
+    return xr.concat(persistence_forecast_list, dim='ensemble')
+
+
+def compute_persistence(ds, control, metric=rmse, comparison=m2e, time_dim='year'):
+    """
+    Compute skill for persistence forecast.
+    """
+    persistence_forecasts = persistence_forecast(ds, control)
+    if comparison.__name__ == 'm2e':
+        result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
+    elif comparison.__name__ == 'm2m':
+        persistence_forecasts = persistence_forecasts.expand_dims('member')
+        all_persistence_forecasts = persistence_forecasts.sel(
+            member=[0] * ds.member.size)
+        fct = m2e(all_persistence_forecasts, 'svd')[0]
+        truth = m2e(ds, 'svd')[0]
+        result = metric(fct, truth, 'svd')
+    else:
+        raise ValueError('not defined')
+    result[time_dim] = np.arange(1, ds[time_dim].size + 1)
+    return result
+
 
 #--------------------------------------------#
 # Diagnostic Potential Predictability (DPP)
@@ -519,6 +733,134 @@ def _ensmean_against_control(ds, control_member=0):
 
 
 #--------------------------------------------#
+# METRICS
+# Metrics for computing predictability.
+#--------------------------------------------#
+def _mse(ds, control, comparison, running):
+    """
+    Mean Square Error (MSE) metric.
+    """
+    return choose_comparison(ds, comparison)
+
+
+def _rmse_v(ds, control, comparison, running):
+    """
+    Root Mean Square Error (RMSE) metric.
+    """
+    return choose_comparison(ds, comparison) ** .5
+
+
+def _nrmse(ds, control, comparison, running):
+    """
+    Normalized Root Mean Square Error (NRMSE) metric.
+
+    Formula
+    -------
+    NRMSE = 1 - RMSE_ens / std_control = 1 - (var_ens / var_control ) ** .5
+
+    References
+    ----------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+        Prediction: Potential versus Operational Seasonal Forecast Skill.”
+        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+        Journal of the Royal Meteorological Society 142, no. 695
+        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+
+    """
+    var = get_variance(control, running=running)
+    ens = choose_comparison(ds, comparison)
+    fac = get_norm_factor(comparison)
+    return (ens / var / fac) ** .5
+
+
+def _nev(ds, control, comparison, running):
+    """
+    Normalized Ensemble Variance (NEV) metric.
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    """
+    var = get_variance(control, running=running)
+    ens = choose_comparison(ds, comparison)
+    fac = get_norm_factor(comparison)
+    return ens / var / fac
+
+
+def _ppp(ds, control, comparison, running):
+    """
+    Prognostic Potential Predictability (PPP) metric.
+
+    Formula
+    -------
+    PPP = 1 - MSE / std_control
+
+    References
+    ----------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
+    """
+    var = get_variance(control, running=running)
+    ens = choose_comparison(ds, comparison)
+    fac = get_norm_factor(comparison)
+    return 1 - ens / var / fac
+
+
+def _PPP(ds, control, comparison, running):
+    """
+    Wraps ppp.
+    """
+    return ppp(ds, control, comparison, running)
+
+
+def _uACC(ds, control, comparison, running):
+    """
+    Unbiased ACC (uACC) metric.
+
+    Formula
+    -------
+    - uACC = PPP ** .5 = MSSS ** .5
+
+    Reference
+    ---------
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+      Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+      Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate
+      Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    """
+    return ppp(ds, control, comparison, running) ** .5
+
+
+def _MSSS(ds, control, comparison, running):
+    """
+    Wraps ppp.
+
+    Formula
+    -------
+    MSSS = 1 - MSE_ens / var_control
+
+    References
+    ----------
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
+    """
+    return ppp(ds, control, comparison, running)
+
+
+#--------------------------------------------#
 # BOOTSTRAPPING 
 # Functions for sampling an ensemble 
 #--------------------------------------------#
@@ -639,128 +981,6 @@ def pseudo_ens_fast(ds3d, control3d, varname=None, shuffle=True, bootstrap=None)
 
 
 
-def mse(ds, control, comparison, running):
-    """
-    Mean Square Error (MSE) metric.
-    """
-    return choose_comparison(ds, comparison)
-
-
-def rmse_v(ds, control, comparison, running):
-    """
-    Root Mean Square Error (RMSE) metric.
-    """
-    return choose_comparison(ds, comparison) ** .5
-
-
-def nrmse(ds, control, comparison, running):
-    """
-    Normalized Root Mean Square Error (NRMSE) metric.
-
-    Formula
-    -------
-    NRMSE = 1 - RMSE_ens / std_control = 1 - (var_ens / var_control ) ** .5
-
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-        Prediction: Potential versus Operational Seasonal Forecast Skill.”
-        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
-        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-        Journal of the Royal Meteorological Society 142, no. 695
-        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-
-    """
-    var = get_variance(control, running=running)
-    ens = choose_comparison(ds, comparison)
-    fac = get_norm_factor(comparison)
-    return (ens / var / fac) ** .5
-
-
-def nev(ds, control, comparison, running):
-    """
-    Normalized Ensemble Variance (NEV) metric.
-
-    Reference
-    ---------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
-      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    """
-    var = get_variance(control, running=running)
-    ens = choose_comparison(ds, comparison)
-    fac = get_norm_factor(comparison)
-    return ens / var / fac
-
-
-def ppp(ds, control, comparison, running):
-    """
-    Prognostic Potential Predictability (PPP) metric.
-
-    Formula
-    -------
-    PPP = 1 - MSE / std_control
-
-    References
-    ----------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-    """
-    var = get_variance(control, running=running)
-    ens = choose_comparison(ds, comparison)
-    fac = get_norm_factor(comparison)
-    return 1 - ens / var / fac
-
-
-def PPP(ds, control, comparison, running):
-    """
-    Wraps ppp.
-    """
-    return ppp(ds, control, comparison, running)
-
-
-def uACC(ds, control, comparison, running):
-    """
-    Unbiased ACC (uACC) metric.
-
-    Formula
-    -------
-    - uACC = PPP ** .5 = MSSS ** .5
-
-    Reference
-    ---------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-      Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-      Prediction: Potential versus Operational Seasonal Forecast Skill.” Climate
-      Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-    """
-    return ppp(ds, control, comparison, running) ** .5
-
-
-def MSSS(ds, control, comparison, running):
-    """
-    Wraps ppp.
-
-    Formula
-    -------
-    MSSS = 1 - MSE_ens / var_control
-
-    References
-    ----------
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-    """
-    return ppp(ds, control, comparison, running)
 
 
 def PM_sig_fast(ds, control, metric=rmse, comparison=m2m, sig=95, bootstrap=10, time_dim='year'):
@@ -904,13 +1124,6 @@ def trend_over_numeric_varnames(df, **kwargs):
     return all_column_trends
 
 
-def normalize(ds, dim=None):
-    """
-    Add description.
-    """
-    return (ds - ds.mean(dim)) / ds.std(dim)
-
-
 def get_anomalous_states(ds, control, threshold=1, varname=varname, area=area, 
                          period=period):
     """
@@ -939,211 +1152,3 @@ def compute_anomalous(ds, control, varname='sos', area='North_Atlantic',
         control, ds_anomalous, metric=metric, bootstrap=bootstrap, sig=sig)
     skill_anomalous = compute(ds_anomalous, control, metric=metric, comparison=comparison)
     return skill_anomalous, threshold_anomalous
-
-
-# Persistence
-def persistence_forecast(ds, control, varname=varname, area=area, period=period, 
-                         comparison=m2e, time_dim='year'):
-    """
-    Generate persistence forecast timeseries.
-    """
-    starting_years = [x - 1100 - 1 for x in ds.ensemble.values]
-    anom = (control.sel(year=starting_years) - control.mean())
-    t = np.arange(1, ds.year.size + 1)
-    tds = np.arange(1900, 1900 + ds.year.size)
-    alpha = control.to_series().autocorr()
-    persistence_forecast_list = []
-    for year in anom.year:
-        ar1 = anom.sel(year=year).values * \
-            np.exp(-alpha * t) + control.mean().values
-        pf = xr.DataArray(data=ar1, coords=[tds], dims=time_dim)
-        pf = pf.expand_dims('ensemble')
-        pf['ensemble'] = [year + 1100 + 1]
-        persistence_forecast_list.append(pf)
-    return xr.concat(persistence_forecast_list, dim='ensemble')
-
-
-def compute_persistence(ds, control, metric=rmse, comparison=m2e, time_dim='year'):
-    """
-    Compute skill for persistence forecast.
-    """
-    persistence_forecasts = persistence_forecast(ds, control)
-    if comparison.__name__ == 'm2e':
-        result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
-    elif comparison.__name__ == 'm2m':
-        persistence_forecasts = persistence_forecasts.expand_dims('member')
-        all_persistence_forecasts = persistence_forecasts.sel(
-            member=[0] * ds.member.size)
-        fct = m2e(all_persistence_forecasts, 'svd')[0]
-        truth = m2e(ds, 'svd')[0]
-        result = metric(fct, truth, 'svd')
-    else:
-        raise ValueError('not defined')
-    result[time_dim] = np.arange(1, ds[time_dim].size + 1)
-    return result
-
-
-def generate_predictability_persistence(s, kind='PPP', percentile=True, length=20):
-    """
-    Calculate the PPP (or NEV) damped persistence mean and range.
-
-    Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be
-    indicated as +- std or 5-95-percentile.
-
-    Reference
-    ---------
-    Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. Appendix
-
-    Parameters
-    ----------
-    s : pandas.series
-        input timeseries from control run
-    kind : str
-        determine kind of damped persistence. 'PPP' or 'NEV' (normalized ensemlbe variance)
-    percentile : bool
-        use percentiles for alpha range
-    length : int
-        length of the output timeseries
-
-    Returns
-    -------
-    PPP_persistence_0 : pandas.series
-        mean damped persistence
-    PPP_persistence_minus : pandas.series
-        lower range damped persistence
-    PP_persistence_plus : pandas.series
-        upper range damped persistence
-
-    Example
-    -------
-    import esmtools as et
-    # s = pd.Series(np.sin(range(1000)+np.cos(range(1000))+np.random.randint(.1,1000)))
-    s = control.sel(area=area,period=period).to_dataframe()[varname]
-    PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = et.prediction.generate_predictability_persistence(
-        s)
-    t = np.arange(0,20+1,1.)
-    plt.plot(PPP_persistence_0,color='black',
-             linestyle='--',label='persistence mean')
-    plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,
-                     color='gray',alpha=.3,label='persistence range')
-    plt.axhline(y=0,color='black')
-
-    """
-    # bootstrapping persistence
-    iterations = 50  # iterations
-    chunk_length = 100  # length of chunks of control run to take lag1 autocorr
-    data = np.zeros(iterations)
-    for i in range(iterations):
-        random_start_year = randint(1900, 2200 - chunk_length)
-        data[i] = s.loc[str(random_start_year):str(
-            random_start_year + chunk_length)].autocorr()
-
-    alpha_0 = np.mean(data)
-    alpha_minus = np.mean(data) - np.std(data)
-    alpha_plus = np.mean(data) + np.std(data)
-    if percentile:
-        alpha_minus = np.percentile(data, 5)
-        alpha_plus = np.percentile(data, 95)
-
-    # persistence function
-    def generate_PPP_persistence(alpha, t):
-        values = np.exp(-2 * alpha * t)  # Griffies 1997
-        s = pd.Series(values, index=t)
-        return s
-
-    t = np.arange(0, length + 1, 1.)
-    PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
-    PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
-    PPP_persistence_plus = generate_PPP_persistence(alpha_minus, t)
-
-    if kind in ['nvar', 'NEV']:
-        PPP_persistence_0 = 1 - PPP_persistence_0
-        PPP_persistence_minus = 1 - PPP_persistence_minus
-        PPP_persistence_plus = 1 - PPP_persistence_plus
-
-    return PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus
-
-
-def generate_damped_persistence_forecast(control, startyear, length=20):
-    """
-    Generate damped persistence forecast.
-
-    Reference
-    ---------
-    - missing: got a script from a collegue
-
-    Parameters
-    ----------
-    control : pandas.series
-        input timeseries from control run
-    startyear : int
-        year damped persistence forecast should start from
-
-    Returns
-    -------
-    ar1 : pandas.series
-        mean damped persistence
-    ar50 : pandas.series
-        50% damped persistence range
-    ar90 : pandas.series
-        90% damped persistence range
-
-    Example
-    -------
-    import esmtools as et
-    ar1, ar50, ar90 = et.prediction.generate_damped_persistence_forecast(
-        s,1919)
-    ar1.plot(label='damped persistence forecast')
-    plt.fill_between(ar1.index,ar1-ar50,ar1+ar50,alpha=.2,
-                     color='gray',label='50% forecast range')
-    plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,
-                     color='gray',label='90% forecast range')
-    s.loc[1919:1939].plot(label='control')
-    plt.legend()
-
-    """
-    anom = (control.loc[startyear] - control.mean())
-    t = np.arange(0., length + 1, 1)
-    alpha = control.autocorr()
-    exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
-    ar1 = exp + control.mean()
-    ar50 = 0.7 * control.std() * np.sqrt(1 - np.exp(-2 * alpha * t))
-    ar90 = 1.7 * control.std() * np.sqrt(1 - np.exp(-2 * alpha * t))
-
-    index = control.loc[startyear:startyear + length].index
-    ar1 = pd.Series(ar1, index=index)
-    ar50 = pd.Series(ar50, index=index)
-    ar90 = pd.Series(ar90, index=index)
-    return ar1, ar50, ar90
-
-
-# utils for xr.Datasets
-def drop_ensembles(ds, rmd_ensemble=[0]):
-    """Drop ensembles from ds."""
-    if all(ens in ds.ensemble.values for ens in rmd_ensemble):
-        ensemble_list = list(ds.ensemble.values)
-        for ens in rmd_ensemble:
-            ensemble_list.remove(ens)
-    else:
-        raise ValueError('select from ensemble starting years', rmd_ensemble)
-    return ds.sel(ensemble=ensemble_list)
-
-
-def drop_members(ds, rmd_member=[0]):
-    """Drop members from ds."""
-    if all(m in ds.member.values for m in rmd_member):
-        member_list = list(ds.member.values)
-        for ens in rmd_member:
-            member_list.remove(ens)
-    else:
-        raise ValueError('select availbale from members', rmd_member)
-    return ds.sel(member=member_list)
-
-
-def select_members_ensembles(ds, m=None, e=None):
-    """Subselect ensembles and members from ds."""
-    if m is None:
-        m = ds.member.values
-    if e is None:
-        e = ds.ensemble.values
-    return ds.sel(member=m, ensemble=e)

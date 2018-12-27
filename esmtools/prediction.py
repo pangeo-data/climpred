@@ -128,6 +128,41 @@ area = 'North_Atlantic'
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
 #--------------------------------------------#
+def _get_variance(control, running=None, time_dim='year'):
+    """
+    Get running variance.
+    """
+    if isinstance(running, int):
+        var = control.rolling(year=running).var().mean(time_dim)
+    else:
+        var = control.var(time_dim)
+    return var
+
+
+def _choose_comparison(ds, comparison):
+    """
+    Choose comparison for any mse-style metric.
+    """
+    comparison_name = comparison.__name__
+    if comparison_name is 'm2e':
+        return ens_var_against_mean(ds)
+    if comparison_name is 'm2c':
+        return ens_var_against_control(ds)
+    if comparison_name is 'm2m':
+        return ens_var_against_every(ds)
+    if comparison_name is 'e2c':
+        return ensmean_against_control(ds)
+
+
+def _get_norm_factor(comparison):
+    """
+    Get normalization factor for ppp, nvar, nrmse.
+    """
+    comparison_name = comparison.__name__
+    if comparison_name is 'm2e':
+        return 1
+    if comparison_name in ['m2c', 'm2m', 'e2c']:
+        return 2
 
 
 #--------------------------------------------#
@@ -196,65 +231,48 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     df = xr.open_dataset(full_path, **kws)
     return df
 
-
-# Diagnostic Potential Predictability (DPP)
-def chunking(ds, number_chunks=False, chunk_length=False, output=False, time_dim='year'):
+#--------------------------------------------#
+# COMPUTE PREDICTABILITY
+# Highest-level features for computing
+# predictability.
+#--------------------------------------------#
+def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, 
+            detrend=False, running=None, varname=None, time_dim='year'):
     """
-    Separate data into chunks and reshapes chunks in a c dimension.
-
-    Specify either the number chunks or the length of chunks.
-    Needed for DPP.
-
-    Parameters
-    ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
-        Input data
-    number_chunks : boolean
-        Number of chunks in the return data
-    chunk_length : boolean
-        Length of chunks
-
-    Returns
-    -------
-    c : DataArray
-        Output data as ds, but with additional dimension c and
-        all same time coordinates
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    control_chunked_into_30yr_chunks = et.prediction.chunking(
-        control,chunk_length=30)
-    control_chunked_into_30_chunks = et.prediction.chunking(
-        control,number_chunks=30)
-
+    Add description here.
     """
-    if number_chunks and not chunk_length:
-        chunk_length = np.floor(ds.year.size / number_chunks)
-        cmin = int(ds.year.min())
-    elif not number_chunks and chunk_length:
-        cmin = int(ds.year.min())
-        number_chunks = int(np.floor(ds.year.size / chunk_length))
+    supervector_dim = 'svd'
+    if anomaly:
+        _ds = ds - control.mean(time_dim)
+        _control = control - control.mean(time_dim)
     else:
-        raise ValueError('set number_chunks or chunk_length to True')
-    c = ds.sel(year=slice(cmin, cmin + chunk_length - 1))
-    c = c.expand_dims('c')
-    c['c'] = [0]
-    for i in range(1, number_chunks):
-        if output:
-            print(i, cmin + chunk_length * i,
-                  cmin + (i + 1) * chunk_length - 1)
-        c2 = ds.sel(year=slice(cmin + chunk_length * i,
-                               cmin + (i + 1) * chunk_length - 1))
-        c2 = c2.expand_dims('c')
-        c2['c'] = [i]
-        c2[time_dim] = c[time_dim]
-        c = xr.concat([c, c2], 'c')
-    return c
+        _ds = ds
+        _control = control
+    if detrend:
+        s, i, _, _, _ = et.stats.xr_linregress(_control, time_dim)
+        _control = _control - \
+            (s * _control[time_dim] - _control[time_dim].values[0])
+        _ds = _ds - (s * _ds[time_dim] - _ds[time_dim].values[0])
 
+    if comparison.__name__ not in ['m2m', 'm2c', 'm2e', 'e2c']:
+        raise ValueError('specify comparison argument')
 
+    if metric.__name__ in ['pearson_r', 'rmse']:
+        fct, truth = comparison(_ds, supervector_dim)
+        res = metric(fct, truth, dim=supervector_dim)
+        res[time_dim]=np.arange(1,res[time_dim].size+1)
+        return res
+    elif metric.__name__ in ['mse', 'rmse_v', 'nrmse', 'nev', 'ppp', 'PPP', 'MSSS', 'uACC']:
+        res = metric(ds, control, comparison, running)
+        res[time_dim]=np.arange(1,res[time_dim].size+1)
+        return res
+    else:
+        raise ValueError('specify metric argument')
+
+#--------------------------------------------#
+# Diagnostic Potential Predictability (DPP)
+# Functions related to DPP from Boer et al.
+#--------------------------------------------#
 def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim='year'):
     """
     Calculate Diagnostic Potential Predictability (DPP) as potentially predictable variance fraction (ppvf) in Boer 2004.
@@ -297,6 +315,53 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim='year'):
     ds_DPPm10 = et.prediction.DPP(ds,m=10,chunk=True)
 
     """
+    def _chunking(ds, number_chunks=False, chunk_length=False, output=False, 
+                  time_dim='time'):
+        """
+        Separate data into chunks and reshapes chunks in a c dimension.
+
+        Specify either the number chunks or the length of chunks.
+        Needed for DPP.
+
+        Parameters
+        ----------
+        ds : DataArray with year dimension (optional spatial coordinates)
+            Input data
+        number_chunks : boolean
+            Number of chunks in the return data
+        chunk_length : boolean
+            Length of chunks
+
+        Returns
+        -------
+        c : DataArray
+            Output data as ds, but with additional dimension c and
+            all same time coordinates
+        """
+        if number_chunks and not chunk_length:
+            chunk_length = np.floor(ds.year.size / number_chunks)
+            cmin = int(ds.year.min())
+        elif not number_chunks and chunk_length:
+            cmin = int(ds.year.min())
+            number_chunks = int(np.floor(ds.year.size / chunk_length))
+        else:
+            raise ValueError('set number_chunks or chunk_length to True')
+        c = ds.sel(year=slice(cmin, cmin + chunk_length - 1))
+        c = c.expand_dims('c')
+        c['c'] = [0]
+        for i in range(1, number_chunks):
+            if output:
+                print(i, cmin + chunk_length * i,
+                      cmin + (i + 1) * chunk_length - 1)
+            c2 = ds.sel(year=slice(cmin + chunk_length * i,
+                        cmin + (i + 1) * chunk_length - 1))
+            c2 = c2.expand_dims('c')
+            c2['c'] = [i]
+            c2[time_dim] = c[time_dim]
+            c = xr.concat([c, c2], 'c')
+        return c
+     
+
     if not chunk:
         s2v = ds.rolling(year=m, min_periods=1, center=True).mean().var(time_dim)
         s2e = (ds - ds.rolling(year=m, min_periods=1,
@@ -304,9 +369,9 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim='year'):
         s2 = s2v + s2e
     if chunk:
         # first chunk
-        chunked_means = chunking(ds, chunk_length=m).mean(time_dim)
+        chunked_means = _chunking(ds, chunk_length=m).mean(time_dim)
         # sub means in chunks
-        chunked_deviations = chunking(ds, chunk_length=m) - chunked_means
+        chunked_deviations = _chunking(ds, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
         if var_all_e:
             s2e = chunked_deviations.var([time_dim, 'c'])
@@ -317,9 +382,79 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim='year'):
     return DPP
 
 
-# Prognostic Potential Predictability Griffies & Bryan 1997
-# 3 different ways of calculation ensemble spread:
-def ens_var_against_mean(ds):
+#--------------------------------------------#
+# COMPARISONS  
+# Ways to calculate ensemble spread. 
+# Generally from Griffies & Bryan 1997
+#--------------------------------------------#
+def _m2m(ds, supervector_dim):
+    """
+    Create two supervectors to compare members to all other members.
+    """
+    truth_list = []
+    fct_list = []
+    for m in ds.member.values:
+        # drop the member being truth
+        ds_reduced = drop_members(ds, rmd_member=[m])
+        truth = ds.sel(member=m)
+        for m2 in ds_reduced.member:
+            for e in ds.ensemble:
+                truth_list.append(truth.sel(ensemble=e))
+                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
+    return fct, truth
+
+
+def _m2e(ds3d, supervector_dim):
+    """
+    Create two supervectors to compare members to ensemble mean.
+    """
+    truth_list = []
+    fct_list = []
+    mean = ds3d.mean('member')
+    for m in range(ds3d.member.size):
+        for e in ds3d.ensemble:
+            truth_list.append(mean.sel(ensemble=e))
+            fct_list.append(ds3d.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
+    return fct, truth
+
+
+def _m2c(ds3d, supervector_dim, control_member=0):
+    """
+    Create two supervectors to compare members to control.
+    """
+    truth_list = []
+    fct_list = []
+    truth = ds3d.sel(member=control_member)
+    # drop the member being truth
+    ds3d_dropped = drop_members(ds3d, rmd_member=[control_member])
+    for m in ds3d_dropped.member:
+        for e in ds3d_dropped.ensemble:
+            fct_list.append(truth.sel(ensemble=e))
+            truth_list.append(ds3d_dropped.sel(member=m, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
+
+    return fct, truth
+
+
+def _e2c(ds, supervector_dim, control_member=0):
+    """
+    Create two supervectors to compare ensemble mean to control.
+    """
+    truth = ds.sel(member=control_member)
+    truth = truth.rename({'ensemble': supervector_dim})
+    # drop the member being truth
+    ds = drop_members(ds, rmd_member=[control_member])
+    fct = ds.mean('member')
+    fct = fct.rename({'ensemble': supervector_dim})
+    return fct, truth
+
+
+def _ens_var_against_mean(ds):
     """
     Calculate the ensemble spread (ensemble variance (squared difference between each ensemble member and the ensemble mean) as a function of time).
 
@@ -345,7 +480,7 @@ def ens_var_against_mean(ds):
     return ds.var('member').mean('ensemble')
 
 
-def ens_var_against_control(ds):
+def _ens_var_against_control(ds):
     """
     See ens_var_against_mean(ds).
 
@@ -357,7 +492,7 @@ def ens_var_against_control(ds):
     return var.mean('ensemble')
 
 
-def ens_var_against_every(ds):
+def _ens_var_against_every(ds):
     """
     See ens_var_against_mean(ds).
 
@@ -373,6 +508,20 @@ def ens_var_against_every(ds):
     return var.mean('ensemble')
 
 
+def _ensmean_against_control(ds, control_member=0):
+    """
+    Add description here.
+    """
+    # drop the member being truth
+    truth = ds.sel(member=control_member)
+    ds = drop_members(ds, rmd_member=[control_member])
+    return ((ds.mean('member') - truth)**2).mean('ensemble')
+
+
+#--------------------------------------------#
+# BOOTSTRAPPING 
+# Functions for sampling an ensemble 
+#--------------------------------------------#
 def pseudo_ens(ds, control, time_dim='year'):
     """
     Create a pseudo-ensemble from control run.
@@ -487,152 +636,7 @@ def pseudo_ens_fast(ds3d, control3d, varname=None, shuffle=True, bootstrap=None)
     return new
 
 
-def m2m(ds, supervector_dim):
-    """
-    Create two supervectors to compare members to all other members.
-    """
-    truth_list = []
-    fct_list = []
-    for m in ds.member.values:
-        # drop the member being truth
-        ds_reduced = drop_members(ds, rmd_member=[m])
-        truth = ds.sel(member=m)
-        for m2 in ds_reduced.member:
-            for e in ds.ensemble:
-                truth_list.append(truth.sel(ensemble=e))
-                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
-    return fct, truth
 
-
-def m2e(ds3d, supervector_dim):
-    """
-    Create two supervectors to compare members to ensemble mean.
-    """
-    truth_list = []
-    fct_list = []
-    mean = ds3d.mean('member')
-    for m in range(ds3d.member.size):
-        for e in ds3d.ensemble:
-            truth_list.append(mean.sel(ensemble=e))
-            fct_list.append(ds3d.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
-    return fct, truth
-
-
-def m2c(ds3d, supervector_dim, control_member=0):
-    """
-    Create two supervectors to compare members to control.
-    """
-    truth_list = []
-    fct_list = []
-    truth = ds3d.sel(member=control_member)
-    # drop the member being truth
-    ds3d_dropped = drop_members(ds3d, rmd_member=[control_member])
-    for m in ds3d_dropped.member:
-        for e in ds3d_dropped.ensemble:
-            fct_list.append(truth.sel(ensemble=e))
-            truth_list.append(ds3d_dropped.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
-
-    return fct, truth
-
-
-def e2c(ds, supervector_dim, control_member=0):
-    """
-    Create two supervectors to compare ensemble mean to control.
-    """
-    truth = ds.sel(member=control_member)
-    truth = truth.rename({'ensemble': supervector_dim})
-    # drop the member being truth
-    ds = drop_members(ds, rmd_member=[control_member])
-    fct = ds.mean('member')
-    fct = fct.rename({'ensemble': supervector_dim})
-    return fct, truth
-
-
-def ensmean_against_control(ds, control_member=0):
-    """
-    Add description here.
-    """
-    # drop the member being truth
-    truth = ds.sel(member=control_member)
-    ds = drop_members(ds, rmd_member=[control_member])
-    return ((ds.mean('member') - truth)**2).mean('ensemble')
-
-
-def compute(ds, control, metric=pearson_r, comparison=m2m, anomaly=False, 
-            detrend=False, running=None, varname=None, time_dim='year'):
-    """
-    Add description here.
-    """
-    supervector_dim = 'svd'
-    if anomaly:
-        _ds = ds - control.mean(time_dim)
-        _control = control - control.mean(time_dim)
-    else:
-        _ds = ds
-        _control = control
-    if detrend:
-        s, i, _, _, _ = et.stats.xr_linregress(_control, time_dim)
-        _control = _control - \
-            (s * _control[time_dim] - _control[time_dim].values[0])
-        _ds = _ds - (s * _ds[time_dim] - _ds[time_dim].values[0])
-
-    if comparison.__name__ not in ['m2m', 'm2c', 'm2e', 'e2c']:
-        raise ValueError('specify comparison argument')
-
-    if metric.__name__ in ['pearson_r', 'rmse']:
-        fct, truth = comparison(_ds, supervector_dim)
-        res = metric(fct, truth, dim=supervector_dim)
-        res[time_dim]=np.arange(1,res[time_dim].size+1)
-        return res
-    elif metric.__name__ in ['mse', 'rmse_v', 'nrmse', 'nev', 'ppp', 'PPP', 'MSSS', 'uACC']:
-        res = metric(ds, control, comparison, running)
-        res[time_dim]=np.arange(1,res[time_dim].size+1)
-        return res
-    else:
-        raise ValueError('specify metric argument')
-
-
-def get_variance(control, running=None, time_dim='year'):
-    """
-    Get running variance.
-    """
-    if isinstance(running, int):
-        var = control.rolling(year=running).var().mean(time_dim)
-    else:
-        var = control.var(time_dim)
-    return var
-
-
-def choose_comparison(ds, comparison):
-    """
-    Choose comparison for any mse-style metric.
-    """
-    comparison_name = comparison.__name__
-    if comparison_name is 'm2e':
-        return ens_var_against_mean(ds)
-    if comparison_name is 'm2c':
-        return ens_var_against_control(ds)
-    if comparison_name is 'm2m':
-        return ens_var_against_every(ds)
-    if comparison_name is 'e2c':
-        return ensmean_against_control(ds)
-
-
-def get_norm_factor(comparison):
-    """
-    Get normalization factor for ppp, nvar, nrmse.
-    """
-    comparison_name = comparison.__name__
-    if comparison_name is 'm2e':
-        return 1
-    if comparison_name in ['m2c', 'm2m', 'e2c']:
-        return 2
 
 
 def mse(ds, control, comparison, running):

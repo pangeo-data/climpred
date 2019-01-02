@@ -146,7 +146,8 @@ def _ensemble_variance(ds, comparison):
 
 def _get_norm_factor(comparison):
     """
-    Get normalization factor for ppp, nvar, nrmse.
+    Get normalization factor for ppp, nvar, nrmse. Used in PM_compute.
+
     m2e gets smaller rmse's than m2m by design, see Seferian 2018 et al.
     # m2m-ensemble variance should be divided by 2 to get var(control)
     """
@@ -157,6 +158,25 @@ def _get_norm_factor(comparison):
         return 1  # 2
     else:
         raise ValueError('specify comparison to get normalization factor.')
+
+
+def _control_for_reference_period(control, reference_period='MK', obs_years=40, time_dim=time_dim):
+    """
+    Modifies control according to knowledge approach, see Hawkins 2016.
+
+    Used in PM_compute(metric=[_mse, _rmse_v]
+    """
+    if reference_period == 'MK':
+        _control = control
+    elif reference_period == 'OP_full_length':
+        _control = control - \
+            control.rolling(year=obs_years, min_periods=1,
+                            center=True).mean() + control.mean(time_dim)
+    elif reference_period == 'OP':
+        raise ValueError('not yet implemented')
+    else:
+        raise ValueError("choose a reference period")
+    return _control
 
 
 def _drop_ensembles(ds, rmd_ensemble=[0]):
@@ -256,24 +276,6 @@ def load_dataset(name, cache=True, data_home=None, **kws):
     df = xr.open_dataset(full_path, **kws)
     return df
 
-
-def _control_for_reference_period(control, reference_period='MK', obs_years=40, time_dim=time_dim):
-    """
-    Modifies control according to knowledge approach, see Hawkins 2016.
-
-    Used in PM_compute(metric=[_mse, _rmse_v]
-    """
-    if reference_period == 'MK':
-        _control = control
-    elif reference_period == 'OP_full_length':
-        _control = control - \
-            control.rolling(year=obs_years, min_periods=1,
-                            center=True).mean() + control.mean(time_dim)
-    elif reference_period == 'OP':
-        raise ValueError('not yet implemented')
-    else:
-        raise ValueError("choose a reference period")
-    return _control
 
 #--------------------------------------------#
 # COMPARISONS

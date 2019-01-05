@@ -102,7 +102,7 @@ from bs4 import BeautifulSoup
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
 
-import esmtools as et
+from .stats import xr_corr, xr_linregress
 
 # standard setup for load dataset and examples
 varname = 'tos'
@@ -186,18 +186,18 @@ def _drop_ensembles(ds, rmd_ensemble=[0]):
         for ens in rmd_ensemble:
             ensemble_list.remove(ens)
     else:
-        raise ValueError('select from ensemble starting years', rmd_ensemble)
+        raise ValueError('select available ensemble starting years', rmd_ensemble)
     return ds.sel(ensemble=ensemble_list)
 
 
 def _drop_members(ds, rmd_member=[0]):
-    """Drop members from ds."""
+    """Drop members by name selection .sel(member=) from ds."""
     if all(m in ds.member.values for m in rmd_member):
         member_list = list(ds.member.values)
         for ens in rmd_member:
             member_list.remove(ens)
     else:
-        raise ValueError('select availbale from members', rmd_member)
+        raise ValueError('select available members', rmd_member)
     return ds.sel(member=member_list)
 
 
@@ -315,27 +315,25 @@ def _ens_var_against_every(ds):
     Only difference is that now distance is evaluated against each ensemble
     member and then averaged.
     """
-    var = ds.copy()
-    m = ds.member.size
     var_list = []
-    for i in range(0, m):
+    for m in ds.member.values:
         var_list.append(
-            ((ds - ds.sel(member=i))**2).sum(dim='member') / (m - 1))
+            ((ds - ds.sel(member=m))**2).sum(dim='member') / (m - 1))
     var = xr.concat(var_list, 'member').mean('member')
     return var.mean('ensemble')
 
 
-def _m2e(ds3d, supervector_dim):
+def _m2e(ds, supervector_dim):
     """
     Create two supervectors to compare all members to ensemble mean.
     """
     truth_list = []
     fct_list = []
-    mean = ds3d.mean('member')
-    for m in range(ds3d.member.size):
-        for e in ds3d.ensemble:
+    mean = ds.mean('member')
+    for m in ds.member.values:
+        for e in ds.ensemble.values:
             truth_list.append(mean.sel(ensemble=e))
-            fct_list.append(ds3d.sel(member=m, ensemble=e))
+            fct_list.append(ds.sel(member=m, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
@@ -367,26 +365,29 @@ def _ens_var_against_mean(ds):
     return ds.var('member').mean('ensemble')
 
 
-def _m2c(ds3d, supervector_dim, control_member=0):
+def _m2c(ds, supervector_dim, control_member=[0]):
     """
     Create two supervectors to compare all members to control.
+
+    control_member: list or int??
+        index to be removed, default 0
     """
     truth_list = []
     fct_list = []
-    truth = ds3d.sel(member=control_member)
+    truth = ds.isel(member=control_member).squeeze()
     # drop the member being truth
-    ds3d_dropped = _drop_members(ds3d, rmd_member=[control_member])
-    for m in ds3d_dropped.member:
-        for e in ds3d_dropped.ensemble:
+    ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
+    for m in ds_dropped.member.values:
+        for e in ds_dropped.ensemble.values:
             fct_list.append(truth.sel(ensemble=e))
-            truth_list.append(ds3d_dropped.sel(member=m, ensemble=e))
+            truth_list.append(ds_dropped.sel(member=m, ensemble=e))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
 
     return fct, truth
 
 
-def _ens_var_against_control(ds):
+def _ens_var_against_control(ds, control_member=0):
     """
     See ens_var_against_mean(ds).
 
@@ -394,18 +395,18 @@ def _ens_var_against_control(ds):
     the control run.
     """
     var = ds.copy()
-    var = ((ds - ds.sel(member=0))**2).sum('member') / (ds.member.size - 1)
+    var = ((ds - ds.sel(member=ds.member.values[control_member]))**2).sum('member') / (ds.member.size - 1)
     return var.mean('ensemble')
 
 
-def _e2c(ds, supervector_dim, control_member=0):
+def _e2c(ds, supervector_dim, control_member=[0]):
     """
     Create two supervectors to compare ensemble mean to control.
     """
-    truth = ds.sel(member=control_member)
+    truth = ds.isel(member=control_member).squeeze()
     truth = truth.rename({'ensemble': supervector_dim})
     # drop the member being truth
-    ds = _drop_members(ds, rmd_member=[control_member])
+    ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     fct = ds.mean('member')
     fct = fct.rename({'ensemble': supervector_dim})
     return fct, truth
@@ -419,8 +420,8 @@ def _ensmean_against_control(ds, control_member=0):
     control.
     """
     # drop the member being truth
-    truth = ds.sel(member=control_member)
-    ds = _drop_members(ds, rmd_member=[control_member])
+    truth = ds.sel(member=ds.member.values[control_member])
+    ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     return ((ds.mean('member') - truth)**2).mean('ensemble')
 
 
@@ -591,10 +592,6 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
         metric from [_rmse, _pearson_r, _mse, _rmse_r, _ppp, _nev, _uACC, _MSSS]
     comparison : function
         comparison from [_m2m, _m2e, _m2c, _e2c]
-    anomaly : bool
-        if true, remove control.mean(time_dim) from ds
-    detrend : bool
-        if true, remove trend of input data
     running : int
         Size of the running window for variance smoothing ( only used for PPP, NEV)
     time_dim : str
@@ -606,23 +603,11 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
         skill score
     """
     supervector_dim = 'svd'
-    if anomaly:
-        _ds = ds - control.mean(time_dim)
-        _control = control - control.mean(time_dim)
-    else:
-        _ds = ds
-        _control = control
-    if detrend:
-        s, i, _, _, _ = et.stats.xr_linregress(_control, time_dim)
-        _control = _control - \
-            (s * _control[time_dim] - _control[time_dim].values[0])
-        _ds = _ds - (s * _ds[time_dim] - _ds[time_dim].values[0])
-
     if comparison.__name__ not in ['_m2m', '_m2c', '_m2e', '_e2c']:
         raise ValueError('specify comparison argument')
 
     if metric.__name__ in ['_pearson_r', '_rmse']:
-        fct, truth = comparison(_ds, supervector_dim)
+        fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
     elif metric.__name__ in ['_mse', '_rmse_v', '_nrmse', '_nev', '_ppp', '_PPP', '_MSSS', '_uACC']:
@@ -674,7 +659,7 @@ def generate_damped_persistence_forecast(control, startyear, length=20, time_dim
     """
     anom = (control.sel({time_dim: startyear}) - control.mean()).values
     t = np.arange(0., length + 1, 1)
-    alpha = et.stats.xr_corr(control).values
+    alpha = xr_corr(control).values
     exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
     ar1 = exp + control.mean().values
     ar50 = 0.7 * control.std().values * np.sqrt(1 - np.exp(-2 * alpha * t))
@@ -792,7 +777,7 @@ def damped_persistence_forecast(ds, control, varname=varname, area=area, period=
 
 def PM_compute_damped_persistence(ds, control, metric=_rmse, comparison=_m2e, time_dim=time_dim):
     """
-    Compute skill for persistence forecast. See compute().
+    Compute skill for persistence forecast. See PM_compute().
     """
     persistence_forecasts = damped_persistence_forecast(ds, control)
     if comparison.__name__ == '_m2e':

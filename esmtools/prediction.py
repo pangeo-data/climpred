@@ -312,7 +312,7 @@ def _ens_var_against_every(ds):
     var_list = []
     for m in ds.member.values:
         var_list.append(
-            ((ds - ds.sel(member=m))**2).sum(dim='member') / (m - 1))
+            ((ds - ds.sel(member=m))**2).sum(dim='member') / (ds.member.size - 1))
     var = xr.concat(var_list, 'member').mean('member')
     return var.mean('ensemble')
 
@@ -652,7 +652,7 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     """
     anom = (control.sel(time=startyear) - control.mean('time')).values
     t = np.arange(0., length + 1, 1)
-    alpha = xr_corr(control).values
+    alpha = xr_corr(control,dim='time').values
     exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
     ar1 = exp + control.mean('time').values
     ar50 = 0.7 * control.std('time').values * np.sqrt(1 - np.exp(-2 * alpha * t))
@@ -760,7 +760,7 @@ def damped_persistence_forecast(ds, control, varname='tos', area='global', perio
     for ens in anom['time']:
         ar1 = anom.sel(time=ens).values * \
             np.exp(-alpha * t) + control.mean('time').values
-        pf = xr.DataArray(data=ar1, coords=[t], dims='time_dim')
+        pf = xr.DataArray(data=ar1, coords=[t], dims='time')
         pf = pf.expand_dims('ensemble')
         pf['ensemble'] = [ens]
         persistence_forecast_list.append(pf)
@@ -776,7 +776,7 @@ def PM_compute_damped_persistence(ds, control, metric=_rmse, comparison=_m2e):
         result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
     elif comparison.__name__ == '_m2m':
         persistence_forecasts = persistence_forecasts.expand_dims('member')
-        all_persistence_forecasts = persistence_forecasts.sel(
+        all_persistence_forecasts = persistence_forecasts.isel(
             member=[0] * ds.member.size)
         fct = _m2e(all_persistence_forecasts, 'svd')[0]
         truth = _m2e(ds, 'svd')[0]

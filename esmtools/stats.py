@@ -478,7 +478,7 @@ def xr_autocorr(da, lag=1, dim='time', r_only=False):
     else:
         return r, p
 
-def xr_corr(ds, lag=1, dim='year'):
+def xr_corr(ds, lag=1, dim='time'):
     """
     Calculated lagged correlation of a xr.Dataset.
 

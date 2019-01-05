@@ -53,43 +53,43 @@ This module works on xr.Datasets with the following dimensions and coordinates:
 - 1D (Predictability of timelines of preprocessed regions):
     - ensemble
     - area
-    - year (as in Lead Year)
+    - time (as in Lead Year)
     - period (time averaging: yearmean, seasonal mean)
 
 Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
 <xarray.Dataset>
-Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5, year: 20)
+Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5, 'time': 20)
 Coordinates:
   * ensemble                 (ensemble) int64 3014 3023 3045 3061 3124 3139 ...
   * area                     (area) object 'global' 'North_Atlantic_SPG' ...
-  * year                     (year) int64 1 2 3 4 5 6 ...
+  * 'time'                     (time) int64 1 2 3 4 5 6 ...
   * period                   (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
 Dimensions without coordinates: member
 Data variables:
-    tos                   (period, year, area, ensemble, member) float32 ...
+    tos                   (period, 'time', area, ensemble, member) float32 ...
 ...
 
 - 3D (Predictability maps):
     - ensemble
     - lon(y, x), lat(y, x)
-    - year (as in Lead Year)
+    - time (as in Lead Year)
     - period (time averaging: yearmean, seasonal mean)
 
 Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
 <xarray.Dataset>
-Dimensions:      (bnds: 2, ensemble: 11, member: 9, vertices: 4, x: 256, y: 220, year: 21)
+Dimensions:      (bnds: 2, ensemble: 11, member: 9, vertices: 4, x: 256, y: 220, time: 21)
 Coordinates:
     lon          (y, x) float64 -47.25 -47.69 -48.12 ... 131.3 132.5 133.8
     lat          (y, x) float64 76.36 76.3 76.24 76.17 ... -77.25 -77.39 -77.54
   * ensemble     (ensemble) int64 3061 3124 3178 3023 ... 3228 3175 3144 3139
-  * year         (year) int64 1 2 3 4 5 ... 19 20
+  * time         (time) int64 1 2 3 4 5 ... 19 20
 Dimensions without coordinates: bnds, member, vertices, x, y
 Data variables:
-    tos          (year, ensemble, member, y, x) float32 dask.array<shape=(21, 11, 9, 220, 256), chunksize=(1, 1, 1, 220, 256)>
+    tos          (time, ensemble, member, y, x) float32 dask.array<shape=(21, 11, 9, 220, 256), chunksize=(1, 1, 1, 220, 256)>
 ...
 
 This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model) netcdf output.
-The time dimensions is called 'year' and is in integer.
+The time dimensions is called 'time' and is in integer, not datetime[ns]
 
 """
 import os
@@ -108,7 +108,6 @@ from .stats import xr_corr, xr_linregress
 varname = 'tos'
 period = 'ym'
 area = 'North_Atlantic'
-time_dim = 'year'  # time
 
 #--------------------------------------------#
 # HELPER FUNCTIONS
@@ -116,16 +115,16 @@ time_dim = 'year'  # time
 #--------------------------------------------#
 
 
-def _get_variance(control, running=None, time_dim=time_dim):
+def _get_variance(control, running=None):
     """
     Get running variance.
 
     Needed for compute and metrics PPP and NEV to normalize a variance.
     """
     if isinstance(running, int):
-        var = control.rolling(year=running).var().mean(time_dim)
+        var = control.rolling(time=running).var().mean('time')
     else:
-        var = control.var(time_dim)
+        var = control.var('time')
     return var
 
 
@@ -160,7 +159,7 @@ def _get_norm_factor(comparison):
         raise ValueError('specify comparison to get normalization factor.')
 
 
-def _control_for_reference_period(control, reference_period='MK', obs_years=40, time_dim=time_dim):
+def _control_for_reference_period(control, reference_period='MK', obs_time=40):
     """
     Modifies control according to knowledge approach, see Hawkins 2016.
 
@@ -170,8 +169,8 @@ def _control_for_reference_period(control, reference_period='MK', obs_years=40, 
         _control = control
     elif reference_period == 'OP_full_length':
         _control = control - \
-            control.rolling(year=obs_years, min_periods=1,
-                            center=True).mean() + control.mean(time_dim)
+            control.rolling(time=obs_time, min_periods=1,
+                            center=True).mean() + control.mean('time')
     elif reference_period == 'OP':
         raise ValueError('not yet implemented')
     else:
@@ -345,7 +344,7 @@ def _ens_var_against_mean(ds):
 
     Parameters
     ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
+    ds : DataArray with time dimension (optional spatial coordinates)
         Input data
 
     Returns
@@ -576,7 +575,7 @@ def _msss(ds, control, comparison, running):
 # predictability.
 #--------------------------------------------#
 def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
-               detrend=False, running=None, time_dim=time_dim):
+               detrend=False, running=None):
     """
     Compute a predictability skill score for a perfect-model framework simulation dataset.
 
@@ -586,7 +585,7 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
 
     Parameters
     ----------
-    ds, control : xr.DataArray or xr.Dataset with time_dim dimension (optional spatial coordinates)
+    ds, control : xr.DataArray or xr.Dataset with 'time' dimension (optional spatial coordinates)
         input data
     metric : function
         metric from [_rmse, _pearson_r, _mse, _rmse_r, _ppp, _nev, _uACC, _MSSS]
@@ -594,8 +593,6 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
         comparison from [_m2m, _m2e, _m2c, _e2c]
     running : int
         Size of the running window for variance smoothing ( only used for PPP, NEV)
-    time_dim : str
-        Name of the time dimension (likely 'year' or 'time')
 
     Returns
     -------
@@ -620,7 +617,8 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
-def generate_damped_persistence_forecast(control, startyear, length=20, time_dim=time_dim):
+# TODO: adapt for maps
+def generate_damped_persistence_forecast(control, startyear, length=20):
     """
     Generate damped persistence forecast mean and range.
 
@@ -653,26 +651,25 @@ def generate_damped_persistence_forecast(control, startyear, length=20, time_dim
                      color='gray',label='50% forecast range')
     plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,
                      color='gray',label='90% forecast range')
-    control_.sel(year=slice(3014,3034)).plot(label='control')
+    control_.sel(time=slice(3014,3034)).plot(label='control')
     plt.legend()
 
     """
-    anom = (control.sel({time_dim: startyear}) - control.mean()).values
+    anom = (control.sel(time=startyear) - control.mean('time')).values
     t = np.arange(0., length + 1, 1)
     alpha = xr_corr(control).values
     exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
-    ar1 = exp + control.mean().values
-    ar50 = 0.7 * control.std().values * np.sqrt(1 - np.exp(-2 * alpha * t))
-    ar90 = 1.7 * control.std().values * np.sqrt(1 - np.exp(-2 * alpha * t))
+    ar1 = exp + control.mean('time').values
+    ar50 = 0.7 * control.std('time').values * np.sqrt(1 - np.exp(-2 * alpha * t))
+    ar90 = 1.7 * control.std('time').values * np.sqrt(1 - np.exp(-2 * alpha * t))
 
-    index = control.sel(
-        {time_dim: slice(startyear, startyear + length)})[time_dim]
+    index = control.sel(time=slice(startyear, startyear + length))['time']
     ar1 = pd.Series(ar1, index=index)
     ar50 = pd.Series(ar50, index=index)
     ar90 = pd.Series(ar90, index=index)
     return ar1, ar50, ar90
 
-
+# TODO: needs complete redo
 def generate_predictability_damped_persistence(s, kind='PPP', percentile=True, length=20):
     """
     Calculate the PPP (or NEV) damped persistence mean and range in PPP plot.
@@ -724,7 +721,7 @@ def generate_predictability_damped_persistence(s, kind='PPP', percentile=True, l
     chunk_length = 100  # length of chunks of control run to take lag1 autocorr
     data = np.zeros(iterations)
     for i in range(iterations):
-        random_start_year = randint(1900, 2200 - chunk_length)
+        random_start_year = randint(s.index.min(), s.index.max() - chunk_length)
         data[i] = s.loc[str(random_start_year):str(
             random_start_year + chunk_length)].autocorr()
 
@@ -756,26 +753,26 @@ def generate_predictability_damped_persistence(s, kind='PPP', percentile=True, l
 
 # TODO: Adjust for 3d fields
 def damped_persistence_forecast(ds, control, varname=varname, area=area, period=period,
-                                comparison=_m2e, time_dim=time_dim):
+                                comparison=_m2e):
     """
     Generate damped persistence forecast timeseries.
     """
     starting_years = ds.ensemble.values
-    anom = (control.sel({time_dim: starting_years}) - control.mean())
-    t = ds[time_dim]
+    anom = (control.sel(time=starting_years) - control.mean('time'))
+    t = ds['time']
     alpha = control.to_series().autocorr()
     persistence_forecast_list = []
-    for ens in anom[time_dim]:
-        ar1 = anom.sel({time_dim: ens}).values * \
-            np.exp(-alpha * t) + control.mean(time_dim).values
-        pf = xr.DataArray(data=ar1, coords=[t], dims=time_dim)
+    for ens in anom['time']:
+        ar1 = anom.sel(time=ens).values * \
+            np.exp(-alpha * t) + control.mean('time').values
+        pf = xr.DataArray(data=ar1, coords=[t], dims='time_dim')
         pf = pf.expand_dims('ensemble')
         pf['ensemble'] = [ens]
         persistence_forecast_list.append(pf)
     return xr.concat(persistence_forecast_list, dim='ensemble')
 
 
-def PM_compute_damped_persistence(ds, control, metric=_rmse, comparison=_m2e, time_dim=time_dim):
+def PM_compute_damped_persistence(ds, control, metric=_rmse, comparison=_m2e):
     """
     Compute skill for persistence forecast. See PM_compute().
     """
@@ -798,7 +795,7 @@ def PM_compute_damped_persistence(ds, control, metric=_rmse, comparison=_m2e, ti
 # Diagnostic Potential Predictability (DPP)
 # Functions related to DPP from Boer et al.
 #--------------------------------------------#
-def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
+def DPP(ds, m=10, chunk=True, var_all_e=False):
     """
     Calculate Diagnostic Potential Predictability (DPP) as potentially predictable variance fraction (ppvf) in Boer 2004.
 
@@ -820,7 +817,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
 
     Parameters
     ----------
-    ds : DataArray with year dimension (optional spatial coordinates)
+    ds : DataArray with time dimension (optional spatial coordinates)
     m : int
         separation time scale in years between predictable low-freq
         component and high-freq noise
@@ -830,7 +827,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
 
     Returns
     -------
-    DPP : DataArray as ds without time/year dimension
+    DPP : DataArray as ds without time dimension
 
     Example 1D
     ----------
@@ -840,8 +837,8 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
     ds_DPPm10 = et.prediction.DPP(ds,m=10,chunk=True)
 
     """
-    def _chunking(ds, number_chunks=False, chunk_length=False,
-                  time_dim=time_dim):
+    # TODO: rename or find xr equiv
+    def _chunking(ds, number_chunks=False, chunk_length=False):
         """
         Separate data into chunks and reshapes chunks in a c dimension.
 
@@ -850,7 +847,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
 
         Parameters
         ----------
-        ds : DataArray with year dimension (optional spatial coordinates)
+        ds : DataArray with time dimension (optional spatial coordinates)
             Input data
         number_chunks : boolean
             Number of chunks in the return data
@@ -864,41 +861,41 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
             all same time coordinates
         """
         if number_chunks and not chunk_length:
-            chunk_length = np.floor(ds[time_dim].size / number_chunks)
-            cmin = int(ds[time_dim].min())
+            chunk_length = np.floor(ds['time'].size / number_chunks)
+            cmin = int(ds['time'].min())
         elif not number_chunks and chunk_length:
-            cmin = int(ds[time_dim].min())
-            number_chunks = int(np.floor(ds[time_dim].size / chunk_length))
+            cmin = int(ds['time'].min())
+            number_chunks = int(np.floor(ds['time'].size / chunk_length))
         else:
             raise ValueError('set number_chunks or chunk_length to True')
-        c = ds.sel({time_dim: slice(cmin, cmin + chunk_length - 1)})
+        c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
         c = c.expand_dims('c')
         c['c'] = [0]
         for i in range(1, number_chunks):
-            c2 = ds.sel({time_dim: slice(cmin + chunk_length * i,
-                                         cmin + (i + 1) * chunk_length - 1)})
+            c2 = ds.sel(time=slice(cmin + chunk_length * i,
+                                         cmin + (i + 1) * chunk_length - 1))
             c2 = c2.expand_dims('c')
             c2['c'] = [i]
-            c2[time_dim] = c[time_dim]
+            c2['time'] = c['time']
             c = xr.concat([c, c2], 'c')
         return c
 
     if not chunk:
-        s2v = ds.rolling({time_dim: m}).mean().var(time_dim)
-        s2e = (ds - ds.rolling({time_dim: m}).mean()).var(time_dim)
+        s2v = ds.rolling(time=m).mean().var('time')
+        s2e = (ds - ds.rolling(time=m).mean()).var('time')
         s2 = s2v + s2e
     if chunk:
         # first chunk
         chunked_means = _chunking(
-            ds, chunk_length=m, time_dim=time_dim).mean(time_dim)
+            ds, chunk_length=m).mean('time')
         # sub means in chunks
         chunked_deviations = _chunking(
-            ds, chunk_length=m, time_dim=time_dim) - chunked_means
+            ds, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
         if var_all_e:
-            s2e = chunked_deviations.var([time_dim, 'c'])
+            s2e = chunked_deviations.var(['time', 'c'])
         else:
-            s2e = chunked_deviations.var(time_dim).mean('c')
+            s2e = chunked_deviations.var('time').mean('c')
         s2 = s2v + s2e
     DPP = (s2v - s2 / (m)) / (s2)
     return DPP
@@ -908,7 +905,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False, time_dim=time_dim):
 # BOOTSTRAPPING
 # Functions for sampling an ensemble
 #--------------------------------------------#
-def pseudo_ens(ds, control, time_dim=time_dim):
+def pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -918,12 +915,12 @@ def pseudo_ens(ds, control, time_dim=time_dim):
 
     Parameters
     ----------
-    control : xr.DataArray with year dimension
+    control : xr.DataArray with 'time' dimension
         Input ensemble data
 
     Returns
     -------
-    ds_e : xr.DataArray with year, ensemble, member dimension
+    ds_e : xr.DataArray with time, ensemble, member dimension
         pseudo-ensemble generated from control run
 
     Example
@@ -938,14 +935,14 @@ def pseudo_ens(ds, control, time_dim=time_dim):
     """
     nens = ds.ensemble.size
     nmember = ds.member.size
-    length = ds.year.size
-    c_start = control[time_dim].min()
-    c_end = control[time_dim].max()
-    year = ds[time_dim]
+    length = ds.time.size
+    c_start = control['time'].min()
+    c_end = control['time'].max()
+    time = ds['time']
 
-    def sel_years(control, year_s, m=None, length=length, time_dim=time_dim):
-        new = control.sel(year=slice(year_s, year_s + length - 1))
-        new[time_dim] = year
+    def sel_years(control, year_s, m=None, length=length):
+        new = control.sel(time=slice(year_s, year_s + length - 1))
+        new['time'] = time
         return new
 
     def create_pseudo_members(control):
@@ -955,15 +952,15 @@ def pseudo_ens(ds, control, time_dim=time_dim):
     return xr.concat([create_pseudo_members(control) for _ in range(nens)], 'ensemble')
 
 
-def PM_sig(ds, control, metric=_rmse, comparison=_m2m, reference_period='MK', sig=95, bootstrap=30, time_dim=time_dim):
+def PM_sig(ds, control, metric=_rmse, comparison=_m2m, reference_period='MK', sig=95, bootstrap=30):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
     Parameters
     ----------
-    control : xr.DataArray/Dataset with time_dim dimension
+    control : xr.DataArray/Dataset with time dimension
         input control data
-    ds : xr.DataArray/Dataset with time_dim, ensemble and member dimensions
+    ds : xr.DataArray/Dataset with time, ensemble and member dimensions
         input ensemble data
     sig: int or list
         Significance level for bootstrapping from pseudo ensemble
@@ -973,14 +970,14 @@ def PM_sig(ds, control, metric=_rmse, comparison=_m2m, reference_period='MK', si
     Returns
     -------
     sig_level : xr.DataArray/Dataset as inputs
-        significance level without time_dim, ensemble and member dimensions
+        significance level without time, ensemble and member dimensions
         as many sig_level as listitems in sig
 
     """
     x = []
     _control = _control_for_reference_period(
         control, reference_period=reference_period)
-    for _ in range(1 + int(bootstrap / ds[time_dim].size)):
+    for _ in range(1 + int(bootstrap / ds['time'].size)):
         ds_pseudo = pseudo_ens(ds, _control)
         ds_pseudo_metric = PM_compute(
             ds_pseudo, _control, metric=metric, comparison=comparison)
@@ -990,22 +987,22 @@ def PM_sig(ds, control, metric=_rmse, comparison=_m2m, reference_period='MK', si
         qsig = [x / 100 for x in sig]
     else:
         qsig = sig / 100
-    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=[time_dim, 'it'])
+    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=['time', 'it'])
     return sig_level
 
 
 #--------------------------------------------#
 # PREDICTABILITY HORIZON
 #--------------------------------------------#
-def xr_predictability_horizon(skill, threshold, limit='upper', time_dim=time_dim):
+def xr_predictability_horizon(skill, threshold, limit='upper'):
     """Get predictability horizons of dataset from skill and threshold dataset."""
     if limit is 'upper':
-        ph = (skill > threshold).argmin(time_dim)
-        # where ph not reached, set max year
-        ph_not_reached = (skill > threshold).all(time_dim)
+        ph = (skill > threshold).argmin('time')
+        # where ph not reached, set max time
+        ph_not_reached = (skill > threshold).all('time')
     elif limit is 'lower':
-        ph = (skill < threshold).argmin(time_dim)
-        # where ph not reached, set max year
-        ph_not_reached = (skill < threshold).all(time_dim)
-    ph = ph.where(~ph_not_reached, other=skill[time_dim].max())
+        ph = (skill < threshold).argmin('time')
+        # where ph not reached, set max time
+        ph_not_reached = (skill < threshold).all('time')
+    ph = ph.where(~ph_not_reached, other=skill['time'].max())
     return ph

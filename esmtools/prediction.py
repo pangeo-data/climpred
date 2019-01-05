@@ -58,32 +58,32 @@ This module works on xr.Datasets with the following dimensions and coordinates:
 
 Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
 <xarray.Dataset>
-Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5, 'time': 20)
+Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5, time: 20)
 Coordinates:
   * ensemble                 (ensemble) int64 3014 3023 3045 3061 3124 3139 ...
   * area                     (area) object 'global' 'North_Atlantic_SPG' ...
-  * 'time'                     (time) int64 1 2 3 4 5 6 ...
+  * time                     (time) int64 1 2 3 4 5 6 ...
   * period                   (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
 Dimensions without coordinates: member
 Data variables:
-    tos                   (period, 'time', area, ensemble, member) float32 ...
+    tos                   (period, time, area, ensemble, member) float32 ...
 ...
 
 - 3D (Predictability maps):
     - ensemble
     - lon(y, x), lat(y, x)
-    - time (as in Lead Year)
+    - time (as in lead time)
     - period (time averaging: yearmean, seasonal mean)
 
 Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
 <xarray.Dataset>
-Dimensions:      (bnds: 2, ensemble: 11, member: 9, vertices: 4, x: 256, y: 220, time: 21)
+Dimensions:      (bnds: 2, ensemble: 11, member: 9, x: 256, y: 220, time: 21)
 Coordinates:
     lon          (y, x) float64 -47.25 -47.69 -48.12 ... 131.3 132.5 133.8
     lat          (y, x) float64 76.36 76.3 76.24 76.17 ... -77.25 -77.39 -77.54
   * ensemble     (ensemble) int64 3061 3124 3178 3023 ... 3228 3175 3144 3139
   * time         (time) int64 1 2 3 4 5 ... 19 20
-Dimensions without coordinates: bnds, member, vertices, x, y
+Dimensions without coordinates: bnds, member, x, y
 Data variables:
     tos          (time, ensemble, member, y, x) float32 dask.array<shape=(21, 11, 9, 220, 256), chunksize=(1, 1, 1, 220, 256)>
 ...
@@ -102,12 +102,7 @@ from bs4 import BeautifulSoup
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
 
-from .stats import xr_corr, xr_linregress
-
-# standard setup for load dataset and examples
-varname = 'tos'
-period = 'ym'
-area = 'North_Atlantic'
+from .stats import xr_corr
 
 #--------------------------------------------#
 # HELPER FUNCTIONS
@@ -705,7 +700,7 @@ def generate_predictability_damped_persistence(s, kind='PPP', percentile=True, l
     -------
     import esmtools as et
     # s = pd.Series(np.sin(range(1000)+np.cos(range(1000))+np.random.randint(.1,1000)))
-    s = control.sel(area=area,period=period).to_dataframe()[varname]
+    s = control.sel(area='global',period='ym').to_dataframe()['tos']
     PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = et.prediction.generate_predictability_persistence(
         s)
     t = np.arange(0,20+1,1.)
@@ -752,7 +747,7 @@ def generate_predictability_damped_persistence(s, kind='PPP', percentile=True, l
 
 
 # TODO: Adjust for 3d fields
-def damped_persistence_forecast(ds, control, varname=varname, area=area, period=period,
+def damped_persistence_forecast(ds, control, varname='tos', area='global', period='ym',
                                 comparison=_m2e):
     """
     Generate damped persistence forecast timeseries.
@@ -928,9 +923,6 @@ def pseudo_ens(ds, control):
     import esmtools as et
     ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    varname='tos'
-    period='ym'
-    area='North_Atlantic'
     ds_e = et.prediction.pseudo_ens(control,ds)
     """
     nens = ds.ensemble.size

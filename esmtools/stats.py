@@ -32,6 +32,7 @@ import xarray as xr
 from scipy.signal import detrend, periodogram, tukey
 from scipy.stats import chi2, linregress
 from scipy.stats.stats import pearsonr as pr
+from xskillscore import pearson_r
 
 
 #--------------------------------------------#
@@ -483,7 +484,6 @@ def xr_corr(ds, lag=1, dim='year'):
 
     This is a faster implementation that scipy pearsonr. Uses xskillscore's pearson_r.
     """
-    from xskillscore import pearson_r
     _check_xarray(ds)
     N = len(ds[dim])
     normal = ds.isel({dim: slice(0, N - lag)})

@@ -94,13 +94,13 @@ The time dimensions is called 'time' and is in integer, not datetime[ns]
 """
 import os
 from random import randint
-
 import numpy as np
 import pandas as pd
 import xarray as xr
 from bs4 import BeautifulSoup
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
+from statsmodels.tsa.stattools import acf as acf
 
 from .stats import xr_autocorr
 
@@ -612,6 +612,27 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
+def persistence_forecast(reconstruction, nlags):
+    """
+    Generates a persistence forecast from a reconstruction (e.g., hindcast/
+    assimilation).
+
+    This simply computes the ACF of the reconstruction out to some lag.
+
+    NOTE: This currently doesn't support multi-dimensional datasets (i.e., 
+    anything that's not a single time series). This is a criticial thing that
+    needs to be implemented but is not trivial. The ACF functions offered through
+    e.g., statsmodels only support 1D.
+    """
+    if len(reconstruction.dims) > 1:
+        raise ValueError("""Persistence forecasts currently only support 
+        one-dimensional time series. Please loop through your dimensions if
+        need be.""")
+    r = acf(reconstruction, nlags=nlags)[1::]
+    r = xr.DataArray(r, dims=['lag'], coords=[np.arange(1, nlags+1)])
+    return r
+
+
 # TODO: adapt for maps
 def generate_damped_persistence_forecast(control, startyear, length=20):
     """

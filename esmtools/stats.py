@@ -268,53 +268,48 @@ def xr_linregress(da, dim='time', compact=True):
                ds['stderr']
 
 
-def xr_eff_pearsonr(ds, dim='time', two_sided=True):
+def xr_cross_corr(ds, dim='time', two_sided=True, return_p=False):
     """
-    Computes the Pearson product-moment coefficient of linear correlation. This
-    version calculates the effective degrees of freedom, accounting for
-    autocorrelation within each time series that could fluff the significance
-    of the correlation.
+    Computes the Pearson product-momment coefficient of linear correlation.
+    (See xr_autocorr for autocorrelation/lag for one time series)
+
+    This version calculates the effective degrees of freedom, accounting
+    for autocorrelation within each time series that could fluff the significance
+    of the cross correlation.
 
     This function is written to accept a dataset of arbitrary number of
     dimensions (e.g., lat, lon, depth).
 
     TODO: Add functionality for an ensemble.
 
+
     Parameters
     ----------
-    ds : xarray Dataset
-        Dataset containing exactly two variables of the time series to be
-        correlated (e.g., ds.x and ds.y). This can contain any arbitrary
-        number of dimensions in addition to the correlation dimension.
+    ds : xarray Dataset/DataArray
+        Should contain exactly the two variables being correlated.
     dim : str (default 'time')
-        The dimension over which to compute the correlation.
+        Correlation dimension
     two_sided : boolean (default True)
-        Whether or not to do a two-sided t-test.
-
+        If true, compute a two-sided t-test
+    return_p : boolean (default False)
+        If true, return both r and p
+    
     Returns
     -------
-    result : xarray Dataset
-        Results of the linear correlation with r, p, and the effective
-        sample size for each time series being correlated.
+    r : correlation coefficient
+    p : p-value accounting for autocorrelation (if return_p True)
 
-    References:
+    References (for dealing with autocorrelation):
     ----------
     1. Wilks, Daniel S. Statistical methods in the atmospheric sciences.
     Vol. 100. Academic press, 2011.
     2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode
     on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
+    3. Brady, R. X., Lovenduski, N. S., Alexander, M. A., Jacox, M., and Gruber, N.: 
+    On the role of climate modes in modulating the air-sea CO2 fluxes in Eastern Boundary 
+    Upwelling Systems, Biogeosciences Discuss., https://doi.org/10.5194/bg-2018-415, in review, 2018.
     """
     _check_xarray(ds)
-    def ufunc_pr(x, y, dim):
-        """
-        Internal ufunc to compute pearsonr over every grid cell.
-        """
-        return xr.apply_ufunc(pr, x, y,
-                              input_core_dims=[[dim], [dim]],
-                              output_core_dims=[[], []],
-                              vectorize=True, dask='parallelized')
-
-
     varlist = _get_vars(ds)
     x, y = varlist[0], varlist[1]
     if len(varlist) < 2 or len(varlist) > 2:
@@ -326,20 +321,46 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
             variables you would like correlated. In other words, it should have
             something like ds.x and ds.y that are either individual time series
             or a grid of time series.""")
-    # Find raw pearson r. The effective sample size simply changes the threshold
-    # for this to be significant.
-    r, _ = ufunc_pr(ds[x], ds[y], dim)
-    # Compute effective sample size
-    n = len(ds[dim])
-    # Find autocorrelation
-    xa, ya = ds[x] - ds[x].mean(dim), ds[y] - ds[y].mean(dim)
-    xauto, _ = ufunc_pr(xa.isel({dim: slice(1, n)}),
-                        xa.isel({dim: slice(0, n-1)}), dim)
-    yauto, _ = ufunc_pr(ya.isel({dim: slice(1, n)}),
-                        ya.isel({dim: slice(0, n-1)}), dim)
+    r = pearson_r(ds[x], ds[y], dim)
+    if return_p:
+        p = _xr_eff_p_value(ds[x], ds[y], r, dim, two_sided)
+        # return with proper dimension labeling. would be easier with
+        # apply_ufunc, but having trouble getting it to work here. issue
+        # probably has to do with core dims.
+        dimlist = _get_dims(r)
+        for i in range(len(dimlist)):
+            p = p.rename({'dim_' + str(i): dimlist[i]})
+        return r, p
+    else:
+        return r
+
+
+def _xr_eff_p_value(x, y, r, dim, two_sided):
+    """
+    Computes the p_value accounting for autocorrelation in time series.
+    
+    ds : dataset with time series being correlated.
+    """
+    def _compute_autocorr(v, dim, n):
+        """
+        Return normal and shifted time series
+        with equal dimensions so as not to 
+        throw an error.
+        """
+        shifted = v.isel({dim: slice(1, n)})
+        normal = v.isel({dim: slice(0, n-1)})
+        shifted[dim] = normal[dim]
+        return pearson_r(shifted, normal, dim)
+    
+    n = x[dim].size
+    # find autocorrelation
+    xa, ya = x - x.mean(dim), y - y.mean(dim)
+    xauto = _compute_autocorr(xa, dim, n)
+    yauto = _compute_autocorr(ya, dim, n)
+    # compute effective sample size
     n_eff = n * (1 - xauto * yauto) / (1 + xauto * yauto)
     n_eff = np.floor(n_eff)
-    # constrain n_eff to be at maximum the total number of samples.
+    # constrain n_eff to be at maximum the total number of samples
     n_eff = n_eff.where(n_eff <= n, n)
     # compute t-statistic
     t = r * np.sqrt((n_eff - 2) / (1 - r**2))
@@ -347,14 +368,7 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
         p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1) * 2)
     else:
         p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1))
-    # return as a nice dataset
-    # fix p dimension names
-    dimlist = _get_dims(r)
-    for i in range(len(dimlist)):
-        p = p.rename({'dim_' + str(i): dimlist[i]})
-    r.name, p.name, n_eff.name = 'r', 'p', 'n_eff'
-    result = xr.merge([r, p, n_eff])
-    return result
+    return p
 
 
 def xr_rm_poly(da, order, dim='time'):

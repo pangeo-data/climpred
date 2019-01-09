@@ -85,7 +85,7 @@ def _get_vars(ds):
     Currently returns as a list, but can add keyword to select tuple or
     list if desired for any reason.
     """
-    return list(ds.variables)
+    return list(ds.data_vars)
 
 
 def _taper(x, p):

@@ -102,7 +102,7 @@ from bs4 import BeautifulSoup
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
 
-from .stats import xr_corr
+from .stats import xr_autocorr
 
 #--------------------------------------------#
 # HELPER FUNCTIONS
@@ -652,7 +652,7 @@ def generate_damped_persistence_forecast(control, startyear, length=20):
     """
     anom = (control.sel(time=startyear) - control.mean('time')).values
     t = np.arange(0., length + 1, 1)
-    alpha = xr_corr(control,dim='time').values
+    alpha = xr_autocorr(control,dim='time').values
     exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
     ar1 = exp + control.mean('time').values
     ar50 = 0.7 * control.std('time').values * np.sqrt(1 - np.exp(-2 * alpha * t))

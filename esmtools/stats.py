@@ -32,7 +32,7 @@ import xarray as xr
 from scipy.signal import detrend, periodogram, tukey
 from scipy.stats import chi2, linregress
 from scipy.stats.stats import pearsonr as pr
-from xskillscore import pearson_r
+from xskillscore import pearson_r, pearson_r_p_value
 
 
 #--------------------------------------------#
@@ -450,53 +450,41 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     return T
 
 
-def xr_autocorr(da, lag=1, dim='time', r_only=False):
+def xr_autocorr(ds, lag=1, dim='time', return_p=False):
     """
     Calculated lagged correlation of a xr.Dataset.
 
     Parameters
     ----------
-    da : xarray dataset/dataarray
+    ds : xarray dataset/dataarray
     lag : int (default 1)
         number of time steps to lag correlate.
     dim : str (default 'time')
-        name of time dimension
-    r_only : boolean (default False)
-       If true, return just the correlation coefficient.
-       If false, return both the correlation coefficient and p-value.
-
+        name of time dimension/dimension to autocorrelate over
+    return_p : boolean (default False)
+        if false, return just the correlation coefficient.
+        if true, return both the correlation coefficient and p-value.
+    
     Returns
     -------
     r : Pearson correlation coefficient
-    p : p-value
-    """
-    _check_xarray(da)
-    N = len(da[dim])
-    da1 = da.isel({dim: slice(0, N - lag)})
-    da2 = da.isel({dim: slice(0 + lag, N)})
-    da2[dim] = da1[dim]
-    r, p = xr.apply_ufunc(pr, da1, da2,
-                          input_core_dims=[[dim], [dim]],
-                          output_core_dims=[[], []],
-                          vectorize=True,
-                          dask='parallelized')
-    if r_only:
-        return r
-    else:
-        return r, p
+    p : (if return_p True) p-value
 
-def xr_corr(ds, lag=1, dim='time'):
-    """
-    Calculated lagged correlation of a xr.Dataset.
-
-    This is a faster implementation that scipy pearsonr. Uses xskillscore's pearson_r.
     """
     _check_xarray(ds)
     N = len(ds[dim])
     normal = ds.isel({dim: slice(0, N - lag)})
     shifted = ds.isel({dim: slice(0 + lag, N)})
     shifted[dim] = normal[dim]
-    return pearson_r(normal, shifted, dim)
+    r = pearson_r(normal, shifted, dim)
+    if return_p:
+        # NOTE: This assumes 2-tailed. Need to update xr_eff_pearsonr
+        # to utilize xskillscore's metrics but then compute own effective
+        # p-value with option for one-tailed.
+        p = pearson_r_p_value(normal, shifted, dim)
+        return r, p
+    else:
+        return r
 
 
 def xr_decorrelation_time(da, r=20, dim='time'):

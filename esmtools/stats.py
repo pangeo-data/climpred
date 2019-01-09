@@ -13,7 +13,7 @@ Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
 `xr_linregress` : Returns results of linear regression over input dataarray.
-`xr_cross_corr` : Computes pearsonr between two time series accounting for autocorrelation.
+`xr_corr` : Computes pearsonr between two time series accounting for autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
 `xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
@@ -268,7 +268,7 @@ def xr_linregress(da, dim='time', compact=True):
                ds['stderr']
 
 
-def xr_cross_corr(ds, dim='time', two_sided=True, return_p=False):
+def xr_corr(x, y, dim='time', two_sided=True, return_p=False):
     """
     Computes the Pearson product-momment coefficient of linear correlation.
     (See xr_autocorr for autocorrelation/lag for one time series)
@@ -285,8 +285,8 @@ def xr_cross_corr(ds, dim='time', two_sided=True, return_p=False):
 
     Parameters
     ----------
-    ds : xarray Dataset/DataArray
-        Should contain exactly the two variables being correlated.
+    x, y : xarray DataArray
+        time series being correlated (can be multi-dimensional)
     dim : str (default 'time')
         Correlation dimension
     two_sided : boolean (default True)
@@ -309,21 +309,11 @@ def xr_cross_corr(ds, dim='time', two_sided=True, return_p=False):
     On the role of climate modes in modulating the air-sea CO2 fluxes in Eastern Boundary 
     Upwelling Systems, Biogeosciences Discuss., https://doi.org/10.5194/bg-2018-415, in review, 2018.
     """
-    _check_xarray(ds)
-    varlist = _get_vars(ds)
-    x, y = varlist[0], varlist[1]
-    if len(varlist) < 2 or len(varlist) > 2:
-        """
-        The philosophy behind this function is to have a dataset containing
-        gridded time series for two elements to be correlated.
-        """
-        raise ValueError("""Please supply an xarray dataset containing the two
-            variables you would like correlated. In other words, it should have
-            something like ds.x and ds.y that are either individual time series
-            or a grid of time series.""")
-    r = pearson_r(ds[x], ds[y], dim)
+    _check_xarray(x)
+    _check_xarray(y)
+    r = pearson_r(x, y, dim)
     if return_p:
-        p = _xr_eff_p_value(ds[x], ds[y], r, dim, two_sided)
+        p = _xr_eff_p_value(x, y, r, dim, two_sided)
         # return with proper dimension labeling. would be easier with
         # apply_ufunc, but having trouble getting it to work here. issue
         # probably has to do with core dims.
@@ -351,7 +341,7 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
         normal = v.isel({dim: slice(0, n-1)})
         # see explanation in xr_autocorr for this
         if dim not in list(v.coords):
-            normal[dim] = np.arange(1, N)
+            normal[dim] = np.arange(1, n)
         shifted[dim] = normal[dim]
         return pearson_r(shifted, normal, dim)
     

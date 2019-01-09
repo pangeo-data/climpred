@@ -13,7 +13,7 @@ Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
 `xr_linregress` : Returns results of linear regression over input dataarray.
-`xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
+`xr_cross_corr` : Computes pearsonr between two time series accounting for autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
 `xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.

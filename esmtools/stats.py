@@ -128,14 +128,21 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     da_aw = et.stats.reg_aw(SST)
     """
     _check_xarray(da)
+    dimlist = _get_dims(da)
+    non_spatial = [i for i in _get_dims(da) if i not in [lat_coord, lon_coord]]
+    filter_dict = {}
+    while len(non_spatial) > 0:
+        filter_dict.update({non_spatial[0]: 0})
+        non_spatial.pop(0)
     if one_dimensional:
         lon, lat = np.meshgrid(da[lon_coord], da[lat_coord])
     else:
         lat = da[lat_coord]
     # NaN out land to not go into area-weighting
-    lat[np.isnan(da)] = np.nan
+    lat[np.isnan(da.isel(filter_dict))] = np.nan
     cos_lat = np.cos(np.deg2rad(lat))
-    aw_da = (da * cos_lat).sum() / np.nansum(np.cos(np.deg2rad(lat)))
+    aw_da = (da * cos_lat).sum(lat_coord).sum(lon_coord) / \
+            np.nansum(cos_lat)
     return aw_da
 
 

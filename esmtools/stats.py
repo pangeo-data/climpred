@@ -349,6 +349,9 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
         """
         shifted = v.isel({dim: slice(1, n)})
         normal = v.isel({dim: slice(0, n-1)})
+        # see explanation in xr_autocorr for this
+        if dim not in list(v.coords):
+            normal[dim] = np.arange(1, N)
         shifted[dim] = normal[dim]
         return pearson_r(shifted, normal, dim)
     
@@ -486,9 +489,17 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
 
     """
     _check_xarray(ds)
-    N = len(ds[dim])
+    N = ds[dim].size
     normal = ds.isel({dim: slice(0, N - lag)})
     shifted = ds.isel({dim: slice(0 + lag, N)})
+    """
+    xskillscore pearson_r looks for the dimensions to be matching, but we 
+    shifted them so they probably won't be. This solution doesn't work
+    if the user provides a dataset without a coordinate for the main
+    dimension, so we need to create a dummy dimension in that case.
+    """
+    if dim not in list(ds.coords):
+        normal[dim] = np.arange(1, N)
     shifted[dim] = normal[dim]
     r = pearson_r(normal, shifted, dim)
     if return_p:

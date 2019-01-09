@@ -42,7 +42,8 @@ Also
     - f-test significant test (Pohlmann 2004, Griffies 1997) (missing)
     - bootstrapping limit
 
-- Persistence Forecasts
+- Persistence Forecast
+    - persistence forecast skill (assimilation/hindcast)s
     - persistence (missing)
     - damped persistence
 
@@ -612,10 +613,10 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
-def persistence_forecast(reconstruction, nlags):
+def persistence_forecast_skill(reconstruction, nlags):
     """
-    Generates a persistence forecast from a reconstruction (e.g., hindcast/
-    assimilation).
+    Computes the skill of  a persistence forecast from a reconstruction 
+    (e.g., hindcast/assimilation).
 
     This simply computes the ACF of the reconstruction out to some lag.
 

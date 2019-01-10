@@ -643,19 +643,28 @@ def DP_compute_skill(dp, reference, nlags=None):
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
-def persistence_forecast_skill(reconstruction, nlags, dim='time'):
+def persistence_forecast_skill(reconstruction, nlags):
     """
     Computes the skill of  a persistence forecast from a reconstruction 
     (e.g., hindcast/assimilation).
 
-    This simply computes the ACF of the reconstruction out to some lag.
+    This simply runs an autocorrelation on the input out to some lag. The user
+    should avoid prebuilt ACF functions in python/MATLAB as they tend to use
+    FFT methods for speed but do have error.
 
-    NOTE: This currently doesn't support multi-dimensional datasets (i.e., 
-    anything that's not a single time series). This is a criticial thing that
-    needs to be implemented but is not trivial. The ACF functions offered through
-    e.g., statsmodels only support 1D.
+    Parameters
+    ---------
+    recontruction : xarray object
+        The reconstruction time series with main dimension 'ensemble'
+    nlags : int
+        Number of lags to compute persistence to
+
+    Returns
+    -------
+    skill : xarray object
+        Skill of persistence forecast with main dimension 'lag'
     """
-    return xr.concat([xr_autocorr(reconstruction, lag=i, dim=dim) for i in \
+    return xr.concat([xr_autocorr(reconstruction, lag=i, dim='ensemble') for i in \
                      range(1, nlags+1)], 'lag')
 
 

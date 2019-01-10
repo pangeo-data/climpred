@@ -627,6 +627,11 @@ def DP_compute_skill(dp, reference, nlags=None):
         Reconstruction or observations over same time period
     nlags : int (default length of `time` dim)
         How many lags to compute skill/potential predictability out to
+
+    Returns
+    -------
+    skill : xarray object
+        Predictability with main dimension `lag`
     """
     _check_xarray(dp)
     _check_xarray(reference)
@@ -636,8 +641,10 @@ def DP_compute_skill(dp, reference, nlags=None):
     N = dp['ensemble'].size
     if nlags is None:
         nlags = dp['time'].size
-    return xr.concat([xr_corr(dp.isel(time=i), reference, lag=i, 
-        dim='ensemble') for i in range(0, nlags)], 'lag') 
+    skill = xr.concat([xr_corr(dp.isel(time=i), reference, lag=i,
+                dim='ensemble') for i in range(0, nlags)], 'lag')
+    skill.coords['lag'] = np.arange(1, nlags+1)
+    return skill 
 
 
 #--------------------------------------------#

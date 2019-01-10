@@ -101,7 +101,6 @@ import xarray as xr
 from bs4 import BeautifulSoup
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
-from statsmodels.tsa.stattools import acf as acf
 
 from .stats import xr_autocorr
 
@@ -613,7 +612,7 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
-def persistence_forecast_skill(reconstruction, nlags):
+def persistence_forecast_skill(reconstruction, nlags, dim='time'):
     """
     Computes the skill of  a persistence forecast from a reconstruction 
     (e.g., hindcast/assimilation).
@@ -625,13 +624,8 @@ def persistence_forecast_skill(reconstruction, nlags):
     needs to be implemented but is not trivial. The ACF functions offered through
     e.g., statsmodels only support 1D.
     """
-    if len(reconstruction.dims) > 1:
-        raise ValueError("""Persistence forecasts currently only support 
-        one-dimensional time series. Please loop through your dimensions if
-        need be.""")
-    r = acf(reconstruction, nlags=nlags)[1::]
-    r = xr.DataArray(r, dims=['lag'], coords=[np.arange(1, nlags+1)])
-    return r
+    return xr.concat([xr_autocorr(reconstruction, lag=i, dim=dim) for i in \
+                     range(1, nlags+1)], 'lag')
 
 
 # TODO: adapt for maps

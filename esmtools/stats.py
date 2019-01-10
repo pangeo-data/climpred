@@ -277,11 +277,14 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     for autocorrelation within each time series that could fluff the significance
     of the cross correlation.
 
+    NOTE: If lag is not zero, x predicts y. In other words, the time series for
+    x is stationary, and y slides to the left. Or, y stays in place and x slides
+    to the right.
+
     This function is written to accept a dataset of arbitrary number of
     dimensions (e.g., lat, lon, depth).
 
     TODO: Add functionality for an ensemble.
-
 
     Parameters
     ----------

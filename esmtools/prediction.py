@@ -32,7 +32,6 @@ Missing
 - Relative Entropy (Kleeman 2002; Branstator and Teng 2010)
 - Mutual information (DelSole)
 - Average Predictability Time (APT) (DelSole)
-- persistence forecast
 
 Also
 ----
@@ -43,7 +42,7 @@ Also
     - bootstrapping limit
 
 - Persistence Forecast
-    - persistence forecast skill (assimilation/hindcast)s
+    - persistence forecast skill (assimilation/hindcast)
     - persistence (missing)
     - damped persistence
 
@@ -102,14 +101,12 @@ from bs4 import BeautifulSoup
 from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
 
-from .stats import xr_autocorr
+from .stats import xr_autocorr, xr_corr, _check_xarray, _get_dims
 
 #--------------------------------------------#
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
 #--------------------------------------------#
-
-
 def _get_variance(control, running=None):
     """
     Get running variance.
@@ -281,8 +278,6 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 # - xarray vectorized (_mse, _rmse_v, ...) from ensemble variance (_ens_var_against_mean, _..control)
 # Leads to the same results: (metric=_rmse, comparison=c) equals (metric=_rmse_v, comparison=c) for all c in comparisons
 #--------------------------------------------#
-
-
 def _m2m(ds, supervector_dim):
     """
     Create two supervectors to compare all members to all other members in turn.
@@ -607,6 +602,42 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
         return res
     else:
         raise ValueError('specify metric argument')
+
+
+def DP_compute_skill(dp, reference, nlags=None):
+    """
+    Compute a predictability skill score for a reconstruction framework dataset.
+    
+    This is currently set up to just run a simple correlation (i.e., ACC) but
+    other metrics should be implemented if needed in the future (as in PM_compute)
+
+    Note that if reference is the reconstruction, the output correlation coefficients
+    are for potential predictability. If the reference is observations, the ouput
+    correlation coefficients are actual skill.
+
+    Parameters
+    ----------
+    dp : xarray object
+        Expected to follow package conventions (and should be an ensemble mean)
+        `ensemble` : dim of initialization dates
+        `time` : dim of lead years from those initializations
+        Additional dims can be lat, lon, depth, etc. but should not be individual
+        members.
+    reference : xarray object
+        Reconstruction or observations over same time period
+    nlags : int (default length of `time` dim)
+        How many lags to compute skill/potential predictability out to
+    """
+    _check_xarray(dp)
+    _check_xarray(reference)
+    if 'member' in _get_dims(dp):
+        print("Taking ensemble mean...")
+        dp = dp.mean('member')
+    N = dp['ensemble'].size
+    if nlags is None:
+        nlags = dp['time'].size
+    return xr.concat([xr_corr(dp.isel(time=i), reference, lag=i, 
+        dim='ensemble') for i in range(0, nlags)], 'lag') 
 
 
 #--------------------------------------------#

@@ -671,9 +671,10 @@ def persistence_forecast_skill(reconstruction, nlags):
     skill : xarray object
         Skill of persistence forecast with main dimension 'lag'
     """
-    return xr.concat([xr_autocorr(reconstruction, lag=i, dim='ensemble') for i in \
-                     range(1, nlags+1)], 'lag')
-
+    skill = xr.concat([xr_autocorr(reconstruction, lag=i, dim='ensemble') \
+                for i in range(1, nlags+1)], 'lag')
+    skill.coords['lag'] = np.arange(1, nlags+1)
+    return skill
 
 # TODO: adapt for maps
 def generate_damped_persistence_forecast(control, startyear, length=20):

@@ -268,7 +268,7 @@ def xr_linregress(da, dim='time', compact=True):
                ds['stderr']
 
 
-def xr_corr(x, y, dim='time', two_sided=True, return_p=False):
+def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     """
     Computes the Pearson product-momment coefficient of linear correlation.
     (See xr_autocorr for autocorrelation/lag for one time series)
@@ -289,6 +289,8 @@ def xr_corr(x, y, dim='time', two_sided=True, return_p=False):
         time series being correlated (can be multi-dimensional)
     dim : str (default 'time')
         Correlation dimension
+    lag : int (default 0)
+        Lag to apply to correlation, with x predicting y.
     two_sided : boolean (default True)
         If true, compute a two-sided t-test
     return_p : boolean (default False)
@@ -311,7 +313,16 @@ def xr_corr(x, y, dim='time', two_sided=True, return_p=False):
     """
     _check_xarray(x)
     _check_xarray(y)
-    r = pearson_r(x, y, dim)
+    if lag != 0:
+        N = x[dim].size 
+        normal = x.isel({dim: slice(0, N-lag)})
+        shifted = y.isel({dim: slice(0 + lag, N)})
+        if dim not in list(x.coords):
+            normal[dim] = np.arange(1, N)
+        shifted[dim] = normal[dim]
+        r = pearson_r(normal, shifted, dim)
+    else:
+        r = pearson_r(x, y, dim)
     if return_p:
         p = _xr_eff_p_value(x, y, r, dim, two_sided)
         # return with proper dimension labeling. would be easier with
@@ -524,7 +535,7 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     """
     _check_xarray(da)
     one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([xr_corr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it').sum('it')
+    return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it').sum('it')
 #--------------------------------------------#
 # GENERATE TIME SERIES DATA
 # Functions that create time series data

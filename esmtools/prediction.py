@@ -811,8 +811,8 @@ def compute_persistence(reference, nlags, metric='pearson_r'):
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i)
         plag.append(metric(a, b, dim='time'))
-    pers = xr.concat(plag, 'lead year')
-    pers['lead year'] = np.arange(1, 1 + nlags)
+    pers = xr.concat(plag, 'lead time')
+    pers['lead time'] = np.arange(1, 1 + nlags)
     return pers
 
 

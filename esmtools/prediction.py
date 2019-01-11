@@ -825,9 +825,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     skill['lead time'] = np.arange(1, 1 + nlags)
     return skill
 
-#--------------------------------------------#
-# PERSISTANCE FORECASTS
-#--------------------------------------------#
+
 def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     """
     Computes the skill of  a persistence forecast from a reference 
@@ -880,6 +878,9 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     return pers
 
 
+#--------------------------------------------#
+# PERSISTANCE FORECASTS
+#--------------------------------------------#
 # TODO: adapt for maps
 def generate_damped_persistence_forecast(control, startyear, length=20):
     """

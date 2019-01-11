@@ -6,7 +6,7 @@ arrays and then one simple function to load them.
 
 """
 import numpy as np
-import esmtools.vis as vis
+import climpred.vis as vis
 import pandas as pd
 import matplotlib.colors as color
 

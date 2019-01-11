@@ -297,6 +297,34 @@ def load_dataset(name, cache=True, data_home=None, **kws):
 # - xarray vectorized (_mse, _rmse_v, ...) from ensemble variance (_ens_var_against_mean, _..control)
 # Leads to the same results: (metric=_rmse, comparison=c) equals (metric=_rmse_v, comparison=c) for all c in comparisons
 #--------------------------------------------#
+def _get_comparison_function(comparison):
+    """
+    Similar to _get_metric_function. This converts a string comparison entry
+    from the user into an actual function for the package to interpret.
+
+    m2m : Compare all members to all other members.
+    m2c : Compare all members to the control.
+    m2e : Compare all members to the ensemble mean.
+    e2c : Compare the ensemble mean to the control.
+    """
+    if comparison == 'm2m':
+        comparison = '_m2m'
+    elif comparison == 'm2c':
+        comparison = '_m2c'
+    elif comparison == 'm2e':
+        comparison = '_m2e'
+    elif comparison == 'e2c':
+        comparison = '_e2c'
+    else:
+        raise ValueError("""Please supply a comparison from the following list:
+            'm2m'
+            'm2c'
+            'm2e'
+            'e2c
+            '""")
+    return eval(comparison)
+
+
 def _m2m(ds, supervector_dim):
     """
     Create two supervectors to compare all members to all other members in turn.
@@ -445,15 +473,29 @@ def _get_metric_function(metric):
 
     Currently compatable with functions:
     * compute_persistence()
+    * compute_pm()
 
     Currently compatable with metrics:
     * pearson_r
     * rmse
+    * mse
+    * rmse_v
+    * nrmse
+    * nev
+    * ppp
+    * msss
+    * uACC
 
     Metrics
     --------
     pearson_r : 'pearson_r', 'pearsonr', 'pr'
     rmse: 'rmse'
+    mse: 'mse'
+    rmse_v: 'rmse_v'
+    nev: 'nev'
+    ppp: 'ppp'
+    msss: 'msss'
+    uACC: 'uacc'
 
     Returns
     --------
@@ -464,10 +506,31 @@ def _get_metric_function(metric):
         metric = '_pearson_r'
     elif metric == 'rmse':
         metric = '_rmse'
+    elif metric.lower() == 'mse':
+        metric = '_mse'
+    elif metric.lower() == 'rmse_v':
+        metric = '_rmse_v'
+    elif metric.lower() == 'nrmse':
+        metric = '_nrmse'
+    elif metric.lower() == 'nev':
+        metric = '_nev'
+    elif metric.lower() == 'ppp':
+        metric = '_PPP'
+    elif metric.lower() == 'msss':
+        metric = '_msss'
+    elif metric.lower() == 'uacc':
+        metric = '_uACC' 
     else:
         raise ValueError("""Please supply a metric from the following list:
             'pearson_r'
             'rmse'
+            'mse'
+            'rmse_v'
+            'nrmse'
+            'nev'
+            'ppp'
+            'msss'
+            'uacc'
             """)
     return eval(metric)
 
@@ -617,8 +680,8 @@ def _msss(ds, control, comparison, running):
 # Highest-level features for computing
 # predictability.
 #--------------------------------------------#
-def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
-               detrend=False, running=None):
+def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m', 
+                          anomaly=False, detrend=False, running=None)
     """
     Compute a predictability skill score for a perfect-model framework simulation dataset.
 
@@ -631,9 +694,10 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
     ds, control : xr.DataArray or xr.Dataset with 'time' dimension (optional spatial coordinates)
         input data
     metric : function
-        metric from [_rmse, _pearson_r, _mse, _rmse_r, _ppp, _nev, _uACC, _MSSS]
+        metric from ['rmse', 'pearson_r', 'mse', 'rmse_r', 'ppp', 'nev', 'uACC',
+                     'MSSS']
     comparison : function
-        comparison from [_m2m, _m2e, _m2c, _e2c]
+        comparison from ['m2m', 'm2e', 'm2c', 'e2c'] 
     running : int
         Size of the running window for variance smoothing ( only used for PPP, NEV)
 
@@ -643,14 +707,17 @@ def PM_compute(ds, control, metric=_pearson_r, comparison=_m2m, anomaly=False,
         skill score
     """
     supervector_dim = 'svd'
+    comparison = _get_comparison_function(comparison)
     if comparison.__name__ not in ['_m2m', '_m2c', '_m2e', '_e2c']:
         raise ValueError('specify comparison argument')
 
+    metric = _get_metric_function(metric)
     if metric.__name__ in ['_pearson_r', '_rmse']:
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric.__name__ in ['_mse', '_rmse_v', '_nrmse', '_nev', '_ppp', '_PPP', '_MSSS', '_uACC']:
+    elif metric.__name__ in ['_mse', '_rmse_v', '_nrmse', '_nev', '_ppp', '_PPP', 
+                             '_msss', '_uACC']:
         res = metric(ds, control, comparison, running)
         return res
     else:

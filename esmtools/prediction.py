@@ -1019,7 +1019,7 @@ def generate_predictability_damped_persistence(s, kind='PPP', percentile=True, l
 
 # TODO: Adjust for 3d fields
 def damped_persistence_forecast(ds, control, varname='tos', area='global', period='ym',
-                                comparison=_m2e):
+                                comparison='m2e'):
     """
     Generate damped persistence forecast timeseries.
     """
@@ -1038,19 +1038,21 @@ def damped_persistence_forecast(ds, control, varname='tos', area='global', perio
     return xr.concat(persistence_forecast_list, dim='ensemble')
 
 
-def PM_compute_damped_persistence(ds, control, metric=_rmse, comparison=_m2e):
+def PM_compute_damped_persistence(ds, control, metric='rmse', comparison='m2e'):
     """
     Compute skill for persistence forecast. See PM_compute().
     """
     persistence_forecasts = damped_persistence_forecast(ds, control)
-    if comparison.__name__ == '_m2e':
+    if comparison == 'm2e':
+        metric = _get_metric_function(metric)
         result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
-    elif comparison.__name__ == '_m2m':
+    elif comparison == 'm2m':
         persistence_forecasts = persistence_forecasts.expand_dims('member')
         all_persistence_forecasts = persistence_forecasts.isel(
             member=[0] * ds.member.size)
         fct = _m2e(all_persistence_forecasts, 'svd')[0]
         truth = _m2e(ds, 'svd')[0]
+        metric = _get_metric_function(metric)
         result = metric(fct, truth, 'svd')
     else:
         raise ValueError('not defined')

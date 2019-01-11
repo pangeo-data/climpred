@@ -302,10 +302,15 @@ def _get_comparison_function(comparison):
     Similar to _get_metric_function. This converts a string comparison entry
     from the user into an actual function for the package to interpret.
 
+    PERFECT MODEL:
     m2m : Compare all members to all other members.
     m2c : Compare all members to the control.
     m2e : Compare all members to the ensemble mean.
     e2c : Compare the ensemble mean to the control.
+
+    RECONSTRUCTION:
+    e2r : Compare the ensemble mean to the reference.
+    m2r : Compare each ensemble member to the reference.
     """
     if comparison == 'm2m':
         comparison = '_m2m'
@@ -315,13 +320,19 @@ def _get_comparison_function(comparison):
         comparison = '_m2e'
     elif comparison == 'e2c':
         comparison = '_e2c'
+    elif comparison == 'e2r':
+        comparison = '_e2r'
+    elif comparison == 'm2r':
+        comparison = '_m2r'
     else:
         raise ValueError("""Please supply a comparison from the following list:
             'm2m'
             'm2c'
             'm2e'
-            'e2c
-            '""")
+            'e2c'
+            'e2r'
+            'm2r'
+            """)
     return eval(comparison)
 
 
@@ -459,6 +470,40 @@ def _ensmean_against_control(ds, control_member=0):
     truth = ds.sel(member=ds.member.values[control_member])
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     return ((ds.mean('member') - truth)**2).mean('ensemble')
+
+
+def _e2r(ds, reference):
+    """
+    For a reconstruction-based decadal prediction ensemble. This compares the
+    ensemble mean prediction to the reference (hindcast, simulation,
+    observations).
+    """
+    if 'member' in _get_dims(ds):
+        print("Taking ensemble mean...")
+        fct = ds.mean('member')
+    else:
+        fct = ds
+    return fct, reference
+
+
+def _m2r(ds, reference):
+    """
+    For a reconstruction-based decadal prediction ensemble. This compares each
+    member individually to the reference (hindcast, simulation,
+    observations).
+    """
+    # check that this contains more than one member
+    if ('member' not in _get_dims(ds)) or (ds.member.size == 1):
+        raise ValueError("""Please supply a decadal prediction ensemble with
+            more than one member. You might have input the ensemble mean here
+            although asking for a member-to-reference comparison.""")
+    else:
+        fct = ds
+    reference = reference.expand_dims('member')
+    nMember = fct.member.size
+    reference = reference.isel(member=[0]*nMember)
+    reference['member'] = fct['member']
+    return fct, reference
 
 
 #--------------------------------------------#
@@ -724,13 +769,11 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify metric argument')
 
 
-def compute_reconstruction(ds, reference, metric='pearson_r', nlags=None):
+def compute_reconstruction(ds, reference, metric='pearson_r', comparison='e2r',
+                           nlags=None):
     """
     Compute a predictability skill score for a reconstruction framework dataset.
     
-    This is currently set up to just run a simple correlation (i.e., ACC) but
-    other metrics should be implemented if needed in the future (as in PM_compute)
-
     Note that if reference is the reconstruction, the output correlation coefficients
     are for potential predictability. If the reference is observations, the ouput
     correlation coefficients are actual skill.
@@ -745,6 +788,14 @@ def compute_reconstruction(ds, reference, metric='pearson_r', nlags=None):
         members.
     reference : xarray object
         Reconstruction or observations over same time period
+    metric : str (default 'pearson_r')
+        Metric used in comparing the decadal prediction ensemble with the reference.
+        * pearson_r
+        * rmse
+    comparison : str (default 'e2r')
+        How to compare the decadal prediction ensemble to the reference.
+        * e2r : ensemble mean to reference
+        * m2r : each member to the reference
     nlags : int (default length of `time` dim)
         How many lags to compute skill/potential predictability out to
 
@@ -755,20 +806,25 @@ def compute_reconstruction(ds, reference, metric='pearson_r', nlags=None):
     """
     _check_xarray(ds)
     _check_xarray(reference)
-    if 'member' in _get_dims(ds):
-        print("Taking ensemble mean...")
-        ds = ds.mean('member')
+    comparison = _get_comparison_function(comparison)
+    if comparison not in [_e2r, _m2r]:
+        raise ValueError("""Please input either 'e2r' or 'm2r' for your
+            comparison.""")
+    fct, reference = comparison(ds, reference)
+    
     if nlags is None:
-        nlags = ds.time.size
+        nlags = fct.time.size
     metric = _get_metric_function(metric)
+    if metric not in [_pearson_r, _rmse]:
+        raise ValueError("""Please input either 'pearson_r' or 'rmse' for your
+            metric.""")
     plag = []
     for i in range(0, nlags):
-        a, b = _shift(ds.isel(time=i), reference, i, dim='ensemble')
+        a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
         plag.append(metric(a, b, dim='ensemble'))
     skill = xr.concat(plag, 'lead time')
     skill['lead time'] = np.arange(1, 1 + nlags)
     return skill
-
 
 #--------------------------------------------#
 # PERSISTANCE FORECASTS

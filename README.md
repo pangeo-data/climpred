@@ -1,10 +1,10 @@
-# esmtools
+# climpred 
 
-Toolbox of functions for analyzing, processing, and plotting ESM output, with an emphasis on ocean model output. 
+An xarray wrapper for decadal climate prediction.
 
 ## Installation
 ```shell
-pip install git+https://github.com/bradyrx/esmtools --process-dependency-links
+pip install git+https://github.com/bradyrx/climpred --process-dependency-links
 ```
 
 ## Modules

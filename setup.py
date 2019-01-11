@@ -1,13 +1,13 @@
 from setuptools import find_packages, setup
 
-DISTNAME = 'esmtools'
+DISTNAME = 'climpred'
 VERSION = '0.1'
 AUTHOR = 'Riley X. Brady'
 AUTHOR_EMAIL = 'riley.brady@colorado.edu'
-DESCRIPTION = 'Tools for analyzing model output from ESMs, with a focus on ocean models and decadal prediction.'
-URL = 'https://github.com/bradyrx/esmtools'
+DESCRIPTION = 'An xarray wrapper for decadal climate prediction.'
+URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
-INSTALL_REQUIRES = ['xarray', 'pandas', 'numpy', 'matplotlib', 'pyfinance', 'xskillscore==0.0.2']
+INSTALL_REQUIRES = ['xarray', 'pandas', 'numpy', 'matplotlib', 'xskillscore==0.0.2']
 DEPENDENCY_LINKS = ['https://github.com/raybellwaves/xskillscore/tarball/master#egg=xskillscore-0.0.2']
 # TODO: Add testing
 # TESTS_REQUIRE = ['pytest']

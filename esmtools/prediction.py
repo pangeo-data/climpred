@@ -450,21 +450,26 @@ def _get_metric_function(metric):
     * pearson_r
     * rmse
 
-    Metrics:
+    Metrics
     --------
     pearson_r : 'pearson_r', 'pearsonr', 'pr'
     rmse: 'rmse'
+
+    Returns
+    --------
+    metric : function object of the metric.
     """
     pearson = ['pr', 'pearsonr', 'pearson_r']
     if metric in pearson:
-        return '_pearson_r'
+        metric = '_pearson_r'
     elif metric == 'rmse':
-        return '_rmse'
+        metric = '_rmse'
     else:
         raise ValueError("""Please supply a metric from the following list:
             'pearson_r'
             'rmse'
             """)
+    return eval(metric)
 
 
 def _pearson_r(a, b, dim):
@@ -738,7 +743,7 @@ def compute_persistence(reference, nlags, metric='pearson_r'):
     plag = [] # holds results of persistence for each lag
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i)
-        plag.append(eval(metric)(a, b, dim='time'))
+        plag.append(metric(a, b, dim='time'))
     pers = xr.concat(plag, 'lead year')
     pers['lead year'] = np.arange(1, 1 + nlags)
     return pers

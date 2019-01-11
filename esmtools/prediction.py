@@ -724,7 +724,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify metric argument')
 
 
-def DP_compute_skill(dp, reference, nlags=None):
+def compute_reconstruction(ds, reference, metric='pearson_r', nlags=None):
     """
     Compute a predictability skill score for a reconstruction framework dataset.
     
@@ -737,7 +737,7 @@ def DP_compute_skill(dp, reference, nlags=None):
 
     Parameters
     ----------
-    dp : xarray object
+    ds : xarray object
         Expected to follow package conventions (and should be an ensemble mean)
         `ensemble` : dim of initialization dates
         `time` : dim of lead years from those initializations
@@ -753,18 +753,21 @@ def DP_compute_skill(dp, reference, nlags=None):
     skill : xarray object
         Predictability with main dimension `lag`
     """
-    _check_xarray(dp)
+    _check_xarray(ds)
     _check_xarray(reference)
-    if 'member' in _get_dims(dp):
+    if 'member' in _get_dims(ds):
         print("Taking ensemble mean...")
-        dp = dp.mean('member')
-    N = dp['ensemble'].size
+        ds = ds.mean('member')
     if nlags is None:
-        nlags = dp['time'].size
-    skill = xr.concat([xr_corr(dp.isel(time=i), reference, lag=i,
-                dim='ensemble') for i in range(0, nlags)], 'lag')
-    skill.coords['lag'] = np.arange(1, nlags+1)
-    return skill 
+        nlags = ds.time.size
+    metric = _get_metric_function(metric)
+    plag = []
+    for i in range(0, nlags):
+        a, b = _shift(ds.isel(time=i), reference, i, dim='ensemble')
+        plag.append(metric(a, b, dim='ensemble'))
+    skill = xr.concat(plag, 'lead time')
+    skill['lead time'] = np.arange(1, 1 + nlags)
+    return skill
 
 
 #--------------------------------------------#

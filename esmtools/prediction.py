@@ -831,7 +831,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
-def compute_persistence(reference, nlags, metric='pearson_r'):
+def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     """
     Computes the skill of  a persistence forecast from a reference 
     (e.g., hindcast/assimilation) or control run.
@@ -854,6 +854,8 @@ def compute_persistence(reference, nlags, metric='pearson_r'):
     metric : str (default 'pearson_r')
         Metric to apply at each lag for the persistence computation. Choose from
         'pearson_r' or 'rmse'.
+    dim : str (default 'ensemble')
+        Dimension over which to compute persistence forecast.
 
     Returns
     -------
@@ -874,8 +876,8 @@ def compute_persistence(reference, nlags, metric='pearson_r'):
             'rmse'""")
     plag = [] # holds results of persistence for each lag
     for i in range(1, 1 + nlags):
-        a, b = _shift(reference, reference, i)
-        plag.append(metric(a, b, dim='time'))
+        a, b = _shift(reference, reference, i, dim=dim)
+        plag.append(metric(a, b, dim=dim))
     pers = xr.concat(plag, 'lead time')
     pers['lead time'] = np.arange(1, 1 + nlags)
     return pers

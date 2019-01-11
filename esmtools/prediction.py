@@ -107,6 +107,25 @@ from .stats import xr_autocorr, xr_corr, _check_xarray, _get_dims
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
 #--------------------------------------------#
+def _shift(a, b, lag, dim='time'):
+    """
+    Helper function to return two shifted time series for applying statistics
+    to lags. This shifts them, and then forces them to have a common dimension
+    so as not to break the metric functions.
+
+    This function is usually applied in a loop. So, one loops over (1, nlags) 
+    applying the shift, then the metric, then concatenates all results into
+    one xarray object.
+    """
+    if a[dim].size != b[dim].size:
+        raise IOError("Please provide time series of equal lengths.")
+    N = a[dim].size
+    a = a.isel({dim: slice(0, N - lag)})
+    b = b.isel({dim: slice(0 + lag, N)})
+    b[dim] = a[dim]
+    return a, b
+
+
 def _get_variance(control, running=None):
     """
     Get running variance.
@@ -418,7 +437,36 @@ def _ensmean_against_control(ds, control_member=0):
 # METRICS
 # Metrics for computing predictability.
 #--------------------------------------------#
-# importing to _metric
+def _get_metric_function(metric):
+    """
+    This allows the user to submit a string representing the desired function
+    to anything that takes a metric. The old format forced the user to import
+    an underscore function (which by definition we don't want).
+
+    Currently compatable with functions:
+    * compute_persistence()
+
+    Currently compatable with metrics:
+    * pearson_r
+    * rmse
+
+    Metrics:
+    --------
+    pearson_r : 'pearson_r', 'pearsonr', 'pr'
+    rmse: 'rmse'
+    """
+    pearson = ['pr', 'pearsonr', 'pearson_r']
+    if metric in pearson:
+        return '_pearson_r'
+    elif metric == 'rmse':
+        return '_rmse'
+    else:
+        raise ValueError("""Please supply a metric from the following list:
+            'pearson_r'
+            'rmse'
+            """)
+
+
 def _pearson_r(a, b, dim):
     """
     Compute anomaly correlation coefficient (ACC) of two xr objects. See xskillscore.pearson_r.
@@ -650,31 +698,51 @@ def DP_compute_skill(dp, reference, nlags=None):
 #--------------------------------------------#
 # PERSISTANCE FORECASTS
 #--------------------------------------------#
-def persistence_forecast_skill(reconstruction, nlags):
+def compute_persistence(reference, nlags, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reconstruction 
-    (e.g., hindcast/assimilation).
+    (e.g., hindcast/assimilation) or control run.
 
-    This simply runs an autocorrelation on the input out to some lag. The user
-    should avoid prebuilt ACF functions in python/MATLAB as they tend to use
-    FFT methods for speed but do have error.
+    This simply applies some metric on the input out to some lag. The user
+    should avoid computing persistence with prebuilt ACF functions in e.g.,
+    python, MATLAB, R as they tend to use FFT methods for speed but incorporate
+    error due to this.
+
+    Currently supported metrics for persistence:
+    * pearson_r
+    * rmse
 
     Parameters
     ---------
-    recontruction : xarray object
-        The reconstruction time series with main dimension 'ensemble'
+    reference : xarray object
+        The reference time series over which to compute persistence.
     nlags : int
-        Number of lags to compute persistence to
+        Number of lags to compute persistence to.
+    metric : str (default 'pearson_r')
+        Metric to apply at each lag for the persistence computation. Choose from
+        'pearson_r' or 'rmse'.
 
     Returns
     -------
-    skill : xarray object
-        Skill of persistence forecast with main dimension 'lag'
+    pers : xarray object
+        Results of persistence forecast with the input metric applied. 
+    
+    References
+    ----------
+    Chapter 8 (Short-Term Climate Prediction) in
+    Van den Dool, Huug. Empirical methods in short-term climate prediction. 
+    Oxford University Press, 2007.
     """
-    skill = xr.concat([xr_autocorr(reconstruction, lag=i, dim='ensemble') \
-                for i in range(1, nlags+1)], 'lag')
-    skill.coords['lag'] = np.arange(1, nlags+1)
-    return skill
+    _check_xarray(reference)
+    metric = _get_metric_function(metric)
+    plag = [] # holds results of persistence for each lag
+    for i in range(1, 1 + nlags):
+        a, b = _shift(reference, reference, i)
+        plag.append(eval(metric)(a, b, dim='time'))
+    pers = xr.concat(plag, 'lead year')
+    pers['lead year'] = np.arange(1, 1 + nlags)
+    return pers
+
 
 # TODO: adapt for maps
 def generate_damped_persistence_forecast(control, startyear, length=20):

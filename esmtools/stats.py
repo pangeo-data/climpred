@@ -13,10 +13,12 @@ Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
 `xr_linregress` : Returns results of linear regression over input dataarray.
-`xr_eff_pearsonr` : Computes pearsonr between two time series accounting for autocorrelation.
+`xr_corr` : Computes pearsonr between two time series accounting for
+            autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
-`xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
+`xr_varweighted_mean_period` : Calculates the variance weighted mean period of
+                               time series.
 `xr_autocorr` : Calculates the autocorrelation of time series over some lag.
 `xr_tau_d` : Calculates the decorrelation time of a time series.
 
@@ -31,14 +33,13 @@ import scipy.stats as ss
 import xarray as xr
 from scipy.signal import detrend, periodogram, tukey
 from scipy.stats import chi2, linregress
-from scipy.stats.stats import pearsonr as pr
-from xskillscore import pearson_r
+from xskillscore import pearson_r, pearson_r_p_value
 
 
-#--------------------------------------------#
+# --------------------------------------------#
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools.
-#--------------------------------------------#
+# --------------------------------------------#
 def _check_xarray(x):
     """
     Check if the object being submitted to a given function is either a
@@ -85,7 +86,7 @@ def _get_vars(ds):
     Currently returns as a list, but can add keyword to select tuple or
     list if desired for any reason.
     """
-    return list(ds.variables)
+    return list(ds.data_vars)
 
 
 def _taper(x, p):
@@ -95,11 +96,13 @@ def _taper(x, p):
     window = tukey(len(x), p)
     y = x * window
     return y
-#-------------------------------------------------------------------#
+# -------------------------------------------------------------------#
 # AREA-WEIGHTING
 # Functions related to area-weighting on grids with and without area
 # information.
-#-------------------------------------------------------------------#
+# -------------------------------------------------------------------#
+
+
 def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     """
     Area-weights data on a regular (e.g. 360x180) grid that does not come with
@@ -128,14 +131,20 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     da_aw = et.stats.reg_aw(SST)
     """
     _check_xarray(da)
+    non_spatial = [i for i in _get_dims(da) if i not in [lat_coord, lon_coord]]
+    filter_dict = {}
+    while len(non_spatial) > 0:
+        filter_dict.update({non_spatial[0]: 0})
+        non_spatial.pop(0)
     if one_dimensional:
         lon, lat = np.meshgrid(da[lon_coord], da[lat_coord])
     else:
         lat = da[lat_coord]
     # NaN out land to not go into area-weighting
-    lat[np.isnan(da)] = np.nan
+    lat[np.isnan(da.isel(filter_dict))] = np.nan
     cos_lat = np.cos(np.deg2rad(lat))
-    aw_da = (da * cos_lat).sum() / np.nansum(np.cos(np.deg2rad(lat)))
+    aw_da = (da * cos_lat).sum(lat_coord).sum(lon_coord) / \
+        np.nansum(cos_lat)
     return aw_da
 
 
@@ -190,10 +199,10 @@ def xr_area_weight(da, area_coord='area'):
     return aw_da
 
 
-#----------------------------------#
+# ----------------------------------#
 # TIME SERIES
 # Functions related to time series.
-#----------------------------------#
+# ----------------------------------#
 def xr_smooth_series(da, dim, length, center=True):
     """
     Returns a smoothed version of the input timeseries.
@@ -244,9 +253,9 @@ def xr_linregress(da, dim='time', compact=True):
     """
     _check_xarray(da)
     results = xr.apply_ufunc(linregress, da[dim], da,
-                          input_core_dims=[[dim], [dim]],
-                          output_core_dims=[[], [], [], [], []],
-                          vectorize=True, dask='parallelized')
+                             input_core_dims=[[dim], [dim]],
+                             output_core_dims=[[], [], [], [], []],
+                             vectorize=True, dask='parallelized')
     # Force into a cleaner dataset. The above function returns a dataset
     # with no clear labeling.
     ds = xr.Dataset()
@@ -261,12 +270,18 @@ def xr_linregress(da, dim='time', compact=True):
                ds['stderr']
 
 
-def xr_eff_pearsonr(ds, dim='time', two_sided=True):
+def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     """
-    Computes the Pearson product-moment coefficient of linear correlation. This
-    version calculates the effective degrees of freedom, accounting for
-    autocorrelation within each time series that could fluff the significance
-    of the correlation.
+    Computes the Pearson product-momment coefficient of linear correlation.
+    (See xr_autocorr for autocorrelation/lag for one time series)
+
+    This version calculates the effective degrees of freedom, accounting
+    for autocorrelation within each time series that could fluff the
+    significance of the correlation.
+
+    NOTE: If lag is not zero, x predicts y. In other words, the time series for
+    x is stationary, and y slides to the left. Or, y stays in place and x
+    slides to the right.
 
     This function is written to accept a dataset of arbitrary number of
     dimensions (e.g., lat, lon, depth).
@@ -275,64 +290,88 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
 
     Parameters
     ----------
-    ds : xarray Dataset
-        Dataset containing exactly two variables of the time series to be
-        correlated (e.g., ds.x and ds.y). This can contain any arbitrary
-        number of dimensions in addition to the correlation dimension.
+    x, y : xarray DataArray
+        time series being correlated (can be multi-dimensional)
     dim : str (default 'time')
-        The dimension over which to compute the correlation.
+        Correlation dimension
+    lag : int (default 0)
+        Lag to apply to correlation, with x predicting y.
     two_sided : boolean (default True)
-        Whether or not to do a two-sided t-test.
+        If true, compute a two-sided t-test
+    return_p : boolean (default False)
+        If true, return both r and p
 
     Returns
     -------
-    result : xarray Dataset
-        Results of the linear correlation with r, p, and the effective
-        sample size for each time series being correlated.
+    r : correlation coefficient
+    p : p-value accounting for autocorrelation (if return_p True)
 
-    References:
+    References (for dealing with autocorrelation):
     ----------
     1. Wilks, Daniel S. Statistical methods in the atmospheric sciences.
     Vol. 100. Academic press, 2011.
-    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode
-    on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
+    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
+    Annular Mode on Southern Ocean circulation and biology." Geophysical
+    Research Letters 32.11 (2005).
+    3. Brady, R. X., Lovenduski, N. S., Alexander, M. A., Jacox, M., and
+    Gruber, N.: On the role of climate modes in modulating the air-sea CO2
+    fluxes in Eastern Boundary Upwelling Systems, Biogeosciences Discuss.,
+    https://doi.org/10.5194/bg-2018-415, in review, 2018.
     """
-    _check_xarray(ds)
-    def ufunc_pr(x, y, dim):
-        """
-        Internal ufunc to compute pearsonr over every grid cell.
-        """
-        return xr.apply_ufunc(pr, x, y,
-                              input_core_dims=[[dim], [dim]],
-                              output_core_dims=[[], []],
-                              vectorize=True, dask='parallelized')
+    _check_xarray(x)
+    _check_xarray(y)
+    if lag != 0:
+        N = x[dim].size
+        normal = x.isel({dim: slice(0, N-lag)})
+        shifted = y.isel({dim: slice(0 + lag, N)})
+        if dim not in list(x.coords):
+            normal[dim] = np.arange(1, N)
+        shifted[dim] = normal[dim]
+        r = pearson_r(normal, shifted, dim)
+    else:
+        r = pearson_r(x, y, dim)
+    if return_p:
+        p = _xr_eff_p_value(x, y, r, dim, two_sided)
+        # return with proper dimension labeling. would be easier with
+        # apply_ufunc, but having trouble getting it to work here. issue
+        # probably has to do with core dims.
+        dimlist = _get_dims(r)
+        for i in range(len(dimlist)):
+            p = p.rename({'dim_' + str(i): dimlist[i]})
+        return r, p
+    else:
+        return r
 
 
-    varlist = _get_vars(ds)
-    x, y = varlist[0], varlist[1]
-    if len(varlist) < 2 or len(varlist) > 2:
+def _xr_eff_p_value(x, y, r, dim, two_sided):
+    """
+    Computes the p_value accounting for autocorrelation in time series.
+
+    ds : dataset with time series being correlated.
+    """
+    def _compute_autocorr(v, dim, n):
         """
-        The philosophy behind this function is to have a dataset containing
-        gridded time series for two elements to be correlated.
+        Return normal and shifted time series
+        with equal dimensions so as not to
+        throw an error.
         """
-        raise ValueError("""Please supply an xarray dataset containing the two
-            variables you would like correlated. In other words, it should have
-            something like ds.x and ds.y that are either individual time series
-            or a grid of time series.""")
-    # Find raw pearson r. The effective sample size simply changes the threshold
-    # for this to be significant.
-    r, _ = ufunc_pr(ds[x], ds[y], dim)
-    # Compute effective sample size
-    n = len(ds[dim])
-    # Find autocorrelation
-    xa, ya = ds[x] - ds[x].mean(dim), ds[y] - ds[y].mean(dim)
-    xauto, _ = ufunc_pr(xa.isel({dim: slice(1, n)}),
-                        xa.isel({dim: slice(0, n-1)}), dim)
-    yauto, _ = ufunc_pr(ya.isel({dim: slice(1, n)}),
-                        ya.isel({dim: slice(0, n-1)}), dim)
+        shifted = v.isel({dim: slice(1, n)})
+        normal = v.isel({dim: slice(0, n-1)})
+        # see explanation in xr_autocorr for this
+        if dim not in list(v.coords):
+            normal[dim] = np.arange(1, n)
+        shifted[dim] = normal[dim]
+        return pearson_r(shifted, normal, dim)
+
+    n = x[dim].size
+    # find autocorrelation
+    xa, ya = x - x.mean(dim), y - y.mean(dim)
+    xauto = _compute_autocorr(xa, dim, n)
+    yauto = _compute_autocorr(ya, dim, n)
+    # compute effective sample size
     n_eff = n * (1 - xauto * yauto) / (1 + xauto * yauto)
     n_eff = np.floor(n_eff)
-    # constrain n_eff to be at maximum the total number of samples.
+    # constrain n_eff to be at maximum the total number of samples
     n_eff = n_eff.where(n_eff <= n, n)
     # compute t-statistic
     t = r * np.sqrt((n_eff - 2) / (1 - r**2))
@@ -340,14 +379,7 @@ def xr_eff_pearsonr(ds, dim='time', two_sided=True):
         p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1) * 2)
     else:
         p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1))
-    # return as a nice dataset
-    # fix p dimension names
-    dimlist = _get_dims(r)
-    for i in range(len(dimlist)):
-        p = p.rename({'dim_' + str(i): dimlist[i]})
-    r.name, p.name, n_eff.name = 'r', 'p', 'n_eff'
-    result = xr.merge([r, p, n_eff])
-    return result
+    return p
 
 
 def xr_rm_poly(da, order, dim='time'):
@@ -371,6 +403,7 @@ def xr_rm_poly(da, order, dim='time'):
         DataArray with detrended time series.
     """
     _check_xarray(da)
+
     def _get_metadata(da):
         dims = da.dims
         coords = da.coords
@@ -392,7 +425,6 @@ def xr_rm_poly(da, order, dim='time'):
             dims[0], dims[idx] = dims[idx], dims[0]
             dims = tuple(dims)
         return y, dims, coords
-
 
     y = np.asarray(da)
     # Force independent axis to be leading dimension.
@@ -424,10 +456,11 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     Reference
     ---------
     - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
-      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
-      6292–6311. https://doi.org/10/bwq92h.
+      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27,
+      2010): 6292-6311. https://doi.org/10/bwq92h.
     """
     _check_xarray(ds)
+
     def _create_dataset(ds, f, Pxx, time_dim):
         """
         Organize results of periodogram into clean dataset.
@@ -443,53 +476,49 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     return T
 
 
-def xr_autocorr(da, lag=1, dim='time', r_only=False):
+def xr_autocorr(ds, lag=1, dim='time', return_p=False):
     """
     Calculated lagged correlation of a xr.Dataset.
 
     Parameters
     ----------
-    da : xarray dataset/dataarray
+    ds : xarray dataset/dataarray
     lag : int (default 1)
         number of time steps to lag correlate.
     dim : str (default 'time')
-        name of time dimension
-    r_only : boolean (default False)
-       If true, return just the correlation coefficient.
-       If false, return both the correlation coefficient and p-value.
+        name of time dimension/dimension to autocorrelate over
+    return_p : boolean (default False)
+        if false, return just the correlation coefficient.
+        if true, return both the correlation coefficient and p-value.
 
     Returns
     -------
     r : Pearson correlation coefficient
-    p : p-value
-    """
-    _check_xarray(da)
-    N = len(da[dim])
-    da1 = da.isel({dim: slice(0, N - lag)})
-    da2 = da.isel({dim: slice(0 + lag, N)})
-    da2[dim] = da1[dim]
-    r, p = xr.apply_ufunc(pr, da1, da2,
-                          input_core_dims=[[dim], [dim]],
-                          output_core_dims=[[], []],
-                          vectorize=True,
-                          dask='parallelized')
-    if r_only:
-        return r
-    else:
-        return r, p
+    p : (if return_p True) p-value
 
-def xr_corr(ds, lag=1, dim='time'):
-    """
-    Calculated lagged correlation of a xr.Dataset.
-
-    This is a faster implementation that scipy pearsonr. Uses xskillscore's pearson_r.
     """
     _check_xarray(ds)
-    N = len(ds[dim])
+    N = ds[dim].size
     normal = ds.isel({dim: slice(0, N - lag)})
     shifted = ds.isel({dim: slice(0 + lag, N)})
+    """
+    xskillscore pearson_r looks for the dimensions to be matching, but we
+    shifted them so they probably won't be. This solution doesn't work
+    if the user provides a dataset without a coordinate for the main
+    dimension, so we need to create a dummy dimension in that case.
+    """
+    if dim not in list(ds.coords):
+        normal[dim] = np.arange(1, N)
     shifted[dim] = normal[dim]
-    return pearson_r(normal, shifted, dim)
+    r = pearson_r(normal, shifted, dim)
+    if return_p:
+        # NOTE: This assumes 2-tailed. Need to update xr_eff_pearsonr
+        # to utilize xskillscore's metrics but then compute own effective
+        # p-value with option for one-tailed.
+        p = pearson_r_p_value(normal, shifted, dim)
+        return r, p
+    else:
+        return r
 
 
 def xr_decorrelation_time(da, r=20, dim='time'):
@@ -514,12 +543,15 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     """
     _check_xarray(da)
     one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([xr_corr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it').sum('it')
-#--------------------------------------------#
+    return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
+                                range(1, r)], 'it').sum('it')
+# --------------------------------------------#
 # GENERATE TIME SERIES DATA
 # Functions that create time series data
 # for testing, etc.
-#--------------------------------------------#
+# --------------------------------------------#
+
+
 def create_power_spectrum(s, pct=0.1, pLow=0.05):
     """
     Create power spectrum with CI for a given pd.series.

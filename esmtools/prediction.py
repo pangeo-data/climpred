@@ -681,7 +681,7 @@ def _msss(ds, control, comparison, running):
 # predictability.
 #--------------------------------------------#
 def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m', 
-                          anomaly=False, detrend=False, running=None)
+        anomaly=False, detrend=False, running=None): 
     """
     Compute a predictability skill score for a perfect-model framework simulation dataset.
 

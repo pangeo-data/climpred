@@ -1215,7 +1215,8 @@ def pseudo_ens(ds, control):
     return xr.concat([create_pseudo_members(control) for _ in range(nens)], 'ensemble')
 
 
-def PM_sig(ds, control, metric=_rmse, comparison=_m2m, reference_period='MK', sig=95, bootstrap=30):
+def PM_sig(ds, control, metric='rmse', comparison='m2m', reference_period='MK', 
+           sig=95, bootstrap=30):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble generated from control.
 
@@ -1237,12 +1238,14 @@ def PM_sig(ds, control, metric=_rmse, comparison=_m2m, reference_period='MK', si
         as many sig_level as listitems in sig
 
     """
+    _check_xarray(ds)
+    _check_xarray(control)
     x = []
     _control = _control_for_reference_period(
         control, reference_period=reference_period)
     for _ in range(1 + int(bootstrap / ds['time'].size)):
         ds_pseudo = pseudo_ens(ds, _control)
-        ds_pseudo_metric = PM_compute(
+        ds_pseudo_metric = compute_perfect_model(
             ds_pseudo, _control, metric=metric, comparison=comparison)
         x.append(ds_pseudo_metric)
     ds_pseudo_metric = xr.concat(x, dim='it')

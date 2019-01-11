@@ -13,10 +13,12 @@ Time Series
 -----------
 `xr_smooth_series` : Returns a smoothed time series.
 `xr_linregress` : Returns results of linear regression over input dataarray.
-`xr_corr` : Computes pearsonr between two time series accounting for autocorrelation.
+`xr_corr` : Computes pearsonr between two time series accounting for
+            autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
 `xr_rm_trend` : Returns detrended (first order) time series.
-`xr_varweighted_mean_period` : Calculates the variance weighted mean period of time series.
+`xr_varweighted_mean_period` : Calculates the variance weighted mean period of
+                               time series.
 `xr_autocorr` : Calculates the autocorrelation of time series over some lag.
 `xr_tau_d` : Calculates the decorrelation time of a time series.
 
@@ -31,14 +33,13 @@ import scipy.stats as ss
 import xarray as xr
 from scipy.signal import detrend, periodogram, tukey
 from scipy.stats import chi2, linregress
-from scipy.stats.stats import pearsonr as pr
 from xskillscore import pearson_r, pearson_r_p_value
 
 
-#--------------------------------------------#
+# --------------------------------------------#
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools.
-#--------------------------------------------#
+# --------------------------------------------#
 def _check_xarray(x):
     """
     Check if the object being submitted to a given function is either a
@@ -95,11 +96,13 @@ def _taper(x, p):
     window = tukey(len(x), p)
     y = x * window
     return y
-#-------------------------------------------------------------------#
+# -------------------------------------------------------------------#
 # AREA-WEIGHTING
 # Functions related to area-weighting on grids with and without area
 # information.
-#-------------------------------------------------------------------#
+# -------------------------------------------------------------------#
+
+
 def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     """
     Area-weights data on a regular (e.g. 360x180) grid that does not come with
@@ -128,7 +131,6 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     da_aw = et.stats.reg_aw(SST)
     """
     _check_xarray(da)
-    dimlist = _get_dims(da)
     non_spatial = [i for i in _get_dims(da) if i not in [lat_coord, lon_coord]]
     filter_dict = {}
     while len(non_spatial) > 0:
@@ -142,7 +144,7 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     lat[np.isnan(da.isel(filter_dict))] = np.nan
     cos_lat = np.cos(np.deg2rad(lat))
     aw_da = (da * cos_lat).sum(lat_coord).sum(lon_coord) / \
-            np.nansum(cos_lat)
+        np.nansum(cos_lat)
     return aw_da
 
 
@@ -197,10 +199,10 @@ def xr_area_weight(da, area_coord='area'):
     return aw_da
 
 
-#----------------------------------#
+# ----------------------------------#
 # TIME SERIES
 # Functions related to time series.
-#----------------------------------#
+# ----------------------------------#
 def xr_smooth_series(da, dim, length, center=True):
     """
     Returns a smoothed version of the input timeseries.
@@ -251,9 +253,9 @@ def xr_linregress(da, dim='time', compact=True):
     """
     _check_xarray(da)
     results = xr.apply_ufunc(linregress, da[dim], da,
-                          input_core_dims=[[dim], [dim]],
-                          output_core_dims=[[], [], [], [], []],
-                          vectorize=True, dask='parallelized')
+                             input_core_dims=[[dim], [dim]],
+                             output_core_dims=[[], [], [], [], []],
+                             vectorize=True, dask='parallelized')
     # Force into a cleaner dataset. The above function returns a dataset
     # with no clear labeling.
     ds = xr.Dataset()
@@ -274,12 +276,12 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     (See xr_autocorr for autocorrelation/lag for one time series)
 
     This version calculates the effective degrees of freedom, accounting
-    for autocorrelation within each time series that could fluff the significance
-    of the cross correlation.
+    for autocorrelation within each time series that could fluff the
+    significance of the correlation.
 
     NOTE: If lag is not zero, x predicts y. In other words, the time series for
-    x is stationary, and y slides to the left. Or, y stays in place and x slides
-    to the right.
+    x is stationary, and y slides to the left. Or, y stays in place and x
+    slides to the right.
 
     This function is written to accept a dataset of arbitrary number of
     dimensions (e.g., lat, lon, depth).
@@ -298,7 +300,7 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
         If true, compute a two-sided t-test
     return_p : boolean (default False)
         If true, return both r and p
-    
+
     Returns
     -------
     r : correlation coefficient
@@ -308,16 +310,18 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     ----------
     1. Wilks, Daniel S. Statistical methods in the atmospheric sciences.
     Vol. 100. Academic press, 2011.
-    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern Annular Mode
-    on Southern Ocean circulation and biology." Geophysical Research Letters 32.11 (2005).
-    3. Brady, R. X., Lovenduski, N. S., Alexander, M. A., Jacox, M., and Gruber, N.: 
-    On the role of climate modes in modulating the air-sea CO2 fluxes in Eastern Boundary 
-    Upwelling Systems, Biogeosciences Discuss., https://doi.org/10.5194/bg-2018-415, in review, 2018.
+    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
+    Annular Mode on Southern Ocean circulation and biology." Geophysical
+    Research Letters 32.11 (2005).
+    3. Brady, R. X., Lovenduski, N. S., Alexander, M. A., Jacox, M., and
+    Gruber, N.: On the role of climate modes in modulating the air-sea CO2
+    fluxes in Eastern Boundary Upwelling Systems, Biogeosciences Discuss.,
+    https://doi.org/10.5194/bg-2018-415, in review, 2018.
     """
     _check_xarray(x)
     _check_xarray(y)
     if lag != 0:
-        N = x[dim].size 
+        N = x[dim].size
         normal = x.isel({dim: slice(0, N-lag)})
         shifted = y.isel({dim: slice(0 + lag, N)})
         if dim not in list(x.coords):
@@ -342,13 +346,13 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
 def _xr_eff_p_value(x, y, r, dim, two_sided):
     """
     Computes the p_value accounting for autocorrelation in time series.
-    
+
     ds : dataset with time series being correlated.
     """
     def _compute_autocorr(v, dim, n):
         """
         Return normal and shifted time series
-        with equal dimensions so as not to 
+        with equal dimensions so as not to
         throw an error.
         """
         shifted = v.isel({dim: slice(1, n)})
@@ -358,7 +362,7 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
             normal[dim] = np.arange(1, n)
         shifted[dim] = normal[dim]
         return pearson_r(shifted, normal, dim)
-    
+
     n = x[dim].size
     # find autocorrelation
     xa, ya = x - x.mean(dim), y - y.mean(dim)
@@ -399,6 +403,7 @@ def xr_rm_poly(da, order, dim='time'):
         DataArray with detrended time series.
     """
     _check_xarray(da)
+
     def _get_metadata(da):
         dims = da.dims
         coords = da.coords
@@ -420,7 +425,6 @@ def xr_rm_poly(da, order, dim='time'):
             dims[0], dims[idx] = dims[idx], dims[0]
             dims = tuple(dims)
         return y, dims, coords
-
 
     y = np.asarray(da)
     # Force independent axis to be leading dimension.
@@ -452,10 +456,11 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     Reference
     ---------
     - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
-      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27, 2010):
-      6292–6311. https://doi.org/10/bwq92h.
+      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27,
+      2010): 6292-6311. https://doi.org/10/bwq92h.
     """
     _check_xarray(ds)
+
     def _create_dataset(ds, f, Pxx, time_dim):
         """
         Organize results of periodogram into clean dataset.
@@ -485,7 +490,7 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
     return_p : boolean (default False)
         if false, return just the correlation coefficient.
         if true, return both the correlation coefficient and p-value.
-    
+
     Returns
     -------
     r : Pearson correlation coefficient
@@ -497,7 +502,7 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
     normal = ds.isel({dim: slice(0, N - lag)})
     shifted = ds.isel({dim: slice(0 + lag, N)})
     """
-    xskillscore pearson_r looks for the dimensions to be matching, but we 
+    xskillscore pearson_r looks for the dimensions to be matching, but we
     shifted them so they probably won't be. This solution doesn't work
     if the user provides a dataset without a coordinate for the main
     dimension, so we need to create a dummy dimension in that case.
@@ -538,12 +543,15 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     """
     _check_xarray(da)
     one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it').sum('it')
-#--------------------------------------------#
+    return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
+                                range(1, r)], 'it').sum('it')
+# --------------------------------------------#
 # GENERATE TIME SERIES DATA
 # Functions that create time series data
 # for testing, etc.
-#--------------------------------------------#
+# --------------------------------------------#
+
+
 def create_power_spectrum(s, pct=0.1, pLow=0.05):
     """
     Create power spectrum with CI for a given pd.series.

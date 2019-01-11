@@ -308,7 +308,7 @@ def _get_comparison_function(comparison):
     m2e : Compare all members to the ensemble mean.
     e2c : Compare the ensemble mean to the control.
 
-    RECONSTRUCTION:
+    REFERENCE:
     e2r : Compare the ensemble mean to the reference.
     m2r : Compare each ensemble member to the reference.
     """
@@ -474,7 +474,7 @@ def _ensmean_against_control(ds, control_member=0):
 
 def _e2r(ds, reference):
     """
-    For a reconstruction-based decadal prediction ensemble. This compares the
+    For a reference-based decadal prediction ensemble. This compares the
     ensemble mean prediction to the reference (hindcast, simulation,
     observations).
     """
@@ -488,7 +488,7 @@ def _e2r(ds, reference):
 
 def _m2r(ds, reference):
     """
-    For a reconstruction-based decadal prediction ensemble. This compares each
+    For a reference-based decadal prediction ensemble. This compares each
     member individually to the reference (hindcast, simulation,
     observations).
     """
@@ -518,7 +518,8 @@ def _get_metric_function(metric):
 
     Currently compatable with functions:
     * compute_persistence()
-    * compute_pm()
+    * compute_perfect_model()
+    * compute_reference()
 
     Currently compatable with metrics:
     * pearson_r
@@ -769,10 +770,11 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify metric argument')
 
 
-def compute_reconstruction(ds, reference, metric='pearson_r', comparison='e2r',
+def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
                            nlags=None):
     """
-    Compute a predictability skill score for a reconstruction framework dataset.
+    Compute a predictability skill score against some reference (hindcast,
+    assimilation, reconstruction, observations).
     
     Note that if reference is the reconstruction, the output correlation coefficients
     are for potential predictability. If the reference is observations, the ouput
@@ -787,7 +789,7 @@ def compute_reconstruction(ds, reference, metric='pearson_r', comparison='e2r',
         Additional dims can be lat, lon, depth, etc. but should not be individual
         members.
     reference : xarray object
-        Reconstruction or observations over same time period
+        reference output/data over same time period
     metric : str (default 'pearson_r')
         Metric used in comparing the decadal prediction ensemble with the reference.
         * pearson_r
@@ -831,7 +833,7 @@ def compute_reconstruction(ds, reference, metric='pearson_r', comparison='e2r',
 #--------------------------------------------#
 def compute_persistence(reference, nlags, metric='pearson_r'):
     """
-    Computes the skill of  a persistence forecast from a reconstruction 
+    Computes the skill of  a persistence forecast from a reference 
     (e.g., hindcast/assimilation) or control run.
 
     This simply applies some metric on the input out to some lag. The user

@@ -1,60 +1,58 @@
-"""Objects dealing with prediction metrics. In particular, these objects are specific to decadal prediction -- skill, persistence forecasting, etc and perfect-model predictability --  etc.
+"""
+Objects dealing with decadal prediction metrics. 
 
 Concept of calculating predictability skill
 -------------------------------------------
-- metric: how is skill calculated, eg. rmse
-- comparison: how forecasts and observation/truth are compared, eg. _m2m
-- PM_compute: computes the perfect-model predictability skill according to metric and comparison
-    - PM_compute(ds, control, metric=rmse, comparison=_m2m)
+- metric: how is skill calculated, e.g. pearson_r, rmse
+- comparison: how forecasts and observation/truth are compared, e.g., m2m, e2r
+
+High-level functions
+-------------------
+- compute_perfect_model: computes the perfect-model predictability skill 
+according to metric and comparison
+- compute_reference: computes predictability/skill relative to some reference
+- compute_persistence: computes a persistence forecast from some simulation
 - bootstrap from uninitialized ensemble:
     - PM_sig(ds, control, metric=rmse, comparison=_m2m, bootstrap=500, sig=99)
     - threshold to determine predictability horizon
 
-Metrics
+Metrics (submit to functions as strings)
 -------
-- _mse: Mean Square Error
-- _nev: Normalized Ensemble Variance
-- _msss: Mean Square Skill Score = _ppp: Prognostic Potential Predictability
-- _rmse and _rmse_v: Root-Mean Square Error
-- _nrmse: Normalized Root-Mean Square Error
-- _pearson_r: Anomaly correlation coefficient
-- _uACC: unbiased ACC
+- mse: Mean Square Error
+- nev: Normalized Ensemble Variance
+- msss: Mean Square Skill Score = ppp: Prognostic Potential Predictability
+- rmse and rmse_v: Root-Mean Square Error
+- nrmse: Normalized Root-Mean Square Error
+- pearson_r: Anomaly correlation coefficient
+- uACC: unbiased ACC
 
-Comparisons
+Comparisons (submit to functions as strings)
 -----------
-- _m2c: many forecasts vs. control truth
-- _m2e: many forecasts vs. ensemble mean truth
-- _m2m: many forecasts vs. many truths in turn
-- _e2c: ensemble mean forecast vs. control truth
+Perfect Model:
+- m2c: many forecasts vs. control truth
+- m2e: many forecasts vs. ensemble mean truth
+- m2m: many forecasts vs. many truths in turn
+- e2c: ensemble mean forecast vs. control truth
 
-Missing
--------
-- Relative Entropy (Kleeman 2002; Branstator and Teng 2010)
-- Mutual information (DelSole)
-- Average Predictability Time (APT) (DelSole)
+Reference:
+- e2r: ensemble mean vs. reference
+- m2r: individual ensemble members vs. reference
 
-Also
-----
+Additional Functions
+--------
 - Diagnostic Potential Predictability (DPP) (Boer 2004, Resplandy 2015/Seferian 2018)
 - predictability horizon:
-    - linear breakpoint fit (Seferian 2018) (missing)
-    - f-test significant test (Pohlmann 2004, Griffies 1997) (missing)
     - bootstrapping limit
-
-- Persistence Forecast
-    - persistence forecast skill (assimilation/hindcast)
-    - persistence (missing)
-    - damped persistence
-
+- Damped persistence forecast
 
 Data Structure
 --------------
 This module works on xr.Datasets with the following dimensions and coordinates:
 - 1D (Predictability of timelines of preprocessed regions):
-    - ensemble
-    - area
-    - time (as in Lead Year)
-    - period (time averaging: yearmean, seasonal mean)
+    - ensemble : initialization months/years
+    - area : pre-processed region strings
+    - time : lead months/years from the initialization 
+    - period : time averaging: yearmean, seasonal mean
 
 Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
 <xarray.Dataset>
@@ -90,7 +88,6 @@ Data variables:
 
 This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model) netcdf output.
 The time dimensions is called 'time' and is in integer, not datetime[ns]
-
 """
 import os
 from random import randint

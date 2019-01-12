@@ -93,6 +93,10 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     Returns:
         An xarray object containing the area-weighted ouput retaining all 
         dimensions other than latitude and longitude.
+
+    .. todo::
+        Remove one_dimensional boolean. This can be checked automatically
+        and should not be up to the user.
     
     Example:
         >>> da_aw = xr_cos_weight(da)

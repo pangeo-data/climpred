@@ -1,1 +1,2 @@
 v0.1, 12/20/2018 -- Initial development.
+v0.2, 01/11/2019 -- Name changed to `climpred`, developed enough for basic decadal prediction tasks on a perfect-model ensemble and reference-based ensemble.

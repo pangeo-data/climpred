@@ -1,7 +1,7 @@
 from setuptools import find_packages, setup
 
 DISTNAME = 'climpred'
-VERSION = '0.1'
+VERSION = '0.2'
 AUTHOR = 'Riley X. Brady'
 AUTHOR_EMAIL = 'riley.brady@colorado.edu'
 DESCRIPTION = 'An xarray wrapper for decadal climate prediction.'

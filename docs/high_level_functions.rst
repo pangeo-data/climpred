@@ -8,4 +8,3 @@ The typical user of ``climpred`` should only need to call one of these high-leve
 Test
 ====
 
-Test again

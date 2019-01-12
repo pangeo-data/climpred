@@ -98,10 +98,7 @@ from random import randint
 import numpy as np
 import pandas as pd
 import xarray as xr
-from bs4 import BeautifulSoup
-from six.moves.urllib.request import urlopen, urlretrieve
 from xskillscore import pearson_r, rmse
-
 from .stats import xr_autocorr, _check_xarray, _get_dims
 
 # -------------------------------------------- #
@@ -222,80 +219,6 @@ def _select_members_ensembles(ds, m=None, e=None):
     if e is None:
         e = ds.ensemble.values
     return ds.sel(member=m, ensemble=e)
-
-
-# --------------------------------------------#
-# SAMPLE DATA
-# Definitions related to loading sample
-# datasets.
-# --------------------------------------------#
-
-
-def _get_data_home(data_home=None):
-    """
-    Return the path of the data directory.
-
-    This is used by the ``load_dataset`` function.
-    If the ``data_home`` argument is not specified, the default location
-    is ``~/seaborn-data``.
-
-    """
-    if data_home is None:
-        data_home = os.environ.get('HOME', '~')
-    data_home = os.path.expanduser(data_home)
-    if not os.path.exists(data_home):
-        os.makedirs(data_home)
-    return data_home
-
-
-def get_dataset_names():
-    """
-    Report available example datasets, useful for reporting issues."""
-    # delayed import to not demand bs4 unless this function is actually used
-    # copied from seaborn
-    http = urlopen(
-        'https://github.com/bradyrx/esmtools/tree/master/sample_data/' +
-        'prediction')
-    gh_list = BeautifulSoup(http, features='lxml')
-    return [l.text.replace('.nc', '')
-            for l in gh_list.find_all("a", {"class": "js-navigation-open"})
-            if l.text.endswith('.nc')]
-
-
-def load_dataset(name, cache=True, data_home=None, **kws):
-    """
-    Load a datasets ds and control from the online repository
-    (requires internet).
-
-    Parameters
-    ----------
-    name : str
-        Name of the dataset (`ds`.nc on
-        https://github.com/aaronspring/esmtools/raw/develop/sample_data/
-        prediction).
-        You can obtain list of available datasets using
-        :func:`get_dataset_names`
-    cache : boolean, optional
-        If True, then cache data locally and use the cache on subsequent calls
-    data_home : string, optional
-        The directory in which to cache data. By default, uses ~/.
-    kws : dict, optional
-        Passed to pandas.read_csv
-
-    """
-    path = (
-        'https://github.com/bradyrx/esmtools/tree/master/sample_data/' +
-        'prediction/{}.nc')
-    full_path = path.format(name)
-    # print('Load from URL:', full_path)
-    if cache:
-        cache_path = os.path.join(_get_data_home(data_home),
-                                  os.path.basename(full_path))
-        if not os.path.exists(cache_path):
-            urlretrieve(full_path, cache_path)
-        full_path = cache_path
-    df = xr.open_dataset(full_path, **kws)
-    return df
 
 
 # --------------------------------------------#

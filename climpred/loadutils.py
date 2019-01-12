@@ -107,7 +107,6 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
         name = file_alias_dict[name]
     longdir = _os.path.expanduser(cache_dir)
     fullname = name + '.nc'
-    print('name: ' + name)
     localfile = _os.sep.join((longdir, fullname))
     md5name = name + '.md5'
     md5file = _os.sep.join((longdir, md5name))
@@ -120,7 +119,6 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
 
         if extension is not None:
             url = '/'.join((github_url, 'raw', branch, extension, fullname))
-            print('url: ' + url)
             _urlretrieve(url, localfile)
             url = '/'.join((github_url, 'raw', branch, extension, md5name))
             _urlretrieve(url, md5file)

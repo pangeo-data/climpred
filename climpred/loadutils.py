@@ -40,19 +40,19 @@ file_alias_dict = {'MPI-DP-1D': 'PM_MPI-ESM-LR_control',
                                       'SST.024901-031612')}
 
 file_descriptions = {'MPI-DP-1D': 'decadal prediction ensemble area averages' +
-                                  'of SST/SSS/AMO.',
+                                  ' of SST/SSS/AMO.',
                      'MPI-DP-3D': 'decadal prediction ensemble lat/lon/time' +
-                                  'of SST/SSS/AMO.',
+                                  ' of SST/SSS/AMO.',
                      'MPI-control-1D': 'area averages for the control run of' +
-                                       'SST/SSS.',
+                                       ' SST/SSS.',
                      'MPI-control-3D': 'lat/lon/time for the control run of' +
-                                       'SST/SSS.',
+                                       ' SST/SSS.',
                      'CESM-DP': 'decadal prediction ensemble of global mean' +
-                                'SSTs.',
+                                ' SSTs.',
                      'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
                      'ERSST': 'observations of global mean SSTs.',
                      'CESM-reference': 'hindcast simulation that initializes' +
-                                       'CESM-DP.',
+                                       ' CESM-DP.',
                      }
 
 

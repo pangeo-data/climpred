@@ -12,8 +12,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
+import os
+import sys
+sys.path.append(os.path.abspath('../climpred'))
 # sys.path.insert(0, os.path.abspath('.'))
 
 
@@ -40,6 +41,7 @@ release = '0.2'
 # ones.
 extensions = [
     'sphinx.ext.autodoc',
+    'sphinx.ext.napoleon',
     'sphinx.ext.doctest',
     'sphinx.ext.intersphinx',
     'sphinx.ext.todo',
@@ -81,7 +83,12 @@ pygments_style = None
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+# themes: http://www.sphinx-doc.org/en/stable/theming.html
+html_theme = 'classic'
+#html_theme_options = {
+#    "rightsidebar": "true",
+#    "relbarbgcolor": "black"
+#}
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the

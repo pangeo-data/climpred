@@ -1,18 +1,4 @@
-"""
-Objects dealing with timeseries and ensemble statistics. All functions will
-auto-check for type DataArray. If it is a DataArray, it will return a type
-DataArray to ensure .apply() function from xarray can be applied.
-
-Time Series
------------
-`xr_corr` : Computes pearsonr between two time series accounting for
-            autocorrelation.
-`xr_rm_poly` : Returns time series with polynomial fit removed.
-`xr_rm_trend` : Returns detrended (first order) time series.
-`xr_varweighted_mean_period` : Calculates the variance weighted mean period of
-                               time series.
-`xr_autocorr` : Calculates the autocorrelation of time series over some lag.
-`xr_tau_d` : Calculates the decorrelation time of a time series.
+"""Objects dealing with time series and ensemble statistics.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
@@ -73,6 +59,115 @@ def _get_vars(ds):
     list if desired for any reason.
     """
     return list(ds.data_vars)
+
+
+def _taper(x, p):
+    """
+    Description needed here.
+    """
+    window = tukey(len(x), p)
+    y = x * window
+    return y
+# -------------------------------------------------------------------#
+# AREA-WEIGHTING
+# Functions related to area-weighting on grids with and without area
+# information.
+# -------------------------------------------------------------------#
+
+
+def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
+    """Applies cosine area-weighting to a grid of data. 
+
+    Area-weights data on a regular (e.g. 360x180) grid that does not come with
+    cell areas. Uses cosine-weighting.
+
+    Args:
+        da: xarray object containing data to be area-weighted.
+        lat_coord: String for name of latitude coordinate.
+        lon_coord: String for name of lognitude coordinate.
+        one_dimensional: If True, the latitude and longitude coordinates are
+            one dimensional, i.e., they do not come as a meshgrid.
+
+    Returns:
+        An xarray object containing the area-weighted ouput retaining all 
+        dimensions other than latitude and longitude.
+
+    .. todo::
+        Remove one_dimensional boolean. This can be checked automatically
+        and should not be up to the user.
+    
+    Example:
+        >>> da_aw = xr_cos_weight(da)
+    """
+    _check_xarray(da)
+    non_spatial = [i for i in _get_dims(da) if i not in [lat_coord, lon_coord]]
+    filter_dict = {}
+    while len(non_spatial) > 0:
+        filter_dict.update({non_spatial[0]: 0})
+        non_spatial.pop(0)
+    if one_dimensional:
+        lon, lat = np.meshgrid(da[lon_coord], da[lat_coord])
+    else:
+        lat = da[lat_coord]
+    # NaN out land to not go into area-weighting
+    lat = lat.astype('float')
+    nan_mask = np.asarray(da.isel(filter_dict).isnull())
+    lat[nan_mask] = np.nan
+    cos_lat = np.cos(np.deg2rad(lat))
+    aw_da = (da * cos_lat).sum(lat_coord).sum(lon_coord) / \
+        np.nansum(cos_lat)
+    return aw_da
+
+
+def xr_area_weight(da, area_coord='area'):
+    """
+    Returns an area-weighted time series from the input xarray dataarray. This
+    automatically figures out spatial dimensions vs. other dimensions. I.e.,
+    this function works for just a single realization or for many realizations.
+
+    See `reg_aw` if you have a regular (e.g. 360x180) grid that does not
+    contain cell areas.
+
+    NOTE: This currently does not support datasets (of multiple variables)
+    The user can alleviate this by using the .apply() function.
+
+    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
+    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
+    this might be altered in the future.
+
+    Parameters
+    ----------
+    da : DataArray
+    area_coord : str (defaults to 'area')
+        Name of area coordinate if different from 'area'
+
+    Returns
+    -------
+    aw_da : Area-weighted DataArray
+    """
+    _check_xarray(da)
+    area = da[area_coord]
+    # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
+    # or land.
+    dimlist = _get_dims(da)
+    # Pull out coordinates that aren't spatial. Time, ensemble members, etc.
+    non_spatial = [i for i in dimlist if i not in _get_dims(area)]
+    filter_dict = {}
+    while len(non_spatial) > 0:
+        filter_dict.update({non_spatial[0]: 0})
+        non_spatial.pop(0)
+    masked_area = area.where(da.isel(filter_dict).notnull())
+    # Compute area-weighting.
+    dimlist = _get_dims(masked_area)
+    aw_da = da * masked_area
+    # Sum over arbitrary number of dimensions.
+    while len(dimlist) > 0:
+        print(f'Summing over {dimlist[0]}')
+        aw_da = aw_da.sum(dimlist[0])
+        dimlist.pop(0)
+    # Finish area-weighting by dividing by sum of area coordinate.
+    aw_da = aw_da / masked_area.sum()
+    return aw_da
 
 
 # ----------------------------------#

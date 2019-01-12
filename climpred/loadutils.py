@@ -29,10 +29,10 @@ import hashlib
 
 _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
 
-file_alias_dict = {'MPI-DP-1D': 'PM_MPI-ESM-LR_control',
-                   'MPI-DP-3D': 'PM_MPI-ESM-LR_control3d',
-                   'MPI-control-1D': 'PM_MPI-ESM-LR_ds',
-                   'MPI-control-3D': 'PM_MPI-ESM-LR_ds3d',
+file_alias_dict = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
+                   'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
+                   'MPI-DP-1D': 'PM_MPI-ESM-LR_ds',
+                   'MPI-DP-3D': 'PM_MPI-ESM-LR_ds3d',
                    'CESM-DP': 'CESM-DP-LE.SST.annmean.anom',
                    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
                    'ERSST': 'ERSSTv4.global.mean',

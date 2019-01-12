@@ -384,13 +384,13 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
     return p
 
 
-def xr_rm_poly(da, order, dim='time'):
+def xr_rm_poly(ds, order, dim='time'):
     """
     Returns xarray object with nth-order fit removed from every time series.
 
     Input
     -----
-    da : xarray DataArray
+    ds : xarray object 
         Single time series or many gridded time series of object to be
         detrended
     order : int
@@ -401,14 +401,14 @@ def xr_rm_poly(da, order, dim='time'):
 
     Returns
     -------
-    detrended_ts : xarray DataArray
-        DataArray with detrended time series.
+    detrended_ts : xarray object 
+        DataArray or Dataset with detrended time series.
     """
-    _check_xarray(da)
+    _check_xarray(ds)
 
-    def _get_metadata(da):
-        dims = da.dims
-        coords = da.coords
+    def _get_metadata(ds):
+        dims = ds.dims
+        coords = ds.coords
         return dims, coords
 
     def _swap_axes(y):
@@ -419,16 +419,35 @@ def xr_rm_poly(da, order, dim='time'):
         leading dimension to be the independent axis, so this subfunction just
         moves it up front.
         """
-        dims, coords = _get_metadata(da)
+        dims, coords = _get_metadata(y)
         if dims[0] != dim:
             idx = dims.index(dim)
             y = np.swapaxes(y, 0, idx)
+            y = y.rename({dims[0]: dim,
+                          dims[idx]: dims[0]})
             dims = list(dims)
             dims[0], dims[idx] = dims[idx], dims[0]
             dims = tuple(dims)
-        return y, dims, coords
+        return np.asarray(y), dims, coords
 
-    y = np.asarray(da)
+    def _reconstruct_ds(y, store_vars):
+        """
+        Rebuild the original dataset.
+        """
+        new_ds = xr.Dataset()
+        for i, var in enumerate(store_vars):
+            new_ds[var] = xr.DataArray(y.isel(variable=i))
+        return new_ds 
+    
+    if isinstance(ds, xr.Dataset):
+        DATASET, store_vars = True, ds.data_vars
+        y = []
+        for var in ds.data_vars:
+            y.append(ds[var])
+        y = xr.concat(y, 'variable')
+    else:
+        DATASET = False
+        y = ds
     # Force independent axis to be leading dimension.
     y, dims, coords = _swap_axes(y)
     data_shape = y.shape
@@ -441,7 +460,10 @@ def xr_rm_poly(da, order, dim='time'):
     detrended_ts = (y - fit.T).reshape(data_shape)
     # Replace NaNs.
     detrended_ts[detrended_ts == 0] = np.nan
-    return xr.DataArray(detrended_ts, dims=dims, coords=coords)
+    detrended_ds = xr.DataArray(detrended_ts, dims=dims, coords=coords)
+    if DATASET:
+        detrended_ds = _reconstruct_ds(detrended_ds, store_vars)
+    return detrended_ds 
 
 
 def xr_rm_trend(da, dim='time'):

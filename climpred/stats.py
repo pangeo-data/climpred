@@ -141,7 +141,9 @@ def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
     else:
         lat = da[lat_coord]
     # NaN out land to not go into area-weighting
-    lat[np.isnan(da.isel(filter_dict))] = np.nan
+    lat = lat.astype('float')
+    nan_mask = np.asarray(da.isel(filter_dict).isnull())
+    lat[nan_mask] = np.nan
     cos_lat = np.cos(np.deg2rad(lat))
     aw_da = (da * cos_lat).sum(lat_coord).sum(lon_coord) / \
         np.nansum(cos_lat)

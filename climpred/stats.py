@@ -104,31 +104,24 @@ def _taper(x, p):
 
 
 def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
-    """
+    """Applies cosine area-weighting to a grid of data. 
+
     Area-weights data on a regular (e.g. 360x180) grid that does not come with
     cell areas. Uses cosine-weighting.
 
-    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
-    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
-    this might be altered in the future.
+    Args:
+        da: xarray object containing data to be area-weighted.
+        lat_coord: String for name of latitude coordinate.
+        lon_coord: String for name of lognitude coordinate.
+        one_dimensional: If True, the latitude and longitude coordinates are
+            one dimensional, i.e., they do not come as a meshgrid.
 
-    Parameters
-    ----------
-    da : DataArray with longitude and latitude
-    lat_coord : str (optional)
-        Name of latitude coordinate
-    lon_coord : str (optional)
-        Name of longitude coordinate
-    one_dimensional : bool (optional)
-        If true, assumes that lat and lon are 1D (i.e. not a meshgrid)
-    Returns
-    -------
-    aw_da : Area-weighted DataArray
-
-    Examples
-    --------
-    import esmtools as et
-    da_aw = et.stats.reg_aw(SST)
+    Returns:
+        An xarray object containing the area-weighted ouput retaining all 
+        dimensions other than latitude and longitude.
+    
+    Example:
+        >>> da_aw = xr_cos_weight(da)
     """
     _check_xarray(da)
     non_spatial = [i for i in _get_dims(da) if i not in [lat_coord, lon_coord]]

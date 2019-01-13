@@ -10,8 +10,8 @@ loading. See the README.md under climpred/sample_data/prediction on Github
 for more details on the files themselves.
 
 Perfect-Model:
-* "MPI-DP-1D": decadal prediction ensemble area averages of SST/SSS/AMO.
-* "MPI-DP-3D": decadal prediction ensemble lat/lon/time of SST/SSS/AMO.
+* "MPI-PM-DP-1D": decadal prediction ensemble area averages of SST/SSS/AMO.
+* "MPI-PM-DP-3D": decadal prediction ensemble lat/lon/time of SST/SSS/AMO.
 * "MPI-control-1D": area averages for the control run of SST/SSS.
 * "MPI-control-3D": lat/lon/time for the control run of SST/SSS.
 
@@ -31,18 +31,18 @@ _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
 
 file_alias_dict = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
                    'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
-                   'MPI-DP-1D': 'PM_MPI-ESM-LR_ds',
-                   'MPI-DP-3D': 'PM_MPI-ESM-LR_ds3d',
+                   'MPI-PM-DP-1D': 'PM_MPI-ESM-LR_ds',
+                   'MPI-PM-DP-3D': 'PM_MPI-ESM-LR_ds3d',
                    'CESM-DP': 'CESM-DP-LE.SST.annmean.anom',
                    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
                    'ERSST': 'ERSSTv4.global.mean',
                    'CESM-reference': ('g.e11_LENS.GECOIAF.T62_g16.009.pop.h.' +
                                       'SST.024901-031612')}
 
-file_descriptions = {'MPI-DP-1D': 'decadal prediction ensemble area averages' +
-                                  ' of SST/SSS/AMO.',
-                     'MPI-DP-3D': 'decadal prediction ensemble lat/lon/time' +
-                                  ' of SST/SSS/AMO.',
+file_descriptions = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
+                                     ' averages of SST/SSS/AMO.',
+                     'MPI-PM-DP-3D': 'decadal prediction ensemble' +
+                                     ' lat/lon/time of SST/SSS/AMO.',
                      'MPI-control-1D': 'area averages for the control run of' +
                                        ' SST/SSS.',
                      'MPI-control-3D': 'lat/lon/time for the control run of' +

@@ -9,6 +9,7 @@ URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
 INSTALL_REQUIRES = ['numpy', 'pandas', 'xarray', 'scipy', 'xskillscore==0.0.2']
 DEPENDENCY_LINKS = ['https://github.com/raybellwaves/xskillscore/tarball/master#egg=xskillscore-0.0.2']
+EXTRAS={'graphics': ['matplotlib', 'proplot']}
 # TODO: Add testing
 # TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
@@ -26,5 +27,6 @@ setup(name=DISTNAME,
       dependency_links=DEPENDENCY_LINKS,
       # Needed for dependencies. Currently do not like the pyfinance or xskillscore dependency.
       install_requires=INSTALL_REQUIRES,
-      python_requires=PYTHON_REQUIRE
+      python_requires=PYTHON_REQUIRE,
+      extras_require=EXTRAS,
      )

@@ -98,7 +98,8 @@ The time dimensions is called 'time' and is in integer, not datetime[ns]
 """
 import numpy as np
 import xarray as xr
-from xskillscore import pearson_r, rmse
+
+from xskillscore import mse, pearson_r, rmse
 
 from .stats import _check_xarray, _get_dims
 
@@ -491,11 +492,11 @@ def _get_metric_function(metric):
     """
     pearson = ['pr', 'pearsonr', 'pearson_r']
     if metric in pearson:
-        metric = '_pearson_r'
+        metric = 'pearson_r'
     elif metric == 'rmse':
-        metric = '_rmse'
+        metric = 'rmse'
     elif metric.lower() == 'mse':
-        metric = '_mse'
+        metric = 'mse'
     elif metric.lower() == 'rmse_v':
         metric = '_rmse_v'
     elif metric.lower() == 'nrmse':
@@ -521,29 +522,6 @@ def _get_metric_function(metric):
             'uacc'
             """)
     return eval(metric)
-
-
-def _pearson_r(a, b, dim):
-    """
-    Compute anomaly correlation coefficient (ACC) of two xr objects.
-    See xskillscore.pearson_r.
-    """
-    return pearson_r(a, b, dim)
-
-
-def _rmse(a, b, dim):
-    """
-    Compute root-mean-square-error (RMSE) of two xr objects.
-    See xskillscore.rmse.
-    """
-    return rmse(a, b, dim)
-
-
-def _mse(ds, control, comparison, running):
-    """
-    Mean Square Error (MSE) metric.
-    """
-    return _ensemble_variance(ds, comparison)
 
 
 def _rmse_v(ds, control, comparison, running):
@@ -704,16 +682,16 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
     """
     supervector_dim = 'svd'
     comparison = _get_comparison_function(comparison)
-    if comparison.__name__ not in ['_m2m', '_m2c', '_m2e', '_e2c']:
+    if comparison not in [_m2m, _m2c, _m2e, _e2c]:
         raise ValueError('specify comparison argument')
 
     metric = _get_metric_function(metric)
-    if metric.__name__ in ['_pearson_r', '_rmse']:
+    if metric in [pearson_r, rmse, mse]:
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric.__name__ in ['_mse', '_rmse_v', '_nrmse', '_nev', '_ppp',
-                             '_PPP', '_msss', '_uACC']:
+    elif metric in [_rmse_v, _nrmse, _nev, _ppp,
+                             _PPP, _msss, _uACC]:
         res = metric(ds, control, comparison, running)
         return res
     else:
@@ -767,7 +745,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if nlags is None:
         nlags = fct.time.size
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse]:
+    if metric not in [pearson_r, rmse, mse]:
         raise ValueError("""Please input either 'pearson_r' or 'rmse' for your
             metric.""")
     plag = []

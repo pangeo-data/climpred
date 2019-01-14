@@ -16,15 +16,18 @@ according to metric and comparison
     - PM_sig(ds, control, metric=rmse, comparison=_m2m, bootstrap=500, sig=99)
     - threshold to determine predictability horizon
 
+# TODO: make metrics non-dependent of prediction framework used
 Metrics (submit to functions as strings)
 -------
-- mse: Mean Square Error
-- nev: Normalized Ensemble Variance
-- msss: Mean Square Skill Score = ppp: Prognostic Potential Predictability
-- rmse and rmse_v: Root-Mean Square Error
-- nrmse: Normalized Root-Mean Square Error
+- mse: Mean Square Error (perfect-model only)
+- nev: Normalized Ensemble Variance (perfect-model only)
+- msss: Mean Square Skill Score (perfect-model only)
+- ppp: Prognostic Potential Predictability (perfect-model only)
+- rmse:  Root-Mean Square Error
+- rmse_v: Root-Mean Square Error (perfect-model only)
+- nrmse: Normalized Root-Mean Square Error (perfect-model only)
 - pearson_r: Anomaly correlation coefficient
-- uACC: unbiased ACC
+- uACC: unbiased ACC (perfect-model only)
 
 Comparisons (submit to functions as strings)
 -----------
@@ -44,7 +47,7 @@ Additional Functions
 (Boer 2004, Resplandy 2015/Seferian 2018)
 - predictability horizon:
     - bootstrapping limit
-- Damped persistence forecast
+
 
 Data Structure
 --------------
@@ -93,13 +96,11 @@ This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model)
 NetCDF output.
 The time dimensions is called 'time' and is in integer, not datetime[ns]
 """
-import os
-from random import randint
 import numpy as np
-import pandas as pd
 import xarray as xr
 from xskillscore import pearson_r, rmse
-from .stats import xr_autocorr, _check_xarray, _get_dims
+
+from .stats import _check_xarray, _get_dims
 
 # -------------------------------------------- #
 # HELPER FUNCTIONS
@@ -827,194 +828,6 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     pers = xr.concat(plag, 'lead time')
     pers['lead time'] = np.arange(1, 1 + nlags)
     return pers
-
-
-# --------------------------------------------#
-# PERSISTANCE FORECASTS
-# --------------------------------------------#
-# TODO: adapt for maps
-def generate_damped_persistence_forecast(control, startyear, length=20):
-    """
-    Generate damped persistence forecast mean and range.
-
-    Reference
-    ---------
-    - missing: got a script from a collegue
-
-    Parameters
-    ----------
-    control : pandas.series
-        input timeseries from control run
-    startyear : int
-        year damped persistence forecast should start from
-
-    Returns
-    -------
-    ar1 : pandas.series
-        mean damped persistence
-    ar50 : pandas.series
-        50% damped persistence range
-    ar90 : pandas.series
-        90% damped persistence range
-
-    Example
-    -------
-    from esmtools.prediction import generate_damped_persistence_forecast
-    ar1, ar50, ar90 = generate_damped_persistence_forecast(control_,3014)
-    ar1.plot(label='damped persistence forecast')
-    plt.fill_between(ar1.index,ar1-ar50,ar1+ar50,alpha=.2,
-                     color='gray',label='50% forecast range')
-    plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,
-                     color='gray',label='90% forecast range')
-    control_.sel(time=slice(3014,3034)).plot(label='control')
-    plt.legend()
-
-    """
-    anom = (control.sel(time=startyear) - control.mean('time')).values
-    t = np.arange(0., length + 1, 1)
-    alpha = xr_autocorr(control, dim='time').values
-    exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
-    ar1 = exp + control.mean('time').values
-    ar50 = 0.7 * control.std('time').values * \
-        np.sqrt(1 - np.exp(-2 * alpha * t))
-    ar90 = 1.7 * control.std('time').values * \
-        np.sqrt(1 - np.exp(-2 * alpha * t))
-
-    index = control.sel(time=slice(startyear, startyear + length))['time']
-    ar1 = pd.Series(ar1, index=index)
-    ar50 = pd.Series(ar50, index=index)
-    ar90 = pd.Series(ar90, index=index)
-    return ar1, ar50, ar90
-
-# TODO: needs complete redo
-
-
-def generate_predictability_damped_persistence(s, kind='PPP', percentile=True,
-                                               length=20):
-    """
-    Calculate the PPP (or NEV) damped persistence mean and range in PPP plot.
-
-    Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be
-    indicated as +- std or 5-95-percentile.
-
-    Reference
-    ---------
-    Griffies, S. M., and K. Bryan. "A Predictability Study of Simulated North
-    Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-    (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. Appendix
-
-    Parameters
-    ----------
-    s : pandas.series
-        input timeseries from control run
-    kind : str
-        determine kind of damped persistence. 'PPP' or 'NEV' (normalized
-        ensemble variance)
-    percentile : bool
-        use percentiles for alpha range
-    length : int
-        length of the output timeseries
-
-    Returns
-    -------
-    PPP_persistence_0 : pandas.series
-        mean damped persistence
-    PPP_persistence_minus : pandas.series
-        lower range damped persistence
-    PP_persistence_plus : pandas.series
-        upper range damped persistence
-
-    Example
-    -------
-    import esmtools as et
-    s = control.sel(area='global',period='ym').to_dataframe()['tos']
-    PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = \
-        et.prediction.generate_predictability_persistence(s)
-    t = np.arange(0,20+1,1.)
-    plt.plot(PPP_persistence_0,color='black',
-             linestyle='--',label='persistence mean')
-    plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,
-                     color='gray',alpha=.3,label='persistence range')
-    plt.axhline(y=0,color='black')
-
-    """
-    # bootstrapping persistence
-    iterations = 50  # iterations
-    chunk_length = 100  # length of chunks of control run to take lag1 autocorr
-    data = np.zeros(iterations)
-    for i in range(iterations):
-        random_start_year = randint(s.index.min(), s.index.max() -
-                                    chunk_length)
-        data[i] = s.loc[str(random_start_year):str(
-            random_start_year + chunk_length)].autocorr()
-
-    alpha_0 = np.mean(data)
-    alpha_minus = np.mean(data) - np.std(data)
-    alpha_plus = np.mean(data) + np.std(data)
-    if percentile:
-        alpha_minus = np.percentile(data, 5)
-        alpha_plus = np.percentile(data, 95)
-
-    # persistence function
-    def generate_PPP_persistence(alpha, t):
-        values = np.exp(-2 * alpha * t)  # Griffies 1997
-        s = pd.Series(values, index=t)
-        return s
-
-    t = np.arange(0, length + 1, 1.)
-    PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
-    PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
-    PPP_persistence_plus = generate_PPP_persistence(alpha_minus, t)
-
-    if kind in ['nvar', 'NEV']:
-        PPP_persistence_0 = 1 - PPP_persistence_0
-        PPP_persistence_minus = 1 - PPP_persistence_minus
-        PPP_persistence_plus = 1 - PPP_persistence_plus
-
-    return PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus
-
-
-# TODO: Adjust for 3d fields
-def damped_persistence_forecast(ds, control, varname='tos', area='global',
-                                period='ym', comparison='m2e'):
-    """
-    Generate damped persistence forecast timeseries.
-    """
-    starting_years = ds.ensemble.values
-    anom = (control.sel(time=starting_years) - control.mean('time'))
-    t = ds['time']
-    alpha = control.to_series().autocorr()
-    persistence_forecast_list = []
-    for ens in anom['time']:
-        ar1 = anom.sel(time=ens).values * \
-            np.exp(-alpha * t) + control.mean('time').values
-        pf = xr.DataArray(data=ar1, coords=[t], dims='time')
-        pf = pf.expand_dims('ensemble')
-        pf['ensemble'] = [ens]
-        persistence_forecast_list.append(pf)
-    return xr.concat(persistence_forecast_list, dim='ensemble')
-
-
-def PM_compute_damped_persistence(ds, control, metric='rmse',
-                                  comparison='m2e'):
-    """
-    Compute skill for persistence forecast. See PM_compute().
-    """
-    persistence_forecasts = damped_persistence_forecast(ds, control)
-    if comparison == 'm2e':
-        metric = _get_metric_function(metric)
-        result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
-    elif comparison == 'm2m':
-        persistence_forecasts = persistence_forecasts.expand_dims('member')
-        all_persistence_forecasts = persistence_forecasts.isel(
-            member=[0] * ds.member.size)
-        fct = _m2e(all_persistence_forecasts, 'svd')[0]
-        truth = _m2e(ds, 'svd')[0]
-        metric = _get_metric_function(metric)
-        result = metric(fct, truth, 'svd')
-    else:
-        raise ValueError('not defined')
-    return result
 
 
 # --------------------------------------------#

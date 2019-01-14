@@ -222,6 +222,14 @@ def _select_members_ensembles(ds, m=None, e=None):
     return ds.sel(member=m, ensemble=e)
 
 
+def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('ensemble', 'member')):
+    """
+    Stack all stacked_dims (likely ensemble and member) dimensions into one
+    supervector dimension to perform metric over.
+    """
+    return ds.stack({new_dim: stacked_dims})
+
+
 # --------------------------------------------#
 # COMPARISONS
 # Ways to calculate ensemble spread.
@@ -273,23 +281,26 @@ def _get_comparison_function(comparison):
     return eval(comparison)
 
 
-def _m2m(ds, supervector_dim):
+def _m2m(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to all other members in turn
     """
     truth_list = []
     fct_list = []
+    new_dim_name = 'svd2'
     for m in ds.member.values:
+        fct_list.append(_drop_members(ds, rmd_member=[m]))
         # drop the member being truth
-        ds_reduced = _drop_members(ds, rmd_member=[m])
-        truth = ds.sel(member=m)
-        for m2 in ds_reduced.member:
-            for e in ds.ensemble:
-                truth_list.append(truth.sel(ensemble=e))
-                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
+        truth_list.append(ds.sel(member=m))
+    fct = xr.concat(fct_list, new_dim_name)
+    truth = xr.concat(truth_list, new_dim_name)
+    fct, truth = xr.broadcast(fct, truth)
+    fct = _stack_to_supervector(fct, new_dim=supervector_dim, stacked_dims=(
+        'ensemble', 'member', new_dim_name))
+    truth = _stack_to_supervector(truth, new_dim=supervector_dim, stacked_dims=(
+        'ensemble', 'member', new_dim_name))
     return fct, truth
+
 
 
 def _ens_var_against_every(ds):
@@ -308,19 +319,14 @@ def _ens_var_against_every(ds):
     return var.mean('ensemble')
 
 
-def _m2e(ds, supervector_dim):
+def _m2e(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to ensemble mean.
     """
-    truth_list = []
-    fct_list = []
-    mean = ds.mean('member')
-    for m in ds.member.values:
-        for e in ds.ensemble.values:
-            truth_list.append(mean.sel(ensemble=e))
-            fct_list.append(ds.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
+    truth = ds.mean('member')
+    fct, truth = xr.broadcast(ds, truth)
+    fct = _stack_to_supervector(fct, new_dim=supervector_dim)
+    truth = _stack_to_supervector(truth, new_dim=supervector_dim)
     return fct, truth
 
 
@@ -351,24 +357,20 @@ def _ens_var_against_mean(ds):
     return ds.var('member').mean('ensemble')
 
 
-def _m2c(ds, supervector_dim, control_member=[0]):
+def _m2c(ds, supervector_dim='svd' ,control_member=[0]):
     """
     Create two supervectors to compare all members to control.
 
-    control_member: list or int??
+    control_member: list of one integer
         index to be removed, default 0
     """
-    truth_list = []
-    fct_list = []
     truth = ds.isel(member=control_member).squeeze()
     # drop the member being truth
     ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    for m in ds_dropped.member.values:
-        for e in ds_dropped.ensemble.values:
-            fct_list.append(truth.sel(ensemble=e))
-            truth_list.append(ds_dropped.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
+    fct, truth = xr.broadcast(ds_dropped,truth)
+    fct = _stack_to_supervector(fct,new_dim=supervector_dim)
+    truth = _stack_to_supervector(truth,new_dim=supervector_dim)
+    return fct, truth
 
     return fct, truth
 
@@ -386,7 +388,7 @@ def _ens_var_against_control(ds, control_member=0):
     return var.mean('ensemble')
 
 
-def _e2c(ds, supervector_dim, control_member=[0]):
+def _e2c(ds, supervector_dim='svd', control_member=[0]):
     """
     Create two supervectors to compare ensemble mean to control.
     """

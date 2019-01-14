@@ -25,5 +25,3 @@ emails:
 riley.brady@colorado.edu
 
 aaron.spring@mpimet.mpg.de
-
-web: https://www.rileyxbrady.com

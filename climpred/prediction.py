@@ -99,7 +99,9 @@ The time dimensions is called 'time' and is in integer, not datetime[ns]
 import numpy as np
 import xarray as xr
 
-from xskillscore import mse, pearson_r, rmse
+from xskillscore import mse as _mse
+from xskillscore import pearson_r as _pearson_r
+from xskillscore import rmse as _rmse
 
 from .stats import _check_xarray, _get_dims
 
@@ -153,16 +155,16 @@ def _control_for_reference_period(control, reference_period='MK', obs_years=40):
         control
     """
     if reference_period is 'MK':
-        _control = control
+        control = control
     elif reference_period is 'OP_full_length':
-        _control = control - \
+        control = control - \
             control.rolling(time=obs_years, min_periods=1,
                             center=True).mean() + control.mean('time')
     elif reference_period is 'OP':
         raise ValueError('not yet implemented')
     else:
         raise ValueError("choose a reference period")
-    return _control
+    return control
 
 
 def _get_variance(control, reference_period=None, time_length=None):
@@ -288,7 +290,6 @@ def _m2m(ds, supervector_dim='svd'):
     truth_list = []
     fct_list = []
     new_dim_name = 'svd2'
-    #_drop_members(ds, rmd_member=[4]).reset_index('member')
     for m in ds.member.values:
         fct_list.append(_drop_members(ds, rmd_member=[m]))
         # drop the member being truth
@@ -316,7 +317,7 @@ def _m2e(ds, supervector_dim='svd'):
     return fct, truth
 
 
-def _m2c(ds, supervector_dim='svd' ,control_member=[0]):
+def _m2c(ds, supervector_dim='svd', control_member=[0]):
     """
     Create two supervectors to compare all members to control.
 
@@ -326,9 +327,9 @@ def _m2c(ds, supervector_dim='svd' ,control_member=[0]):
     truth = ds.isel(member=control_member).squeeze()
     # drop the member being truth
     ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    fct, truth = xr.broadcast(ds_dropped,truth)
-    fct = _stack_to_supervector(fct,new_dim=supervector_dim)
-    truth = _stack_to_supervector(truth,new_dim=supervector_dim)
+    fct, truth = xr.broadcast(ds_dropped, truth)
+    fct = _stack_to_supervector(fct, new_dim=supervector_dim)
+    truth = _stack_to_supervector(truth, new_dim=supervector_dim)
     return fct, truth
 
     return fct, truth
@@ -412,10 +413,9 @@ def _get_metric_function(metric):
     pearson_r : 'pearson_r', 'pearsonr', 'pr'
     rmse: 'rmse'
     mse: 'mse'
-    rmse_v: 'rmse_v'
-    nev: 'nev'
-    ppp: 'ppp'
-    msss: 'msss'
+    nrmse: 'mrmse'
+    nmse: 'nmse','nev'
+    ppp: 'ppp','msss'
     uACC: 'uacc'
 
     Returns
@@ -424,19 +424,19 @@ def _get_metric_function(metric):
     """
     pearson = ['pr', 'pearsonr', 'pearson_r']
     if metric in pearson:
-        metric = 'pearson_r'
+        metric = '_pearson_r'
     elif metric == 'rmse':
-        metric = 'rmse'
+        metric = '_rmse'
     elif metric.lower() == 'mse':
-        metric = 'mse'
+        metric = '_mse'
     elif metric.lower() == 'nrmse':
-        metric = 'nrmse'
-    elif metric.lower() in ['nev','nmse']:
-        metric = 'nmse'
-    elif metric.lower() in ['ppp','msss']:
-        metric = 'ppp'
+        metric = '_nrmse'
+    elif metric.lower() in ['nev', 'nmse']:
+        metric = '_nmse'
+    elif metric.lower() in ['ppp', 'msss']:
+        metric = '_ppp'
     elif metric.lower() == 'uacc':
-        metric = 'uacc'
+        metric = '_uacc'
     else:
         raise ValueError("""Please supply a metric from the following list:
             'pearson_r'
@@ -455,7 +455,7 @@ def _get_metric_function(metric):
 # TODO: Do we need wrappers or should we rather create wrappers for skill score
 #       as used in a specific paper: def Seferian2018(ds, control):
 #       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
-def ppp(ds, control, comparison, running=None, reference_period=None):
+def _ppp(ds, control, comparison, running=None, reference_period=None):
     """
     Prognostic Potential Predictability (PPP) metric.
 
@@ -479,14 +479,15 @@ def ppp(ds, control, comparison, running=None, reference_period=None):
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
-    mse_skill = mse(fct, truth, dim=supervector_dim)
-    var = _get_variance(control, time_length=running, reference_period=reference_period)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
 
 
-def nrmse(ds, control, comparison, running=None, reference_period=None):
+def _nrmse(ds, control, comparison, running=None, reference_period=None):
     """
     Normalized Root Mean Square Error (NRMSE) metric.
 
@@ -509,7 +510,7 @@ def nrmse(ds, control, comparison, running=None, reference_period=None):
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
-    rmse_skill = rmse(fct, truth, dim=supervector_dim)
+    rmse_skill = _rmse(fct, truth, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
@@ -517,7 +518,7 @@ def nrmse(ds, control, comparison, running=None, reference_period=None):
     return nrmse_skill
 
 
-def nmse(ds, control, comparison, running=None, reference_period=None):
+def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
     Normalized Ensemble Variance (NEV) metric.
 
@@ -529,7 +530,7 @@ def nmse(ds, control, comparison, running=None, reference_period=None):
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
-    mse_skill = mse(fct, truth, dim=supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
@@ -537,7 +538,7 @@ def nmse(ds, control, comparison, running=None, reference_period=None):
     return nmse_skill
 
 
-def uACC(fct, truth, control, running=None, reference_period=None):
+def _uacc(fct, truth, control, running=None, reference_period=None):
     """
     Unbiased ACC (uACC) metric.
 
@@ -552,7 +553,7 @@ def uACC(fct, truth, control, running=None, reference_period=None):
       Prediction: Potential versus Operational Seasonal Forecast Skill.
       Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    return np.sqrt(ppp(fct, truth, control, running, reference_period))
+    return np.sqrt(_ppp(fct, truth, control, running, reference_period))
 
 
 # --------------------------------------------#
@@ -593,11 +594,11 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify comparison argument')
 
     metric = _get_metric_function(metric)
-    if metric in [pearson_r, rmse, mse]:
+    if metric in [_pearson_r, _rmse, _mse]:
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric in [nrmse, nmse, ppp, uACC]:  # perfect-model only metrics
+    elif metric in [_nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:
@@ -651,7 +652,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if nlags is None:
         nlags = fct.time.size
     metric = _get_metric_function(metric)
-    if metric not in [pearson_r, rmse, mse]:
+    if metric not in [_pearson_r, _rmse, _mse]:
         raise ValueError("""Please input either 'pearson_r' or 'rmse' for your
             metric.""")
     plag = []
@@ -703,7 +704,7 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     """
     _check_xarray(reference)
     metric = _get_metric_function(metric)
-    if metric not in [pearson_r, rmse, mse]:
+    if metric not in [_pearson_r, _rmse, _mse]:
         raise ValueError("""Please select between the following metrics:
             'pearson_r'
             'rmse'""")
@@ -831,7 +832,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False):
 # BOOTSTRAPPING
 # Functions for sampling an ensemble
 # --------------------------------------------#
-def pseudo_ens(ds, control):
+def _pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -876,8 +877,8 @@ def pseudo_ens(ds, control):
                      'ensemble')
 
 
-def PM_sig(ds, control, metric='rmse', comparison='m2m', reference_period='MK',
-           sig=95, bootstrap=30):
+def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
+                            reference_period='MK', sig=95, bootstrap=30):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble
     generated from control.
@@ -906,7 +907,7 @@ def PM_sig(ds, control, metric='rmse', comparison='m2m', reference_period='MK',
     _control = _control_for_reference_period(
         control, reference_period=reference_period)
     for _ in range(1 + int(bootstrap / ds['time'].size)):
-        ds_pseudo = pseudo_ens(ds, _control)
+        ds_pseudo = _pseudo_ens(ds, _control)
         ds_pseudo_metric = compute_perfect_model(
             ds_pseudo, _control, metric=metric, comparison=comparison)
         x.append(ds_pseudo_metric)

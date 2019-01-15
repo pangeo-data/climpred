@@ -289,20 +289,16 @@ def _m2m(ds, supervector_dim='svd'):
     """
     truth_list = []
     fct_list = []
-    new_dim_name = 'svd2'
     for m in ds.member.values:
-        fct_list.append(_drop_members(ds, rmd_member=[m]))
         # drop the member being truth
-        truth_list.append(ds.sel(member=m))
-    fct = xr.concat(fct_list, new_dim_name)
-    truth = xr.concat(truth_list, new_dim_name)
-    fct, truth = xr.broadcast(fct, truth)
-    fct = _stack_to_supervector(fct, new_dim=supervector_dim, stacked_dims=(
-        'ensemble', 'member', new_dim_name))
-    truth = _stack_to_supervector(truth, new_dim=supervector_dim, stacked_dims=(
-        'ensemble', 'member', new_dim_name))
-    fct = fct.dropna(supervector_dim)
-    truth = truth.sel({supervector_dim: fct[supervector_dim]})
+        ds_reduced = _drop_members(ds, rmd_member=[m])
+        truth = ds.sel(member=m)
+        for m2 in ds_reduced.member:
+            for e in ds.ensemble:
+                truth_list.append(truth.sel(ensemble=e))
+                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
+    truth = xr.concat(truth_list, supervector_dim)
+    fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
 
 

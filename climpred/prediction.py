@@ -16,15 +16,18 @@ according to metric and comparison
     - PM_sig(ds, control, metric=rmse, comparison=_m2m, bootstrap=500, sig=99)
     - threshold to determine predictability horizon
 
+# TODO: make metrics non-dependent of prediction framework used
 Metrics (submit to functions as strings)
 -------
-- mse: Mean Square Error
-- nev: Normalized Ensemble Variance
-- msss: Mean Square Skill Score = ppp: Prognostic Potential Predictability
-- rmse and rmse_v: Root-Mean Square Error
-- nrmse: Normalized Root-Mean Square Error
+- mse: Mean Square Error (perfect-model only)
+- nev: Normalized Ensemble Variance (perfect-model only)
+- msss: Mean Square Skill Score (perfect-model only)
+- ppp: Prognostic Potential Predictability (perfect-model only)
+- rmse:  Root-Mean Square Error
+- rmse_v: Root-Mean Square Error (perfect-model only)
+- nrmse: Normalized Root-Mean Square Error (perfect-model only)
 - pearson_r: Anomaly correlation coefficient
-- uACC: unbiased ACC
+- uACC: unbiased ACC (perfect-model only)
 
 Comparisons (submit to functions as strings)
 -----------
@@ -44,7 +47,7 @@ Additional Functions
 (Boer 2004, Resplandy 2015/Seferian 2018)
 - predictability horizon:
     - bootstrapping limit
-- Damped persistence forecast
+
 
 Data Structure
 --------------
@@ -93,13 +96,14 @@ This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model)
 NetCDF output.
 The time dimensions is called 'time' and is in integer, not datetime[ns]
 """
-import os
-from random import randint
 import numpy as np
-import pandas as pd
 import xarray as xr
-from xskillscore import pearson_r, rmse
-from .stats import xr_autocorr, _check_xarray, _get_dims
+
+from xskillscore import mse as _mse
+from xskillscore import pearson_r as _pearson_r
+from xskillscore import rmse as _rmse
+
+from .stats import _check_xarray, _get_dims
 
 # -------------------------------------------- #
 # HELPER FUNCTIONS
@@ -126,67 +130,75 @@ def _shift(a, b, lag, dim='time'):
     return a, b
 
 
-def _get_variance(control, running=None):
+def _control_for_reference_period(control, reference_period='MK', obs_years=40):
     """
-    Get running variance.
+    Modifies control according to knowledge approach.
 
-    Needed for compute and metrics PPP and NEV to normalize a variance.
+    Reference
+    ---------
+    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+        Journal of the Royal Meteorological Society 142, no. 695
+        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+
+    args:
+    reference_period : str
+        'MK' : maximum knowledge
+        'OP' : operational
+        'OP_full_length' : operational observational record length but keep
+                           full length of record
+    obs_years : int
+        length of observational record
+
+    return:
+        control
     """
-    if isinstance(running, int):
-        var = control.rolling(time=running).var().mean('time')
+    if reference_period is 'MK':
+        control = control
+    elif reference_period is 'OP_full_length':
+        control = control - \
+            control.rolling(time=obs_years, min_periods=1,
+                            center=True).mean() + control.mean('time')
+    elif reference_period is 'OP':
+        raise ValueError('not yet implemented')
     else:
-        var = control.var('time')
-    return var
+        raise ValueError("choose a reference period")
+    return control
 
 
-def _ensemble_variance(ds, comparison):
+def _get_variance(control, reference_period=None, time_length=None):
     """
-    Calculate ensemble variance for selected comparison.
+    Get variance to normalize skill score.
+
+    Args:
+    control
+    reference_period : str see _control_for_reference_period
+    time_length : int
+        smooth control by time_length before taking variance
     """
-    comparison_name = comparison.__name__
-    if comparison_name is '_m2e':
-        return _ens_var_against_mean(ds)
-    if comparison_name is '_m2c':
-        return _ens_var_against_control(ds)
-    if comparison_name is '_m2m':
-        return _ens_var_against_every(ds)
-    if comparison_name is '_e2c':
-        return _ensmean_against_control(ds)
+    if reference_period is not None and isinstance(time_length, int):
+        control = _control_for_reference_period(control,
+                    reference_period=reference_period, obs_years=time_length)
+        return control.var('time')
+    else:
+        return control.var('time')
 
 
 def _get_norm_factor(comparison):
     """
-    Get normalization factor for ppp, nvar, nrmse. Used in PM_compute.
+    Get normalization factor for ppp, nvar, nrmse. Used in compute_perfect_model.
 
     m2e gets smaller rmse's than m2m by design, see Seferian 2018 et al.
-    # m2m-ensemble variance should be divided by 2 to get var(control)
+    m2m, m2c-ensemble variance should be divided by 2 to get var(control)
     """
     comparison_name = comparison.__name__
-    if comparison_name is '_m2e':
+    if comparison_name in ['_m2e', '_e2c']:
         return 1
-    elif comparison_name in ['_m2c', '_m2m', '_e2c']:
-        return 1  # 2
+    elif comparison_name in ['_m2c', '_m2m']:
+        return 2
     else:
         raise ValueError('specify comparison to get normalization factor.')
-
-
-def _control_for_reference_period(control, reference_period='MK', obs_time=40):
-    """
-    Modifies control according to knowledge approach, see Hawkins 2016.
-
-    Used in PM_compute(metric=[_mse, _rmse_v]
-    """
-    if reference_period == 'MK':
-        _control = control
-    elif reference_period == 'OP_full_length':
-        _control = control - \
-            control.rolling(time=obs_time, min_periods=1,
-                            center=True).mean() + control.mean('time')
-    elif reference_period == 'OP':
-        raise ValueError('not yet implemented')
-    else:
-        raise ValueError("choose a reference period")
-    return _control
 
 
 def _drop_ensembles(ds, rmd_ensemble=[0]):
@@ -221,17 +233,16 @@ def _select_members_ensembles(ds, m=None, e=None):
     return ds.sel(member=m, ensemble=e)
 
 
+def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('ensemble', 'member')):
+    """
+    Stack all stacked_dims (likely ensemble and member) dimensions into one
+    supervector dimension to perform metric over.
+    """
+    return ds.stack({new_dim: stacked_dims})
+
+
 # --------------------------------------------#
 # COMPARISONS
-# Ways to calculate ensemble spread.
-# Generally from Griffies & Bryan 1997
-# Two different approaches here:
-# - np vectorized from xskillscore (_rmse, _pearson_r) but manually 'stacked'
-#  (_m2m, m2e, ...); supervector is stacked vector of all ensembles and members
-# - xarray vectorized (_mse, _rmse_v, ...) from ensemble variance
-#   (_ens_var_against_mean, _..control)
-# Leads to the same results: (metric=_rmse, comparison=c) equals
-# metric=_rmse_v, comparison=c) for all c in comparisons
 # --------------------------------------------#
 def _get_comparison_function(comparison):
     """
@@ -272,7 +283,7 @@ def _get_comparison_function(comparison):
     return eval(comparison)
 
 
-def _m2m(ds, supervector_dim):
+def _m2m(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to all other members in turn
     """
@@ -291,101 +302,36 @@ def _m2m(ds, supervector_dim):
     return fct, truth
 
 
-def _ens_var_against_every(ds):
-    """
-    See ens_var_against_mean(ds).
-
-    Only difference is that now distance is evaluated against each ensemble
-    member and then averaged.
-    """
-    var_list = []
-    for m in ds.member.values:
-        var_list.append(
-            ((ds - ds.sel(member=m))**2).sum(dim='member') /
-            (ds.member.size - 1))
-    var = xr.concat(var_list, 'member').mean('member')
-    return var.mean('ensemble')
-
-
-def _m2e(ds, supervector_dim):
+def _m2e(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to ensemble mean.
     """
-    truth_list = []
-    fct_list = []
-    mean = ds.mean('member')
-    for m in ds.member.values:
-        for e in ds.ensemble.values:
-            truth_list.append(mean.sel(ensemble=e))
-            fct_list.append(ds.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
+    truth = ds.mean('member')
+    fct, truth = xr.broadcast(ds, truth)
+    fct = _stack_to_supervector(fct, new_dim=supervector_dim)
+    truth = _stack_to_supervector(truth, new_dim=supervector_dim)
     return fct, truth
 
 
-def _ens_var_against_mean(ds):
-    """
-    Calculate the ensemble spread (ensemble variance (squared difference
-    between each ensemble member and the ensemble mean) as a function of time).
-
-    Parameters
-    ----------
-    ds : DataArray with time dimension (optional spatial coordinates)
-        Input data
-
-    Returns
-    -------
-    c : DataArray as ds reduced by member dimension
-        Output data
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    ens_var_against_mean = et.prediction.ens_var_against_mean(ds)
-    # display as dataframe
-    ens_var_against_mean.to_dataframe().unstack(level=0).unstack(level=0).unstack(level=0).reorder_levels([3,1,0,2],axis=1)
-
-    """
-    return ds.var('member').mean('ensemble')
-
-
-def _m2c(ds, supervector_dim, control_member=[0]):
+def _m2c(ds, supervector_dim='svd', control_member=[0]):
     """
     Create two supervectors to compare all members to control.
 
-    control_member: list or int??
+    control_member: list of one integer
         index to be removed, default 0
     """
-    truth_list = []
-    fct_list = []
     truth = ds.isel(member=control_member).squeeze()
     # drop the member being truth
     ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    for m in ds_dropped.member.values:
-        for e in ds_dropped.ensemble.values:
-            fct_list.append(truth.sel(ensemble=e))
-            truth_list.append(ds_dropped.sel(member=m, ensemble=e))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
+    fct, truth = xr.broadcast(ds_dropped, truth)
+    fct = _stack_to_supervector(fct, new_dim=supervector_dim)
+    truth = _stack_to_supervector(truth, new_dim=supervector_dim)
+    return fct, truth
 
     return fct, truth
 
 
-def _ens_var_against_control(ds, control_member=0):
-    """
-    See ens_var_against_mean(ds).
-
-    Only difference is that now distance is evaluated against member=0 which is
-    the control run.
-    """
-    var = ds.copy()
-    var = ((ds - ds.sel(member=ds.member.values[control_member]))**2) \
-        .sum('member') / (ds.member.size - 1)
-    return var.mean('ensemble')
-
-
-def _e2c(ds, supervector_dim, control_member=[0]):
+def _e2c(ds, supervector_dim='svd', control_member=[0]):
     """
     Create two supervectors to compare ensemble mean to control.
     """
@@ -396,19 +342,6 @@ def _e2c(ds, supervector_dim, control_member=[0]):
     fct = ds.mean('member')
     fct = fct.rename({'ensemble': supervector_dim})
     return fct, truth
-
-
-def _ensmean_against_control(ds, control_member=0):
-    """
-    See ens_var_against_mean(ds).
-
-    Only difference is that now distance is evaluated between ensemble mean and
-    control.
-    """
-    # drop the member being truth
-    truth = ds.sel(member=ds.member.values[control_member])
-    ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
-    return ((ds.mean('member') - truth)**2).mean('ensemble')
 
 
 def _e2r(ds, reference):
@@ -440,7 +373,7 @@ def _m2r(ds, reference):
         fct = ds
     reference = reference.expand_dims('member')
     nMember = fct.member.size
-    reference = reference.isel(member=[0]*nMember)
+    reference = reference.isel(member=[0] * nMember)
     reference['member'] = fct['member']
     return fct, reference
 
@@ -476,10 +409,9 @@ def _get_metric_function(metric):
     pearson_r : 'pearson_r', 'pearsonr', 'pr'
     rmse: 'rmse'
     mse: 'mse'
-    rmse_v: 'rmse_v'
-    nev: 'nev'
-    ppp: 'ppp'
-    msss: 'msss'
+    nrmse: 'mrmse'
+    nmse: 'nmse','nev'
+    ppp: 'ppp','msss'
     uACC: 'uacc'
 
     Returns
@@ -493,26 +425,22 @@ def _get_metric_function(metric):
         metric = '_rmse'
     elif metric.lower() == 'mse':
         metric = '_mse'
-    elif metric.lower() == 'rmse_v':
-        metric = '_rmse_v'
     elif metric.lower() == 'nrmse':
         metric = '_nrmse'
-    elif metric.lower() == 'nev':
-        metric = '_nev'
-    elif metric.lower() == 'ppp':
-        metric = '_PPP'
-    elif metric.lower() == 'msss':
-        metric = '_msss'
+    elif metric.lower() in ['nev', 'nmse']:
+        metric = '_nmse'
+    elif metric.lower() in ['ppp', 'msss']:
+        metric = '_ppp'
     elif metric.lower() == 'uacc':
-        metric = '_uACC'
+        metric = '_uacc'
     else:
         raise ValueError("""Please supply a metric from the following list:
             'pearson_r'
             'rmse'
             'mse'
-            'rmse_v'
             'nrmse'
             'nev'
+            'nmse'
             'ppp'
             'msss'
             'uacc'
@@ -520,37 +448,42 @@ def _get_metric_function(metric):
     return eval(metric)
 
 
-def _pearson_r(a, b, dim):
+# TODO: Do we need wrappers or should we rather create wrappers for skill score
+#       as used in a specific paper: def Seferian2018(ds, control):
+#       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
+def _ppp(ds, control, comparison, running=None, reference_period=None):
     """
-    Compute anomaly correlation coefficient (ACC) of two xr objects.
-    See xskillscore.pearson_r.
+    Prognostic Potential Predictability (PPP) metric.
+
+    Formula
+    -------
+    PPP = 1 - MSE / std_control
+
+    References
+    ----------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
+    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+        Prediction: Potential versus Operational Seasonal Forecast Skill.
+        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    return pearson_r(a, b, dim)
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
+    fac = _get_norm_factor(comparison)
+    ppp_skill = 1 - mse_skill / var / fac
+    return ppp_skill
 
 
-def _rmse(a, b, dim):
-    """
-    Compute root-mean-square-error (RMSE) of two xr objects.
-    See xskillscore.rmse.
-    """
-    return rmse(a, b, dim)
-
-
-def _mse(ds, control, comparison, running):
-    """
-    Mean Square Error (MSE) metric.
-    """
-    return _ensemble_variance(ds, comparison)
-
-
-def _rmse_v(ds, control, comparison, running):
-    """
-    Root Mean Square Error (RMSE) metric.
-    """
-    return _ensemble_variance(ds, comparison) ** .5
-
-
-def _nrmse(ds, control, comparison, running):
+def _nrmse(ds, control, comparison, running=None, reference_period=None):
     """
     Normalized Root Mean Square Error (NRMSE) metric.
 
@@ -571,13 +504,17 @@ def _nrmse(ds, control, comparison, running):
         (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
 
     """
-    var = _get_variance(control, running=running)
-    ens = _ensemble_variance(ds, comparison)
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    rmse_skill = _rmse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    return (ens / var / fac) ** .5
+    nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
+    return nrmse_skill
 
 
-def _nev(ds, control, comparison, running):
+def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
     Normalized Ensemble Variance (NEV) metric.
 
@@ -587,47 +524,17 @@ def _nev(ds, control, comparison, running):
       Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
       (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
     """
-    var = _get_variance(control, running=running)
-    ens = _ensemble_variance(ds, comparison)
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    return ens / var / fac
+    nmse_skill = mse_skill / var / fac
+    return nmse_skill
 
 
-def _ppp(ds, control, comparison, running):
-    """
-    Prognostic Potential Predictability (PPP) metric.
-
-    Formula
-    -------
-    PPP = 1 - MSE / std_control
-
-    References
-    ----------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-    """
-    var = _get_variance(control, running=running)
-    ens = _ensemble_variance(ds, comparison)
-    fac = _get_norm_factor(comparison)
-    return 1 - ens / var / fac
-
-
-# TODO: Do we need wrappers or should we rather create wrappers for skill score
-#       as used in a specific paper: def Seferian2018(ds, control):
-#       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
-def _PPP(ds, control, comparison, running):
-    """
-    Wraps ppp.
-    """
-    return _ppp(ds, control, comparison, running)
-
-
-def _uACC(ds, control, comparison, running):
+def _uacc(fct, truth, control, running=None, reference_period=None):
     """
     Unbiased ACC (uACC) metric.
 
@@ -642,25 +549,7 @@ def _uACC(ds, control, comparison, running):
       Prediction: Potential versus Operational Seasonal Forecast Skill.
       Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    return _ppp(ds, control, comparison, running) ** .5
-
-
-def _msss(ds, control, comparison, running):
-    """
-    Wraps ppp.
-
-    Formula
-    -------
-    MSSS = 1 - MSE_ens / var_control
-
-    References
-    ----------
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-    """
-    return _ppp(ds, control, comparison, running)
+    return np.sqrt(_ppp(fct, truth, control, running, reference_period))
 
 
 # --------------------------------------------#
@@ -669,16 +558,10 @@ def _msss(ds, control, comparison, running):
 # predictability.
 # --------------------------------------------#
 def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
-                          anomaly=False, detrend=False, running=None):
+                          running=None, reference_period=None):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
-
-    Relies on two concepts yielding equal results (see comparisons):
-    - np vectorized from xskillscore (_rmse, _pearson_r) but manually
-      'stacked' (_m2m, m2e, ...)
-    - xarray vectorized (_mse, _rmse_v, ...) from ensemble variance
-      (_ens_var_against_mean, _..control)
 
     Parameters
     ----------
@@ -686,13 +569,15 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
                   spatial coordinates)
         input data
     metric : function
-        metric from ['rmse', 'pearson_r', 'mse', 'rmse_r', 'ppp', 'nev',
+        metric from ['rmse', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse'
                      'uACC', 'MSSS']
     comparison : function
         comparison from ['m2m', 'm2e', 'm2c', 'e2c']
     running : int
         Size of the running window for variance smoothing
-        (only used for PPP, NEV)
+        (only optionally applicable to perfect-model metrics)
+    reference_period : str
+
 
     Returns
     -------
@@ -701,17 +586,16 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
     """
     supervector_dim = 'svd'
     comparison = _get_comparison_function(comparison)
-    if comparison.__name__ not in ['_m2m', '_m2c', '_m2e', '_e2c']:
+    if comparison not in [_m2m, _m2c, _m2e, _e2c]:
         raise ValueError('specify comparison argument')
 
     metric = _get_metric_function(metric)
-    if metric.__name__ in ['_pearson_r', '_rmse']:
+    if metric in [_pearson_r, _rmse, _mse]:
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric.__name__ in ['_mse', '_rmse_v', '_nrmse', '_nev', '_ppp',
-                             '_PPP', '_msss', '_uACC']:
-        res = metric(ds, control, comparison, running)
+    elif metric in [_nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
+        res = metric(ds, control, comparison, running, reference_period)
         return res
     else:
         raise ValueError('specify metric argument')
@@ -764,7 +648,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if nlags is None:
         nlags = fct.time.size
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse]:
+    if metric not in [_pearson_r, _rmse, _mse]:
         raise ValueError("""Please input either 'pearson_r' or 'rmse' for your
             metric.""")
     plag = []
@@ -816,10 +700,11 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     """
     _check_xarray(reference)
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse]:
+    if metric not in [_pearson_r, _rmse, _mse]:
         raise ValueError("""Please select between the following metrics:
             'pearson_r'
-            'rmse'""")
+            'rmse'
+            ,'mse'""")
     plag = []  # holds results of persistence for each lag
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)
@@ -827,194 +712,6 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     pers = xr.concat(plag, 'lead time')
     pers['lead time'] = np.arange(1, 1 + nlags)
     return pers
-
-
-# --------------------------------------------#
-# PERSISTANCE FORECASTS
-# --------------------------------------------#
-# TODO: adapt for maps
-def generate_damped_persistence_forecast(control, startyear, length=20):
-    """
-    Generate damped persistence forecast mean and range.
-
-    Reference
-    ---------
-    - missing: got a script from a collegue
-
-    Parameters
-    ----------
-    control : pandas.series
-        input timeseries from control run
-    startyear : int
-        year damped persistence forecast should start from
-
-    Returns
-    -------
-    ar1 : pandas.series
-        mean damped persistence
-    ar50 : pandas.series
-        50% damped persistence range
-    ar90 : pandas.series
-        90% damped persistence range
-
-    Example
-    -------
-    from esmtools.prediction import generate_damped_persistence_forecast
-    ar1, ar50, ar90 = generate_damped_persistence_forecast(control_,3014)
-    ar1.plot(label='damped persistence forecast')
-    plt.fill_between(ar1.index,ar1-ar50,ar1+ar50,alpha=.2,
-                     color='gray',label='50% forecast range')
-    plt.fill_between(ar1.index,ar1-ar90,ar1+ar90,alpha=.1,
-                     color='gray',label='90% forecast range')
-    control_.sel(time=slice(3014,3034)).plot(label='control')
-    plt.legend()
-
-    """
-    anom = (control.sel(time=startyear) - control.mean('time')).values
-    t = np.arange(0., length + 1, 1)
-    alpha = xr_autocorr(control, dim='time').values
-    exp = anom * np.exp(-alpha * t)  # exp. decay towards mean
-    ar1 = exp + control.mean('time').values
-    ar50 = 0.7 * control.std('time').values * \
-        np.sqrt(1 - np.exp(-2 * alpha * t))
-    ar90 = 1.7 * control.std('time').values * \
-        np.sqrt(1 - np.exp(-2 * alpha * t))
-
-    index = control.sel(time=slice(startyear, startyear + length))['time']
-    ar1 = pd.Series(ar1, index=index)
-    ar50 = pd.Series(ar50, index=index)
-    ar90 = pd.Series(ar90, index=index)
-    return ar1, ar50, ar90
-
-# TODO: needs complete redo
-
-
-def generate_predictability_damped_persistence(s, kind='PPP', percentile=True,
-                                               length=20):
-    """
-    Calculate the PPP (or NEV) damped persistence mean and range in PPP plot.
-
-    Lag1 autocorrelation coefficient (alpha) is bootstrapped. Range can be
-    indicated as +- std or 5-95-percentile.
-
-    Reference
-    ---------
-    Griffies, S. M., and K. Bryan. "A Predictability Study of Simulated North
-    Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-    (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. Appendix
-
-    Parameters
-    ----------
-    s : pandas.series
-        input timeseries from control run
-    kind : str
-        determine kind of damped persistence. 'PPP' or 'NEV' (normalized
-        ensemble variance)
-    percentile : bool
-        use percentiles for alpha range
-    length : int
-        length of the output timeseries
-
-    Returns
-    -------
-    PPP_persistence_0 : pandas.series
-        mean damped persistence
-    PPP_persistence_minus : pandas.series
-        lower range damped persistence
-    PP_persistence_plus : pandas.series
-        upper range damped persistence
-
-    Example
-    -------
-    import esmtools as et
-    s = control.sel(area='global',period='ym').to_dataframe()['tos']
-    PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus = \
-        et.prediction.generate_predictability_persistence(s)
-    t = np.arange(0,20+1,1.)
-    plt.plot(PPP_persistence_0,color='black',
-             linestyle='--',label='persistence mean')
-    plt.fill_between(t,PPP_persistence_minus,PPP_persistence_plus,
-                     color='gray',alpha=.3,label='persistence range')
-    plt.axhline(y=0,color='black')
-
-    """
-    # bootstrapping persistence
-    iterations = 50  # iterations
-    chunk_length = 100  # length of chunks of control run to take lag1 autocorr
-    data = np.zeros(iterations)
-    for i in range(iterations):
-        random_start_year = randint(s.index.min(), s.index.max() -
-                                    chunk_length)
-        data[i] = s.loc[str(random_start_year):str(
-            random_start_year + chunk_length)].autocorr()
-
-    alpha_0 = np.mean(data)
-    alpha_minus = np.mean(data) - np.std(data)
-    alpha_plus = np.mean(data) + np.std(data)
-    if percentile:
-        alpha_minus = np.percentile(data, 5)
-        alpha_plus = np.percentile(data, 95)
-
-    # persistence function
-    def generate_PPP_persistence(alpha, t):
-        values = np.exp(-2 * alpha * t)  # Griffies 1997
-        s = pd.Series(values, index=t)
-        return s
-
-    t = np.arange(0, length + 1, 1.)
-    PPP_persistence_0 = generate_PPP_persistence(alpha_0, t)
-    PPP_persistence_minus = generate_PPP_persistence(alpha_plus, t)
-    PPP_persistence_plus = generate_PPP_persistence(alpha_minus, t)
-
-    if kind in ['nvar', 'NEV']:
-        PPP_persistence_0 = 1 - PPP_persistence_0
-        PPP_persistence_minus = 1 - PPP_persistence_minus
-        PPP_persistence_plus = 1 - PPP_persistence_plus
-
-    return PPP_persistence_0, PPP_persistence_minus, PPP_persistence_plus
-
-
-# TODO: Adjust for 3d fields
-def damped_persistence_forecast(ds, control, varname='tos', area='global',
-                                period='ym', comparison='m2e'):
-    """
-    Generate damped persistence forecast timeseries.
-    """
-    starting_years = ds.ensemble.values
-    anom = (control.sel(time=starting_years) - control.mean('time'))
-    t = ds['time']
-    alpha = control.to_series().autocorr()
-    persistence_forecast_list = []
-    for ens in anom['time']:
-        ar1 = anom.sel(time=ens).values * \
-            np.exp(-alpha * t) + control.mean('time').values
-        pf = xr.DataArray(data=ar1, coords=[t], dims='time')
-        pf = pf.expand_dims('ensemble')
-        pf['ensemble'] = [ens]
-        persistence_forecast_list.append(pf)
-    return xr.concat(persistence_forecast_list, dim='ensemble')
-
-
-def PM_compute_damped_persistence(ds, control, metric='rmse',
-                                  comparison='m2e'):
-    """
-    Compute skill for persistence forecast. See PM_compute().
-    """
-    persistence_forecasts = damped_persistence_forecast(ds, control)
-    if comparison == 'm2e':
-        metric = _get_metric_function(metric)
-        result = metric(persistence_forecasts, ds.mean('member'), 'ensemble')
-    elif comparison == 'm2m':
-        persistence_forecasts = persistence_forecasts.expand_dims('member')
-        all_persistence_forecasts = persistence_forecasts.isel(
-            member=[0] * ds.member.size)
-        fct = _m2e(all_persistence_forecasts, 'svd')[0]
-        truth = _m2e(ds, 'svd')[0]
-        metric = _get_metric_function(metric)
-        result = metric(fct, truth, 'svd')
-    else:
-        raise ValueError('not defined')
-    return result
 
 
 # --------------------------------------------#
@@ -1132,7 +829,7 @@ def DPP(ds, m=10, chunk=True, var_all_e=False):
 # BOOTSTRAPPING
 # Functions for sampling an ensemble
 # --------------------------------------------#
-def pseudo_ens(ds, control):
+def _pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -1177,8 +874,8 @@ def pseudo_ens(ds, control):
                      'ensemble')
 
 
-def PM_sig(ds, control, metric='rmse', comparison='m2m', reference_period='MK',
-           sig=95, bootstrap=30):
+def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
+                            reference_period='MK', sig=95, bootstrap=30):
     """
     Return sig-th percentile of function to be choosen from pseudo ensemble
     generated from control.
@@ -1207,7 +904,7 @@ def PM_sig(ds, control, metric='rmse', comparison='m2m', reference_period='MK',
     _control = _control_for_reference_period(
         control, reference_period=reference_period)
     for _ in range(1 + int(bootstrap / ds['time'].size)):
-        ds_pseudo = pseudo_ens(ds, _control)
+        ds_pseudo = _pseudo_ens(ds, _control)
         ds_pseudo_metric = compute_perfect_model(
             ds_pseudo, _control, metric=metric, comparison=comparison)
         x.append(ds_pseudo_metric)

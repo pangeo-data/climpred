@@ -703,7 +703,8 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     if metric not in [_pearson_r, _rmse, _mse]:
         raise ValueError("""Please select between the following metrics:
             'pearson_r'
-            'rmse'""")
+            'rmse'
+            ,'mse'""")
     plag = []  # holds results of persistence for each lag
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)

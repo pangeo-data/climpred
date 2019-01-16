@@ -8,7 +8,7 @@ DESCRIPTION = 'An xarray wrapper for decadal climate prediction.'
 URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
 INSTALL_REQUIRES = ['numpy', 'pandas', 'xarray', 'scipy', 'xskillscore==0.0.2']
-DEPENDENCY_LINKS = ['https://github.com/raybellwaves/xskillscore/tarball/master#egg=xskillscore-0.0.2']
+DEPENDENCY_LINKS = ['https://github.com/aaronspring/xskillscore/tarball/master#egg=xskillscore-0.0.2']
 # TODO: Add testing
 # TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'

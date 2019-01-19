@@ -22,7 +22,7 @@ Functions for decadal climate prediction.
 Functions for time series and spatial statistics
 
 ## Contact
-Developed and maintained by Riley Brady (CU Boulder) and Aaron Spring (MPI).
+Developed and maintained by Riley Brady (CU Boulder) and Aaron Spring (MPI-M).
 
 emails: 
 

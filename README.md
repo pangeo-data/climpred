@@ -8,7 +8,7 @@ Note that `climpred` is in the very early stages of development. We are currentl
 
 ## Installation
 ```shell
-pip install git+https://github.com/bradyrx/climpred --process-dependency-links
+pip install git+https://github.com/bradyrx/climpred
 ```
 
 ## Modules

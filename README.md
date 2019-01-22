@@ -13,6 +13,10 @@ pip install git+https://github.com/bradyrx/climpred
 
 ## Modules
 
+`loadutils`
+
+Functions for loading sample datasets.
+
 `prediction`
 
 Functions for decadal climate prediction.

@@ -130,7 +130,8 @@ def _shift(a, b, lag, dim='time'):
     return a, b
 
 
-def _control_for_reference_period(control, reference_period='MK', obs_years=40):
+def _control_for_reference_period(control, reference_period='MK',
+                                  obs_years=40):
     """
     Modifies control according to knowledge approach.
 
@@ -179,7 +180,8 @@ def _get_variance(control, reference_period=None, time_length=None):
     """
     if reference_period is not None and isinstance(time_length, int):
         control = _control_for_reference_period(control,
-                    reference_period=reference_period, obs_years=time_length)
+                                                reference_period=reference_period,
+                                                obs_years=time_length)
         return control.var('time')
     else:
         return control.var('time')
@@ -187,7 +189,8 @@ def _get_variance(control, reference_period=None, time_length=None):
 
 def _get_norm_factor(comparison):
     """
-    Get normalization factor for ppp, nvar, nrmse. Used in compute_perfect_model.
+    Get normalization factor for ppp, nvar, nrmse.
+    Used in compute_perfect_model.
 
     m2e gets smaller rmse's than m2m by design, see Seferian 2018 et al.
     m2m, m2c-ensemble variance should be divided by 2 to get var(control)
@@ -233,7 +236,8 @@ def _select_members_ensembles(ds, m=None, e=None):
     return ds.sel(member=m, ensemble=e)
 
 
-def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('ensemble', 'member')):
+def _stack_to_supervector(ds, new_dim='svd',
+                          stacked_dims=('ensemble', 'member')):
     """
     Stack all stacked_dims (likely ensemble and member) dimensions into one
     supervector dimension to perform metric over.

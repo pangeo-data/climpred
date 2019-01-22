@@ -685,6 +685,8 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     Currently supported metrics for persistence:
     * pearson_r
     * rmse
+    * mse
+    * mae
 
     Parameters
     ---------
@@ -712,11 +714,12 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     """
     _check_xarray(reference)
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse]:
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please select between the following metrics:
-            'pearson_r'
-            'rmse'
-            ,'mse'""")
+            'pearson_r',
+            'rmse',
+            'mse',
+            'mae'""")
     plag = []  # holds results of persistence for each lag
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)

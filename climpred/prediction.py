@@ -636,6 +636,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         reference.
         * pearson_r
         * rmse
+        * mae
+        * mse
     comparison : str (default 'e2r')
         How to compare the decadal prediction ensemble to the reference.
         * e2r : ensemble mean to reference
@@ -658,9 +660,9 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if nlags is None:
         nlags = fct.time.size
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse]:
-        raise ValueError("""Please input either 'pearson_r' or 'rmse' for your
-            metric.""")
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
+        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
+            'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')

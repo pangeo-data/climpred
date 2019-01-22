@@ -19,6 +19,7 @@ according to metric and comparison
 # TODO: make metrics non-dependent of prediction framework used
 Metrics (submit to functions as strings)
 -------
+- mae: Mean Absolute Error
 - mse: Mean Square Error (perfect-model only)
 - nev: Normalized Ensemble Variance (perfect-model only)
 - msss: Mean Square Skill Score (perfect-model only)
@@ -102,6 +103,7 @@ import xarray as xr
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
+from xskillscore import mae as _mae
 
 from .stats import _check_xarray, _get_dims
 
@@ -130,7 +132,8 @@ def _shift(a, b, lag, dim='time'):
     return a, b
 
 
-def _control_for_reference_period(control, reference_period='MK', obs_years=40):
+def _control_for_reference_period(control, reference_period='MK',
+                                  obs_years=40):
     """
     Modifies control according to knowledge approach.
 
@@ -179,7 +182,8 @@ def _get_variance(control, reference_period=None, time_length=None):
     """
     if reference_period is not None and isinstance(time_length, int):
         control = _control_for_reference_period(control,
-                    reference_period=reference_period, obs_years=time_length)
+                                                reference_period=reference_period,
+                                                obs_years=time_length)
         return control.var('time')
     else:
         return control.var('time')
@@ -187,7 +191,8 @@ def _get_variance(control, reference_period=None, time_length=None):
 
 def _get_norm_factor(comparison):
     """
-    Get normalization factor for ppp, nvar, nrmse. Used in compute_perfect_model.
+    Get normalization factor for ppp, nvar, nrmse.
+    Used in compute_perfect_model.
 
     m2e gets smaller rmse's than m2m by design, see Seferian 2018 et al.
     m2m, m2c-ensemble variance should be divided by 2 to get var(control)
@@ -233,7 +238,8 @@ def _select_members_ensembles(ds, m=None, e=None):
     return ds.sel(member=m, ensemble=e)
 
 
-def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('ensemble', 'member')):
+def _stack_to_supervector(ds, new_dim='svd',
+                          stacked_dims=('ensemble', 'member')):
     """
     Stack all stacked_dims (likely ensemble and member) dimensions into one
     supervector dimension to perform metric over.
@@ -396,6 +402,7 @@ def _get_metric_function(metric):
     Currently compatable with metrics:
     * pearson_r
     * rmse
+    * mae
     * mse
     * rmse_v
     * nrmse
@@ -408,6 +415,7 @@ def _get_metric_function(metric):
     --------
     pearson_r : 'pearson_r', 'pearsonr', 'pr'
     rmse: 'rmse'
+    mae: 'mae'
     mse: 'mse'
     nrmse: 'mrmse'
     nmse: 'nmse','nev'
@@ -423,6 +431,8 @@ def _get_metric_function(metric):
         metric = '_pearson_r'
     elif metric == 'rmse':
         metric = '_rmse'
+    elif metric == 'mae':
+        metric = '_mae'
     elif metric.lower() == 'mse':
         metric = '_mse'
     elif metric.lower() == 'nrmse':
@@ -569,7 +579,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
                   spatial coordinates)
         input data
     metric : function
-        metric from ['rmse', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse'
+        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse',
                      'uACC', 'MSSS']
     comparison : function
         comparison from ['m2m', 'm2e', 'm2c', 'e2c']
@@ -590,7 +600,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify comparison argument')
 
     metric = _get_metric_function(metric)
-    if metric in [_pearson_r, _rmse, _mse]:
+    if metric in [_pearson_r, _rmse, _mse, _mae]:
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
@@ -626,6 +636,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         reference.
         * pearson_r
         * rmse
+        * mae
+        * mse
     comparison : str (default 'e2r')
         How to compare the decadal prediction ensemble to the reference.
         * e2r : ensemble mean to reference
@@ -648,9 +660,9 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if nlags is None:
         nlags = fct.time.size
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse]:
-        raise ValueError("""Please input either 'pearson_r' or 'rmse' for your
-            metric.""")
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
+        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
+            'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
@@ -673,6 +685,8 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     Currently supported metrics for persistence:
     * pearson_r
     * rmse
+    * mse
+    * mae
 
     Parameters
     ---------
@@ -700,11 +714,12 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     """
     _check_xarray(reference)
     metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse]:
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please select between the following metrics:
-            'pearson_r'
-            'rmse'
-            ,'mse'""")
+            'pearson_r',
+            'rmse',
+            'mse',
+            'mae'""")
     plag = []  # holds results of persistence for each lag
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)

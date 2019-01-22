@@ -19,6 +19,7 @@ according to metric and comparison
 # TODO: make metrics non-dependent of prediction framework used
 Metrics (submit to functions as strings)
 -------
+- mae: Mean Absolute Error
 - mse: Mean Square Error (perfect-model only)
 - nev: Normalized Ensemble Variance (perfect-model only)
 - msss: Mean Square Skill Score (perfect-model only)
@@ -102,6 +103,7 @@ import xarray as xr
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
+from xskillscore import mae as _mae
 
 from .stats import _check_xarray, _get_dims
 
@@ -400,6 +402,7 @@ def _get_metric_function(metric):
     Currently compatable with metrics:
     * pearson_r
     * rmse
+    * mae
     * mse
     * rmse_v
     * nrmse
@@ -412,6 +415,7 @@ def _get_metric_function(metric):
     --------
     pearson_r : 'pearson_r', 'pearsonr', 'pr'
     rmse: 'rmse'
+    mae: 'mae'
     mse: 'mse'
     nrmse: 'mrmse'
     nmse: 'nmse','nev'
@@ -427,6 +431,8 @@ def _get_metric_function(metric):
         metric = '_pearson_r'
     elif metric == 'rmse':
         metric = '_rmse'
+    elif metric == 'mae':
+        metric = '_mae'
     elif metric.lower() == 'mse':
         metric = '_mse'
     elif metric.lower() == 'nrmse':

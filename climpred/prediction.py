@@ -579,7 +579,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
                   spatial coordinates)
         input data
     metric : function
-        metric from ['rmse', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse'
+        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse',
                      'uACC', 'MSSS']
     comparison : function
         comparison from ['m2m', 'm2e', 'm2c', 'e2c']
@@ -600,7 +600,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify comparison argument')
 
     metric = _get_metric_function(metric)
-    if metric in [_pearson_r, _rmse, _mse]:
+    if metric in [_pearson_r, _rmse, _mse, _mae]:
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res

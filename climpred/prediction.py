@@ -544,7 +544,9 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     ---------
     - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
       Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. NOTE: NMSE = - 1 - NEV
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+
+      NOTE: NMSE = - 1 - NEV
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
@@ -640,7 +642,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
+    # perfect-model only metrics
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:
@@ -706,13 +709,16 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     fct, reference = comparison(ds, reference)
     if nlags is None:
         nlags = fct.time.size
-    metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse, _mae]:
-        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
-            'mae' for your metric.""")
+    if horizon and metric != 'pearson_r':
+        print("""Setting metric to pearson r, since predictability horizon
+            is being computed.""")
+        metric = _get_metric_function('pearson_r')
+    else:
+        metric = _get_metric_function(metric)
+        if metric not in [_pearson_r, _rmse, _mse, _mae]:
+            raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
+                'mae' for your metric.""")
     plag = []
-    if horizon:
-        p_value = []
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
         plag.append(metric(a, b, dim='ensemble'))
@@ -721,6 +727,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if (horizon) & (metric == _pearson_r):
         # NaN values throw warnings for p-value comparison, so just
         # suppress that here.
+        p_value = []
         for i in range(0, nlags):
             a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
             with warnings.catch_warnings():
@@ -1056,3 +1063,37 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
     mask = np.isnan(mask)
     ph = ph.where(~mask, np.nan)
     return ph
+
+
+def z_significance(r1, r2, N, ci=90):
+    """Computes the z test statistic for two ACC time series, e.g. an
+       initialized ensemble ACC and persistence forecast ACC.
+
+    Inputs:
+        r1, r2: (xarray objects) time series, grids, etc. of pearson
+                correlation coefficients between the two prediction systems
+                of interest.
+        N: (int) length of original time series being correlated.
+        ci: (optional int) confidence level for z-statistic test
+
+    Returns:
+        Boolean array of same dimensions as input where True means r1 is
+        significantly different from r2 at ci.
+
+    Reference:
+        https://www.statisticssolutions.com/comparing-correlation-coefficients/
+    """
+    def _r_to_z(r):
+        """Fisher's r to z transformation"""
+        return 0.5 * (np.log(1 + r) - np.log(1 - r))
+
+    z1, z2 = _r_to_z(r1), _r_to_z(r2)
+    difference = np.abs(z1 - z2)
+    zo = difference / (np.sqrt(2*(1 / (N - 3))))
+    # Could broadcast better than this, but this works for now.
+    confidence = {80: [1.282]*len(z1),
+                  90: [1.645]*len(z1),
+                  95: [1.96]*len(z1),
+                  99: [2.576]*len(z1)}
+    sig = xr.DataArray(zo > confidence[ci], dims='lead time')
+    return sig

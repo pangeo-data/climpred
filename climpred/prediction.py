@@ -985,6 +985,17 @@ def z_significance(r1, r2, N, ci=90):
     """Computes the z test statistic for two ACC time series, e.g. an
        initialized ensemble ACC and persistence forecast ACC.
 
+    Inputs:
+        r1, r2: (xarray objects) time series, grids, etc. of pearson
+                correlation coefficients between the two prediction systems
+                of interest.
+        N: (int) length of original time series being correlated.
+        ci: (optional int) confidence level for z-statistic test
+
+    Returns:
+        Boolean array of same dimensions as input where True means r1 is
+        significantly different from r2 at ci.
+
     Reference:
         https://www.statisticssolutions.com/comparing-correlation-coefficients/
     """

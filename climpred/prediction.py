@@ -612,7 +612,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
 
 
 def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
-                      nlags=None):
+                      nlags=None, horizon=False, alpha=0.05, ci=90):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations)
@@ -644,11 +644,22 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         * m2r : each member to the reference
     nlags : int (default length of `time` dim)
         How many lags to compute skill/potential predictability out to
+    horizon : (optional bool) If true, compute and return the predictability
+              horizon. This checks that (1) the initialized ensemble skill
+              correlations to the reference simulation are statistically 
+              significant, and (2) that the resulting r-values are significantly
+              different from the persistence r-values.
+    alpha: (optional double) p-value significance to check for correlations
+           between initialized ensemble and reference simulation.
+    ci: (optional int) confidence level in comparing initialized skill to
+        persistence skill.
 
     Returns
     -------
     skill : xarray object
         Predictability with main dimension `lag`
+    persistence : xarray object (if horizon is True)
+    horizon : xarray object (if horizon is True)
     """
     _check_xarray(ds)
     _check_xarray(reference)
@@ -659,10 +670,15 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     fct, reference = comparison(ds, reference)
     if nlags is None:
         nlags = fct.time.size
-    metric = _get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse, _mae]:
-        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
-            'mae' for your metric.""")
+    if horizon and metric != 'pearson_r':
+        print("""Setting metric to pearson r, since predictability horizon
+            is being computed.""")
+        metric = _get_metric_function('pearson_r')
+    else:
+        metric = _get_metric_function(metric)
+        if metric not in [_pearson_r, _rmse, _mse, _mae]:
+            raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
+                'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')

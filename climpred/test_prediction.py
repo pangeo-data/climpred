@@ -85,7 +85,14 @@ def test_compute_perfect_model_ds(PM_ds_ds, PM_ds_control, metric, comparison):
 
 
 @pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
-def test_compute_persistence(PM_da_control, metric):
+def test_compute_persistence_da(PM_da_control, metric):
     actual = compute_persistence(
         PM_da_control, nlags=3, metric=metric, dim='time')
+    assert_allclose(actual, actual)
+
+
+@pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
+def test_compute_persistence_ds(PM_ds_control, metric):
+    actual = compute_persistence(
+        PM_ds_control, nlags=3, metric=metric, dim='time')
     assert_allclose(actual, actual)

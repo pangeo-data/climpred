@@ -695,7 +695,9 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         p_value['lead time'] = skill['lead time']
         persistence = compute_persistence(reference, nlags)
         sig = z_significance(skill, persistence, ds.ensemble.size, ci)
-        horizon = ((p_value < alpha) & (sig)).argmin('lead time')
+        # subtracting one is because this returns the value of the first
+        # False essentially, and we want the last True for the horizon.
+        horizon = ((p_value < alpha) & (sig)).argmin('lead time') - 1
         return skill, persistence, horizon
     else:
         return skill

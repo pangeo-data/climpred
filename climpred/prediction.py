@@ -104,6 +104,7 @@ from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
 from xskillscore import mae as _mae
+from xskillscore import pearson_r_p_value
 
 from .stats import _check_xarray, _get_dims
 
@@ -646,9 +647,9 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         How many lags to compute skill/potential predictability out to
     horizon : (optional bool) If true, compute and return the predictability
               horizon. This checks that (1) the initialized ensemble skill
-              correlations to the reference simulation are statistically 
-              significant, and (2) that the resulting r-values are significantly
-              different from the persistence r-values.
+              correlations to the reference simulation are statistically
+              significant, and (2) that the resulting r-values are
+              significantly different from the persistence r-values.
     alpha: (optional double) p-value significance to check for correlations
            between initialized ensemble and reference simulation.
     ci: (optional int) confidence level in comparing initialized skill to
@@ -680,12 +681,24 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
             raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
                 'mae' for your metric.""")
     plag = []
+    if horizon:
+        p_value = []
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
         plag.append(metric(a, b, dim='ensemble'))
+        if horizon:
+            p_value.append(pearson_r_p_value(a, b, dim='ensemble'))
     skill = xr.concat(plag, 'lead time')
     skill['lead time'] = np.arange(1, 1 + nlags)
-    return skill
+    if horizon:
+        p_value = xr.concat(p_value, 'lead time')
+        p_value['lead time'] = skill['lead time']
+        persistence = compute_persistence(reference, nlags)
+        sig = z_significance(skill, persistence, ds.ensemble.size, ci)
+        horizon = ((p_value < alpha) & (sig)).argmin('lead time')
+        return skill, persistence, horizon
+    else:
+        return skill
 
 
 def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
@@ -966,3 +979,26 @@ def xr_predictability_horizon(skill, threshold, limit='upper'):
         ph_not_reached = (skill < threshold).all('time')
     ph = ph.where(~ph_not_reached, other=skill['time'].max())
     return ph
+
+
+def z_significance(r1, r2, N, ci=90):
+    """Computes the z test statistic for two ACC time series, e.g. an
+       initialized ensemble ACC and persistence forecast ACC.
+
+    Reference:
+        https://www.statisticssolutions.com/comparing-correlation-coefficients/
+    """
+    def _r_to_z(r):
+        """Fisher's r to z transformation"""
+        return 0.5 * (np.log(1 + r) - np.log(1 - r))
+
+    z1, z2 = _r_to_z(r1), _r_to_z(r2)
+    difference = np.abs(z1 - z2)
+    zo = difference / (np.sqrt(2*(1 / (N - 3))))
+    # Could broadcast better than this, but this works for now.
+    confidence = {80: [1.282]*len(z1),
+                  90: [1.645]*len(z1),
+                  95: [1.96]*len(z1),
+                  99: [2.576]*len(z1)}
+    sig = xr.DataArray(zo > confidence[ci], dims='lead time')
+    return sig

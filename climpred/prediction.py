@@ -734,15 +734,10 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     fct, reference = comparison(ds, reference)
     if nlags is None:
         nlags = fct.time.size
-    if horizon and metric != 'pearson_r':
-        print("""Setting metric to pearson r, since predictability horizon
-            is being computed.""")
-        metric = _get_metric_function('pearson_r')
-    else:
-        metric = _get_metric_function(metric)
-        if metric not in [_pearson_r, _rmse, _mse, _mae]:
-            raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
-                'mae' for your metric.""")
+    metric = _get_metric_function(metric)
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
+        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
+            'mae' for your metric.""")
     plag = []
     if horizon:
         p_value = []
@@ -1124,9 +1119,11 @@ def z_significance(r1, r2, N, ci=90):
     difference = np.abs(z1 - z2)
     zo = difference / (np.sqrt(2*(1 / (N - 3))))
     # Could broadcast better than this, but this works for now.
-    confidence = {80: [1.282]*len(z1),
-                  90: [1.645]*len(z1),
-                  95: [1.96]*len(z1),
-                  99: [2.576]*len(z1)}
-    sig = xr.DataArray(zo > confidence[ci], dims='lead time')
+    zscore = {80: 1.282,
+              90: 1.645,
+              95: 1.96,
+              99: 2.576}
+    confidence = np.zeros_like(zo)
+    confidence[:] = zscore[ci]
+    sig = xr.DataArray(zo > confidence)
     return sig

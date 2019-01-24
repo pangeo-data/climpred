@@ -7,6 +7,10 @@ from xarray.tests import assert_allclose
 from climpred.prediction import (bootstrap_perfect_model,
                                  compute_perfect_model, compute_persistence)
 
+xskillscore_metrics = ('pearson_r', 'rmse', 'mse', 'mae')
+PM_only_metrics = ('ppp', 'nrmse', 'nmse')
+PM_comparisons = ('e2c', 'm2c', 'm2e', 'm2m')
+all_metrics = xskillscore_metrics + PM_only_metrics
 
 @pytest.fixture
 def PM_da_ds():
@@ -58,41 +62,47 @@ def PM_ds_control():
                       coords={'time': dates, 'lat': lats, 'lon': lons})
 
 
-@pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
-@pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
-def test_compute_perfect_model_da(PM_da_ds, PM_da_control, metric, comparison):
+@pytest.mark.parametrize('comparison', PM_comparisons)
+@pytest.mark.parametrize('metric', all_metrics)
+def test_compute_perfect_model_da_not_nan(PM_da_ds, PM_da_control, metric, comparison):
     actual = compute_perfect_model(
-        PM_da_ds, PM_da_control, metric=metric, comparison=comparison)
-    assert_allclose(actual, actual)
+        PM_da_ds, PM_da_control, metric=metric, comparison=comparison).isnull().any()
+    assert actual == False
+
+
+@pytest.mark.parametrize('comparison', PM_comparisons)
+@pytest.mark.parametrize('metric', all_metrics)
+def test_compute_perfect_model_ds_not_nan(PM_ds_ds, PM_ds_control, metric, comparison):
+    actual = compute_perfect_model(
+        PM_ds_ds, PM_ds_control, metric=metric, comparison=comparison).isnull().any()
+    assert actual == False
 
 
 @pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
-@pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
-def test_compute_perfect_model_ds(PM_ds_ds, PM_ds_control, metric, comparison):
-    actual = compute_perfect_model(
-        PM_ds_ds, PM_ds_control, metric=metric, comparison=comparison)
-    assert_allclose(actual, actual)
+@pytest.mark.parametrize('metric', (all_metrics))
+def test_bootstrap_perfect_model_ds_not_nan(PM_ds_ds, PM_ds_control, metric, comparison):
+    actual = bootstrap_perfect_model(PM_ds_ds, PM_ds_control, metric=metric,
+                                     comparison=comparison, sig=50, bootstrap=5).isnull().any()
+    assert actual == False
 
 
-# @pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
-# @pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
-# def test_bootstrap_perfect_model(PM_ds_ds, PM_ds_control, metric, comparison):
-    # fails so far because of datetime and not int time
-    #actual = bootstrap_perfect_model(PM_ds_ds, PM_ds_control, metric=metric,
-    #                                 comparison=comparison, sig=50, bootstrap=10)
-    #assert_allclose(actual, actual)
-    # pass
+@pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
+@pytest.mark.parametrize('metric', (all_metrics))
+def test_bootstrap_perfect_model_da_not_nan(PM_da_ds, PM_da_control, metric, comparison):
+    actual = bootstrap_perfect_model(PM_da_ds, PM_da_control, metric=metric,
+                                     comparison=comparison, sig=50, bootstrap=5).isnull().any()
+    assert actual == False
 
 
-@pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
-def test_compute_persistence_da(PM_da_control, metric):
+@pytest.mark.parametrize('metric', xskillscore_metrics)
+def test_compute_persistence_da_not_nan(PM_da_control, metric):
     actual = compute_persistence(
-        PM_da_control, nlags=3, metric=metric, dim='time')
-    assert_allclose(actual, actual)
+        PM_da_control, nlags=3, metric=metric, dim='time').isnull().any()
+    assert actual == False
 
 
-@pytest.mark.parametrize('metric', ('pearson_r', 'rmse', 'mse', 'mae'))
-def test_compute_persistence_ds(PM_ds_control, metric):
+@pytest.mark.parametrize('metric', xskillscore_metrics)
+def test_compute_persistence_ds_not_nan(PM_ds_control, metric):
     actual = compute_persistence(
-        PM_ds_control, nlags=3, metric=metric, dim='time')
-    assert_allclose(actual, actual)
+        PM_ds_control, nlags=3, metric=metric, dim='time').isnull().any()
+    assert actual == False

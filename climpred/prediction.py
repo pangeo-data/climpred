@@ -20,12 +20,13 @@ according to metric and comparison
 Metrics (submit to functions as strings)
 -------
 - mae: Mean Absolute Error
+- nmae: Normalized Ensemble Mean Absolute Error (perfect-model only)
 - mse: Mean Square Error (perfect-model only)
 - nev: Normalized Ensemble Variance (perfect-model only)
+- nmse: Normalized Ensemble Mean Square Error (perfect-model only)
 - msss: Mean Square Skill Score (perfect-model only)
 - ppp: Prognostic Potential Predictability (perfect-model only)
 - rmse:  Root-Mean Square Error
-- rmse_v: Root-Mean Square Error (perfect-model only)
 - nrmse: Normalized Root-Mean Square Error (perfect-model only)
 - pearson_r: Anomaly correlation coefficient
 - uACC: unbiased ACC (perfect-model only)
@@ -433,6 +434,8 @@ def _get_metric_function(metric):
         metric = '_rmse'
     elif metric == 'mae':
         metric = '_mae'
+    elif metric == 'nmae':
+        metric = '_nmae'
     elif metric.lower() == 'mse':
         metric = '_mse'
     elif metric.lower() == 'nrmse':
@@ -454,6 +457,7 @@ def _get_metric_function(metric):
             'ppp'
             'msss'
             'uacc'
+            'nmae'
             """)
     return eval(metric)
 
@@ -499,7 +503,7 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
 
     Formula
     -------
-    NRMSE = 1 - RMSE_ens / std_control = 1 - (var_ens / var_control ) ** .5
+    NRMSE = 1 - RMSE / std_control
 
     References
     ----------
@@ -520,13 +524,41 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
+    nrmse_skill = 1 - rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
 
 
 def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
-    Normalized Ensemble Variance (NEV) metric.
+    Normalized Ensemble Measure Square Error (NMSE) metric.
+
+    Formula
+    -------
+    NMSE-SS = 1 - mse / var
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. NOTE: NMSE = - 1 - NEV
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
+    fac = _get_norm_factor(comparison)
+    nmse_skill = 1 - mse_skill / var / fac
+    return nmse_skill
+
+
+def _nmae(ds, control, comparison, running=None, reference_period=None):
+    """
+    Normalized Ensemble Mean Absolute Error metric.
+
+    Formula
+    -------
+    NMAE-SS = 1 - mse / var
 
     Reference
     ---------
@@ -540,7 +572,7 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nmse_skill = mse_skill / var / fac
+    nmse_skill = 1 - mse_skill / var / fac
     return nmse_skill
 
 
@@ -579,8 +611,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
                   spatial coordinates)
         input data
     metric : function
-        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse',
-                     'uACC', 'MSSS']
+        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmae',
+                     'nmse', 'uACC', 'MSSS']
     comparison : function
         comparison from ['m2m', 'm2e', 'm2c', 'e2c']
     running : int
@@ -604,7 +636,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric in [_nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:

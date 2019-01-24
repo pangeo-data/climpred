@@ -100,10 +100,10 @@ The time dimensions is called 'time' and is in integer, not datetime[ns]
 import numpy as np
 import xarray as xr
 
+from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
-from xskillscore import mae as _mae
 from xskillscore import pearson_r_p_value
 
 from .stats import _check_xarray, _get_dims, z_significance
@@ -915,18 +915,21 @@ def _pseudo_ens(ds, control):
     nens = ds.ensemble.size
     nmember = ds.member.size
     length = ds.time.size
-    c_start = control['time'].min()
-    c_end = control['time'].max()
+    c_start = 0
+    c_end = control['time'].size
     time = ds['time']
 
-    def sel_years(control, year_s, m=None, length=length):
-        new = control.sel(time=slice(year_s, year_s + length - 1))
-        new['time'] = time
+    def isel_years(control, year_s, m=None, length=length):
+        new = control.isel(time=slice(year_s, year_s + length - 0))
+        if isinstance(new, xr.DataArray):
+            new['time'] = time
+        elif isinstance(new, xr.Dataset):
+            new = new.assign(time=time)
         return new
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat([sel_years(control, start)
+        return xr.concat([isel_years(control, start)
                           for start in startlist], 'member')
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
                      'ensemble')

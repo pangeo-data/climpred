@@ -568,12 +568,12 @@ def _nmae(ds, control, comparison, running=None, reference_period=None):
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
-    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    mae_skill = _mae(fct, truth, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nmse_skill = 1 - mse_skill / var / fac
-    return nmse_skill
+    nmae_skill = 1 - mae_skill / np.sqrt(var) / fac
+    return nmae_skill
 
 
 def _uacc(fct, truth, control, running=None, reference_period=None):

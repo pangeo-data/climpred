@@ -681,8 +681,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
         plag.append(metric(a, b, dim='ensemble'))
-    skill = xr.concat(plag, 'lead time')
-    skill['lead time'] = np.arange(1, 1 + nlags)
+    skill = xr.concat(plag, 'time')
+    skill['time'] = np.arange(1, 1 + nlags)
     if (horizon) & (metric == _pearson_r):
         # NaN values throw warnings for p-value comparison, so just
         # suppress that here.
@@ -691,8 +691,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 p_value.append(pearson_r_p_value(a, b, dim='ensemble'))
-        p_value = xr.concat(p_value, 'lead time')
-        p_value['lead time'] = np.arange(1, 1 + nlags)
+        p_value = xr.concat(p_value, 'time')
+        p_value['time'] = np.arange(1, 1 + nlags)
     if horizon:
         persistence = compute_persistence(reference, nlags)
         if metric == _pearson_r:
@@ -761,8 +761,8 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)
         plag.append(metric(a, b, dim=dim))
-    pers = xr.concat(plag, 'lead time')
-    pers['lead time'] = np.arange(1, 1 + nlags)
+    pers = xr.concat(plag, 'time')
+    pers['time'] = np.arange(1, 1 + nlags)
     return pers
 
 
@@ -1002,19 +1002,19 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
             raise ValueError("""Please submit N, the length of the original
                 time series being correlated.""")
         sig = z_significance(skill, threshold, N, ci)
-        ph = ((p_values < alpha) & (sig)).argmin('lead time')
+        ph = ((p_values < alpha) & (sig)).argmin('time')
         # where ph not reached, set max time
-        ph_not_reached = ((p_values < alpha) & (sig)).all('lead time')
+        ph_not_reached = ((p_values < alpha) & (sig)).all('time')
     elif limit is 'lower':
-        ph = (skill < threshold).argmin('lead time')
+        ph = (skill < threshold).argmin('time')
         # where ph not reached, set max time
-        ph_not_reached = (skill < threshold).all('lead time')
+        ph_not_reached = (skill < threshold).all('time')
     else:
         raise ValueError("""Please either submit 'upper' or 'lower' for the
             limit keyword.""")
-    ph = ph.where(~ph_not_reached, other=skill['lead time'].max())
+    ph = ph.where(~ph_not_reached, other=skill['time'].max())
     # mask out any initial NaNs (land, masked out regions, etc.)
-    mask = np.asarray(skill.isel({'lead time': 0}))
+    mask = np.asarray(skill.isel({'time': 0}))
     mask = np.isnan(mask)
     ph = ph.where(~mask, np.nan)
     return ph

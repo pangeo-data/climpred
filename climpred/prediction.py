@@ -107,7 +107,7 @@ from xskillscore import mae as _mae
 from xskillscore import pearson_r_p_value
 
 from .stats import _check_xarray, _get_dims
-
+import warnings
 # -------------------------------------------- #
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
@@ -671,33 +671,39 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     fct, reference = comparison(ds, reference)
     if nlags is None:
         nlags = fct.time.size
-    if horizon and metric != 'pearson_r':
-        print("""Setting metric to pearson r, since predictability horizon
-            is being computed.""")
-        metric = _get_metric_function('pearson_r')
-    else:
-        metric = _get_metric_function(metric)
-        if metric not in [_pearson_r, _rmse, _mse, _mae]:
-            raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
-                'mae' for your metric.""")
+    metric = _get_metric_function(metric)
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
+        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
+            'mae' for your metric.""")
     plag = []
     if horizon:
         p_value = []
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
         plag.append(metric(a, b, dim='ensemble'))
-        if horizon:
-            p_value.append(pearson_r_p_value(a, b, dim='ensemble'))
     skill = xr.concat(plag, 'lead time')
     skill['lead time'] = np.arange(1, 1 + nlags)
-    if horizon:
+    if (horizon) & (metric == _pearson_r):
+        # NaN values throw warnings for p-value comparison, so just
+        # suppress that here.
+        for i in range(0, nlags):
+            a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                p_value.append(pearson_r_p_value(a, b, dim='ensemble'))
         p_value = xr.concat(p_value, 'lead time')
-        p_value['lead time'] = skill['lead time']
+        p_value['lead time'] = np.arange(1, 1 + nlags)
+    if horizon:
         persistence = compute_persistence(reference, nlags)
-        sig = z_significance(skill, persistence, ds.ensemble.size, ci)
-        # subtracting one is because this returns the value of the first
-        # False essentially, and we want the last True for the horizon.
-        horizon = ((p_value < alpha) & (sig)).argmin('lead time') - 1
+        if metric == _pearson_r:
+            horizon = xr_predictability_horizon(skill, persistence,
+                                                limit='upper',
+                                                p_values=p_value,
+                                                N=reference.ensemble.size,
+                                                alpha=alpha, ci=ci)
+        else:
+            horizon = xr_predictability_horizon(skill, persistence,
+                                                limit='lower')
         return skill, persistence, horizon
     else:
         return skill
@@ -966,20 +972,51 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
 # --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
-def xr_predictability_horizon(skill, threshold, limit='upper'):
+def xr_predictability_horizon(skill, threshold, limit='upper',
+                              p_values=None, N=None, alpha=0.05, ci=90):
     """
     Get predictability horizons of dataset from skill and
     threshold dataset.
+
+    Inputs:
+        skill: (xarray object) skill (e.g., ACC) at different lead times.
+        threshold: (xarray object) skill for persistence or uninitialized
+                   ensemble.
+        limit: (optional str) If 'upper' check horizon for correlation
+               coefficients by testing lead time to which the skill
+               beats out the threshold. If 'lower', check horizon for which
+               error (e.g., MAE) is lower than threshold.
+        p_values: (optional xarray object) If using 'upper' limit, input
+                  a DataArray/Dataset of the same dimensions as skill that
+                  contains p-values for the skill correlatons.
+
+    Returns:
+        predictability horizon reduced by the lead time dimension.
     """
     if limit is 'upper':
-        ph = (skill > threshold).argmin('time')
+        if (p_values is None) | (p_values.dims != skill.dims):
+            raise ValueError("""Please submit an xarray object of the same
+                dimensions as `skill` that contains p-values for the skill
+                correlatons.""")
+        if N is None:
+            raise ValueError("""Please submit N, the length of the original
+                time series being correlated.""")
+        sig = z_significance(skill, threshold, N, ci)
+        ph = ((p_values < alpha) & (sig)).argmin('lead time')
         # where ph not reached, set max time
-        ph_not_reached = (skill > threshold).all('time')
+        ph_not_reached = ((p_values < alpha) & (sig)).all('lead time')
     elif limit is 'lower':
-        ph = (skill < threshold).argmin('time')
+        ph = (skill < threshold).argmin('lead time')
         # where ph not reached, set max time
-        ph_not_reached = (skill < threshold).all('time')
-    ph = ph.where(~ph_not_reached, other=skill['time'].max())
+        ph_not_reached = (skill < threshold).all('lead time')
+    else:
+        raise ValueError("""Please either submit 'upper' or 'lower' for the
+            limit keyword.""")
+    ph = ph.where(~ph_not_reached, other=skill['lead time'].max())
+    # mask out any initial NaNs (land, masked out regions, etc.)
+    mask = np.asarray(skill.isel({'lead time': 0}))
+    mask = np.isnan(mask)
+    ph = ph.where(~mask, np.nan)
     return ph
 
 

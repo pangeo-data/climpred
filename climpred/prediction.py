@@ -108,6 +108,7 @@ from xskillscore import pearson_r_p_value
 
 from .stats import _check_xarray, _get_dims, z_significance
 import warnings
+import types
 # -------------------------------------------- #
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
@@ -427,36 +428,41 @@ def _get_metric_function(metric):
     --------
     metric : function object of the metric.
     """
-    pearson = ['pr', 'pearsonr', 'pearson_r']
-    if metric in pearson:
-        metric = '_pearson_r'
-    elif metric == 'rmse':
-        metric = '_rmse'
-    elif metric == 'mae':
-        metric = '_mae'
-    elif metric.lower() == 'mse':
-        metric = '_mse'
-    elif metric.lower() == 'nrmse':
-        metric = '_nrmse'
-    elif metric.lower() in ['nev', 'nmse']:
-        metric = '_nmse'
-    elif metric.lower() in ['ppp', 'msss']:
-        metric = '_ppp'
-    elif metric.lower() == 'uacc':
-        metric = '_uacc'
+    # catches issues with wrappers, etc. that actually submit the
+    # proper underscore function
+    if type(metric) == types.FunctionType:
+        return metric
     else:
-        raise ValueError("""Please supply a metric from the following list:
-            'pearson_r'
-            'rmse'
-            'mse'
-            'nrmse'
-            'nev'
-            'nmse'
-            'ppp'
-            'msss'
-            'uacc'
-            """)
-    return eval(metric)
+        pearson = ['pr', 'pearsonr', 'pearson_r']
+        if metric in pearson:
+            metric = '_pearson_r'
+        elif metric == 'rmse':
+            metric = '_rmse'
+        elif metric == 'mae':
+            metric = '_mae'
+        elif metric.lower() == 'mse':
+            metric = '_mse'
+        elif metric.lower() == 'nrmse':
+            metric = '_nrmse'
+        elif metric.lower() in ['nev', 'nmse']:
+            metric = '_nmse'
+        elif metric.lower() in ['ppp', 'msss']:
+            metric = '_ppp'
+        elif metric.lower() == 'uacc':
+            metric = '_uacc'
+        else:
+            raise ValueError("""Please supply a metric from the following list:
+                'pearson_r'
+                'rmse'
+                'mse'
+                'nrmse'
+                'nev'
+                'nmse'
+                'ppp'
+                'msss'
+                'uacc'
+                """)
+        return eval(metric)
 
 
 # TODO: Do we need wrappers or should we rather create wrappers for skill score
@@ -694,7 +700,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         p_value = xr.concat(p_value, 'time')
         p_value['time'] = np.arange(1, 1 + nlags)
     if horizon:
-        persistence = compute_persistence(reference, nlags)
+        persistence = compute_persistence(reference, nlags, metric=metric)
         if metric == _pearson_r:
             horizon = xr_predictability_horizon(skill, persistence,
                                                 limit='upper',

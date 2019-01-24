@@ -106,7 +106,7 @@ from xskillscore import rmse as _rmse
 from xskillscore import mae as _mae
 from xskillscore import pearson_r_p_value
 
-from .stats import _check_xarray, _get_dims
+from .stats import _check_xarray, _get_dims, z_significance
 import warnings
 # -------------------------------------------- #
 # HELPER FUNCTIONS
@@ -1018,39 +1018,3 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
     mask = np.isnan(mask)
     ph = ph.where(~mask, np.nan)
     return ph
-
-
-def z_significance(r1, r2, N, ci=90):
-    """Computes the z test statistic for two ACC time series, e.g. an
-       initialized ensemble ACC and persistence forecast ACC.
-
-    Inputs:
-        r1, r2: (xarray objects) time series, grids, etc. of pearson
-                correlation coefficients between the two prediction systems
-                of interest.
-        N: (int) length of original time series being correlated.
-        ci: (optional int) confidence level for z-statistic test
-
-    Returns:
-        Boolean array of same dimensions as input where True means r1 is
-        significantly different from r2 at ci.
-
-    Reference:
-        https://www.statisticssolutions.com/comparing-correlation-coefficients/
-    """
-    def _r_to_z(r):
-        """Fisher's r to z transformation"""
-        return 0.5 * (np.log(1 + r) - np.log(1 - r))
-
-    z1, z2 = _r_to_z(r1), _r_to_z(r2)
-    difference = np.abs(z1 - z2)
-    zo = difference / (np.sqrt(2*(1 / (N - 3))))
-    # Could broadcast better than this, but this works for now.
-    zscore = {80: 1.282,
-              90: 1.645,
-              95: 1.96,
-              99: 2.576}
-    confidence = np.zeros_like(zo)
-    confidence[:] = zscore[ci]
-    sig = xr.DataArray(zo > confidence)
-    return sig

@@ -6,6 +6,9 @@ import xarray as xr
 from climpred.prediction import (bootstrap_perfect_model,
                                  compute_perfect_model, compute_persistence)
 
+# from xarray.tests import assert_allclose
+
+
 xskillscore_metrics = ('pearson_r', 'rmse', 'mse', 'mae')
 PM_only_metrics = ('nrmse', 'nmse', 'nmae')  # excl uacc because sqrt(neg)
 PM_comparisons = ('e2c', 'm2c', 'm2e', 'm2m')

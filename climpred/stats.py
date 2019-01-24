@@ -3,16 +3,8 @@ Objects dealing with timeseries and ensemble statistics. All functions will
 auto-check for type DataArray. If it is a DataArray, it will return a type
 DataArray to ensure .apply() function from xarray can be applied.
 
-Area-weighting
-------------
-`xr_cos_weight`: Area-weights output or observations without grid cell area
-                 information using cosine weighting.
-`xr_area_weight`: Area-weights output with grid cell area information.
-
 Time Series
 -----------
-`xr_smooth_series` : Returns a smoothed time series.
-`xr_linregress` : Returns results of linear regression over input dataarray.
 `xr_corr` : Computes pearsonr between two time series accounting for
             autocorrelation.
 `xr_rm_poly` : Returns time series with polynomial fit removed.
@@ -34,11 +26,10 @@ Generate Time Series Data
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
-import pandas as pd
 import scipy.stats as ss
 import xarray as xr
-from scipy.signal import detrend, periodogram, tukey
-from scipy.stats import chi2, linregress, norm
+from scipy.signal import periodogram
+from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -95,189 +86,10 @@ def _get_vars(ds):
     return list(ds.data_vars)
 
 
-def _taper(x, p):
-    """
-    Description needed here.
-    """
-    window = tukey(len(x), p)
-    y = x * window
-    return y
-# -------------------------------------------------------------------#
-# AREA-WEIGHTING
-# Functions related to area-weighting on grids with and without area
-# information.
-# -------------------------------------------------------------------#
-
-
-def xr_cos_weight(da, lat_coord='lat', lon_coord='lon', one_dimensional=True):
-    """
-    Area-weights data on a regular (e.g. 360x180) grid that does not come with
-    cell areas. Uses cosine-weighting.
-
-    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
-    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
-    this might be altered in the future.
-
-    Parameters
-    ----------
-    da : DataArray with longitude and latitude
-    lat_coord : str (optional)
-        Name of latitude coordinate
-    lon_coord : str (optional)
-        Name of longitude coordinate
-    one_dimensional : bool (optional)
-        If true, assumes that lat and lon are 1D (i.e. not a meshgrid)
-    Returns
-    -------
-    aw_da : Area-weighted DataArray
-
-    Examples
-    --------
-    import esmtools as et
-    da_aw = et.stats.reg_aw(SST)
-    """
-    _check_xarray(da)
-    non_spatial = [i for i in _get_dims(da) if i not in [lat_coord, lon_coord]]
-    filter_dict = {}
-    while len(non_spatial) > 0:
-        filter_dict.update({non_spatial[0]: 0})
-        non_spatial.pop(0)
-    if one_dimensional:
-        lon, lat = np.meshgrid(da[lon_coord], da[lat_coord])
-    else:
-        lat = da[lat_coord]
-    # NaN out land to not go into area-weighting
-    lat = lat.astype('float')
-    nan_mask = np.asarray(da.isel(filter_dict).isnull())
-    lat[nan_mask] = np.nan
-    cos_lat = np.cos(np.deg2rad(lat))
-    aw_da = (da * cos_lat).sum(lat_coord).sum(lon_coord) / \
-        np.nansum(cos_lat)
-    return aw_da
-
-
-def xr_area_weight(da, area_coord='area'):
-    """
-    Returns an area-weighted time series from the input xarray dataarray. This
-    automatically figures out spatial dimensions vs. other dimensions. I.e.,
-    this function works for just a single realization or for many realizations.
-
-    See `reg_aw` if you have a regular (e.g. 360x180) grid that does not
-    contain cell areas.
-
-    NOTE: This currently does not support datasets (of multiple variables)
-    The user can alleviate this by using the .apply() function.
-
-    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
-    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
-    this might be altered in the future.
-
-    Parameters
-    ----------
-    da : DataArray
-    area_coord : str (defaults to 'area')
-        Name of area coordinate if different from 'area'
-
-    Returns
-    -------
-    aw_da : Area-weighted DataArray
-    """
-    _check_xarray(da)
-    area = da[area_coord]
-    # Mask the area coordinate in case you've got a bunch of NaNs, e.g. a mask
-    # or land.
-    dimlist = _get_dims(da)
-    # Pull out coordinates that aren't spatial. Time, ensemble members, etc.
-    non_spatial = [i for i in dimlist if i not in _get_dims(area)]
-    filter_dict = {}
-    while len(non_spatial) > 0:
-        filter_dict.update({non_spatial[0]: 0})
-        non_spatial.pop(0)
-    masked_area = area.where(da.isel(filter_dict).notnull())
-    # Compute area-weighting.
-    dimlist = _get_dims(masked_area)
-    aw_da = da * masked_area
-    # Sum over arbitrary number of dimensions.
-    while len(dimlist) > 0:
-        print(f'Summing over {dimlist[0]}')
-        aw_da = aw_da.sum(dimlist[0])
-        dimlist.pop(0)
-    # Finish area-weighting by dividing by sum of area coordinate.
-    aw_da = aw_da / masked_area.sum()
-    return aw_da
-
-
 # ----------------------------------#
 # TIME SERIES
 # Functions related to time series.
 # ----------------------------------#
-def xr_smooth_series(da, dim, length, center=True):
-    """
-    Returns a smoothed version of the input timeseries.
-
-    NOTE: Currently explicitly writing `xr` as a prefix for xarray-specific
-    definitions. Since `esmtools` is supposed to be a wrapper for xarray,
-    this might be altered in the future.
-
-    Parameters
-    ----------
-    da : xarray DataArray
-    dim : str
-        dimension to smooth over (e.g. 'time')
-    length : int
-        number of steps to smooth over for the given dim
-    center : boolean (default to True)
-        whether to center the smoothing filter or start from the beginning
-
-    Returns
-    -------
-    smoothed : smoothed DataArray object
-    """
-    _check_xarray(da)
-    return da.rolling({dim: length}, center=center).mean()
-
-
-def xr_linregress(da, dim='time', compact=True):
-    """
-    Computes the least-squares linear regression of a dataarray over some
-    dimension (typically time).
-
-    Parameters
-    ----------
-    da : xarray DataArray
-    dim : str (default to 'time')
-        dimension over which to compute the linear regression.
-    compact : boolean (default to True)
-        If true, return all results of linregress as a single dataset.
-        If false, return results as five separate DataArrays.
-
-    Returns
-    -------
-    ds : xarray Dataset
-        Dataset containing slope, intercept, rvalue, pvalue, stderr from
-        the linear regression. Excludes the dimension the regression was
-        computed over. If compact is False, these five parameters are
-        returned separately.
-    """
-    _check_xarray(da)
-    results = xr.apply_ufunc(linregress, da[dim], da,
-                             input_core_dims=[[dim], [dim]],
-                             output_core_dims=[[], [], [], [], []],
-                             vectorize=True, dask='parallelized')
-    # Force into a cleaner dataset. The above function returns a dataset
-    # with no clear labeling.
-    ds = xr.Dataset()
-    labels = ['slope', 'intercept', 'rvalue', 'pvalue', 'stderr']
-    for i, l in enumerate(labels):
-        results[i].name = l
-        ds = xr.merge([ds, results[i]])
-    if compact:
-        return ds
-    else:
-        return ds['slope'], ds['intercept'], ds['rvalue'], ds['pvalue'], \
-               ds['stderr']
-
-
 def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     """
     Computes the Pearson product-momment coefficient of linear correlation.
@@ -619,73 +431,3 @@ def z_significance(r1, r2, N, ci=90):
     confidence[:] = _z_score(ci)
     sig = xr.DataArray(zo > confidence)
     return sig
-
-# --------------------------------------------#
-# GENERATE TIME SERIES DATA
-# Functions that create time series data
-# for testing, etc.
-# --------------------------------------------#
-
-
-def create_power_spectrum(s, pct=0.1, pLow=0.05):
-    """
-    Create power spectrum with CI for a given pd.series.
-
-    Reference
-    ---------
-    - /ncl-6.4.0-gccsys/lib/ncarg/nclscripts/csm/shea_util.ncl
-
-    Parameters
-    ----------
-    s : pd.series
-        input time series
-    pct : float (default 0.10)
-        percent of the time series to be tapered. (0 <= pct <= 1). If pct = 0,
-        no tapering will be done. If pct = 1, the whole series is tapered.
-        Tapering should always be done.
-    pLow : float (default 0.05)
-        significance interval for markov red-noise spectrum
-
-    Returns
-    -------
-    p : np.ndarray
-        period
-    Pxx_den : np.ndarray
-        power spectrum
-    markov : np.ndarray
-        theoretical markov red noise spectrum
-    low_ci : np.ndarray
-        lower confidence interval
-    high_ci : np.ndarray
-        upper confidence interval
-    """
-    # A value of 0.10 is common (tapering should always be done).
-    jave = 1  # smoothing ### DOESNT WORK HERE FOR VALUES OTHER THAN 1 !!!
-    tapcf = 0.5 * (128 - 93 * pct) / (8 - 5 * pct)**2
-    wgts = np.linspace(1., 1., jave)
-    sdof = 2 / (tapcf * np.sum(wgts**2))
-    pHigh = 1 - pLow
-    data = s - s.mean()
-    # detrend
-    data = detrend(data)
-    data = _taper(data, pct)
-    # periodigram
-    timestep = 1
-    frequency, power_spectrum = periodogram(data, timestep)
-    Period = 1 / frequency
-    power_spectrum_smoothed = pd.Series(power_spectrum).rolling(jave, 1).mean()
-    # markov theo red noise spectrum
-    twopi = 2. * np.pi
-    r = s.autocorr()
-    temp = r * 2. * np.cos(twopi * frequency)  # vector
-    mkov = 1. / (1 + r**2 - temp)  # Markov model
-    sum1 = np.sum(mkov)
-    sum2 = np.sum(power_spectrum_smoothed)
-    scale = sum2 / sum1
-    xLow = chi2.ppf(pLow, sdof) / sdof
-    xHigh = chi2.ppf(pHigh, sdof) / sdof
-    # output
-    markov = mkov * scale  # theor Markov spectrum
-    low_ci = markov * xLow  # confidence
-    high_ci = markov * xHigh  # interval
-    return Period, power_spectrum_smoothed, markov, low_ci, high_ci

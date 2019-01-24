@@ -465,7 +465,6 @@ def _get_metric_function(metric):
                 """)
         return eval(metric)
 
-
 # TODO: Do we need wrappers or should we rather create wrappers for skill score
 #       as used in a specific paper: def Seferian2018(ds, control):
 #       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
@@ -539,6 +538,30 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     Formula
     -------
     NMSE-SS = 1 - mse / var
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. NOTE: NMSE = - 1 - NEV
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
+    fac = _get_norm_factor(comparison)
+    nmse_skill = 1 - mse_skill / var / fac
+    return nmse_skill
+
+
+def _nmae(ds, control, comparison, running=None, reference_period=None):
+    """
+    Normalized Ensemble Mean Absolute Error metric.
+
+    Formula
+    -------
+    NMAE-SS = 1 - mse / var
 
     Reference
     ---------

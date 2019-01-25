@@ -86,7 +86,7 @@ pygments_style = None
 # a list of builtin themes.
 #
 # themes: http://www.sphinx-doc.org/en/stable/theming.html
-html_theme = 'classic'
+html_theme = 'agogo'
 #html_theme_options = {
 #    "rightsidebar": "true",
 #    "relbarbgcolor": "black"

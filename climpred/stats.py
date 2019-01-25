@@ -57,10 +57,11 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
         return_p (optional bool): If True, return correlation coefficients
                                   as well as p values.
     Returns:
-        r (xarray object): Pearson correlation coefficients.
-        p (xarray object): If return_p is True, p values for correlation.
+        Pearson correlation coefficients
+        
+        If return_p True, associated p values.
 
-    References (for effective sample size):
+    References:
         * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
           Vol. 100. Academic press, 2011.
         * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern

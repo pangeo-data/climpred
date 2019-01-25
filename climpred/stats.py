@@ -1,19 +1,4 @@
-"""
-Objects dealing with timeseries and ensemble statistics. All functions will
-auto-check for type DataArray. If it is a DataArray, it will return a type
-DataArray to ensure .apply() function from xarray can be applied.
-
-Time Series
------------
-`xr_corr` : Computes pearsonr between two time series accounting for
-            autocorrelation.
-`xr_rm_poly` : Returns time series with polynomial fit removed.
-`xr_rm_trend` : Returns detrended (first order) time series.
-`xr_varweighted_mean_period` : Calculates the variance weighted mean period of
-                               time series.
-`xr_autocorr` : Calculates the autocorrelation of time series over some lag.
-`xr_tau_d` : Calculates the decorrelation time of a time series.
-"""
+"""Objects dealing with timeseries and ensemble statistics."""
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
@@ -27,14 +12,7 @@ from xskillscore import pearson_r, pearson_r_p_value
 # Should only be used internally by esmtools.
 # --------------------------------------------#
 def _check_xarray(x):
-    """
-    Check if the object being submitted to a given function is either a
-    Dataset or DataArray. This is important since `esmtools` is built as an
-    xarray wrapper.
-
-    TODO: Move this to a generalized util.py module with any other functions
-    that are being called in other submodules.
-    """
+    """Check if the object being submitted is either a Dataset or DataArray."""
     if not (isinstance(x, xr.DataArray) or isinstance(x, xr.Dataset)):
         typecheck = type(x)
         raise IOError(f"""The input data is not an xarray object (an xarray
@@ -46,32 +24,14 @@ def _check_xarray(x):
 
 
 def _get_coords(da):
-    """
-    Simple function to retrieve dimensions from a given dataset/dataarray.
-
-    Currently returns as a list, but can add keyword to select tuple or
-    list if desired for any reason.
-    """
     return list(da.coords)
 
 
 def _get_dims(da):
-    """
-    Simple function to retrieve dimensions from a given dataset/datarray.
-
-    Currently returns as a list, but can add keyword to select tuple or
-    list if desired for any reason.
-    """
     return list(da.dims)
 
 
 def _get_vars(ds):
-    """
-    Simple function to retrieve variables from a given dataset.
-
-    Currently returns as a list, but can add keyword to select tuple or
-    list if desired for any reason.
-    """
     return list(ds.data_vars)
 
 
@@ -80,52 +40,35 @@ def _get_vars(ds):
 # Functions related to time series.
 # ----------------------------------#
 def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
-    """
-    Computes the Pearson product-momment coefficient of linear correlation.
-    (See xr_autocorr for autocorrelation/lag for one time series)
+    """Computes the Pearson product-moment coefficient of linear correlation.
 
     This version calculates the effective degrees of freedom, accounting
     for autocorrelation within each time series that could fluff the
     significance of the correlation.
 
-    NOTE: If lag is not zero, x predicts y. In other words, the time series for
-    x is stationary, and y slides to the left. Or, y stays in place and x
-    slides to the right.
+    Args:
+        x (xarray object): Independent variable time series or grid of time
+                           series.
+        y (xarray object): Dependent variable time series or grid of time
+                           series
+        dim (optional str): Correlation dimension
+        lag (optional int): Lag to apply to correlaton, with x predicting y.
+        two_sided (optonal bool): If True, compute a two-sided t-test.
+        return_p (optional bool): If True, return correlation coefficients
+                                  as well as p values.
+    Returns:
+        r (xarray object): Pearson correlation coefficients.
+        p (xarray object): If return_p is True, p values for correlation.
 
-    This function is written to accept a dataset of arbitrary number of
-    dimensions (e.g., lat, lon, depth).
+    References (for effective sample size):
+        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
+          Vol. 100. Academic press, 2011.
+        * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
+          Annular Mode on Southern Ocean circulation and biology." Geophysical
+          Research Letters 32.11 (2005).
 
-    TODO: Add functionality for an ensemble.
-
-    Parameters
-    ----------
-    x, y : xarray DataArray
-        time series being correlated (can be multi-dimensional)
-    dim : str (default 'time')
-        Correlation dimension
-    lag : int (default 0)
-        Lag to apply to correlation, with x predicting y.
-    two_sided : boolean (default True)
-        If true, compute a two-sided t-test
-    return_p : boolean (default False)
-        If true, return both r and p
-
-    Returns
-    -------
-    r : correlation coefficient
-    p : p-value accounting for autocorrelation (if return_p True)
-
-    References (for dealing with autocorrelation):
-    ----------
-    1. Wilks, Daniel S. Statistical methods in the atmospheric sciences.
-    Vol. 100. Academic press, 2011.
-    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
-    Annular Mode on Southern Ocean circulation and biology." Geophysical
-    Research Letters 32.11 (2005).
-    3. Brady, R. X., Lovenduski, N. S., Alexander, M. A., Jacox, M., and
-    Gruber, N.: On the role of climate modes in modulating the air-sea CO2
-    fluxes in Eastern Boundary Upwelling Systems, Biogeosciences Discuss.,
-    https://doi.org/10.5194/bg-2018-415, in review, 2018.
+    Todo:
+      * Test and adapt for xr.Datasets
     """
     _check_xarray(x)
     _check_xarray(y)

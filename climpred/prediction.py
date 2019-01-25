@@ -1,118 +1,17 @@
-"""
-Objects dealing with decadal prediction metrics.
-
-Concept of calculating predictability skill
--------------------------------------------
-- metric: how is skill calculated, e.g. pearson_r, rmse
-- comparison: how forecasts and observation/truth are compared, e.g., m2m, e2r
-
-High-level functions
--------------------
-- compute_perfect_model: computes the perfect-model predictability skill
-according to metric and comparison
-- compute_reference: computes predictability/skill relative to some reference
-- compute_persistence: computes a persistence forecast from some simulation
-- bootstrap from uninitialized ensemble:
-    - PM_sig(ds, control, metric=rmse, comparison=_m2m, bootstrap=500, sig=99)
-    - threshold to determine predictability horizon
-
-# TODO: make metrics non-dependent of prediction framework used
-Metrics (submit to functions as strings)
--------
-- mae: Mean Absolute Error
-- mse: Mean Square Error (perfect-model only)
-- nev: Normalized Ensemble Variance (perfect-model only)
-- msss: Mean Square Skill Score (perfect-model only)
-- ppp: Prognostic Potential Predictability (perfect-model only)
-- rmse:  Root-Mean Square Error
-- rmse_v: Root-Mean Square Error (perfect-model only)
-- nrmse: Normalized Root-Mean Square Error (perfect-model only)
-- pearson_r: Anomaly correlation coefficient
-- uACC: unbiased ACC (perfect-model only)
-
-Comparisons (submit to functions as strings)
------------
-Perfect Model:
-- m2c: many forecasts vs. control truth
-- m2e: many forecasts vs. ensemble mean truth
-- m2m: many forecasts vs. many truths in turn
-- e2c: ensemble mean forecast vs. control truth
-
-Reference:
-- e2r: ensemble mean vs. reference
-- m2r: individual ensemble members vs. reference
-
-Additional Functions
---------
-- Diagnostic Potential Predictability (DPP)
-(Boer 2004, Resplandy 2015/Seferian 2018)
-- predictability horizon:
-    - bootstrapping limit
-
-
-Data Structure
---------------
-This module works on xr.Datasets with the following dimensions and coordinates:
-- 1D (Predictability of timelines of preprocessed regions):
-    - ensemble : initialization months/years
-    - area : pre-processed region strings
-    - time : lead months/years from the initialization
-    - period : time averaging: yearmean, seasonal mean
-
-Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
-<xarray.Dataset>
-Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5,
-                              time: 20)
-Coordinates:
-  * ensemble                 (ensemble) int64 3014 3023 3045 3061 3124 3139 ...
-  * area                     (area) object 'global' 'North_Atlantic_SPG' ...
-  * time                     (time) int64 1 2 3 4 5 6 ...
-  * period                   (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
-Dimensions without coordinates: member
-Data variables:
-    tos                   (period, time, area, ensemble, member) float32 ...
-...
-
-- 3D (Predictability maps):
-    - ensemble
-    - lon(y, x), lat(y, x)
-    - time (as in lead time)
-    - period (time averaging: yearmean, seasonal mean)
-
-Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
-<xarray.Dataset>
-Dimensions:      (bnds: 2, ensemble: 11, member: 9, x: 256, y: 220, time: 21)
-Coordinates:
-    lon          (y, x) float64 -47.25 -47.69 -48.12 ... 131.3 132.5 133.8
-    lat          (y, x) float64 76.36 76.3 76.24 76.17 ... -77.25 -77.39 -77.54
-  * ensemble     (ensemble) int64 3061 3124 3178 3023 ... 3228 3175 3144 3139
-  * time         (time) int64 1 2 3 4 5 ... 19 20
-Dimensions without coordinates: bnds, member, x, y
-Data variables:
-    tos          (time, ensemble, member, y, x) float32
-    dask.array<shape=(21, 11, 9, 220, 256), chunksize=(1, 1, 1, 220, 256)>
-...
-
-This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model)
-NetCDF output.
-The time dimensions is called 'time' and is in integer, not datetime[ns]
-"""
+"""Objects dealing with decadal prediction metrics."""
 import numpy as np
 import xarray as xr
-
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
 from xskillscore import mae as _mae
-
 from .stats import _check_xarray, _get_dims
+
 
 # -------------------------------------------- #
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
 # -------------------------------------------- #
-
-
 def _shift(a, b, lag, dim='time'):
     """
     Helper function to return two shifted time series for applying statistics
@@ -134,28 +33,25 @@ def _shift(a, b, lag, dim='time'):
 
 def _control_for_reference_period(control, reference_period='MK',
                                   obs_years=40):
-    """
-    Modifies control according to knowledge approach.
+    """Modifies control according to knowledge approach.
 
-    Reference
-    ---------
-    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
-        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-        Journal of the Royal Meteorological Society 142, no. 695
-        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+    Args:
+        reference_period (str):
+            'MK' : maximum knowledge
+            'OP' : operational
+            'OP_full_length' : operational observational record length but keep
+                               full length of record
+        obs_years (int): length of observational record 
 
-    args:
-    reference_period : str
-        'MK' : maximum knowledge
-        'OP' : operational
-        'OP_full_length' : operational observational record length but keep
-                           full length of record
-    obs_years : int
-        length of observational record
+    Returns:
+        Control with modifications applied. 
 
-    return:
-        control
+    Reference:
+        * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia,Keith
+          Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+          Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+          Journal of the Royal Meteorological Society 142, no. 695
+          (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
     """
     if reference_period is 'MK':
         control = control
@@ -171,14 +67,13 @@ def _control_for_reference_period(control, reference_period='MK',
 
 
 def _get_variance(control, reference_period=None, time_length=None):
-    """
-    Get variance to normalize skill score.
+    """Get variance to normalize skill score.
 
     Args:
-    control
-    reference_period : str see _control_for_reference_period
-    time_length : int
-        smooth control by time_length before taking variance
+        control (xarray object): Control simulation.
+        reference_period (str): See _control_for_reference_period
+        time_length (int): Number of time steps to smooth control by before
+                           taking variance.
     """
     if reference_period is not None and isinstance(time_length, int):
         control = _control_for_reference_period(control,
@@ -190,8 +85,8 @@ def _get_variance(control, reference_period=None, time_length=None):
 
 
 def _get_norm_factor(comparison):
-    """
-    Get normalization factor for ppp, nvar, nrmse.
+    """Get normalization factor for PPP, nvar, nRMSE.
+
     Used in compute_perfect_model.
 
     m2e gets smaller rmse's than m2m by design, see Seferian 2018 et al.
@@ -251,19 +146,18 @@ def _stack_to_supervector(ds, new_dim='svd',
 # COMPARISONS
 # --------------------------------------------#
 def _get_comparison_function(comparison):
-    """
-    Similar to _get_metric_function. This converts a string comparison entry
-    from the user into an actual function for the package to interpret.
+    """Converts a string comparison entry from the user into an actual
+       function for the package to interpret.
 
     PERFECT MODEL:
-    m2m : Compare all members to all other members.
-    m2c : Compare all members to the control.
-    m2e : Compare all members to the ensemble mean.
-    e2c : Compare the ensemble mean to the control.
+    m2m: Compare all members to all other members.
+    m2c: Compare all members to the control.
+    m2e: Compare all members to the ensemble mean.
+    e2c: Compare the ensemble mean to the control.
 
     REFERENCE:
-    e2r : Compare the ensemble mean to the reference.
-    m2r : Compare each ensemble member to the reference.
+    e2r: Compare the ensemble mean to the reference.
+    m2r: Compare each ensemble member to the reference.
     """
     if comparison == 'm2m':
         comparison = '_m2m'
@@ -462,23 +356,21 @@ def _get_metric_function(metric):
 #       as used in a specific paper: def Seferian2018(ds, control):
 #       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
 def _ppp(ds, control, comparison, running=None, reference_period=None):
-    """
-    Prognostic Potential Predictability (PPP) metric.
+    """Prognostic Potential Predictability (PPP) metric.
 
     Formula
     -------
     PPP = 1 - MSE / std_control
 
-    References
-    ----------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+    References:
+      * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
         North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
         (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+      * Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
         Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
         Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
         4463–72. https://doi.org/10/d2qf62.
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
         Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
@@ -494,25 +386,22 @@ def _ppp(ds, control, comparison, running=None, reference_period=None):
 
 
 def _nrmse(ds, control, comparison, running=None, reference_period=None):
-    """
-    Normalized Root Mean Square Error (NRMSE) metric.
+    """Normalized Root Mean Square Error (NRMSE) metric.
 
-    Formula
-    -------
+    Formula:
+
     NRMSE = 1 - RMSE_ens / std_control = 1 - (var_ens / var_control ) ** .5
 
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+    References:
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
         Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
         Prediction: Potential versus Operational Seasonal Forecast Skill.”
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+      * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
         Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
         Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
         Journal of the Royal Meteorological Society 142, no. 695
         (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)

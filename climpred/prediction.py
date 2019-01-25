@@ -20,12 +20,13 @@ according to metric and comparison
 Metrics (submit to functions as strings)
 -------
 - mae: Mean Absolute Error
+- nmae: Normalized Ensemble Mean Absolute Error (perfect-model only)
 - mse: Mean Square Error (perfect-model only)
 - nev: Normalized Ensemble Variance (perfect-model only)
+- nmse: Normalized Ensemble Mean Square Error (perfect-model only)
 - msss: Mean Square Skill Score (perfect-model only)
 - ppp: Prognostic Potential Predictability (perfect-model only)
 - rmse:  Root-Mean Square Error
-- rmse_v: Root-Mean Square Error (perfect-model only)
 - nrmse: Normalized Root-Mean Square Error (perfect-model only)
 - pearson_r: Anomaly correlation coefficient
 - uACC: unbiased ACC (perfect-model only)
@@ -100,10 +101,10 @@ The time dimensions is called 'time' and is in integer, not datetime[ns]
 import numpy as np
 import xarray as xr
 
+from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
-from xskillscore import mae as _mae
 
 from .stats import _check_xarray, _get_dims
 
@@ -433,6 +434,8 @@ def _get_metric_function(metric):
         metric = '_rmse'
     elif metric == 'mae':
         metric = '_mae'
+    elif metric == 'nmae':
+        metric = '_nmae'
     elif metric.lower() == 'mse':
         metric = '_mse'
     elif metric.lower() == 'nrmse':
@@ -454,6 +457,7 @@ def _get_metric_function(metric):
             'ppp'
             'msss'
             'uacc'
+            'nmae'
             """)
     return eval(metric)
 
@@ -499,7 +503,7 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
 
     Formula
     -------
-    NRMSE = 1 - RMSE_ens / std_control = 1 - (var_ens / var_control ) ** .5
+    NRMSE = 1 - RMSE / std_control
 
     References
     ----------
@@ -520,13 +524,41 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
+    nrmse_skill = 1 - rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
 
 
 def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
-    Normalized Ensemble Variance (NEV) metric.
+    Normalized Ensemble Measure Square Error (NMSE) metric.
+
+    Formula
+    -------
+    NMSE-SS = 1 - mse / var
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. NOTE: NMSE = - 1 - NEV
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
+    fac = _get_norm_factor(comparison)
+    nmse_skill = 1 - mse_skill / var / fac
+    return nmse_skill
+
+
+def _nmae(ds, control, comparison, running=None, reference_period=None):
+    """
+    Normalized Ensemble Mean Absolute Error metric.
+
+    Formula
+    -------
+    NMAE-SS = 1 - mse / var
 
     Reference
     ---------
@@ -536,12 +568,12 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
-    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    mae_skill = _mae(fct, truth, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nmse_skill = mse_skill / var / fac
-    return nmse_skill
+    nmae_skill = 1 - mae_skill / np.sqrt(var) / fac
+    return nmae_skill
 
 
 def _uacc(fct, truth, control, running=None, reference_period=None):
@@ -579,8 +611,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
                   spatial coordinates)
         input data
     metric : function
-        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmse',
-                     'uACC', 'MSSS']
+        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmae',
+                     'nmse', 'uACC', 'MSSS']
     comparison : function
         comparison from ['m2m', 'm2e', 'm2c', 'e2c']
     running : int
@@ -604,7 +636,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric in [_nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:
@@ -872,18 +904,21 @@ def _pseudo_ens(ds, control):
     nens = ds.ensemble.size
     nmember = ds.member.size
     length = ds.time.size
-    c_start = control['time'].min()
-    c_end = control['time'].max()
+    c_start = 0
+    c_end = control['time'].size
     time = ds['time']
 
-    def sel_years(control, year_s, m=None, length=length):
-        new = control.sel(time=slice(year_s, year_s + length - 1))
-        new['time'] = time
+    def isel_years(control, year_s, m=None, length=length):
+        new = control.isel(time=slice(year_s, year_s + length - 0))
+        if isinstance(new, xr.DataArray):
+            new['time'] = time
+        elif isinstance(new, xr.Dataset):
+            new = new.assign(time=time)
         return new
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat([sel_years(control, start)
+        return xr.concat([isel_years(control, start)
                           for start in startlist], 'member')
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
                      'ensemble')

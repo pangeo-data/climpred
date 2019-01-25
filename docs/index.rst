@@ -3,8 +3,9 @@ Climate Prediction
 
 A light xarray wrapper for decadal climate predictions.
 
-:ref:`API`
+.. toctree::
+  :maxdepth: 2
 
-:ref:`metrics`
-
-:ref:`sample-data`
+  API
+  metrics
+  sample_data

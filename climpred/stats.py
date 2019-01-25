@@ -58,7 +58,7 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
                                   as well as p values.
     Returns:
         Pearson correlation coefficients
-        
+
         If return_p True, associated p values.
 
     References:
@@ -136,24 +136,15 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
 
 
 def xr_rm_poly(ds, order, dim='time'):
-    """
-    Returns xarray object with nth-order fit removed from every time series.
+    """Returns xarray object with nth-order fit removed.
 
-    Input
-    -----
-    ds : xarray object 
-        Single time series or many gridded time series of object to be
-        detrended
-    order : int
-        Order of polynomial fit to be removed. If 1, this is functionally
-        the same as calling `xr_rm_trend`
-    dim : str (default 'time')
-        Dimension over which to remove the polynomial fit.
+    Args:
+        ds (xarray object): Time series to be detrended.
+        order (int): Order of polynomial fit to be removed.
+        dim (optional str): Dimension over which to remove the polynomial fit.
 
-    Returns
-    -------
-    detrended_ts : xarray object 
-        DataArray or Dataset with detrended time series.
+    Returns:
+        xarray object with polynomial fit removed.
     """
     _check_xarray(ds)
 
@@ -188,8 +179,8 @@ def xr_rm_poly(ds, order, dim='time'):
         new_ds = xr.Dataset()
         for i, var in enumerate(store_vars):
             new_ds[var] = xr.DataArray(y.isel(variable=i))
-        return new_ds 
-    
+        return new_ds
+
     if isinstance(ds, xr.Dataset):
         DATASET, store_vars = True, ds.data_vars
         y = []
@@ -214,25 +205,25 @@ def xr_rm_poly(ds, order, dim='time'):
     detrended_ds = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     if DATASET:
         detrended_ds = _reconstruct_ds(detrended_ds, store_vars)
-    return detrended_ds 
+    return detrended_ds
 
 
 def xr_rm_trend(da, dim='time'):
-    """
-    Calls xr_rm_poly with an order 1 argument.
-    """
+    """Calls ``xr_rm_poly`` with an order 1 argument."""
     return xr_rm_poly(da, 1, dim=dim)
 
 
 def xr_varweighted_mean_period(ds, time_dim='time'):
-    """
-    Calculate the variance weighted mean period of an xr.DataArray.
+    """Calculate the variance weighted mean period of time series.
 
-    Reference
-    ---------
-    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
-      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27,
-      2010): 6292-6311. https://doi.org/10/bwq92h.
+    Args:
+        ds (xarray object): Time series.
+        time_dim (optional str): Name of time dimension.
+
+    Reference:
+      * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
+        Decadal Predictability in a CGCM." Journal of Climate 23, no. 23
+        (August 27, 2010): 6292-6311. https://doi.org/10/bwq92h.
     """
     _check_xarray(ds)
 
@@ -252,25 +243,19 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
 
 
 def xr_autocorr(ds, lag=1, dim='time', return_p=False):
-    """
-    Calculated lagged correlation of a xr.Dataset.
+    """Calculate the lagged correlation of time series.
 
-    Parameters
-    ----------
-    ds : xarray dataset/dataarray
-    lag : int (default 1)
-        number of time steps to lag correlate.
-    dim : str (default 'time')
-        name of time dimension/dimension to autocorrelate over
-    return_p : boolean (default False)
-        if false, return just the correlation coefficient.
-        if true, return both the correlation coefficient and p-value.
+    Args:
+        ds (xarray object): Time series or grid of time series.
+        lag (optional int): Number of time steps to lag correlate to.
+        dim (optional str): Name of dimension to autocorrelate over.
+        return_p (optional bool): If True, return correlation coefficients
+                                  and p values.
 
-    Returns
-    -------
-    r : Pearson correlation coefficient
-    p : (if return_p True) p-value
+    Returns:
+        Pearson correlation coefficients.
 
+        If return_p, also returns their associated p values.
     """
     _check_xarray(ds)
     N = ds[dim].size
@@ -297,24 +282,24 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
 
 
 def xr_decorrelation_time(da, r=20, dim='time'):
-    """
-    Calculate decorrelation time of an xr.DataArray.
+    """Calculate the decorrelaton time of a time series.
 
-    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)**k
+    .. math::
 
-    Parameters
-    ----------
-    da : xarray object
-    r : int (default 20)
-        Number of iterations to run of the above formula
-    dim : str (default 'time')
-        Time dimension for xarray object
+        tau_{d} = 1 + 2 * \sum_{k=1}^{\inf}(alpha_{k})^{k}
 
-    Reference
-    ---------
-    - Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
-    Research. Cambridge ; New York: Cambridge University Press, 1999., p.373
+    Args:
+        da (xarray object): Time series.
+        r (optional int): Number of iterations to run the above formula.
+        dim (optional str): Time dimension for xarray object.
 
+    Returns:
+        Decorrelation time of time series.
+
+    Reference:
+        * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+          Research. Cambridge ; New York: Cambridge University Press, 1999.,
+          p.373
     """
     _check_xarray(da)
     one = da.mean(dim) / da.mean(dim)

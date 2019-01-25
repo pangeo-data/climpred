@@ -1,10 +1,11 @@
 .. _API:
 
+===
 API
----
+===
 
-.. automodule:: climpred
-   :members:
+Statistics
+----------
 
 .. automodule:: climpred.stats
    :members:

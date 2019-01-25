@@ -97,10 +97,17 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
 
 
 def _xr_eff_p_value(x, y, r, dim, two_sided):
-    """
-    Computes the p_value accounting for autocorrelation in time series.
+    """Computes p values accounting for autocorrelation in time series.
 
-    ds : dataset with time series being correlated.
+    Args:
+        x (xarray object): Independent time series.
+        y (xarray object): Dependent time series.
+        r (xarray object): Pearson correlations between x and y.
+        dim (str): Dimension to compute compute p values over.
+        two_sided (bool): If True, compute two-sided p value.
+
+    Returns:
+        p values accounting for autocorrelation in input time series.
     """
     def _compute_autocorr(v, dim, n):
         """

@@ -13,12 +13,23 @@ Time Series
                                time series.
 `xr_autocorr` : Calculates the autocorrelation of time series over some lag.
 `xr_tau_d` : Calculates the decorrelation time of a time series.
+
+Z Scores
+--------
+`_z_score`: Returns the z score at a particular confidence.
+`z_significance`: Computes statistical significance between two correlation
+coefficients using Fisher's r to z conversion.
+
+Generate Time Series Data
+-------------------------
+`create_power_spectrum` : Creates power spectrum with CI for a given pd.series.
 """
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
+from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -197,7 +208,7 @@ def xr_rm_poly(ds, order, dim='time'):
 
     Input
     -----
-    ds : xarray object 
+    ds : xarray object
         Single time series or many gridded time series of object to be
         detrended
     order : int
@@ -208,7 +219,7 @@ def xr_rm_poly(ds, order, dim='time'):
 
     Returns
     -------
-    detrended_ts : xarray object 
+    detrended_ts : xarray object
         DataArray or Dataset with detrended time series.
     """
     _check_xarray(ds)
@@ -244,8 +255,8 @@ def xr_rm_poly(ds, order, dim='time'):
         new_ds = xr.Dataset()
         for i, var in enumerate(store_vars):
             new_ds[var] = xr.DataArray(y.isel(variable=i))
-        return new_ds 
-    
+        return new_ds
+
     if isinstance(ds, xr.Dataset):
         DATASET, store_vars = True, ds.data_vars
         y = []
@@ -270,7 +281,7 @@ def xr_rm_poly(ds, order, dim='time'):
     detrended_ds = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     if DATASET:
         detrended_ds = _reconstruct_ds(detrended_ds, store_vars)
-    return detrended_ds 
+    return detrended_ds
 
 
 def xr_rm_trend(da, dim='time'):
@@ -376,3 +387,47 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     one = da.mean(dim) / da.mean(dim)
     return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
                                 range(1, r)], 'it').sum('it')
+
+
+# -------
+# Z SCORE
+# -------
+def _z_score(ci):
+    """Returns critical z score given a confidence interval
+
+    Source: https://stackoverflow.com/questions/20864847/
+            probability-to-z-score-and-vice-versa-in-python
+    """
+    diff = (100 - ci) / 2
+    return norm.ppf((100 - diff) / 100)
+
+
+def z_significance(r1, r2, N, ci=90):
+    """Computes the z test statistic for two ACC time series, e.g. an
+       initialized ensemble ACC and persistence forecast ACC.
+
+    Inputs:
+        r1, r2: (xarray objects) time series, grids, etc. of pearson
+                correlation coefficients between the two prediction systems
+                of interest.
+        N: (int) length of original time series being correlated.
+        ci: (optional int) confidence level for z-statistic test
+
+    Returns:
+        Boolean array of same dimensions as input where True means r1 is
+        significantly different from r2 at ci.
+
+    Reference:
+        https://www.statisticssolutions.com/comparing-correlation-coefficients/
+    """
+    def _r_to_z(r):
+        """Fisher's r to z transformation"""
+        return 0.5 * (np.log(1 + r) - np.log(1 - r))
+
+    z1, z2 = _r_to_z(r1), _r_to_z(r2)
+    difference = np.abs(z1 - z2)
+    zo = difference / (np.sqrt(2*(1 / (N - 3))))
+    confidence = np.zeros_like(zo)
+    confidence[:] = _z_score(ci)
+    sig = xr.DataArray(zo > confidence)
+    return sig

@@ -1013,7 +1013,8 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
 def xr_predictability_horizon(skill, threshold, limit='upper',
-                              p_values=None, N=None, alpha=0.05, ci=90):
+                              perfect_model=False, p_values=None, N=None,
+                              alpha=0.05, ci=90):
     """
     Get predictability horizons of dataset from skill and
     threshold dataset.
@@ -1026,6 +1027,8 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
                coefficients by testing lead time to which the skill
                beats out the threshold. If 'lower', check horizon for which
                error (e.g., MAE) is lower than threshold.
+        perfect_model: (optional bool) If True, do not consider p values, N,
+                       etc.
         p_values: (optional xarray object) If using 'upper' limit, input
                   a DataArray/Dataset of the same dimensions as skill that
                   contains p-values for the skill correlatons.
@@ -1033,7 +1036,7 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
     Returns:
         predictability horizon reduced by the lead time dimension.
     """
-    if limit is 'upper':
+    if (limit is 'upper') and (not perfect_model):
         if (p_values is None) | (p_values.dims != skill.dims):
             raise ValueError("""Please submit an xarray object of the same
                 dimensions as `skill` that contains p-values for the skill
@@ -1045,6 +1048,9 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
         ph = ((p_values < alpha) & (sig)).argmin('time')
         # where ph not reached, set max time
         ph_not_reached = ((p_values < alpha) & (sig)).all('time')
+    elif (limit is 'upper') and (perfect_model):
+        ph = (skill > threshold).argmin('time')
+        ph_not_reached = (skill > threshold).all('time')
     elif limit is 'lower':
         ph = (skill < threshold).argmin('time')
         # where ph not reached, set max time

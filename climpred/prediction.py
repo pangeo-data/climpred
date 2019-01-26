@@ -449,6 +449,8 @@ def _get_metric_function(metric):
             metric = '_nmse'
         elif metric.lower() in ['ppp', 'msss']:
             metric = '_ppp'
+        elif metric.lower() == 'nmae':
+            metric = '_nmae'
         elif metric.lower() == 'uacc':
             metric = '_uacc'
         else:
@@ -582,30 +584,6 @@ def _nmae(ds, control, comparison, running=None, reference_period=None):
     fac = _get_norm_factor(comparison)
     nmse_skill = 1 - mse_skill / var / fac
     return nmse_skill
-
-
-def _nmae(ds, control, comparison, running=None, reference_period=None):
-    """
-    Normalized Ensemble Mean Absolute Error metric.
-
-    Formula
-    -------
-    NMAE-SS = 1 - mse / var
-
-    Reference
-    ---------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
-      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    """
-    supervector_dim = 'svd'
-    fct, truth = comparison(ds, supervector_dim)
-    mae_skill = _mae(fct, truth, dim=supervector_dim)
-    var = _get_variance(control, time_length=running,
-                        reference_period=reference_period)
-    fac = _get_norm_factor(comparison)
-    nmae_skill = 1 - mae_skill / np.sqrt(var) / fac
-    return nmae_skill
 
 
 def _uacc(fct, truth, control, running=None, reference_period=None):

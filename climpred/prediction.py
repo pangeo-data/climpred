@@ -105,9 +105,11 @@ from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
+from xskillscore import pearson_r_p_value
 
-from .stats import _check_xarray, _get_dims
-
+from .stats import _check_xarray, _get_dims, z_significance
+import warnings
+import types
 # -------------------------------------------- #
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
@@ -427,40 +429,42 @@ def _get_metric_function(metric):
     --------
     metric : function object of the metric.
     """
-    pearson = ['pr', 'pearsonr', 'pearson_r']
-    if metric in pearson:
-        metric = '_pearson_r'
-    elif metric == 'rmse':
-        metric = '_rmse'
-    elif metric == 'mae':
-        metric = '_mae'
-    elif metric == 'nmae':
-        metric = '_nmae'
-    elif metric.lower() == 'mse':
-        metric = '_mse'
-    elif metric.lower() == 'nrmse':
-        metric = '_nrmse'
-    elif metric.lower() in ['nev', 'nmse']:
-        metric = '_nmse'
-    elif metric.lower() in ['ppp', 'msss']:
-        metric = '_ppp'
-    elif metric.lower() == 'uacc':
-        metric = '_uacc'
+    # catches issues with wrappers, etc. that actually submit the
+    # proper underscore function
+    if type(metric) == types.FunctionType:
+        return metric
     else:
-        raise ValueError("""Please supply a metric from the following list:
-            'pearson_r'
-            'rmse'
-            'mse'
-            'nrmse'
-            'nev'
-            'nmse'
-            'ppp'
-            'msss'
-            'uacc'
-            'nmae'
-            """)
-    return eval(metric)
-
+        pearson = ['pr', 'pearsonr', 'pearson_r']
+        if metric in pearson:
+            metric = '_pearson_r'
+        elif metric == 'rmse':
+            metric = '_rmse'
+        elif metric == 'mae':
+            metric = '_mae'
+        elif metric.lower() == 'mse':
+            metric = '_mse'
+        elif metric.lower() == 'nrmse':
+            metric = '_nrmse'
+        elif metric.lower() in ['nev', 'nmse']:
+            metric = '_nmse'
+        elif metric.lower() in ['ppp', 'msss']:
+            metric = '_ppp'
+        elif metric.lower() == 'uacc':
+            metric = '_uacc'
+        else:
+            raise ValueError("""Please supply a metric from the following list:
+                'pearson_r'
+                'rmse'
+                'mse'
+                'nrmse'
+                'nev'
+                'nmse'
+                'ppp'
+                'msss'
+                'uacc'
+                """)
+        return eval(metric)
+      
 
 # TODO: Do we need wrappers or should we rather create wrappers for skill score
 #       as used in a specific paper: def Seferian2018(ds, control):
@@ -540,7 +544,35 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     ---------
     - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
       Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4. NOTE: NMSE = - 1 - NEV
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+
+      NOTE: NMSE = - 1 - NEV
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
+    fac = _get_norm_factor(comparison)
+    nmse_skill = 1 - mse_skill / var / fac
+    return nmse_skill
+
+
+def _nmae(ds, control, comparison, running=None, reference_period=None):
+    """
+    Normalized Ensemble Mean Absolute Error metric.
+
+    Formula
+    -------
+    NMAE-SS = 1 - mse / var
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+
+      NOTE: NMSE = - 1 - NEV
     """
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
@@ -636,7 +668,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         fct, truth = comparison(ds, supervector_dim)
         res = metric(fct, truth, dim=supervector_dim)
         return res
-    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
+    # perfect-model only metrics
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:
@@ -644,7 +677,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
 
 
 def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
-                      nlags=None):
+                      nlags=None, horizon=False, alpha=0.05, ci=90):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations)
@@ -676,11 +709,22 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         * m2r : each member to the reference
     nlags : int (default length of `time` dim)
         How many lags to compute skill/potential predictability out to
+    horizon : (optional bool) If true, compute and return the predictability
+              horizon. This checks that (1) the initialized ensemble skill
+              correlations to the reference simulation are statistically
+              significant, and (2) that the resulting r-values are
+              significantly different from the persistence r-values.
+    alpha: (optional double) p-value significance to check for correlations
+           between initialized ensemble and reference simulation.
+    ci: (optional int) confidence level in comparing initialized skill to
+        persistence skill.
 
     Returns
     -------
     skill : xarray object
         Predictability with main dimension `lag`
+    persistence : xarray object (if horizon is True)
+    horizon : xarray object (if horizon is True)
     """
     _check_xarray(ds)
     _check_xarray(reference)
@@ -699,9 +743,33 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     for i in range(0, nlags):
         a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
         plag.append(metric(a, b, dim='ensemble'))
-    skill = xr.concat(plag, 'lead time')
-    skill['lead time'] = np.arange(1, 1 + nlags)
-    return skill
+    skill = xr.concat(plag, 'time')
+    skill['time'] = np.arange(1, 1 + nlags)
+    if (horizon) & (metric == _pearson_r):
+        # NaN values throw warnings for p-value comparison, so just
+        # suppress that here.
+        p_value = []
+        for i in range(0, nlags):
+            a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                p_value.append(pearson_r_p_value(a, b, dim='ensemble'))
+        p_value = xr.concat(p_value, 'time')
+        p_value['time'] = np.arange(1, 1 + nlags)
+    if horizon:
+        persistence = compute_persistence(reference, nlags, metric=metric)
+        if metric == _pearson_r:
+            horizon = xr_predictability_horizon(skill, persistence,
+                                                limit='upper',
+                                                p_values=p_value,
+                                                N=reference.ensemble.size,
+                                                alpha=alpha, ci=ci)
+        else:
+            horizon = xr_predictability_horizon(skill, persistence,
+                                                limit='lower')
+        return skill, persistence, horizon
+    else:
+        return skill
 
 
 def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
@@ -756,8 +824,8 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)
         plag.append(metric(a, b, dim=dim))
-    pers = xr.concat(plag, 'lead time')
-    pers['lead time'] = np.arange(1, 1 + nlags)
+    pers = xr.concat(plag, 'time')
+    pers['time'] = np.arange(1, 1 + nlags)
     return pers
 
 
@@ -970,18 +1038,55 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
 # --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
-def xr_predictability_horizon(skill, threshold, limit='upper'):
+def xr_predictability_horizon(skill, threshold, limit='upper',
+                              perfect_model=False, p_values=None, N=None,
+                              alpha=0.05, ci=90):
     """
     Get predictability horizons of dataset from skill and
     threshold dataset.
+
+    Inputs:
+        skill: (xarray object) skill (e.g., ACC) at different lead times.
+        threshold: (xarray object) skill for persistence or uninitialized
+                   ensemble.
+        limit: (optional str) If 'upper' check horizon for correlation
+               coefficients by testing lead time to which the skill
+               beats out the threshold. If 'lower', check horizon for which
+               error (e.g., MAE) is lower than threshold.
+        perfect_model: (optional bool) If True, do not consider p values, N,
+                       etc.
+        p_values: (optional xarray object) If using 'upper' limit, input
+                  a DataArray/Dataset of the same dimensions as skill that
+                  contains p-values for the skill correlatons.
+
+    Returns:
+        predictability horizon reduced by the lead time dimension.
     """
-    if limit is 'upper':
-        ph = (skill > threshold).argmin('time')
+    if (limit is 'upper') and (not perfect_model):
+        if (p_values is None) | (p_values.dims != skill.dims):
+            raise ValueError("""Please submit an xarray object of the same
+                dimensions as `skill` that contains p-values for the skill
+                correlatons.""")
+        if N is None:
+            raise ValueError("""Please submit N, the length of the original
+                time series being correlated.""")
+        sig = z_significance(skill, threshold, N, ci)
+        ph = ((p_values < alpha) & (sig)).argmin('time')
         # where ph not reached, set max time
+        ph_not_reached = ((p_values < alpha) & (sig)).all('time')
+    elif (limit is 'upper') and (perfect_model):
+        ph = (skill > threshold).argmin('time')
         ph_not_reached = (skill > threshold).all('time')
     elif limit is 'lower':
         ph = (skill < threshold).argmin('time')
         # where ph not reached, set max time
         ph_not_reached = (skill < threshold).all('time')
+    else:
+        raise ValueError("""Please either submit 'upper' or 'lower' for the
+            limit keyword.""")
     ph = ph.where(~ph_not_reached, other=skill['time'].max())
+    # mask out any initial NaNs (land, masked out regions, etc.)
+    mask = np.asarray(skill.isel({'time': 0}))
+    mask = np.isnan(mask)
+    ph = ph.where(~mask, np.nan)
     return ph

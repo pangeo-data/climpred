@@ -55,42 +55,42 @@ Data Structure
 --------------
 This module works on xr.Datasets with the following dimensions and coordinates:
 - 1D (Predictability of timelines of preprocessed regions):
-    - ensemble : initialization months/years
+    - initialization : initialization months/years
     - area : pre-processed region strings
     - time : lead months/years from the initialization
     - period : time averaging: yearmean, seasonal mean
 
 Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
 <xarray.Dataset>
-Dimensions:                  (area: 14, ensemble: 12, member: 10, period: 5,
+Dimensions:                  (area: 14, initialization: 12, member: 10, period: 5,
                               time: 20)
 Coordinates:
-  * ensemble                 (ensemble) int64 3014 3023 3045 3061 3124 3139 ...
+  * initialization                 (initialization) int64 3014 3023 3045 3061 3124 3139 ...
   * area                     (area) object 'global' 'North_Atlantic_SPG' ...
   * time                     (time) int64 1 2 3 4 5 6 ...
   * period                   (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
 Dimensions without coordinates: member
 Data variables:
-    tos                   (period, time, area, ensemble, member) float32 ...
+    tos                   (period, time, area, initialization, member) float32 ...
 ...
 
 - 3D (Predictability maps):
-    - ensemble
+    - initialization
     - lon(y, x), lat(y, x)
     - time (as in lead time)
     - period (time averaging: yearmean, seasonal mean)
 
 Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
 <xarray.Dataset>
-Dimensions:      (bnds: 2, ensemble: 11, member: 9, x: 256, y: 220, time: 21)
+Dimensions:      (bnds: 2, initialization: 11, member: 9, x: 256, y: 220, time: 21)
 Coordinates:
     lon          (y, x) float64 -47.25 -47.69 -48.12 ... 131.3 132.5 133.8
     lat          (y, x) float64 76.36 76.3 76.24 76.17 ... -77.25 -77.39 -77.54
-  * ensemble     (ensemble) int64 3061 3124 3178 3023 ... 3228 3175 3144 3139
+  * initialization     (initialization) int64 3061 3124 3178 3023 ... 3228 3175 3144 3139
   * time         (time) int64 1 2 3 4 5 ... 19 20
 Dimensions without coordinates: bnds, member, x, y
 Data variables:
-    tos          (time, ensemble, member, y, x) float32
+    tos          (time, initialization, member, y, x) float32
     dask.array<shape=(21, 11, 9, 220, 256), chunksize=(1, 1, 1, 220, 256)>
 ...
 
@@ -211,14 +211,14 @@ def _get_norm_factor(comparison):
 
 def _drop_ensembles(ds, rmd_ensemble=[0]):
     """Drop ensembles from ds."""
-    if all(ens in ds.ensemble.values for ens in rmd_ensemble):
-        ensemble_list = list(ds.ensemble.values)
+    if all(ens in ds.initialization.values for ens in rmd_ensemble):
+        ensemble_list = list(ds.initialization.values)
         for ens in rmd_ensemble:
             ensemble_list.remove(ens)
     else:
         raise ValueError('select available ensemble starting years',
                          rmd_ensemble)
-    return ds.sel(ensemble=ensemble_list)
+    return ds.sel(initialization=ensemble_list)
 
 
 def _drop_members(ds, rmd_member=[0]):
@@ -232,19 +232,19 @@ def _drop_members(ds, rmd_member=[0]):
     return ds.sel(member=member_list)
 
 
-def _select_members_ensembles(ds, m=None, e=None):
+def _select_members_ensembles(ds, m=None, i=None):
     """Subselect ensembles and members from ds."""
     if m is None:
         m = ds.member.values
-    if e is None:
-        e = ds.ensemble.values
-    return ds.sel(member=m, ensemble=e)
+    if i is None:
+        i = ds.initialization.values
+    return ds.sel(member=m, initialization=i)
 
 
 def _stack_to_supervector(ds, new_dim='svd',
-                          stacked_dims=('ensemble', 'member')):
+                          stacked_dims=('initialization', 'member')):
     """
-    Stack all stacked_dims (likely ensemble and member) dimensions into one
+    Stack all stacked_dims (likely initialization and member) dimensions into one
     supervector dimension to perform metric over.
     """
     return ds.stack({new_dim: stacked_dims})
@@ -303,9 +303,9 @@ def _m2m(ds, supervector_dim='svd'):
         ds_reduced = _drop_members(ds, rmd_member=[m])
         truth = ds.sel(member=m)
         for m2 in ds_reduced.member:
-            for e in ds.ensemble:
-                truth_list.append(truth.sel(ensemble=e))
-                fct_list.append(ds_reduced.sel(member=m2, ensemble=e))
+            for i in ds.initialization:
+                truth_list.append(truth.sel(initialization=i))
+                fct_list.append(ds_reduced.sel(member=m2, initialization=i))
     truth = xr.concat(truth_list, supervector_dim)
     fct = xr.concat(fct_list, supervector_dim)
     return fct, truth
@@ -345,11 +345,11 @@ def _e2c(ds, supervector_dim='svd', control_member=[0]):
     Create two supervectors to compare ensemble mean to control.
     """
     truth = ds.isel(member=control_member).squeeze()
-    truth = truth.rename({'ensemble': supervector_dim})
+    truth = truth.rename({'initialization': supervector_dim})
     # drop the member being truth
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     fct = ds.mean('member')
-    fct = fct.rename({'ensemble': supervector_dim})
+    fct = fct.rename({'initialization': supervector_dim})
     return fct, truth
 
 
@@ -668,7 +668,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     ----------
     ds : xarray object
         Expected to follow package conventions (and should be an ensemble mean)
-        `ensemble` : dim of initialization dates
+        `initialization` : dim of initialization dates
         `time` : dim of lead years from those initializations
         Additional dims can be lat, lon, depth, etc. but should not be
         individual members.
@@ -719,8 +719,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
             'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
-        a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
-        plag.append(metric(a, b, dim='ensemble'))
+        a, b = _shift(fct.isel(time=i), reference, i, dim='initialization')
+        plag.append(metric(a, b, dim='initialization'))
     skill = xr.concat(plag, 'time')
     skill['time'] = np.arange(1, 1 + nlags)
     if (horizon) & (metric == _pearson_r):
@@ -728,10 +728,10 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         # suppress that here.
         p_value = []
         for i in range(0, nlags):
-            a, b = _shift(fct.isel(time=i), reference, i, dim='ensemble')
+            a, b = _shift(fct.isel(time=i), reference, i, dim='initialization')
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                p_value.append(pearson_r_p_value(a, b, dim='ensemble'))
+                p_value.append(pearson_r_p_value(a, b, dim='initialization'))
         p_value = xr.concat(p_value, 'time')
         p_value['time'] = np.arange(1, 1 + nlags)
     if horizon:
@@ -740,7 +740,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
             horizon = xr_predictability_horizon(skill, persistence,
                                                 limit='upper',
                                                 p_values=p_value,
-                                                N=reference.ensemble.size,
+                                                N=reference.initialization.size,
                                                 alpha=alpha, ci=ci)
         else:
             horizon = xr_predictability_horizon(skill, persistence,
@@ -750,7 +750,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         return skill
 
 
-def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
+def compute_persistence(reference, nlags, metric='pearson_r', dim='initialization'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or control run.
@@ -775,7 +775,7 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     metric : str (default 'pearson_r')
         Metric to apply at each lag for the persistence computation. Choose
         from 'pearson_r' or 'rmse'.
-    dim : str (default 'ensemble')
+    dim : str (default 'initialization')
         Dimension over which to compute persistence forecast.
 
     Returns
@@ -937,7 +937,7 @@ def _pseudo_ens(ds, control):
 
     Returns
     -------
-    ds_e : xr.DataArray with time, ensemble, member dimension
+    ds_e : xr.DataArray with time, initialization, member dimension
         pseudo-ensemble generated from control run
 
     Example
@@ -947,7 +947,7 @@ def _pseudo_ens(ds, control):
     control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
     ds_e = et.prediction.pseudo_ens(control,ds)
     """
-    nens = ds.ensemble.size
+    nens = ds.initialization.size
     nmember = ds.member.size
     length = ds.time.size
     c_start = 0
@@ -967,7 +967,7 @@ def _pseudo_ens(ds, control):
         return xr.concat([isel_years(control, start)
                           for start in startlist], 'member')
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
-                     'ensemble')
+                     'initialization')
 
 
 def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
@@ -980,7 +980,7 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
     ----------
     control : xr.DataArray/Dataset with time dimension
         input control data
-    ds : xr.DataArray/Dataset with time, ensemble and member dimensions
+    ds : xr.DataArray/Dataset with time, initialization and member dimensions
         input ensemble data
     sig: int or list
         Significance level for bootstrapping from pseudo ensemble
@@ -990,7 +990,7 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
     Returns
     -------
     sig_level : xr.DataArray/Dataset as inputs
-        significance level without time, ensemble and member dimensions
+        significance level without time, initialization and member dimensions
         as many sig_level as listitems in sig
 
     """

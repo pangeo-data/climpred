@@ -62,16 +62,17 @@ This module works on xr.Datasets with the following dimensions and coordinates:
 
 Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
 <xarray.Dataset>
-Dimensions:                  (area: 14, initialization: 12, member: 10, period: 5,
-                              time: 20)
+Dimensions:                  (area: 14, initialization: 12, member: 10,
+                              period: 5, time: 20)
+
 Coordinates:
-  * initialization                 (initialization) int64 3014 3023 3045 3061 3124 3139 ...
-  * area                     (area) object 'global' 'North_Atlantic_SPG' ...
-  * time                     (time) int64 1 2 3 4 5 6 ...
-  * period                   (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
+  * initialization     (initialization) int64 3014 3023 3045 3061 3124 3139 ...
+  * area               (area) object 'global' 'North_Atlantic_SPG' ...
+  * time               (time) int64 1 2 3 4 5 6 ...
+  * period             (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
 Dimensions without coordinates: member
 Data variables:
-    tos                   (period, time, area, initialization, member) float32 ...
+    tos               (period, time, area, initialization, member) float32 ...
 ...
 
 - 3D (Predictability maps):
@@ -82,11 +83,12 @@ Data variables:
 
 Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
 <xarray.Dataset>
-Dimensions:      (bnds: 2, initialization: 11, member: 9, x: 256, y: 220, time: 21)
+Dimensions:      (bnds: 2, initialization: 11, member: 9, x: 256, y: 220,
+                  time: 21)
 Coordinates:
     lon          (y, x) float64 -47.25 -47.69 -48.12 ... 131.3 132.5 133.8
     lat          (y, x) float64 76.36 76.3 76.24 76.17 ... -77.25 -77.39 -77.54
-  * initialization     (initialization) int64 3061 3124 3178 3023 ... 3228 3175 3144 3139
+  * initialization     (initialization) int64 3061 3124 3178 3023 ... 3228 3175
   * time         (time) int64 1 2 3 4 5 ... 19 20
 Dimensions without coordinates: bnds, member, x, y
 Data variables:
@@ -244,8 +246,8 @@ def _select_members_ensembles(ds, m=None, i=None):
 def _stack_to_supervector(ds, new_dim='svd',
                           stacked_dims=('initialization', 'member')):
     """
-    Stack all stacked_dims (likely initialization and member) dimensions into one
-    supervector dimension to perform metric over.
+    Stack all stacked_dims (likely initialization and member) dimensions into
+    one supervector dimension to perform metric over.
     """
     return ds.stack({new_dim: stacked_dims})
 
@@ -466,7 +468,7 @@ def _get_metric_function(metric):
                 'uacc'
                 """)
         return eval(metric)
-      
+
 
 # TODO: Do we need wrappers or should we rather create wrappers for skill score
 #       as used in a specific paper: def Seferian2018(ds, control):
@@ -750,7 +752,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         return skill
 
 
-def compute_persistence(reference, nlags, metric='pearson_r', dim='initialization'):
+def compute_persistence(reference, nlags, metric='pearson_r',
+                        dim='initialization'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or control run.

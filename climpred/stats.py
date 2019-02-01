@@ -4,6 +4,7 @@ import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
+from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -411,6 +412,7 @@ def DPP(ds, m=10, chunk=True):
         s2 = s2v + s2e
     dpp = (s2v - s2 / (m)) / s2
     return dpp
+
 
 # -------
 # Z SCORE

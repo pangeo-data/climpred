@@ -701,7 +701,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
 
 
 def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
-                      nlags=None):
+                      nlags=None, return_p=False):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations).
@@ -732,9 +732,12 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         * m2r : each member to the reference
     nlags (int): How many lags to compute skill/potential predictability out
                  to. Default: length of `time` dim
+    return_p (bool): If True, return p values associated with pearson r.
 
     Returns:
         skill (xarray object): Predictability with main dimension `lag`.
+        p_value (xarray object): If `return_p`, p values associated with
+                                 pearson r correlations.
     """
     _check_xarray(ds)
     _check_xarray(reference)
@@ -751,11 +754,29 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
             'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
-        a, b = _shift(forecast.isel(time=i), reference, i, dim='ensemble')
-        plag.append(metric(a, b, dim='ensemble'))
-    skill = xr.concat(plag, 'lead time')
-    skill['lead time'] = np.arange(1, 1 + nlags)
-    return skill
+        a, b = _shift(forecast.isel(time=i), reference, i,
+                      dim='initialization')
+        plag.append(metric(a, b, dim='initialization'))
+    skill = xr.concat(plag, 'time')
+    skill['time'] = np.arange(1, 1 + nlags)
+    if (return_p) & (metric != _pearson_r):
+        raise ValueError("""You can only return p values if the metric is
+            pearson_r.""")
+    elif (return_p) & (metric == _pearson_r):
+        # NaN values throw warning for p-value comparison, so just
+        # suppress that here.
+        p_value = []
+        for i in range(0, nlags):
+            a, b = _shift(forecast.isel(time=i), reference, i,
+                          dim='initialization')
+            with warnings.catch_warnings():
+                warnings.simplefilter("ignore")
+                p_value.append(pearson_r_p_value(a, b, dim='initialization'))
+        p_value = xr.concat(p_value, 'time')
+        p_value['time'] = np.arange(1, 1 + nlags)
+        return skill, p_value
+    else:
+        return skill
 
 
 def compute_persistence(reference, nlags, metric='pearson_r',
@@ -913,7 +934,10 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
         ph (xarray object)
     """
     if (limit is 'upper') and (not perfect_model):
-        if (p_values is None) | (p_values.dims != skill.dims):
+        if (p_values is None):
+            raise ValueError("""Please submit p values associated with the
+                correlation coefficients.""")
+        if (p_values.dims != skill.dims):
             raise ValueError("""Please submit an xarray object of the same
                 dimensions as `skill` that contains p-values for the skill
                 correlatons.""")

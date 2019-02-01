@@ -4,6 +4,7 @@ import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
+
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -46,6 +47,16 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     for autocorrelation within each time series that could fluff the
     significance of the correlation.
 
+    References:
+        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
+          Vol. 100. Academic press, 2011.
+        * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
+          Annular Mode on Southern Ocean circulation and biology." Geophysical
+          Research Letters 32.11 (2005).
+
+    Todo:
+      * Test and adapt for xr.Datasets
+
     Args:
         x (xarray object): Independent variable time series or grid of time
                            series.
@@ -61,15 +72,6 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
 
         If return_p True, associated p values.
 
-    References:
-        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
-          Vol. 100. Academic press, 2011.
-        * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
-          Annular Mode on Southern Ocean circulation and biology." Geophysical
-          Research Letters 32.11 (2005).
-
-    Todo:
-      * Test and adapt for xr.Datasets
     """
     _check_xarray(x)
     _check_xarray(y)
@@ -223,14 +225,18 @@ def xr_rm_trend(da, dim='time'):
 def xr_varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
-    Args:
-        ds (xarray object): Time series.
-        time_dim (optional str): Name of time dimension.
+    ..math:
+        P_x = \sum_k V(f_k,x) / \sum_k f_k V(f_k,x)
 
     Reference:
       * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
         Decadal Predictability in a CGCM." Journal of Climate 23, no. 23
         (August 27, 2010): 6292-6311. https://doi.org/10/bwq92h.
+
+    Args:
+        ds (xarray object): Time series.
+        time_dim (optional str): Name of time dimension.
+
     """
     _check_xarray(ds)
 
@@ -292,8 +298,12 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     """Calculate the decorrelaton time of a time series.
 
     .. math::
-
         tau_{d} = 1 + 2 * \sum_{k=1}^{\inf}(alpha_{k})^{k}
+
+    Reference:
+        * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+          Research. Cambridge ; New York: Cambridge University Press, 1999.,
+          p.373
 
     Args:
         da (xarray object): Time series.
@@ -303,12 +313,102 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     Returns:
         Decorrelation time of time series.
 
-    Reference:
-        * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
-          Research. Cambridge ; New York: Cambridge University Press, 1999.,
-          p.373
     """
     _check_xarray(da)
     one = da.mean(dim) / da.mean(dim)
     return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
                                 range(1, r)], 'it').sum('it')
+
+
+# --------------------------------------------#
+# Diagnostic Potential Predictability (DPP)
+# Functions related to DPP from Boer et al.
+# --------------------------------------------#
+def DPP(ds, m=10, chunk=True):
+    """
+    Calculate Diagnostic Potential Predictability (DPP) as potentially
+    predictable variance fraction (ppvf) in Boer 2004.
+
+    Note: Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
+    in a slightly different way. chunk=False
+
+    .. math::
+
+        DPP_{\text{unbiased}}(m)=\frac{\sigma^2_m - 1/m \cdot \sigma^2}{\sigma^2}
+
+    References:
+    * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
+        Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004):
+        29–44. https://doi.org/10/csjjbh.
+    * Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and
+        O2 Fluxes: What Can We Learn from Centuries-Long Climate Models
+        Simulations?” Journal of Geophysical Research: Oceans 120, no. 1
+        (January 2015): 384–404. https://doi.org/10/f63c3h.
+    * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the
+        Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical
+        Research Letters, March 15, 2018. https://doi.org/10/gdb424.
+
+    Args:
+    ds (xr.DataArray): control simulation with time dimension as years.
+    m (optional int): separation time scale in years between predictable
+                      low-freq component and high-freq noise.
+    chunk (optional boolean): Whether chunking is applied. Default: True.
+                    If False, then uses Resplandy 2015 / Seferian 2018 method.
+
+    Returns:
+        dpp (xr.DataArray): ds without time dimension.
+
+    """
+    # TODO: rename or find xr equiv
+    def _chunking(ds, number_chunks=False, chunk_length=False):
+        """
+        Separate data into chunks and reshapes chunks in a c dimension.
+
+        Specify either the number chunks or the length of chunks.
+        Needed for DPP.
+
+        Args:
+            ds (xr.DataArray): control simulation with time dimension as years.
+            chunk_length (int): see DPP(m)
+            number_chunks (int): number of chunks in the return data.
+
+        Returns:
+            c (xr.DataArray): chunked ds, but with additional dimension c.
+
+        """
+        if number_chunks and not chunk_length:
+            chunk_length = np.floor(ds['time'].size / number_chunks)
+            cmin = int(ds['time'].min())
+        elif not number_chunks and chunk_length:
+            cmin = int(ds['time'].min())
+            number_chunks = int(np.floor(ds['time'].size / chunk_length))
+        else:
+            raise ValueError('set number_chunks or chunk_length to True')
+        c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
+        c = c.expand_dims('c')
+        c['c'] = [0]
+        for i in range(1, number_chunks):
+            c2 = ds.sel(time=slice(cmin + chunk_length * i,
+                                   cmin + (i + 1) * chunk_length - 1))
+            c2 = c2.expand_dims('c')
+            c2['c'] = [i]
+            c2['time'] = c['time']
+            c = xr.concat([c, c2], 'c')
+        return c
+
+    if not chunk:  # Resplandy 2015, Seferian 2018
+        s2v = ds.rolling(time=m).mean().var('time')
+        s2 = ds.var('time')
+
+    if chunk:  # Boer 2004 ppvf
+        # first chunk
+        chunked_means = _chunking(
+            ds, chunk_length=m).mean('time')
+        # sub means in chunks
+        chunked_deviations = _chunking(
+            ds, chunk_length=m) - chunked_means
+        s2v = chunked_means.var('c')
+        s2e = chunked_deviations.var(['time', 'c'])
+        s2 = s2v + s2e
+    dpp = (s2v - s2 / (m)) / s2
+    return dpp

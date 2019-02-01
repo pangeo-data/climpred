@@ -1,105 +1,4 @@
-"""
-Objects dealing with decadal prediction metrics.
-
-Concept of calculating predictability skill
--------------------------------------------
-- metric: how is skill calculated, e.g. pearson_r, rmse
-- comparison: how forecasts and observation/truth are compared, e.g., m2m, e2r
-
-High-level functions
--------------------
-- compute_perfect_model: computes the perfect-model predictability skill
-according to metric and comparison
-- compute_reference: computes predictability/skill relative to some reference
-- compute_persistence: computes a persistence forecast from some simulation
-- bootstrap from uninitialized ensemble:
-    - PM_sig(ds, control, metric=rmse, comparison=_m2m, bootstrap=500, sig=99)
-    - threshold to determine predictability horizon
-
-# TODO: make metrics non-dependent of prediction framework used
-Metrics (submit to functions as strings)
--------
-- mae: Mean Absolute Error
-- nmae: Normalized Ensemble Mean Absolute Error (perfect-model only)
-- mse: Mean Square Error (perfect-model only)
-- nev: Normalized Ensemble Variance (perfect-model only)
-- nmse: Normalized Ensemble Mean Square Error (perfect-model only)
-- msss: Mean Square Skill Score (perfect-model only)
-- ppp: Prognostic Potential Predictability (perfect-model only)
-- rmse:  Root-Mean Square Error
-- nrmse: Normalized Root-Mean Square Error (perfect-model only)
-- pearson_r: Anomaly correlation coefficient
-- uACC: unbiased ACC (perfect-model only)
-
-Comparisons (submit to functions as strings)
------------
-Perfect Model:
-- m2c: many forecasts vs. control truth
-- m2e: many forecasts vs. ensemble mean truth
-- m2m: many forecasts vs. many truths in turn
-- e2c: ensemble mean forecast vs. control truth
-
-Reference:
-- e2r: ensemble mean vs. reference
-- m2r: individual ensemble members vs. reference
-
-Additional Functions
---------
-- Diagnostic Potential Predictability (DPP)
-(Boer 2004, Resplandy 2015/Seferian 2018)
-- predictability horizon:
-    - bootstrapping limit
-
-
-Data Structure
---------------
-This module works on xr.Datasets with the following dimensions and coordinates:
-- 1D (Predictability of timelines of preprocessed regions):
-    - initialization : initialization months/years
-    - area : pre-processed region strings
-    - time : lead months/years from the initialization
-    - period : time averaging: yearmean, seasonal mean
-
-Example ds via load_dataset('PM_MPI-ESM-LR_ds'):
-<xarray.Dataset>
-Dimensions:                  (area: 14, initialization: 12, member: 10,
-                              period: 5, time: 20)
-
-Coordinates:
-  * initialization     (initialization) int64 3014 3023 3045 3061 3124 3139 ...
-  * area               (area) object 'global' 'North_Atlantic_SPG' ...
-  * time               (time) int64 1 2 3 4 5 6 ...
-  * period             (period) object 'DJF' 'JJA' 'MAM' 'SON' 'ym'
-Dimensions without coordinates: member
-Data variables:
-    tos               (period, time, area, initialization, member) float32 ...
-...
-
-- 3D (Predictability maps):
-    - initialization
-    - lon(y, x), lat(y, x)
-    - time (as in lead time)
-    - period (time averaging: yearmean, seasonal mean)
-
-Example via load_dataset('PM_MPI-ESM-LR_ds3d'):
-<xarray.Dataset>
-Dimensions:      (bnds: 2, initialization: 11, member: 9, x: 256, y: 220,
-                  time: 21)
-Coordinates:
-    lon          (y, x) float64 -47.25 -47.69 -48.12 ... 131.3 132.5 133.8
-    lat          (y, x) float64 76.36 76.3 76.24 76.17 ... -77.25 -77.39 -77.54
-  * initialization     (initialization) int64 3061 3124 3178 3023 ... 3228 3175
-  * time         (time) int64 1 2 3 4 5 ... 19 20
-Dimensions without coordinates: bnds, member, x, y
-Data variables:
-    tos          (time, initialization, member, y, x) float32
-    dask.array<shape=(21, 11, 9, 220, 256), chunksize=(1, 1, 1, 220, 256)>
-...
-
-This 3D example data is from curivlinear grid MPIOM (MPI Ocean Model)
-NetCDF output.
-The time dimensions is called 'time' and is in integer, not datetime[ns]
-"""
+"""Objects dealing with decadal prediction metrics."""
 import numpy as np
 import xarray as xr
 
@@ -112,12 +11,12 @@ from xskillscore import pearson_r_p_value
 from .stats import _check_xarray, _get_dims, z_significance
 import warnings
 import types
+
+
 # -------------------------------------------- #
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
 # -------------------------------------------- #
-
-
 def _shift(a, b, lag, dim='time'):
     """
     Helper function to return two shifted time series for applying statistics
@@ -139,28 +38,25 @@ def _shift(a, b, lag, dim='time'):
 
 def _control_for_reference_period(control, reference_period='MK',
                                   obs_years=40):
-    """
-    Modifies control according to knowledge approach.
+    """Modifies control according to knowledge approach.
 
-    Reference
-    ---------
-    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
-        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-        Journal of the Royal Meteorological Society 142, no. 695
-        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+    Args:
+        reference_period (str):
+            'MK' : maximum knowledge
+            'OP' : operational
+            'OP_full_length' : operational observational record length but keep
+                               full length of record.
+        obs_years (int): length of observational record.
 
-    args:
-    reference_period : str
-        'MK' : maximum knowledge
-        'OP' : operational
-        'OP_full_length' : operational observational record length but keep
-                           full length of record
-    obs_years : int
-        length of observational record
+    Returns:
+        Control with modifications applied.
 
-    return:
-        control
+    Reference:
+        * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia,Keith
+          Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+          Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+          Journal of the Royal Meteorological Society 142, no. 695
+          (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
     """
     if reference_period is 'MK':
         control = control
@@ -176,66 +72,112 @@ def _control_for_reference_period(control, reference_period='MK',
 
 
 def _get_variance(control, reference_period=None, time_length=None):
-    """
-    Get variance to normalize skill score.
+    """Get variance to normalize skill score.
 
     Args:
-    control
-    reference_period : str see _control_for_reference_period
-    time_length : int
-        smooth control by time_length before taking variance
+        control (xarray object): Control simulation.
+        reference_period (str): See _control_for_reference_period.
+        time_length (int): Number of time steps to smooth control by before
+                           taking variance.
+
     """
     if reference_period is not None and isinstance(time_length, int):
-        control = _control_for_reference_period(control,
-                                                reference_period=reference_period,
-                                                obs_years=time_length)
+        control = _control_for_reference_period(
+            control, reference_period=reference_period, obs_years=time_length)
         return control.var('time')
     else:
         return control.var('time')
 
 
 def _get_norm_factor(comparison):
-    """
-    Get normalization factor for ppp, nvar, nrmse.
-    Used in compute_perfect_model.
+    """Get normalization factor for PPP, nvar, nRMSE.
 
-    m2e gets smaller rmse's than m2m by design, see Seferian 2018 et al.
-    m2m, m2c-ensemble variance should be divided by 2 to get var(control)
+    Used in compute_perfect_model. Comparison 'm2e' gets smaller rmse's than
+    'm2m' by design, see Seferian et al. 2018. 'm2m', 'm2c' ensemble variance
+    is divided by 2 to get control variance.
+
+    Args:
+        comparison (function): comparison function.
+
+    Returns:
+        fac (int): normalization factor.
+
+    Raises:
+        ValueError: if comparison is not matching.
+
     """
     comparison_name = comparison.__name__
     if comparison_name in ['_m2e', '_e2c']:
-        return 1
+        fac = 1
+        return fac
     elif comparison_name in ['_m2c', '_m2m']:
-        return 2
+        fac = 2
+        return fac
     else:
         raise ValueError('specify comparison to get normalization factor.')
 
 
 def _drop_ensembles(ds, rmd_ensemble=[0]):
-    """Drop ensembles from ds."""
+    """Drop ensembles by name selection .sel(member=) from ds.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with ensemble dimension.
+        rmd_ensemble (list): list of ensemble names to be dropped. Default: [0]
+
+    Returns:
+        ds (xarray object): xr.Dataset/xr.DataArray with less ensembles.
+
+    Raises:
+        ValueError: if list items are not all in ds.ensemble.
+
+    """
     if all(ens in ds.initialization.values for ens in rmd_ensemble):
         ensemble_list = list(ds.initialization.values)
         for ens in rmd_ensemble:
             ensemble_list.remove(ens)
     else:
-        raise ValueError('select available ensemble starting years',
+        raise ValueError('select available ensembles only',
                          rmd_ensemble)
     return ds.sel(initialization=ensemble_list)
 
 
 def _drop_members(ds, rmd_member=[0]):
-    """Drop members by name selection .sel(member=) from ds."""
+    """Drop members by name selection .sel(member=) from ds.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member dimension
+        rmd_ensemble (list): list of members to be dropped. Default: [0]
+
+    Returns:
+        ds (xarray object): xr.Dataset/xr.DataArray with less members.
+
+    Raises:
+        ValueError: if list items are not all in ds.member
+
+    """
     if all(m in ds.member.values for m in rmd_member):
         member_list = list(ds.member.values)
         for ens in rmd_member:
             member_list.remove(ens)
     else:
-        raise ValueError('select available members', rmd_member)
+        raise ValueError('select available members only', rmd_member)
     return ds.sel(member=member_list)
 
 
 def _select_members_ensembles(ds, m=None, i=None):
-    """Subselect ensembles and members from ds."""
+    """Subselect ensembles and members from ds.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        m (list): list of members to select. Default: None
+        i (list): list of members to select. Default: None
+
+    Returns:
+        ds (xarray object): xr.Dataset/xr.DataArray with less members or
+                            ensembles.
+
+    """
     if m is None:
         m = ds.member.values
     if i is None:
@@ -245,9 +187,18 @@ def _select_members_ensembles(ds, m=None, i=None):
 
 def _stack_to_supervector(ds, new_dim='svd',
                           stacked_dims=('initialization', 'member')):
-    """
-    Stack all stacked_dims (likely initialization and member) dimensions into
-    one supervector dimension to perform metric over.
+    """Stack all stacked_dims (likely initialization and member) dimensions into one
+    supervector dimension to perform metric over.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        new_dim (str): name of new supervector dimension. Default: 'svd'
+        stacked_dims (set): dimensions to be stacked.
+
+    Returns:
+        ds (xarray object): xr.Dataset/xr.DataArray with stacked new_dim
+                            dimension.
     """
     return ds.stack({new_dim: stacked_dims})
 
@@ -256,19 +207,25 @@ def _stack_to_supervector(ds, new_dim='svd',
 # COMPARISONS
 # --------------------------------------------#
 def _get_comparison_function(comparison):
-    """
-    Similar to _get_metric_function. This converts a string comparison entry
-    from the user into an actual function for the package to interpret.
+    """Converts a string comparison entry from the user into an actual
+       function for the package to interpret.
 
     PERFECT MODEL:
-    m2m : Compare all members to all other members.
-    m2c : Compare all members to the control.
-    m2e : Compare all members to the ensemble mean.
-    e2c : Compare the ensemble mean to the control.
+    m2m: Compare all members to all other members.
+    m2c: Compare all members to the control.
+    m2e: Compare all members to the ensemble mean.
+    e2c: Compare the ensemble mean to the control.
 
     REFERENCE:
-    e2r : Compare the ensemble mean to the reference.
-    m2r : Compare each ensemble member to the reference.
+    e2r: Compare the ensemble mean to the reference.
+    m2r: Compare each ensemble member to the reference.
+
+    Args:
+        comparison (str): name of comparison.
+
+    Returns:
+        comparison (function): comparison function.
+
     """
     if comparison == 'm2m':
         comparison = '_m2m'
@@ -296,63 +253,104 @@ def _get_comparison_function(comparison):
 
 def _m2m(ds, supervector_dim='svd'):
     """
-    Create two supervectors to compare all members to all other members in turn
+    Create two supervectors to compare all members to all other members in turn.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        supervector_dim (str): name of new supervector dimension. Default: 'svd'
+
+    Returns:
+        forecast (xarray object): forecast.
+        reference (xarray object): reference.
+
     """
-    truth_list = []
-    fct_list = []
+    reference_list = []
+    forecast_list = []
     for m in ds.member.values:
-        # drop the member being truth
+        # drop the member being reference
         ds_reduced = _drop_members(ds, rmd_member=[m])
-        truth = ds.sel(member=m)
+        reference = ds.sel(member=m)
         for m2 in ds_reduced.member:
             for i in ds.initialization:
-                truth_list.append(truth.sel(initialization=i))
-                fct_list.append(ds_reduced.sel(member=m2, initialization=i))
-    truth = xr.concat(truth_list, supervector_dim)
-    fct = xr.concat(fct_list, supervector_dim)
-    return fct, truth
+                reference_list.append(reference.sel(initialization=i))
+                forecast_list.append(ds_reduced.sel(member=m2, initialization=i))
+    reference = xr.concat(reference_list, supervector_dim)
+    forecast = xr.concat(forecast_list, supervector_dim)
+    return forecast, reference
+
 
 
 def _m2e(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to ensemble mean.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        supervector_dim (str): name of new supervector dimension. Default: 'svd'
+
+    Returns:
+        forecast (xarray object): forecast.
+        reference (xarray object): reference.
+
     """
-    truth = ds.mean('member')
-    fct, truth = xr.broadcast(ds, truth)
-    fct = _stack_to_supervector(fct, new_dim=supervector_dim)
-    truth = _stack_to_supervector(truth, new_dim=supervector_dim)
-    return fct, truth
+    reference = ds.mean('member')
+    forecast, reference = xr.broadcast(ds, reference)
+    forecast = _stack_to_supervector(forecast, new_dim=supervector_dim)
+    reference = _stack_to_supervector(reference, new_dim=supervector_dim)
+    return forecast, reference
 
 
 def _m2c(ds, supervector_dim='svd', control_member=[0]):
     """
     Create two supervectors to compare all members to control.
 
-    control_member: list of one integer
-        index to be removed, default 0
-    """
-    truth = ds.isel(member=control_member).squeeze()
-    # drop the member being truth
-    ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    fct, truth = xr.broadcast(ds_dropped, truth)
-    fct = _stack_to_supervector(fct, new_dim=supervector_dim)
-    truth = _stack_to_supervector(truth, new_dim=supervector_dim)
-    return fct, truth
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        supervector_dim (str): name of new supervector dimension. Default: 'svd'
+        control_member: list of the one integer member serving as
+                        reference. Default 0
 
-    return fct, truth
+    Returns:
+        forecast (xarray object): forecast.
+        reference (xarray object): reference.
+
+    """
+    reference = ds.isel(member=control_member).squeeze()
+    # drop the member being reference
+    ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
+    forecast, reference = xr.broadcast(ds_dropped, reference)
+    forecast = _stack_to_supervector(forecast, new_dim=supervector_dim)
+    reference = _stack_to_supervector(reference, new_dim=supervector_dim)
+    return forecast, reference
+
+    return forecast, reference
 
 
 def _e2c(ds, supervector_dim='svd', control_member=[0]):
     """
     Create two supervectors to compare ensemble mean to control.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        supervector_dim (str): name of new supervector dimension. Default: 'svd'
+        control_member: list of the one integer member serving as
+                        reference. Default 0
+
+    Returns:
+        forecast (xarray object): forecast.
+        reference (xarray object): reference.
     """
-    truth = ds.isel(member=control_member).squeeze()
-    truth = truth.rename({'initialization': supervector_dim})
-    # drop the member being truth
+    reference = ds.isel(member=control_member).squeeze()
+    reference = reference.rename({'initialization': supervector_dim})
+    # drop the member being reference
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
-    fct = ds.mean('member')
-    fct = fct.rename({'initialization': supervector_dim})
-    return fct, truth
+    forecast = ds.mean('member')
+    forecast = forecast.rename({'initialization': supervector_dim})
+    return forecast, reference
 
 
 def _e2r(ds, reference):
@@ -360,13 +358,23 @@ def _e2r(ds, reference):
     For a reference-based decadal prediction ensemble. This compares the
     ensemble mean prediction to the reference (hindcast, simulation,
     observations).
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        reference (xarray object): reference xr.Dataset/xr.DataArray.
+
+    Returns:
+        forecast (xarray object): forecast.
+        reference (xarray object): reference.
+
     """
     if 'member' in _get_dims(ds):
         print("Taking ensemble mean...")
-        fct = ds.mean('member')
+        forecast = ds.mean('member')
     else:
-        fct = ds
-    return fct, reference
+        forecast = ds
+    return forecast, reference
 
 
 def _m2r(ds, reference):
@@ -374,6 +382,16 @@ def _m2r(ds, reference):
     For a reference-based decadal prediction ensemble. This compares each
     member individually to the reference (hindcast, simulation,
     observations).
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        reference (xarray object): reference xr.Dataset/xr.DataArray.
+
+    Returns:
+        forecast (xarray object): forecast.
+        reference (xarray object): reference.
+
     """
     # check that this contains more than one member
     if ('member' not in _get_dims(ds)) or (ds.member.size == 1):
@@ -381,12 +399,12 @@ def _m2r(ds, reference):
             more than one member. You might have input the ensemble mean here
             although asking for a member-to-reference comparison.""")
     else:
-        fct = ds
+        forecast = ds
     reference = reference.expand_dims('member')
-    nMember = fct.member.size
+    nMember = forecast.member.size
     reference = reference.isel(member=[0] * nMember)
-    reference['member'] = fct['member']
-    return fct, reference
+    reference['member'] = forecast['member']
+    return forecast, reference
 
 
 # --------------------------------------------#
@@ -396,8 +414,7 @@ def _m2r(ds, reference):
 def _get_metric_function(metric):
     """
     This allows the user to submit a string representing the desired function
-    to anything that takes a metric. The old format forced the user to import
-    an underscore function (which by definition we don't want).
+    to anything that takes a metric.
 
     Currently compatable with functions:
     * compute_persistence()
@@ -409,27 +426,21 @@ def _get_metric_function(metric):
     * rmse
     * mae
     * mse
-    * rmse_v
     * nrmse
-    * nev
-    * ppp
+    * nmae
+    * nmse
     * msss
-    * uACC
+    * uacc
 
-    Metrics
-    --------
-    pearson_r : 'pearson_r', 'pearsonr', 'pr'
-    rmse: 'rmse'
-    mae: 'mae'
-    mse: 'mse'
-    nrmse: 'mrmse'
-    nmse: 'nmse','nev'
-    ppp: 'ppp','msss'
-    uACC: 'uacc'
+    Args:
+        metric (str): name of metric.
 
-    Returns
-    --------
-    metric : function object of the metric.
+    Returns:
+        metric (function): function object of the metric.
+
+    Raises:
+        ValueError: if metric not implemented.
+
     """
     # catches issues with wrappers, etc. that actually submit the
     # proper underscore function
@@ -474,30 +485,39 @@ def _get_metric_function(metric):
 #       as used in a specific paper: def Seferian2018(ds, control):
 #       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
 def _ppp(ds, control, comparison, running=None, reference_period=None):
-    """
-    Prognostic Potential Predictability (PPP) metric.
+    """Prognostic Potential Predictability (PPP) metric.
 
-    Formula
-    -------
-    PPP = 1 - MSE / std_control
+    .. math:: PPP = 1 - \frac{MSE}{ \sigma_{control} \cdot fac}
+    Perfect forecast: 1
+    Climatology forecast: 0
 
-    References
-    ----------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+    References:
+      * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
         North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
         (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    - Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+      * Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
         Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
         Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
         4463–72. https://doi.org/10/d2qf62.
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
         Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
+        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
+        comparison (function): comparison function.
+        running (int): smoothing of control. Default: None (no smoothing).
+        reference_period (str): see _control_for_reference_period.
+
+    Returns:
+        ppp_skill (xarray object): skill of PPP.
+
     """
     supervector_dim = 'svd'
-    fct, truth = comparison(ds, supervector_dim)
-    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    forecast, reference = comparison(ds, supervector_dim)
+    mse_skill = _mse(forecast, reference, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
@@ -506,29 +526,40 @@ def _ppp(ds, control, comparison, running=None, reference_period=None):
 
 
 def _nrmse(ds, control, comparison, running=None, reference_period=None):
-    """
-    Normalized Root Mean Square Error (NRMSE) metric.
+    """Normalized Root Mean Square Error (NRMSE) metric.
 
-    Formula
-    -------
-    NRMSE = 1 - RMSE / std_control
+    .. math:: NRMSE = \frac{RMSE}{\sigma_{control} \cdot \sqrt{fac}
+                    = sqrt{ \frac{MSE}{ \sigma^2_{control} \cdot fac} }
+                    
+    Perfect forecast: 0
+    Climatology forecast: 1
 
-    References
-    ----------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+
+    References:
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
         Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
         Prediction: Potential versus Operational Seasonal Forecast Skill.”
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-    - Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+      * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
         Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
         Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
         Journal of the Royal Meteorological Society 142, no. 695
         (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
 
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
+        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
+        comparison (function): comparison function.
+        running (int): smoothing of control. Default: None (no smoothing).
+        reference_period (str): see _control_for_reference_period.
+
+    Returns:
+        nrmse_skill (xarray object): skill of NRMSE.
+
     """
     supervector_dim = 'svd'
-    fct, truth = comparison(ds, supervector_dim)
-    rmse_skill = _rmse(fct, truth, dim=supervector_dim)
+    forecast, reference = comparison(ds, supervector_dim)
+    rmse_skill = _rmse(forecast, reference, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
@@ -538,23 +569,32 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
 
 def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
-    Normalized Ensemble Measure Square Error (NMSE) metric.
+    Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV) metric.
 
-    Formula
-    -------
-    NMSE-SS = 1 - mse / var
 
-    Reference
-    ---------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+    .. math:: NMSE = NEV = frac{MSE}{\sigma^2_{control} \cdot fac}
+
+    Perfect forecast: 0
+    Climatology forecast: 1
+
+    Reference:
+    * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
       Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
       (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
 
-      NOTE: NMSE = - 1 - NEV
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
+        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
+        comparison (function): comparison function.
+        running (int): smoothing of control. Default: None (no smoothing).
+        reference_period (str): see _control_for_reference_period.
+
+    Returns:
+        nmse_skill (xarray object): skill of NMSE.
     """
     supervector_dim = 'svd'
-    fct, truth = comparison(ds, supervector_dim)
-    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    forecast, reference = comparison(ds, supervector_dim)
+    mse_skill = _mse(forecast, reference, dim=supervector_dim)
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
@@ -588,22 +628,30 @@ def _nmae(ds, control, comparison, running=None, reference_period=None):
     return nmse_skill
 
 
-def _uacc(fct, truth, control, running=None, reference_period=None):
+def _uacc(forecast, reference, control, running=None, reference_period=None):
     """
     Unbiased ACC (uACC) metric.
 
-    Formula
-    -------
-    - uACC = PPP ** .5 = MSSS ** .5
+    .. math::
+        uACC = \sqrt{PPP} = \sqrt{MSSS}
 
     Reference
-    ---------
-    - Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+    * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
       Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
       Prediction: Potential versus Operational Seasonal Forecast Skill.
       Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
+        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
+        comparison (function): comparison function.
+        running (int): smoothing of control. Default: None (no smoothing).
+        reference_period (str): see _control_for_reference_period.
+
+    Returns:
+        uacc_skill (xarray object): skill of uACC
     """
-    return np.sqrt(_ppp(fct, truth, control, running, reference_period))
+    return np.sqrt(_ppp(forecast, reference, control, running, reference_period))
 
 
 # --------------------------------------------#
@@ -617,26 +665,22 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
 
-    Parameters
-    ----------
-    ds, control : xr.DataArray or xr.Dataset with 'time' dimension (optional
-                  spatial coordinates)
-        input data
-    metric : function
-        metric from ['rmse', 'mae', 'pearson_r', 'mse', 'ppp', 'nev', 'nmae',
-                     'nmse', 'uACC', 'MSSS']
-    comparison : function
-        comparison from ['m2m', 'm2e', 'm2c', 'e2c']
-    running : int
-        Size of the running window for variance smoothing
-        (only optionally applicable to perfect-model metrics)
-    reference_period : str
+    Args:
+        ds (xarray object): ensemble with dimensions time and member.
+        control (xarray object): control with dimensions time.
+        metric (str): metric name see _get_metric_function.
+        comparison (str): comparison name see _get_comparison_function.
+        running (optional int): size of the running window for variance
+                                smoothing. Default: None (no smoothing)
+        reference_period (optional str): choice of reference period of control.
+                                Default: None (corresponds to MK approach)
 
+    Returns:
+        res (xarray object): skill score.
 
-    Returns
-    -------
-    res : xr.DataArray or xr.Dataset
-        skill score
+    Raises:
+        ValueError: if comarison not implemented.
+                    if metric not implemented.
     """
     supervector_dim = 'svd'
     comparison = _get_comparison_function(comparison)
@@ -645,8 +689,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
 
     metric = _get_metric_function(metric)
     if metric in [_pearson_r, _rmse, _mse, _mae]:
-        fct, truth = comparison(ds, supervector_dim)
-        res = metric(fct, truth, dim=supervector_dim)
+        forecast, reference = comparison(ds, supervector_dim)
+        res = metric(forecast, reference, dim=supervector_dim)
         return res
     # perfect-model only metrics
     elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
@@ -657,10 +701,10 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
 
 
 def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
-                      nlags=None, horizon=False, alpha=0.05, ci=90):
+                      nlags=None):
     """
     Compute a predictability skill score against some reference (hindcast,
-    assimilation, reconstruction, observations)
+    assimilation, reconstruction, observations).
 
     Note that if reference is the reconstruction, the output correlation
     coefficients are for potential predictability. If the reference is
@@ -668,43 +712,29 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
 
     Parameters
     ----------
-    ds : xarray object
-        Expected to follow package conventions (and should be an ensemble mean)
+    ds (xarray object):
+        Expected to follow package conventions:
         `initialization` : dim of initialization dates
         `time` : dim of lead years from those initializations
-        Additional dims can be lat, lon, depth, etc. but should not be
-        individual members.
-    reference : xarray object
-        reference output/data over same time period
-    metric : str (default 'pearson_r')
+        Additional dims can be lat, lon, depth.
+    reference (xarray object):
+        reference output/data over same time period.
+    metric (str):
         Metric used in comparing the decadal prediction ensemble with the
         reference.
-        * pearson_r
+        * pearson_r (Default)
         * rmse
         * mae
         * mse
-    comparison : str (default 'e2r')
+    comparison (str):
         How to compare the decadal prediction ensemble to the reference.
-        * e2r : ensemble mean to reference
+        * e2r : ensemble mean to reference (Default)
         * m2r : each member to the reference
-    nlags : int (default length of `time` dim)
-        How many lags to compute skill/potential predictability out to
-    horizon : (optional bool) If true, compute and return the predictability
-              horizon. This checks that (1) the initialized ensemble skill
-              correlations to the reference simulation are statistically
-              significant, and (2) that the resulting r-values are
-              significantly different from the persistence r-values.
-    alpha: (optional double) p-value significance to check for correlations
-           between initialized ensemble and reference simulation.
-    ci: (optional int) confidence level in comparing initialized skill to
-        persistence skill.
+    nlags (int): How many lags to compute skill/potential predictability out
+                 to. Default: length of `time` dim
 
-    Returns
-    -------
-    skill : xarray object
-        Predictability with main dimension `lag`
-    persistence : xarray object (if horizon is True)
-    horizon : xarray object (if horizon is True)
+    Returns:
+        skill (xarray object): Predictability with main dimension `lag`.
     """
     _check_xarray(ds)
     _check_xarray(reference)
@@ -712,44 +742,20 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     if comparison not in [_e2r, _m2r]:
         raise ValueError("""Please input either 'e2r' or 'm2r' for your
             comparison.""")
-    fct, reference = comparison(ds, reference)
+    forecast, reference = comparison(ds, reference)
     if nlags is None:
-        nlags = fct.time.size
+        nlags = forecast.time.size
     metric = _get_metric_function(metric)
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
             'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
-        a, b = _shift(fct.isel(time=i), reference, i, dim='initialization')
-        plag.append(metric(a, b, dim='initialization'))
-    skill = xr.concat(plag, 'time')
-    skill['time'] = np.arange(1, 1 + nlags)
-    if (horizon) & (metric == _pearson_r):
-        # NaN values throw warnings for p-value comparison, so just
-        # suppress that here.
-        p_value = []
-        for i in range(0, nlags):
-            a, b = _shift(fct.isel(time=i), reference, i, dim='initialization')
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                p_value.append(pearson_r_p_value(a, b, dim='initialization'))
-        p_value = xr.concat(p_value, 'time')
-        p_value['time'] = np.arange(1, 1 + nlags)
-    if horizon:
-        persistence = compute_persistence(reference, nlags, metric=metric)
-        if metric == _pearson_r:
-            horizon = xr_predictability_horizon(skill, persistence,
-                                                limit='upper',
-                                                p_values=p_value,
-                                                N=reference.initialization.size,
-                                                alpha=alpha, ci=ci)
-        else:
-            horizon = xr_predictability_horizon(skill, persistence,
-                                                limit='lower')
-        return skill, persistence, horizon
-    else:
-        return skill
+        a, b = _shift(forecast.isel(time=i), reference, i, dim='ensemble')
+        plag.append(metric(a, b, dim='ensemble'))
+    skill = xr.concat(plag, 'lead time')
+    skill['lead time'] = np.arange(1, 1 + nlags)
+    return skill
 
 
 def compute_persistence(reference, nlags, metric='pearson_r',
@@ -769,29 +775,24 @@ def compute_persistence(reference, nlags, metric='pearson_r',
     * mse
     * mae
 
-    Parameters
-    ---------
-    reference : xarray object
-        The reference time series over which to compute persistence.
-    nlags : int
-        Number of lags to compute persistence to.
-    metric : str (default 'pearson_r')
-        Metric to apply at each lag for the persistence computation. Choose
-        from 'pearson_r' or 'rmse'.
-    dim : str (default 'initialization')
-        Dimension over which to compute persistence forecast.
-
-    Returns
-    -------
-    pers : xarray object
-        Results of persistence forecast with the input metric applied.
+    Reference:
+    * Chapter 8 (Short-Term Climate Prediction) in
+        Van den Dool, Huug. Empirical methods in short-term climate prediction.
+        Oxford University Press, 2007.
 
 
-    References
-    ----------
-    Chapter 8 (Short-Term Climate Prediction) in
-    Van den Dool, Huug. Empirical methods in short-term climate prediction.
-    Oxford University Press, 2007.
+    Args:
+        reference (xarray object): The reference time series over which to
+                                   compute persistence.
+        nlags (int): Number of lags to compute persistence to.
+        metric (str): Metric name to apply at each lag for the persistence
+                      computation. Default: 'pearson_r'
+        dim (str): Dimension over which to compute persistence forecast.
+                   Default: 'ensemble'
+
+    Returns:
+        pers (xarray object): Results of persistence forecast with the input
+                              metric applied.
     """
     _check_xarray(reference)
     metric = _get_metric_function(metric)
@@ -811,117 +812,6 @@ def compute_persistence(reference, nlags, metric='pearson_r',
 
 
 # --------------------------------------------#
-# Diagnostic Potential Predictability (DPP)
-# Functions related to DPP from Boer et al.
-# --------------------------------------------#
-def DPP(ds, m=10, chunk=True, var_all_e=False):
-    """
-    Calculate Diagnostic Potential Predictability (DPP) as potentially
-    predictable variance fraction (ppvf) in Boer 2004.
-
-    Note: Different way of calculating it than in Seferian 2018 or
-    Resplandy 2015, but quite similar results.
-
-    References
-    ----------
-    - Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
-        Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004):
-        29–44. https://doi.org/10/csjjbh.
-    - Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and
-        O2 Fluxes: What Can We Learn from Centuries-Long Climate Models
-        Simulations?” Journal of Geophysical Research: Oceans 120, no. 1
-        (January 2015): 384–404. https://doi.org/10/f63c3h.
-    - Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the
-        Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical
-        Research Letters, March 15, 2018. https://doi.org/10/gdb424.
-
-    Parameters
-    ----------
-    ds : DataArray with time dimension (optional spatial coordinates)
-    m : int
-        separation time scale in years between predictable low-freq
-        component and high-freq noise
-    chunk : boolean
-        Whether chunking is applied. Default: True.
-        If False, then uses Resplandy 2015 / Seferian 2018 method.
-
-    Returns
-    -------
-    DPP : DataArray as ds without time dimension
-
-    Example 1D
-    ----------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    ds_DPPm10 = et.prediction.DPP(ds,m=10,chunk=True)
-
-    """
-    # TODO: rename or find xr equiv
-    def _chunking(ds, number_chunks=False, chunk_length=False):
-        """
-        Separate data into chunks and reshapes chunks in a c dimension.
-
-        Specify either the number chunks or the length of chunks.
-        Needed for DPP.
-
-        Parameters
-        ----------
-        ds : DataArray with time dimension (optional spatial coordinates)
-            Input data
-        number_chunks : boolean
-            Number of chunks in the return data
-        chunk_length : boolean
-            Length of chunks
-
-        Returns
-        -------
-        c : DataArray
-            Output data as ds, but with additional dimension c and
-            all same time coordinates
-        """
-        if number_chunks and not chunk_length:
-            chunk_length = np.floor(ds['time'].size / number_chunks)
-            cmin = int(ds['time'].min())
-        elif not number_chunks and chunk_length:
-            cmin = int(ds['time'].min())
-            number_chunks = int(np.floor(ds['time'].size / chunk_length))
-        else:
-            raise ValueError('set number_chunks or chunk_length to True')
-        c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
-        c = c.expand_dims('c')
-        c['c'] = [0]
-        for i in range(1, number_chunks):
-            c2 = ds.sel(time=slice(cmin + chunk_length * i,
-                                   cmin + (i + 1) * chunk_length - 1))
-            c2 = c2.expand_dims('c')
-            c2['c'] = [i]
-            c2['time'] = c['time']
-            c = xr.concat([c, c2], 'c')
-        return c
-
-    if not chunk:
-        s2v = ds.rolling(time=m).mean().var('time')
-        s2e = (ds - ds.rolling(time=m).mean()).var('time')
-        s2 = s2v + s2e
-    if chunk:
-        # first chunk
-        chunked_means = _chunking(
-            ds, chunk_length=m).mean('time')
-        # sub means in chunks
-        chunked_deviations = _chunking(
-            ds, chunk_length=m) - chunked_means
-        s2v = chunked_means.var('c')
-        if var_all_e:
-            s2e = chunked_deviations.var(['time', 'c'])
-        else:
-            s2e = chunked_deviations.var('time').mean('c')
-        s2 = s2v + s2e
-    DPP = (s2v - s2 / (m)) / (s2)
-    return DPP
-
-
-# --------------------------------------------#
 # BOOTSTRAPPING
 # Functions for sampling an ensemble
 # --------------------------------------------#
@@ -929,26 +819,16 @@ def _pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
-    Needed for bootstrapping confidence intervals of a metric.
-    Takes randomly 20yr segments from control and rearranges them into ensemble
-    and member dimensions.
+    Needed for block bootstrapping confidence intervals of a metric in perfect
+    model framework. Takes randomly segments of length of ensemble dataset from
+    control and rearranges them into ensemble and member dimensions.
 
-    Parameters
-    ----------
-    control : xr.DataArray with 'time' dimension
-        Input ensemble data
+    Args:
+        ds (xarray object): ensemble simulation.
+        control (xarray object): control simulation.
 
-    Returns
-    -------
-    ds_e : xr.DataArray with time, initialization, member dimension
-        pseudo-ensemble generated from control run
-
-    Example
-    -------
-    import esmtools as et
-    ds = et.prediction.load_dataset('PM_MPI-ESM-LR_ds')
-    control = et.prediction.load_dataset('PM_MPI-ESM-LR_control')
-    ds_e = et.prediction.pseudo_ens(control,ds)
+    Returns:
+        ds_e (xarray object): pseudo-ensemble generated from control run.
     """
     nens = ds.initialization.size
     nmember = ds.member.size
@@ -976,26 +856,20 @@ def _pseudo_ens(ds, control):
 def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
                             reference_period='MK', sig=95, bootstrap=30):
     """
-    Return sig-th percentile of function to be choosen from pseudo ensemble
+    Return sig-th percentile of metric, comparison from pseudo ensemble
     generated from control.
 
-    Parameters
-    ----------
-    control : xr.DataArray/Dataset with time dimension
-        input control data
-    ds : xr.DataArray/Dataset with time, initialization and member dimensions
-        input ensemble data
-    sig: int or list
-        Significance level for bootstrapping from pseudo ensemble
-    bootstrap: int
-        number of iterations
+    Args:
+        ds (xarray object): ensemble simulation.
+        control (xarray object): control simulation.
+        metric (str): metric name.
+        comparison (str): comparison name.
+        reference_period (optional str): see _control_for_reference_period.
+        sig (int or list): significance level for bootstrapping.
+        bootstrap (int): number of iterations.
 
-    Returns
-    -------
-    sig_level : xr.DataArray/Dataset as inputs
-        significance level without time, initialization and member dimensions
-        as many sig_level as listitems in sig
-
+    Returns:
+        sig_level (xarray object): as many sig_levels as list items in sig.
     """
     _check_xarray(ds)
     _check_xarray(control)
@@ -1023,17 +897,12 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
                               perfect_model=False, p_values=None, N=None,
                               alpha=0.05, ci=90):
     """
-    Get predictability horizons of dataset from skill and
-    threshold dataset.
+    Get predictability horizons for skill better than threshold.
 
-    Inputs:
-        skill: (xarray object) skill (e.g., ACC) at different lead times.
-        threshold: (xarray object) skill for persistence or uninitialized
-                   ensemble.
-        limit: (optional str) If 'upper' check horizon for correlation
-               coefficients by testing lead time to which the skill
-               beats out the threshold. If 'lower', check horizon for which
-               error (e.g., MAE) is lower than threshold.
+    Args:
+        skill (xarray object): skill.
+        threshold (xarray object): threshold.
+        limit (str): bounds for comparison. Default: 'upper'.
         perfect_model: (optional bool) If True, do not consider p values, N,
                        etc.
         p_values: (optional xarray object) If using 'upper' limit, input
@@ -1041,7 +910,7 @@ def xr_predictability_horizon(skill, threshold, limit='upper',
                   contains p-values for the skill correlatons.
 
     Returns:
-        predictability horizon reduced by the lead time dimension.
+        ph (xarray object)
     """
     if (limit is 'upper') and (not perfect_model):
         if (p_values is None) | (p_values.dims != skill.dims):

@@ -4,7 +4,6 @@ import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
-
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -412,3 +411,46 @@ def DPP(ds, m=10, chunk=True):
         s2 = s2v + s2e
     dpp = (s2v - s2 / (m)) / s2
     return dpp
+
+# -------
+# Z SCORE
+# -------
+def _z_score(ci):
+    """Returns critical z score given a confidence interval
+
+    Source: https://stackoverflow.com/questions/20864847/
+            probability-to-z-score-and-vice-versa-in-python
+    """
+    diff = (100 - ci) / 2
+    return norm.ppf((100 - diff) / 100)
+
+
+def z_significance(r1, r2, N, ci=90):
+    """Computes the z test statistic for two ACC time series, e.g. an
+       initialized ensemble ACC and persistence forecast ACC.
+
+    Inputs:
+        r1, r2: (xarray objects) time series, grids, etc. of pearson
+                correlation coefficients between the two prediction systems
+                of interest.
+        N: (int) length of original time series being correlated.
+        ci: (optional int) confidence level for z-statistic test
+
+    Returns:
+        Boolean array of same dimensions as input where True means r1 is
+        significantly different from r2 at ci.
+
+    Reference:
+        https://www.statisticssolutions.com/comparing-correlation-coefficients/
+    """
+    def _r_to_z(r):
+        """Fisher's r to z transformation"""
+        return 0.5 * (np.log(1 + r) - np.log(1 - r))
+
+    z1, z2 = _r_to_z(r1), _r_to_z(r2)
+    difference = np.abs(z1 - z2)
+    zo = difference / (np.sqrt(2*(1 / (N - 3))))
+    confidence = np.zeros_like(zo)
+    confidence[:] = _z_score(ci)
+    sig = xr.DataArray(zo > confidence)
+    return sig

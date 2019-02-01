@@ -8,8 +8,7 @@ DESCRIPTION = 'An xarray wrapper for decadal climate prediction.'
 URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
 INSTALL_REQUIRES = ['numpy', 'pandas', 'xarray', 'scipy', 'xskillscore']
-# TODO: Add testing
-# TESTS_REQUIRE = ['pytest']
+TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
 
 setup(name=DISTNAME,
@@ -24,5 +23,6 @@ setup(name=DISTNAME,
       # NOTE: This will be deprecated, so either need to move away from non-pypi packages or find another solution.
       # Needed for dependencies. Currently do not like the pyfinance or xskillscore dependency.
       install_requires=INSTALL_REQUIRES,
-      python_requires=PYTHON_REQUIRE
+      python_requires=PYTHON_REQUIRE,
+      tests_require=TESTS_REQUIRE,
      )

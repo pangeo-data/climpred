@@ -6,8 +6,11 @@ from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
+from xskillscore import pearson_r_p_value
 
-from .stats import _check_xarray, _get_dims
+from .stats import _check_xarray, _get_dims, z_significance
+import warnings
+import types
 
 
 # -------------------------------------------- #
@@ -128,14 +131,14 @@ def _drop_ensembles(ds, rmd_ensemble=[0]):
         ValueError: if list items are not all in ds.ensemble.
 
     """
-    if all(ens in ds.ensemble.values for ens in rmd_ensemble):
-        ensemble_list = list(ds.ensemble.values)
+    if all(ens in ds.initialization.values for ens in rmd_ensemble):
+        ensemble_list = list(ds.initialization.values)
         for ens in rmd_ensemble:
             ensemble_list.remove(ens)
     else:
         raise ValueError('select available ensembles only',
                          rmd_ensemble)
-    return ds.sel(ensemble=ensemble_list)
+    return ds.sel(initialization=ensemble_list)
 
 
 def _drop_members(ds, rmd_member=[0]):
@@ -161,14 +164,14 @@ def _drop_members(ds, rmd_member=[0]):
     return ds.sel(member=member_list)
 
 
-def _select_members_ensembles(ds, m=None, e=None):
+def _select_members_ensembles(ds, m=None, i=None):
     """Subselect ensembles and members from ds.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         m (list): list of members to select. Default: None
-        e (list): list of members to select. Default: None
+        i (list): list of members to select. Default: None
 
     Returns:
         ds (xarray object): xr.Dataset/xr.DataArray with less members or
@@ -177,14 +180,14 @@ def _select_members_ensembles(ds, m=None, e=None):
     """
     if m is None:
         m = ds.member.values
-    if e is None:
-        e = ds.ensemble.values
-    return ds.sel(member=m, ensemble=e)
+    if i is None:
+        i = ds.initialization.values
+    return ds.sel(member=m, initialization=i)
 
 
 def _stack_to_supervector(ds, new_dim='svd',
-                          stacked_dims=('ensemble', 'member')):
-    """Stack all stacked_dims (likely ensemble and member) dimensions into one
+                          stacked_dims=('initialization', 'member')):
+    """Stack all stacked_dims (likely initialization and member) dimensions into one
     supervector dimension to perform metric over.
 
     Args:
@@ -196,7 +199,6 @@ def _stack_to_supervector(ds, new_dim='svd',
     Returns:
         ds (xarray object): xr.Dataset/xr.DataArray with stacked new_dim
                             dimension.
-
     """
     return ds.stack({new_dim: stacked_dims})
 
@@ -270,12 +272,13 @@ def _m2m(ds, supervector_dim='svd'):
         ds_reduced = _drop_members(ds, rmd_member=[m])
         reference = ds.sel(member=m)
         for m2 in ds_reduced.member:
-            for e in ds.ensemble:
-                reference_list.append(reference.sel(ensemble=e))
-                forecast_list.append(ds_reduced.sel(member=m2, ensemble=e))
+            for i in ds.initialization:
+                reference_list.append(reference.sel(initialization=i))
+                forecast_list.append(ds_reduced.sel(member=m2, initialization=i))
     reference = xr.concat(reference_list, supervector_dim)
     forecast = xr.concat(forecast_list, supervector_dim)
     return forecast, reference
+
 
 
 def _m2e(ds, supervector_dim='svd'):
@@ -342,11 +345,11 @@ def _e2c(ds, supervector_dim='svd', control_member=[0]):
         reference (xarray object): reference.
     """
     reference = ds.isel(member=control_member).squeeze()
-    reference = reference.rename({'ensemble': supervector_dim})
+    reference = reference.rename({'initialization': supervector_dim})
     # drop the member being reference
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     forecast = ds.mean('member')
-    forecast = forecast.rename({'ensemble': supervector_dim})
+    forecast = forecast.rename({'initialization': supervector_dim})
     return forecast, reference
 
 
@@ -439,36 +442,43 @@ def _get_metric_function(metric):
         ValueError: if metric not implemented.
 
     """
-    pearson = ['pr', 'pearsonr', 'pearson_r']
-    if metric in pearson:
-        metric = '_pearson_r'
-    elif metric == 'rmse':
-        metric = '_rmse'
-    elif metric == 'mae':
-        metric = '_mae'
-    elif metric.lower() == 'mse':
-        metric = '_mse'
-    elif metric.lower() == 'nrmse':
-        metric = '_nrmse'
-    elif metric.lower() in ['nev', 'nmse']:
-        metric = '_nmse'
-    elif metric.lower() in ['ppp', 'msss']:
-        metric = '_ppp'
-    elif metric.lower() == 'uacc':
-        metric = '_uacc'
+    # catches issues with wrappers, etc. that actually submit the
+    # proper underscore function
+    if type(metric) == types.FunctionType:
+        return metric
     else:
-        raise ValueError("""Please supply a metric from the following list:
-            'pearson_r'
-            'rmse'
-            'mse'
-            'nrmse'
-            'nev'
-            'nmse'
-            'ppp'
-            'msss'
-            'uacc'
-            """)
-    return eval(metric)
+        pearson = ['pr', 'pearsonr', 'pearson_r']
+        if metric in pearson:
+            metric = '_pearson_r'
+        elif metric == 'rmse':
+            metric = '_rmse'
+        elif metric == 'mae':
+            metric = '_mae'
+        elif metric.lower() == 'mse':
+            metric = '_mse'
+        elif metric.lower() == 'nrmse':
+            metric = '_nrmse'
+        elif metric.lower() in ['nev', 'nmse']:
+            metric = '_nmse'
+        elif metric.lower() in ['ppp', 'msss']:
+            metric = '_ppp'
+        elif metric.lower() == 'nmae':
+            metric = '_nmae'
+        elif metric.lower() == 'uacc':
+            metric = '_uacc'
+        else:
+            raise ValueError("""Please supply a metric from the following list:
+                'pearson_r'
+                'rmse'
+                'mse'
+                'nrmse'
+                'nev'
+                'nmse'
+                'ppp'
+                'msss'
+                'uacc'
+                """)
+        return eval(metric)
 
 
 # TODO: Do we need wrappers or should we rather create wrappers for skill score
@@ -520,8 +530,10 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
 
     .. math:: NRMSE = \frac{RMSE}{\sigma_{control} \cdot \sqrt{fac}
                     = sqrt{ \frac{MSE}{ \sigma^2_{control} \cdot fac} }
+                    
     Perfect forecast: 0
     Climatology forecast: 1
+
 
     References:
       * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
@@ -551,13 +563,14 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
+    nrmse_skill = 1 - rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
 
 
 def _nmse(ds, control, comparison, running=None, reference_period=None):
     """
     Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV) metric.
+
 
     .. math:: NMSE = NEV = frac{MSE}{\sigma^2_{control} \cdot fac}
 
@@ -578,7 +591,6 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
 
     Returns:
         nmse_skill (xarray object): skill of NMSE.
-
     """
     supervector_dim = 'svd'
     forecast, reference = comparison(ds, supervector_dim)
@@ -586,7 +598,33 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     var = _get_variance(control, time_length=running,
                         reference_period=reference_period)
     fac = _get_norm_factor(comparison)
-    nmse_skill = mse_skill / var / fac
+    nmse_skill = 1 - mse_skill / var / fac
+    return nmse_skill
+
+
+def _nmae(ds, control, comparison, running=None, reference_period=None):
+    """
+    Normalized Ensemble Mean Absolute Error metric.
+
+    Formula
+    -------
+    NMAE-SS = 1 - mse / var
+
+    Reference
+    ---------
+    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
+      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+
+      NOTE: NMSE = - 1 - NEV
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    mse_skill = _mse(fct, truth, dim=supervector_dim)
+    var = _get_variance(control, time_length=running,
+                        reference_period=reference_period)
+    fac = _get_norm_factor(comparison)
+    nmse_skill = 1 - mse_skill / var / fac
     return nmse_skill
 
 
@@ -643,7 +681,6 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
     Raises:
         ValueError: if comarison not implemented.
                     if metric not implemented.
-
     """
     supervector_dim = 'svd'
     comparison = _get_comparison_function(comparison)
@@ -655,7 +692,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         forecast, reference = comparison(ds, supervector_dim)
         res = metric(forecast, reference, dim=supervector_dim)
         return res
-    elif metric in [_nrmse, _nmse, _ppp, _uacc]:  # perfect-model only metrics
+    # perfect-model only metrics
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:
@@ -676,7 +714,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     ----------
     ds (xarray object):
         Expected to follow package conventions:
-        `ensemble` : dim of initialization dates
+        `initialization` : dim of initialization dates
         `time` : dim of lead years from those initializations
         Additional dims can be lat, lon, depth.
     reference (xarray object):
@@ -720,7 +758,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
     return skill
 
 
-def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
+def compute_persistence(reference, nlags, metric='pearson_r',
+                        dim='initialization'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or control run.
@@ -754,7 +793,6 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     Returns:
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
-
     """
     _check_xarray(reference)
     metric = _get_metric_function(metric)
@@ -768,8 +806,8 @@ def compute_persistence(reference, nlags, metric='pearson_r', dim='ensemble'):
     for i in range(1, 1 + nlags):
         a, b = _shift(reference, reference, i, dim=dim)
         plag.append(metric(a, b, dim=dim))
-    pers = xr.concat(plag, 'lead time')
-    pers['lead time'] = np.arange(1, 1 + nlags)
+    pers = xr.concat(plag, 'time')
+    pers['time'] = np.arange(1, 1 + nlags)
     return pers
 
 
@@ -791,26 +829,28 @@ def _pseudo_ens(ds, control):
 
     Returns:
         ds_e (xarray object): pseudo-ensemble generated from control run.
-
     """
-    nens = ds.ensemble.size
+    nens = ds.initialization.size
     nmember = ds.member.size
     length = ds.time.size
-    c_start = control['time'].min()
-    c_end = control['time'].max()
+    c_start = 0
+    c_end = control['time'].size
     time = ds['time']
 
-    def sel_years(control, year_s, m=None, length=length):
-        new = control.sel(time=slice(year_s, year_s + length - 1))
-        new['time'] = time
+    def isel_years(control, year_s, m=None, length=length):
+        new = control.isel(time=slice(year_s, year_s + length - 0))
+        if isinstance(new, xr.DataArray):
+            new['time'] = time
+        elif isinstance(new, xr.Dataset):
+            new = new.assign(time=time)
         return new
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat([sel_years(control, start)
+        return xr.concat([isel_years(control, start)
                           for start in startlist], 'member')
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
-                     'ensemble')
+                     'initialization')
 
 
 def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
@@ -830,7 +870,6 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
 
     Returns:
         sig_level (xarray object): as many sig_levels as list items in sig.
-
     """
     _check_xarray(ds)
     _check_xarray(control)
@@ -854,7 +893,9 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
 # --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
-def xr_predictability_horizon(skill, threshold, limit='upper'):
+def xr_predictability_horizon(skill, threshold, limit='upper',
+                              perfect_model=False, p_values=None, N=None,
+                              alpha=0.05, ci=90):
     """
     Get predictability horizons for skill better than threshold.
 
@@ -862,18 +903,40 @@ def xr_predictability_horizon(skill, threshold, limit='upper'):
         skill (xarray object): skill.
         threshold (xarray object): threshold.
         limit (str): bounds for comparison. Default: 'upper'.
+        perfect_model: (optional bool) If True, do not consider p values, N,
+                       etc.
+        p_values: (optional xarray object) If using 'upper' limit, input
+                  a DataArray/Dataset of the same dimensions as skill that
+                  contains p-values for the skill correlatons.
 
     Returns:
         ph (xarray object)
-
     """
-    if limit is 'upper':
-        ph = (skill > threshold).argmin('time')
+    if (limit is 'upper') and (not perfect_model):
+        if (p_values is None) | (p_values.dims != skill.dims):
+            raise ValueError("""Please submit an xarray object of the same
+                dimensions as `skill` that contains p-values for the skill
+                correlatons.""")
+        if N is None:
+            raise ValueError("""Please submit N, the length of the original
+                time series being correlated.""")
+        sig = z_significance(skill, threshold, N, ci)
+        ph = ((p_values < alpha) & (sig)).argmin('time')
         # where ph not reached, set max time
+        ph_not_reached = ((p_values < alpha) & (sig)).all('time')
+    elif (limit is 'upper') and (perfect_model):
+        ph = (skill > threshold).argmin('time')
         ph_not_reached = (skill > threshold).all('time')
     elif limit is 'lower':
         ph = (skill < threshold).argmin('time')
         # where ph not reached, set max time
         ph_not_reached = (skill < threshold).all('time')
+    else:
+        raise ValueError("""Please either submit 'upper' or 'lower' for the
+            limit keyword.""")
     ph = ph.where(~ph_not_reached, other=skill['time'].max())
+    # mask out any initial NaNs (land, masked out regions, etc.)
+    mask = np.asarray(skill.isel({'time': 0}))
+    mask = np.isnan(mask)
+    ph = ph.where(~mask, np.nan)
     return ph

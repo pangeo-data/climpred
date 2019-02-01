@@ -18,12 +18,13 @@ def PM_da_ds():
     lats = np.arange(4)
     lons = np.arange(3)
     member = np.arange(3)
-    ensemble = np.arange(3)
+    initialization = np.arange(3)
     data = np.random.rand(len(dates), len(
-        lats), len(lons), len(member), len(ensemble))
+        lats), len(lons), len(member), len(initialization))
     return xr.DataArray(data,
-                        coords=[dates, lats, lons, member, ensemble],
-                        dims=['time', 'lat', 'lon', 'member', 'ensemble'])
+                        coords=[dates, lats, lons, member, initialization],
+                        dims=['time', 'lat', 'lon', 'member',
+                              'initialization'])
 
 
 @pytest.fixture
@@ -43,15 +44,16 @@ def PM_ds_ds():
     lats = np.arange(4)
     lons = np.arange(3)
     member = np.arange(3)
-    ensemble = np.arange(3)
+    initialization = np.arange(3)
     data = np.random.rand(len(dates), len(
-        lats), len(lons), len(member), len(ensemble))
+        lats), len(lons), len(member), len(initialization))
     return xr.Dataset({'varname1': (['time', 'lat', 'lon', 'member',
-                                     'ensemble'], data),
+                                     'initialization'], data),
                        'varname2': (['time', 'lat', 'lon', 'member',
-                                     'ensemble'], 2 * data)},
+                                     'initialization'], 2 * data)},
                       coords={'time': dates, 'lat': lats, 'lon': lons,
-                              'member': member, 'ensemble': ensemble})
+                              'member': member,
+                              'initialization': initialization})
 
 
 @pytest.fixture

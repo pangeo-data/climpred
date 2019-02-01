@@ -1,35 +1,9 @@
-"""
-Objects dealing with timeseries and ensemble statistics. All functions will
-auto-check for type DataArray. If it is a DataArray, it will return a type
-DataArray to ensure .apply() function from xarray can be applied.
-
-Time Series
------------
-`xr_corr` : Computes pearsonr between two time series accounting for
-            autocorrelation.
-`xr_rm_poly` : Returns time series with polynomial fit removed.
-`xr_rm_trend` : Returns detrended (first order) time series.
-`xr_varweighted_mean_period` : Calculates the variance weighted mean period of
-                               time series.
-`xr_autocorr` : Calculates the autocorrelation of time series over some lag.
-`xr_tau_d` : Calculates the decorrelation time of a time series.
-
-Z Scores
---------
-`_z_score`: Returns the z score at a particular confidence.
-`z_significance`: Computes statistical significance between two correlation
-coefficients using Fisher's r to z conversion.
-
-Generate Time Series Data
--------------------------
-`create_power_spectrum` : Creates power spectrum with CI for a given pd.series.
-"""
+"""Objects dealing with timeseries and ensemble statistics."""
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
-from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -38,14 +12,7 @@ from xskillscore import pearson_r, pearson_r_p_value
 # Should only be used internally by esmtools.
 # --------------------------------------------#
 def _check_xarray(x):
-    """
-    Check if the object being submitted to a given function is either a
-    Dataset or DataArray. This is important since `esmtools` is built as an
-    xarray wrapper.
-
-    TODO: Move this to a generalized util.py module with any other functions
-    that are being called in other submodules.
-    """
+    """Check if the object being submitted is either a Dataset or DataArray."""
     if not (isinstance(x, xr.DataArray) or isinstance(x, xr.Dataset)):
         typecheck = type(x)
         raise IOError(f"""The input data is not an xarray object (an xarray
@@ -57,32 +24,14 @@ def _check_xarray(x):
 
 
 def _get_coords(da):
-    """
-    Simple function to retrieve dimensions from a given dataset/dataarray.
-
-    Currently returns as a list, but can add keyword to select tuple or
-    list if desired for any reason.
-    """
     return list(da.coords)
 
 
 def _get_dims(da):
-    """
-    Simple function to retrieve dimensions from a given dataset/datarray.
-
-    Currently returns as a list, but can add keyword to select tuple or
-    list if desired for any reason.
-    """
     return list(da.dims)
 
 
 def _get_vars(ds):
-    """
-    Simple function to retrieve variables from a given dataset.
-
-    Currently returns as a list, but can add keyword to select tuple or
-    list if desired for any reason.
-    """
     return list(ds.data_vars)
 
 
@@ -91,52 +40,37 @@ def _get_vars(ds):
 # Functions related to time series.
 # ----------------------------------#
 def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
-    """
-    Computes the Pearson product-momment coefficient of linear correlation.
-    (See xr_autocorr for autocorrelation/lag for one time series)
+    """Computes the Pearson product-moment coefficient of linear correlation.
 
     This version calculates the effective degrees of freedom, accounting
     for autocorrelation within each time series that could fluff the
     significance of the correlation.
 
-    NOTE: If lag is not zero, x predicts y. In other words, the time series for
-    x is stationary, and y slides to the left. Or, y stays in place and x
-    slides to the right.
+    References:
+        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
+          Vol. 100. Academic press, 2011.
+        * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
+          Annular Mode on Southern Ocean circulation and biology." Geophysical
+          Research Letters 32.11 (2005).
 
-    This function is written to accept a dataset of arbitrary number of
-    dimensions (e.g., lat, lon, depth).
+    Todo:
+      * Test and adapt for xr.Datasets
 
-    TODO: Add functionality for an ensemble.
+    Args:
+        x (xarray object): Independent variable time series or grid of time
+                           series.
+        y (xarray object): Dependent variable time series or grid of time
+                           series
+        dim (optional str): Correlation dimension
+        lag (optional int): Lag to apply to correlaton, with x predicting y.
+        two_sided (optonal bool): If True, compute a two-sided t-test.
+        return_p (optional bool): If True, return correlation coefficients
+                                  as well as p values.
+    Returns:
+        Pearson correlation coefficients
 
-    Parameters
-    ----------
-    x, y : xarray DataArray
-        time series being correlated (can be multi-dimensional)
-    dim : str (default 'time')
-        Correlation dimension
-    lag : int (default 0)
-        Lag to apply to correlation, with x predicting y.
-    two_sided : boolean (default True)
-        If true, compute a two-sided t-test
-    return_p : boolean (default False)
-        If true, return both r and p
+        If return_p True, associated p values.
 
-    Returns
-    -------
-    r : correlation coefficient
-    p : p-value accounting for autocorrelation (if return_p True)
-
-    References (for dealing with autocorrelation):
-    ----------
-    1. Wilks, Daniel S. Statistical methods in the atmospheric sciences.
-    Vol. 100. Academic press, 2011.
-    2. Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
-    Annular Mode on Southern Ocean circulation and biology." Geophysical
-    Research Letters 32.11 (2005).
-    3. Brady, R. X., Lovenduski, N. S., Alexander, M. A., Jacox, M., and
-    Gruber, N.: On the role of climate modes in modulating the air-sea CO2
-    fluxes in Eastern Boundary Upwelling Systems, Biogeosciences Discuss.,
-    https://doi.org/10.5194/bg-2018-415, in review, 2018.
     """
     _check_xarray(x)
     _check_xarray(y)
@@ -164,10 +98,17 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
 
 
 def _xr_eff_p_value(x, y, r, dim, two_sided):
-    """
-    Computes the p_value accounting for autocorrelation in time series.
+    """Computes p values accounting for autocorrelation in time series.
 
-    ds : dataset with time series being correlated.
+    Args:
+        x (xarray object): Independent time series.
+        y (xarray object): Dependent time series.
+        r (xarray object): Pearson correlations between x and y.
+        dim (str): Dimension to compute compute p values over.
+        two_sided (bool): If True, compute two-sided p value.
+
+    Returns:
+        p values accounting for autocorrelation in input time series.
     """
     def _compute_autocorr(v, dim, n):
         """
@@ -203,24 +144,15 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
 
 
 def xr_rm_poly(ds, order, dim='time'):
-    """
-    Returns xarray object with nth-order fit removed from every time series.
+    """Returns xarray object with nth-order fit removed.
 
-    Input
-    -----
-    ds : xarray object
-        Single time series or many gridded time series of object to be
-        detrended
-    order : int
-        Order of polynomial fit to be removed. If 1, this is functionally
-        the same as calling `xr_rm_trend`
-    dim : str (default 'time')
-        Dimension over which to remove the polynomial fit.
+    Args:
+        ds (xarray object): Time series to be detrended.
+        order (int): Order of polynomial fit to be removed.
+        dim (optional str): Dimension over which to remove the polynomial fit.
 
-    Returns
-    -------
-    detrended_ts : xarray object
-        DataArray or Dataset with detrended time series.
+    Returns:
+        xarray object with polynomial fit removed.
     """
     _check_xarray(ds)
 
@@ -285,21 +217,25 @@ def xr_rm_poly(ds, order, dim='time'):
 
 
 def xr_rm_trend(da, dim='time'):
-    """
-    Calls xr_rm_poly with an order 1 argument.
-    """
+    """Calls ``xr_rm_poly`` with an order 1 argument."""
     return xr_rm_poly(da, 1, dim=dim)
 
 
 def xr_varweighted_mean_period(ds, time_dim='time'):
-    """
-    Calculate the variance weighted mean period of an xr.DataArray.
+    """Calculate the variance weighted mean period of time series.
 
-    Reference
-    ---------
-    - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value Decadal
-      Predictability in a CGCM.” Journal of Climate 23, no. 23 (August 27,
-      2010): 6292-6311. https://doi.org/10/bwq92h.
+    ..math:
+        P_x = \sum_k V(f_k,x) / \sum_k f_k V(f_k,x)
+
+    Reference:
+      * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
+        Decadal Predictability in a CGCM." Journal of Climate 23, no. 23
+        (August 27, 2010): 6292-6311. https://doi.org/10/bwq92h.
+
+    Args:
+        ds (xarray object): Time series.
+        time_dim (optional str): Name of time dimension.
+
     """
     _check_xarray(ds)
 
@@ -319,25 +255,19 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
 
 
 def xr_autocorr(ds, lag=1, dim='time', return_p=False):
-    """
-    Calculated lagged correlation of a xr.Dataset.
+    """Calculate the lagged correlation of time series.
 
-    Parameters
-    ----------
-    ds : xarray dataset/dataarray
-    lag : int (default 1)
-        number of time steps to lag correlate.
-    dim : str (default 'time')
-        name of time dimension/dimension to autocorrelate over
-    return_p : boolean (default False)
-        if false, return just the correlation coefficient.
-        if true, return both the correlation coefficient and p-value.
+    Args:
+        ds (xarray object): Time series or grid of time series.
+        lag (optional int): Number of time steps to lag correlate to.
+        dim (optional str): Name of dimension to autocorrelate over.
+        return_p (optional bool): If True, return correlation coefficients
+                                  and p values.
 
-    Returns
-    -------
-    r : Pearson correlation coefficient
-    p : (if return_p True) p-value
+    Returns:
+        Pearson correlation coefficients.
 
+        If return_p, also returns their associated p values.
     """
     _check_xarray(ds)
     N = ds[dim].size
@@ -364,23 +294,23 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
 
 
 def xr_decorrelation_time(da, r=20, dim='time'):
-    """
-    Calculate decorrelation time of an xr.DataArray.
+    """Calculate the decorrelaton time of a time series.
 
-    tau_d = 1 + 2 * sum_{k=1}^(infinity)(alpha_k)**k
+    .. math::
+        tau_{d} = 1 + 2 * \sum_{k=1}^{\inf}(alpha_{k})^{k}
 
-    Parameters
-    ----------
-    da : xarray object
-    r : int (default 20)
-        Number of iterations to run of the above formula
-    dim : str (default 'time')
-        Time dimension for xarray object
+    Reference:
+        * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+          Research. Cambridge ; New York: Cambridge University Press, 1999.,
+          p.373
 
-    Reference
-    ---------
-    - Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
-    Research. Cambridge ; New York: Cambridge University Press, 1999., p.373
+    Args:
+        da (xarray object): Time series.
+        r (optional int): Number of iterations to run the above formula.
+        dim (optional str): Time dimension for xarray object.
+
+    Returns:
+        Decorrelation time of time series.
 
     """
     _check_xarray(da)
@@ -388,6 +318,99 @@ def xr_decorrelation_time(da, r=20, dim='time'):
     return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
                                 range(1, r)], 'it').sum('it')
 
+
+# --------------------------------------------#
+# Diagnostic Potential Predictability (DPP)
+# Functions related to DPP from Boer et al.
+# --------------------------------------------#
+def DPP(ds, m=10, chunk=True):
+    """
+    Calculate Diagnostic Potential Predictability (DPP) as potentially
+    predictable variance fraction (ppvf) in Boer 2004.
+
+    Note: Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
+    in a slightly different way. chunk=False
+
+    .. math::
+
+        DPP_{\text{unbiased}}(m)=\frac{\sigma^2_m - 1/m \cdot \sigma^2}{\sigma^2}
+
+    References:
+    * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
+        Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004):
+        29–44. https://doi.org/10/csjjbh.
+    * Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and
+        O2 Fluxes: What Can We Learn from Centuries-Long Climate Models
+        Simulations?” Journal of Geophysical Research: Oceans 120, no. 1
+        (January 2015): 384–404. https://doi.org/10/f63c3h.
+    * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the
+        Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical
+        Research Letters, March 15, 2018. https://doi.org/10/gdb424.
+
+    Args:
+    ds (xr.DataArray): control simulation with time dimension as years.
+    m (optional int): separation time scale in years between predictable
+                      low-freq component and high-freq noise.
+    chunk (optional boolean): Whether chunking is applied. Default: True.
+                    If False, then uses Resplandy 2015 / Seferian 2018 method.
+
+    Returns:
+        dpp (xr.DataArray): ds without time dimension.
+
+    """
+    # TODO: rename or find xr equiv
+    def _chunking(ds, number_chunks=False, chunk_length=False):
+        """
+        Separate data into chunks and reshapes chunks in a c dimension.
+
+        Specify either the number chunks or the length of chunks.
+        Needed for DPP.
+
+        Args:
+            ds (xr.DataArray): control simulation with time dimension as years.
+            chunk_length (int): see DPP(m)
+            number_chunks (int): number of chunks in the return data.
+
+        Returns:
+            c (xr.DataArray): chunked ds, but with additional dimension c.
+
+        """
+        if number_chunks and not chunk_length:
+            chunk_length = np.floor(ds['time'].size / number_chunks)
+            cmin = int(ds['time'].min())
+        elif not number_chunks and chunk_length:
+            cmin = int(ds['time'].min())
+            number_chunks = int(np.floor(ds['time'].size / chunk_length))
+        else:
+            raise ValueError('set number_chunks or chunk_length to True')
+        c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
+        c = c.expand_dims('c')
+        c['c'] = [0]
+        for i in range(1, number_chunks):
+            c2 = ds.sel(time=slice(cmin + chunk_length * i,
+                                   cmin + (i + 1) * chunk_length - 1))
+            c2 = c2.expand_dims('c')
+            c2['c'] = [i]
+            c2['time'] = c['time']
+            c = xr.concat([c, c2], 'c')
+        return c
+
+    if not chunk:  # Resplandy 2015, Seferian 2018
+        s2v = ds.rolling(time=m).mean().var('time')
+        s2 = ds.var('time')
+
+    if chunk:  # Boer 2004 ppvf
+        # first chunk
+        chunked_means = _chunking(
+            ds, chunk_length=m).mean('time')
+        # sub means in chunks
+        chunked_deviations = _chunking(
+            ds, chunk_length=m) - chunked_means
+        s2v = chunked_means.var('c')
+        s2e = chunked_deviations.var(['time', 'c'])
+        s2 = s2v + s2e
+    dpp = (s2v - s2 / (m)) / s2
+    return dpp
 
 # -------
 # Z SCORE

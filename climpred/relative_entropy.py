@@ -107,8 +107,8 @@ def compute_relative_entropy(initialized, control_uninitialized,
 
     if not anomaly_data:  # if ds, control are raw values
         if detrend_by_control_time_mean:
-        anom_x = initialized - control.mean('time')
-        anom_b = control_uninitialized - control.mean('time')
+        anom_x = initialized - control_uninitialized.mean('time')
+        anom_b = control_uninitialized - control_uninitialized.mean('time')
     else:  # leave as is when already anomalies
         anom_x = initialized
         anom_b = control_uninitialized

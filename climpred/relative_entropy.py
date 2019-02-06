@@ -41,7 +41,7 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     # (A.T\B)*A
     x, resid, rank, s = np.linalg.lstsq(
         sigma_b, mu_x - mu_b)  # sigma_b \ (mu_x - mu_b)
-    signal = fac * np.matmul((mu_x - mu_b), x)
+    signal = fac * np.matmul((mu_x.values - mu_b.values), x)
     R = dispersion + signal
     return R, dispersion, signal
 

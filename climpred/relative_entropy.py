@@ -26,7 +26,7 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
         sigma_x (xr.DataArray): covariance matrix of forecast distribution
         mu_b (xr.DataArray): mean state vector of the baseline distribution
         mu_x (xr.DataArray): mean state vector of the forecast distribution
-        neofs (int): number of EOFs to use
+        neofs (int): number of EOFs used
 
     Returns:
         R (float): relative entropy
@@ -52,15 +52,15 @@ def _gen_control_distribution(ds, control, it=10):
 
     Args:
         ds (xr.DataArray): initialization data with dimensions initialization,
-                           member, time, lon (x), lat(y).
-        control (xr.DataArray): control data with dimensions time, lon (x),
-                                lat(y).
+                           member, time and spatial [lon (x), lat(y)].
+        control (xr.DataArray): control data with dimensions time and spatial
+                                [lon (x), lat(y)].
         it (int): multiplying factor for ds.member.
 
     Returns:
         control_uninitialized (xr.DataArray): data with dimensions
-                                              initialization, member, time, lon
-                                              (x), lat(y).
+                                              initialization, member, time
+                                              and spatial [lon (x), lat(y)].
 
     """
     ds_list = []
@@ -71,6 +71,33 @@ def _gen_control_distribution(ds, control, it=10):
     control_uninitialized = xr.concat(ds_list, 'member')
     control_uninitialized['member'] = np.arange(control_uninitialized.member.size)
     return control_uninitialized
+
+
+def _gen_control_distribution_lens(ds, control, max_member=40):
+    """
+    Generate a large control distribution from control, LENS like.
+
+    Args:
+        ds (xr.DataArray): initialization data with dimensions initialization,
+                           member, time and spatial [lon (x), lat(y)].
+        control (xr.DataArray): control data with dimensions time and spatial
+                                [lon (x), lat(y)].
+        it (int): multiplying factor for ds.member.
+
+    Returns:
+        control_uninitialized (xr.DataArray): data with dimensions member, time
+                                              and spatial [lon (x), lat(y)].
+
+    """
+    ds_list = []
+    for _ in range(int(max_member/ds.member.size)+1):
+        control_uninitialized = _pseudo_ens(ds, control)
+        control_uninitialized['initialization'] = ds.initialization.values
+        ds_list.append(control_uninitialized)
+    control_uninitialized = xr.concat(ds_list, 'member')
+    control_uninitialized['member'] = np.arange(control_uninitialized.member.size)
+    return control_uninitialized.isel(
+                    initialization=0,member=slice(0,40)).drop('initialization')
 
 
 def compute_relative_entropy(initialized, control_uninitialized,
@@ -85,11 +112,11 @@ def compute_relative_entropy(initialized, control_uninitialized,
 
     Args:
         initialized (xr.DataArray): anomaly ensemble data with dimensions
-                                    initialization, member, time, lon (x),
-                                    lat(y).
+                                    initialization, member, time and spatial
+                                    [lon (x), lat(y)].
         control_uninitialized (xr.DataArray): anomaly control distribution with
-                                              dimensions, initialization,
-                                              member, time, lon (x), lat(y).
+                                              dimensions init, member, time and
+                                              spatial [lon (x), lat(y)].
         anomaly_data (bool): Input data is anomaly alread. Default: False.
         neofs (int): number of EOFs to use. Default: initialized.member.size.
         curv (bool): if curvilinear grids are provided disables EOF weights.
@@ -105,10 +132,14 @@ def compute_relative_entropy(initialized, control_uninitialized,
     if ntime is None:
         ntime = initialized.time.size
 
+    non_spatial_dims = []
+    for dim in control_uninitialized.dims:
+        if dim not in ['x','y','lon','lat','area','period']:
+            non_spatial_dims.append(dim)
     if not anomaly_data:  # if ds, control are raw values
         if detrend_by_control_unitialized:
-            anom_x = initialized - control_uninitialized.mean('time')
-            anom_b = control_uninitialized - control_uninitialized.mean('time')
+            anom_x = initialized - control_uninitialized.mean(non_spatial_dims)
+            anom_b = control_uninitialized - control_uninitialized.mean(non_spatial_dims)
     else:  # leave as is when already anomalies
         anom_x = initialized
         anom_b = control_uninitialized
@@ -126,8 +157,15 @@ def compute_relative_entropy(initialized, control_uninitialized,
     else:
         coslat = np.cos(np.deg2rad(anom_x.coords['lat'].values))
         wgts = np.sqrt(coslat)[..., np.newaxis]
+    # stack all dimensions member and initialization into time, make time first
+    transpose_dims = list(control_uninitialized.dims)
+    transpose_dims.remove('member')
+    transpose_dims.remove('initialization')
+    dims=tuple(transpose_dims)
     base_to_calc_eofs = control_uninitialized.stack(
-            new=('member','initialization')).rename({'new'";time"})
+            new=tuple(non_spatial_dims)).rename({'new':'time'}).set_index(
+            {'time':'time'}).transpose(*dims)
+
     solver = Eof(base_to_calc_eofs, weights=wgts)
 
     for init in initializations:
@@ -136,7 +174,8 @@ def compute_relative_entropy(initialized, control_uninitialized,
             pc_b = solver.projectField(anom_b.sel(initialization=init, time=t)
                                              .drop('time')
                                              .rename({'member': 'time'}),
-                                       neofs=neofs, eofscaling=0, weighted=False)
+                                       neofs=neofs, eofscaling=0,
+                                       weighted=False)
 
             mu_b = pc_b.mean('time')
             sigma_b = xr.DataArray(np.cov(pc_b.T))
@@ -145,7 +184,8 @@ def compute_relative_entropy(initialized, control_uninitialized,
             pc_x = solver.projectField(anom_x.sel(initialization=init, time=t)
                                              .drop('time')
                                              .rename({'member': 'time'}),
-                                       neofs=neofs, eofscaling=0, weighted=False)
+                                       neofs=neofs, eofscaling=0,
+                                       weighted=False)
 
             mu_x = pc_x.mean('time')
             sigma_x = xr.DataArray(np.cov(pc_x.T))
@@ -153,9 +193,9 @@ def compute_relative_entropy(initialized, control_uninitialized,
             r, d, s = _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b,
                                                 neofs)
 
-            rel_ent.T.loc['R', ens][t] = r
-            rel_ent.T.loc['D', ens][t] = d
-            rel_ent.T.loc['S', ens][t] = s
+            rel_ent.T.loc['R', init][t] = r
+            rel_ent.T.loc['D', init][t] = d
+            rel_ent.T.loc['S', init][t] = s
     return rel_ent
 
 

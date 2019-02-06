@@ -41,7 +41,7 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     # (A.T\B)*A
     x, resid, rank, s = np.linalg.lstsq(
         sigma_b, mu_x - mu_b)  # sigma_b \ (mu_x - mu_b)
-    signal = fac * np.matmul((mu_x - mu_b), x)
+    signal = fac * np.matmul((mu_x.values - mu_b.values), x)
     R = dispersion + signal
     return R, dispersion, signal
 
@@ -199,6 +199,18 @@ def compute_relative_entropy(initialized, control_uninitialized,
     return rel_ent
 
 
+def _shuffle(ds, dim='initialization'):
+    """Shuffle ensemble members to uninitialize the data."""
+    old_dim_range = ds[dim]
+    shuffled = ds.sel({dim: np.random.permutation(ds[dim])})
+    if isinstance(ds, xr.DataArray):
+        shuffled[dim] = old_dim_range
+    elif isinstance(ds, xr.Dataset):
+        shuffled = shuffled.assign({dim: old_dim_range})
+    shuffled = shuffled.sortby(dim)
+    return shuffled
+
+
 def bootstrap_relative_entropy(initialized, control_uninitialized, sig=95,
                                bootstrap=100, curv=True, neofs=None,
                                ntime=None):
@@ -233,12 +245,12 @@ def bootstrap_relative_entropy(initialized, control_uninitialized, sig=95,
 
     x = []
     for _ in range(min(1, int(bootstrap / initialized.time.size))):
-        ds_control = _pseudo_ens(initialized, control)
-        ds_control['initialization'] = initialized.initialization.values
-        ds_control['member'] = np.arange(ds_control.member.size)
+        shuffled_control_uninitialized = _shuffle(control_uninitialized).isel(
+            initialization=slice(0,initialized.initialization.size),
+            member=slice(0,initialized.member.size))
         ds_pseudo_rel_ent = compute_relative_entropy(
-            ds_control, control_uninitialized, neofs=neofs, curv=curv,
-            ntime=ntime)
+            shuffled_control_uninitialized, control_uninitialized, neofs=neofs,
+            curv=curv, ntime=ntime)
         x.append(ds_pseudo_rel_ent)
     ds_pseudo_metric = pd.concat(x, ignore_index=True)
     qsig = sig / 100

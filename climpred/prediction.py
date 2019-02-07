@@ -448,11 +448,11 @@ def _get_metric_function(metric):
         return metric
     else:
         pearson = ['pr', 'pearsonr', 'pearson_r']
-        if metric in pearson:
+        if metric.lower() in pearson:
             metric = '_pearson_r'
-        elif metric == 'rmse':
+        elif metric.lower() == 'rmse':
             metric = '_rmse'
-        elif metric == 'mae':
+        elif metric.lower() == 'mae':
             metric = '_mae'
         elif metric.lower() == 'mse':
             metric = '_mse'
@@ -470,12 +470,14 @@ def _get_metric_function(metric):
             raise ValueError("""Please supply a metric from the following list:
                 'pearson_r'
                 'rmse'
+                'mae'
                 'mse'
                 'nrmse'
                 'nev'
                 'nmse'
                 'ppp'
                 'msss'
+                'nmae'
                 'uacc'
                 """)
         return eval(metric)

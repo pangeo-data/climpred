@@ -857,15 +857,13 @@ def _pseudo_ens(ds, control):
     nmember = ds.member.size
     length = ds.time.size
     c_start = 0
-    c_end = control['time'].size
+    c_end = control.initialization.size
     time = ds['time']
 
     def isel_years(control, year_s, m=None, length=length):
-        new = control.isel(time=slice(year_s, year_s + length - 0))
-        if isinstance(new, xr.DataArray):
-            new['time'] = time
-        elif isinstance(new, xr.Dataset):
-            new = new.assign(time=time)
+        new = control.isel(initialization=slice(year_s, year_s + length - 0))
+        new = new.rename({'initialization': 'time'})
+        new['time'] = time
         return new
 
     def create_pseudo_members(control):

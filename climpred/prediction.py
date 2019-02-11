@@ -63,7 +63,7 @@ def _control_for_reference_period(control, reference_period='MK',
     elif reference_period is 'OP_full_length':
         control = control - \
             control.rolling(time=obs_years, min_periods=1,
-                            center=True).mean() + control.mean('time')
+                            center=True).mean() + control.mean('initialization')
     elif reference_period is 'OP':
         raise ValueError('not yet implemented')
     else:
@@ -84,9 +84,9 @@ def _get_variance(control, reference_period=None, time_length=None):
     if reference_period is not None and isinstance(time_length, int):
         control = _control_for_reference_period(
             control, reference_period=reference_period, obs_years=time_length)
-        return control.var('time')
+        return control.var('initialization')
     else:
-        return control.var('time')
+        return control.var('initialization')
 
 
 def _get_norm_factor(comparison):

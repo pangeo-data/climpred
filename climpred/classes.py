@@ -1,5 +1,6 @@
 import xarray as xr
-from .prediction import compute_reference, compute_persistence
+from .prediction import (compute_reference, compute_persistence,
+                         compute_perfect_model, bootstrap_perfect_model)
 # TODO: add horizon functionality
 # TODO: add perfect model functionality
 # TODO: add relative entropy functionality
@@ -28,6 +29,8 @@ def _check_reference_dimensions(init, ref):
     init_dims = list(init.dims)
     if 'time' in init_dims:
         init_dims.remove('time')
+    if 'member' in init_dims:
+        init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
         raise ValueError("""Reference dimensions must match initialized
             prediction ensemble dimensions (excluding `time`.)""")
@@ -118,14 +121,53 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def add_control(self, xobj):
         """
-        Control run for perfect model
+        Special to PerfectModelEnsemble. Ensures that there's a control
+        to do PM computations with.
         """
         _check_xarray(xobj)
+        if isinstance(xobj, xr.DataArray):
+            xobj = xobj.to_dataset()
+        _check_reference_dimensions(self.initialized, xobj)
+        _check_reference_vars_match_initialized(self.initialized, xobj)
         self.control = xobj
+
+    def compute_skill(self, metric='pearson_r', comparison='m2m',
+                      running=None, reference_period=None):
+        if len(self.control) == 0:
+            raise ValueError("""You need to add a control dataset before
+            attempting to compute predictability.""")
+        else:
+            return compute_perfect_model(self.initialized,
+                                         self.control,
+                                         metric=metric,
+                                         comparison=comparison,
+                                         running=running,
+                                         reference_period=reference_period)
+
+    def compute_persistence(self, nlags=None, metric='pearson_r'):
+        if len(self.control) == 0:
+            raise ValueError("""You need to add a control dataset before
+            attempting to compute a persistence forecast.""")
+        if nlags is None:
+            nlags = self.initialized.time.size
+        return compute_persistence(self.control,
+                                   nlags=nlags,
+                                   metric=metric)
+
+    def bootstrap(self, metric='rmse', comparison='m2m', reference_period='MK',
+                  sig=95, bootstrap=30):
+        if len(self.control) == 0:
+            raise ValueError("""You need to add a control dataset before
+            attempting to bootstrap.""")
+        else:
+            return bootstrap_perfect_model(self.initialized, self.control,
+                                           metric=metric,
+                                           comparison=comparison,
+                                           reference_period=reference_period,
+                                           sig=sig, bootstrap=bootstrap)
 
 
 class ReferenceEnsemble(PredictionEnsemble):
-    # can have multiple references (obs, hindcast)
     def __init__(self, xobj):
         super().__init__(xobj)
         self.reference = {}
@@ -194,4 +236,4 @@ class ReferenceEnsemble(PredictionEnsemble):
                 persistence[key] = compute_persistence(self.reference[key],
                                                        nlags=nlags,
                                                        metric=metric)
-            return persistence
+        return persistence

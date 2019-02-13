@@ -3,11 +3,8 @@ from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
 import xarray as xr
 from eofs.xarray import Eof
-
-from climpred.prediction import _pseudo_ens
 
 
 def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
@@ -54,7 +51,7 @@ def _bootstrap_dim(control, lead_years, time_dim='initialization', dim='member',
     """
     c_start = 0
     c_end = control[time_dim].size
-    time = np.arange(1, 1+lead_years)
+    time = np.arange(1, 1 + lead_years)
 
     def isel_years(control, year_s, m=None, length=lead_years):
         new = control.isel({time_dim: slice(year_s, year_s + length - 0)})
@@ -115,7 +112,7 @@ def compute_relative_entropy(initialized, control,
         ntime = initialized.time.size
 
     # case if you only submit control with dim time, PM case
-    if 'ensemble' not in control.dims and 'member' not in control.dims:
+    if ('ensemble' not in control.dims) and ('member' not in control.dims):
         control_uninitialized = xr.concat([_bootstrap_dim(control, initialized.time.size, dim='member', dim_label=np.arange(
             nmember_control)) for _ in range(initialized.initialization.size)], dim='initialization')
         if isinstance(control_uninitialized, xr.DataArray):
@@ -182,7 +179,7 @@ def compute_relative_entropy(initialized, control,
         # print('transpose(*dims)',*dims,'time should be first')
         base_to_calc_eofs = control.stack(
             new=tuple(non_spatial_control_dims)).rename({'new': 'time'}).set_index({'time': 'time'}).transpose(*dims)
-    elif 'initialization' in control.dims and not 'member' in control.dims:  # PM_control
+    elif 'initialization' in control.dims and 'member' not in control.dims:  # PM_control
         base_to_calc_eofs = control.rename({'initialization': 'time'})
     else:
         raise ValueError('adapt you inputs to PM- or DPLE/LENS-style')
@@ -251,7 +248,7 @@ def create_uninitialized_ensemble_from_control(ds, control, member_label=[1, 2, 
     control_uninitialized = xr.concat([_bootstrap_dim(control, ds.time.size, dim='member',
                                                       dim_label=member_label) for _ in range(ds.initialization.size)], dim='initialization')
     if isinstance(control_uninitialized, xr.DataArray):
-        control_uninitialized['initialization'] = initialized.initialization.values
+        control_uninitialized['initialization'] = ds.initialization.values
     elif isinstance(control_uninitialized, xr.Dataset):
         control_uninitialized = control_uninitialized.assign(
             initialization=ds.initialization.values)
@@ -325,9 +322,9 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     fig, ax = plt.subplots(ncols=3, **kwargs)
     std = rel_ent.std('initialization')
     for i, dim in enumerate(['R', 'S', 'D']):
-        m = rel_ent[dim].median(axis=1)
-        std = rel_ent[dim].std(axis=1)
-        ax[i].plot(rel_ent[dim], c='gray',
+        m = rel_ent[dim].median('initialization')
+        std = rel_ent[dim].std('initialization')
+        ax[i].plot(rel_ent[dim].to_dataframe().unstack(0), c='gray',
                    label='individual initializations', linewidth=.5, alpha=.5)
         ax[i].plot(m, c=colors[i], label=dim, linewidth=2.5)
         ax[i].plot((m - std), c=colors[i], label=dim + ' median +/- std',

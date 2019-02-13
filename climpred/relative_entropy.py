@@ -324,12 +324,13 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     for i, dim in enumerate(['R', 'S', 'D']):
         m = rel_ent[dim].median('initialization')
         std = rel_ent[dim].std('initialization')
-        ax[i].plot(rel_ent[dim].to_dataframe().unstack(0), c='gray',
+        ax[i].plot(rel_ent.time, rel_ent[dim].to_dataframe().unstack(0), c='gray',
                    label='individual initializations', linewidth=.5, alpha=.5)
-        ax[i].plot(m, c=colors[i], label=dim, linewidth=2.5)
-        ax[i].plot((m - std), c=colors[i], label=dim + ' median +/- std',
+        ax[i].plot(rel_ent.time, m, c=colors[i], label=dim, linewidth=2.5)
+        ax[i].plot(rel_ent.time, (m - std), c=colors[i], label=dim + ' median +/- std',
                    linewidth=2.5, ls='--')
-        ax[i].plot((m + std), c=colors[i], label='', linewidth=2.5, ls='--')
+        ax[i].plot(rel_ent.time, (m + std), c=colors[i],
+                   label='', linewidth=2.5, ls='--')
         if rel_ent_threshold is not None:
             ax[i].axhline(y=rel_ent_threshold[dim].values,
                           label='bootstrapped threshold', c='gray', ls='--')

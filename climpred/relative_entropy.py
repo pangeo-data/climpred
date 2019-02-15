@@ -152,8 +152,7 @@ def compute_relative_entropy(initialized, control,
                 dim_label=np.arange(nmember_control))
             for _ in range(initialized.initialization.size)],
             dim='initialization')
-        control_uninitialized['initialization'] =
-            initialized.initialization.values
+        control_uninitialized['initialization'] = initialized.initialization.values
 
     # initialized and control_uninitialized are allowed to have different
     # dims as I need more members to sample my control distr. properly

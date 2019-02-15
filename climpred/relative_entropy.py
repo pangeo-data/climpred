@@ -1,7 +1,5 @@
 import warnings
-from collections import OrderedDict
 
-import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from eofs.xarray import Eof
@@ -34,8 +32,8 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     fac = 0.5
     dispersion = fac * (np.log(np.linalg.det(sigma_b) / np.linalg.det(sigma_x))
                         + np.trace(sigma_x / sigma_b) - neofs)
-
-    # https://stackoverflow.com/questions/7160162/left-matrix-division-and-numpy-solve
+    # https://stackoverflow.com/questions/
+    # 7160162/left-matrix-division-and-numpy-solve
     # (A.T\B)*A
     x, resid, rank, s = np.linalg.lstsq(
         sigma_b, mu_x - mu_b)  # sigma_b \ (mu_x - mu_b)
@@ -44,9 +42,36 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     return R, dispersion, signal
 
 
-def _bootstrap_dim(control, lead_years, time_dim='initialization', dim='member', dim_label=list(np.arange(10))):
+def _shuffle(ds, dim='initialization'):
+    """Shuffle ensemble members to uninitialize the data."""
+    old_dim_range = ds[dim]
+    shuffled = ds.sel({dim: np.random.permutation(ds[dim])})
+    shuffled[dim] = old_dim_range
+    shuffled = shuffled.sortby(dim)
+    return shuffled
+
+
+def _create_uninitialized_ensemble_from_control(ds, control,
+                                                member_label):
+    """Create uninitialized ensemble from control."""
+    control_uninitialized = xr.concat([
+        _bootstrap_dim(control, ds.time.size, dim='member',
+                       dim_label=member_label) for _ in
+        range(ds.initialization.size)],
+        dim='initialization')
+    if isinstance(control_uninitialized, xr.DataArray):
+        control_uninitialized['initialization'] = ds.initialization.values
+    elif isinstance(control_uninitialized, xr.Dataset):
+        control_uninitialized = control_uninitialized.assign(
+            initialization=ds.initialization.values)
+    return control_uninitialized
+
+
+def _bootstrap_dim(control, lead_years, time_dim='initialization',
+                   dim='member', dim_label=list(np.arange(10))):
     """
-    Add a `len(dim_label)` dimension `dim` to uninitialized control with time_dim by bootstrapping.
+    Add a `len(dim_label)` dimension `dim` to uninitialized control with
+    time_dim by bootstrapping.
 
     """
     c_start = 0
@@ -54,7 +79,7 @@ def _bootstrap_dim(control, lead_years, time_dim='initialization', dim='member',
     time = np.arange(1, 1 + lead_years)
 
     def isel_years(control, year_s, m=None, length=lead_years):
-        new = control.isel({time_dim: slice(year_s, year_s + length - 0)})
+        new = control.isel({time_dim: slice(year_s, year_s + length)})
         new = new.rename({time_dim: 'time'})
         if isinstance(new, xr.DataArray):
             new['time'] = time
@@ -63,7 +88,6 @@ def _bootstrap_dim(control, lead_years, time_dim='initialization', dim='member',
         return new
 
     def create_pseudo_members(control):
-        # print(c_start,c_end,lead_years,dim_label)
         startlist = np.random.randint(
             c_start, c_end - lead_years - 1, len(dim_label))
         return xr.concat([isel_years(control, start)
@@ -87,22 +111,24 @@ def compute_relative_entropy(initialized, control,
 
     Args:
         initialized (xr.Dataset): anomaly ensemble data with dimensions
-                                    initialization, member, time and spatial
-                                    [lon (x), lat(y)]. DPLE or PM_ds
+                                    initialization, member, time and
+                                    spatial [lon (x), lat(y)].
+                                    DPLE or PM_ds
         control (xr.Dataset): anomaly control distribution with
                                               non-spatial dimensions:
                                               spatial [lon (x), lat(y)].
                                               - LENS: member, time
                                               - PM_control: initialization
         anomaly_data (bool): Input data is anomaly alread. Default: False.
-        neofs (int): number of EOFs to use. Default: initialized.member.size.
-        curv (bool): if curvilinear grids are provided disables EOF weights.
+        neofs (int): number of EOFs to use.
+                     Default: initialized.member.size.
+        curv (bool): if curvilinear grids disables EOF weights.
         ntime (int): number of timesteps calculated.
-        detrend_by_control_uninitialized (bool): Default: True
-        nmember_control (int): number of members created from bootstrapping from control
+        nmember_control (int): number of members created from
+                               bootstrapping from control
 
     Returns:
-        rel_ent (pd.DataFrame): relative entropy
+        rel_ent (xr.Dataset): relative entropy
 
     """
     # Defaults
@@ -111,47 +137,43 @@ def compute_relative_entropy(initialized, control,
     if ntime is None:
         ntime = initialized.time.size
 
-    # case if you only submit control with dim time, PM case
-    if ('ensemble' not in control.dims) and ('member' not in control.dims):
-        control_uninitialized = xr.concat([_bootstrap_dim(control, initialized.time.size, dim='member', dim_label=np.arange(
-            nmember_control)) for _ in range(initialized.initialization.size)], dim='initialization')
-        if isinstance(control_uninitialized, xr.DataArray):
-            control_uninitialized['initialization'] = initialized.initialization.values
-        elif isinstance(control_uninitialized, xr.Dataset):
-            control_uninitialized = control_uninitialized.assign(
-                initialization=initialized.initialization.values)
-
     # case if you submit control with dim time and member, LENS case
-    elif 'member' in control.dims:
+    if 'member' in control.dims:
         control_uninitialized = _bootstrap_dim(
-            control, initialized.time.size, time_dim='time', dim='initialization', dim_label=list(initialized.initialization.values))
-        #print('added member')
+            control, initialized.time.size, time_dim='time',
+            dim='initialization',
+            dim_label=list(initialized.initialization.values))
 
-    # initialized and control_uninitialized are allowed to have different dims
-    # as I need more members to sample my control distribution properly
-    # ToDo: understand this more
-    if initialized.dims != control_uninitialized.dims:
-        print(initialized.dims)
-        print(control_uninitialized.dims)
-        # raise ValueError('init and uninit must have same dims')
+    # case if you only submit control with dim time, PM case
+    else:
+        control_uninitialized = xr.concat([
+            _bootstrap_dim(control,
+                           initialized.time.size, dim='member',
+                           dim_label=np.arange(nmember_control))
+            for _ in range(initialized.initialization.size)],
+            dim='initialization')
+        control_uninitialized['initialization'] = initialized.initialization.values
+
+    # initialized and control_uninitialized are allowed to have different
+    # dims as I need more members to sample my control distr. properly
+    if set(initialized.dims) == set(control_uninitialized.dims):
         warnings.warn(
             "Warning: initialized and control_uninitialized have different coords.")
 
+    # the datasets should only contain one variable
     if isinstance(control_uninitialized, xr.Dataset):
         control_uninitialized = control_uninitialized.to_array().squeeze()
     if isinstance(initialized, xr.Dataset):
         initialized = initialized.to_array().squeeze()
 
     # detrend
-    #non_spatial_dims = set(control_uninitialized.dims).intersection(['time', 'initialization','member'])
     non_spatial_dims = set(control_uninitialized.dims).intersection(
         ['initialization', 'member'])
     non_spatial_dims = list(non_spatial_dims)
     if not anomaly_data:  # if ds, control are raw values
-        if detrend_by_control_unitialized:
-            anom_x = initialized - control_uninitialized.mean(non_spatial_dims)
-            anom_b = control_uninitialized - \
-                control_uninitialized.mean(non_spatial_dims)
+        anom_x = initialized - control_uninitialized.mean(non_spatial_dims)
+        anom_b = control_uninitialized - \
+            control_uninitialized.mean(non_spatial_dims)
     else:  # leave as is when already anomalies
         anom_x = initialized
         anom_b = control_uninitialized
@@ -164,27 +186,24 @@ def compute_relative_entropy(initialized, control,
         wgts = np.sqrt(coslat)[..., np.newaxis]
 
     if isinstance(control, xr.Dataset):  # EOF requires xr.dataArray
-        # print('convert control to xr.dataarray')
         control = control.to_array().squeeze()
 
     if 'member' in control.dims:  # LENS
-        # stack all dimensions member and initialization into time, make time first
-        # print('member is in control')
+        # stack member and initialization into time dim, make time first
         non_spatial_control_dims = list(
             set(control.dims).intersection(['time', 'member']))
-        # print('non_spatial',non_spatial_control_dims)
+
         transpose_dims = list(control.dims)
         transpose_dims.remove('member')
         dims = tuple(transpose_dims)
-        # print('transpose(*dims)',*dims,'time should be first')
-        base_to_calc_eofs = control.stack(
-            new=tuple(non_spatial_control_dims)).rename({'new': 'time'}).set_index({'time': 'time'}).transpose(*dims)
-    elif 'initialization' in control.dims and 'member' not in control.dims:  # PM_control
-        base_to_calc_eofs = control.rename({'initialization': 'time'})
-    else:
-        raise ValueError('adapt you inputs to PM- or DPLE/LENS-style')
 
-    # print('calc EOF base',base_to_calc_eofs.dims,'time should be first')
+        base_to_calc_eofs = control.stack(
+            new=tuple(non_spatial_control_dims)).rename({'new':
+                                                         'time'}).set_index({'time': 'time'}).transpose(*dims)
+    else:
+        # PM_control
+        base_to_calc_eofs = control.rename({'initialization': 'time'})
+
     solver = Eof(base_to_calc_eofs, weights=wgts)
 
     re_leadtime_list = []
@@ -231,30 +250,6 @@ def compute_relative_entropy(initialized, control,
     return re
 
 
-def _shuffle(ds, dim='initialization'):
-    """Shuffle ensemble members to uninitialize the data."""
-    old_dim_range = ds[dim]
-    shuffled = ds.sel({dim: np.random.permutation(ds[dim])})
-    if isinstance(ds, xr.DataArray):
-        shuffled[dim] = old_dim_range
-    elif isinstance(ds, xr.Dataset):
-        shuffled = shuffled.assign({dim: old_dim_range})
-    shuffled = shuffled.sortby(dim)
-    return shuffled
-
-
-def create_uninitialized_ensemble_from_control(ds, control, member_label=[1, 2, 3, 4, 5]):
-    """Create uninitialized ensemble from control."""
-    control_uninitialized = xr.concat([_bootstrap_dim(control, ds.time.size, dim='member',
-                                                      dim_label=member_label) for _ in range(ds.initialization.size)], dim='initialization')
-    if isinstance(control_uninitialized, xr.DataArray):
-        control_uninitialized['initialization'] = ds.initialization.values
-    elif isinstance(control_uninitialized, xr.Dataset):
-        control_uninitialized = control_uninitialized.assign(
-            initialization=ds.initialization.values)
-    return control_uninitialized
-
-
 def bootstrap_relative_entropy(initialized, control, sig=95,
                                bootstrap=100, curv=True, neofs=None,
                                ntime=None, anomaly_data=False,
@@ -289,55 +284,18 @@ def bootstrap_relative_entropy(initialized, control, sig=95,
     if ntime is None:
         ntime = initialized.time.size
 
-    x = []
+    results_list = []
     for _ in range(min(1, int(bootstrap / initialized.time.size))):
-        uninitialized_initialized = create_uninitialized_ensemble_from_control(
-            initialized, control, member_label=list(initialized.member.values))
-        print(uninitialized_initialized.dims)
-        print(control.dims)
+        uninitialized_initialized = _create_uninitialized_ensemble_from_control(
+            initialized, control, list(initialized.member.values))
         ds_pseudo_rel_ent = compute_relative_entropy(
             uninitialized_initialized, control, neofs=neofs,
             curv=curv, ntime=ntime, anomaly_data=anomaly_data,
             detrend_by_control_unitialized=detrend_by_control_unitialized,
             nmember_control=nmember_control)
-        x.append(ds_pseudo_rel_ent)
-    ds_pseudo_metric = xr.concat(x, dim='it')
+        results_list.append(ds_pseudo_rel_ent)
+    ds_pseudo_metric = xr.concat(results_list, dim='it')
     qsig = sig / 100
     sig_level = ds_pseudo_metric.quantile(
         q=qsig, dim=['it', 'time', 'initialization'])
     return sig_level
-
-
-def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
-    """
-    Plot relative entropy results.
-
-    Args:
-        rel_ent (pd.DataFrame): relative entropy from compute_relative_entropy
-        rel_ent_threshold (pd.DataFrame): threshold from
-                                          bootstrap_relative_entropy
-
-    """
-    colors = ['royalblue', 'indianred', 'goldenrod']
-    fig, ax = plt.subplots(ncols=3, **kwargs)
-    std = rel_ent.std('initialization')
-    for i, dim in enumerate(['R', 'S', 'D']):
-        m = rel_ent[dim].median('initialization')
-        std = rel_ent[dim].std('initialization')
-        ax[i].plot(rel_ent.time, rel_ent[dim].to_dataframe().unstack(0), c='gray',
-                   label='individual initializations', linewidth=.5, alpha=.5)
-        ax[i].plot(rel_ent.time, m, c=colors[i], label=dim, linewidth=2.5)
-        ax[i].plot(rel_ent.time, (m - std), c=colors[i], label=dim + ' median +/- std',
-                   linewidth=2.5, ls='--')
-        ax[i].plot(rel_ent.time, (m + std), c=colors[i],
-                   label='', linewidth=2.5, ls='--')
-        if rel_ent_threshold is not None:
-            ax[i].axhline(y=rel_ent_threshold[dim].values,
-                          label='bootstrapped threshold', c='gray', ls='--')
-        handles, labels = ax[i].get_legend_handles_labels()
-        by_label = OrderedDict(zip(labels, handles))
-        ax[i].legend(by_label.values(), by_label.keys(), frameon=False)
-    ax[0].set_title('Relative Entropy')
-    ax[1].set_title('Signal')
-    ax[2].set_title('Dispersion')
-    ax[0].set_ylim(bottom=0)

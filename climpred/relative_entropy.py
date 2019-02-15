@@ -57,8 +57,8 @@ def _create_uninitialized_ensemble_from_control(ds, control,
     control_uninitialized = xr.concat([
         _bootstrap_dim(control, ds.time.size, dim='member',
                        dim_label=member_label) for _ in
-                       range(ds.initialization.size)],
-                            dim='initialization')
+        range(ds.initialization.size)],
+        dim='initialization')
     if isinstance(control_uninitialized, xr.DataArray):
         control_uninitialized['initialization'] = ds.initialization.values
     elif isinstance(control_uninitialized, xr.Dataset):
@@ -148,8 +148,8 @@ def compute_relative_entropy(initialized, control,
     else:
         control_uninitialized = xr.concat([
             _bootstrap_dim(control,
-                initialized.time.size, dim='member',
-                dim_label=np.arange(nmember_control))
+                           initialized.time.size, dim='member',
+                           dim_label=np.arange(nmember_control))
             for _ in range(initialized.initialization.size)],
             dim='initialization')
         control_uninitialized['initialization'] = initialized.initialization.values
@@ -171,70 +171,69 @@ def compute_relative_entropy(initialized, control,
         ['initialization', 'member'])
     non_spatial_dims = list(non_spatial_dims)
     if not anomaly_data:  # if ds, control are raw values
-            anom_x = initialized - \
-                control_uninitialized.mean(non_spatial_dims)
-            anom_b = control_uninitialized - \
-                control_uninitialized.mean(non_spatial_dims
+        anom_x = initialized - control_uninitialized.mean(non_spatial_dims)
+        anom_b = control_uninitialized - \
+            control_uninitialized.mean(non_spatial_dims)
     else:  # leave as is when already anomalies
-        anom_x=initialized
-        anom_b=control_uninitialized
+        anom_x = initialized
+        anom_b = control_uninitialized
 
     # prepare for EOF
     if curv:  # if curvilinear lon(x,y), lat(x,y) data inputs
-        wgts=None
+        wgts = None
     else:
-        coslat=np.cos(np.deg2rad(anom_x.coords['lat'].values))
-        wgts=np.sqrt(coslat)[..., np.newaxis]
+        coslat = np.cos(np.deg2rad(anom_x.coords['lat'].values))
+        wgts = np.sqrt(coslat)[..., np.newaxis]
 
     if isinstance(control, xr.Dataset):  # EOF requires xr.dataArray
-        control=control.to_array().squeeze()
+        control = control.to_array().squeeze()
 
     if 'member' in control.dims:  # LENS
         # stack member and initialization into time dim, make time first
-        non_spatial_control_dims=list(
+        non_spatial_control_dims = list(
             set(control.dims).intersection(['time', 'member']))
 
-        transpose_dims=list(control.dims)
+        transpose_dims = list(control.dims)
         transpose_dims.remove('member')
-        dims=tuple(transpose_dims)
+        dims = tuple(transpose_dims)
 
-        base_to_calc_eofs=control.stack(
+        base_to_calc_eofs = control.stack(
             new=tuple(non_spatial_control_dims)).rename({'new':
-            'time'}).set_index({'time': 'time'}).transpose(*dims)
+                                                         'time'}).set_index({'time': 'time'}).transpose(*dims)
     else:
         # PM_control
-        base_to_calc_eofs=control.rename({'initialization': 'time'})
+        base_to_calc_eofs = control.rename({'initialization': 'time'})
 
-    solver=Eof(base_to_calc_eofs, weights=wgts)
+    solver = Eof(base_to_calc_eofs, weights=wgts)
 
-    re_leadtime_list=[]
-    lead_times=initialized.time.values[:ntime]
-    initializations=initialized.initialization.values
+    re_leadtime_list = []
+    lead_times = initialized.time.values[:ntime]
+    initializations = initialized.initialization.values
     # DoTo: parallelize this double loop
     for init in initializations:  # loop over initializations
-        rl, sl, dl=([] for _ in range(3))  # lists to store results in
+        rl, sl, dl = ([] for _ in range(3))  # lists to store results in
         for t in lead_times:  # loop over lead time
             # P_b base distribution
-            pc_b=solver.projectField(anom_b.sel(initialization=init, time=t)
+            pc_b = solver.projectField(anom_b.sel(initialization=init, time=t)
                                              .drop('time')
                                              .rename({'member': 'time'}),
                                        neofs=neofs, eofscaling=0,
                                        weighted=False)
 
-            mu_b=pc_b.mean('time')
-            sigma_b=xr.DataArray(np.cov(pc_b.T))
+            mu_b = pc_b.mean('time')
+            sigma_b = xr.DataArray(np.cov(pc_b.T))
 
             # P_x initialization distribution
-            pc_x=solver.projectField(anom_x.sel(initialization=init, time=t)
+            pc_x = solver.projectField(anom_x.sel(initialization=init, time=t)
                                              .drop('time')
                                              .rename({'member': 'time'}),
                                        neofs=neofs, eofscaling=0,
                                        weighted=False)
 
-            mu_x=pc_x.mean('time')
-            sigma_x=xr.DataArray(np.cov(pc_x.T))
+            mu_x = pc_x.mean('time')
+            sigma_x = xr.DataArray(np.cov(pc_x.T))
 
-            r, d, s=_relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b,
+            r, d, s = _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b,
                                                 neofs)
 
             rl.append(r)
@@ -245,7 +244,7 @@ def compute_relative_entropy(initialized, control,
                                             'S': ('time', sl),
                                             'D': ('time', dl)}))
 
-    re=xr.concat(re_leadtime_list, dim='initialization').assign(
+    re = xr.concat(re_leadtime_list, dim='initialization').assign(
         initialization=initializations, time=lead_times)
 
     return re
@@ -281,24 +280,25 @@ def bootstrap_relative_entropy(initialized, control, sig=95,
 
     """
     if neofs is None:
-        neofs=initialized.member.size
+        neofs = initialized.member.size
     if ntime is None:
-        ntime=initialized.time.size
+        ntime = initialized.time.size
 
-    results_list=[]
+    results_list = []
     for _ in range(min(1, int(bootstrap / initialized.time.size))):
-        uninitialized_initialized=_create_uninitialized_ensemble_from_control(
-                initialized, control, list(initialized.member.values))
+        uninitialized_initialized =
+        _create_uninitialized_ensemble_from_control(
+            initialized, control, list(initialized.member.values))
         print(uninitialized_initialized.dims)
         print(control.dims)
-        ds_pseudo_rel_ent=compute_relative_entropy(
+        ds_pseudo_rel_ent = compute_relative_entropy(
             uninitialized_initialized, control, neofs=neofs,
             curv=curv, ntime=ntime, anomaly_data=anomaly_data,
             detrend_by_control_unitialized=detrend_by_control_unitialized,
             nmember_control=nmember_control)
         results_list.append(ds_pseudo_rel_ent)
-    ds_pseudo_metric=xr.concat(results_list, dim='it')
-    qsig=sig / 100
-    sig_level=ds_pseudo_metric.quantile(
+    ds_pseudo_metric = xr.concat(results_list, dim='it')
+    qsig = sig / 100
+    sig_level = ds_pseudo_metric.quantile(
         q=qsig, dim=['it', 'time', 'initialization'])
     return sig_level

@@ -19,9 +19,11 @@ before_install:
 install:
   - conda env create -n test_env --file ci/requirements-py36.yml
   - source activate test_env
+  - conda install pip
   - conda list
-  - pip install --no-deps -e .
-  - python setup.py install
+  - which conda
+  - which python
+  - python setup.py install --user
 
 script:
   - pytest

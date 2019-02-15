@@ -157,8 +157,8 @@ def compute_relative_entropy(initialized, control,
     # initialized and control_uninitialized are allowed to have different
     # dims as I need more members to sample my control distr. properly
     if set(initialized.dims) == set(control_uninitialized.dims):
-        warnings.warn("Warning: initialized and control_uninitialized have different
-            coords.")
+        warnings.warn(
+            "Warning: initialized and control_uninitialized have different coords.")
 
     # the datasets should only contain one variable
     if isinstance(control_uninitialized, xr.Dataset):

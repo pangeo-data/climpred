@@ -138,7 +138,7 @@ def compute_relative_entropy(initialized, control,
         ntime = initialized.time.size
 
     # case if you submit control with dim time and member, LENS case
-    if 'member' not in control.dims:
+    if 'member' in control.dims:
         control_uninitialized = _bootstrap_dim(
             control, initialized.time.size, time_dim='time',
             dim='initialization',
@@ -288,8 +288,6 @@ def bootstrap_relative_entropy(initialized, control, sig=95,
     for _ in range(min(1, int(bootstrap / initialized.time.size))):
         uninitialized_initialized = _create_uninitialized_ensemble_from_control(
             initialized, control, list(initialized.member.values))
-        print(uninitialized_initialized.dims)
-        print(control.dims)
         ds_pseudo_rel_ent = compute_relative_entropy(
             uninitialized_initialized, control, neofs=neofs,
             curv=curv, ntime=ntime, anomaly_data=anomaly_data,

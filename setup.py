@@ -21,8 +21,8 @@ setup(name=DISTNAME,
       license=LICENSE,
       packages=find_packages(),
       # NOTE: This will be deprecated, so either need to move away from non-pypi packages or find another solution.
-      # Needed for dependencies. Currently do not like the pyfinance or xskillscore dependency.
+      # Needed for dependencies.
       install_requires=INSTALL_REQUIRES,
       python_requires=PYTHON_REQUIRE,
       tests_require=TESTS_REQUIRE,
-     )
+      )

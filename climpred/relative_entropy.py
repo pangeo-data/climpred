@@ -286,8 +286,7 @@ def bootstrap_relative_entropy(initialized, control, sig=95,
 
     results_list = []
     for _ in range(min(1, int(bootstrap / initialized.time.size))):
-        uninitialized_initialized =
-        _create_uninitialized_ensemble_from_control(
+        uninitialized_initialized = _create_uninitialized_ensemble_from_control(
             initialized, control, list(initialized.member.values))
         print(uninitialized_initialized.dims)
         print(control.dims)

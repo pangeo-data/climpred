@@ -2,14 +2,12 @@
 Markdown:
   beautifiers:
     - Prettier
-  indent_size: 2
+  indent_size: 4
   indent_char: " "
   wrap_line_length: 80
 Python:
-  beautifiers:
-    - YAPF
-    - Black
-  indent_size: 2
+  beautifiers: ["Black", "YAPF"]
+  indent_size: 4
   indent_char: " "
   indent_space: "space"
   wrap_line_length: 80

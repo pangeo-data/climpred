@@ -32,6 +32,6 @@ Developed and maintained by Riley Brady (CU Boulder) and Aaron Spring (MPI).
 
 emails:
 
-- riley.brady@colorado.edu
+-   riley.brady@colorado.edu
 
-- aaron.spring@mpimet.mpg.de
+-   aaron.spring@mpimet.mpg.de

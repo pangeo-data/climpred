@@ -7,7 +7,8 @@ AUTHOR_EMAIL = 'riley.brady@colorado.edu'
 DESCRIPTION = 'An xarray wrapper for decadal climate prediction.'
 URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
-INSTALL_REQUIRES = ['numpy', 'pandas', 'xarray', 'scipy', 'xskillscore']
+INSTALL_REQUIRES = ['numpy', 'pandas',
+                    'xarray', 'scipy', 'xskillscore', 'eofs']
 TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
 

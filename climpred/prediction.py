@@ -1,16 +1,17 @@
 """Objects dealing with decadal prediction metrics."""
+import types
+import warnings
+
 import numpy as np
 import xarray as xr
 
 from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
-from xskillscore import rmse as _rmse
 from xskillscore import pearson_r_p_value
+from xskillscore import rmse as _rmse
 
 from .stats import _check_xarray, _get_dims, z_significance
-import warnings
-import types
 
 
 # -------------------------------------------- #
@@ -532,7 +533,7 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
 
     .. math:: NRMSE = \frac{RMSE}{\sigma_{control} \cdot \sqrt{fac}
                     = sqrt{ \frac{MSE}{ \sigma^2_{control} \cdot fac} }
-                    
+
     Perfect forecast: 0
     Climatology forecast: 1
 
@@ -904,7 +905,7 @@ def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
         ds_pseudo_metric = compute_perfect_model(
             ds_pseudo, _control, metric=metric, comparison=comparison)
         x.append(ds_pseudo_metric)
-    ds_pseudo_metric = xr.concat(x, dim='it')
+    ds_pseudo_metric = xr.concat(x, dim='it').compute()
     if isinstance(sig, list):
         qsig = [x / 100 for x in sig]
     else:

@@ -931,7 +931,7 @@ def bootstrap_perfect_model(ds,
         uninit_ci (xr.Dataset): confidence levels of uninit_skill
         p_uninit_over_init (xr.Dataset): p-value of the hypothesis
                                          that the difference of
-                                         correlations between the
+                                         skill between the
                                          initialized and uninitialized
                                          simulations is smaller or
                                          equal to zero based on
@@ -942,7 +942,7 @@ def bootstrap_perfect_model(ds,
         pers_ci (xr.Dataset): confidence levels of pers_skill
         p_pers_over_init (xr.Dataset): p-value of the hypothesis
                                        that the difference of
-                                       correlations between the
+                                       skill between the
                                        initialized and persistence
                                        simulations is smaller or
                                        equal to zero based on
@@ -964,7 +964,9 @@ def bootstrap_perfect_model(ds,
     init = []
     uninit = []
     pers = []
-    for _ in range(bootstrap):  # resample with replacement
+    # resample with replacement
+    # DoTo: parallelize loop
+    for _ in range(bootstrap):
         smp = np.random.choice(inits, len(inits))
         smp_ds = ds.sel(initialization=smp)
         # compute init skill
@@ -1012,9 +1014,12 @@ def bootstrap_perfect_model(ds,
         pers_skill, pers_ci = _distribution_to_signal_ci(
             pers, ci_low_pers, ci_high_pers)
 
-    def _pvalue_from_distributions(simple_fct, init):
+    def _pvalue_from_distributions(simple_fct, init, metric=metric):
         """Get probability that simple_fct is larger than init."""
-        return ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
+        pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
+        if metric not in ['pearson_r', 'ppp']:
+            pv = 1 - pv
+        return pv
 
     if compute_uninitized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)

@@ -931,7 +931,7 @@ def bootstrap_perfect_model(ds,
         uninit_ci (xr.Dataset): confidence levels of uninit_skill
         p_uninit_over_init (xr.Dataset): p-value of the hypothesis
                                          that the difference of
-                                         correlations between the
+                                         skill between the
                                          initialized and uninitialized
                                          simulations is smaller or
                                          equal to zero based on
@@ -942,7 +942,7 @@ def bootstrap_perfect_model(ds,
         pers_ci (xr.Dataset): confidence levels of pers_skill
         p_pers_over_init (xr.Dataset): p-value of the hypothesis
                                        that the difference of
-                                       correlations between the
+                                       skill between the
                                        initialized and persistence
                                        simulations is smaller or
                                        equal to zero based on

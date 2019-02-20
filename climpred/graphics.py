@@ -103,7 +103,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             https://doi.org/10/f8wkrs.
 
     """
-    capsize_pv_offset = (init_skill.max('time') - init_skill.min('time'))/25
+    capsize_pv_offset = (init_skill.max('time') - init_skill.min('time')) / 25
     fontsize = 8
     c_uninit = 'indianred'
     c_init = 'steelblue'
@@ -128,8 +128,8 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
         for t in init_skill.time.values:
             ax.text(
                 init_skill.time.sel(time=t),
-                init_ci.isel(quantile=1).sel(
-                    time=t).values + capsize_pv_offset,
+                init_ci.isel(quantile=1).sel(time=t).values +
+                capsize_pv_offset,
                 "%.2f" % float(p_uninit_over_init.sel(time=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',
@@ -157,13 +157,14 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             fmt='--o',
             capsize=4,
             c=c_pers,
-            label='persistence with ' + str(pers_sig) + '% confidence interval')
+            label='persistence with ' + str(pers_sig) +
+            '% confidence interval')
     if p_pers_over_init is not None:
         for t in pers_skill.time.values:
             ax.text(
                 pers_skill.time.sel(time=t),
-                pers_ci.isel(quantile=0).sel(
-                    time=t).values - capsize_pv_offset,
+                pers_ci.isel(quantile=0).sel(time=t).values -
+                capsize_pv_offset,
                 "%.2f" % float(p_pers_over_init.sel(time=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',

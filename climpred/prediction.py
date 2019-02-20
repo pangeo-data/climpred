@@ -835,7 +835,7 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
             'mse',
             'mae'""")
     plag = []  # holds results of persistence for each lag
-    inits = ds[dim].values
+    inits = ds['initialization'].values
     reference = reference.isel({dim: slice(0, -nlags)})
     for lag in range(1, 1 + nlags):
         ref = reference.sel({dim: inits + lag})

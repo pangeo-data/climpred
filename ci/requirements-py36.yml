@@ -1,0 +1,11 @@
+name: test_env
+channels:
+  - conda-forge
+dependencies:
+  - xarray
+  - dask
+  - scipy
+  - matplotlib
+  - pandas
+  - pytest
+  - eofs

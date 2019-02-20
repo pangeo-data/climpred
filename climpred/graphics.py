@@ -103,7 +103,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             https://doi.org/10/f8wkrs.
 
     """
-    capsize_pv_offset = 0.05
+    capsize_pv_offset = (init_skill.max('time') - init_skill.min('time'))/25
     fontsize = 8
     c_uninit = 'indianred'
     c_init = 'steelblue'

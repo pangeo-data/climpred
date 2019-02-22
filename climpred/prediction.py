@@ -664,7 +664,7 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-@dask.delayed
+
 def compute_perfect_model(ds,
                           control,
                           metric='pearson_r',
@@ -793,7 +793,6 @@ def compute_reference(ds,
         return skill
 
 
-@dask.delayed
 def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -854,7 +853,6 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
 # BOOTSTRAPPING
 # Functions for sampling an ensemble
 # --------------------------------------------#
-@dask.delayed
 def _pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.

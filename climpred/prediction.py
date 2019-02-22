@@ -2,6 +2,7 @@
 import types
 import warnings
 
+import dask
 import numpy as np
 import xarray as xr
 
@@ -663,6 +664,7 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
+@dask.delayed
 def compute_perfect_model(ds,
                           control,
                           metric='pearson_r',
@@ -791,6 +793,7 @@ def compute_reference(ds,
         return skill
 
 
+@dask.delayed
 def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -851,6 +854,7 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
 # BOOTSTRAPPING
 # Functions for sampling an ensemble
 # --------------------------------------------#
+@dask.delayed
 def _pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
@@ -1002,7 +1006,7 @@ def bootstrap_perfect_model(ds,
         pers = xr.concat(pers, dim='bootstrap')
 
     def _distribution_to_signal_ci(ds, ci_low, ci_high, dim='bootstrap'):
-        ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
+        ds_ci = ds.compute().quantile(q=[ci_low, ci_high], dim=dim)
         ds_skill = ds.mean(dim)
         return ds_skill, ds_ci
 

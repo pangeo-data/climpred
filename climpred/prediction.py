@@ -898,6 +898,7 @@ def bootstrap_perfect_model(ds,
                             bootstrap=500,
                             compute_uninitized_skill=True,
                             compute_persistence_skill=True,
+                            compute_ci=True,
                             nlags=None,
                             running=None,
                             reference_period='MK'):
@@ -1003,18 +1004,23 @@ def bootstrap_perfect_model(ds,
     if compute_persistence_skill:
         pers = xr.concat(pers, dim='bootstrap')
 
-    def _distribution_to_signal_ci(ds, ci_low, ci_high, dim='bootstrap'):
-        ds_ci = ds.compute().quantile(q=[ci_low, ci_high], dim=dim)
-        ds_skill = ds.mean(dim)
-        return ds_skill, ds_ci
+    def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
+        if len(ds.chunks) > 0:
+            ds = ds.compute()
+        ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
+        return ds_ci
 
-    init_skill, init_ci = _distribution_to_signal_ci(init, ci_low, ci_high)
-    if compute_uninitized_skill:
-        uninit_skill, uninit_ci = _distribution_to_signal_ci(
-            uninit, ci_low, ci_high)
-    if compute_persistence_skill:
-        pers_skill, pers_ci = _distribution_to_signal_ci(
-            pers, ci_low_pers, ci_high_pers)
+    if compute_ci:
+        init_ci = _distribution_to_ci(init, ci_low, ci_high)
+        if compute_uninitized_skill:
+            uninit_ci = _distribution_to_ci(
+                uninit, ci_low, ci_high)
+        if compute_persistence_skill:
+            pers_ci = _distribution_to_ci(
+                pers, ci_low_pers, ci_high_pers)
+    else:
+        pers_ci = None
+        uninit_ci = None
 
     def _pvalue_from_distributions(simple_fct, init, metric=metric):
         """Get probability that simple_fct is larger than init."""
@@ -1026,14 +1032,14 @@ def bootstrap_perfect_model(ds,
     if compute_uninitized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)
     else:
-        p_uninit_over_init, uninit_skill, uninit_ci = None, None, None
+        p_uninit_over_init, uninit_ci = None, None
 
     if compute_persistence_skill:
         p_pers_over_init = _pvalue_from_distributions(uninit, init)
     else:
-        p_pers_over_init, pers_skill, pers_ci = None, None, None
+        p_pers_over_init, pers_ci = None, None
 
-    return init_skill, init_ci, uninit_skill, uninit_ci, p_uninit_over_init, pers_skill, pers_ci, p_pers_over_init
+    return init_ci, uninit_ci, p_uninit_over_init, pers_ci, p_pers_over_init
 
 
 # --------------------------------------------#

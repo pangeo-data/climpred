@@ -1019,6 +1019,7 @@ def bootstrap_perfect_model(ds,
             pers_ci = _distribution_to_ci(
                 pers, ci_low_pers, ci_high_pers)
     else:
+        init_ci = None
         pers_ci = None
         uninit_ci = None
 

@@ -1036,7 +1036,7 @@ def bootstrap_perfect_model(ds,
         p_uninit_over_init, uninit_ci = None, None
 
     if compute_persistence_skill:
-        p_pers_over_init = _pvalue_from_distributions(uninit, init)
+        p_pers_over_init = _pvalue_from_distributions(pers, init)
     else:
         p_pers_over_init, pers_ci = None, None
 

@@ -1005,8 +1005,11 @@ def bootstrap_perfect_model(ds,
         pers = xr.concat(pers, dim='bootstrap')
 
     def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
-        if len(ds.chunks) > 0:
-            ds = ds.compute()
+        try:
+            if len(ds.chunks) >= 1:
+                ds = ds.compute()
+        except:
+            pass
         ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
         return ds_ci
 

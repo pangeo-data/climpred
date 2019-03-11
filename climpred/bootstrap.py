@@ -1,10 +1,11 @@
+import numpy as np
 import xarray as xr
 
 from climpred.prediction import _pseudo_ens
 from climpred.stats import DPP
 
 
-def DPP_threshold(ds, control, sig=95, bootstrap=500, m=10):
+def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
     """Calc DPP from re-sampled dataset.
 
     Reference:
@@ -15,9 +16,12 @@ def DPP_threshold(ds, control, sig=95, bootstrap=500, m=10):
 
     """
     bootstraped_results = []
-    for _ in bootstrap:
-        smp_ds = _pseudo_ens(ds, control)
-        bootstraped_results.append(DPP(smp_ds, control, m=m))
+    time = control.time.values
+    for _ in range(bootstrap):
+        smp_time = np.random.choice(time, len(time))
+        smp_control = control.sel(time=smp_time)
+        smp_control['time'] = time
+        bootstraped_results.append(DPP(smp_control, **dpp_kwargs))
     threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
         sig / 100, 'bootstrap')
     return threshold

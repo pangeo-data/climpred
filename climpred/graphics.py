@@ -103,11 +103,11 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             https://doi.org/10/f8wkrs.
 
     """
-    capsize_pv_offset = (init_skill.max('time') - init_skill.min('time')) / 25
     fontsize = 8
     c_uninit = 'indianred'
     c_init = 'steelblue'
     c_pers = 'gray'
+    capsize = capsize
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 4))
@@ -115,11 +115,11 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
         init_skill.time,
         init_skill,
         yerr=[
-            init_ci.isel(quantile=1) - init_skill,
-            init_skill - init_ci.isel(quantile=0)
+            init_skill - init_ci.isel(quantile=0),
+            init_ci.isel(quantile=1) - init_skill
         ],
         fmt='--o',
-        capsize=4,
+        capsize=capsize,
         c=c_uninit,
         label='initialized with ' + str(sig) + '% confidence interval')
     # uninit
@@ -128,8 +128,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
         for t in init_skill.time.values:
             ax.text(
                 init_skill.time.sel(time=t),
-                init_ci.isel(quantile=1).sel(time=t).values +
-                capsize_pv_offset,
+                init_ci.isel(quantile=1).sel(time=t).values,
                 "%.2f" % float(p_uninit_over_init.sel(time=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',
@@ -138,10 +137,10 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
         ax.errorbar(
             0,
             uninit_skill,
-            yerr=[[uninit_ci.isel(quantile=1) - uninit_skill],
-                  [uninit_skill - uninit_ci.isel(quantile=0)]],
+            yerr=[[uninit_skill - uninit_ci.isel(quantile=0)],
+                  [uninit_ci.isel(quantile=1) - uninit_skill]],
             fmt='--o',
-            capsize=4,
+            capsize=capsize,
             c=c_init,
             label='uninitialized with ' + str(sig) + '% confidence interval')
         ax.axhline(y=uninit_skill, c='steelblue', ls=':')
@@ -151,11 +150,11 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             pers_skill.time,
             pers_skill,
             yerr=[
-                pers_ci.isel(quantile=1) - pers_skill,
-                pers_skill - pers_ci.isel(quantile=0)
+                pers_skill - pers_ci.isel(quantile=0),
+                pers_ci.isel(quantile=1) - pers_skill
             ],
             fmt='--o',
-            capsize=4,
+            capsize=capsize,
             c=c_pers,
             label='persistence with ' + str(pers_sig) +
             '% confidence interval')
@@ -163,8 +162,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
         for t in pers_skill.time.values:
             ax.text(
                 pers_skill.time.sel(time=t),
-                pers_ci.isel(quantile=0).sel(time=t).values -
-                capsize_pv_offset,
+                pers_ci.isel(quantile=0).sel(time=t).values,
                 "%.2f" % float(p_pers_over_init.sel(time=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',

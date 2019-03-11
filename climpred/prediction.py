@@ -1027,9 +1027,9 @@ def bootstrap_perfect_model(ds,
         uninit_ci = None
 
     def _pvalue_from_distributions(simple_fct, init, metric=metric):
-        """Get probability that simple_fct is larger than init."""
+        """Get probability that skill of simple_fct is larger than init skill."""
         pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
-        if metric not in ['pearson_r', 'ppp']:
+        if metric not in ['pearson_r', 'ppp']:  # positively oriented metrics
             pv = 1 - pv
         return pv
 

@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from climpred.prediction import _pseudo_ens
-from climpred.stats import DPP
+from climpred.stats import DPP, xr_varweighted_mean_period
 
 
 def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
@@ -22,6 +22,23 @@ def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
         smp_control = control.sel(time=smp_time)
         smp_control['time'] = time
         bootstraped_results.append(DPP(smp_control, **dpp_kwargs))
+    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
+        sig / 100, 'bootstrap')
+    return threshold
+
+
+def xr_varweighted_mean_period_threshold(control, sig=95, bootstrap=500, **vwmp_kwargs):
+    """Calc vwmp from re-sampled dataset.
+
+    """
+    bootstraped_results = []
+    time = control.time.values
+    for _ in range(bootstrap):
+        smp_time = np.random.choice(time, len(time))
+        smp_control = control.sel(time=smp_time)
+        smp_control['time'] = time
+        bootstraped_results.append(
+            xr_varweighted_mean_period(smp_control, **vwmp_kwargs))
     threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
         sig / 100, 'bootstrap')
     return threshold

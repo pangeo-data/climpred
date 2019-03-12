@@ -158,8 +158,10 @@ def xr_rm_poly(ds, order, dim='time'):
     _check_xarray(ds)
 
     def _get_metadata(ds):
-        dims = ds.dims
-        coords = ds.coords
+        # copy is to make sure any edits to the dims or coords doesn't
+        # affect the original dataset that is entered.
+        dims = ds.copy().dims
+        coords = ds.copy().coords
         return dims, coords
 
     def _swap_axes(y):
@@ -174,6 +176,9 @@ def xr_rm_poly(ds, order, dim='time'):
         if dims[0] != dim:
             idx = dims.index(dim)
             y = np.swapaxes(y, 0, idx)
+            # fixes bug with renaming dimensions that have
+            # coordinates with differing shapes.
+            del y.coords[dim], y.coords[dims[0]]
             y = y.rename({dims[0]: dim,
                           dims[idx]: dims[0]})
             dims = list(dims)
@@ -214,7 +219,7 @@ def xr_rm_poly(ds, order, dim='time'):
     detrended_ds = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     if DATASET:
         detrended_ds = _reconstruct_ds(detrended_ds, store_vars)
-    return detrended_ds
+    return detrended_ds, dims, coords
 
 
 def xr_rm_trend(da, dim='time'):

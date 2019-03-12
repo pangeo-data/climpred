@@ -219,7 +219,7 @@ def xr_rm_poly(ds, order, dim='time'):
     detrended_ds = xr.DataArray(detrended_ts, dims=dims, coords=coords)
     if DATASET:
         detrended_ds = _reconstruct_ds(detrended_ds, store_vars)
-    return detrended_ds, dims, coords
+    return detrended_ds
 
 
 def xr_rm_trend(da, dim='time'):

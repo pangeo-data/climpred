@@ -107,7 +107,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
     c_uninit = 'indianred'
     c_init = 'steelblue'
     c_pers = 'gray'
-    capsize = capsize
+    capsize = 4
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 4))

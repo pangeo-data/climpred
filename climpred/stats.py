@@ -5,6 +5,7 @@ import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
 from scipy.stats import norm
+
 from xskillscore import pearson_r, pearson_r_p_value
 
 
@@ -158,8 +159,10 @@ def xr_rm_poly(ds, order, dim='time'):
     _check_xarray(ds)
 
     def _get_metadata(ds):
-        dims = ds.dims
-        coords = ds.coords
+        # copy is to make sure any edits to the dims or coords doesn't
+        # affect the original dataset that is entered.
+        dims = ds.copy().dims
+        coords = ds.copy().coords
         return dims, coords
 
     def _swap_axes(y):
@@ -174,6 +177,9 @@ def xr_rm_poly(ds, order, dim='time'):
         if dims[0] != dim:
             idx = dims.index(dim)
             y = np.swapaxes(y, 0, idx)
+            # fixes bug with renaming dimensions that have
+            # coordinates with differing shapes.
+            del y.coords[dim], y.coords[dims[0]]
             y = y.rename({dims[0]: dim,
                           dims[idx]: dims[0]})
             dims = list(dims)

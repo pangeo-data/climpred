@@ -1,8 +1,8 @@
 import numpy as np
 import xarray as xr
 
-from climpred.prediction import compute_perfect_model, compute_persistence
-from climpred.stats import DPP, xr_varweighted_mean_period
+from .prediction import compute_perfect_model, compute_persistence
+from .stats import DPP, xr_varweighted_mean_period
 
 
 def _pseudo_ens(ds, control):

@@ -5,6 +5,7 @@ import warnings
 import dask
 import numpy as np
 import xarray as xr
+from properscoring import crps_ensemble
 
 from xskillscore import mae as _mae
 from xskillscore import mse as _mse
@@ -12,13 +13,51 @@ from xskillscore import pearson_r as _pearson_r
 from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
 
+# from .bootstrap import _pseudo_ens
 from .stats import _check_xarray, _get_dims, z_significance
-
 
 # -------------------------------------------- #
 # HELPER FUNCTIONS
 # Should only be used internally by esmtools
 # -------------------------------------------- #
+
+
+def _pseudo_ens(ds, control):
+    """
+    Create a pseudo-ensemble from control run.
+
+    Needed for block bootstrapping confidence intervals of a metric in perfect
+    model framework. Takes randomly segments of length of ensemble dataset from
+    control and rearranges them into ensemble and member dimensions.
+
+    Args:
+        ds (xarray object): ensemble simulation.
+        control (xarray object): control simulation.
+
+    Returns:
+        ds_e (xarray object): pseudo-ensemble generated from control run.
+    """
+    nens = ds.initialization.size
+    nmember = ds.member.size
+    length = ds.time.size
+    c_start = 0
+    c_end = control['time'].size
+    time = ds['time']
+
+    def isel_years(control, year_s, m=None, length=length):
+        new = control.isel(time=slice(year_s, year_s + length))
+        new['time'] = time
+        return new
+
+    def create_pseudo_members(control):
+        startlist = np.random.randint(c_start, c_end - length - 1, nmember)
+        return xr.concat([isel_years(control, start) for start in startlist],
+                         'member')
+
+    return xr.concat([create_pseudo_members(control) for _ in range(nens)],
+                     'initialization')
+
+
 def _shift(a, b, lag, dim='time'):
     """
     Helper function to return two shifted time series for applying statistics
@@ -433,6 +472,10 @@ def _get_metric_function(metric):
     * nmse
     * msss
     * uacc
+    * less
+    * lesss
+    * crps
+    * crpss
 
     Args:
         metric (str): name of metric.
@@ -462,12 +505,20 @@ def _get_metric_function(metric):
             metric = '_nrmse'
         elif metric.lower() in ['nev', 'nmse']:
             metric = '_nmse'
-        elif metric.lower() in ['ppp', 'msss']:
+        elif metric.lower() in ['ppp', 'msss', 'msess']:
             metric = '_ppp'
         elif metric.lower() == 'nmae':
             metric = '_nmae'
         elif metric.lower() == 'uacc':
             metric = '_uacc'
+        elif metric.lower() == 'less':
+            metric = '_less'
+        elif metric.lower() == 'lesss':
+            metric = '_lesss'
+        elif metric.lower() == 'crps':
+            metric = '_crps'
+        elif metric.lower() == 'crpss':
+            metric = '_crpss'
         else:
             raise ValueError("""Please supply a metric from the following list:
                 'pearson_r'
@@ -479,8 +530,13 @@ def _get_metric_function(metric):
                 'nmse'
                 'ppp'
                 'msss'
+                'msess'
                 'nmae'
                 'uacc'
+                'less'
+                'lesss'
+                'crps'
+                'crpss'
                 """)
         return eval(metric)
 
@@ -659,6 +715,71 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
         _ppp(forecast, reference, control, running, reference_period))
 
 
+def _less(ds, control, comparison, running=None, reference_period=None):
+    """
+    Logarithmic Ensemble Spread Score
+
+    Kadow et al. 2016.
+
+    pos: under-disperive
+    neg: over-disperive
+    perfect: 0
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    numerator = _mse(fct, truth, dim=supervector_dim)
+    denominator = control.std('time')
+    less = np.log(numerator / denominator)
+    return less
+
+
+def _lesss(ds, control, comparison, running=None, reference_period=None):
+    """
+    Logarithmic Ensemble Spread Skill Score.
+
+    Kadow et al. 2016.
+
+    min: -inf
+    max: 1
+    perfect: 0
+    """
+    less_pred = _less(ds, control, comparison)
+    ds_uninit = _pseudo_ens(ds, control)
+    less_ref = _less(ds_uninit, control, comparison).mean('time')
+    lesss = 1 - less_pred ** 2 / less_ref ** 2
+    return lesss
+
+
+def _crps(ds, control, comparison, running=None, reference_period=None):
+    """
+    Continuous Ranked Probability Score
+
+    Matheson and Winkler, 1976
+
+    """
+    supervector_dim = 'svd'
+    fct, truth = comparison(ds, supervector_dim)
+    skill = crps_ensemble(fct, truth)
+    skill = xr.DataArray(skill, coords=fct.coords).to_dataset('var')
+    return skill
+
+
+def _crpss(ds, control, comparison, running=None, reference_period=None):
+    """
+    Continuous Ranked Probability Skill Score.
+
+    Matheson and Winkler, 1976
+
+    perfect: 0
+    else: negative
+    """
+    crps_skill = _crps(ds, control, comparison)
+    ds_uninit = _pseudo_ens(ds, control)
+    baseline_skill = _crps(ds_uninit, control, comparison).mean('time')
+    score = (baseline_skill - crps_skill) / baseline_skill
+    return score
+
+
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
@@ -703,7 +824,7 @@ def compute_perfect_model(ds,
         res = metric(forecast, reference, dim=supervector_dim)
         return res
     # perfect-model only metrics
-    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc, _less, _lesss, _crps, _crpss]:
         res = metric(ds, control, comparison, running, reference_period)
         return res
     else:

@@ -15,10 +15,7 @@ Please delete options that are not relevant.
 
 # How Has This Been Tested?
 
-Please describe the tests that you ran to verify your changes. Provide instructions so we can reproduce. Please also list any relevant details for your test configuration
-
-- [ ] Test A
-- [ ] Test B
+Please describe the tests that you ran to verify your changes. This could point to a cell in the updated notebooks. Or a snippet of code with accompanying figures here.
 
 # Checklist:
 
@@ -28,3 +25,7 @@ Please describe the tests that you ran to verify your changes. Provide instructi
 - [ ] I have added docstrings to all new functions.
 - [ ] I have updated the wiki with documentation, if necessary.
 - [ ] I have commented my code, particularly in hard-to-understand areas
+
+# References
+
+Please add any references to manuscripts, textbooks, etc.

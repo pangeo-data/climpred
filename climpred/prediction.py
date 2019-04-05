@@ -2,6 +2,7 @@
 import types
 import warnings
 
+import dask
 import numpy as np
 import xarray as xr
 
@@ -137,8 +138,7 @@ def _drop_ensembles(ds, rmd_ensemble=[0]):
         for ens in rmd_ensemble:
             ensemble_list.remove(ens)
     else:
-        raise ValueError('select available ensembles only',
-                         rmd_ensemble)
+        raise ValueError('select available ensembles only', rmd_ensemble)
     return ds.sel(initialization=ensemble_list)
 
 
@@ -186,7 +186,8 @@ def _select_members_ensembles(ds, m=None, i=None):
     return ds.sel(member=m, initialization=i)
 
 
-def _stack_to_supervector(ds, new_dim='svd',
+def _stack_to_supervector(ds,
+                          new_dim='svd',
                           stacked_dims=('initialization', 'member')):
     """Stack all stacked_dims (likely initialization and member) dimensions into one
     supervector dimension to perform metric over.
@@ -275,11 +276,11 @@ def _m2m(ds, supervector_dim='svd'):
         for m2 in ds_reduced.member:
             for i in ds.initialization:
                 reference_list.append(reference.sel(initialization=i))
-                forecast_list.append(ds_reduced.sel(member=m2, initialization=i))
+                forecast_list.append(
+                    ds_reduced.sel(member=m2, initialization=i))
     reference = xr.concat(reference_list, supervector_dim)
     forecast = xr.concat(forecast_list, supervector_dim)
     return forecast, reference
-
 
 
 def _m2e(ds, supervector_dim='svd'):
@@ -521,8 +522,8 @@ def _ppp(ds, control, comparison, running=None, reference_period=None):
     supervector_dim = 'svd'
     forecast, reference = comparison(ds, supervector_dim)
     mse_skill = _mse(forecast, reference, dim=supervector_dim)
-    var = _get_variance(control, time_length=running,
-                        reference_period=reference_period)
+    var = _get_variance(
+        control, time_length=running, reference_period=reference_period)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
@@ -563,8 +564,8 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
     supervector_dim = 'svd'
     forecast, reference = comparison(ds, supervector_dim)
     rmse_skill = _rmse(forecast, reference, dim=supervector_dim)
-    var = _get_variance(control, time_length=running,
-                        reference_period=reference_period)
+    var = _get_variance(
+        control, time_length=running, reference_period=reference_period)
     fac = _get_norm_factor(comparison)
     nrmse_skill = 1 - rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
@@ -598,8 +599,8 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     supervector_dim = 'svd'
     forecast, reference = comparison(ds, supervector_dim)
     mse_skill = _mse(forecast, reference, dim=supervector_dim)
-    var = _get_variance(control, time_length=running,
-                        reference_period=reference_period)
+    var = _get_variance(
+        control, time_length=running, reference_period=reference_period)
     fac = _get_norm_factor(comparison)
     nmse_skill = 1 - mse_skill / var / fac
     return nmse_skill
@@ -624,8 +625,8 @@ def _nmae(ds, control, comparison, running=None, reference_period=None):
     supervector_dim = 'svd'
     fct, truth = comparison(ds, supervector_dim)
     mse_skill = _mse(fct, truth, dim=supervector_dim)
-    var = _get_variance(control, time_length=running,
-                        reference_period=reference_period)
+    var = _get_variance(
+        control, time_length=running, reference_period=reference_period)
     fac = _get_norm_factor(comparison)
     nmse_skill = 1 - mse_skill / var / fac
     return nmse_skill
@@ -654,7 +655,8 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
     Returns:
         uacc_skill (xarray object): skill of uACC
     """
-    return np.sqrt(_ppp(forecast, reference, control, running, reference_period))
+    return np.sqrt(
+        _ppp(forecast, reference, control, running, reference_period))
 
 
 # --------------------------------------------#
@@ -662,8 +664,13 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
-                          running=None, reference_period=None):
+
+def compute_perfect_model(ds,
+                          control,
+                          metric='pearson_r',
+                          comparison='m2m',
+                          running=None,
+                          reference_period=None):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
@@ -703,8 +710,12 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2m',
         raise ValueError('specify metric argument')
 
 
-def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
-                      nlags=None, return_p=False):
+def compute_reference(ds,
+                      reference,
+                      metric='pearson_r',
+                      comparison='e2r',
+                      nlags=None,
+                      return_p=False):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations).
@@ -757,8 +768,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
             'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
-        a, b = _shift(forecast.isel(time=i), reference, i,
-                      dim='initialization')
+        a, b = _shift(
+            forecast.isel(time=i), reference, i, dim='initialization')
         plag.append(metric(a, b, dim='initialization'))
     skill = xr.concat(plag, 'time')
     skill['time'] = np.arange(1, 1 + nlags)
@@ -770,8 +781,8 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         # suppress that here.
         p_value = []
         for i in range(0, nlags):
-            a, b = _shift(forecast.isel(time=i), reference, i,
-                          dim='initialization')
+            a, b = _shift(
+                forecast.isel(time=i), reference, i, dim='initialization')
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 p_value.append(pearson_r_p_value(a, b, dim='initialization'))
@@ -780,6 +791,64 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r',
         return skill, p_value
     else:
         return skill
+
+
+def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
+                           dim='time'):
+    """
+    Computes the skill of  a persistence forecast from a control run.
+
+    This simply applies some metric on the input out to some lag. The user
+    should avoid computing persistence with prebuilt ACF functions in e.g.,
+    python, MATLAB, R as they tend to use FFT methods for speed but incorporate
+    error due to this.
+
+    TODO: Merge this and `compute_persistence` into one function. These two
+    functions employ different philosophies on how to compute persistence.
+
+    Currently supported metrics for persistence:
+    * pearson_r
+    * rmse
+    * mse
+    * mae
+
+    Reference:
+    * Chapter 8 (Short-Term Climate Prediction) in
+        Van den Dool, Huug. Empirical methods in short-term climate prediction.
+        Oxford University Press, 2007.
+
+    Args:
+        ds (xarray object): The initialization years to get persistence from.
+        reference (xarray object): The reference time series.
+        nlags (int): Number of lags to compute persistence to.
+        metric (str): Metric name to apply at each lag for the persistence
+                      computation. Default: 'pearson_r'
+        dim (str): Dimension over which to compute persistence forecast.
+                   Default: 'time'
+
+    Returns:
+        pers (xarray object): Results of persistence forecast with the input
+                              metric applied.
+    """
+    _check_xarray(control)
+    metric = _get_metric_function(metric)
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
+        raise ValueError("""Please select between the following metrics:
+            'pearson_r',
+            'rmse',
+            'mse',
+            'mae'""")
+    plag = []  # holds results of persistence for each lag
+    inits = ds['initialization'].values
+    control = control.isel({dim: slice(0, -nlags)})
+    for lag in range(1, 1 + nlags):
+        ref = control.sel({dim: inits + lag})
+        fct = control.sel({dim: inits})
+        ref[dim] = fct[dim]
+        plag.append(metric(ref, fct, dim=dim))
+    pers = xr.concat(plag, 'time')
+    pers['time'] = np.arange(1, 1 + nlags)
+    return pers
 
 
 def compute_persistence(reference, nlags, metric='pearson_r',
@@ -806,13 +875,12 @@ def compute_persistence(reference, nlags, metric='pearson_r',
 
 
     Args:
-        reference (xarray object): The reference time series over which to
-                                   compute persistence.
+        reference (xarray object): The reference time series.
         nlags (int): Number of lags to compute persistence to.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
         dim (str): Dimension over which to compute persistence forecast.
-                   Default: 'ensemble'
+                   Default: 'initialization'
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input
@@ -836,90 +904,16 @@ def compute_persistence(reference, nlags, metric='pearson_r',
 
 
 # --------------------------------------------#
-# BOOTSTRAPPING
-# Functions for sampling an ensemble
-# --------------------------------------------#
-def _pseudo_ens(ds, control):
-    """
-    Create a pseudo-ensemble from control run.
-
-    Needed for block bootstrapping confidence intervals of a metric in perfect
-    model framework. Takes randomly segments of length of ensemble dataset from
-    control and rearranges them into ensemble and member dimensions.
-
-    Args:
-        ds (xarray object): ensemble simulation.
-        control (xarray object): control simulation.
-
-    Returns:
-        ds_e (xarray object): pseudo-ensemble generated from control run.
-    """
-    nens = ds.initialization.size
-    nmember = ds.member.size
-    length = ds.time.size
-    c_start = 0
-    c_end = control['time'].size
-    time = ds['time']
-
-    def isel_years(control, year_s, m=None, length=length):
-        new = control.isel(time=slice(year_s, year_s + length - 0))
-        if isinstance(new, xr.DataArray):
-            new['time'] = time
-        elif isinstance(new, xr.Dataset):
-            new = new.assign(time=time)
-        return new
-
-    def create_pseudo_members(control):
-        startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat([isel_years(control, start)
-                          for start in startlist], 'member')
-    return xr.concat([create_pseudo_members(control) for _ in range(nens)],
-                     'initialization')
-
-
-def bootstrap_perfect_model(ds, control, metric='rmse', comparison='m2m',
-                            reference_period='MK', sig=95, bootstrap=30):
-    """
-    Return sig-th percentile of metric, comparison from pseudo ensemble
-    generated from control.
-
-    Args:
-        ds (xarray object): ensemble simulation.
-        control (xarray object): control simulation.
-        metric (str): metric name.
-        comparison (str): comparison name.
-        reference_period (optional str): see _control_for_reference_period.
-        sig (int or list): significance level for bootstrapping.
-        bootstrap (int): number of iterations.
-
-    Returns:
-        sig_level (xarray object): as many sig_levels as list items in sig.
-    """
-    _check_xarray(ds)
-    _check_xarray(control)
-    x = []
-    _control = _control_for_reference_period(
-        control, reference_period=reference_period)
-    for _ in range(1 + int(bootstrap / ds['time'].size)):
-        ds_pseudo = _pseudo_ens(ds, _control)
-        ds_pseudo_metric = compute_perfect_model(
-            ds_pseudo, _control, metric=metric, comparison=comparison)
-        x.append(ds_pseudo_metric)
-    ds_pseudo_metric = xr.concat(x, dim='it').compute()
-    if isinstance(sig, list):
-        qsig = [x / 100 for x in sig]
-    else:
-        qsig = sig / 100
-    sig_level = ds_pseudo_metric.quantile(q=qsig, dim=['time', 'it'])
-    return sig_level
-
-
-# --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
-def xr_predictability_horizon(skill, threshold, limit='upper',
-                              perfect_model=False, p_values=None, N=None,
-                              alpha=0.05, ci=90):
+def xr_predictability_horizon(skill,
+                              threshold,
+                              limit='upper',
+                              perfect_model=False,
+                              p_values=None,
+                              N=None,
+                              alpha=0.05,
+                              ci=90):
     """
     Get predictability horizons for skill better than threshold.
 

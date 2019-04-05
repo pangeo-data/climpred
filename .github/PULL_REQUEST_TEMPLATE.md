@@ -26,6 +26,10 @@ Please describe the tests that you ran to verify your changes. This could point 
 - [ ] I have updated the wiki with documentation, if necessary.
 - [ ] I have commented my code, particularly in hard-to-understand areas
 
+# Discussion
+
+Add any points to discuss in the PR thread. Issues with the code? Suggestions needed? Philosophy changes to the package?
+
 # References
 
 Please add any references to manuscripts, textbooks, etc.

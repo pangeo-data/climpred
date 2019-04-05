@@ -796,7 +796,7 @@ def compute_reference(ds,
 def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
                            dim='time'):
     """
-    Computes the skill of  a persistence forecast from a control run. 
+    Computes the skill of  a persistence forecast from a control run.
 
     This simply applies some metric on the input out to some lag. The user
     should avoid computing persistence with prebuilt ACF functions in e.g.,

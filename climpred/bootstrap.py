@@ -1,6 +1,6 @@
 import numpy as np
 import xarray as xr
-from .prediction import compute_perfect_model, compute_persistence
+from .prediction import compute_perfect_model, compute_persistence_pm
 from .stats import DPP, xr_varweighted_mean_period
 
 
@@ -189,7 +189,7 @@ def bootstrap_perfect_model(ds,
         # compute persistence skill
         if compute_persistence_skill:
             pers.append(
-                compute_persistence(
+                compute_persistence_pm(
                     smp_ds, control, nlags=nlags, dim='time', metric=metric))
     init = xr.concat(init, dim='bootstrap')
     if compute_uninitized_skill:

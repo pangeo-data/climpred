@@ -1,12 +1,25 @@
 import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
-                         compute_perfect_model)
+                         compute_perfect_model, compute_persistence_pm)
 from .bootstrap import bootstrap_perfect_model
 # TODO: add horizon functionality
-# TODO: add perfect model functionality
 # TODO: add relative entropy functionality
 # TODO: add various `get` and `set` decorators
-# TODO: refactor other modules, e.g. move all metrics to `metrics.py`
+# TODO: add checks for our package naming conventions. I.e., should
+# have 'member', 'initialization', etc. Can do this after updating the
+# terminology.
+# TODO: make sure that comparison 'm2r' works for reference ensemble.
+# TODO: allow user to only compute things for one variable. I.e., if the
+# PredictionEnsemble has multiple variables, maybe you only want to compute
+# for one.
+# TODO: For attributes, don't want them spit out for every `print(dp)` call.
+# Maybe have a decorator under PredictionEnsemble that is .get_attr()
+# TODO: Add attributes to the PredictionEnsemble that will change behavior
+# for some functions. E.g.:
+# temporal_resolution = 'annual'
+# TODO: Add attributes to returned objects. E.g., 'skill' should come back
+# with attribute explaining what two things were compared.
+# TODO: Create custom errors (not just ValueError for all of this)
 
 
 # --------------
@@ -26,7 +39,7 @@ def _check_prediction_ensemble_dimensions(xobj):
 
 def _check_reference_dimensions(init, ref):
     """Checks that the reference matches all initialized dimensions except
-    for 'time'"""
+    for 'time' and 'member'"""
     init_dims = list(init.dims)
     if 'time' in init_dims:
         init_dims.remove('time')
@@ -34,26 +47,43 @@ def _check_reference_dimensions(init, ref):
         init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
         raise ValueError("""Reference dimensions must match initialized
-            prediction ensemble dimensions (excluding `time`.)""")
+            prediction ensemble dimensions (excluding `time` and `member`.)""")
 
 
-# TODO: Don't force same variables for every reference. Allow for some
-# references to only have a subset of the initialized prediction variables.
-# This means skill, etc. will be computed for whatever variables
-# are available.
+def _check_control_dimensions(init, control):
+    """Checks that the control matches all initialized prediction ensemble
+    dimensions except for `initialization` and `member`.
+
+    NOTE: This needs to be merged with `_check_reference_dimensions` following
+    refactoring. The dimension language is confusing, since control expects
+    'time' and reference expects 'initialization'."""
+    init_dims = list(init.dims)
+    if 'initialization' in init_dims:
+        init_dims.remove('initialization')
+    if 'member' in init_dims:
+        init_dims.remove('member')
+    if not (set(control.dims) == set(init_dims)):
+        raise ValueError("""Control dimensions must match initialized
+            prediction ensemble dimensions (excluding `initialization` and
+            `member`.)""")
+
+
 def _check_reference_vars_match_initialized(init, ref):
     """
-    Checks that a new reference (or control) dataset has identical variables
-    to the initialized dataset. This ensures that they can be compared
-    pairwise.
+    Checks that a new reference (or control) dataset has at least one variable
+    in common with the initialized dataset. This ensures that they can be
+    compared pairwise.
+
     ref: new addition
     init: dp.initialized
     """
     init_list = [var for var in init.data_vars]
     ref_list = [var for var in ref.data_vars]
-    if set(init_list) != set(ref_list):
-        raise ValueError("""Please provide a dataset with matching variables
-        (and variable names) to the initialied prediction ensemble.""")
+    # https://stackoverflow.com/questions/10668282/
+    # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
+    if set(init_list).isdisjoint(ref_list):
+        raise ValueError("""Please provide a Dataset/DataArray with at least
+        one matching variable to the initialized prediction ensemble.""")
 
 
 def _check_xarray(xobj):
@@ -65,6 +95,14 @@ def _check_xarray(xobj):
 # Aesthetics
 # ----------
 def _display_metadata(self):
+    """
+    This is called in the following case:
+
+    ```
+    dp = cp.ReferenceEnsemble(dple)
+    print(dp)
+    ```
+    """
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
     summary += '    ' + str(self.initialized.data_vars)[18:].strip()
@@ -99,6 +137,11 @@ def _display_metadata(self):
 # CLASS DEFINITIONS
 # -----------------
 class PredictionEnsemble:
+    """
+    The main object. This is the super of both `PerfectModelEnsemble` and
+    `ReferenceEnsemble`. This cannot be called directly by a user, but
+    should house functions that both ensemble types can use.
+    """
     def __init__(self, xobj):
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
@@ -127,7 +170,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_reference_dimensions(self.initialized, xobj)
+        _check_control_dimensions(self.initialized, xobj)
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.control = xobj
 
@@ -150,9 +193,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             attempting to compute a persistence forecast.""")
         if nlags is None:
             nlags = self.initialized.time.size
-        return compute_persistence(self.control,
-                                   nlags=nlags,
-                                   metric=metric)
+        return compute_persistence_pm(self.initialized,
+                                      self.control,
+                                      nlags=nlags,
+                                      metric=metric)
 
     def bootstrap(self, metric='rmse', comparison='m2m', reference_period='MK',
                   sig=95, bootstrap=30):
@@ -172,11 +216,30 @@ class ReferenceEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self.reference = {}
 
+    def _trim_to_reference(self, ref):
+        """
+        Temporarily reduce initialized ensemble to the variables
+        it shares with the given reference. I.e., if the reference
+        has ['SST'] and the initialized ensemble has ['SST', 'SALT'],
+        this will drop 'SALT' so that the computation can be made.
+
+        ref: str for reference name.
+        """
+        init_vars = [var for var in self.initialized.data_vars]
+        ref_vars = [var for var in self.reference[ref].data_vars]
+        # find what variable they have in common.
+        intersect = set(ref_vars).intersection(init_vars)
+        # perhaps could be done cleaner than this.
+        for var in intersect:
+            idx = init_vars.index(var)
+            init_vars.pop(idx)
+        return init_vars
+
     def add_reference(self, xobj, name):
         """
         uninitialized things should all have 'initialization' dimension,
         so can stack them here.
-        
+
         Args:
             xobj (xarray object): Dataset/DataArray being appended to the
                                   `ReferenceEnsemble` object.
@@ -185,19 +248,33 @@ class ReferenceEnsemble(PredictionEnsemble):
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        # TODO: Should just check that at least *one* variable matches.
-        # In a case where you have SST references for some products, etc.
+        # TODO: Make sure everything is the same length. Can add keyword
+        # to autotrim to the common timeframe?
         _check_reference_dimensions(self.initialized, xobj)
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.reference[name] = xobj
 
+    def add_uninitialized(self, xobj):
+        """
+        This will be a special case for a complimentary uninitialized
+        simulation, like LENS for DPLE.
+
+        There should be complimentary functions for uninitialized skill.
+        """
+        pass
+
     def compute_skill(self, refname=None, metric='pearson_r', comparison='e2r',
                       nlags=None, return_p=False):
+        """
+        Add docstring here.
+        """
+        # TODO: Check that p-value return is easy on the user.
         if len(self.reference) == 0:
             raise ValueError("""You need to add a reference dataset before
                 attempting to compute predictability.""")
         if refname is not None:
-            return compute_reference(self.initialized,
+            drop_vars = self._trim_to_reference(refname)
+            return compute_reference(self.initialized.drop(drop_vars),
                                      self.reference[refname],
                                      metric=metric,
                                      comparison=comparison,
@@ -206,7 +283,8 @@ class ReferenceEnsemble(PredictionEnsemble):
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
-                return compute_reference(self.initialized,
+                drop_vars = self._trim_to_reference(refname)
+                return compute_reference(self.initialized.drop(drop_vars),
                                          self.reference[refname],
                                          metric=metric,
                                          comparison=comparison,
@@ -215,7 +293,9 @@ class ReferenceEnsemble(PredictionEnsemble):
             else:
                 skill = {}
                 for key in self.reference:
-                    skill[key] = compute_reference(self.initialized,
+                    drop_vars = self._trim_to_reference(key)
+                    skill[key] = compute_reference(self.initialized
+                                                       .drop(drop_vars),
                                                    self.reference[key],
                                                    metric=metric,
                                                    comparison=comparison,
@@ -225,7 +305,6 @@ class ReferenceEnsemble(PredictionEnsemble):
 
     def compute_persistence(self, refname=None, nlags=None,
                             metric='pearson_r'):
-        # TODO: Make this into a _ function
         if len(self.reference) == 0:
             raise ValueError("""You need to add a reference dataset before
             attempting to compute persistence forecasts.""")
@@ -242,3 +321,9 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                        nlags=nlags,
                                                        metric=metric)
         return persistence
+
+    def compute_horizon(self, refname=None,):
+        """
+        Method to compute the predictability horizon.
+        """
+        pass

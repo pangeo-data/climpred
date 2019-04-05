@@ -11,19 +11,9 @@ Note that `climpred` is in the very early stages of development. We are currentl
 pip install git+https://github.com/bradyrx/climpred
 ```
 
-## Modules
+## Documentation
 
-`loadutils`
-
-Functions for loading sample datasets.
-
-`prediction`
-
-Functions for decadal climate prediction.
-
-`stats`
-
-Functions for time series and spatial statistics
+Documentation can be found on this Github's [wiki](https://github.com/bradyrx/climpred/wiki). It is currently in development and will eventually move to a `sphinx` page.
 
 ## Contact
 Developed and maintained by Riley Brady (CU Boulder) and Aaron Spring (MPI).

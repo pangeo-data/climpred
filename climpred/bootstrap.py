@@ -121,9 +121,7 @@ def bootstrap_perfect_model(ds,
                       Defaults to ds.time.size.
 
     Returns:
-        init_skill (xr.Dataset): skill of initialized
         init_ci (xr.Dataset): confidence levels of init_skill
-        uninit_skill (xr.Dataset): skill of uninitialized
         uninit_ci (xr.Dataset): confidence levels of uninit_skill
         p_uninit_over_init (xr.Dataset): p-value of the hypothesis
                                          that the difference of
@@ -134,7 +132,6 @@ def bootstrap_perfect_model(ds,
                                          bootstrapping with
                                          replacement.
                                          Defaults to None.
-        pers_skill (xr.Dataset): skill of persistence
         pers_ci (xr.Dataset): confidence levels of pers_skill
         p_pers_over_init (xr.Dataset): p-value of the hypothesis
                                        that the difference of

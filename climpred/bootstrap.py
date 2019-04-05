@@ -144,6 +144,11 @@ def bootstrap_perfect_model(ds,
                                        Defaults to None.
 
     """
+    def _merge_result(result, new_result, new_result_name):
+        new_result.name = new_result_name
+        return xr.merge([result, new_result])
+
+    result = xr.Dataset()
     if nlags is None:
         nlags = ds.time.size
     p = (100 - sig) / 100  # 0.05
@@ -205,10 +210,13 @@ def bootstrap_perfect_model(ds,
 
     if compute_ci:
         init_ci = _distribution_to_ci(init, ci_low, ci_high)
+        result = _merge_result(result, init_ci, 'init_ci')
         if compute_uninitized_skill:
             uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
+            result = _merge_result(result, uninit_ci, 'uninit_ci')
         if compute_persistence_skill:
             pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
+            result = _merge_result(result, pers_ci, 'pers_ci')
     else:
         init_ci = None
         pers_ci = None
@@ -224,12 +232,17 @@ def bootstrap_perfect_model(ds,
 
     if compute_uninitized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)
+        result = _merge_result(result, p_uninit_over_init,
+                               'p_uninit_over_init')
     else:
         p_uninit_over_init, uninit_ci = None, None
 
     if compute_persistence_skill:
         p_pers_over_init = _pvalue_from_distributions(pers, init)
+        result = _merge_result(result, p_pers_over_init,
+                               'p_pers_over_init')
     else:
         p_pers_over_init, pers_ci = None, None
 
-    return init_ci, uninit_ci, p_uninit_over_init, pers_ci, p_pers_over_init
+    #return init_ci, uninit_ci, p_uninit_over_init, pers_ci, p_pers_over_init
+    return result

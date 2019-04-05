@@ -793,7 +793,8 @@ def compute_reference(ds,
         return skill
 
 
-def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
+def compute_persistence(reference, nlags, metric='pearson_r',
+                        dim='initialization'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or control run.
@@ -816,13 +817,12 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
 
 
     Args:
-        ds (xarray object): The initialization years to get persistence from.
         reference (xarray object): The reference time series.
         nlags (int): Number of lags to compute persistence to.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
         dim (str): Dimension over which to compute persistence forecast.
-                   Default: 'ensemble'
+                   Default: 'initialization'
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input
@@ -837,13 +837,9 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r', dim='time'):
             'mse',
             'mae'""")
     plag = []  # holds results of persistence for each lag
-    inits = ds['initialization'].values
-    reference = reference.isel({dim: slice(0, -nlags)})
-    for lag in range(1, 1 + nlags):
-        ref = reference.sel({dim: inits + lag})
-        fct = reference.sel({dim: inits})
-        ref[dim] = fct[dim]
-        plag.append(metric(ref, fct, dim=dim))
+    for i in range(1, 1 + nlags):
+        a, b = _shift(reference, reference, i, dim=dim)
+        plag.append(metric(a, b, dim=dim))
     pers = xr.concat(plag, 'time')
     pers['time'] = np.arange(1, 1 + nlags)
     return pers

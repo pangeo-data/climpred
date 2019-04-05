@@ -793,6 +793,64 @@ def compute_reference(ds,
         return skill
 
 
+def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
+                           dim='time'):
+    """
+    Computes the skill of  a persistence forecast from a control run. 
+
+    This simply applies some metric on the input out to some lag. The user
+    should avoid computing persistence with prebuilt ACF functions in e.g.,
+    python, MATLAB, R as they tend to use FFT methods for speed but incorporate
+    error due to this.
+
+    TODO: Merge this and `compute_persistence` into one function. These two
+    functions employ different philosophies on how to compute persistence.
+
+    Currently supported metrics for persistence:
+    * pearson_r
+    * rmse
+    * mse
+    * mae
+
+    Reference:
+    * Chapter 8 (Short-Term Climate Prediction) in
+        Van den Dool, Huug. Empirical methods in short-term climate prediction.
+        Oxford University Press, 2007.
+
+    Args:
+        ds (xarray object): The initialization years to get persistence from.
+        reference (xarray object): The reference time series.
+        nlags (int): Number of lags to compute persistence to.
+        metric (str): Metric name to apply at each lag for the persistence
+                      computation. Default: 'pearson_r'
+        dim (str): Dimension over which to compute persistence forecast.
+                   Default: 'time'
+
+    Returns:
+        pers (xarray object): Results of persistence forecast with the input
+                              metric applied.
+    """
+    _check_xarray(control)
+    metric = _get_metric_function(metric)
+    if metric not in [_pearson_r, _rmse, _mse, _mae]:
+        raise ValueError("""Please select between the following metrics:
+            'pearson_r',
+            'rmse',
+            'mse',
+            'mae'""")
+    plag = []  # holds results of persistence for each lag
+    inits = ds['initialization'].values
+    control = control.isel({dim: slice(0, -nlags)})
+    for lag in range(1, 1 + nlags):
+        ref = control.sel({dim: inits + lag})
+        fct = control.sel({dim: inits})
+        ref[dim] = fct[dim]
+        plag.append(metric(ref, fct, dim=dim))
+    pers = xr.concat(plag, 'time')
+    pers['time'] = np.arange(1, 1 + nlags)
+    return pers
+
+
 def compute_persistence(reference, nlags, metric='pearson_r',
                         dim='initialization'):
     """

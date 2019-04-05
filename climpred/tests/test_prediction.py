@@ -3,8 +3,8 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from climpred.prediction import (bootstrap_perfect_model,
-                                 compute_perfect_model, compute_persistence)
+from climpred.prediction import compute_perfect_model, compute_persistence
+from climpred.bootstrap import bootstrap_perfect_model
 
 xskillscore_metrics = ('pearson_r', 'rmse', 'mse', 'mae')
 PM_only_metrics = ('nrmse', 'nmse', 'nmae')  # excl uacc because sqrt(neg)
@@ -85,35 +85,35 @@ def test_compute_perfect_model_ds_not_nan(PM_ds_ds, PM_ds_control, metric,
     assert actual == False
 
 
-@pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
-@pytest.mark.parametrize('metric', (all_metrics))
-def test_bootstrap_perfect_model_ds_not_nan(PM_ds_ds, PM_ds_control, metric,
-                                            comparison):
-    actual = bootstrap_perfect_model(PM_ds_ds, PM_ds_control, metric=metric,
-                                     comparison=comparison, sig=50,
-                                     bootstrap=2).isnull().any()
-    assert actual == False
+# @pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
+# @pytest.mark.parametrize('metric', (all_metrics))
+# def test_bootstrap_perfect_model_ds_not_nan(PM_ds_ds, PM_ds_control, metric,
+#                                            comparison):
+#    actual = bootstrap_perfect_model(PM_ds_ds, PM_ds_control, metric=metric,
+#                                     comparison=comparison, sig=50,
+#                                     bootstrap=2).isnull().any()
+#    assert actual == False
 
 
-@pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
-@pytest.mark.parametrize('metric', (all_metrics))
-def test_bootstrap_perfect_model_da_not_nan(PM_da_ds, PM_da_control, metric,
-                                            comparison):
-    actual = bootstrap_perfect_model(PM_da_ds, PM_da_control, metric=metric,
-                                     comparison=comparison, sig=50,
-                                     bootstrap=2).isnull().any()
+# @pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e', 'm2m'))
+# @pytest.mark.parametrize('metric', (all_metrics))
+# def test_bootstrap_perfect_model_da_not_nan(PM_da_ds, PM_da_control, metric,
+#                                            comparison):
+#    actual = bootstrap_perfect_model(PM_da_ds, PM_da_control, metric=metric,
+#                                     comparison=comparison, sig=50,
+#                                     bootstrap=2).isnull().any()
+#    assert actual == False
+
+
+@pytest.mark.parametrize('metric', xskillscore_metrics)
+def test_compute_persistence_da_not_nan(PM_da_ds, PM_da_control, metric):
+    actual = compute_persistence(
+        PM_da_ds, PM_da_control, nlags=2, metric=metric, dim='time').isnull().any()
     assert actual == False
 
 
 @pytest.mark.parametrize('metric', xskillscore_metrics)
-def test_compute_persistence_da_not_nan(PM_da_control, metric):
+def test_compute_persistence_ds_not_nan(PM_ds_ds, PM_ds_control, metric):
     actual = compute_persistence(
-        PM_da_control, nlags=2, metric=metric, dim='time').isnull().any()
-    assert actual == False
-
-
-@pytest.mark.parametrize('metric', xskillscore_metrics)
-def test_compute_persistence_ds_not_nan(PM_ds_control, metric):
-    actual = compute_persistence(
-        PM_ds_control, nlags=2, metric=metric, dim='time').isnull().any()
+        PM_ds_ds, PM_ds_control, nlags=2, metric=metric, dim='time').isnull().any()
     assert actual == False

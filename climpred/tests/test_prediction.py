@@ -3,8 +3,8 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from climpred.prediction import (bootstrap_perfect_model,
-                                 compute_perfect_model, compute_persistence)
+from climpred.prediction import compute_perfect_model, compute_persistence
+from climpred.bootstrap import bootstrap_perfect_model
 
 xskillscore_metrics = ('pearson_r', 'rmse', 'mse', 'mae')
 PM_only_metrics = ('nrmse', 'nmse', 'nmae')  # excl uacc because sqrt(neg)

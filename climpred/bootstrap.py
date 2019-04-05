@@ -87,7 +87,6 @@ def bootstrap_perfect_model(ds,
                             metric='pearson_r',
                             comparison='m2e',
                             sig=95,
-                            pers_sig=50,
                             bootstrap=500,
                             compute_uninitized_skill=True,
                             compute_persistence_skill=True,
@@ -111,8 +110,6 @@ def bootstrap_perfect_model(ds,
         comparison (str): `comparison`. Defaults to 'm2e'.
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
-        pers_sig (int): Significance level for persistence forecast.
-                        Defaults to 50.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
         compute_uninitized_skill (bool): Defaults to True.
@@ -154,7 +151,7 @@ def bootstrap_perfect_model(ds,
     p = (100 - sig) / 100  # 0.05
     ci_low = p / 2  # 0.025
     ci_high = 1 - p / 2  # 0.975
-    p_pers = (100 - pers_sig) / 100  # 0.5
+    p_pers = (100 - sig) / 100  # 0.5
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 

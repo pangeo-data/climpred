@@ -2,13 +2,12 @@ import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm)
 from .bootstrap import bootstrap_perfect_model
+# Both:
 # TODO: add horizon functionality
-# TODO: add relative entropy functionality
 # TODO: add various `get` and `set` decorators
 # TODO: add checks for our package naming conventions. I.e., should
 # have 'member', 'initialization', etc. Can do this after updating the
 # terminology.
-# TODO: make sure that comparison 'm2r' works for reference ensemble.
 # TODO: allow user to only compute things for one variable. I.e., if the
 # PredictionEnsemble has multiple variables, maybe you only want to compute
 # for one.
@@ -20,6 +19,20 @@ from .bootstrap import bootstrap_perfect_model
 # TODO: Add attributes to returned objects. E.g., 'skill' should come back
 # with attribute explaining what two things were compared.
 # TODO: Create custom errors (not just ValueError for all of this)
+
+# PerfectModel:
+# TODO: add relative entropy functionality
+
+# Reference
+# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
+# members to be on DPLE and not just the mean)
+
+# PerfectModel:
+# TODO: add relative entropy functionality
+
+# Reference
+# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
+# members to be on DPLE and not just the mean)
 
 
 # --------------
@@ -73,7 +86,6 @@ def _check_reference_vars_match_initialized(init, ref):
     Checks that a new reference (or control) dataset has at least one variable
     in common with the initialized dataset. This ensures that they can be
     compared pairwise.
-
     ref: new addition
     init: dp.initialized
     """
@@ -118,6 +130,12 @@ def _display_metadata(self):
                                .split('\n')[i].strip()
         else:
             summary += '\nReferences:\n'
+            summary += '    None'
+        if any(self.uninitialized):
+            summary += '\nUninitialized:\n'
+            summary += '    ' + str(self.uninitialized.data_vars)[18:].strip()
+        else:
+            summary += '\nUninitialized:\n'
             summary += '    None'
     elif isinstance(self, PerfectModelEnsemble):
         summary += '\nControl:\n'
@@ -200,6 +218,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def bootstrap(self, metric='rmse', comparison='m2m', reference_period='MK',
                   sig=95, bootstrap=30):
+        """
+        NOTE: This was written for an old bootstrap function. Needs to be
+        updated with the newer one.
+        """
         if len(self.control) == 0:
             raise ValueError("""You need to add a control dataset before
             attempting to bootstrap.""")
@@ -215,6 +237,7 @@ class ReferenceEnsemble(PredictionEnsemble):
     def __init__(self, xobj):
         super().__init__(xobj)
         self.reference = {}
+        self.uninitialized = {}
 
     def _trim_to_reference(self, ref):
         """
@@ -261,7 +284,12 @@ class ReferenceEnsemble(PredictionEnsemble):
 
         There should be complimentary functions for uninitialized skill.
         """
-        pass
+        _check_xarray(xobj)
+        if isinstance(xobj, xr.DataArray):
+            xobj = xobj.to_dataset()
+        _check_reference_dimensions(self.initialized, xobj)
+        _check_reference_vars_match_initialized(self.initialized, xobj)
+        self.uninitialized = xobj
 
     def compute_skill(self, refname=None, metric='pearson_r', comparison='e2r',
                       nlags=None, return_p=False):

@@ -2,6 +2,7 @@
 import types
 import warnings
 
+import cftime
 import dask
 import numpy as np
 import xarray as xr
@@ -794,7 +795,7 @@ def compute_reference(ds,
 
 
 def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
-                           dim='time'):
+                           dim='time', init_month_index=0):
     """
     Computes the skill of  a persistence forecast from a control run.
 
@@ -838,12 +839,35 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
             'rmse',
             'mse',
             'mae'""")
+
+    init_years = ds['initialization'].values
+    if isinstance(ds.time.values[0], cftime._cftime.DatetimeProlepticGregorian) or isinstance(ds.time.values[0], np.datetime64):
+        init_cftimes = []
+        for year in init_years:
+            init_cftimes.append(control.sel(
+                time=str(year)).isel(time=init_month_index).time)
+        init_cftimes = xr.concat(init_cftimes, 'time')
+    elif isinstance(ds.time.values[0], np.int64):
+        init_cftimes = []
+        for year in init_years:
+            init_cftimes.append(control.sel(
+                time=year).time)
+        init_cftimes = xr.concat(init_cftimes, 'time')
+    else:
+        raise ValueError(
+            'Set time axis to xr.cftime_range, pd.date_range or np.int64.')
+
+    inits_index = []
+    control_time_list = list(control.time.values)
+    for i, inits in enumerate(init_cftimes.time.values):
+        inits_index.append(control_time_list.index(init_cftimes[i]))
+
     plag = []  # holds results of persistence for each lag
-    inits = ds['initialization'].values
     control = control.isel({dim: slice(0, -nlags)})
     for lag in range(1, 1 + nlags):
-        ref = control.sel({dim: inits + lag})
-        fct = control.sel({dim: inits})
+        inits_index_plus_lag = [x + lag for x in inits_index]
+        ref = control.isel({dim: inits_index_plus_lag})
+        fct = control.isel({dim: inits_index})
         ref[dim] = fct[dim]
         plag.append(metric(ref, fct, dim=dim))
     pers = xr.concat(plag, 'time')

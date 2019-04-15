@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+
 from .prediction import compute_perfect_model, compute_persistence_pm
 from .stats import DPP, xr_varweighted_mean_period
 
@@ -90,6 +91,7 @@ def bootstrap_perfect_model(ds,
                             bootstrap=500,
                             compute_uninitized_skill=True,
                             compute_persistence_skill=True,
+                            pers_sig=None,
                             compute_ci=True,
                             nlags=None,
                             running=None,
@@ -145,13 +147,16 @@ def bootstrap_perfect_model(ds,
         new_result.name = new_result_name
         return xr.merge([result, new_result])
 
+    if pers_sig is None:
+        pers_sig = sig
+
     result = xr.Dataset()
     if nlags is None:
         nlags = ds.time.size
     p = (100 - sig) / 100  # 0.05
     ci_low = p / 2  # 0.025
     ci_high = 1 - p / 2  # 0.975
-    p_pers = (100 - sig) / 100  # 0.5
+    p_pers = (100 - pers_sig) / 100  # 0.5
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
@@ -241,5 +246,5 @@ def bootstrap_perfect_model(ds,
     else:
         p_pers_over_init, pers_ci = None, None
 
-    #return init_ci, uninit_ci, p_uninit_over_init, pers_ci, p_pers_over_init
+    # return init_ci, uninit_ci, p_uninit_over_init, pers_ci, p_pers_over_init
     return result

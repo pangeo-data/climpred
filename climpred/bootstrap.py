@@ -245,6 +245,4 @@ def bootstrap_perfect_model(ds,
                                'p_pers_over_init')
     else:
         p_pers_over_init, pers_ci = None, None
-
-    # return init_ci, uninit_ci, p_uninit_over_init, pers_ci, p_pers_over_init
     return result

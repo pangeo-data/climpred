@@ -702,13 +702,17 @@ def compute_perfect_model(ds,
     if metric in [_pearson_r, _rmse, _mse, _mae]:
         forecast, reference = comparison(ds, supervector_dim)
         res = metric(forecast, reference, dim=supervector_dim)
-        return res
     # perfect-model only metrics
     elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
         res = metric(ds, control, comparison, running, reference_period)
-        return res
     else:
         raise ValueError('specify metric argument')
+    print(type(res))
+    print(res)
+    time_size = ds.time.size
+    del res['time']
+    res['time'] = np.arange(1, 1 + time_size)
+    return res
 
 
 def compute_reference(ds,

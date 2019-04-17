@@ -41,7 +41,7 @@ def _get_vars(ds):
 # TIME SERIES
 # Functions related to time series.
 # ----------------------------------#
-def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
+def xr_corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 
     This version calculates the effective degrees of freedom, accounting
@@ -65,7 +65,6 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
                            series
         dim (optional str): Correlation dimension
         lag (optional int): Lag to apply to correlaton, with x predicting y.
-        two_sided (optonal bool): If True, compute a two-sided t-test.
         return_p (optional bool): If True, return correlation coefficients
                                   as well as p values.
     Returns:
@@ -87,7 +86,7 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
     else:
         r = pearson_r(x, y, dim)
     if return_p:
-        p = _xr_eff_p_value(x, y, r, dim, two_sided)
+        p = _xr_eff_p_value(x, y, r, dim)
         # return with proper dimension labeling. would be easier with
         # apply_ufunc, but having trouble getting it to work here. issue
         # probably has to do with core dims.
@@ -99,7 +98,7 @@ def xr_corr(x, y, dim='time', lag=0, two_sided=True, return_p=False):
         return r
 
 
-def _xr_eff_p_value(x, y, r, dim, two_sided):
+def _xr_eff_p_value(x, y, r, dim):
     """Computes p values accounting for autocorrelation in time series.
 
     Args:
@@ -107,10 +106,13 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
         y (xarray object): Dependent time series.
         r (xarray object): Pearson correlations between x and y.
         dim (str): Dimension to compute compute p values over.
-        two_sided (bool): If True, compute two-sided p value.
 
     Returns:
         p values accounting for autocorrelation in input time series.
+
+    References:
+        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
+          Vol. 100. Academic press, 2011.
     """
     def _compute_autocorr(v, dim, n):
         """
@@ -138,10 +140,7 @@ def _xr_eff_p_value(x, y, r, dim, two_sided):
     n_eff = n_eff.where(n_eff <= n, n)
     # compute t-statistic
     t = r * np.sqrt((n_eff - 2) / (1 - r**2))
-    if two_sided:
-        p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1) * 2)
-    else:
-        p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 1))
+    p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 2) * 2)
     return p
 
 

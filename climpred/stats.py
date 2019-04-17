@@ -228,6 +228,7 @@ def xr_rm_trend(da, dim='time'):
     return xr_rm_poly(da, 1, dim=dim)
 
 
+# # TODO: coords lon, lat get lost for curvilinear ds
 def xr_varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
@@ -330,6 +331,7 @@ def xr_decorrelation_time(da, r=20, dim='time'):
 # Diagnostic Potential Predictability (DPP)
 # Functions related to DPP from Boer et al.
 # --------------------------------------------#
+# # TODO: coords lon, lat get lost for curvilinear ds
 def DPP(ds, m=10, chunk=True):
     """
     Calculate Diagnostic Potential Predictability (DPP) as potentially

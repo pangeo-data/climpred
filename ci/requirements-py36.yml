@@ -9,3 +9,5 @@ dependencies:
   - pandas
   - pytest
   - eofs
+  - xskillscore
+  - cftime

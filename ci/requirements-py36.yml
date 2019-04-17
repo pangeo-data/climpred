@@ -9,3 +9,4 @@ dependencies:
   - pandas
   - pytest
   - eofs
+  - cftime

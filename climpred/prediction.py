@@ -881,7 +881,7 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
     return pers
 
 
-def compute_persistence(reference, nlags, metric='pearson_r',
+def compute_persistence(ds, reference, nlags, metric='pearson_r',
                         dim='initialization'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -905,6 +905,7 @@ def compute_persistence(reference, nlags, metric='pearson_r',
 
 
     Args:
+        ds (xarray object): The initialized ensemble.
         reference (xarray object): The reference time series.
         nlags (int): Number of lags to compute persistence to.
         metric (str): Metric name to apply at each lag for the persistence
@@ -916,6 +917,13 @@ def compute_persistence(reference, nlags, metric='pearson_r',
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
+    def _intersection(lst1, lst2):
+        """
+        Custom intersection, since `set.intersection()` changes type of list.
+        """
+        lst3 = [value for value in lst1 if value in lst2]
+        return np.array(lst3)
+
     _check_xarray(reference)
     metric = _get_metric_function(metric)
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
@@ -925,9 +933,14 @@ def compute_persistence(reference, nlags, metric='pearson_r',
             'mse',
             'mae'""")
     plag = []  # holds results of persistence for each lag
-    for i in range(1, 1 + nlags):
-        a, b = _shift(reference, reference, i, dim=dim)
-        plag.append(metric(a, b, dim=dim))
+    for lag in range(1, 1 + nlags):
+        inits = ds['initialization'].values
+        ctrl_inits = reference.isel({dim: slice(0, -lag)})[dim].values
+        inits = _intersection(inits, ctrl_inits)
+        ref = reference.sel({dim: inits + lag})
+        fct = reference.sel({dim: inits})
+        ref[dim] = fct[dim]
+        plag.append(metric(ref, fct, dim=dim))
     pers = xr.concat(plag, 'time')
     pers['time'] = np.arange(1, 1 + nlags)
     return pers

@@ -707,8 +707,6 @@ def compute_perfect_model(ds,
         res = metric(ds, control, comparison, running, reference_period)
     else:
         raise ValueError('specify metric argument')
-    print(type(res))
-    print(res)
     time_size = ds.time.size
     del res['time']
     res['time'] = np.arange(1, 1 + time_size)

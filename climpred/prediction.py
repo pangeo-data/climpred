@@ -2,6 +2,7 @@
 import types
 import warnings
 
+import cftime
 import dask
 import numpy as np
 import xarray as xr
@@ -701,13 +702,19 @@ def compute_perfect_model(ds,
     if metric in [_pearson_r, _rmse, _mse, _mae]:
         forecast, reference = comparison(ds, supervector_dim)
         res = metric(forecast, reference, dim=supervector_dim)
-        return res
     # perfect-model only metrics
     elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
         res = metric(ds, control, comparison, running, reference_period)
-        return res
     else:
         raise ValueError('specify metric argument')
+    # Note: Aaron implemented this in PR #87. They break when
+    # compute_perfect_model is called from `bootstrap_perfect_model`. So need
+    # to debug why that is the case and see if these lines are even
+    # necessary.
+#    time_size = ds.time.size
+#    del res['time']
+#    res['time'] = np.arange(1, 1 + time_size)
+    return res
 
 
 def compute_reference(ds,
@@ -794,7 +801,7 @@ def compute_reference(ds,
 
 
 def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
-                           dim='time'):
+                           dim='time', init_month_index=0):
     """
     Computes the skill of  a persistence forecast from a control run.
 
@@ -838,12 +845,35 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
             'rmse',
             'mse',
             'mae'""")
+
+    init_years = ds['initialization'].values
+    if isinstance(ds.time.values[0], cftime._cftime.DatetimeProlepticGregorian) or isinstance(ds.time.values[0], np.datetime64):
+        init_cftimes = []
+        for year in init_years:
+            init_cftimes.append(control.sel(
+                time=str(year)).isel(time=init_month_index).time)
+        init_cftimes = xr.concat(init_cftimes, 'time')
+    elif isinstance(ds.time.values[0], np.int64):
+        init_cftimes = []
+        for year in init_years:
+            init_cftimes.append(control.sel(
+                time=year).time)
+        init_cftimes = xr.concat(init_cftimes, 'time')
+    else:
+        raise ValueError(
+            'Set time axis to xr.cftime_range, pd.date_range or np.int64.')
+
+    inits_index = []
+    control_time_list = list(control.time.values)
+    for i, inits in enumerate(init_cftimes.time.values):
+        inits_index.append(control_time_list.index(init_cftimes[i]))
+
     plag = []  # holds results of persistence for each lag
-    inits = ds['initialization'].values
     control = control.isel({dim: slice(0, -nlags)})
     for lag in range(1, 1 + nlags):
-        ref = control.sel({dim: inits + lag})
-        fct = control.sel({dim: inits})
+        inits_index_plus_lag = [x + lag for x in inits_index]
+        ref = control.isel({dim: inits_index_plus_lag})
+        fct = control.isel({dim: inits_index})
         ref[dim] = fct[dim]
         plag.append(metric(ref, fct, dim=dim))
     pers = xr.concat(plag, 'time')
@@ -851,7 +881,7 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
     return pers
 
 
-def compute_persistence(reference, nlags, metric='pearson_r',
+def compute_persistence(ds, reference, nlags, metric='pearson_r',
                         dim='initialization'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -875,6 +905,7 @@ def compute_persistence(reference, nlags, metric='pearson_r',
 
 
     Args:
+        ds (xarray object): The initialized ensemble.
         reference (xarray object): The reference time series.
         nlags (int): Number of lags to compute persistence to.
         metric (str): Metric name to apply at each lag for the persistence
@@ -886,6 +917,13 @@ def compute_persistence(reference, nlags, metric='pearson_r',
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
+    def _intersection(lst1, lst2):
+        """
+        Custom intersection, since `set.intersection()` changes type of list.
+        """
+        lst3 = [value for value in lst1 if value in lst2]
+        return np.array(lst3)
+
     _check_xarray(reference)
     metric = _get_metric_function(metric)
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
@@ -895,9 +933,14 @@ def compute_persistence(reference, nlags, metric='pearson_r',
             'mse',
             'mae'""")
     plag = []  # holds results of persistence for each lag
-    for i in range(1, 1 + nlags):
-        a, b = _shift(reference, reference, i, dim=dim)
-        plag.append(metric(a, b, dim=dim))
+    for lag in range(1, 1 + nlags):
+        inits = ds['initialization'].values
+        ctrl_inits = reference.isel({dim: slice(0, -lag)})[dim].values
+        inits = _intersection(inits, ctrl_inits)
+        ref = reference.sel({dim: inits + lag})
+        fct = reference.sel({dim: inits})
+        ref[dim] = fct[dim]
+        plag.append(metric(ref, fct, dim=dim))
     pers = xr.concat(plag, 'time')
     pers['time'] = np.arange(1, 1 + nlags)
     return pers

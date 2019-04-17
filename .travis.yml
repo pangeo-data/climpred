@@ -25,6 +25,5 @@ install:
   - which python
   - python setup.py install --user
 
-script:
-    - print("null.")
+# script:
 #  - pytest

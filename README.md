@@ -1,6 +1,6 @@
 # climpred 
 
-An xarray wrapper for decadal climate prediction.
+An xarray wrapper for analysis of ensemble forecast models for climate prediction.
 
 ## Release
 

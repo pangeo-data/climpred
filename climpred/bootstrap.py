@@ -1,44 +1,9 @@
 import numpy as np
 import xarray as xr
 
-from .prediction import compute_perfect_model, compute_persistence_pm
+from .prediction import (_pseudo_ens, compute_perfect_model,
+                         compute_persistence_pm)
 from .stats import DPP, xr_varweighted_mean_period
-
-
-def _pseudo_ens(ds, control):
-    """
-    Create a pseudo-ensemble from control run.
-
-    Needed for block bootstrapping confidence intervals of a metric in perfect
-    model framework. Takes randomly segments of length of ensemble dataset from
-    control and rearranges them into ensemble and member dimensions.
-
-    Args:
-        ds (xarray object): ensemble simulation.
-        control (xarray object): control simulation.
-
-    Returns:
-        ds_e (xarray object): pseudo-ensemble generated from control run.
-    """
-    nens = ds.initialization.size
-    nmember = ds.member.size
-    length = ds.time.size
-    c_start = 0
-    c_end = control['time'].size
-    time = ds['time']
-
-    def isel_years(control, year_s, m=None, length=length):
-        new = control.isel(time=slice(year_s, year_s + length))
-        new['time'] = time
-        return new
-
-    def create_pseudo_members(control):
-        startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat([isel_years(control, start) for start in startlist],
-                         'member')
-
-    return xr.concat([create_pseudo_members(control) for _ in range(nens)],
-                     'initialization')
 
 
 def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):

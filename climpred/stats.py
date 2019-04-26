@@ -155,71 +155,57 @@ def xr_rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
-    _check_xarray(ds)
+    _check_xarray(ds)  # this could be a decorator I think?
 
-    def _get_metadata(ds):
-        # copy is to make sure any edits to the dims or coords doesn't
-        # affect the original dataset that is entered.
-        dims = ds.copy().dims
-        coords = ds.copy().coords
-        return dims, coords
+    if dim not in ds.dims:
+        raise KeyError(
+            f'Input dim {dim} was not found in the ds; '
+            f'found only the following dims: {list(ds.dims)}.'
+        )
 
-    def _swap_axes(y):
-        """
-        Push the independent axis up to the first dimension if needed. E.g.,
-        the user submits a DataArray with dimensions ('lat','lon','time'), but
-        wants the regression performed over time. This function expects the
-        leading dimension to be the independent axis, so this subfunction just
-        moves it up front.
-        """
-        dims, coords = _get_metadata(y)
-        if dims[0] != dim:
-            idx = dims.index(dim)
-            y = np.swapaxes(y, 0, idx)
-            # fixes bug with renaming dimensions that have
-            # coordinates with differing shapes.
-            del y.coords[dim], y.coords[dims[0]]
-            y = y.rename({dims[0]: dim,
-                          dims[idx]: dims[0]})
-            dims = list(dims)
-            dims[0], dims[idx] = dims[idx], dims[0]
-            dims = tuple(dims)
-        return np.asarray(y), dims, coords
-
-    def _reconstruct_ds(y, store_vars):
-        """
-        Rebuild the original dataset.
-        """
-        new_ds = xr.Dataset()
-        for i, var in enumerate(store_vars):
-            new_ds[var] = xr.DataArray(y.isel(variable=i))
-        return new_ds
-
+    # handle both datasets and dataarray
     if isinstance(ds, xr.Dataset):
-        DATASET, store_vars = True, ds.data_vars
-        y = []
-        for var in ds.data_vars:
-            y.append(ds[var])
-        y = xr.concat(y, 'variable')
+        da = ds.to_array()
+        return_ds = True
     else:
-        DATASET = False
-        y = ds
-    # Force independent axis to be leading dimension.
-    y, dims, coords = _swap_axes(y)
-    data_shape = y.shape
-    y = y.reshape((data_shape[0], -1))
-    # NaNs screw up vectorized regression; just fill with zeros.
-    y[np.isnan(y)] = 0
+        da = ds.copy()
+        return_ds = False
+
+    # want independent axis to be the leading dimension
+    da_dims_orig = list(da.dims)  # orig -> original
+    da_dims_swap = da_dims_orig.copy()  # copy to prevent contamination
+
+    # https://stackoverflow.com/questions/1014523/
+    # simple-syntax-for-bringing-a-list-element-to-the-front-in-python
+    da_dims_swap.insert(0, da_dims_swap.pop(da_dims_swap.index(dim)))
+    da = da.transpose(*da_dims_swap)
+    # hide other dims into a single dim
+    da = da.stack({'other_dims': da.dims[1:]})
+
+    # NaNs will make the polyfit fail; fill with 0s (will 0 affect the fit?)
+    nan_locs = np.isnan(da.values)
+    da = da.fillna(0)
+
+    # the actual operation of detrending
+    y = da.values
     x = np.arange(0, len(y), 1)
     coefs = poly.polyfit(x, y, order)
     fit = poly.polyval(x, coefs)
-    detrended_ts = (y - fit.T).reshape(data_shape)
-    # Replace NaNs.
-    detrended_ts[detrended_ts == 0] = np.nan
-    detrended_ds = xr.DataArray(detrended_ts, dims=dims, coords=coords)
-    if DATASET:
-        detrended_ds = _reconstruct_ds(detrended_ds, store_vars)
-    return detrended_ds
+    y_dt = y - fit.transpose()  # dt -> detrended
+    da.data[:] = y_dt
+
+    # replace back the filled NaNs (keep values where not NaN)
+    da = da.where(~nan_locs)
+
+    # revert the other dimensions to its original form and ordering
+    da = da.unstack('other_dims').transpose(*da_dims_orig)
+
+    if return_ds:
+        # revert back into a dataset
+        return xr.merge(da.sel(variable=var).rename(var).drop('variable')
+                        for var in da['variable'].values)
+    else:
+        return da
 
 
 def xr_rm_trend(da, dim='time'):

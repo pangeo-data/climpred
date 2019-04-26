@@ -10,3 +10,5 @@ dependencies:
   - pytest
   - eofs
   - cftime
+  - pip:
+    - properscoring

@@ -8,7 +8,7 @@ DESCRIPTION = 'An xarray wrapper for analysis of ensemble forecast models for cl
 URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
 INSTALL_REQUIRES = ['numpy', 'pandas',
-                    'xarray', 'scipy', 'xskillscore', 'eofs', 'cftime']
+                    'xarray', 'scipy', 'xskillscore', 'eofs', 'cftime', 'properscoring']
 TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
 

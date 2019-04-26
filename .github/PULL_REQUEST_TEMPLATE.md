@@ -25,6 +25,8 @@ Please describe the tests that you ran to verify your changes. This could point 
 - [ ] I have added docstrings to all new functions.
 - [ ] I have updated the wiki with documentation, if necessary.
 - [ ] I have commented my code, particularly in hard-to-understand areas
+- [ ] I have rebased onto master or develop (wherever I am merging) and dealt with any conflictions.
+- [ ] I have squashed commits to a reasonable amount.
 
 # Discussion
 

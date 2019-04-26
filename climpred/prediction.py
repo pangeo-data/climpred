@@ -777,7 +777,7 @@ def xr_crps_ensemble(observations, forecasts):
 
 def xr_crps_gaussian(observations, mu, sig):
     if mu.dims != observations.dims:
-        observations, mean = xr.broadcast(observations, mu)
+        observations, mu = xr.broadcast(observations, mu)
     if sig.dims != observations.dims:
         observations, sig = xr.broadcast(observations, sig)
     return xr.apply_ufunc(crps_gaussian, observations, mu, sig,

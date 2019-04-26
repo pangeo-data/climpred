@@ -40,8 +40,9 @@ from .bootstrap import bootstrap_perfect_model
 # --------------
 def _check_prediction_ensemble_dimensions(xobj):
     """
-    Checks that at the minimum, the dple object has dimensions initialization
-    and time (a time series with lead times).
+    Checks that at the minimum, the climate prediction  object has dimensions
+    `initialization` and `time` (i.e., it's a time series with lead
+    times.
     """
     cond = all(dims in xobj.dims for dims in ['initialization', 'time'])
     if not cond:
@@ -99,6 +100,10 @@ def _check_reference_vars_match_initialized(init, ref):
 
 
 def _check_xarray(xobj):
+    """Checks that it is in fact an xarray object coming in.
+
+    NOTE: This needs to be changed to a decorator.
+    """
     if not isinstance(xobj, (xr.Dataset, xr.DataArray)):
         raise ValueError("""You must input an xarray Dataset or DataArray.""")
 
@@ -175,16 +180,40 @@ class PredictionEnsemble:
 
 
 class PerfectModelEnsemble(PredictionEnsemble):
+    """An object for "perfect model" climate prediction ensembles.
+
+    `PerfectModelEnsemble` is a sub-class of `PredictionEnsemble`. It tracks
+    the control run used to initialize the ensemble for easy computations,
+    bootstrapping, etc.
+
+    This object is built on `xarray` and thus requires the input object to
+    be an `xarray` Dataset or DataArray.
+    """
+
     def __init__(self, xobj):
+        """Create a `PerfectModelEnsemble` object by inputting output from the
+        control run in `xarray` format.
+
+        Args:
+          xobj (xarray object):
+            decadal prediction ensemble output.
+
+        Attributes:
+            control: Dictionary of control run associated with the initialized
+                     ensemble.
+        """
+
         super().__init__(xobj)
-        # for consistency with ReferenceEnsemble
         self.control = {}
 
     def add_control(self, xobj):
+        """Add the control run that initialized the climate prediction
+        ensemble.
+
+        Args:
+            xobj (xarray object): Dataset/DataArray of the control run.
         """
-        Special to PerfectModelEnsemble. Ensures that there's a control
-        to do PM computations with.
-        """
+        # NOTE: These should all be decorators.
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
@@ -192,8 +221,24 @@ class PerfectModelEnsemble(PredictionEnsemble):
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.control = xobj
 
-    def compute_skill(self, metric='pearson_r', comparison='m2m',
-                      running=None, reference_period=None):
+    def compute_metric(self, metric='pearson_r', comparison='m2m',
+                       running=None, reference_period=None):
+        """Compares the initialized ensemble to the control run.
+
+        Args:
+            metric (str, default 'pearson_r'):
+              Metric to apply in the comparison.
+            comparison (str, default 'm2m'):
+              How to compare the climate prediction ensemble to the control.
+            running (int, default None):
+              Size of the running window for variance smoothing.
+            reference_period (str, default None):
+              Choice of reference period of control.
+
+        Returns:
+            Result of the comparison as a Dataset.
+        """
+
         if len(self.control) == 0:
             raise ValueError("""You need to add a control dataset before
             attempting to compute predictability.""")
@@ -206,6 +251,26 @@ class PerfectModelEnsemble(PredictionEnsemble):
                                          reference_period=reference_period)
 
     def compute_persistence(self, nlags=None, metric='pearson_r'):
+        """Compute a simple persistence forecast for the control run.
+
+        Args:
+            nlags (int, default None):
+              Number of lags to compute persistence forecast to. If None,
+              compute to the length of the initialized forecasts.
+            metric (str, default 'pearson_r'):
+              Metric to apply to the persistence forecast.
+
+        Returns:
+            Dataset of persistence forecast results (if refname is declared),
+            or dictionary of Datasets with keys corresponding to reference
+            name.
+
+        Reference:
+            * Chapter 8 (Short-Term Climate Prediction) in
+              Van den Dool, Huug. Empirical methods in short-term climate
+              prediction. Oxford University Press, 2007.
+        """
+
         if len(self.control) == 0:
             raise ValueError("""You need to add a control dataset before
             attempting to compute a persistence forecast.""")
@@ -216,21 +281,104 @@ class PerfectModelEnsemble(PredictionEnsemble):
                                       nlags=nlags,
                                       metric=metric)
 
-    def bootstrap(self, metric='rmse', comparison='m2m', reference_period='MK',
-                  sig=95, bootstrap=30):
+    def bootstrap(self, var=None, metric='pearson_r', comparison='m2e', sig=95,
+                  bootstrap=500, compute_uninitialized_skill=True,
+                  compute_persistence_skill=True, pers_sig=None,
+                  compute_ci=True, nlags=None, running=None,
+                  reference_period='MK'):
+        """Bootstrap ensemble simulations with replacement.
+
+        Args:
+            var (str, default None):
+                Variable to apply bootstrapping to.
+            metric (str, default 'pearson_r'):
+                Metric to apply for bootstrapping.
+            comparison (str, default 'm2e'):
+                Comparison style for bootstrapping.
+            sig (int, default 95):
+                Significance level for uninitialized and initialized
+                comparison.
+            bootstrap (int, default 500): Number of resampling iterations for
+                bootstrapping with replacement.
+            compute_uninitialized_skill (bool, default True):
+                Whether to compute unintialized skill.
+            compute_persistence_skill (bool, default True):
+                Whether to compute persistence skill.
+            pers_sig (int, default None):
+                If not None, the separate significance level for persistence.
+            compute_ci (bool, default True):
+                Whether to compute confidence intervals.
+            nlags (int, default None):
+                Number of lags.
+            running (int, default None):
+                Size of the window for variance smoothing.
+            reference_period (str, default 'MK'):
+                Choice of reference period of control.
+
+        Returns:
+            Dictionary of Datasets for each variable applied to with the
+            following variables:
+                * init_ci: confidence levels of init_skill.
+                * uninit_ci: confidence levels of uninit_skill.
+                * pers_ci: confidence levels of pers_skill.
+                * p_uninit_over_init: p-value of the hypothesis that the
+                    difference of skill between the initialized and
+                    uninitialized simulations is smaller or equal to zero
+                    based on bootstrapping with replacement.
+                * p_pers_over_init: p-value of the hypothesis that the
+                    difference of skill between the initialized and persistence
+                    simulations is smaller or equal to zero based on
+                    bootstrapping with replacement.
+
+        Reference:
+            * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
+              Gonzalez, V. Kharin, et al. “A Verification Framework for
+              Interannual-to-Decadal Predictions Experiments.” Climate
+              Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+              https://doi.org/10/f4jjvf.
+
         """
-        NOTE: This was written for an old bootstrap function. Needs to be
-        updated with the newer one.
-        """
+        # shorthand to adhere to PEP8 column limit.
+        cus = compute_uninitialized_skill
+        cps = compute_persistence_skill
+        ref_pd = reference_period
         if len(self.control) == 0:
             raise ValueError("""You need to add a control dataset before
             attempting to bootstrap.""")
-        else:
-            return bootstrap_perfect_model(self.initialized, self.control,
+        # compute for single variable.
+        if var is not None:
+            return bootstrap_perfect_model(self.initialized[var],
+                                           self.control[var],
                                            metric=metric,
                                            comparison=comparison,
-                                           reference_period=reference_period,
-                                           sig=sig, bootstrap=bootstrap)
+                                           sig=sig,
+                                           bootstrap=bootstrap,
+                                           compute_uninitialized_skill=cus,
+                                           compute_persistence_skill=cps,
+                                           pers_sig=pers_sig,
+                                           compute_ci=compute_ci,
+                                           nlags=nlags,
+                                           running=running,
+                                           reference_period=ref_pd)
+        # compute for all variables in control.
+        else:
+            boot = {}
+            for var in self.control.data_vars:
+                res = bootstrap_perfect_model(self.initialized[var],
+                                              self.control[var],
+                                              metric=metric,
+                                              comparison=comparison,
+                                              sig=sig,
+                                              bootstrap=bootstrap,
+                                              compute_uninitialized_skill=cus,
+                                              compute_persistence_skill=cps,
+                                              pers_sig=pers_sig,
+                                              compute_ci=compute_ci,
+                                              nlags=nlags,
+                                              running=running,
+                                              reference_period=ref_pd)
+                boot[var] = res
+            return boot
 
 
 class ReferenceEnsemble(PredictionEnsemble):
@@ -320,11 +468,14 @@ class ReferenceEnsemble(PredictionEnsemble):
         self.reference[name] = xobj
 
     def add_uninitialized(self, xobj):
-        """
-        This will be a special case for a complimentary uninitialized
-        simulation, like LENS for DPLE.
+        """Add a companion uninitialized ensemble for comparison to references.
 
-        There should be complimentary functions for uninitialized skill.
+        NOTE: There is currently no check to ensure that these objects cover
+        the same time frame as the initialized ensemble.
+
+        Args:
+            xobj (xarray object): Dataset/DataArray of the uninitialzed
+                                  ensemble.
         """
         _check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
@@ -333,15 +484,41 @@ class ReferenceEnsemble(PredictionEnsemble):
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.uninitialized = xobj
 
-    def compute_skill(self, refname=None, metric='pearson_r', comparison='e2r',
-                      nlags=None, return_p=False):
-        """
-        Add docstring here.
+    def compute_metric(self, refname=None, metric='pearson_r',
+                       comparison='e2r', nlags=None, return_p=False):
+        """Compares the initialized ensemble to a given reference.
+
+        This will automatically run the comparison against all shared variables
+        between the initialized ensemble and reference.
+
+        Args:
+            refname (str):
+              Name of reference to compare to. If `None`, compare to all
+              references.
+            metric (str, default 'pearson_r'):
+              Metric to apply in the comparison.
+            comparison (str, default 'e2r'):
+              How to compare to the reference. ('e2r' for ensemble mean to
+              reference. 'm2r' for each individual member to reference)
+            nlags (int, default None):
+              Number of lags to compute the metric to.
+            return_p (bool, default False):
+              Whether to return p-values associated with a pearson r
+              comparison.
+
+        Returns:
+            Dataset of comparison results (if comparing to one reference),
+            or dictionary of Datasets with keys corresponding to reference
+            name.
         """
         # TODO: Check that p-value return is easy on the user.
+        # Note (RXB): compute_reference currently returns the skill results
+        # and p-values as two separate dictionaries. Need to think of a better
+        # way to handle this.
         if len(self.reference) == 0:
             raise ValueError("""You need to add a reference dataset before
                 attempting to compute predictability.""")
+        # Computation for a single reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname)
             return compute_reference(self.initialized.drop(drop_init),
@@ -361,6 +538,8 @@ class ReferenceEnsemble(PredictionEnsemble):
                                          comparison=comparison,
                                          nlags=nlags,
                                          return_p=return_p)
+            # Loop through all references and return results as a dictionary
+            # with keys corresponding to reference names.
             else:
                 skill = {}
                 for key in self.reference:
@@ -378,10 +557,37 @@ class ReferenceEnsemble(PredictionEnsemble):
     def compute_uninitialized(self, refname=None, nlags=None,
                               metric='pearson_r', comparison='e2r',
                               return_p=False):
-        # TODO: Check that p-value return is easy on the user.
+        """Compares the uninitialized ensemble to a given reference.
+
+        This will automatically run the comparison against all shared variables
+        between the initialized ensemble and reference.
+
+        Args:
+            refname (str):
+              Name of reference to compare to. If `None`, compare to all
+              references.
+            metric (str, default 'pearson_r'):
+              Metric to apply in the comparison.
+            comparison (str, default 'e2r'):
+              How to compare to the reference. ('e2r' for ensemble mean to
+              reference. 'm2r' for each individual member to reference)
+            nlags (int, default None):
+              Number of lags to compute the metric to.
+            return_p (bool, default False):
+              Whether to return p-values associated with a pearson r
+              comparison.
+
+        Returns:
+            Dataset of comparison results (if comparing to one reference),
+            or dictionary of Datasets with keys corresponding to reference
+            name.
+        """
+        # TODO: Check that p-value return is easy on the user. (see note on
+        # compute_metric)
         if len(self.uninitialized) == 0:
             raise ValueError("""You need to add an uninitialized ensemble
                 before attempting to compute its skill.""")
+        # Compute for a single reference.
         if refname is not None:
             drop_un, drop_ref = self._vars_to_drop(refname, init=False)
             return compute_uninitialized(self.uninitialized.drop(drop_un),
@@ -404,6 +610,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                              comparison=comparison,
                                              return_p=return_p,
                                              dim='initialization')
+            # Loop through all references and apply comparison.
             else:
                 u = {}
                 for key in self.reference:
@@ -421,16 +628,44 @@ class ReferenceEnsemble(PredictionEnsemble):
 
     def compute_persistence(self, refname=None, nlags=None,
                             metric='pearson_r'):
+        """Compute a simple persistence forecast for a reference.
+
+        This simply applies some metric between the reference and itself out
+        to some lag (i.e., an ACF in the case of pearson r).
+
+        Args:
+            refname (str, default None):
+              Name of reference to compute the persistence forecast for. If
+              `None`, compute for all references.
+            nlags (int, default None):
+              Number of lags to compute persistence forecast to. If None,
+              compute to the length of the initialized forecasts.
+            metric (str, default 'pearson_r'):
+              Metric to apply to the persistence forecast.
+
+        Returns:
+            Dataset of persistence forecast results (if refname is declared),
+            or dictionary of Datasets with keys corresponding to reference
+            name.
+
+        Reference:
+            * Chapter 8 (Short-Term Climate Prediction) in
+              Van den Dool, Huug. Empirical methods in short-term climate
+              prediction. Oxford University Press, 2007.
+        """
         if len(self.reference) == 0:
             raise ValueError("""You need to add a reference dataset before
             attempting to compute persistence forecasts.""")
+        # Default to the length of the initialized forecast.
         if nlags is None:
             nlags = self.initialized.time.size
+        # apply to single reference.
         if refname is not None:
             return compute_persistence(self.initialized,
                                        self.reference[refname],
                                        nlags=nlags,
                                        metric=metric)
+        # loop through and apply to all references.
         else:
             persistence = {}
             for key in self.reference:

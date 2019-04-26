@@ -2,7 +2,7 @@ import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm,
                          compute_uninitialized)
-from .bootstrap import bootstrap_perfect_model
+from .bootstrap import bootstrap_perfect_model, _pseudo_ens
 # Both:
 # TODO: add horizon functionality
 # TODO: add various `get` and `set` decorators
@@ -122,29 +122,21 @@ def _display_metadata(self):
     """
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
-    summary += '    ' + str(self.initialized.data_vars)[18:].strip()
+    summary += '    ' + str(self.initialized.data_vars)[18:].strip() + '\n'
     if isinstance(self, ReferenceEnsemble):
-        # TODO: convert to decorator
         if any(self.reference):
             for key in self.reference:
-                summary += f'\n{key}:'
+                summary += f'{key}:\n'
                 N = len(self.reference[key].data_vars)
                 for i in range(1, N+1):
-                    summary += '\n    ' + \
+                    summary += '    ' + \
                                str(self.reference[key].data_vars) \
-                               .split('\n')[i].strip()
+                               .split('\n')[i].strip() + '\n'
         else:
-            summary += '\nReferences:\n'
-            summary += '    None'
-        if any(self.uninitialized):
-            summary += '\nUninitialized:\n'
-            summary += '    ' + str(self.uninitialized.data_vars)[18:].strip()
-        else:
-            summary += '\nUninitialized:\n'
-            summary += '    None'
+            summary += 'References:\n'
+            summary += '    None\n'
     elif isinstance(self, PerfectModelEnsemble):
-        summary += '\nControl:\n'
-        # TODO: convert to decorator
+        summary += 'Control:\n'
         if any(self.control):
             N = len(self.control.data_vars)
             for i in range(1, N+1):
@@ -152,7 +144,13 @@ def _display_metadata(self):
                            str(self.control.data_vars) \
                            .split('\n')[i].strip() + '\n'
         else:
-            summary += '    None'
+            summary += '    None\n'
+    if any(self.uninitialized):
+        summary += 'Uninitialized:\n'
+        summary += '    ' + str(self.uninitialized.data_vars)[18:].strip()
+    else:
+        summary += 'Uninitialized:\n'
+        summary += '    None'
     return summary
 
 
@@ -172,6 +170,7 @@ class PredictionEnsemble:
             xobj = xobj.to_dataset()
         _check_prediction_ensemble_dimensions(xobj)
         self.initialized = xobj
+        self.uninitialized = {}
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
@@ -201,6 +200,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Attributes:
             control: Dictionary of control run associated with the initialized
                      ensemble.
+            uninitialized: Dictionary of uninitialized run that is
+                           bootstrapped from the initialized run.
         """
 
         super().__init__(xobj)
@@ -220,6 +221,25 @@ class PerfectModelEnsemble(PredictionEnsemble):
         _check_control_dimensions(self.initialized, xobj)
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.control = xobj
+
+    def generate_uninitialized(self, var=None):
+        """Generate an uninitialized ensemble by bootstrapping the
+        initialized prediction ensemble.
+
+        Args:
+            var (str, default None):
+              Name of variable to be bootstrapped.
+
+        Returns:
+            Bootstrapped (uninitialized) ensemble as a Dataset.
+        """
+        if var is not None:
+            uninit = _pseudo_ens(self.initialized[var],
+                                 self.control[var]).to_dataset()
+        else:
+            uninit = _pseudo_ens(self.initialized,
+                                 self.control)
+        self.uninitialized = uninit
 
     def compute_metric(self, metric='pearson_r', comparison='m2m',
                        running=None, reference_period=None):
@@ -244,6 +264,34 @@ class PerfectModelEnsemble(PredictionEnsemble):
             attempting to compute predictability.""")
         else:
             return compute_perfect_model(self.initialized,
+                                         self.control,
+                                         metric=metric,
+                                         comparison=comparison,
+                                         running=running,
+                                         reference_period=reference_period)
+
+    def compute_uninitialized(self, metric='pearson_r', comparison='m2m',
+                              running=None, reference_period=None):
+        """Compares the bootstrapped uninitialized run to the control run.
+
+        Args:
+            metric (str, default 'pearson_r'):
+              Metric to apply in the comparison.
+            comparison (str, default 'm2m'):
+              How to compare to the control run.
+            running (int, default None):
+              Size of the running window for variance smoothing.
+            reference_period (str, default None):
+              Choice of reference period of control.
+
+        Returns:
+            Result of the comparison as a Dataset.
+        """
+        if len(self.uninitialized) == 0:
+            raise ValueError("""Uninitialized ensemble not generated. Please
+                             run `pm.generate_ensemble()` first.""")
+        else:
+            return compute_perfect_model(self.uninitialized,
                                          self.control,
                                          metric=metric,
                                          comparison=comparison,
@@ -362,23 +410,40 @@ class PerfectModelEnsemble(PredictionEnsemble):
                                            reference_period=ref_pd)
         # compute for all variables in control.
         else:
-            boot = {}
-            for var in self.control.data_vars:
-                res = bootstrap_perfect_model(self.initialized[var],
-                                              self.control[var],
-                                              metric=metric,
-                                              comparison=comparison,
-                                              sig=sig,
-                                              bootstrap=bootstrap,
-                                              compute_uninitialized_skill=cus,
-                                              compute_persistence_skill=cps,
-                                              pers_sig=pers_sig,
-                                              compute_ci=compute_ci,
-                                              nlags=nlags,
-                                              running=running,
-                                              reference_period=ref_pd)
-                boot[var] = res
-            return boot
+            if len(self.initialized.data_vars) == 1:
+                for var in self.initialized.data_vars:
+                    var = var
+                return bootstrap_perfect_model(self.initialized[var],
+                                               self.control[var],
+                                               metric=metric,
+                                               comparison=comparison,
+                                               sig=sig,
+                                               bootstrap=bootstrap,
+                                               compute_uninitialized_skill=cus,
+                                               compute_persistence_skill=cps,
+                                               pers_sig=pers_sig,
+                                               compute_ci=compute_ci,
+                                               nlags=nlags,
+                                               running=running,
+                                               reference_period=ref_pd)
+            else:
+                boot = {}
+                for var in self.control.data_vars:
+                    res = bootstrap_perfect_model(self.initialized[var],
+                                                  self.control[var],
+                                                  metric=metric,
+                                                  comparison=comparison,
+                                                  sig=sig,
+                                                  bootstrap=bootstrap,
+                                                  compute_uninitialized_skill=cus,
+                                                  compute_persistence_skill=cps,
+                                                  pers_sig=pers_sig,
+                                                  compute_ci=compute_ci,
+                                                  nlags=nlags,
+                                                  running=running,
+                                                  reference_period=ref_pd)
+                    boot[var] = res
+                return boot
 
 
 class ReferenceEnsemble(PredictionEnsemble):
@@ -408,7 +473,6 @@ class ReferenceEnsemble(PredictionEnsemble):
         """
         super().__init__(xobj)
         self.reference = {}
-        self.uninitialized = {}
 
     def _vars_to_drop(self, ref, init=True):
         """Returns list of variables to drop when comparing

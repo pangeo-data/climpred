@@ -1,6 +1,7 @@
 import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
-                         compute_perfect_model, compute_persistence_pm)
+                         compute_perfect_model, compute_persistence_pm,
+                         compute_uninitialized)
 from .bootstrap import bootstrap_perfect_model
 # Both:
 # TODO: add horizon functionality
@@ -18,7 +19,6 @@ from .bootstrap import bootstrap_perfect_model
 # temporal_resolution = 'annual'
 # TODO: Add attributes to returned objects. E.g., 'skill' should come back
 # with attribute explaining what two things were compared.
-# TODO: Create custom errors (not just ValueError for all of this)
 
 # PerfectModel:
 # TODO: add relative entropy functionality
@@ -234,34 +234,76 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
 
 class ReferenceEnsemble(PredictionEnsemble):
+    """An object for climate prediction ensembles initialized by a data-like
+    product.
+
+    `ReferenceEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
+    simulations/observations associated with the prediction ensemble for easy
+    computation across multiple variables and products.
+
+    This object is built on `xarray` and thus requires the input object to
+    be an `xarray` Dataset or DataArray.
+    """
     def __init__(self, xobj):
+        """Create a `ReferenceEnsemble` object by inputting output from a
+        prediction ensemble in `xarray` format.
+
+        Args:
+          xobj (xarray object):
+            decadal prediction ensemble output.
+
+        Attributes:
+          reference: Dictionary of various reference observations/simulations
+                     to associate with the decadal prediction ensemble.
+          uninitialized: Dictionary of companion (or bootstrapped)
+                         uninitialized ensemble run.
+        """
         super().__init__(xobj)
         self.reference = {}
         self.uninitialized = {}
 
-    def _trim_to_reference(self, ref):
-        """
-        Temporarily reduce initialized ensemble to the variables
-        it shares with the given reference. I.e., if the reference
-        has ['SST'] and the initialized ensemble has ['SST', 'SALT'],
-        this will drop 'SALT' so that the computation can be made.
+    def _vars_to_drop(self, ref, init=True):
+        """Returns list of variables to drop when comparing
+        initialized/uninitialized to a reference.
 
-        ref: str for reference name.
+        This is useful if the two products being compared do not share the same
+        variables. I.e., if the reference has ['SST'] and the initialized has
+        ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
+        from the initialized.
+
+        Args:
+          ref (str):
+            Name of reference being compared to.
+          init (bool, default True):
+            If `True`, check variables on the initialized.
+            If `False`, check variables on the uninitialized.
+
+        Returns:
+          Lists of variables to drop from the initialized/uninitialized
+          and reference Datasets.
         """
-        init_vars = [var for var in self.initialized.data_vars]
+        if init:
+            init_vars = [var for var in self.initialized.data_vars]
+        else:
+            init_vars = [var for var in self.uninitialized.data_vars]
         ref_vars = [var for var in self.reference[ref].data_vars]
         # find what variable they have in common.
         intersect = set(ref_vars).intersection(init_vars)
         # perhaps could be done cleaner than this.
         for var in intersect:
+            # generates a list of variables to drop from each product being
+            # compared.
             idx = init_vars.index(var)
             init_vars.pop(idx)
-        return init_vars
+            idx = ref_vars.index(var)
+            ref_vars.pop(idx)
+        return init_vars, ref_vars
 
     def add_reference(self, xobj, name):
-        """
-        uninitialized things should all have 'initialization' dimension,
-        so can stack them here.
+        """Add a reference product for comparison to the initialized ensemble.
+
+        NOTE: There is currently no check to ensure that these objects cover
+        the same time frame.
 
         Args:
             xobj (xarray object): Dataset/DataArray being appended to the
@@ -301,9 +343,9 @@ class ReferenceEnsemble(PredictionEnsemble):
             raise ValueError("""You need to add a reference dataset before
                 attempting to compute predictability.""")
         if refname is not None:
-            drop_vars = self._trim_to_reference(refname)
-            return compute_reference(self.initialized.drop(drop_vars),
-                                     self.reference[refname],
+            drop_init, drop_ref = self._vars_to_drop(refname)
+            return compute_reference(self.initialized.drop(drop_init),
+                                     self.reference[refname].drop(drop_ref),
                                      metric=metric,
                                      comparison=comparison,
                                      nlags=nlags,
@@ -311,9 +353,10 @@ class ReferenceEnsemble(PredictionEnsemble):
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
-                drop_vars = self._trim_to_reference(refname)
-                return compute_reference(self.initialized.drop(drop_vars),
-                                         self.reference[refname],
+                drop_init, drop_ref = self._vars_to_drop(refname)
+                return compute_reference(self.initialized.drop(drop_init),
+                                         self.reference[refname]
+                                             .drop(drop_ref),
                                          metric=metric,
                                          comparison=comparison,
                                          nlags=nlags,
@@ -321,15 +364,60 @@ class ReferenceEnsemble(PredictionEnsemble):
             else:
                 skill = {}
                 for key in self.reference:
-                    drop_vars = self._trim_to_reference(key)
+                    drop_init, drop_ref = self._vars_to_drop(key)
                     skill[key] = compute_reference(self.initialized
-                                                       .drop(drop_vars),
-                                                   self.reference[key],
+                                                       .drop(drop_init),
+                                                   self.reference[key]
+                                                       .drop(drop_ref),
                                                    metric=metric,
                                                    comparison=comparison,
                                                    nlags=nlags,
                                                    return_p=return_p)
                 return skill
+
+    def compute_uninitialized(self, refname=None, nlags=None,
+                              metric='pearson_r', comparison='e2r',
+                              return_p=False):
+        # TODO: Check that p-value return is easy on the user.
+        if len(self.uninitialized) == 0:
+            raise ValueError("""You need to add an uninitialized ensemble
+                before attempting to compute its skill.""")
+        if refname is not None:
+            drop_un, drop_ref = self._vars_to_drop(refname, init=False)
+            return compute_uninitialized(self.uninitialized.drop(drop_un),
+                                         self.reference[refname]
+                                             .drop(drop_ref),
+                                         metric=metric,
+                                         comparison=comparison,
+                                         return_p=return_p,
+                                         dim='initialization')
+        else:
+            if len(self.reference) == 1:
+                refname = list(self.reference.keys())[0]
+                drop_un, drop_ref = self._vars_to_drop(refname,
+                                                       init=False)
+                return compute_uninitialized(self.uninitialized
+                                                 .drop(drop_un),
+                                             self.reference[refname]
+                                                 .drop(drop_ref),
+                                             metric=metric,
+                                             comparison=comparison,
+                                             return_p=return_p,
+                                             dim='initialization')
+            else:
+                u = {}
+                for key in self.reference:
+                    drop_un, drop_ref = self._vars_to_drop(key,
+                                                           init=False)
+                    u[key] = compute_uninitialized(self.uninitialized
+                                                       .drop(drop_un),
+                                                   self.reference[key]
+                                                       .drop(drop_ref),
+                                                   metric=metric,
+                                                   comparison=comparison,
+                                                   return_p=return_p,
+                                                   dim='initialization')
+                return u
 
     def compute_persistence(self, refname=None, nlags=None,
                             metric='pearson_r'):
@@ -339,19 +427,22 @@ class ReferenceEnsemble(PredictionEnsemble):
         if nlags is None:
             nlags = self.initialized.time.size
         if refname is not None:
-            return compute_persistence(self.reference[refname],
+            return compute_persistence(self.initialized,
+                                       self.reference[refname],
                                        nlags=nlags,
                                        metric=metric)
         else:
             persistence = {}
             for key in self.reference:
-                persistence[key] = compute_persistence(self.reference[key],
+                persistence[key] = compute_persistence(self.initialized,
+                                                       self.reference[key],
                                                        nlags=nlags,
                                                        metric=metric)
-        return persistence
+            return persistence
 
     def compute_horizon(self, refname=None,):
         """
         Method to compute the predictability horizon.
         """
-        pass
+        raise NotImplementedError("""Predictability horizons are not yet fully
+            implemented and tested.""")

@@ -159,8 +159,8 @@ def xr_rm_poly(ds, order, dim='time'):
 
     if dim not in ds.dims:
         raise KeyError(
-            f'Input dim {dim} was not found in the ds; '
-            f'found only the following dims: {list(ds.dims)}.'
+            f"Input dim, '{dim}', was not found in the ds; "
+            f"found only the following dims: {list(ds.dims)}."
         )
 
     # handle both datasets and dataarray
@@ -171,16 +171,21 @@ def xr_rm_poly(ds, order, dim='time'):
         da = ds.copy()
         return_ds = False
 
-    # want independent axis to be the leading dimension
     da_dims_orig = list(da.dims)  # orig -> original
-    da_dims_swap = da_dims_orig.copy()  # copy to prevent contamination
+    if len(da_dims_orig) > 1:
+        # want independent axis to be the leading dimension
+        da_dims_swap = da_dims_orig.copy()  # copy to prevent contamination
 
-    # https://stackoverflow.com/questions/1014523/
-    # simple-syntax-for-bringing-a-list-element-to-the-front-in-python
-    da_dims_swap.insert(0, da_dims_swap.pop(da_dims_swap.index(dim)))
-    da = da.transpose(*da_dims_swap)
-    # hide other dims into a single dim
-    da = da.stack({'other_dims': da.dims[1:]})
+        # https://stackoverflow.com/questions/1014523/
+        # simple-syntax-for-bringing-a-list-element-to-the-front-in-python
+        da_dims_swap.insert(0, da_dims_swap.pop(da_dims_swap.index(dim)))
+        da = da.transpose(*da_dims_swap)
+
+        # hide other dims into a single dim
+        da = da.stack({'other_dims': da_dims_swap[1:]})
+        dims_swapped = True
+    else:
+        dims_swapped = False
 
     # NaNs will make the polyfit fail; fill with 0s (will 0 affect the fit?)
     nan_locs = np.isnan(da.values)
@@ -197,8 +202,9 @@ def xr_rm_poly(ds, order, dim='time'):
     # replace back the filled NaNs (keep values where not NaN)
     da = da.where(~nan_locs)
 
-    # revert the other dimensions to its original form and ordering
-    da = da.unstack('other_dims').transpose(*da_dims_orig)
+    if dims_swapped:
+        # revert the other dimensions to its original form and ordering
+        da = da.unstack('other_dims').transpose(*da_dims_orig)
 
     if return_ds:
         # revert back into a dataset

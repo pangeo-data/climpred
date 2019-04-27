@@ -16,10 +16,12 @@ Perfect-Model:
 * "MPI-control-3D": lat/lon/time for the control run of SST/SSS.
 
 Reference-based:
-* "CESM-DP": decadal prediction ensemble of global mean SSTs.
+* "CESM-DP-SST": decadal prediction ensemble of global mean SSTs.
+* "CESM-DP-SSS": decadal prediction ensemble of global mean SSS.
 * "CESM-LE": uninitialized ensemble of global mean SSTs.
 * "ERSST": observations of global mean SSTs.
-* "CESM-reference": hindcast simulation that initializes CESM-DP.
+* "FOSI-SST": reconstruction of global mean SSTs.
+* "FOSI-SSS": reconstruction of global mean SSS.
 """
 
 import os as _os
@@ -33,11 +35,12 @@ file_alias_dict = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
                    'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
                    'MPI-PM-DP-1D': 'PM_MPI-ESM-LR_ds',
                    'MPI-PM-DP-3D': 'PM_MPI-ESM-LR_ds3d',
-                   'CESM-DP': 'CESM-DP-LE.SST.annmean.anom',
+                   'CESM-DP-SST': 'CESM-DP-LE.SST.global',
+                   'CESM-DP-SSS': 'CESM-DP-LE.SSS.global',
                    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
                    'ERSST': 'ERSSTv4.global.mean',
-                   'CESM-reference': ('g.e11_LENS.GECOIAF.T62_g16.009.pop.h.' +
-                                      'SST.024901-031612')}
+                   'FOSI-SST': 'FOSI.SST.global',
+                   'FOSI-SSS': 'FOSI.SSS.global'}
 
 file_descriptions = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
                                      ' averages of SST/SSS/AMO.',

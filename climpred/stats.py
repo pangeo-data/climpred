@@ -187,8 +187,32 @@ def xr_rm_poly(ds, order, dim='time'):
     else:
         dims_swapped = False
 
-    # NaNs will make the polyfit fail; fill with 0s (will 0 affect the fit?)
+    # NaNs will make the polyfit fail--interpolate any NaNs in
+    # the provided dim to prevent poor fit, while other dims' NaNs
+    # will be filled with 0s; however, all NaNs will be replaced
+    # in the final output
     nan_locs = np.isnan(da.values)
+
+    # any(nan_locs.sum(axis=0)) fails if not 2D
+    if nan_locs.ndim == 1:
+        nan_locs = nan_locs.reshape(len(nan_locs), 1)
+        nan_reshaped = True
+    else:
+        nan_reshaped = False
+
+    # check if there's any NaNs in the provided dim because
+    # interpolate_na is computationally expensive to run regardless of NaNs
+    if any(nan_locs.sum(axis=0)) > 0:
+        if any(nan_locs[0, :]) == True:
+            # [np.nan, 1, 2], no first value to interpolate from; back fill
+            da = da.bfill(dim)
+        elif any(nan_locs[-1, :] == True):
+            # [0, 1, np.nan], no last value to interpolate from; forward fill
+            da = da.ffill(dim)
+        else:  # [0, np.nan, 2], can interpolate
+            da = da.interpolate_na(dim)
+
+    # this handles the other axes; doesn't matter since it won't affect the fit
     da = da.fillna(0)
 
     # the actual operation of detrending
@@ -200,6 +224,8 @@ def xr_rm_poly(ds, order, dim='time'):
     da.data[:] = y_dt
 
     # replace back the filled NaNs (keep values where not NaN)
+    if nan_reshaped:
+        nan_locs = nan_locs[:, 0]
     da = da.where(~nan_locs)
 
     if dims_swapped:

@@ -203,10 +203,10 @@ def xr_rm_poly(ds, order, dim='time'):
     # check if there's any NaNs in the provided dim because
     # interpolate_na is computationally expensive to run regardless of NaNs
     if any(nan_locs.sum(axis=0)) > 0:
-        if any(nan_locs[0, :]) == True:
+        if any(nan_locs[0, :]):
             # [np.nan, 1, 2], no first value to interpolate from; back fill
             da = da.bfill(dim)
-        elif any(nan_locs[-1, :] == True):
+        elif any(nan_locs[-1, :]):
             # [0, 1, np.nan], no last value to interpolate from; forward fill
             da = da.ffill(dim)
         else:  # [0, np.nan, 2], can interpolate
@@ -359,7 +359,7 @@ def DPP(ds, m=10, chunk=True):
 
     .. math::
 
-        DPP_{\text{unbiased}}(m)=\frac{\sigma^2_m - 1/m \cdot \sigma^2}{\sigma^2}
+    DPP_{\text{unbiased}}(m)=\frac{\sigma^2_m - 1/m \cdot \sigma^2}{\sigma^2}
 
     References:
     * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of

@@ -10,7 +10,7 @@ LICENSE = 'MIT'
 INSTALL_REQUIRES = ['numpy', 'pandas',
                     'xarray', 'scipy',
                     'xskillscore', 'eofs',
-                    'cftime']
+                    'cftime', 'bottleneck']
 TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
 

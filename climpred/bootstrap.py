@@ -89,7 +89,7 @@ def bootstrap_perfect_model(ds,
                             comparison='m2e',
                             sig=95,
                             bootstrap=500,
-                            compute_uninitized_skill=True,
+                            compute_uninitialized_skill=True,
                             compute_persistence_skill=True,
                             pers_sig=None,
                             compute_ci=True,
@@ -114,7 +114,7 @@ def bootstrap_perfect_model(ds,
                    initialized skill. Defaults to 95.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        compute_uninitized_skill (bool): Defaults to True.
+        compute_uninitialized_skill (bool): Defaults to True.
         compute_persistence_skill (bool): Defaults to True.
         nlags (type): number of lags persistence forecast skill.
                       Defaults to ds.time.size.
@@ -178,7 +178,7 @@ def bootstrap_perfect_model(ds,
                 comparison=comparison,
                 running=running,
                 reference_period=reference_period))
-        if compute_uninitized_skill:
+        if compute_uninitialized_skill:
             # generate uninitialized ensemble from control
             uninit_ds = _pseudo_ens(ds, control).isel(time=0)
             # compute uninit skill
@@ -196,7 +196,7 @@ def bootstrap_perfect_model(ds,
                 compute_persistence_pm(
                     smp_ds, control, nlags=nlags, dim='time', metric=metric))
     init = xr.concat(init, dim='bootstrap')
-    if compute_uninitized_skill:
+    if compute_uninitialized_skill:
         uninit = xr.concat(uninit, dim='bootstrap')
     if compute_persistence_skill:
         pers = xr.concat(pers, dim='bootstrap')
@@ -213,7 +213,7 @@ def bootstrap_perfect_model(ds,
     if compute_ci:
         init_ci = _distribution_to_ci(init, ci_low, ci_high)
         result = _merge_result(result, init_ci, 'init_ci')
-        if compute_uninitized_skill:
+        if compute_uninitialized_skill:
             uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
             result = _merge_result(result, uninit_ci, 'uninit_ci')
         if compute_persistence_skill:
@@ -232,7 +232,7 @@ def bootstrap_perfect_model(ds,
             pv = 1 - pv
         return pv
 
-    if compute_uninitized_skill:
+    if compute_uninitialized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)
         result = _merge_result(result, p_uninit_over_init,
                                'p_uninit_over_init')

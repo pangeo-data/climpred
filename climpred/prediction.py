@@ -946,6 +946,60 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r',
     return pers
 
 
+def compute_uninitialized(uninit, reference, metric='pearson_r',
+                          comparison='e2r', return_p=False,
+                          dim='initialization'):
+    """
+    Compute a predictability skill score between an uninitialized ensemble
+    and some reference (hindcast, assimilation, reconstruction, observations).
+
+    Based on Decadal Prediction protocol, this should only be computed for the
+    first lag and then projected out to any further lags being analyzed.
+
+    Parameters
+    ----------
+    uninit (xarray object):
+        uninitialized ensemble.
+    reference (xarray object):
+        reference output/data over same time period.
+    metric (str):
+        Metric used in comparing the decadal prediction ensemble with the
+        reference.
+        * pearson_r (Default)
+        * rmse
+        * mae
+        * mse
+    comparison (str):
+        How to compare the decadal prediction ensemble to the reference.
+        * e2r : ensemble mean to reference (Default)
+        * m2r : each member to the reference
+    return_p (bool): If True, return p values associated with pearson r.
+
+    Returns:
+        u (xarray object): Results from comparison at the first lag.
+        p (xarray object): If `return_p`, p values associated with
+                                 pearson r correlations.
+    """
+    _check_xarray(uninit)
+    _check_xarray(reference)
+    comparison = _get_comparison_function(comparison)
+    if comparison not in [_e2r, _m2r]:
+        raise KeyError("""Please input either 'e2r' or 'm2r' for your
+            comparison. This will be implemented for the perfect model setup
+            in the future.""")
+    uninit, reference = comparison(uninit, reference)
+    metric = _get_metric_function(metric)
+    u = metric(uninit, reference, dim=dim)
+    if (return_p) & (metric != _pearson_r):
+        raise KeyError("""You can only return p values if the metric is
+            'pearson_r'.""")
+    elif (return_p) & (metric == _pearson_r):
+        p = pearson_r_p_value(uninit, reference, dim=dim)
+        return u, p
+    else:
+        return u
+
+
 # --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#

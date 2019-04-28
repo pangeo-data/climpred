@@ -1,9 +1,11 @@
+import numpy as np
 import types
 from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
+from .prediction import _get_variance, _get_norm_factor
 
 
 def _get_metric_function(metric):
@@ -39,7 +41,7 @@ def _get_metric_function(metric):
     """
     # catches issues with wrappers, etc. that actually submit the
     # proper underscore function
-    if type(metric) == types.FunctionType:
+    if isinstance(metric, types.FunctionType):
         return metric
     else:
         pearson = ['pr', 'pearsonr', 'pearson_r']
@@ -250,4 +252,3 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
     """
     return np.sqrt(
         _ppp(forecast, reference, control, running, reference_period))
-

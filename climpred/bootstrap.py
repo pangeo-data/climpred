@@ -20,16 +20,16 @@ def _pseudo_ens(ds, control):
     Returns:
         ds_e (xarray object): pseudo-ensemble generated from control run.
     """
-    nens = ds.initialization.size
+    nens = ds.time.size
     nmember = ds.member.size
-    length = ds.time.size
+    length = ds.lead.size
     c_start = 0
     c_end = control['time'].size
-    time = ds['time']
+    time = ds['lead']
 
     def isel_years(control, year_s, m=None, length=length):
         new = control.isel(time=slice(year_s, year_s + length))
-        new['time'] = time
+        new['lead'] = time
         return new
 
     def create_pseudo_members(control):
@@ -38,7 +38,7 @@ def _pseudo_ens(ds, control):
                          'member')
 
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
-                     'initialization')
+                     'time')
 
 
 def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
@@ -117,7 +117,7 @@ def bootstrap_perfect_model(ds,
         compute_uninitialized_skill (bool): Defaults to True.
         compute_persistence_skill (bool): Defaults to True.
         nlags (type): number of lags persistence forecast skill.
-                      Defaults to ds.time.size.
+                      Defaults to ds.lead.size.
 
     Returns:
         init_ci (xr.Dataset): confidence levels of init_skill
@@ -152,7 +152,7 @@ def bootstrap_perfect_model(ds,
 
     result = xr.Dataset()
     if nlags is None:
-        nlags = ds.time.size
+        nlags = ds.lead.size
     p = (100 - sig) / 100  # 0.05
     ci_low = p / 2  # 0.025
     ci_high = 1 - p / 2  # 0.975
@@ -160,7 +160,7 @@ def bootstrap_perfect_model(ds,
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    inits = ds.initialization.values
+    inits = ds.time.values
     init = []
     uninit = []
     pers = []
@@ -168,7 +168,7 @@ def bootstrap_perfect_model(ds,
     # DoTo: parallelize loop
     for _ in range(bootstrap):
         smp = np.random.choice(inits, len(inits))
-        smp_ds = ds.sel(initialization=smp)
+        smp_ds = ds.sel(time=smp)
         # compute init skill
         init.append(
             compute_perfect_model(
@@ -180,7 +180,7 @@ def bootstrap_perfect_model(ds,
                 reference_period=reference_period))
         if compute_uninitialized_skill:
             # generate uninitialized ensemble from control
-            uninit_ds = _pseudo_ens(ds, control).isel(time=0)
+            uninit_ds = _pseudo_ens(ds, control).isel(lead=0)
             # compute uninit skill
             uninit.append(
                 compute_perfect_model(

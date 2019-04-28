@@ -11,7 +11,7 @@ from xskillscore import pearson_r as _pearson_r
 from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
 
-from .stats import _check_xarray, _get_dims, z_significance
+from .stats import _check_xarray, z_significance
 from .comparisons import (_get_comparison_function, _m2m, _m2c,
                           _m2e, _e2c, _e2r, _m2r)
 from .metrics import (_get_metric_function, _nmae, _nrmse,
@@ -136,13 +136,13 @@ def _drop_ensembles(ds, rmd_ensemble=[0]):
         ValueError: if list items are not all in ds.ensemble.
 
     """
-    if all(ens in ds.initialization.values for ens in rmd_ensemble):
-        ensemble_list = list(ds.initialization.values)
+    if all(ens in ds.time.values for ens in rmd_ensemble):
+        ensemble_list = list(ds.time.values)
         for ens in rmd_ensemble:
             ensemble_list.remove(ens)
     else:
         raise ValueError('select available ensembles only', rmd_ensemble)
-    return ds.sel(initialization=ensemble_list)
+    return ds.sel(time=ensemble_list)
 
 
 def _drop_members(ds, rmd_member=[0]):
@@ -185,14 +185,14 @@ def _select_members_ensembles(ds, m=None, i=None):
     if m is None:
         m = ds.member.values
     if i is None:
-        i = ds.initialization.values
-    return ds.sel(member=m, initialization=i)
+        i = ds.time.values
+    return ds.sel(member=m, time=i)
 
 
 def _stack_to_supervector(ds,
                           new_dim='svd',
-                          stacked_dims=('initialization', 'member')):
-    """Stack all stacked_dims (likely initialization and member) dimensions
+                          stacked_dims=('time', 'member')):
+    """Stack all stacked_dims (likely time and member) dimensions
     into one supervector dimension to perform metric over.
 
     Args:
@@ -282,8 +282,8 @@ def compute_reference(ds,
     ----------
     ds (xarray object):
         Expected to follow package conventions:
-        `initialization` : dim of initialization dates
-        `time` : dim of lead years from those initializations
+        `time` : dim of initialization dates
+        `lead` : dim of lead time from those initializations
         Additional dims can be lat, lon, depth.
     reference (xarray object):
         reference output/data over same time period.
@@ -299,7 +299,7 @@ def compute_reference(ds,
         * e2r : ensemble mean to reference (Default)
         * m2r : each member to the reference
     nlags (int): How many lags to compute skill/potential predictability out
-                 to. Default: length of `time` dim
+                 to. Default: length of `lead` dim
     return_p (bool): If True, return p values associated with pearson r.
 
     Returns:
@@ -315,7 +315,7 @@ def compute_reference(ds,
             comparison.""")
     forecast, reference = comparison(ds, reference)
     if nlags is None:
-        nlags = forecast.time.size
+        nlags = forecast.lead.size
     metric = _get_metric_function(metric)
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
@@ -323,10 +323,10 @@ def compute_reference(ds,
     plag = []
     for i in range(0, nlags):
         a, b = _shift(
-            forecast.isel(time=i), reference, i, dim='initialization')
-        plag.append(metric(a, b, dim='initialization'))
-    skill = xr.concat(plag, 'time')
-    skill['time'] = np.arange(1, 1 + nlags)
+            forecast.isel(lead=i), reference, i, dim='time')
+        plag.append(metric(a, b, dim='time'))
+    skill = xr.concat(plag, 'lead')
+    skill['lead'] = np.arange(1, 1 + nlags)
     if (return_p) & (metric != _pearson_r):
         raise ValueError("""You can only return p values if the metric is
             pearson_r.""")
@@ -336,12 +336,12 @@ def compute_reference(ds,
         p_value = []
         for i in range(0, nlags):
             a, b = _shift(
-                forecast.isel(time=i), reference, i, dim='initialization')
+                forecast.isel(lead=i), reference, i, dim='time')
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
-                p_value.append(pearson_r_p_value(a, b, dim='initialization'))
-        p_value = xr.concat(p_value, 'time')
-        p_value['time'] = np.arange(1, 1 + nlags)
+                p_value.append(pearson_r_p_value(a, b, dim='time'))
+        p_value = xr.concat(p_value, 'lead')
+        p_value['lead'] = np.arange(1, 1 + nlags)
         return skill, p_value
     else:
         return skill
@@ -393,7 +393,7 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
             'mse',
             'mae'""")
 
-    init_years = ds['initialization'].values
+    init_years = ds['time'].values
     if isinstance(ds.time.values[0],
                   cftime._cftime.DatetimeProlepticGregorian) \
             or isinstance(ds.time.values[0], np.datetime64):
@@ -425,13 +425,13 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
         fct = control.isel({dim: inits_index})
         ref[dim] = fct[dim]
         plag.append(metric(ref, fct, dim=dim))
-    pers = xr.concat(plag, 'time')
-    pers['time'] = np.arange(1, 1 + nlags)
+    pers = xr.concat(plag, 'lead')
+    pers['lead'] = np.arange(1, 1 + nlags)
     return pers
 
 
 def compute_persistence(ds, reference, nlags, metric='pearson_r',
-                        dim='initialization'):
+                        dim='time'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or control run.
@@ -460,7 +460,7 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r',
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
         dim (str): Dimension over which to compute persistence forecast.
-                   Default: 'initialization'
+                   Default: 'time'
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input
@@ -483,21 +483,21 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r',
             'mae'""")
     plag = []  # holds results of persistence for each lag
     for lag in range(1, 1 + nlags):
-        inits = ds['initialization'].values
+        inits = ds['time'].values
         ctrl_inits = reference.isel({dim: slice(0, -lag)})[dim].values
         inits = _intersection(inits, ctrl_inits)
         ref = reference.sel({dim: inits + lag})
         fct = reference.sel({dim: inits})
         ref[dim] = fct[dim]
         plag.append(metric(ref, fct, dim=dim))
-    pers = xr.concat(plag, 'time')
-    pers['time'] = np.arange(1, 1 + nlags)
+    pers = xr.concat(plag, 'lead')
+    pers['lead'] = np.arange(1, 1 + nlags)
     return pers
 
 
 def compute_uninitialized(uninit, reference, metric='pearson_r',
                           comparison='e2r', return_p=False,
-                          dim='initialization'):
+                          dim='time'):
     """
     Compute a predictability skill score between an uninitialized ensemble
     and some reference (hindcast, assimilation, reconstruction, observations).
@@ -588,22 +588,22 @@ def xr_predictability_horizon(skill,
             raise ValueError("""Please submit N, the length of the original
                 time series being correlated.""")
         sig = z_significance(skill, threshold, N, ci)
-        ph = ((p_values < alpha) & (sig)).argmin('time')
+        ph = ((p_values < alpha) & (sig)).argmin('lead')
         # where ph not reached, set max time
-        ph_not_reached = ((p_values < alpha) & (sig)).all('time')
+        ph_not_reached = ((p_values < alpha) & (sig)).all('lead')
     elif (limit is 'upper') and (perfect_model):
-        ph = (skill > threshold).argmin('time')
-        ph_not_reached = (skill > threshold).all('time')
+        ph = (skill > threshold).argmin('lead')
+        ph_not_reached = (skill > threshold).all('lead')
     elif limit is 'lower':
-        ph = (skill < threshold).argmin('time')
-        # where ph not reached, set max time
-        ph_not_reached = (skill < threshold).all('time')
+        ph = (skill < threshold).argmin('lead')
+        # where ph not reached, set max time 
+        ph_not_reached = (skill < threshold).all('lead')
     else:
         raise ValueError("""Please either submit 'upper' or 'lower' for the
             limit keyword.""")
-    ph = ph.where(~ph_not_reached, other=skill['time'].max())
+    ph = ph.where(~ph_not_reached, other=skill['lead'].max())
     # mask out any initial NaNs (land, masked out regions, etc.)
-    mask = np.asarray(skill.isel({'time': 0}))
+    mask = np.asarray(skill.isel({'lead': 0}))
     mask = np.isnan(mask)
     ph = ph.where(~mask, np.nan)
     return ph

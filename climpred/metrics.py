@@ -5,7 +5,87 @@ from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
-from .prediction import _get_variance, _get_norm_factor
+
+
+def _control_for_reference_period(control, reference_period='MK',
+                                  obs_years=40):
+    """Modifies control according to knowledge approach.
+
+    Args:
+        reference_period (str):
+            'MK' : maximum knowledge
+            'OP' : operational
+            'OP_full_length' : operational observational record length but keep
+                               full length of record.
+        obs_years (int): length of observational record.
+
+    Returns:
+        Control with modifications applied.
+
+    Reference:
+        * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia,Keith
+          Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+          Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+          Journal of the Royal Meteorological Society 142, no. 695
+          (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+    """
+    if reference_period is 'MK':
+        control = control
+    elif reference_period is 'OP_full_length':
+        control = control - \
+            control.rolling(time=obs_years, min_periods=1,
+                            center=True).mean() + control.mean('time')
+    elif reference_period is 'OP':
+        raise ValueError('not yet implemented')
+    else:
+        raise ValueError("choose a reference period")
+    return control
+
+
+def _get_variance(control, reference_period=None, time_length=None):
+    """Get variance to normalize skill score.
+
+    Args:
+        control (xarray object): Control simulation.
+        reference_period (str): See _control_for_reference_period.
+        time_length (int): Number of time steps to smooth control by before
+                           taking variance.
+
+    """
+    if reference_period is not None and isinstance(time_length, int):
+        control = _control_for_reference_period(
+            control, reference_period=reference_period, obs_years=time_length)
+        return control.var('time')
+    else:
+        return control.var('time')
+
+
+def _get_norm_factor(comparison):
+    """Get normalization factor for PPP, nvar, nRMSE.
+
+    Used in compute_perfect_model. Comparison 'm2e' gets smaller rmse's than
+    'm2m' by design, see Seferian et al. 2018. 'm2m', 'm2c' ensemble variance
+    is divided by 2 to get control variance.
+
+    Args:
+        comparison (function): comparison function.
+
+    Returns:
+        fac (int): normalization factor.
+
+    Raises:
+        ValueError: if comparison is not matching.
+
+    """
+    comparison_name = comparison.__name__
+    if comparison_name in ['_m2e', '_e2c']:
+        fac = 1
+        return fac
+    elif comparison_name in ['_m2c', '_m2m']:
+        fac = 2
+        return fac
+    else:
+        raise ValueError('specify comparison to get normalization factor.')
 
 
 def _get_metric_function(metric):

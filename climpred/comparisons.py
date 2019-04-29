@@ -30,8 +30,8 @@ def _drop_members(ds, rmd_member=[0]):
 
 def _stack_to_supervector(ds,
                           new_dim='svd',
-                          stacked_dims=('lead', 'member')):
-    """Stack all stacked_dims (likely lead and member) dimensions
+                          stacked_dims=('time', 'member')):
+    """Stack all stacked_dims (likely time and member) dimensions
     into one supervector dimension to perform metric over.
 
     Args:

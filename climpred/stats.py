@@ -5,36 +5,9 @@ import scipy.stats as ss
 import xarray as xr
 from scipy.signal import periodogram
 from scipy.stats import norm
-
 from xskillscore import pearson_r, pearson_r_p_value
 
-
-# --------------------------------------------#
-# HELPER FUNCTIONS
-# Should only be used internally by esmtools.
-# --------------------------------------------#
-def _check_xarray(x):
-    """Check if the object being submitted is either a Dataset or DataArray."""
-    if not (isinstance(x, xr.DataArray) or isinstance(x, xr.Dataset)):
-        typecheck = type(x)
-        raise IOError(f"""The input data is not an xarray object (an xarray
-            DataArray or Dataset). esmtools is built to wrap xarray to make
-            use of its awesome features. Please input an xarray object and
-            retry the function.
-
-            Your input was of type: {typecheck}""")
-
-
-def _get_coords(da):
-    return list(da.coords)
-
-
-def _get_dims(da):
-    return list(da.dims)
-
-
-def _get_vars(ds):
-    return list(ds.data_vars)
+from .utils import (get_dims, check_xarray)
 
 
 # ----------------------------------#
@@ -73,8 +46,8 @@ def xr_corr(x, y, dim='time', lag=0, return_p=False):
         If return_p True, associated p values.
 
     """
-    _check_xarray(x)
-    _check_xarray(y)
+    check_xarray(x)
+    check_xarray(y)
     if lag != 0:
         N = x[dim].size
         normal = x.isel({dim: slice(0, N-lag)})
@@ -90,7 +63,7 @@ def xr_corr(x, y, dim='time', lag=0, return_p=False):
         # return with proper dimension labeling. would be easier with
         # apply_ufunc, but having trouble getting it to work here. issue
         # probably has to do with core dims.
-        dimlist = _get_dims(r)
+        dimlist = get_dims(r)
         for i in range(len(dimlist)):
             p = p.rename({'dim_' + str(i): dimlist[i]})
         return r, p
@@ -155,7 +128,7 @@ def xr_rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
-    _check_xarray(ds)  # this could be a decorator I think?
+    check_xarray(ds)  # this could be a decorator I think?
 
     if dim not in ds.dims:
         raise KeyError(
@@ -262,13 +235,13 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
         time_dim (optional str): Name of time dimension.
 
     """
-    _check_xarray(ds)
+    check_xarray(ds)
 
     def _create_dataset(ds, f, Pxx, time_dim):
         """
         Organize results of periodogram into clean dataset.
         """
-        dimlist = [i for i in _get_dims(ds) if i not in [time_dim]]
+        dimlist = [i for i in get_dims(ds) if i not in [time_dim]]
         PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
         PSD.coords['freq'] = f
         return PSD
@@ -294,7 +267,7 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
 
         If return_p, also returns their associated p values.
     """
-    _check_xarray(ds)
+    check_xarray(ds)
     N = ds[dim].size
     normal = ds.isel({dim: slice(0, N - lag)})
     shifted = ds.isel({dim: slice(0 + lag, N)})
@@ -338,7 +311,7 @@ def xr_decorrelation_time(da, r=20, dim='time'):
         Decorrelation time of time series.
 
     """
-    _check_xarray(da)
+    check_xarray(da)
     one = da.mean(dim) / da.mean(dim)
     return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
                                 range(1, r)], 'it').sum('it')

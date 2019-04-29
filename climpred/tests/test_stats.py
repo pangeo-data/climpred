@@ -65,10 +65,11 @@ def test_xr_rm_trend_2d_dataarray_interp_nan(two_dim_da):
     two_dim_da_dt = xr_rm_trend(two_dim_da, 'col')
 
     assert two_dim_da_dt.shape == (4, 5)
-    # should have 15 values (5 NaNs) near 0 after detrending because it's linear
-    # but because of floating point precision, may not be 0
+    # should have 15 values (5 NaNs) near 0 after detrending because it's
+    # linear. But because of floating point precision, it may not be 0.
     assert (two_dim_da_dt <= 1e-5).sum() == 15
     assert np.isnan(two_dim_da_dt[2]).all()  # should be replaced with nan
+
 
 def test_xr_rm_trend_3d_dataset(multi_dim_ds):
     multi_dim_ds_dt = xr_rm_trend(multi_dim_ds)

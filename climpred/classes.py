@@ -2,7 +2,7 @@ import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm,
                          compute_uninitialized)
-from .bootstrap import bootstrap_perfect_model, _pseudo_ens
+from .bootstrap import bootstrap_perfect_model, pseudo_ens
 # Both:
 # TODO: add horizon functionality
 # TODO: add various `get` and `set` decorators

@@ -41,87 +41,6 @@ def _shift(a, b, lag, dim='time'):
     return a, b
 
 
-def _control_for_reference_period(control, reference_period='MK',
-                                  obs_years=40):
-    """Modifies control according to knowledge approach.
-
-    Args:
-        reference_period (str):
-            'MK' : maximum knowledge
-            'OP' : operational
-            'OP_full_length' : operational observational record length but keep
-                               full length of record.
-        obs_years (int): length of observational record.
-
-    Returns:
-        Control with modifications applied.
-
-    Reference:
-        * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia,Keith
-          Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-          Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-          Journal of the Royal Meteorological Society 142, no. 695
-          (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-    """
-    if reference_period is 'MK':
-        control = control
-    elif reference_period is 'OP_full_length':
-        control = control - \
-            control.rolling(time=obs_years, min_periods=1,
-                            center=True).mean() + control.mean('time')
-    elif reference_period is 'OP':
-        raise ValueError('not yet implemented')
-    else:
-        raise ValueError("choose a reference period")
-    return control
-
-
-def _get_variance(control, reference_period=None, time_length=None):
-    """Get variance to normalize skill score.
-
-    Args:
-        control (xarray object): Control simulation.
-        reference_period (str): See _control_for_reference_period.
-        time_length (int): Number of time steps to smooth control by before
-                           taking variance.
-
-    """
-    if reference_period is not None and isinstance(time_length, int):
-        control = _control_for_reference_period(
-            control, reference_period=reference_period, obs_years=time_length)
-        return control.var('time')
-    else:
-        return control.var('time')
-
-
-def _get_norm_factor(comparison):
-    """Get normalization factor for PPP, nvar, nRMSE.
-
-    Used in compute_perfect_model. Comparison 'm2e' gets smaller rmse's than
-    'm2m' by design, see Seferian et al. 2018. 'm2m', 'm2c' ensemble variance
-    is divided by 2 to get control variance.
-
-    Args:
-        comparison (function): comparison function.
-
-    Returns:
-        fac (int): normalization factor.
-
-    Raises:
-        ValueError: if comparison is not matching.
-
-    """
-    comparison_name = comparison.__name__
-    if comparison_name in ['_m2e', '_e2c']:
-        fac = 1
-        return fac
-    elif comparison_name in ['_m2c', '_m2m']:
-        fac = 2
-        return fac
-    else:
-        raise ValueError('specify comparison to get normalization factor.')
-
-
 def _drop_ensembles(ds, rmd_ensemble=[0]):
     """Drop ensembles by name selection .sel(member=) from ds.
 
@@ -145,29 +64,6 @@ def _drop_ensembles(ds, rmd_ensemble=[0]):
     return ds.sel(time=ensemble_list)
 
 
-def _drop_members(ds, rmd_member=[0]):
-    """Drop members by name selection .sel(member=) from ds.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member dimension
-        rmd_ensemble (list): list of members to be dropped. Default: [0]
-
-    Returns:
-        ds (xarray object): xr.Dataset/xr.DataArray with less members.
-
-    Raises:
-        ValueError: if list items are not all in ds.member
-
-    """
-    if all(m in ds.member.values for m in rmd_member):
-        member_list = list(ds.member.values)
-        for ens in rmd_member:
-            member_list.remove(ens)
-    else:
-        raise ValueError('select available members only', rmd_member)
-    return ds.sel(member=member_list)
-
-
 def _select_members_ensembles(ds, m=None, i=None):
     """Subselect ensembles and members from ds.
 
@@ -187,25 +83,6 @@ def _select_members_ensembles(ds, m=None, i=None):
     if i is None:
         i = ds.time.values
     return ds.sel(member=m, time=i)
-
-
-def _stack_to_supervector(ds,
-                          new_dim='svd',
-                          stacked_dims=('time', 'member')):
-    """Stack all stacked_dims (likely time and member) dimensions
-    into one supervector dimension to perform metric over.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        new_dim (str): name of new supervector dimension. Default: 'svd'
-        stacked_dims (set): dimensions to be stacked.
-
-    Returns:
-        ds (xarray object): xr.Dataset/xr.DataArray with stacked new_dim
-                            dimension.
-    """
-    return ds.stack({new_dim: stacked_dims})
 
 
 # --------------------------------------------#
@@ -596,7 +473,7 @@ def xr_predictability_horizon(skill,
         ph_not_reached = (skill > threshold).all('lead')
     elif limit is 'lower':
         ph = (skill < threshold).argmin('lead')
-        # where ph not reached, set max time 
+        # where ph not reached, set max time
         ph_not_reached = (skill < threshold).all('lead')
     else:
         raise ValueError("""Please either submit 'upper' or 'lower' for the

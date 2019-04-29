@@ -5,7 +5,7 @@ from .prediction import compute_perfect_model, compute_persistence_pm
 from .stats import DPP, xr_varweighted_mean_period
 
 
-def _pseudo_ens(ds, control):
+def pseudo_ens(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -25,17 +25,18 @@ def _pseudo_ens(ds, control):
     length = ds.lead.size
     c_start = 0
     c_end = control['time'].size
-    time = ds['lead']
+    lead_time = ds['lead']
 
-    def isel_years(control, year_s, m=None, length=length):
+    def isel_years(control, year_s, length):
         new = control.isel(time=slice(year_s, year_s + length))
-        new['lead'] = time
+        new = new.rename({'time': 'lead'})
+        new['lead'] = lead_time
         return new
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat([isel_years(control, start) for start in startlist],
-                         'member')
+        return xr.concat([isel_years(control, start, length) for start in
+                          startlist], 'member')
 
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
                      'time')
@@ -180,7 +181,7 @@ def bootstrap_perfect_model(ds,
                 reference_period=reference_period))
         if compute_uninitialized_skill:
             # generate uninitialized ensemble from control
-            uninit_ds = _pseudo_ens(ds, control).isel(lead=0)
+            uninit_ds = pseudo_ens(ds, control).isel(lead=0)
             # compute uninit skill
             uninit.append(
                 compute_perfect_model(

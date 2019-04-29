@@ -50,12 +50,14 @@ file_descriptions = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
                                        ' SST/SSS.',
                      'MPI-control-3D': 'lat/lon/time for the control run of' +
                                        ' SST/SSS.',
-                     'CESM-DP': 'decadal prediction ensemble of global mean' +
-                                ' SSTs.',
+                     'CESM-DP-SST': 'decadal prediction ensemble of global' +
+                                    ' mean SSTs.',
+                     'CESM-DP-SSS': 'decadal prediction ensemble of global' +
+                                    ' mean SSS.',
                      'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
                      'ERSST': 'observations of global mean SSTs.',
-                     'CESM-reference': 'hindcast simulation that initializes' +
-                                       ' CESM-DP.',
+                     'FOSI-SST': 'reconstruction of global mean SSTs.',
+                     'FOSI-SSS': 'reconstruction of global mean SSS.',
                      }
 
 

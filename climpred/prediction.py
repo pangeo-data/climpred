@@ -199,8 +199,11 @@ def compute_reference(ds,
             'mae' for your metric.""")
     plag = []
     for i in range(0, nlags):
+        # Temporary rename of init dimension to time to allow the
+        # metric to run properly.
         a, b = _shift(
-            forecast.isel(lead=i), reference, i, dim='time')
+            forecast.isel(lead=i).rename({'init': 'time'}), reference, i,
+            dim='time')
         plag.append(metric(a, b, dim='time'))
     skill = xr.concat(plag, 'lead')
     skill['lead'] = np.arange(1, 1 + nlags)
@@ -213,7 +216,8 @@ def compute_reference(ds,
         p_value = []
         for i in range(0, nlags):
             a, b = _shift(
-                forecast.isel(lead=i), reference, i, dim='time')
+                forecast.isel(lead=i).rename({'init': 'time'}), reference, i,
+                dim='time')
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore")
                 p_value.append(pearson_r_p_value(a, b, dim='time'))
@@ -270,16 +274,16 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
             'mse',
             'mae'""")
 
-    init_years = ds['time'].values
-    if isinstance(ds.time.values[0],
+    init_years = ds['init'].values
+    if isinstance(ds.init.values[0],
                   cftime._cftime.DatetimeProlepticGregorian) \
-            or isinstance(ds.time.values[0], np.datetime64):
+            or isinstance(ds.init.values[0], np.datetime64):
         init_cftimes = []
         for year in init_years:
             init_cftimes.append(control.sel(
                 time=str(year)).isel(time=init_month_index).time)
         init_cftimes = xr.concat(init_cftimes, 'time')
-    elif isinstance(ds.time.values[0], np.int64):
+    elif isinstance(ds.init.values[0], np.int64):
         init_cftimes = []
         for year in init_years:
             init_cftimes.append(control.sel(
@@ -360,7 +364,7 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r',
             'mae'""")
     plag = []  # holds results of persistence for each lag
     for lag in range(1, 1 + nlags):
-        inits = ds['time'].values
+        inits = ds['init'].values
         ctrl_inits = reference.isel({dim: slice(0, -lag)})[dim].values
         inits = _intersection(inits, ctrl_inits)
         ref = reference.sel({dim: inits + lag})

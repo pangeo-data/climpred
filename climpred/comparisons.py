@@ -1,6 +1,50 @@
-from .stats import _get_dims
-from .prediction import _stack_to_supervector, _drop_members
 import xarray as xr
+
+
+def _get_dims(da):
+    return list(da.dims)
+
+
+def _drop_members(ds, rmd_member=[0]):
+    """Drop members by name selection .sel(member=) from ds.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member dimension
+        rmd_ensemble (list): list of members to be dropped. Default: [0]
+
+    Returns:
+        ds (xarray object): xr.Dataset/xr.DataArray with less members.
+
+    Raises:
+        ValueError: if list items are not all in ds.member
+
+    """
+    if all(m in ds.member.values for m in rmd_member):
+        member_list = list(ds.member.values)
+        for ens in rmd_member:
+            member_list.remove(ens)
+    else:
+        raise ValueError('select available members only', rmd_member)
+    return ds.sel(member=member_list)
+
+
+def _stack_to_supervector(ds,
+                          new_dim='svd',
+                          stacked_dims=('lead', 'member')):
+    """Stack all stacked_dims (likely lead and member) dimensions
+    into one supervector dimension to perform metric over.
+
+    Args:
+        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
+                            dimension.
+        new_dim (str): name of new supervector dimension. Default: 'svd'
+        stacked_dims (set): dimensions to be stacked.
+
+    Returns:
+        ds (xarray object): xr.Dataset/xr.DataArray with stacked new_dim
+                            dimension.
+    """
+    return ds.stack({new_dim: stacked_dims})
 
 
 def _get_comparison_function(comparison):
@@ -71,10 +115,10 @@ def _m2m(ds, supervector_dim='svd'):
         ds_reduced = _drop_members(ds, rmd_member=[m])
         reference = ds.sel(member=m)
         for m2 in ds_reduced.member:
-            for i in ds.initialization:
-                reference_list.append(reference.sel(initialization=i))
+            for i in ds.time:
+                reference_list.append(reference.sel(time=i))
                 forecast_list.append(
-                    ds_reduced.sel(member=m2, initialization=i))
+                    ds_reduced.sel(member=m2, time=i))
     reference = xr.concat(reference_list, supervector_dim)
     forecast = xr.concat(forecast_list, supervector_dim)
     return forecast, reference
@@ -147,11 +191,11 @@ def _e2c(ds, supervector_dim='svd', control_member=[0]):
         reference (xarray object): reference.
     """
     reference = ds.isel(member=control_member).squeeze()
-    reference = reference.rename({'initialization': supervector_dim})
+    reference = reference.rename({'time': supervector_dim})
     # drop the member being reference
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     forecast = ds.mean('member')
-    forecast = forecast.rename({'initialization': supervector_dim})
+    forecast = forecast.rename({'time': supervector_dim})
     return forecast, reference
 
 

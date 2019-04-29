@@ -5,7 +5,7 @@ def _get_dims(da):
     return list(da.dims)
 
 
-def _drop_members(ds, rmd_member=[0]):
+def _drop_members(ds, rmd_member=None):
     """Drop members by name selection .sel(member=) from ds.
 
     Args:
@@ -19,6 +19,8 @@ def _drop_members(ds, rmd_member=[0]):
         ValueError: if list items are not all in ds.member
 
     """
+    if rmd_member is None:
+        rmd_member = [0]
     if all(m in ds.member.values for m in rmd_member):
         member_list = list(ds.member.values)
         for ens in rmd_member:
@@ -146,7 +148,7 @@ def _m2e(ds, supervector_dim='svd'):
     return forecast, reference
 
 
-def _m2c(ds, supervector_dim='svd', control_member=[0]):
+def _m2c(ds, supervector_dim='svd', control_member=None):
     """
     Create two supervectors to compare all members to control.
 
@@ -163,6 +165,8 @@ def _m2c(ds, supervector_dim='svd', control_member=[0]):
         reference (xarray object): reference.
 
     """
+    if control_member is None:
+        control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
     # drop the member being reference
     ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
@@ -171,10 +175,8 @@ def _m2c(ds, supervector_dim='svd', control_member=[0]):
     reference = _stack_to_supervector(reference, new_dim=supervector_dim)
     return forecast, reference
 
-    return forecast, reference
 
-
-def _e2c(ds, supervector_dim='svd', control_member=[0]):
+def _e2c(ds, supervector_dim='svd', control_member=None):
     """
     Create two supervectors to compare ensemble mean to control.
 
@@ -190,6 +192,8 @@ def _e2c(ds, supervector_dim='svd', control_member=[0]):
         forecast (xarray object): forecast.
         reference (xarray object): reference.
     """
+    if control_member is None:
+        control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
     reference = reference.rename({'init': supervector_dim})
     # drop the member being reference

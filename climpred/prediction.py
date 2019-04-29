@@ -12,9 +12,9 @@ from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
 
 from .stats import _check_xarray, z_significance
-from .comparisons import (_get_comparison_function, _m2m, _m2c,
+from .comparisons import (get_comparison_function, _m2m, _m2c,
                           _m2e, _e2c, _e2r, _m2r)
-from .metrics import (_get_metric_function, _nmae, _nrmse,
+from .metrics import (get_metric_function, _nmae, _nrmse,
                       _nmse, _ppp, _uacc)
 
 
@@ -41,50 +41,6 @@ def _shift(a, b, lag, dim='time'):
     return a, b
 
 
-def _drop_ensembles(ds, rmd_ensemble=[0]):
-    """Drop ensembles by name selection .sel(member=) from ds.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with ensemble dimension.
-        rmd_ensemble (list): list of ensemble names to be dropped. Default: [0]
-
-    Returns:
-        ds (xarray object): xr.Dataset/xr.DataArray with less ensembles.
-
-    Raises:
-        ValueError: if list items are not all in ds.ensemble.
-
-    """
-    if all(ens in ds.time.values for ens in rmd_ensemble):
-        ensemble_list = list(ds.time.values)
-        for ens in rmd_ensemble:
-            ensemble_list.remove(ens)
-    else:
-        raise ValueError('select available ensembles only', rmd_ensemble)
-    return ds.sel(time=ensemble_list)
-
-
-def _select_members_ensembles(ds, m=None, i=None):
-    """Subselect ensembles and members from ds.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        m (list): list of members to select. Default: None
-        i (list): list of members to select. Default: None
-
-    Returns:
-        ds (xarray object): xr.Dataset/xr.DataArray with less members or
-                            ensembles.
-
-    """
-    if m is None:
-        m = ds.member.values
-    if i is None:
-        i = ds.time.values
-    return ds.sel(member=m, time=i)
-
-
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
@@ -103,8 +59,8 @@ def compute_perfect_model(ds,
     Args:
         ds (xarray object): ensemble with dimensions time and member.
         control (xarray object): control with dimensions time.
-        metric (str): metric name see _get_metric_function.
-        comparison (str): comparison name see _get_comparison_function.
+        metric (str): metric name see get_metric_function.
+        comparison (str): comparison name see get_comparison_function.
         running (optional int): size of the running window for variance
                                 smoothing. Default: None (no smoothing)
         reference_period (optional str): choice of reference period of control.
@@ -118,11 +74,11 @@ def compute_perfect_model(ds,
                     if metric not implemented.
     """
     supervector_dim = 'svd'
-    comparison = _get_comparison_function(comparison)
+    comparison = get_comparison_function(comparison)
     if comparison not in [_m2m, _m2c, _m2e, _e2c]:
         raise ValueError('specify comparison argument')
 
-    metric = _get_metric_function(metric)
+    metric = get_metric_function(metric)
     if metric in [_pearson_r, _rmse, _mse, _mae]:
         forecast, reference = comparison(ds, supervector_dim)
         res = metric(forecast, reference, dim=supervector_dim)
@@ -186,14 +142,14 @@ def compute_reference(ds,
     """
     _check_xarray(ds)
     _check_xarray(reference)
-    comparison = _get_comparison_function(comparison)
+    comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise ValueError("""Please input either 'e2r' or 'm2r' for your
             comparison.""")
     forecast, reference = comparison(ds, reference)
     if nlags is None:
         nlags = forecast.lead.size
-    metric = _get_metric_function(metric)
+    metric = get_metric_function(metric)
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
             'mae' for your metric.""")
@@ -228,7 +184,7 @@ def compute_reference(ds,
         return skill
 
 
-def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
+def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
                            dim='time', init_month_index=0):
     """
     Computes the skill of  a persistence forecast from a control run.
@@ -255,7 +211,9 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
     Args:
         ds (xarray object): The initialization years to get persistence from.
         reference (xarray object): The reference time series.
-        nlags (int): Number of lags to compute persistence to.
+        nlags (int, default None): Number of lags to compute persistence to.
+            If None, use the number of lead steps from the prediction
+            ensemble.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
         dim (str): Dimension over which to compute persistence forecast.
@@ -266,7 +224,10 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
                               metric applied.
     """
     _check_xarray(control)
-    metric = _get_metric_function(metric)
+    metric = get_metric_function(metric)
+    if nlags is None:
+        nlags = ds.lead.size
+
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please select between the following metrics:
             'pearson_r',
@@ -311,7 +272,7 @@ def compute_persistence_pm(ds, control, nlags, metric='pearson_r',
     return pers
 
 
-def compute_persistence(ds, reference, nlags, metric='pearson_r',
+def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
                         dim='time'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -337,7 +298,9 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r',
     Args:
         ds (xarray object): The initialized ensemble.
         reference (xarray object): The reference time series.
-        nlags (int): Number of lags to compute persistence to.
+        nlags (int, default None): Number of lags to compute persistence to.
+            If None, defaults to number of lead steps from the prediction
+            ensemble.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
         dim (str): Dimension over which to compute persistence forecast.
@@ -355,7 +318,10 @@ def compute_persistence(ds, reference, nlags, metric='pearson_r',
         return np.array(lst3)
 
     _check_xarray(reference)
-    metric = _get_metric_function(metric)
+    if nlags is None:
+        nlags = ds.lead.size
+
+    metric = get_metric_function(metric)
     if metric not in [_pearson_r, _rmse, _mse, _mae]:
         raise ValueError("""Please select between the following metrics:
             'pearson_r',
@@ -412,13 +378,13 @@ def compute_uninitialized(uninit, reference, metric='pearson_r',
     """
     _check_xarray(uninit)
     _check_xarray(reference)
-    comparison = _get_comparison_function(comparison)
+    comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise KeyError("""Please input either 'e2r' or 'm2r' for your
             comparison. This will be implemented for the perfect model setup
             in the future.""")
     uninit, reference = comparison(uninit, reference)
-    metric = _get_metric_function(metric)
+    metric = get_metric_function(metric)
     u = metric(uninit, reference, dim=dim)
     if (return_p) & (metric != _pearson_r):
         raise KeyError("""You can only return p values if the metric is

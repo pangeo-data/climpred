@@ -47,7 +47,7 @@ def _stack_to_supervector(ds,
     return ds.stack({new_dim: stacked_dims})
 
 
-def _get_comparison_function(comparison):
+def get_comparison_function(comparison):
     """Converts a string comparison entry from the user into an actual
        function for the package to interpret.
 
@@ -116,7 +116,7 @@ def _m2m(ds, supervector_dim='svd'):
         reference = ds.sel(member=m)
         for m2 in ds_reduced.member:
             for i in ds.init:
-                reference_list.append(reference.sel(time=i))
+                reference_list.append(reference.sel(init=i))
                 forecast_list.append(
                     ds_reduced.sel(member=m2, init=i))
     reference = xr.concat(reference_list, supervector_dim)
@@ -191,7 +191,7 @@ def _e2c(ds, supervector_dim='svd', control_member=[0]):
         reference (xarray object): reference.
     """
     reference = ds.isel(member=control_member).squeeze()
-    reference = reference.rename({'time': supervector_dim})
+    reference = reference.rename({'init': supervector_dim})
     # drop the member being reference
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     forecast = ds.mean('member')

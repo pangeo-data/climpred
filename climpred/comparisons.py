@@ -30,8 +30,8 @@ def _drop_members(ds, rmd_member=[0]):
 
 def _stack_to_supervector(ds,
                           new_dim='svd',
-                          stacked_dims=('time', 'member')):
-    """Stack all stacked_dims (likely time and member) dimensions
+                          stacked_dims=('init', 'member')):
+    """Stack all stacked_dims (likely init and member) dimensions
     into one supervector dimension to perform metric over.
 
     Args:
@@ -115,10 +115,10 @@ def _m2m(ds, supervector_dim='svd'):
         ds_reduced = _drop_members(ds, rmd_member=[m])
         reference = ds.sel(member=m)
         for m2 in ds_reduced.member:
-            for i in ds.time:
+            for i in ds.init:
                 reference_list.append(reference.sel(time=i))
                 forecast_list.append(
-                    ds_reduced.sel(member=m2, time=i))
+                    ds_reduced.sel(member=m2, init=i))
     reference = xr.concat(reference_list, supervector_dim)
     forecast = xr.concat(forecast_list, supervector_dim)
     return forecast, reference
@@ -195,7 +195,7 @@ def _e2c(ds, supervector_dim='svd', control_member=[0]):
     # drop the member being reference
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
     forecast = ds.mean('member')
-    forecast = forecast.rename({'time': supervector_dim})
+    forecast = forecast.rename({'init': supervector_dim})
     return forecast, reference
 
 

@@ -20,7 +20,7 @@ def pseudo_ens(ds, control):
     Returns:
         ds_e (xarray object): pseudo-ensemble generated from control run.
     """
-    nens = ds.time.size
+    nens = ds.init.size
     nmember = ds.member.size
     length = ds.lead.size
     c_start = 0
@@ -39,7 +39,7 @@ def pseudo_ens(ds, control):
                           startlist], 'member')
 
     return xr.concat([create_pseudo_members(control) for _ in range(nens)],
-                     'time')
+                     'init')
 
 
 def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
@@ -161,7 +161,7 @@ def bootstrap_perfect_model(ds,
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    inits = ds.time.values
+    inits = ds.init.values
     init = []
     uninit = []
     pers = []
@@ -169,7 +169,7 @@ def bootstrap_perfect_model(ds,
     # DoTo: parallelize loop
     for _ in range(bootstrap):
         smp = np.random.choice(inits, len(inits))
-        smp_ds = ds.sel(time=smp)
+        smp_ds = ds.sel(init=smp)
         # compute init skill
         init.append(
             compute_perfect_model(

@@ -3,7 +3,6 @@ import types
 from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
-from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
 
 
@@ -126,23 +125,23 @@ def get_metric_function(metric):
     else:
         pearson = ['pr', 'pearsonr', 'pearson_r']
         if metric.lower() in pearson:
-            metric = '_pearson_r'
+            metric = _pearson_r
         elif metric.lower() == 'rmse':
-            metric = '_rmse'
+            metric = _rmse
         elif metric.lower() == 'mae':
-            metric = '_mae'
+            metric = _mae
         elif metric.lower() == 'mse':
-            metric = '_mse'
+            metric = _mse
         elif metric.lower() == 'nrmse':
-            metric = '_nrmse'
+            metric = _nrmse
         elif metric.lower() in ['nev', 'nmse']:
-            metric = '_nmse'
+            metric = _nmse
         elif metric.lower() in ['ppp', 'msss']:
-            metric = '_ppp'
+            metric = _ppp
         elif metric.lower() == 'nmae':
-            metric = '_nmae'
+            metric = _nmae
         elif metric.lower() == 'uacc':
-            metric = '_uacc'
+            metric = _uacc
         else:
             raise ValueError("""Please supply a metric from the following list:
                 'pearson_r'
@@ -157,7 +156,7 @@ def get_metric_function(metric):
                 'nmae'
                 'uacc'
                 """)
-        return eval(metric)
+        return metric
 
 
 # TODO: Do we need wrappers or should we rather create wrappers for skill score

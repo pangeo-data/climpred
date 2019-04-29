@@ -11,7 +11,8 @@ from xskillscore import pearson_r as _pearson_r
 from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
 
-from .stats import _check_xarray, z_significance
+from .stats import z_significance
+from .utils import check_xarray
 from .comparisons import (get_comparison_function, _m2m, _m2c,
                           _m2e, _e2c, _e2r, _m2r)
 from .metrics import (get_metric_function, _nmae, _nrmse,
@@ -140,8 +141,8 @@ def compute_reference(ds,
         p_value (xarray object): If `return_p`, p values associated with
                                  pearson r correlations.
     """
-    _check_xarray(ds)
-    _check_xarray(reference)
+    check_xarray(ds)
+    check_xarray(reference)
     comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise ValueError("""Please input either 'e2r' or 'm2r' for your
@@ -223,7 +224,7 @@ def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    _check_xarray(control)
+    check_xarray(control)
     metric = get_metric_function(metric)
     if nlags is None:
         nlags = ds.lead.size
@@ -317,7 +318,7 @@ def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
         lst3 = [value for value in lst1 if value in lst2]
         return np.array(lst3)
 
-    _check_xarray(reference)
+    check_xarray(reference)
     if nlags is None:
         nlags = ds.lead.size
 
@@ -376,8 +377,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r',
         p (xarray object): If `return_p`, p values associated with
                                  pearson r correlations.
     """
-    _check_xarray(uninit)
-    _check_xarray(reference)
+    check_xarray(uninit)
+    check_xarray(reference)
     comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise KeyError("""Please input either 'e2r' or 'm2r' for your

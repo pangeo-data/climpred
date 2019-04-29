@@ -69,17 +69,17 @@ def get_comparison_function(comparison):
 
     """
     if comparison == 'm2m':
-        comparison = '_m2m'
+        comparison = _m2m
     elif comparison == 'm2c':
-        comparison = '_m2c'
+        comparison = _m2c
     elif comparison == 'm2e':
-        comparison = '_m2e'
+        comparison = _m2e
     elif comparison == 'e2c':
-        comparison = '_e2c'
+        comparison = _e2c
     elif comparison == 'e2r':
-        comparison = '_e2r'
+        comparison = _e2r
     elif comparison == 'm2r':
-        comparison = '_m2r'
+        comparison = _m2r
     else:
         raise ValueError("""Please supply a comparison from the following list:
             'm2m'
@@ -89,7 +89,7 @@ def get_comparison_function(comparison):
             'e2r'
             'm2r'
             """)
-    return eval(comparison)
+    return comparison
 
 
 def _m2m(ds, supervector_dim='svd'):

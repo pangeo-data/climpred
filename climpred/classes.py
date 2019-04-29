@@ -3,6 +3,7 @@ from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm,
                          compute_uninitialized)
 from .bootstrap import (bootstrap_perfect_model, pseudo_ens)
+from .utils import check_xarray
 # Both:
 # TODO: add horizon functionality
 # TODO: add various `get` and `set` decorators
@@ -84,15 +85,6 @@ def _check_reference_vars_match_initialized(init, ref):
         one matching variable to the initialized prediction ensemble.""")
 
 
-def _check_xarray(xobj):
-    """Checks that it is in fact an xarray object coming in.
-
-    NOTE: This needs to be changed to a decorator.
-    """
-    if not isinstance(xobj, (xr.Dataset, xr.DataArray)):
-        raise ValueError("""You must input an xarray Dataset or DataArray.""")
-
-
 # ----------
 # Aesthetics
 # ----------
@@ -149,7 +141,7 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
     def __init__(self, xobj):
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
@@ -200,7 +192,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             xobj (xarray object): Dataset/DataArray of the control run.
         """
         # NOTE: These should all be decorators.
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         _check_reference_dimensions(self.initialized, xobj)
@@ -507,7 +499,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                   `ReferenceEnsemble` object.
             name (str): Name of this object (e.g., "reconstruction")
         """
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         # TODO: Make sure everything is the same length. Can add keyword
@@ -526,7 +518,7 @@ class ReferenceEnsemble(PredictionEnsemble):
             xobj (xarray object): Dataset/DataArray of the uninitialzed
                                   ensemble.
         """
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         _check_reference_dimensions(self.initialized, xobj)

@@ -2,7 +2,7 @@ import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm,
                          compute_uninitialized)
-from .bootstrap import bootstrap_perfect_model, pseudo_ens
+from .bootstrap import (bootstrap_perfect_model, pseudo_ens)
 # Both:
 # TODO: add horizon functionality
 # TODO: add various `get` and `set` decorators
@@ -41,22 +41,25 @@ from .bootstrap import bootstrap_perfect_model, pseudo_ens
 def _check_prediction_ensemble_dimensions(xobj):
     """
     Checks that at the minimum, the climate prediction  object has dimensions
-    `initialization` and `lead` (i.e., it's a time series with lead
+    `init` and `lead` (i.e., it's a time series with lead
     times.
     """
-    cond = all(dims in xobj.dims for dims in ['time', 'lead'])
+    cond = all(dims in xobj.dims for dims in ['init', 'lead'])
     if not cond:
         # create custom error here.
         raise ValueError("""Your decadal prediction object must contain the
-            dimensions `lead` and `time` at the minimum.""")
+            dimensions `lead` and `init` at the minimum.""")
 
 
 def _check_reference_dimensions(init, ref):
     """Checks that the reference matches all initialized dimensions except
     for 'lead' and 'member'"""
+    # since reference products won't have the initialization dimension,
+    # temporarily rename to time.
+    init = init.rename({'init': 'time'})
     init_dims = list(init.dims)
     if 'lead' in init_dims:
-        init_dims.remove('time')
+        init_dims.remove('lead')
     if 'member' in init_dims:
         init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
@@ -216,11 +219,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Bootstrapped (uninitialized) ensemble as a Dataset.
         """
         if var is not None:
-            uninit = _pseudo_ens(self.initialized[var],
-                                 self.control[var]).to_dataset()
+            uninit = pseudo_ens(self.initialized[var],
+                                self.control[var]).to_dataset()
         else:
-            uninit = _pseudo_ens(self.initialized,
-                                 self.control)
+            uninit = pseudo_ens(self.initialized,
+                                self.control)
         self.uninitialized = uninit
 
     def compute_metric(self, metric='pearson_r', comparison='m2m',
@@ -641,8 +644,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                              .drop(drop_ref),
                                          metric=metric,
                                          comparison=comparison,
-                                         return_p=return_p,
-                                         dim='time')
+                                         return_p=return_p,)
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
@@ -654,8 +656,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                  .drop(drop_ref),
                                              metric=metric,
                                              comparison=comparison,
-                                             return_p=return_p,
-                                             dim='time')
+                                             return_p=return_p,)
             # Loop through all references and apply comparison.
             else:
                 u = {}
@@ -668,8 +669,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                        .drop(drop_ref),
                                                    metric=metric,
                                                    comparison=comparison,
-                                                   return_p=return_p,
-                                                   dim='time')
+                                                   return_p=return_p,)
                 return u
 
     def compute_persistence(self, refname=None, nlags=None,

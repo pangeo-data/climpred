@@ -1,4 +1,4 @@
-![](https://i.imgur.com/JnhjrIl.png)
+![](https://i.imgur.com/HPOdOsR.png)
 
 An xarray wrapper for analysis of ensemble forecast models for climate prediction.
 

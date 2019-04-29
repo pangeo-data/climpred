@@ -88,7 +88,7 @@ def _get_norm_factor(comparison):
         raise ValueError('specify comparison to get normalization factor.')
 
 
-def _get_metric_function(metric):
+def get_metric_function(metric):
     """
     This allows the user to submit a string representing the desired function
     to anything that takes a metric.

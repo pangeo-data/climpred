@@ -1,8 +1,6 @@
+import numpy as np
 import xarray as xr
-
-
-def _get_dims(da):
-    return list(da.dims)
+from .utils import get_dims
 
 
 def _drop_members(ds, rmd_member=None):
@@ -110,19 +108,24 @@ def _m2m(ds, supervector_dim='svd'):
         reference (xarray object): reference.
 
     """
+    supervector_dim2 = 'svd2'
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
         # drop the member being reference
         ds_reduced = _drop_members(ds, rmd_member=[m])
-        reference = ds.sel(member=m)
+        reference = ds.sel(member=m).squeeze()
         for m2 in ds_reduced.member:
-            for i in ds.init:
-                reference_list.append(reference.sel(init=i))
-                forecast_list.append(
-                    ds_reduced.sel(member=m2, init=i))
-    reference = xr.concat(reference_list, supervector_dim)
-    forecast = xr.concat(forecast_list, supervector_dim)
+            reference_list.append(reference)
+            forecast_list.append(
+                ds_reduced.sel(member=m2).squeeze())
+
+    reference = xr.concat(reference_list, supervector_dim2).stack(
+        svd=(supervector_dim2, 'init'))
+    reference['svd'] = np.arange(1, 1+reference.svd.size)
+    forecast = xr.concat(forecast_list, supervector_dim2).stack(
+        svd=(supervector_dim2, 'init'))
+    forecast['svd'] = np.arange(1, 1+forecast.svd.size)
     return forecast, reference
 
 
@@ -219,7 +222,7 @@ def _e2r(ds, reference):
         reference (xarray object): reference.
 
     """
-    if 'member' in _get_dims(ds):
+    if 'member' in get_dims(ds):
         print("Taking ensemble mean...")
         forecast = ds.mean('member')
     else:
@@ -244,7 +247,7 @@ def _m2r(ds, reference):
 
     """
     # check that this contains more than one member
-    if ('member' not in _get_dims(ds)) or (ds.member.size == 1):
+    if ('member' not in get_dims(ds)) or (ds.member.size == 1):
         raise ValueError("""Please supply a decadal prediction ensemble with
             more than one member. You might have input the ensemble mean here
             although asking for a member-to-reference comparison.""")

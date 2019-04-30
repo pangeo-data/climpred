@@ -2,12 +2,13 @@ import xarray as xr
 from .prediction import (compute_reference, compute_persistence,
                          compute_perfect_model, compute_persistence_pm,
                          compute_uninitialized)
-from .bootstrap import bootstrap_perfect_model, _pseudo_ens
+from .bootstrap import (bootstrap_perfect_model, pseudo_ens)
+from .utils import check_xarray
 # Both:
 # TODO: add horizon functionality
 # TODO: add various `get` and `set` decorators
 # TODO: add checks for our package naming conventions. I.e., should
-# have 'member', 'initialization', etc. Can do this after updating the
+# have 'member', 'time', etc. Can do this after updating the
 # terminology.
 # TODO: allow user to only compute things for one variable. I.e., if the
 # PredictionEnsemble has multiple variables, maybe you only want to compute
@@ -41,45 +42,30 @@ from .bootstrap import bootstrap_perfect_model, _pseudo_ens
 def _check_prediction_ensemble_dimensions(xobj):
     """
     Checks that at the minimum, the climate prediction  object has dimensions
-    `initialization` and `time` (i.e., it's a time series with lead
+    `init` and `lead` (i.e., it's a time series with lead
     times.
     """
-    cond = all(dims in xobj.dims for dims in ['initialization', 'time'])
+    cond = all(dims in xobj.dims for dims in ['init', 'lead'])
     if not cond:
         # create custom error here.
         raise ValueError("""Your decadal prediction object must contain the
-            dimensions `time` and `initialization` at the minimum.""")
+            dimensions `lead` and `init` at the minimum.""")
 
 
 def _check_reference_dimensions(init, ref):
     """Checks that the reference matches all initialized dimensions except
-    for 'time' and 'member'"""
+    for 'lead' and 'member'"""
+    # since reference products won't have the initialization dimension,
+    # temporarily rename to time.
+    init = init.rename({'init': 'time'})
     init_dims = list(init.dims)
-    if 'time' in init_dims:
-        init_dims.remove('time')
+    if 'lead' in init_dims:
+        init_dims.remove('lead')
     if 'member' in init_dims:
         init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
-        raise ValueError("""Reference dimensions must match initialized
-            prediction ensemble dimensions (excluding `time` and `member`.)""")
-
-
-def _check_control_dimensions(init, control):
-    """Checks that the control matches all initialized prediction ensemble
-    dimensions except for `initialization` and `member`.
-
-    NOTE: This needs to be merged with `_check_reference_dimensions` following
-    refactoring. The dimension language is confusing, since control expects
-    'time' and reference expects 'initialization'."""
-    init_dims = list(init.dims)
-    if 'initialization' in init_dims:
-        init_dims.remove('initialization')
-    if 'member' in init_dims:
-        init_dims.remove('member')
-    if not (set(control.dims) == set(init_dims)):
-        raise ValueError("""Control dimensions must match initialized
-            prediction ensemble dimensions (excluding `initialization` and
-            `member`.)""")
+        raise ValueError("""Dimensions must match initialized
+            prediction ensemble dimensions (excluding `lead` and `member`.)""")
 
 
 def _check_reference_vars_match_initialized(init, ref):
@@ -97,15 +83,6 @@ def _check_reference_vars_match_initialized(init, ref):
     if set(init_list).isdisjoint(ref_list):
         raise ValueError("""Please provide a Dataset/DataArray with at least
         one matching variable to the initialized prediction ensemble.""")
-
-
-def _check_xarray(xobj):
-    """Checks that it is in fact an xarray object coming in.
-
-    NOTE: This needs to be changed to a decorator.
-    """
-    if not isinstance(xobj, (xr.Dataset, xr.DataArray)):
-        raise ValueError("""You must input an xarray Dataset or DataArray.""")
 
 
 # ----------
@@ -164,7 +141,7 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
     def __init__(self, xobj):
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
@@ -215,10 +192,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             xobj (xarray object): Dataset/DataArray of the control run.
         """
         # NOTE: These should all be decorators.
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_control_dimensions(self.initialized, xobj)
+        _check_reference_dimensions(self.initialized, xobj)
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.control = xobj
 
@@ -234,11 +211,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Bootstrapped (uninitialized) ensemble as a Dataset.
         """
         if var is not None:
-            uninit = _pseudo_ens(self.initialized[var],
-                                 self.control[var]).to_dataset()
+            uninit = pseudo_ens(self.initialized[var],
+                                self.control[var]).to_dataset()
         else:
-            uninit = _pseudo_ens(self.initialized,
-                                 self.control)
+            uninit = pseudo_ens(self.initialized,
+                                self.control)
         self.uninitialized = uninit
 
     def compute_metric(self, metric='pearson_r', comparison='m2m',
@@ -323,7 +300,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             raise ValueError("""You need to add a control dataset before
             attempting to compute a persistence forecast.""")
         if nlags is None:
-            nlags = self.initialized.time.size
+            nlags = self.initialized.lead.size
         return compute_persistence_pm(self.initialized,
                                       self.control,
                                       nlags=nlags,
@@ -522,7 +499,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                   `ReferenceEnsemble` object.
             name (str): Name of this object (e.g., "reconstruction")
         """
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         # TODO: Make sure everything is the same length. Can add keyword
@@ -541,7 +518,7 @@ class ReferenceEnsemble(PredictionEnsemble):
             xobj (xarray object): Dataset/DataArray of the uninitialzed
                                   ensemble.
         """
-        _check_xarray(xobj)
+        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         _check_reference_dimensions(self.initialized, xobj)
@@ -659,8 +636,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                              .drop(drop_ref),
                                          metric=metric,
                                          comparison=comparison,
-                                         return_p=return_p,
-                                         dim='initialization')
+                                         return_p=return_p,)
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
@@ -672,8 +648,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                  .drop(drop_ref),
                                              metric=metric,
                                              comparison=comparison,
-                                             return_p=return_p,
-                                             dim='initialization')
+                                             return_p=return_p,)
             # Loop through all references and apply comparison.
             else:
                 u = {}
@@ -686,8 +661,7 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                        .drop(drop_ref),
                                                    metric=metric,
                                                    comparison=comparison,
-                                                   return_p=return_p,
-                                                   dim='initialization')
+                                                   return_p=return_p,)
                 return u
 
     def compute_persistence(self, refname=None, nlags=None,
@@ -722,7 +696,7 @@ class ReferenceEnsemble(PredictionEnsemble):
             attempting to compute persistence forecasts.""")
         # Default to the length of the initialized forecast.
         if nlags is None:
-            nlags = self.initialized.time.size
+            nlags = self.initialized.lead.size
         # apply to single reference.
         if refname is not None:
             return compute_persistence(self.initialized,

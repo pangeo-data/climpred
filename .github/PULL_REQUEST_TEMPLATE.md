@@ -17,21 +17,23 @@ Please delete options that are not relevant.
 
 Please describe the tests that you ran to verify your changes. This could point to a cell in the updated notebooks. Or a snippet of code with accompanying figures here.
 
-# Checklist:
+## Checklist (while developing):
 
-- [ ] All notebooks run with this branch installed. (Notebooks can be updated to reflect changes)
-- [ ] Tests added for `pytest` if necessary.
-- [ ] `pytest` runs without breaking.
 - [ ] I have added docstrings to all new functions.
-- [ ] I have updated the wiki with documentation, if necessary.
 - [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] I have rebased onto master or develop (wherever I am merging) and dealt with any conflictions.
-- [ ] I have squashed commits to a reasonable amount.
+- [ ] Tests added for `pytest`, if necessary.
 
-# Discussion
+## Pre-Merge Checklist (final steps):
+
+- [ ] I have rebased onto master or develop (wherever I am merging) and dealt with any conflictions.
+- [ ] I have squashed commits to a reasonable amount, and force-pushed the squashed commits.
+- [ ] All notebooks run with this branch installed. (please post a screenshot of `treon` compiling successfully)
+- [ ] `pytest` runs without breaking.
+
+## Discussion
 
 Add any points to discuss in the PR thread. Issues with the code? Suggestions needed? Philosophy changes to the package?
 
-# References
+## References
 
 Please add any references to manuscripts, textbooks, etc.

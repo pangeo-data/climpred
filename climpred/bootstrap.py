@@ -144,14 +144,19 @@ def bootstrap_perfect_model(ds,
                                        Defaults to None.
 
     """
-    def _merge_result(result, new_result, new_result_name):
-        new_result.name = new_result_name
-        return xr.merge([result, new_result])
+    # def _merge_result(result, new_result, new_result_name):
+    #    new_result.name = new_result_name
+    #    return xr.merge([result, new_result])
 
     if pers_sig is None:
         pers_sig = sig
 
-    result = xr.Dataset()
+    # TODO: calc normalized persistence forecasts
+    if metric not in ['pearson_r', 'rmse', 'mse', 'mae']:
+        compute_persistence_skill = False
+        #raise ValueError('not implemented for non-xskillscore metrics')
+
+    #result = xr.Dataset()
     if nlags is None:
         nlags = ds.lead.size
     p = (100 - sig) / 100  # 0.05
@@ -181,7 +186,7 @@ def bootstrap_perfect_model(ds,
                 reference_period=reference_period))
         if compute_uninitialized_skill:
             # generate uninitialized ensemble from control
-            uninit_ds = pseudo_ens(ds, control).isel(lead=0)
+            uninit_ds = pseudo_ens(ds, control)  # .isel(lead=0)
             # compute uninit skill
             uninit.append(
                 compute_perfect_model(
@@ -213,13 +218,13 @@ def bootstrap_perfect_model(ds,
 
     if compute_ci:
         init_ci = _distribution_to_ci(init, ci_low, ci_high)
-        result = _merge_result(result, init_ci, 'init_ci')
+        #result = _merge_result(result, init_ci, 'init_ci')
         if compute_uninitialized_skill:
             uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-            result = _merge_result(result, uninit_ci, 'uninit_ci')
+            #result = _merge_result(result, uninit_ci, 'uninit_ci')
         if compute_persistence_skill:
             pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-            result = _merge_result(result, pers_ci, 'pers_ci')
+            #result = _merge_result(result, pers_ci, 'pers_ci')
     else:
         init_ci = None
         pers_ci = None
@@ -235,15 +240,15 @@ def bootstrap_perfect_model(ds,
 
     if compute_uninitialized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)
-        result = _merge_result(result, p_uninit_over_init,
-                               'p_uninit_over_init')
+        # result = _merge_result(result, p_uninit_over_init,
+        #                       'p_uninit_over_init')
     else:
         p_uninit_over_init, uninit_ci = None, None
 
     if compute_persistence_skill:
         p_pers_over_init = _pvalue_from_distributions(pers, init)
-        result = _merge_result(result, p_pers_over_init,
-                               'p_pers_over_init')
+        # result = _merge_result(result, p_pers_over_init,
+        #                       'p_pers_over_init')
     else:
         p_pers_over_init, pers_ci = None, None
-    return result
+    return init_ci, uninit_ci, pers_ci, p_uninit_over_init, p_pers_over_init

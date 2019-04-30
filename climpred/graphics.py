@@ -17,26 +17,26 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     """
     colors = ['royalblue', 'indianred', 'goldenrod']
     fig, ax = plt.subplots(ncols=3, **kwargs)
-    std = rel_ent.std('initialization')
+    std = rel_ent.std('time')
     for i, dim in enumerate(['R', 'S', 'D']):
-        m = rel_ent[dim].median('initialization')
-        std = rel_ent[dim].std('initialization')
+        m = rel_ent[dim].median('time')
+        std = rel_ent[dim].std('time')
         ax[i].plot(
-            rel_ent.time,
+            rel_ent.lead,
             rel_ent[dim].to_dataframe().unstack(0),
             c='gray',
             label='individual initializations',
             linewidth=.5,
             alpha=.5)
-        ax[i].plot(rel_ent.time, m, c=colors[i], label=dim, linewidth=2.5)
+        ax[i].plot(rel_ent.lead, m, c=colors[i], label=dim, linewidth=2.5)
         ax[i].plot(
-            rel_ent.time, (m - std),
+            rel_ent.lead, (m - std),
             c=colors[i],
             label=dim + ' median +/- std',
             linewidth=2.5,
             ls='--')
         ax[i].plot(
-            rel_ent.time, (m + std),
+            rel_ent.lead, (m + std),
             c=colors[i],
             label='',
             linewidth=2.5,
@@ -115,7 +115,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 4))
     ax.errorbar(
-        init_skill.time,
+        init_skill.lead,
         init_skill,
         yerr=[
             init_skill - init_ci.isel(quantile=0),
@@ -128,11 +128,11 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
     # uninit
     if p_uninit_over_init is not None:
         # add p-values
-        for t in init_skill.time.values:
+        for t in init_skill.lead.values:
             ax.text(
-                init_skill.time.sel(time=t),
-                init_ci.isel(quantile=1).sel(time=t).values,
-                "%.2f" % float(p_uninit_over_init.sel(time=t).values),
+                init_skill.lead.sel(lead=t),
+                init_ci.isel(quantile=1).sel(lead=t).values,
+                "%.2f" % float(p_uninit_over_init.sel(lead=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',
                 fontsize=fontsize,
@@ -150,7 +150,7 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
     # persistence
     if pers_skill is not None and pers_ci is not None:
         ax.errorbar(
-            pers_skill.time,
+            pers_skill.lead,
             pers_skill,
             yerr=[
                 pers_skill - pers_ci.isel(quantile=0),
@@ -162,16 +162,16 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             label='persistence with ' + str(pers_sig) +
             '% confidence interval')
     if p_pers_over_init is not None:
-        for t in pers_skill.time.values:
+        for t in pers_skill.lead.values:
             ax.text(
-                pers_skill.time.sel(time=t),
-                pers_ci.isel(quantile=0).sel(time=t).values,
-                "%.2f" % float(p_pers_over_init.sel(time=t).values),
+                pers_skill.lead.sel(lead=t),
+                pers_ci.isel(quantile=0).sel(lead=t).values,
+                "%.2f" % float(p_pers_over_init.sel(lead=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',
                 fontsize=fontsize,
                 color=c_pers)
 
-    ax.xaxis.set_ticks(np.arange(init_skill.time.size + 1))
+    ax.xaxis.set_ticks(np.arange(init_skill.lead.size + 1))
     ax.legend(frameon=False)
     ax.set_xlabel('Lead time [years]')

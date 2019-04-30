@@ -1,5 +1,0 @@
----
-Python:
-    "beautifiers":
-        - Black
-        - YAPF

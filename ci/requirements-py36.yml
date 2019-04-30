@@ -2,11 +2,15 @@ name: test_env
 channels:
   - conda-forge
 dependencies:
+  - python=3.6
+  - numpy
+  - pandas
   - xarray
   - dask
   - scipy
-  - matplotlib
-  - pandas
   - pytest
   - eofs
   - cftime
+  - bottleneck
+  - matplotlib
+  - netcdf4

@@ -1,8 +1,10 @@
+import numpy as np
 import pytest
-from climpred.loadutils import open_dataset
-from climpred.bootstrap import bootstrap_perfect_model
-from climpred.prediction import compute_perfect_model, compute_persistence_pm
+import xarray as xr
 
+from climpred.bootstrap import bootstrap_perfect_model, pseudo_ens
+from climpred.loadutils import open_dataset
+from climpred.prediction import compute_perfect_model, compute_persistence_pm
 
 xskillscore_metrics = ('pearson_r', 'rmse', 'mse', 'mae')
 xskillscore_distance_metrics = ('rmse', 'mse', 'mae')
@@ -66,6 +68,51 @@ def PM_ds_control1d():
     return ds
 
 
+# v = 'tos'
+# ds = open_dataset('MPI-PM-DP-3D')  # [v]
+# control = open_dataset('MPI-control-3D')  # [v]
+# these three lines fix short control
+#t = list(np.arange(control.time.size))
+#control = control.isel(time=t*6)
+#control['time'] = np.arange(3000, 3000+control.time.size)
+
+
+#res = compute_perfect_model(ds, control, metric='rmse', comparison='m2m')
+
+
+# res = bootstrap_perfect_model(
+#    ds, control, metric='pearson_r', comparison='m2e', bootstrap=2, compute_persistence_skill=True)
+
+# init_skill = compute_perfect_model(
+#    ds, control, metric='pearson_r', comparison='m2e')
+#pseudo_ds = pseudo_ens(ds, control)
+# uninit_skill = compute_perfect_model(
+#    pseudo_ds, control, metric='pearson_r', comparison='m2e')
+# pers_skill = compute_perfect_model(
+#    ds, control, metric='pearson_r', comparison='m2e')
+
+#skill = xr.concat([init_skill, uninit_skill, pers_skill], 'i')
+#skill['i'] = ['init', 'uninit', 'pers']
+
+#init_ci, uninit_ci, pers_ci, p_uninit_over_init, p_pers_over_init = res
+
+# p = xr.concat(
+#    [i for i in [p_uninit_over_init, p_pers_over_init] if i is not None], 'i')
+# what if one above is None?
+# ['i'] = ['uninit', 'pers']
+
+
+# ci = xr.concat([init_ci, uninit_ci, pers_ci],
+#               'i').rename({'quantile': 'results'})
+#ci['i'] = ['init', 'uninit', 'pers']
+
+
+#results = xr.concat([skill, p], 'results')
+#results['results'] = ['skill', 'p']
+#results = xr.concat([results, ci], 'results')
+# results.coords
+
+
 @pytest.mark.parametrize('comparison', PM_comparisons)
 @pytest.mark.parametrize('metric', all_metrics)
 def test_compute_perfect_model_da_not_nan(PM_da_ds3d, PM_da_control3d, metric,
@@ -94,7 +141,7 @@ def test_compute_perfect_model_ds_not_nan(PM_ds_ds3d, PM_ds_control3d, metric,
         assert not actual[var]
 
 
-@pytest.mark.parametrize('metric', xskillscore_distance_metrics)
+@pytest.mark.parametrize('metric', xskillscore_metrics)
 def test_compute_persistence_pm_ds_not_nan(PM_ds_ds1d, PM_ds_control1d,
                                            metric):
     """
@@ -106,11 +153,25 @@ def test_compute_persistence_pm_ds_not_nan(PM_ds_ds1d, PM_ds_control1d,
         assert not actual[var]
 
 
+# TODO: should work for pearson_r as well, does when more than one initialization present
+@pytest.mark.parametrize('metric', xskillscore_distance_metrics)
+def test_compute_persistence_pm_ds_not_nan(PM_ds_ds3d, PM_ds_control3d,
+                                           metric):
+    """
+    Checks that there are no NaNs on persistence forecast of 1D time series.
+    """
+    actual = compute_persistence_pm(PM_ds_ds3d, PM_ds_control3d,
+                                    metric=metric).isnull().any()
+    for var in actual.data_vars:
+        assert not actual[var]
+
+
 # NOTE: bootstrap_perfect_model breaks on 'm2m'. It should be added back into
-# the test once that is resolved. Also, it breaks when any PM-only metrics are
-# used, since `compute_persistence_pm` breaks on non-xskillscore metrics.
-@pytest.mark.parametrize('comparison', PM_comparisons)
-@pytest.mark.parametrize('metric', xskillscore_metrics)
+# the test once that is resolved.
+# Also, it breaks when any PM-only metrics are
+# used, since `compute_persistence_pm` breaks on non-xskillscore metrics. [resolved]
+@pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e'))
+@pytest.mark.parametrize('metric', all_metrics)
 def test_bootstrap_perfect_model_da_not_nan(PM_da_ds1d, PM_da_control1d,
                                             metric, comparison):
     """
@@ -118,6 +179,8 @@ def test_bootstrap_perfect_model_da_not_nan(PM_da_ds1d, PM_da_control1d,
     """
     actual = bootstrap_perfect_model(PM_da_ds1d, PM_da_control1d,
                                      metric=metric, comparison=comparison,
-                                     sig=50, bootstrap=2).isnull().any()
+                                     sig=50,
+                                     compute_persistence_skill=False,
+                                     bootstrap=2).isnull().any()
     for var in actual.data_vars:
         assert not actual[var]

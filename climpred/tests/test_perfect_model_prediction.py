@@ -109,7 +109,7 @@ def test_compute_persistence_pm_ds_not_nan(PM_ds_ds1d, PM_ds_control1d,
 # NOTE: bootstrap_perfect_model breaks on 'm2m'. It should be added back into
 # the test once that is resolved. Also, it breaks when any PM-only metrics are
 # used, since `compute_persistence_pm` breaks on non-xskillscore metrics.
-@pytest.mark.parametrize('comparison', ('e2c', 'm2c', 'm2e'))
+@pytest.mark.parametrize('comparison', PM_comparisons)
 @pytest.mark.parametrize('metric', xskillscore_metrics)
 def test_bootstrap_perfect_model_da_not_nan(PM_da_ds1d, PM_da_control1d,
                                             metric, comparison):

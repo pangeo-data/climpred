@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+
 from .utils import get_dims
 
 
@@ -198,6 +199,8 @@ def _e2c(ds, supervector_dim='svd', control_member=None):
     if control_member is None:
         control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
+    if 'member' in reference.coords:
+        del reference['member']
     reference = reference.rename({'init': supervector_dim})
     # drop the member being reference
     ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])

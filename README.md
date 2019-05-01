@@ -2,6 +2,8 @@
 
 An xarray wrapper for analysis of ensemble forecast models for climate prediction.
 
+[![Build Status](https://travis-ci.org/bradyrx/climpred.svg?branch=master)](https://travis-ci.org/bradyrx/climpred)
+
 ## Release
 
 Note that `climpred` is in the very early stages of development. We are currently working on documentation and are adding features when we have the time to do so. There is no timeline for a formal v1 release, but you can install the package below and reference the notebooks for guidance. Please raise any issues if you encounter any bugs or have any ideas; you can also raise a PR to add new features. Feel free to contact either of us if you have questions.

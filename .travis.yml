@@ -23,6 +23,7 @@ install:
   - conda list
   - which conda
   - which python
+  - pip install --no-deps -e .
   - python setup.py install --user
 
 script:

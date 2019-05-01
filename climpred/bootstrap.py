@@ -218,13 +218,11 @@ def bootstrap_perfect_model(ds,
 
     if compute_ci:
         init_ci = _distribution_to_ci(init, ci_low, ci_high)
-        #result = _merge_result(result, init_ci, 'init_ci')
         if compute_uninitialized_skill:
             uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-            #result = _merge_result(result, uninit_ci, 'uninit_ci')
         if compute_persistence_skill:
             pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-            #result = _merge_result(result, pers_ci, 'pers_ci')
+
     else:
         init_ci = None
         pers_ci = None
@@ -240,15 +238,39 @@ def bootstrap_perfect_model(ds,
 
     if compute_uninitialized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)
-        # result = _merge_result(result, p_uninit_over_init,
-        #                       'p_uninit_over_init')
     else:
         p_uninit_over_init, uninit_ci = None, None
 
     if compute_persistence_skill:
         p_pers_over_init = _pvalue_from_distributions(pers, init)
-        # result = _merge_result(result, p_pers_over_init,
-        #                       'p_pers_over_init')
+
     else:
         p_pers_over_init, pers_ci = None, None
-    return init_ci, uninit_ci, pers_ci, p_uninit_over_init, p_pers_over_init
+
+    # calc skill
+    init_skill = compute_perfect_model(
+        ds, control, metric=metric, comparison=comparison, running=running, reference_period=reference_period)
+    uninit_skill = uninit.mean('bootstrap')
+    pers_skill = compute_persistence_pm(
+        ds, control, nlags=nlags, dim='time', metric=metric)
+
+    # somehow there may be a member dim, which lets concat crash
+    if 'member' in init_skill:
+        del init_skill['member']
+    # wrap results together in one dataarray
+    skill = xr.concat([init_skill.squeeze(), uninit_skill, pers_skill], 'i')
+    skill['i'] = ['init', 'uninit', 'pers']
+
+    # probability that i beats init
+    p = xr.concat([p_uninit_over_init, p_pers_over_init], 'i')
+    p['i'] = ['uninit', 'pers']
+
+    # ci for each skill
+    ci = xr.concat([init_ci, uninit_ci, pers_ci],
+                   'i').rename({'quantile': 'results'})
+    ci['i'] = ['init', 'uninit', 'pers']
+
+    results = xr.concat([skill, p], 'results')
+    results['results'] = ['skill', 'p']
+    results = xr.concat([results, ci], 'results')
+    return results

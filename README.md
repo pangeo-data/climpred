@@ -3,6 +3,7 @@
 An xarray wrapper for analysis of ensemble forecast models for climate prediction.
 
 [![Build Status](https://travis-ci.org/bradyrx/climpred.svg?branch=master)](https://travis-ci.org/bradyrx/climpred)
+[![Codacy Badge](https://api.codacy.com/project/badge/Grade/a532752e9e814c6e895694463f307cd9)](https://www.codacy.com/app/bradyrx/climpred?utm_source=github.com&amp;utm_medium=referral&amp;utm_content=bradyrx/climpred&amp;utm_campaign=Badge_Grade)
 
 ## Release
 

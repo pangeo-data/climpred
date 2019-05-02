@@ -144,19 +144,13 @@ def bootstrap_perfect_model(ds,
                                        Defaults to None.
 
     """
-    # def _merge_result(result, new_result, new_result_name):
-    #    new_result.name = new_result_name
-    #    return xr.merge([result, new_result])
-
     if pers_sig is None:
         pers_sig = sig
 
     # TODO: calc normalized persistence forecasts
     if metric not in ['pearson_r', 'rmse', 'mse', 'mae']:
         compute_persistence_skill = False
-        #raise ValueError('not implemented for non-xskillscore metrics')
 
-    #result = xr.Dataset()
     if nlags is None:
         nlags = ds.lead.size
     p = (100 - sig) / 100  # 0.05
@@ -249,7 +243,8 @@ def bootstrap_perfect_model(ds,
 
     # calc skill
     init_skill = compute_perfect_model(
-        ds, control, metric=metric, comparison=comparison, running=running, reference_period=reference_period)
+        ds, control, metric=metric, comparison=comparison, running=running,
+        reference_period=reference_period)
     uninit_skill = uninit.mean('bootstrap')
     pers_skill = compute_persistence_pm(
         ds, control, nlags=nlags, dim='time', metric=metric)
@@ -272,5 +267,11 @@ def bootstrap_perfect_model(ds,
 
     results = xr.concat([skill, p], 'results')
     results['results'] = ['skill', 'p']
-    results = xr.concat([results, ci], 'results')
+    # (RXB) Drop any spurious coordinates that came along with results due to
+    # input ds. You can't concatenate if results and ci don't exactly match
+    # in coordinates. Maybe we can create a decorator to check this before
+    # anytime we merge.
+    dims = list(results.dims)
+    droplist = [coord for coord in results.coords if coord not in dims]
+    results = xr.concat([results.drop(droplist), ci], 'results')
     return results

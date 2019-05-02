@@ -13,6 +13,7 @@ INSTALL_REQUIRES = ['numpy', 'pandas',
                     'cftime', 'bottleneck']
 TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
+EXTRAS = {'graphics': ['matplotlib']}
 
 setup(name=DISTNAME,
       version=VERSION,
@@ -26,4 +27,5 @@ setup(name=DISTNAME,
       install_requires=INSTALL_REQUIRES,
       python_requires=PYTHON_REQUIRE,
       tests_require=TESTS_REQUIRE,
+      extras_require=EXTRAS,
       )

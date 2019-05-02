@@ -271,7 +271,10 @@ def bootstrap_perfect_model(ds,
     # input ds. You can't concatenate if results and ci don't exactly match
     # in coordinates. Maybe we can create a decorator to check this before
     # anytime we merge.
-    dims = list(results.dims)
-    droplist = [coord for coord in results.coords if coord not in dims]
-    results = xr.concat([results.drop(droplist), ci], 'results')
+    if set(results.coords) != set(ci.coords):
+        res_drop = [c for c in results.coords if c not in ci.coords]
+        ci_drop = [c for c in ci.coords if c not in results.coords]
+        results = results.drop(res_drop)
+        ci = ci.drop(ci_drop)
+    results = xr.concat([results, ci], 'results')
     return results

@@ -275,7 +275,7 @@ def bootstrap_relative_entropy(initialized, control, sig=95,
 
     results_list = []
     for _ in range(min(1, int(bootstrap / initialized.lead.size))):
-        if 'member' in control:  # resample from lens
+        if 'member' in control.dims:  # resample from lens
             uninitialized_initialized = _bootstrap_dim(
                 control, initialized.lead.size, dim='init', dim_label=initialized.init.values)
         else:  # PM

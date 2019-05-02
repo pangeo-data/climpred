@@ -23,8 +23,12 @@ install:
   - conda list
   - which conda
   - which python
-  - pip install --no-deps -e .
+  - pip install .['graphics']
+  # Solution until proplot goes to PyPI. Most recent PIP can't handle dependency links.
+  - pip install git+https://github.com/lukelbd/proplot.git#egg=proplot
   - python setup.py install --user
+  - pip install treon
 
 script:
   - pytest
+  - treon notebooks

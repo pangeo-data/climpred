@@ -11,12 +11,11 @@ from xskillscore import pearson_r as _pearson_r
 from xskillscore import pearson_r_p_value
 from xskillscore import rmse as _rmse
 
+from .comparisons import (_e2c, _e2r, _m2c, _m2e, _m2m, _m2r,
+                          get_comparison_function)
+from .metrics import _nmae, _nmse, _nrmse, _ppp, _uacc, get_metric_function
 from .stats import z_significance
 from .utils import check_xarray
-from .comparisons import (get_comparison_function, _m2m, _m2c,
-                          _m2e, _e2c, _e2r, _m2r)
-from .metrics import (get_metric_function, _nmae, _nrmse,
-                      _nmse, _ppp, _uacc)
 
 
 # -------------------------------------------- #
@@ -40,6 +39,14 @@ def _shift(a, b, lag, dim='time'):
     b = b.isel({dim: slice(0 + lag, N)})
     b[dim] = a[dim]
     return a, b
+
+
+def _intersection(lst1, lst2):
+    """
+    Custom intersection, since `set.intersection()` changes type of list.
+    """
+    lst3 = [value for value in lst1 if value in lst2]
+    return np.array(lst3)
 
 
 # --------------------------------------------#
@@ -237,6 +244,7 @@ def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
             'mae'""")
 
     init_years = ds['init'].values
+    init_years = _intersection(init_years, list(control.time.values))
     if isinstance(ds.init.values[0],
                   cftime._cftime.DatetimeProlepticGregorian) \
             or isinstance(ds.init.values[0], np.datetime64):
@@ -311,12 +319,6 @@ def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    def _intersection(lst1, lst2):
-        """
-        Custom intersection, since `set.intersection()` changes type of list.
-        """
-        lst3 = [value for value in lst1 if value in lst2]
-        return np.array(lst3)
 
     check_xarray(reference)
     if nlags is None:

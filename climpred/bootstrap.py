@@ -144,14 +144,13 @@ def bootstrap_perfect_model(ds,
                                        Defaults to None.
 
     """
-    def _merge_result(result, new_result, new_result_name):
-        new_result.name = new_result_name
-        return xr.merge([result, new_result])
-
     if pers_sig is None:
         pers_sig = sig
 
-    result = xr.Dataset()
+    # TODO: calc normalized persistence forecasts
+    if metric not in ['pearson_r', 'rmse', 'mse', 'mae']:
+        compute_persistence_skill = False
+
     if nlags is None:
         nlags = ds.lead.size
     p = (100 - sig) / 100  # 0.05
@@ -181,7 +180,7 @@ def bootstrap_perfect_model(ds,
                 reference_period=reference_period))
         if compute_uninitialized_skill:
             # generate uninitialized ensemble from control
-            uninit_ds = pseudo_ens(ds, control).isel(lead=0)
+            uninit_ds = pseudo_ens(ds, control)  # .isel(lead=0)
             # compute uninit skill
             uninit.append(
                 compute_perfect_model(
@@ -213,13 +212,11 @@ def bootstrap_perfect_model(ds,
 
     if compute_ci:
         init_ci = _distribution_to_ci(init, ci_low, ci_high)
-        result = _merge_result(result, init_ci, 'init_ci')
         if compute_uninitialized_skill:
             uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-            result = _merge_result(result, uninit_ci, 'uninit_ci')
         if compute_persistence_skill:
             pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-            result = _merge_result(result, pers_ci, 'pers_ci')
+
     else:
         init_ci = None
         pers_ci = None
@@ -235,15 +232,49 @@ def bootstrap_perfect_model(ds,
 
     if compute_uninitialized_skill:
         p_uninit_over_init = _pvalue_from_distributions(uninit, init)
-        result = _merge_result(result, p_uninit_over_init,
-                               'p_uninit_over_init')
     else:
         p_uninit_over_init, uninit_ci = None, None
 
     if compute_persistence_skill:
         p_pers_over_init = _pvalue_from_distributions(pers, init)
-        result = _merge_result(result, p_pers_over_init,
-                               'p_pers_over_init')
+
     else:
         p_pers_over_init, pers_ci = None, None
-    return result
+
+    # calc skill
+    init_skill = compute_perfect_model(
+        ds, control, metric=metric, comparison=comparison, running=running,
+        reference_period=reference_period)
+    uninit_skill = uninit.mean('bootstrap')
+    pers_skill = compute_persistence_pm(
+        ds, control, nlags=nlags, dim='time', metric=metric)
+
+    # somehow there may be a member dim, which lets concat crash
+    if 'member' in init_skill:
+        del init_skill['member']
+    # wrap results together in one dataarray
+    skill = xr.concat([init_skill.squeeze(), uninit_skill, pers_skill], 'i')
+    skill['i'] = ['init', 'uninit', 'pers']
+
+    # probability that i beats init
+    p = xr.concat([p_uninit_over_init, p_pers_over_init], 'i')
+    p['i'] = ['uninit', 'pers']
+
+    # ci for each skill
+    ci = xr.concat([init_ci, uninit_ci, pers_ci],
+                   'i').rename({'quantile': 'results'})
+    ci['i'] = ['init', 'uninit', 'pers']
+
+    results = xr.concat([skill, p], 'results')
+    results['results'] = ['skill', 'p']
+    # (RXB) Drop any spurious coordinates that came along with results due to
+    # input ds. You can't concatenate if results and ci don't exactly match
+    # in coordinates. Maybe we can create a decorator to check this before
+    # anytime we merge.
+    if set(results.coords) != set(ci.coords):
+        res_drop = [c for c in results.coords if c not in ci.coords]
+        ci_drop = [c for c in ci.coords if c not in results.coords]
+        results = results.drop(res_drop)
+        ci = ci.drop(ci_drop)
+    results = xr.concat([results, ci], 'results')
+    return results

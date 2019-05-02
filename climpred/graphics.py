@@ -17,10 +17,10 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     """
     colors = ['royalblue', 'indianred', 'goldenrod']
     fig, ax = plt.subplots(ncols=3, **kwargs)
-    std = rel_ent.std('time')
+
     for i, dim in enumerate(['R', 'S', 'D']):
-        m = rel_ent[dim].median('time')
-        std = rel_ent[dim].std('time')
+        m = rel_ent[dim].median('init')
+        std = rel_ent[dim].std('init')
         ax[i].plot(
             rel_ent.lead,
             rel_ent[dim].to_dataframe().unstack(0),
@@ -50,9 +50,11 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
         handles, labels = ax[i].get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
         ax[i].legend(by_label.values(), by_label.keys(), frameon=False)
+        ax[i].set_xlabel('Lead')
     ax[0].set_title('Relative Entropy')
     ax[1].set_title('Signal')
     ax[2].set_title('Dispersion')
+    ax[0].set_ylabel('Relative Entropy [ ]')
     ax[0].set_ylim(bottom=0)
 
 

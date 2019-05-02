@@ -8,9 +8,13 @@ dependencies:
   - xarray
   - dask
   - scipy
+  - matplotlib
+  - bottleneck
+  - netcdf4
   - pytest
   - eofs
   - cftime
   - bottleneck
   - matplotlib
   - netcdf4
+  - lxml 

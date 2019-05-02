@@ -1,7 +1,6 @@
 import numpy as np
 import pytest
 import xarray as xr
-
 from climpred.comparisons import _drop_members, _m2m
 from climpred.loadutils import open_dataset
 

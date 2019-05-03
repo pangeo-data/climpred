@@ -1,5 +1,6 @@
 .DS_Store
 .*.un~
+.fuse_hidden*
 
 # Created by https://www.gitignore.io/api/python
 

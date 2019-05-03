@@ -14,16 +14,16 @@ all_metrics = xskillscore_metrics + PM_only_metrics
 
 @pytest.fixture
 def PM_da_ds3d():
-    da = open_dataset('MPI-PM-DP-3D')
+    da = open_dataset('MPI-PM-DP-3D').rename({'initialization': 'init','time':'lead'})
     # Box in South Atlantic with no NaNs.
-    da = da.isel(x=slice(0, 50), y=slice(125, 150))
+    da = da.isel(x=slice(0, 5), y=slice(145, 150))
     return da['tos']
 
 
 @pytest.fixture
 def PM_da_control3d():
     da = open_dataset('MPI-control-3D')
-    da = da.isel(x=slice(0, 50), y=slice(125, 150))
+    da = da.isel(x=slice(0, 5), y=slice(145, 150))
     # fix to span 300yr control
     t = list(np.arange(da.time.size))
     da = da.isel(time=t*6)
@@ -33,15 +33,15 @@ def PM_da_control3d():
 
 @pytest.fixture
 def PM_ds_ds3d():
-    ds = open_dataset('MPI-PM-DP-3D')
-    ds = ds.isel(x=slice(0, 50), y=slice(125, 150))
+    ds = open_dataset('MPI-PM-DP-3D').rename({'initialization': 'init','time':'lead'})
+    ds = ds.isel(x=slice(0, 5), y=slice(145, 150))
     return ds
 
 
 @pytest.fixture
 def PM_ds_control3d():
     ds = open_dataset('MPI-control-3D')
-    ds = ds.isel(x=slice(0, 50), y=slice(125, 150))
+    ds = ds.isel(x=slice(0, 5), y=slice(145, 150))
     t = list(np.arange(ds.time.size))
     ds = ds.isel(time=t*6)
     ds['time'] = np.arange(3000, 3000 + ds.time.size)
@@ -50,7 +50,7 @@ def PM_ds_control3d():
 
 @pytest.fixture
 def PM_da_ds1d():
-    da = open_dataset('MPI-PM-DP-1D')
+    da = open_dataset('MPI-PM-DP-1D').rename({'initialization': 'init','time':'lead'})
     da = da['tos']
     return da
 
@@ -64,7 +64,7 @@ def PM_da_control1d():
 
 @pytest.fixture
 def PM_ds_ds1d():
-    ds = open_dataset('MPI-PM-DP-1D')
+    ds = open_dataset('MPI-PM-DP-1D').rename({'initialization': 'init','time':'lead'})
     return ds
 
 

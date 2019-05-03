@@ -132,7 +132,7 @@ def _m2m(ds, supervector_dim='svd'):
 
 def _m2e(ds, supervector_dim='svd'):
     """
-    Create two supervectors to compare all members to ensemble mean.
+    Create two supervectors to compare all members to ensemble mean while leaving out the reference when creating the forecasts.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -145,10 +145,16 @@ def _m2e(ds, supervector_dim='svd'):
         reference (xarray object): reference.
 
     """
-    reference = ds.mean('member')
-    forecast, reference = xr.broadcast(ds, reference)
-    forecast = _stack_to_supervector(forecast, new_dim=supervector_dim)
-    reference = _stack_to_supervector(reference, new_dim=supervector_dim)
+    reference_list = []
+    forecast_list = []
+    for m in ds.member.values:
+        forecast = _drop_members(ds, rmd_member=[m]).mean('member')
+        reference = ds.sel(member=m).squeeze()
+        forecast, reference = xr.broadcast(forecast, reference)
+        forecast_list.append(forecast)
+        reference_list.append(reference)
+    reference = xr.concat(reference_list,'init').rename({'init': supervector_dim})
+    forecast = xr.concat(forecast_list,'init').rename({'init': supervector_dim})
     return forecast, reference
 
 

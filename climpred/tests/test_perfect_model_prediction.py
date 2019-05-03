@@ -14,7 +14,7 @@ all_metrics = xskillscore_metrics + PM_only_metrics
 
 @pytest.fixture
 def PM_da_ds3d():
-    da = open_dataset('MPI-PM-DP-3D').rename({'initialization': 'init','time':'lead'})
+    da = open_dataset('MPI-PM-DP-3D')
     # Box in South Atlantic with no NaNs.
     da = da.isel(x=slice(0, 5), y=slice(145, 150))
     return da['tos']
@@ -33,7 +33,7 @@ def PM_da_control3d():
 
 @pytest.fixture
 def PM_ds_ds3d():
-    ds = open_dataset('MPI-PM-DP-3D').rename({'initialization': 'init','time':'lead'})
+    ds = open_dataset('MPI-PM-DP-3D')
     ds = ds.isel(x=slice(0, 5), y=slice(145, 150))
     return ds
 
@@ -50,7 +50,7 @@ def PM_ds_control3d():
 
 @pytest.fixture
 def PM_da_ds1d():
-    da = open_dataset('MPI-PM-DP-1D').rename({'initialization': 'init','time':'lead'})
+    da = open_dataset('MPI-PM-DP-1D')
     da = da['tos']
     return da
 
@@ -64,7 +64,7 @@ def PM_da_control1d():
 
 @pytest.fixture
 def PM_ds_ds1d():
-    ds = open_dataset('MPI-PM-DP-1D').rename({'initialization': 'init','time':'lead'})
+    ds = open_dataset('MPI-PM-DP-1D')
     return ds
 
 

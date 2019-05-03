@@ -10,14 +10,14 @@ from climpred.loadutils import open_dataset
 
 @pytest.fixture
 def PM_da_ds1d():
-    da = open_dataset('MPI-PM-DP-1D').rename({'initialization': 'init'})
+    da = open_dataset('MPI-PM-DP-1D')
     da = da['tos']
     return da
 
 
 @pytest.fixture
 def PM_da_control1d():
-    da = open_dataset('MPI-control-1D').rename({'initialization': 'init'})
+    da = open_dataset('MPI-control-1D')
     da = da['tos']
     return da
 

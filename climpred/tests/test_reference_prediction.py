@@ -1,6 +1,5 @@
 import pytest
 import numpy as np
-import xarray as xr
 from climpred.loadutils import open_dataset
 from climpred.prediction import (compute_reference, compute_persistence,
                                  compute_uninitialized)
@@ -35,9 +34,8 @@ def reconstruction():
 @pytest.fixture
 def uninitialized():
     da = open_dataset('CESM-LE')['SST']
-    # create fake ensemble data (i.e., multiple members)
-    da = xr.concat([da]*10, 'member')
-    da['member'] = np.arange(10)
+    # add member coordinate
+    da['member'] = np.arange(len(da.member))
     return da
 
 

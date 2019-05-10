@@ -92,6 +92,7 @@ def get_comparison_function(comparison):
             """)
     return comparison
 
+
 # --------------------------------------------#
 # PERFECT-MODEL COMPARISONS
 # based on supervector approach
@@ -135,7 +136,8 @@ def _m2m(ds, supervector_dim='svd'):
 
 def _m2e(ds, supervector_dim='svd'):
     """
-    Create two supervectors to compare all members to ensemble mean while leaving out the reference when creating the forecasts.
+    Create two supervectors to compare all members to ensemble mean while
+    leaving out the reference when creating the forecasts.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -156,8 +158,10 @@ def _m2e(ds, supervector_dim='svd'):
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list,'init').rename({'init': supervector_dim})
-    forecast = xr.concat(forecast_list,'init').rename({'init': supervector_dim})
+    reference = xr.concat(reference_list, 'init').rename(
+        {'init': supervector_dim})
+    forecast = xr.concat(forecast_list, 'init').rename(
+        {'init': supervector_dim})
     return forecast, reference
 
 

@@ -92,7 +92,10 @@ def get_comparison_function(comparison):
             """)
     return comparison
 
-
+# --------------------------------------------#
+# PERFECT-MODEL COMPARISONS
+# based on supervector approach
+# --------------------------------------------#
 def _m2m(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to all other members in
@@ -215,6 +218,10 @@ def _e2c(ds, supervector_dim='svd', control_member=None):
     return forecast, reference
 
 
+# --------------------------------------------#
+# REFERENCE COMPARISONS
+# based on supervector approach
+# --------------------------------------------#
 def _e2r(ds, reference):
     """
     For a reference-based decadal prediction ensemble. This compares the

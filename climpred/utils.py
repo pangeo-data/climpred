@@ -4,7 +4,11 @@ import xarray as xr
 # https://stackoverflow.com/questions/10610824/
 # python-shortcut-for-writing-decorators-which-accept-arguments
 def dec_args_kwargs(wrapper):
-    return lambda *dec_args, **dec_kwargs: lambda func: wrapper(func, *dec_args, **dec_kwargs)
+    return (
+        lambda *dec_args, **dec_kwargs:
+            lambda func:
+                wrapper(func, *dec_args, **dec_kwargs)
+    )
 
 # --------------------------------------#
 # CHECKS

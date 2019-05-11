@@ -55,8 +55,8 @@ def test_check_xarray_ds(ds1):
 def test_check_xarray_not_ds():
     not_a_ds = 'not_a_ds'
     with pytest.raises(IOError) as e:
-        not_a_ds, args, kwargs = _arbitrary_ds_da_func(
-            ds1, 'arg1', 'arg2', kwarg1='kwarg1')
+        _arbitrary_ds_da_func(
+            not_a_ds, 'arg1', 'arg2', kwarg1='kwarg1')
     assert 'The input data is not an xarray' in str(e.value)
 
 
@@ -98,6 +98,6 @@ def test_check_xarray_ds_da_args_keys(ds1, da1, da2):
 def test_check_xarray_ds_da_args_keys_not(ds1, da2):
     not_a_da = np.array([0, 1, 2])
     with pytest.raises(IOError) as e:
-        ds, da, other_da, kwargs = _arbitrary_three_xr_func_args_keys(
+        _arbitrary_three_xr_func_args_keys(
             ds1, da=not_a_da, other_da=da2, kwarg1='kwarg1')
     assert 'The input data is not an xarray' in str(e.value)

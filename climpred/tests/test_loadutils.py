@@ -1,7 +1,6 @@
 import os
-
 import xarray as xr
-from climpred.loadutils import file_alias_dict as datasets
+from climpred.loadutils import FILE_ALIAS_DICT as datasets
 
 
 def test_open_dataset_locally():

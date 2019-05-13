@@ -13,7 +13,9 @@ from xskillscore import rmse as _rmse
 
 from .comparisons import (_e2c, _e2r, _m2c, _m2e, _m2m, _m2r,
                           get_comparison_function)
-from .metrics import _nmae, _nmse, _nrmse, _ppp, _uacc, get_metric_function
+from .metrics import (_bias_slope, _conditional_bias, _msss_murphy, _nmae,
+                      _nmse, _nrmse, _ppp, _std_ratio, _uacc,
+                      get_metric_function)
 from .stats import z_significance
 from .utils import check_xarray
 
@@ -91,7 +93,7 @@ def compute_perfect_model(ds,
         forecast, reference = comparison(ds, supervector_dim)
         res = metric(forecast, reference, dim=supervector_dim)
     # perfect-model only metrics
-    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc]:
+    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc, _msss_murphy, _conditional_bias, _std_ratio, _bias_slope]:
         res = metric(ds, control, comparison, running, reference_period)
     else:
         raise ValueError('specify metric argument')

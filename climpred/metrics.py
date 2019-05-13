@@ -1,5 +1,7 @@
-import numpy as np
 import types
+
+import numpy as np
+
 from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
@@ -142,6 +144,14 @@ def get_metric_function(metric):
             metric = _nmae
         elif metric.lower() == 'uacc':
             metric = _uacc
+        elif metric.lower() == 'msss_murphy':
+            metric = _msss_murphy
+        elif metric.lower() in ['c_b','conditional_bias']:
+            metric = _conditional_bias
+        elif metric.lower() == 'std_ratio':
+            metric = _std_ratio
+        elif metric.lower() == 'bias_slope':
+            metric = _bias_slope
         else:
             raise ValueError("""Please supply a metric from the following list:
                 'pearson_r'
@@ -155,8 +165,48 @@ def get_metric_function(metric):
                 'msss'
                 'nmae'
                 'uacc'
+                'msss_murphy'
+                'bias_slope'
+                'conditional_bias'
+                'std_ratio'
                 """)
         return metric
+
+
+def _msss_murphy(ds, control, comparison, running=None, reference_period=None):
+    """msss_murphy"""
+    supervector_dim = 'svd'
+    forecast, reference = comparison(ds, supervector_dim)
+    acc = _pearson_r(forecast, reference, dim=supervector_dim)
+    conditional_bias = acc - _std_ratio(ds, control, comparison, running=running, reference_period=None)
+    skill = acc ** 2 - conditional_bias ** 2
+    return skill
+
+def _conditional_bias(ds, control, comparison, running=None, reference_period=None):
+    """conditional_bias"""
+    supervector_dim = 'svd'
+    forecast, reference = comparison(ds, supervector_dim)
+    acc = _pearson_r(forecast, reference, dim=supervector_dim)
+    conditional_bias = acc - _std_ratio(ds, control, comparison, running=running, reference_period=None)
+    return conditional_bias
+
+
+def _std_ratio(ds, control, comparison, running=None, reference_period=None):
+    """std ratio"""
+    supervector_dim = 'svd'
+    forecast, reference = comparison(ds, supervector_dim)
+    ratio = forecast.std(supervector_dim) / reference.std(supervector_dim)
+    return ratio
+
+
+def _bias_slope(ds, control, comparison, running=None, reference_period=None):
+    """bias slope"""
+    supervector_dim = 'svd'
+    forecast, reference = comparison(ds, supervector_dim)
+    std_ratio = _std_ratio(ds, control, comparison, running=running, reference_period=None)
+    acc = _pearson_r(forecast, reference, dim=supervector_dim)
+    b_s = std_ratio * acc
+    return b_s
 
 
 # TODO: Do we need wrappers or should we rather create wrappers for skill score

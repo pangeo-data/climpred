@@ -105,6 +105,7 @@ def compute_perfect_model(ds,
     return res
 
 
+check_xarray([0, 1])
 def compute_reference(ds,
                       reference,
                       metric='pearson_r',
@@ -148,8 +149,6 @@ def compute_reference(ds,
         p_value (xarray object): If `return_p`, p values associated with
                                  pearson r correlations.
     """
-    check_xarray(ds)
-    check_xarray(reference)
     comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise ValueError("""Please input either 'e2r' or 'm2r' for your
@@ -192,6 +191,7 @@ def compute_reference(ds,
         return skill
 
 
+check_xarray([0, 1])
 def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
                            dim='time', init_month_index=0):
     """
@@ -231,7 +231,6 @@ def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    check_xarray(control)
     metric = get_metric_function(metric)
     if nlags is None:
         nlags = ds.lead.size
@@ -281,6 +280,7 @@ def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
     return pers
 
 
+check_xarray([0, 1])
 def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
                         dim='time'):
     """
@@ -319,8 +319,6 @@ def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-
-    check_xarray(reference)
     if nlags is None:
         nlags = ds.lead.size
 
@@ -345,6 +343,7 @@ def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
     return pers
 
 
+check_xarray([0, 1])
 def compute_uninitialized(uninit, reference, metric='pearson_r',
                           comparison='e2r', return_p=False,
                           dim='time'):
@@ -379,8 +378,6 @@ def compute_uninitialized(uninit, reference, metric='pearson_r',
         p (xarray object): If `return_p`, p values associated with
                                  pearson r correlations.
     """
-    check_xarray(uninit)
-    check_xarray(reference)
     comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise KeyError("""Please input either 'e2r' or 'm2r' for your

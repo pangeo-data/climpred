@@ -1,9 +1,13 @@
-import numpy as np
 import types
+
+import numpy as np
+
 from xskillscore import mae as _mae
 from xskillscore import mse as _mse
 from xskillscore import pearson_r as _pearson_r
 from xskillscore import rmse as _rmse
+
+from .stats import xr_rm_trend
 
 
 def _control_for_reference_period(control, reference_period='MK',
@@ -38,6 +42,7 @@ def _control_for_reference_period(control, reference_period='MK',
         raise ValueError('not yet implemented')
     else:
         raise ValueError("choose a reference period")
+    control = xr_rm_trend(control)
     return control
 
 

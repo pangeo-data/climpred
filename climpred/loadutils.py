@@ -24,10 +24,11 @@ Reference-based:
 * "FOSI-SSS": reconstruction of global mean SSS.
 """
 
+import hashlib
 import os as _os
 from urllib.request import urlretrieve as _urlretrieve
+
 from xarray.backends.api import open_dataset as _open_dataset
-import hashlib
 
 _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
 
@@ -38,6 +39,12 @@ file_alias_dict = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
                    'CESM-DP-SST': 'CESM-DP-LE.SST.global',
                    'CESM-DP-SSS': 'CESM-DP-LE.SSS.global',
                    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
+                   'MPIESM_miklip_baseline1-hind-SST-global':
+                        'MPIESM_miklip_baseline1-hind-SST-global',
+                   'MPIESM_miklip_baseline1-hist-SST-global':
+                        'MPIESM_miklip_baseline1-hist-SST-global',
+                   'MPIESM_miklip_baseline1-assim-SST-global':
+                        'MPIESM_miklip_baseline1-assim-SST-global',
                    'ERSST': 'ERSSTv4.global.mean',
                    'FOSI-SST': 'FOSI.SST.global',
                    'FOSI-SSS': 'FOSI.SSS.global'}
@@ -55,6 +62,12 @@ file_descriptions = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
                      'CESM-DP-SSS': 'decadal prediction ensemble of global' +
                                     ' mean SSS.',
                      'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
+                     'MPIESM_miklip_baseline1-hind-SST-global':
+                        'initialized ensemble of global mean SSTs',
+                     'MPIESM_miklip_baseline1-hist-SST-global':
+                        'uninitialized ensemble of global mean SSTs',
+                     'MPIESM_miklip_baseline1-assim-SST-global':
+                        'assimilation in MPI-ESM of global mean SSTs',
                      'ERSST': 'observations of global mean SSTs.',
                      'FOSI-SST': 'reconstruction of global mean SSTs.',
                      'FOSI-SSS': 'reconstruction of global mean SSS.',

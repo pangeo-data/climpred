@@ -95,13 +95,6 @@ def compute_perfect_model(ds,
         res = metric(ds, control, comparison, running, reference_period)
     else:
         raise ValueError('specify metric argument')
-    # Note: Aaron implemented this in PR #87. They break when
-    # compute_perfect_model is called from `bootstrap_perfect_model`. So need
-    # to debug why that is the case and see if these lines are even
-    # necessary.
-#    time_size = ds.time.size
-#    del res['time']
-#    res['time'] = np.arange(1, 1 + time_size)
     return res
 
 

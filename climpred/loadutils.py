@@ -1,29 +1,3 @@
-"""Contains functions for loading sample datasets for decadal prediction.
-
-This is nearly a replication of the `loadutils` in `esmtools` but it is
-important for `climpred` users to have explicitly within-package. The
-main function is `open_dataset` which by default points to the folder
-containing example datasets relevant to decadal prediction.
-
-Aliases have been made for the files to make it more clear what the user is
-loading. See the README.md under climpred/sample_data/prediction on Github
-for more details on the files themselves.
-
-Perfect-Model:
-* "MPI-PM-DP-1D": decadal prediction ensemble area averages of SST/SSS/AMO.
-* "MPI-PM-DP-3D": decadal prediction ensemble lat/lon/time of SST/SSS/AMO.
-* "MPI-control-1D": area averages for the control run of SST/SSS.
-* "MPI-control-3D": lat/lon/time for the control run of SST/SSS.
-
-Reference-based:
-* "CESM-DP-SST": decadal prediction ensemble of global mean SSTs.
-* "CESM-DP-SSS": decadal prediction ensemble of global mean SSS.
-* "CESM-LE": uninitialized ensemble of global mean SSTs.
-* "ERSST": observations of global mean SSTs.
-* "FOSI-SST": reconstruction of global mean SSTs.
-* "FOSI-SSS": reconstruction of global mean SSS.
-"""
-
 import hashlib
 import os as _os
 from urllib.request import urlretrieve as _urlretrieve
@@ -32,7 +6,7 @@ from xarray.backends.api import open_dataset as _open_dataset
 
 _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
 
-file_alias_dict = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
+FILE_ALIAS_DICT = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
                    'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
                    'MPI-PM-DP-1D': 'PM_MPI-ESM-LR_ds',
                    'MPI-PM-DP-3D': 'PM_MPI-ESM-LR_ds3d',
@@ -40,16 +14,16 @@ file_alias_dict = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
                    'CESM-DP-SSS': 'CESM-DP-LE.SSS.global',
                    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
                    'MPIESM_miklip_baseline1-hind-SST-global':
-                        'MPIESM_miklip_baseline1-hind-SST-global',
+                   'MPIESM_miklip_baseline1-hind-SST-global',
                    'MPIESM_miklip_baseline1-hist-SST-global':
-                        'MPIESM_miklip_baseline1-hist-SST-global',
+                   'MPIESM_miklip_baseline1-hist-SST-global',
                    'MPIESM_miklip_baseline1-assim-SST-global':
-                        'MPIESM_miklip_baseline1-assim-SST-global',
+                   'MPIESM_miklip_baseline1-assim-SST-global',
                    'ERSST': 'ERSSTv4.global.mean',
                    'FOSI-SST': 'FOSI.SST.global',
                    'FOSI-SSS': 'FOSI.SSS.global'}
 
-file_descriptions = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
+FILE_DESCRIPTIONS = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
                                      ' averages of SST/SSS/AMO.',
                      'MPI-PM-DP-3D': 'decadal prediction ensemble' +
                                      ' lat/lon/time of SST/SSS/AMO.',
@@ -63,21 +37,15 @@ file_descriptions = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
                                     ' mean SSS.',
                      'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
                      'MPIESM_miklip_baseline1-hind-SST-global':
-                        'initialized ensemble of global mean SSTs',
+                     'initialized ensemble of global mean SSTs',
                      'MPIESM_miklip_baseline1-hist-SST-global':
-                        'uninitialized ensemble of global mean SSTs',
+                     'uninitialized ensemble of global mean SSTs',
                      'MPIESM_miklip_baseline1-assim-SST-global':
-                        'assimilation in MPI-ESM of global mean SSTs',
+                     'assimilation in MPI-ESM of global mean SSTs',
                      'ERSST': 'observations of global mean SSTs.',
                      'FOSI-SST': 'reconstruction of global mean SSTs.',
                      'FOSI-SSS': 'reconstruction of global mean SSS.',
                      }
-
-
-def get_datasets():
-    """Prints out available datasets for the user to load."""
-    for key in file_descriptions.keys():
-        print(f"'{key}': {file_descriptions[key]}")
 
 
 def _file_md5_checksum(fname):
@@ -87,9 +55,16 @@ def _file_md5_checksum(fname):
     return hash_md5.hexdigest()
 
 
-def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
-                 github_url='https://github.com/bradyrx/climpred',
-                 branch='master', extension='sample_data/prediction', **kws):
+def _get_datasets():
+    """Prints out available datasets for the user to load if no args are
+       given."""
+    for key in FILE_DESCRIPTIONS.keys():
+        print(f"'{key}': {FILE_DESCRIPTIONS[key]}")
+
+
+def open_dataset(name=None, cache=True, cache_dir=_default_cache_dir,
+                 github_url='https://github.com/bradyrx/climpred-data',
+                 branch='master', extension=None, **kws):
     """Load example data or a mask from an online repository.
 
     This is a function from `xarray.tutorial` to load an online dataset
@@ -98,16 +73,16 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
     data files that are not in the main folder of the repo (i.e., they are
     in subfolders).
 
-    Note that this requires an md5 file to be loaded. Check the github
-    repo bradyrx/climdata for a python script that converts .nc files into
-    md5 files.
+    If no dataset name is provided (i.e., name=None), this function displays
+    the available datasets to load.
 
     Args:
-        name: (str) Name of the netcdf file containing the dataset, without
-              the .nc extension.
+        name: (str, default None) Name of the netcdf file containing the
+              dataset, without the .nc extension. If None, this function
+              prints out the available datasets to import.
         cache_dir: (str, optional) The directory in which to search
                    for and cache the data.
-        cache: (bool, optional) If true, cache data locally for use on later
+        cache: (bool, optional) If True, cache data locally for use on later
                calls.
         github_url: (str, optional) Github repository where the data is stored.
         branch: (str, optional) The git branch to download from.
@@ -118,13 +93,21 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
     Returns:
         The desired xarray dataset.
     """
-    if name.endswith('.nc'):
-        name = name[:-3]
+    if name is None:
+        return _get_datasets()
+
+    # https://stackoverflow.com/questions/541390/extracting-extension-from-
+    # filename-in-python
+    # Allows for generalized file extensions.
+    name, ext = _os.path.splitext(name)
+    if not ext.endswith('.nc'):
+        ext += '.nc'
+
     # use aliases
-    if name in file_alias_dict.keys():
-        name = file_alias_dict[name]
+    if name in FILE_ALIAS_DICT.keys():
+        name = FILE_ALIAS_DICT[name]
     longdir = _os.path.expanduser(cache_dir)
-    fullname = name + '.nc'
+    fullname = name + ext
     localfile = _os.sep.join((longdir, fullname))
     md5name = name + '.md5'
     md5file = _os.sep.join((longdir, md5name))
@@ -136,7 +119,8 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
             _os.mkdir(longdir)
 
         if extension is not None:
-            url = '/'.join((github_url, 'raw', branch, extension, fullname))
+            url = '/'.join((github_url, 'raw', branch, extension,
+                            fullname))
             _urlretrieve(url, localfile)
             url = '/'.join((github_url, 'raw', branch, extension, md5name))
             _urlretrieve(url, md5file)
@@ -152,7 +136,9 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
         if localmd5 != remotemd5:
             _os.remove(localfile)
             msg = """
-            MD5 checksum does not match, try downloading dataset again.
+            Try downloading the file again. There was a confliction between
+            your local .md5 file compared to the one in the remote repository,
+            so the local copy has been removed to resolve the issue.
             """
             raise IOError(msg)
 
@@ -161,5 +147,4 @@ def open_dataset(name, cache=True, cache_dir=_default_cache_dir,
     if not cache:
         ds = ds.load()
         _os.remove(localfile)
-
     return ds

@@ -1,11 +1,11 @@
-import pytest
 import numpy as np
+import pytest
+
 from climpred.loadutils import open_dataset
-from climpred.prediction import (compute_reference, compute_persistence,
-                                 compute_uninitialized)
+from climpred.prediction import (all_metric_strings, compute_persistence,
+                                 compute_reference, compute_uninitialized)
 
-
-metrics = ('pearson_r', 'rmse', 'mse', 'mae')
+metrics = tuple(all_metric_strings)
 comparisons = ('e2r', 'm2r')
 
 
@@ -13,12 +13,14 @@ comparisons = ('e2r', 'm2r')
 def initialized():
     da = open_dataset('CESM-DP-SST')
     da = da.sel(init=slice(1955, 2015))
+    da = da - da.mean('init')
     return da
 
 
 @pytest.fixture
 def observations():
     da = open_dataset('ERSST')
+    da = da - da.mean('time')
     return da
 
 
@@ -28,6 +30,7 @@ def reconstruction():
     # same timeframe as DPLE
     da = da.sel(time=slice(1955, 2015))
     da = da['SST']
+    da = da - da.mean('time')
     return da
 
 
@@ -36,6 +39,7 @@ def uninitialized():
     da = open_dataset('CESM-LE')['SST']
     # add member coordinate
     da['member'] = np.arange(len(da.member))
+    da = da - da.mean('time')
     return da
 
 

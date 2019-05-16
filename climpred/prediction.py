@@ -5,19 +5,26 @@ import cftime
 import numpy as np
 import xarray as xr
 
-from xskillscore import mae as _mae
-from xskillscore import mse as _mse
-from xskillscore import pearson_r as _pearson_r
-from xskillscore import pearson_r_p_value
-from xskillscore import rmse as _rmse
-
-from .comparisons import (_e2c, _e2r, _m2c, _m2e, _m2m, _m2r,
+from .comparisons import (_drop_members, _e2c, _e2r, _m2c, _m2e, _m2m, _m2r,
                           get_comparison_function)
-from .metrics import (_bias_slope, _conditional_bias, _msss_murphy, _nmae,
-                      _nmse, _nrmse, _ppp, _std_ratio, _uacc,
-                      get_metric_function)
+from .metrics import (_bias, _bias_slope, _conditional_bias, _crps, _crpss,
+                      _less, _mae, _mse, _msss_murphy, _nmae, _nmse, _nrmse,
+                      _pearson_r, _pearson_r_p_value, _ppp, _rmse, _std_ratio,
+                      _uacc, get_metric_function)
 from .stats import z_significance
 from .utils import check_xarray
+
+all_metrics = [
+    _pearson_r, _pearson_r_p_value, _rmse, _mse, _mae, _msss_murphy,
+    _conditional_bias, _bias, _std_ratio, _bias_slope, _crps, _crpss, _less,
+    _nmae, _nrmse, _nmse, _ppp, _uacc
+]
+
+all_metric_strings = [
+    'pearson_r', 'pearson_r_p_value', 'rmse', 'mse', 'mae', 'msss_murphy',
+    'conditional_bias', 'bias', 'std_ratio', 'bias_slope', 'crps', 'crpss',
+    'less', 'nmae', 'nrmse', 'nmse', 'ppp', 'uacc'
+]
 
 
 # -------------------------------------------- #
@@ -56,12 +63,7 @@ def _intersection(lst1, lst2):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-def compute_perfect_model(ds,
-                          control,
-                          metric='pearson_r',
-                          comparison='m2m',
-                          running=None,
-                          reference_period=None):
+def compute_perfect_model(ds, metric='rmse', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
@@ -71,10 +73,6 @@ def compute_perfect_model(ds,
         control (xarray object): control with dimensions time.
         metric (str): metric name see get_metric_function.
         comparison (str): comparison name see get_comparison_function.
-        running (optional int): size of the running window for variance
-                                smoothing. Default: None (no smoothing)
-        reference_period (optional str): choice of reference period of control.
-                                Default: None (corresponds to MK approach)
 
     Returns:
         res (xarray object): skill score.
@@ -88,31 +86,20 @@ def compute_perfect_model(ds,
     if comparison not in [_m2m, _m2c, _m2e, _e2c]:
         raise ValueError('specify comparison argument')
 
+    forecast, reference = comparison(ds, supervector_dim)
     metric = get_metric_function(metric)
-    if metric in [_pearson_r, _rmse, _mse, _mae]:
-        forecast, reference = comparison(ds, supervector_dim)
-        res = metric(forecast, reference, dim=supervector_dim)
-    # perfect-model only metrics
-    elif metric in [_nmae, _nrmse, _nmse, _ppp, _uacc, _msss_murphy, _conditional_bias, _std_ratio, _bias_slope]:
-        res = metric(ds, control, comparison, running, reference_period)
+
+    if metric in all_metrics:
+        res = metric(forecast,
+                     reference,
+                     dim=supervector_dim,
+                     comparison=comparison)
     else:
         raise ValueError('specify metric argument')
-    # Note: Aaron implemented this in PR #87. They break when
-    # compute_perfect_model is called from `bootstrap_perfect_model`. So need
-    # to debug why that is the case and see if these lines are even
-    # necessary.
-#    time_size = ds.time.size
-#    del res['time']
-#    res['time'] = np.arange(1, 1 + time_size)
     return res
 
 
-def compute_reference(ds,
-                      reference,
-                      metric='pearson_r',
-                      comparison='e2r',
-                      nlags=None,
-                      return_p=False):
+def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations).
@@ -137,168 +124,68 @@ def compute_reference(ds,
         * rmse
         * mae
         * mse
+        * all
     comparison (str):
         How to compare the decadal prediction ensemble to the reference.
         * e2r : ensemble mean to reference (Default)
         * m2r : each member to the reference
     nlags (int): How many lags to compute skill/potential predictability out
                  to. Default: length of `lead` dim
-    return_p (bool): If True, return p values associated with pearson r.
 
     Returns:
         skill (xarray object): Predictability with main dimension `lag`.
-        p_value (xarray object): If `return_p`, p values associated with
-                                 pearson r correlations.
     """
     check_xarray(ds)
     check_xarray(reference)
+    nlags = ds.lead.size
     comparison = get_comparison_function(comparison)
     if comparison not in [_e2r, _m2r]:
         raise ValueError("""Please input either 'e2r' or 'm2r' for your
             comparison.""")
     forecast, reference = comparison(ds, reference)
-    if nlags is None:
-        nlags = forecast.lead.size
+
     metric = get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse, _mae]:
-        raise ValueError("""Please input 'pearson_r', 'rmse', 'mse', or
-            'mae' for your metric.""")
+    if metric not in all_metrics:
+        raise ValueError("""Please input metric from all_metrics.""")
+
+    # think in real time dimension: real time = init + lag
+    forecast = forecast.rename({'init': 'time'})
+
+    # take only inits for which we have references at all leads
+    imin = max(forecast.time.min(), reference.time.min())
+    imax = min(forecast.time.max(), reference.time.max() - nlags)
+    forecast = forecast.where(forecast.time <= imax, drop=True)
+    forecast = forecast.where(forecast.time >= imin, drop=True)
+    reference = reference.where(reference.time >= imin, drop=True)
+
     plag = []
-    for i in range(0, nlags):
-        # Temporary rename of init dimension to time to allow the
-        # metric to run properly.
-        a, b = _shift(
-            forecast.isel(lead=i).rename({'init': 'time'}), reference, i,
-            dim='time')
-        plag.append(metric(a, b, dim='time'))
+    # iterate over all leads (accounts for lead.min() in [0,1])
+    for i in forecast.lead.values:
+        # take lead year i timeseries and convert to real time
+        a = forecast.sel(lead=i).drop('lead')
+        a['time'] = [t + i for t in a.time.values]
+        # take real time reference of real time forecast years
+        b = reference.sel(time=a.time.values)
+        # convert to lead as in compute_perfect_model
+        a = a.rename({'time': 'lead'})
+        b = b.rename({'time': 'lead'})
+        plag.append(metric(a, b, dim='lead', comparison=comparison))
     skill = xr.concat(plag, 'lead')
-    skill['lead'] = np.arange(1, 1 + nlags)
-    if (return_p) & (metric != _pearson_r):
-        raise ValueError("""You can only return p values if the metric is
-            pearson_r.""")
-    elif (return_p) & (metric == _pearson_r):
-        # NaN values throw warning for p-value comparison, so just
-        # suppress that here.
-        p_value = []
-        for i in range(0, nlags):
-            a, b = _shift(
-                forecast.isel(lead=i).rename({'init': 'time'}), reference, i,
-                dim='time')
-            with warnings.catch_warnings():
-                warnings.simplefilter("ignore")
-                p_value.append(pearson_r_p_value(a, b, dim='time'))
-        p_value = xr.concat(p_value, 'lead')
-        p_value['lead'] = np.arange(1, 1 + nlags)
-        return skill, p_value
-    else:
-        return skill
+    skill['lead'] = forecast.lead.values
+    return skill
 
 
-def compute_persistence_pm(ds, control, nlags=None, metric='pearson_r',
-                           dim='time', init_month_index=0):
-    """
-    Computes the skill of  a persistence forecast from a control run.
-
-    This simply applies some metric on the input out to some lag. The user
-    should avoid computing persistence with prebuilt ACF functions in e.g.,
-    python, MATLAB, R as they tend to use FFT methods for speed but incorporate
-    error due to this.
-
-    TODO: Merge this and `compute_persistence` into one function. These two
-    functions employ different philosophies on how to compute persistence.
-
-    Currently supported metrics for persistence:
-    * pearson_r
-    * rmse
-    * mse
-    * mae
-
-    Reference:
-    * Chapter 8 (Short-Term Climate Prediction) in
-        Van den Dool, Huug. Empirical methods in short-term climate prediction.
-        Oxford University Press, 2007.
-
-    Args:
-        ds (xarray object): The initialization years to get persistence from.
-        reference (xarray object): The reference time series.
-        nlags (int, default None): Number of lags to compute persistence to.
-            If None, use the number of lead steps from the prediction
-            ensemble.
-        metric (str): Metric name to apply at each lag for the persistence
-                      computation. Default: 'pearson_r'
-        dim (str): Dimension over which to compute persistence forecast.
-                   Default: 'time'
-
-    Returns:
-        pers (xarray object): Results of persistence forecast with the input
-                              metric applied.
-    """
-    check_xarray(control)
-    metric = get_metric_function(metric)
-    if nlags is None:
-        nlags = ds.lead.size
-
-    if metric not in [_pearson_r, _rmse, _mse, _mae]:
-        raise ValueError("""Please select between the following metrics:
-            'pearson_r',
-            'rmse',
-            'mse',
-            'mae'""")
-
-    init_years = ds['init'].values
-    init_years = _intersection(init_years, list(control.time.values))
-    if isinstance(ds.init.values[0],
-                  cftime._cftime.DatetimeProlepticGregorian) \
-            or isinstance(ds.init.values[0], np.datetime64):
-        init_cftimes = []
-        for year in init_years:
-            init_cftimes.append(control.sel(
-                time=str(year)).isel(time=init_month_index).time)
-        init_cftimes = xr.concat(init_cftimes, 'time')
-    elif isinstance(ds.init.values[0], np.int64):
-        init_cftimes = []
-        for year in init_years:
-            init_cftimes.append(control.sel(
-                time=year).time)
-        init_cftimes = xr.concat(init_cftimes, 'time')
-    else:
-        raise ValueError(
-            'Set time axis to xr.cftime_range, pd.date_range or np.int64.')
-
-    inits_index = []
-    control_time_list = list(control.time.values)
-    for i, inits in enumerate(init_cftimes.time.values):
-        inits_index.append(control_time_list.index(init_cftimes[i]))
-
-    plag = []  # holds results of persistence for each lag
-    control = control.isel({dim: slice(0, -nlags)})
-    for lag in range(1, 1 + nlags):
-        inits_index_plus_lag = [x + lag for x in inits_index]
-        ref = control.isel({dim: inits_index_plus_lag})
-        fct = control.isel({dim: inits_index})
-        ref[dim] = fct[dim]
-        plag.append(metric(ref, fct, dim=dim))
-    pers = xr.concat(plag, 'lead')
-    pers['lead'] = np.arange(1, 1 + nlags)
-    return pers
-
-
-def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
-                        dim='time'):
+def compute_persistence(ds, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
-    (e.g., hindcast/assimilation) or control run.
-
-    This simply applies some metric on the input out to some lag. The user
-    should avoid computing persistence with prebuilt ACF functions in e.g.,
-    python, MATLAB, R as they tend to use FFT methods for speed but incorporate
-    error due to this.
+    (e.g., hindcast/assimilation) or a control run.
 
     Currently supported metrics for persistence:
     * pearson_r
     * rmse
     * mse
     * mae
+    * all
 
     Reference:
     * Chapter 8 (Short-Term Climate Prediction) in
@@ -309,47 +196,40 @@ def compute_persistence(ds, reference, nlags=None, metric='pearson_r',
     Args:
         ds (xarray object): The initialized ensemble.
         reference (xarray object): The reference time series.
-        nlags (int, default None): Number of lags to compute persistence to.
-            If None, defaults to number of lead steps from the prediction
-            ensemble.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
-        dim (str): Dimension over which to compute persistence forecast.
-                   Default: 'time'
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
+    nlags = ds.lead.size
 
     check_xarray(reference)
-    if nlags is None:
-        nlags = ds.lead.size
 
     metric = get_metric_function(metric)
-    if metric not in [_pearson_r, _rmse, _mse, _mae]:
-        raise ValueError("""Please select between the following metrics:
-            'pearson_r',
-            'rmse',
-            'mse',
-            'mae'""")
+    if metric not in all_metrics:
+        raise ValueError("""Please select from all_metrics.'""")
     plag = []  # holds results of persistence for each lag
-    for lag in range(1, 1 + nlags):
+    for lag in ds.lead.values:
         inits = ds['init'].values
-        ctrl_inits = reference.isel({dim: slice(0, -lag)})[dim].values
+        ctrl_inits = reference.isel(time=slice(0, -lag))['time'].values
         inits = _intersection(inits, ctrl_inits)
-        ref = reference.sel({dim: inits + lag})
-        fct = reference.sel({dim: inits})
-        ref[dim] = fct[dim]
-        plag.append(metric(ref, fct, dim=dim))
+        ref = reference.sel(time=inits + lag)
+        fct = reference.sel(time=inits)
+        ref['time'] = fct['time']
+        ref = ref.rename({'time': 'lead'})
+        fct = fct.rename({'time': 'lead'})
+        plag.append(metric(ref, fct, dim='lead', comparison=_e2c))
     pers = xr.concat(plag, 'lead')
-    pers['lead'] = np.arange(1, 1 + nlags)
+    pers['lead'] = ds.lead.values
     return pers
 
 
-def compute_uninitialized(uninit, reference, metric='pearson_r',
-                          comparison='e2r', return_p=False,
-                          dim='time'):
+def compute_uninitialized(uninit,
+                          reference,
+                          metric='pearson_r',
+                          comparison='e2r'):
     """
     Compute a predictability skill score between an uninitialized ensemble
     and some reference (hindcast, assimilation, reconstruction, observations).
@@ -374,12 +254,9 @@ def compute_uninitialized(uninit, reference, metric='pearson_r',
         How to compare the decadal prediction ensemble to the reference.
         * e2r : ensemble mean to reference (Default)
         * m2r : each member to the reference
-    return_p (bool): If True, return p values associated with pearson r.
 
     Returns:
         u (xarray object): Results from comparison at the first lag.
-        p (xarray object): If `return_p`, p values associated with
-                                 pearson r correlations.
     """
     check_xarray(uninit)
     check_xarray(reference)
@@ -390,15 +267,10 @@ def compute_uninitialized(uninit, reference, metric='pearson_r',
             in the future.""")
     uninit, reference = comparison(uninit, reference)
     metric = get_metric_function(metric)
-    u = metric(uninit, reference, dim=dim)
-    if (return_p) & (metric != _pearson_r):
-        raise KeyError("""You can only return p values if the metric is
-            'pearson_r'.""")
-    elif (return_p) & (metric == _pearson_r):
-        p = pearson_r_p_value(uninit, reference, dim=dim)
-        return u, p
-    else:
-        return u
+    uninit = uninit.rename({'time': 'lead'})
+    reference = reference.rename({'time': 'lead'})
+    u = metric(uninit, reference, dim='lead', comparison=comparison)
+    return u
 
 
 # --------------------------------------------#

@@ -1,9 +1,10 @@
 import xarray as xr
-from .prediction import (compute_reference, compute_persistence,
-                         compute_perfect_model, compute_persistence_pm,
-                         compute_uninitialized)
-from .bootstrap import (bootstrap_perfect_model, pseudo_ens)
+
+from .bootstrap import bootstrap_perfect_model, pseudo_ens
+from .prediction import (compute_perfect_model, compute_persistence,
+                         compute_reference, compute_uninitialized)
 from .utils import check_xarray
+
 # Both:
 # TODO: add horizon functionality
 # TODO: add various `get` and `set` decorators
@@ -301,7 +302,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             attempting to compute a persistence forecast.""")
         if nlags is None:
             nlags = self.initialized.lead.size
-        return compute_persistence_pm(self.initialized,
+        return compute_persistence(self.initialized,
                                       self.control,
                                       nlags=nlags,
                                       metric=metric)

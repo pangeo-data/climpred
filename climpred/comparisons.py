@@ -232,7 +232,7 @@ def _e2r(ds, reference):
 
     """
     if 'member' in get_dims(ds):
-        print("Taking ensemble mean...")
+        #print("Taking ensemble mean...")
         forecast = ds.mean('member')
     else:
         forecast = ds

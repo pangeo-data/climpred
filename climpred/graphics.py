@@ -58,21 +58,14 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     ax[0].set_ylim(bottom=0)
 
 
-def plot_bootstrapped_skill_over_leadyear(init_skill,
-                                          init_ci,
-                                          uninit_skill,
-                                          uninit_ci,
-                                          sig,
-                                          p_uninit_over_init=None,
-                                          pers_skill=None,
-                                          pers_ci=None,
-                                          pers_sig=None,
-                                          p_pers_over_init=None,
+def plot_bootstrapped_skill_over_leadyear(bootstrapped, sig, plot_persistence=True,
                                           ax=None):
     """
     Plot Ensemble Prediction skill as in Li et al. 2016 Fig.3a-c.
 
     Args:
+        bootstrapped (xr.Dataset): from bootstrap_perfect_model or bootstrap_hindcast
+        contains:
         init_skill (xr.Dataset): skill of initialized
         init_ci (xr.Dataset): confidence levels of init_skill
         uninit_skill (xr.Dataset): skill of uninitialized
@@ -105,6 +98,21 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             https://doi.org/10/f8wkrs.
 
     """
+    p = (100 - sig) / 100  # 0.05
+    ci_low = p / 2  # 0.025
+    ci_high = 1 - p / 2  # .975
+    pers_sig = sig
+
+    init_skill = bootstrapped.sel(i='init',results='skill')
+    init_ci = bootstrapped.sel(i='init',results=[ci_low,ci_high]).rename({'results':'quantile'})
+    uninit_skill = bootstrapped.sel(i='uninit',results='skill').isel(lead=0)
+    uninit_ci = bootstrapped.sel(i='uninit',results=[ci_low,ci_high]).rename({'results':'quantile'}).isel(lead=0)
+    pers_skill = bootstrapped.sel(i='pers',results='skill')
+    pers_ci = bootstrapped.sel(i='pers',results=[ci_low,ci_high]).rename({'results':'quantile'})
+    p_uninit_over_init = bootstrapped.sel(i='uninit',results='p')
+    p_pers_over_init = bootstrapped.sel(i='pers',results='p')
+
+
     fontsize = 8
     c_uninit = 'indianred'
     c_init = 'steelblue'
@@ -150,29 +158,30 @@ def plot_bootstrapped_skill_over_leadyear(init_skill,
             label='uninitialized with ' + str(sig) + '% confidence interval')
         ax.axhline(y=uninit_skill, c='steelblue', ls=':')
     # persistence
-    if pers_skill is not None and pers_ci is not None:
-        ax.errorbar(
-            pers_skill.lead,
-            pers_skill,
-            yerr=[
-                pers_skill - pers_ci.isel(quantile=0),
-                pers_ci.isel(quantile=1) - pers_skill
-            ],
-            fmt='--o',
-            capsize=capsize,
-            c=c_pers,
-            label='persistence with ' + str(pers_sig) +
-            '% confidence interval')
-    if p_pers_over_init is not None:
-        for t in pers_skill.lead.values:
-            ax.text(
-                pers_skill.lead.sel(lead=t),
-                pers_ci.isel(quantile=0).sel(lead=t).values,
-                "%.2f" % float(p_pers_over_init.sel(lead=t).values),
-                horizontalalignment='center',
-                verticalalignment='bottom',
-                fontsize=fontsize,
-                color=c_pers)
+    if plot_persistence:
+        if pers_skill is not None and pers_ci is not None:
+            ax.errorbar(
+                pers_skill.lead,
+                pers_skill,
+                yerr=[
+                    pers_skill - pers_ci.isel(quantile=0),
+                    pers_ci.isel(quantile=1) - pers_skill
+                ],
+                fmt='--o',
+                capsize=capsize,
+                c=c_pers,
+                label='persistence with ' + str(pers_sig) +
+                '% confidence interval')
+        if p_pers_over_init is not None:
+            for t in pers_skill.lead.values:
+                ax.text(
+                    pers_skill.lead.sel(lead=t),
+                    pers_ci.isel(quantile=0).sel(lead=t).values,
+                    "%.2f" % float(p_pers_over_init.sel(lead=t).values),
+                    horizontalalignment='center',
+                    verticalalignment='bottom',
+                    fontsize=fontsize,
+                    color=c_pers)
 
     ax.xaxis.set_ticks(np.arange(init_skill.lead.size + 1))
     ax.legend(frameon=False)

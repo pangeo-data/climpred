@@ -1,8 +1,56 @@
 import numpy as np
 import xarray as xr
 
-from .prediction import compute_perfect_model, compute_persistence_pm
+from .prediction import (compute_perfect_model, compute_persistence,
+                         compute_reference)
 from .stats import DPP, xr_varweighted_mean_period
+
+
+def resample_uninit_dple_from_lens(dple, lens):
+    """Resample uninitialized hindcast from historical members."""
+    # find range for bootstrapping
+    first_init = max(lens.time.min().values, dple.init.min().values)
+    last_init = min(lens.time.max().values - dple.lead.size,
+                    dple.init.max().values)
+    dple = dple.sel(init=slice(first_init, last_init))
+
+    uninit_dple = []
+    for init in dple.init.values:
+        random_members = np.random.choice(
+            lens.member.values, dple.member.size)
+        # take random uninitialized members from lens at init forcing
+        # (Goddard allows 5 year forcing range here)
+        uninit_at_one_init_year = lens.sel(
+            time=slice(init + 1, init + dple.lead.size)).sel(
+                member=random_members).rename({'time': 'lead'})
+        uninit_at_one_init_year['lead'] = np.arange(
+            1, 1 + uninit_at_one_init_year.lead.size)
+        uninit_at_one_init_year['member'] = np.arange(1,
+                                                      1 + len(random_members))
+        uninit_dple.append(uninit_at_one_init_year)
+    uninit_dple = xr.concat(uninit_dple, 'init')
+    uninit_dple['init'] = dple.init.values
+    return uninit_dple
+
+
+def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
+    """Get confidence intervals from bootstrapped distribution."""
+    try:  # incase of lazy results compute
+        if len(ds.chunks) >= 1:
+            ds = ds.compute()
+    except:
+        pass
+    ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
+    return ds_ci
+
+
+def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
+    """Get probability that skill of simple_fct is larger than
+    init skill."""
+    pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
+    if metric not in ['pearson_r', 'ppp']:  # positively oriented metrics
+        pv = 1 - pv
+    return pv
 
 
 def pseudo_ens(ds, control):
@@ -90,13 +138,7 @@ def bootstrap_perfect_model(ds,
                             comparison='m2e',
                             sig=95,
                             bootstrap=500,
-                            compute_uninitialized_skill=True,
-                            compute_persistence_skill=True,
-                            pers_sig=None,
-                            compute_ci=True,
-                            nlags=None,
-                            running=None,
-                            reference_period='MK'):
+                            pers_sig=None):
     """Bootstrap perfect-model ensemble simulations with replacement.
 
     Reference:
@@ -121,6 +163,8 @@ def bootstrap_perfect_model(ds,
                       Defaults to ds.lead.size.
 
     Returns:
+        results: (xr.Dataset): bootstrapped results
+        ...contains...
         init_ci (xr.Dataset): confidence levels of init_skill
         uninit_ci (xr.Dataset): confidence levels of uninit_skill
         p_uninit_over_init (xr.Dataset): p-value of the hypothesis
@@ -147,12 +191,7 @@ def bootstrap_perfect_model(ds,
     if pers_sig is None:
         pers_sig = sig
 
-    # TODO: calc normalized persistence forecasts
-    if metric not in ['pearson_r', 'rmse', 'mse', 'mae']:
-        compute_persistence_skill = False
-
-    if nlags is None:
-        nlags = ds.lead.size
+    nlags = ds.lead.size
     p = (100 - sig) / 100  # 0.05
     ci_low = p / 2  # 0.025
     ci_high = 1 - p / 2  # 0.975
@@ -173,81 +212,133 @@ def bootstrap_perfect_model(ds,
         init.append(
             compute_perfect_model(
                 smp_ds,
-                control,
                 metric=metric,
-                comparison=comparison,
-                running=running,
-                reference_period=reference_period))
-        if compute_uninitialized_skill:
-            # generate uninitialized ensemble from control
-            uninit_ds = pseudo_ens(ds, control)  # .isel(lead=0)
-            # compute uninit skill
-            uninit.append(
-                compute_perfect_model(
-                    uninit_ds,
-                    control,
-                    metric=metric,
-                    comparison=comparison,
-                    running=running,
-                    reference_period=reference_period))
+                comparison=comparison))
+        # generate uninitialized ensemble from control
+        uninit_ds = pseudo_ens(ds, control)  # .isel(lead=0)
+        # compute uninit skill
+        uninit.append(
+            compute_perfect_model(
+                uninit_ds,
+                metric=metric,
+                comparison=comparison))
         # compute persistence skill
-        if compute_persistence_skill:
-            pers.append(
-                compute_persistence_pm(
-                    smp_ds, control, nlags=nlags, dim='time', metric=metric))
+        pers.append(
+            compute_persistence(
+                smp_ds, control, metric=metric))
     init = xr.concat(init, dim='bootstrap')
-    if compute_uninitialized_skill:
-        uninit = xr.concat(uninit, dim='bootstrap')
-    if compute_persistence_skill:
-        pers = xr.concat(pers, dim='bootstrap')
+    uninit = xr.concat(uninit, dim='bootstrap')
+    pers = xr.concat(pers, dim='bootstrap')
 
-    def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
-        try:
-            if len(ds.chunks) >= 1:
-                ds = ds.compute()
-        except:
-            pass
-        ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
-        return ds_ci
+    init_ci = _distribution_to_ci(init, ci_low, ci_high)
+    uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
+    pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
 
-    if compute_ci:
-        init_ci = _distribution_to_ci(init, ci_low, ci_high)
-        if compute_uninitialized_skill:
-            uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-        if compute_persistence_skill:
-            pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-
-    else:
-        init_ci = None
-        pers_ci = None
-        uninit_ci = None
-
-    def _pvalue_from_distributions(simple_fct, init, metric=metric):
-        """Get probability that skill of simple_fct is larger than
-        init skill."""
-        pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
-        if metric not in ['pearson_r', 'ppp']:  # positively oriented metrics
-            pv = 1 - pv
-        return pv
-
-    if compute_uninitialized_skill:
-        p_uninit_over_init = _pvalue_from_distributions(uninit, init)
-    else:
-        p_uninit_over_init, uninit_ci = None, None
-
-    if compute_persistence_skill:
-        p_pers_over_init = _pvalue_from_distributions(pers, init)
-
-    else:
-        p_pers_over_init, pers_ci = None, None
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init)
+    p_pers_over_init = _pvalue_from_distributions(pers, init)
 
     # calc skill
     init_skill = compute_perfect_model(
-        ds, control, metric=metric, comparison=comparison, running=running,
-        reference_period=reference_period)
+        ds, metric=metric, comparison=comparison)
     uninit_skill = uninit.mean('bootstrap')
-    pers_skill = compute_persistence_pm(
-        ds, control, nlags=nlags, dim='time', metric=metric)
+    pers_skill = compute_persistence(
+        ds, control, metric=metric)
+
+    # somehow there may be a member dim, which lets concat crash
+    if 'member' in init_skill:
+        del init_skill['member']
+    # wrap results together in one dataarray
+    skill = xr.concat([init_skill.squeeze(), uninit_skill, pers_skill], 'i')
+    skill['i'] = ['init', 'uninit', 'pers']
+
+    # probability that i beats init
+    p = xr.concat([p_uninit_over_init, p_pers_over_init], 'i')
+    p['i'] = ['uninit', 'pers']
+
+    # ci for each skill
+    ci = xr.concat([init_ci, uninit_ci, pers_ci],
+                   'i').rename({'quantile': 'results'})
+    ci['i'] = ['init', 'uninit', 'pers']
+
+    results = xr.concat([skill, p], 'results')
+    results['results'] = ['skill', 'p']
+    # (RXB) Drop any spurious coordinates that came along with results due to
+    # input ds. You can't concatenate if results and ci don't exactly match
+    # in coordinates. Maybe we can create a decorator to check this before
+    # anytime we merge.
+    if set(results.coords) != set(ci.coords):
+        res_drop = [c for c in results.coords if c not in ci.coords]
+        ci_drop = [c for c in ci.coords if c not in results.coords]
+        results = results.drop(res_drop)
+        ci = ci.drop(ci_drop)
+    results = xr.concat([results, ci], 'results')
+    return results
+
+
+def bootstrap_hindcast(dple,
+                       lens,
+                       reference,
+                       metric='pearson_r',
+                       comparison='e2r',
+                       bootstrap=5,
+                       sig=95,
+                       pers_sig=None):
+    if pers_sig is None:
+        pers_sig = sig
+
+    nlags = dple.lead.size
+
+    p = (100 - sig) / 100  # 0.05
+    ci_low = p / 2  # 0.025
+    ci_high = 1 - p / 2  # 0.975
+    p_pers = (100 - pers_sig) / 100  # 0.5
+    ci_low_pers = p_pers / 2
+    ci_high_pers = 1 - p_pers / 2
+    inits = dple.init.values
+    init = []
+    uninit = []
+    pers = []
+    # resample with replacement
+    # DoTo: parallelize loop
+    for _ in range(bootstrap):
+        smp = np.random.choice(inits, len(inits))
+        smp_dple = dple.sel(init=smp)
+        smp_reference = reference.sel(time=smp)
+        # compute init skill
+        init.append(
+            compute_reference(smp_dple,
+                              reference,
+                              metric=metric,
+                              comparison=comparison))
+        # compute uninit skill
+        # generate uninitialized ensemble from control
+        uninit_dple = resample_uninit_dple_from_lens(dple,
+                                                     lens)  # .isel(lead=0)
+        uninit.append(
+            compute_reference(uninit_dple,
+                              reference,
+                              metric=metric,
+                              comparison=comparison))
+        # compute persistence skill
+        pers.append(
+            compute_persistence(smp_dple, reference, metric=metric))
+    init = xr.concat(init, dim='bootstrap')
+    uninit = xr.concat(uninit, dim='bootstrap')
+    pers = xr.concat(pers, dim='bootstrap')
+
+    init_ci = _distribution_to_ci(init, ci_low, ci_high)
+    uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
+    pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
+
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init)
+    p_pers_over_init = _pvalue_from_distributions(pers, init)
+
+    # calc skill
+    init_skill = compute_reference(
+        dple, reference, metric=metric, comparison=comparison)
+    uninit_skill = uninit.mean('bootstrap')
+    pers_skill = compute_persistence(
+        dple, reference, metric=metric)
 
     # somehow there may be a member dim, which lets concat crash
     if 'member' in init_skill:

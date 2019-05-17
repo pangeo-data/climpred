@@ -1,6 +1,7 @@
 import numpy as np
 import xarray as xr
 
+from .metrics import POSITIVELY_ORIENTED_METRICS
 from .prediction import (compute_perfect_model, compute_persistence,
                          compute_reference)
 from .stats import DPP, xr_varweighted_mean_period
@@ -48,7 +49,7 @@ def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
     """Get probability that skill of simple_fct is larger than
     init skill."""
     pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
-    if metric not in ['pearson_r', 'ppp']:  # positively oriented metrics
+    if metric not in POSITIVELY_ORIENTED_METRICS:
         pv = 1 - pv
     return pv
 

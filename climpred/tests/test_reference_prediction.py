@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
 
+# testing less separately: use ALL_PM_METRICS_DICT
+from climpred.comparisons import ALL_HINDCAST_COMPARISONS_DICT
 from climpred.loadutils import open_dataset
-from climpred.prediction import (ALL_PM_METRICS_DICT, compute_persistence,
-                                 compute_reference, compute_uninitialized)
-
-comparisons = ('e2r', 'm2r')
+from climpred.metrics import ALL_PM_METRICS_DICT
+from climpred.prediction import (compute_persistence, compute_reference,
+                                 compute_uninitialized)
 
 
 @pytest.fixture
@@ -62,7 +63,7 @@ def test_compute_reference_less_m2r(initialized, reconstruction):
 
 
 @pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
-@pytest.mark.parametrize('comparison', comparisons)
+@pytest.mark.parametrize('comparison', ALL_HINDCAST_COMPARISONS_DICT.keys())
 def test_compute_reference(initialized, reconstruction, metric, comparison):
     """
     Checks that compute reference works without breaking.
@@ -86,7 +87,7 @@ def test_persistence(initialized, reconstruction, metric):
 
 
 @pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
-@pytest.mark.parametrize('comparison', comparisons)
+@pytest.mark.parametrize('comparison', ALL_HINDCAST_COMPARISONS_DICT.keys())
 def test_uninitialized(uninitialized, reconstruction, metric, comparison):
     """
     Checks that compute uninitialized works without breaking.

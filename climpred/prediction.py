@@ -5,26 +5,11 @@ import cftime
 import numpy as np
 import xarray as xr
 
-from .comparisons import (_drop_members, _e2c, _e2r, _m2c, _m2e, _m2m, _m2r,
-                          get_comparison_function)
-from .metrics import (_bias, _bias_slope, _conditional_bias, _crps, _crpss,
-                      _less, _mae, _mse, _msss_murphy, _nmae, _nmse, _nrmse,
-                      _pearson_r, _pearson_r_p_value, _ppp, _rmse, _std_ratio,
-                      _uacc, get_metric_function)
+from .comparisons import (ALL_COMPARISONS_DICT, ALL_PM_COMPARISONS_DICT,
+                          _drop_members, _e2c, get_comparison_function)
+from .metrics import ALL_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
 from .stats import z_significance
 from .utils import check_xarray
-
-all_metrics = [
-    _pearson_r, _pearson_r_p_value, _rmse, _mse, _mae, _msss_murphy,
-    _conditional_bias, _bias, _std_ratio, _bias_slope, _crps, _crpss, _less,
-    _nmae, _nrmse, _nmse, _ppp, _uacc
-]
-
-all_metric_strings = [
-    'pearson_r', 'pearson_r_p_value', 'rmse', 'mse', 'mae', 'msss_murphy',
-    'conditional_bias', 'bias', 'std_ratio', 'bias_slope', 'crps', 'crpss',
-    'less', 'nmae', 'nrmse', 'nmse', 'ppp', 'uacc'
-]
 
 
 # -------------------------------------------- #
@@ -83,19 +68,21 @@ def compute_perfect_model(ds, metric='rmse', comparison='m2e'):
     """
     supervector_dim = 'svd'
     comparison = get_comparison_function(comparison)
-    if comparison not in [_m2m, _m2c, _m2e, _e2c]:
-        raise ValueError('specify comparison argument')
+    if comparison not in ALL_PM_COMPARISONS_DICT.values():
+        raise ValueError(f'specify comparison from',
+                         f'{ALL_PM_COMPARISONS_DICT.keys()}')
 
     forecast, reference = comparison(ds, supervector_dim)
     metric = get_metric_function(metric)
 
-    if metric in all_metrics:
+    if metric in ALL_PM_METRICS_DICT.values():
         res = metric(forecast,
                      reference,
                      dim=supervector_dim,
                      comparison=comparison)
     else:
-        raise ValueError('specify metric argument')
+        raise ValueError(f'specify metric argument from',
+                         f'{ALL_PM_METRICS_DICT.keys()}')
     return res
 
 
@@ -120,11 +107,6 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     metric (str):
         Metric used in comparing the decadal prediction ensemble with the
         reference.
-        * pearson_r (Default)
-        * rmse
-        * mae
-        * mse
-        * all
     comparison (str):
         How to compare the decadal prediction ensemble to the reference.
         * e2r : ensemble mean to reference (Default)
@@ -139,14 +121,15 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     check_xarray(reference)
     nlags = ds.lead.size
     comparison = get_comparison_function(comparison)
-    if comparison not in [_e2r, _m2r]:
-        raise ValueError("""Please input either 'e2r' or 'm2r' for your
-            comparison.""")
+    if comparison not in ALL_COMPARISONS_DICT.values():
+        raise ValueError('Please input comparison from',
+                         f'{ALL_COMPARISONS_DICT.keys()}.')
     forecast, reference = comparison(ds, reference)
 
     metric = get_metric_function(metric)
-    if metric not in all_metrics:
-        raise ValueError("""Please input metric from all_metrics.""")
+    if metric not in ALL_METRICS_DICT.values():
+        raise ValueError(f'Please input metric from',
+                         f'{ALL_METRICS_DICT.keys()}.')
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
@@ -166,10 +149,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
         a['time'] = [t + i for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
-        # convert to lead as in compute_perfect_model
-        a = a.rename({'time': 'lead'})
-        b = b.rename({'time': 'lead'})
-        plag.append(metric(a, b, dim='lead', comparison=comparison))
+        plag.append(metric(a, b, dim='time', comparison=comparison))
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     return skill
@@ -179,13 +159,6 @@ def compute_persistence(ds, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or a control run.
-
-    Currently supported metrics for persistence:
-    * pearson_r
-    * rmse
-    * mse
-    * mae
-    * all
 
     Reference:
     * Chapter 8 (Short-Term Climate Prediction) in
@@ -203,13 +176,11 @@ def compute_persistence(ds, reference, metric='pearson_r'):
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    nlags = ds.lead.size
-
     check_xarray(reference)
 
     metric = get_metric_function(metric)
-    if metric not in all_metrics:
-        raise ValueError("""Please select from all_metrics.'""")
+    if metric not in ALL_METRICS_DICT.values():
+        raise ValueError(f'Please select from {ALL_METRICS_DICT.keys()}.')
     plag = []  # holds results of persistence for each lag
     for lag in ds.lead.values:
         inits = ds['init'].values
@@ -218,14 +189,14 @@ def compute_persistence(ds, reference, metric='pearson_r'):
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
-        ref = ref.rename({'time': 'lead'})
-        fct = fct.rename({'time': 'lead'})
-        plag.append(metric(ref, fct, dim='lead', comparison=_e2c))
+        plag.append(metric(ref, fct, dim='time', comparison=_e2c))
     pers = xr.concat(plag, 'lead')
     pers['lead'] = ds.lead.values
     return pers
 
 
+# ToDo: do we really need a function here
+# or cannot we somehow use compute_reference for that?
 def compute_uninitialized(uninit,
                           reference,
                           metric='pearson_r',
@@ -246,10 +217,6 @@ def compute_uninitialized(uninit,
     metric (str):
         Metric used in comparing the decadal prediction ensemble with the
         reference.
-        * pearson_r (Default)
-        * rmse
-        * mae
-        * mse
     comparison (str):
         How to compare the decadal prediction ensemble to the reference.
         * e2r : ensemble mean to reference (Default)
@@ -261,15 +228,12 @@ def compute_uninitialized(uninit,
     check_xarray(uninit)
     check_xarray(reference)
     comparison = get_comparison_function(comparison)
-    if comparison not in [_e2r, _m2r]:
-        raise KeyError("""Please input either 'e2r' or 'm2r' for your
-            comparison. This will be implemented for the perfect model setup
-            in the future.""")
+    if comparison not in ALL_COMPARISONS_DICT.values():
+        raise KeyError('Please input comparison from',
+                       f'{ALL_COMPARISONS_DICT.keys()}.')
     uninit, reference = comparison(uninit, reference)
     metric = get_metric_function(metric)
-    uninit = uninit.rename({'time': 'lead'})
-    reference = reference.rename({'time': 'lead'})
-    u = metric(uninit, reference, dim='lead', comparison=comparison)
+    u = metric(uninit, reference, dim='time', comparison=comparison)
     return u
 
 

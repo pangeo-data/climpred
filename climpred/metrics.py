@@ -413,7 +413,7 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
     return _ppp(forecast, reference, dim=dim, comparison=comparison)**.5
 
 
-ALL_METRICS_DICT = {
+ALL_HINDCAST_METRICS_DICT = {
     'pearson_r': _pearson_r,
     'pearson_r_p_value': _pearson_r_p_value,
     'rmse': _rmse,
@@ -434,5 +434,5 @@ ALL_METRICS_DICT = {
     'uacc': _uacc
 }
 
-ALL_PM_METRICS_DICT = ALL_METRICS_DICT.copy()
+ALL_PM_METRICS_DICT = ALL_HINDCAST_METRICS_DICT.copy()
 del ALL_PM_METRICS_DICT['less']

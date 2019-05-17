@@ -5,9 +5,11 @@ import cftime
 import numpy as np
 import xarray as xr
 
-from .comparisons import (ALL_COMPARISONS_DICT, ALL_PM_COMPARISONS_DICT,
-                          _drop_members, _e2c, get_comparison_function)
-from .metrics import ALL_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
+from .comparisons import (ALL_HINDCAST_COMPARISONS_DICT,
+                          ALL_PM_COMPARISONS_DICT, _drop_members, _e2c,
+                          get_comparison_function)
+from .metrics import (ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT,
+                      get_metric_function)
 from .stats import z_significance
 from .utils import check_xarray
 
@@ -43,6 +45,34 @@ def _intersection(lst1, lst2):
     return np.array(lst3)
 
 
+def _validate_PM_comparison(comparison):
+    """Validate if comparison is PM comparison."""
+    if comparison not in ALL_PM_COMPARISONS_DICT.values():
+        raise ValueError(f'specify comparison from',
+                         f'{ALL_PM_COMPARISONS_DICT.keys()}')
+
+
+def _validate_hindcast_comparison(comparison):
+    """Validate if comparison is hindcast comparison."""
+    if comparison not in ALL_HINDCAST_COMPARISONS_DICT.values():
+        raise ValueError(f'specify comparison from',
+                         f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}')
+
+
+def _validate_PM_metric(metric):
+    """Validate if metric is PM metric."""
+    if metric not in ALL_PM_METRICS_DICT.values():
+        raise ValueError(f'specify metric argument from',
+                         f'{ALL_PM_METRICS_DICT.keys()}')
+
+
+def _validate_hindcast_metric(metric):
+    """Validate if metric is hindcast metric."""
+    if metric not in ALL_HINDCAST_METRICS_DICT.values():
+        raise ValueError(f'specify metric argument from',
+                         f'{ALL_HINDCAST_METRICS_DICT.keys()}')
+
+
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
@@ -68,21 +98,16 @@ def compute_perfect_model(ds, metric='rmse', comparison='m2e'):
     """
     supervector_dim = 'svd'
     comparison = get_comparison_function(comparison)
-    if comparison not in ALL_PM_COMPARISONS_DICT.values():
-        raise ValueError(f'specify comparison from',
-                         f'{ALL_PM_COMPARISONS_DICT.keys()}')
+    _validate_PM_comparison(comparison)
+    metric = get_metric_function(metric)
+    _validate_PM_metric(metric)
 
     forecast, reference = comparison(ds, supervector_dim)
-    metric = get_metric_function(metric)
 
-    if metric in ALL_PM_METRICS_DICT.values():
-        res = metric(forecast,
-                     reference,
-                     dim=supervector_dim,
-                     comparison=comparison)
-    else:
-        raise ValueError(f'specify metric argument from',
-                         f'{ALL_PM_METRICS_DICT.keys()}')
+    res = metric(forecast,
+                 reference,
+                 dim=supervector_dim,
+                 comparison=comparison)
     return res
 
 
@@ -121,19 +146,13 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     check_xarray(reference)
     nlags = ds.lead.size
     comparison = get_comparison_function(comparison)
-    if comparison not in ALL_COMPARISONS_DICT.values():
-        raise ValueError('Please input comparison from',
-                         f'{ALL_COMPARISONS_DICT.keys()}.')
-    forecast, reference = comparison(ds, reference)
-
+    _validate_hindcast_comparison(comparison)
     metric = get_metric_function(metric)
-    if metric not in ALL_METRICS_DICT.values():
-        raise ValueError(f'Please input metric from',
-                         f'{ALL_METRICS_DICT.keys()}.')
+    _validate_hindcast_metric(metric)
 
+    forecast, reference = comparison(ds, reference)
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
-
     # take only inits for which we have references at all leads
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), reference.time.max() - nlags)
@@ -179,8 +198,8 @@ def compute_persistence(ds, reference, metric='pearson_r'):
     check_xarray(reference)
 
     metric = get_metric_function(metric)
-    if metric not in ALL_METRICS_DICT.values():
-        raise ValueError(f'Please select from {ALL_METRICS_DICT.keys()}.')
+    _validate_hindcast_metric(metric)
+
     plag = []  # holds results of persistence for each lag
     for lag in ds.lead.values:
         inits = ds['init'].values
@@ -228,11 +247,10 @@ def compute_uninitialized(uninit,
     check_xarray(uninit)
     check_xarray(reference)
     comparison = get_comparison_function(comparison)
-    if comparison not in ALL_COMPARISONS_DICT.values():
-        raise KeyError('Please input comparison from',
-                       f'{ALL_COMPARISONS_DICT.keys()}.')
-    uninit, reference = comparison(uninit, reference)
+    _validate_hindcast_comparison(comparison)
     metric = get_metric_function(metric)
+    _validate_hindcast_metric(metric)
+    uninit, reference = comparison(uninit, reference)
     u = metric(uninit, reference, dim='time', comparison=comparison)
     return u
 

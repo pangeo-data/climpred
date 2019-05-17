@@ -274,14 +274,14 @@ def _m2r(ds, reference):
     return forecast, reference
 
 
-ALL_COMPARISONS_DICT = {
+ALL_HINDCAST_COMPARISONS_DICT = {
     'e2r': _e2r,
     'm2r': _m2r
 }
 
 ALL_PM_COMPARISONS_DICT = {
-    'm2m': _m2m,
-    'm2e': _m2e,
     'm2c': _m2c,
-    'e2c': _e2c
+    'e2c': _e2c,
+    'm2m': _m2m,
+    'm2e': _m2e
 }

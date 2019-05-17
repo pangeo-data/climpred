@@ -5,8 +5,6 @@ import numpy as np
 from xskillscore import (crps_ensemble, crps_gaussian, mae, mse, pearson_r,
                          pearson_r_p_value, rmse)
 
-from .comparisons import _m2e
-
 
 def _get_norm_factor(comparison):
     """Get normalization factor for PPP, nvar, nRMSE.
@@ -187,7 +185,12 @@ def _crpss(forecast, reference, dim='svd', comparison=None):
 
 def _less(forecast, reference, dim='svd', comparison=None):
     """
-    Logarithmic Ensemble Spread Score
+    Logarithmic Ensemble Spread Score.
+
+    Formula
+    -------
+    .. math:: LESS = ln(\frac{\sigma^2_F}{\sigma^2_R})
+
     Reference
     ---------
     * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
@@ -195,27 +198,27 @@ def _less(forecast, reference, dim='svd', comparison=None):
       Forecasts by Accuracy and Spread in the MiKlip Decadal Climate Prediction
       System.” Meteorologische Zeitschrift, December 21, 2016, 631–43.
       https://doi.org/10/f9jrhw.
+
     Range
     -----
     pos: under-disperive
     neg: over-disperive
     perfect: 0
     """
-    numerator = _mse(forecast, reference, dim=dim)
-    try:  # PM
-        denominator = reference.std('lead').mean(dim)
-    except:  # hindcast
-        denominator = reference.std('lead')
+    if comparison.__name__ is not '_m2r':
+        raise ValueError("LESS requires member dimension and therefore"
+                         "compute_reference(comparison='m2r')")
+    numerator = _mse(forecast, reference, dim='member').mean(dim)
+    denominator = _mse(forecast.mean('member'),
+                       reference.mean('member'),
+                       dim=dim)
     less = np.log(numerator / denominator)
     return less
 
 
 def _bias(forecast, reference, dim='svd', comparison=None):
-    """(unconditional) bias: https://www-miklip.dkrz.de/about/murcss/"""
-    try:
-        bias = ((forecast - reference) / reference.std('lead')).mean(dim)
-    except:
-        bias = ((forecast - reference) / reference.std('lead'))
+    """(unconditional) bias: https://www.cawcr.gov.au/projects/verification/"""
+    bias = (forecast - reference).mean(dim)
     return bias
 
 
@@ -223,7 +226,7 @@ def _msss_murphy(forecast, reference, dim='svd', comparison=None):
     """msss_murphy: https://www-miklip.dkrz.de/about/murcss/"""
     acc = _pearson_r(forecast, reference, dim=dim)
     conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
-    bias = _bias(forecast, reference, dim=dim)
+    bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
     skill = acc**2 - conditional_bias**2 - bias**2
     return skill
 
@@ -282,11 +285,7 @@ def _ppp(forecast, reference, dim='svd', comparison=None):
 
     """
     mse_skill = _mse(forecast, reference, dim=dim)
-    # dirty implementation
-    try:  # PM branch
-        var = reference.std('lead').mean(dim)
-    except:  # hindcast branch
-        var = reference.std('lead')
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
@@ -325,10 +324,7 @@ def _nrmse(forecast, reference, dim='svd', comparison=None):
 
     """
     rmse_skill = _rmse(forecast, reference, dim=dim)
-    try:
-        var = reference.std('lead').mean(dim)
-    except:
-        var = reference.std('lead')
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
     nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
@@ -360,10 +356,7 @@ def _nmse(forecast, reference, dim='svd', comparison=None):
         nmse_skill (xarray object): skill of NMSE.
     """
     mse_skill = _mse(forecast, reference, dim=dim)
-    try:
-        var = reference.std('lead').mean(dim)
-    except:
-        var = reference.std('lead')
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
@@ -388,10 +381,7 @@ def _nmae(forecast, reference, dim='svd', comparison=None):
 
     """
     mse_skill = _mse(forecast, reference, dim=dim)
-    try:
-        var = reference.std('lead').mean(dim)
-    except:
-        var = reference.std('lead')
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
@@ -421,3 +411,28 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
         uacc_skill (xarray object): skill of uACC
     """
     return _ppp(forecast, reference, dim=dim, comparison=comparison)**.5
+
+
+ALL_METRICS_DICT = {
+    'pearson_r': _pearson_r,
+    'pearson_r_p_value': _pearson_r_p_value,
+    'rmse': _rmse,
+    'mse': _mse,
+    'mae': _mae,
+    'msss_murphy': _msss_murphy,
+    'conditional_bias': _conditional_bias,
+    'bias': _bias,
+    'std_ratio': _std_ratio,
+    'bias_slope': _bias_slope,
+    'crps': _crps,
+    'crpss': _crpss,
+    'less': _less,
+    'nmae': _nmae,
+    'nrmse': _nrmse,
+    'nmse': _nmse,
+    'ppp': _ppp,
+    'uacc': _uacc
+}
+
+ALL_PM_METRICS_DICT = ALL_METRICS_DICT.copy()
+del ALL_PM_METRICS_DICT['less']

@@ -191,7 +191,6 @@ def bootstrap_perfect_model(ds,
     if pers_sig is None:
         pers_sig = sig
 
-    nlags = ds.lead.size
     p = (100 - sig) / 100  # 0.05
     ci_low = p / 2  # 0.025
     ci_high = 1 - p / 2  # 0.975
@@ -283,10 +282,9 @@ def bootstrap_hindcast(dple,
                        bootstrap=5,
                        sig=95,
                        pers_sig=None):
+    """See bootstrap_perfect_model but for hindcasts."""
     if pers_sig is None:
         pers_sig = sig
-
-    nlags = dple.lead.size
 
     p = (100 - sig) / 100  # 0.05
     ci_low = p / 2  # 0.025
@@ -303,7 +301,6 @@ def bootstrap_hindcast(dple,
     for _ in range(bootstrap):
         smp = np.random.choice(inits, len(inits))
         smp_dple = dple.sel(init=smp)
-        smp_reference = reference.sel(time=smp)
         # compute init skill
         init.append(
             compute_reference(smp_dple,

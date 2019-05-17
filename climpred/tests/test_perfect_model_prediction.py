@@ -2,11 +2,16 @@ import numpy as np
 import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
+from climpred.comparisons import ALL_PM_COMPARISONS_DICT
 from climpred.loadutils import open_dataset
-from climpred.prediction import (ALL_PM_METRICS_DICT, compute_perfect_model,
-                                 compute_persistence)
+from climpred.metrics import ALL_PM_METRICS_DICT
+from climpred.prediction import compute_perfect_model, compute_persistence
 
-PM_comparisons = ('e2c', 'm2c', 'm2e', 'm2m')[:2]
+# faster with only two comparisons
+ALL_PM_COMPARISONS_DICT = {
+    'm2c': '',
+    'e2c': ''
+}
 
 
 @pytest.fixture
@@ -46,7 +51,7 @@ def test_compute_persistence_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d, metric):
         assert not actual[var]
 
 
-@pytest.mark.parametrize('comparison', (PM_comparisons))
+@pytest.mark.parametrize('comparison', ALL_PM_COMPARISONS_DICT.keys())
 @pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
 def test_bootstrap_perfect_model_da1d_not_nan(PM_da_ds1d, PM_da_control1d,
                                               metric, comparison):
@@ -65,7 +70,7 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_ds1d, PM_da_control1d,
     assert not actual_uninit_p
 
 
-@pytest.mark.parametrize('comparison', (PM_comparisons))
+@pytest.mark.parametrize('comparison', ALL_PM_COMPARISONS_DICT.keys())
 @pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
 def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d,
                                               metric, comparison):

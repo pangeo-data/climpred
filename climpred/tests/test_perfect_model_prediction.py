@@ -3,12 +3,10 @@ import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.loadutils import open_dataset
-from climpred.prediction import (all_metric_strings, compute_perfect_model,
+from climpred.prediction import (ALL_PM_METRICS_DICT, compute_perfect_model,
                                  compute_persistence)
 
 PM_comparisons = ('e2c', 'm2c', 'm2e', 'm2m')[:2]
-
-all_metrics = tuple(all_metric_strings)
 
 
 @pytest.fixture
@@ -37,7 +35,7 @@ def PM_ds_control1d():
     return ds
 
 
-@pytest.mark.parametrize('metric', all_metrics)
+@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
 def test_compute_persistence_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d, metric):
     """
     Checks that there are no NaNs on persistence forecast of 1D time series.
@@ -49,7 +47,7 @@ def test_compute_persistence_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d, metric):
 
 
 @pytest.mark.parametrize('comparison', (PM_comparisons))
-@pytest.mark.parametrize('metric', all_metrics)
+@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
 def test_bootstrap_perfect_model_da1d_not_nan(PM_da_ds1d, PM_da_control1d,
                                               metric, comparison):
     """
@@ -68,7 +66,7 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_ds1d, PM_da_control1d,
 
 
 @pytest.mark.parametrize('comparison', (PM_comparisons))
-@pytest.mark.parametrize('metric', all_metrics)
+@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
 def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d,
                                               metric, comparison):
     """

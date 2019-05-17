@@ -5,8 +5,8 @@ from .prediction import (compute_reference, compute_persistence,
 from .bootstrap import (bootstrap_perfect_model, pseudo_ens)
 from .utils import check_xarray
 # Both:
-# TODO: add horizon functionality
-# TODO: add various `get` and `set` decorators
+# TODO: add horizon functionality.
+# TODO: add various `get` and `set` functions.
 # TODO: add checks for our package naming conventions. I.e., should
 # have 'member', 'time', etc. Can do this after updating the
 # terminology.
@@ -23,17 +23,6 @@ from .utils import check_xarray
 
 # PerfectModel:
 # TODO: add relative entropy functionality
-
-# Reference
-# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
-# members to be on DPLE and not just the mean)
-
-# PerfectModel:
-# TODO: add relative entropy functionality
-
-# Reference
-# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
-# members to be on DPLE and not just the mean)
 
 
 # --------------
@@ -93,14 +82,14 @@ def _display_metadata(self):
     This is called in the following case:
 
     ```
-    dp = cp.ReferenceEnsemble(dple)
+    dp = cp.HindcastEnsemble(dple)
     print(dp)
     ```
     """
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
     summary += '    ' + str(self.initialized.data_vars)[18:].strip() + '\n'
-    if isinstance(self, ReferenceEnsemble):
+    if isinstance(self, HindcastEnsemble):
         if any(self.reference):
             for key in self.reference:
                 summary += f'{key}:\n'
@@ -137,7 +126,7 @@ def _display_metadata(self):
 class PredictionEnsemble:
     """
     The main object. This is the super of both `PerfectModelEnsemble` and
-    `ReferenceEnsemble`. This cannot be called directly by a user, but
+    `HindcastEnsemble`. This cannot be called directly by a user, but
     should house functions that both ensemble types can use.
     """
     @check_xarray(1)
@@ -423,11 +412,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 return boot
 
 
-class ReferenceEnsemble(PredictionEnsemble):
+class HindcastEnsemble(PredictionEnsemble):
     """An object for climate prediction ensembles initialized by a data-like
     product.
 
-    `ReferenceEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
+    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
     simulations/observations associated with the prediction ensemble for easy
     computation across multiple variables and products.
 
@@ -435,7 +424,7 @@ class ReferenceEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
     def __init__(self, xobj):
-        """Create a `ReferenceEnsemble` object by inputting output from a
+        """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
 
         Args:
@@ -497,7 +486,7 @@ class ReferenceEnsemble(PredictionEnsemble):
 
         Args:
             xobj (xarray object): Dataset/DataArray being appended to the
-                                  `ReferenceEnsemble` object.
+                                  `HindcastEnsemble` object.
             name (str): Name of this object (e.g., "reconstruction")
         """
         if isinstance(xobj, xr.DataArray):

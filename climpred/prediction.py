@@ -159,7 +159,6 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)
     reference = reference.where(reference.time >= imin, drop=True)
-
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
@@ -196,7 +195,6 @@ def compute_persistence(ds, reference, metric='pearson_r'):
                               metric applied.
     """
     check_xarray(reference)
-
     metric = get_metric_function(metric)
     _validate_hindcast_metric(metric)
 
@@ -244,8 +242,6 @@ def compute_uninitialized(uninit,
     Returns:
         u (xarray object): Results from comparison at the first lag.
     """
-    check_xarray(uninit)
-    check_xarray(reference)
     comparison = get_comparison_function(comparison)
     _validate_hindcast_comparison(comparison)
     metric = get_metric_function(metric)

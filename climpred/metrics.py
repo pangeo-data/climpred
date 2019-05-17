@@ -436,3 +436,8 @@ ALL_HINDCAST_METRICS_DICT = {
 
 ALL_PM_METRICS_DICT = ALL_HINDCAST_METRICS_DICT.copy()
 del ALL_PM_METRICS_DICT['less']
+
+# more positive skill is better than more negative
+POSITIVELY_ORIENTED_METRICS = [
+    'pearson_r', 'msss_murphy', 'ppp', 'msss', 'crpss', 'uacc'
+]

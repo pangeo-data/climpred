@@ -6,6 +6,7 @@ from climpred.loadutils import open_dataset
 from climpred.metrics import ALL_PM_METRICS_DICT
 from climpred.prediction import compute_perfect_model, compute_persistence
 
+# TODO: comment out
 # faster with only two comparisons
 ALL_PM_COMPARISONS_DICT = {
     'm2c': '',

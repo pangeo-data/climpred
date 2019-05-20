@@ -8,27 +8,27 @@ Fixes # (issue)
 
 Please delete options that are not relevant.
 
-- [ ] Bug fix (non-breaking change which fixes an issue)
-- [ ] New feature (non-breaking change which adds functionality)
-- [ ] Breaking change (fix or feature that would cause existing functionality to not work as expected)
-- [ ] This change requires a documentation update
+-   [ ]  Bug fix (non-breaking change which fixes an issue)
+-   [ ]  New feature (non-breaking change which adds functionality)
+-   [ ]  Breaking change (fix or feature that would cause existing functionality to not work as expected)
+-   [ ]  This change requires a documentation update
 
 # How Has This Been Tested?
 
 Please describe the tests that you ran to verify your changes. This could point to a cell in the updated notebooks. Or a snippet of code with accompanying figures here.
 
-## Checklist (while developing):
+## Checklist (while developing)
 
-- [ ] I have added docstrings to all new functions.
-- [ ] I have commented my code, particularly in hard-to-understand areas
-- [ ] Tests added for `pytest`, if necessary.
+-   [ ]  I have added docstrings to all new functions.
+-   [ ]  I have commented my code, particularly in hard-to-understand areas
+-   [ ]  Tests added for `pytest`, if necessary.
 
-## Pre-Merge Checklist (final steps):
+## Pre-Merge Checklist (final steps)
 
-- [ ] I have rebased onto master or develop (wherever I am merging) and dealt with any conflictions.
-- [ ] I have squashed commits to a reasonable amount, and force-pushed the squashed commits.
-- [ ] All notebooks run with this branch installed. (please post a screenshot of `treon` compiling successfully)
-- [ ] `pytest` runs without breaking.
+-   [ ]  I have rebased onto master or develop (wherever I am merging) and dealt with any conflicts.
+-   [ ]  I have squashed commits to a reasonable amount, and force-pushed the squashed commits.
+-   [ ]  All notebooks run with this branch; tested via `treon`.
+-   [ ]  `pytest` runs without breaking.
 
 ## Discussion
 

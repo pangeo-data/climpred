@@ -117,6 +117,7 @@ def _xr_eff_p_value(x, y, r, dim):
     return p
 
 
+@check_xarray(0)
 def xr_rm_poly(ds, order, dim='time'):
     """Returns xarray object with nth-order fit removed.
 
@@ -128,8 +129,6 @@ def xr_rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
-    check_xarray(ds)  # this could be a decorator I think?
-
     if dim not in ds.dims:
         raise KeyError(
             f"Input dim, '{dim}', was not found in the ds; "

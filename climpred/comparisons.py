@@ -61,7 +61,7 @@ def get_comparison_function(comparison):
     m2e: Compare all members to the ensemble mean.
     e2c: Compare the ensemble mean to the control.
 
-    REFERENCE:
+    HINDCAST:
     e2r: Compare the ensemble mean to the reference.
     m2r: Compare each ensemble member to the reference.
 
@@ -96,6 +96,10 @@ def get_comparison_function(comparison):
     return comparison
 
 
+# --------------------------------------------#
+# PERFECT-MODEL COMPARISONS
+# based on supervector approach
+# --------------------------------------------#
 def _m2m(ds, supervector_dim='svd'):
     """
     Create two supervectors to compare all members to all other members in
@@ -221,9 +225,13 @@ def _e2c(ds, supervector_dim='svd', control_member=None):
     return forecast, reference
 
 
+# --------------------------------------------#
+# REFERENCE COMPARISONS
+# based on supervector approach
+# --------------------------------------------#
 def _e2r(ds, reference):
     """
-    For a reference-based decadal prediction ensemble. This compares the
+    For a hindcast-based decadal prediction ensemble. This compares the
     ensemble mean prediction to the reference (hindcast, simulation,
     observations).
 
@@ -246,7 +254,7 @@ def _e2r(ds, reference):
 
 def _m2r(ds, reference):
     """
-    For a reference-based decadal prediction ensemble. This compares each
+    For a hindcast-based decadal prediction ensemble. This compares each
     member individually to the reference (hindcast, simulation,
     observations).
 

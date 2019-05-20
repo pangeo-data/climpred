@@ -1,18 +1,46 @@
 import xarray as xr
 
 
+# https://stackoverflow.com/questions/10610824/
+# python-shortcut-for-writing-decorators-which-accept-arguments
+def dec_args_kwargs(wrapper):
+    return (
+        lambda *dec_args, **dec_kwargs:
+            lambda func:
+                wrapper(func, *dec_args, **dec_kwargs)
+    )
+
 # --------------------------------------#
 # CHECKS
 # --------------------------------------#
-def check_xarray(x):
-    """Check if the object being submitted is either a Dataset or DataArray."""
-    if not (isinstance(x, xr.DataArray) or isinstance(x, xr.Dataset)):
-        typecheck = type(x)
-        raise IOError(f"""The input data is not an xarray object (an xarray
-            DataArray or Dataset). esmtools is built to wrap xarray to make
-            use of its awesome features. Please input an xarray object and
-            retry the function.
-            Your input was of type: {typecheck}""")
+@dec_args_kwargs
+def check_xarray(func, *dec_args):
+    """
+    Decorate a function to ensure the first arg being submitted is
+    either a Dataset or DataArray.
+    """
+    def wrapper(*args, **kwargs):
+        ds_da_locs = dec_args[0]
+        if not isinstance(ds_da_locs, list):
+            ds_da_locs = [ds_da_locs]
+
+        for loc in ds_da_locs:
+            if isinstance(loc, int):
+                ds_da = args[loc]
+            elif isinstance(loc, str):
+                ds_da = kwargs[loc]
+
+            is_ds_da = isinstance(ds_da, (xr.Dataset, xr.DataArray))
+            if not is_ds_da:
+                typecheck = type(ds_da)
+                raise IOError(f"""The input data is not an xarray DataArray or
+                    Dataset. climpred is built to wrap xarray to make
+                    use of its awesome features. Please input an xarray object and
+                    retry the function.
+                    Your input was of type: {typecheck}""")
+
+        return func(*args, **kwargs)
+    return wrapper
 
 
 # --------------------------------------#

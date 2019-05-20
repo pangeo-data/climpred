@@ -145,6 +145,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     check_xarray(hind)
     check_xarray(reference)
     nlags = hind.lead.size
+
     comparison = get_comparison_function(comparison)
     _validate_hindcast_comparison(comparison)
     metric = get_metric_function(metric)
@@ -174,6 +175,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     return skill
 
 
+check_xarray([0, 1])
 def compute_persistence(hind, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -195,8 +197,6 @@ def compute_persistence(hind, reference, metric='pearson_r'):
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    check_xarray(reference)
-
     metric = get_metric_function(metric)
     _validate_hindcast_metric(metric)
 
@@ -216,6 +216,7 @@ def compute_persistence(hind, reference, metric='pearson_r'):
 
 # ToDo: do we really need a function here
 # or cannot we somehow use compute_hindcast for that?
+check_xarray([0, 1])
 def compute_uninitialized(uninit,
                           reference,
                           metric='pearson_r',
@@ -244,8 +245,6 @@ def compute_uninitialized(uninit,
     Returns:
         u (xarray object): Results from comparison at the first lag.
     """
-    check_xarray(uninit)
-    check_xarray(reference)
     comparison = get_comparison_function(comparison)
     _validate_hindcast_comparison(comparison)
     metric = get_metric_function(metric)

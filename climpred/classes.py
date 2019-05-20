@@ -7,8 +7,8 @@ from .prediction import (compute_hindcast, compute_perfect_model,
 from .utils import check_xarray
 
 # Both:
-# TODO: add horizon functionality
-# TODO: add various `get` and `set` decorators
+# TODO: add horizon functionality.
+# TODO: add various `get` and `set` functions.
 # TODO: add checks for our package naming conventions. I.e., should
 # have 'member', 'time', etc. Can do this after updating the
 # terminology.
@@ -25,17 +25,6 @@ from .utils import check_xarray
 
 # PerfectModel:
 # TODO: add relative entropy functionality
-
-# Reference
-# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
-# members to be on DPLE and not just the mean)
-
-# PerfectModel:
-# TODO: add relative entropy functionality
-
-# Reference
-# TODO: make sure that comparison 'm2r' works (i.e., allow for the ensemble
-# members to be on DPLE and not just the mean)
 
 
 # --------------
@@ -95,14 +84,14 @@ def _display_metadata(self):
     This is called in the following case:
 
     ```
-    dp = cp.ReferenceEnsemble(dple)
+    dp = cp.HindcastEnsemble(dple)
     print(dp)
     ```
     """
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
     summary += '    ' + str(self.initialized.data_vars)[18:].strip() + '\n'
-    if isinstance(self, ReferenceEnsemble):
+    if isinstance(self, HindcastEnsemble):
         if any(self.reference):
             for key in self.reference:
                 summary += f'{key}:\n'
@@ -139,12 +128,11 @@ def _display_metadata(self):
 class PredictionEnsemble:
     """
     The main object. This is the super of both `PerfectModelEnsemble` and
-    `ReferenceEnsemble`. This cannot be called directly by a user, but
+    `HindcastEnsemble`. This cannot be called directly by a user, but
     should house functions that both ensemble types can use.
     """
-
+    @check_xarray(1)
     def __init__(self, xobj):
-        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
@@ -187,6 +175,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self.control = {}
 
+    @check_xarray(1)
     def add_control(self, xobj):
         """Add the control run that initialized the climate prediction
         ensemble.
@@ -195,7 +184,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             xobj (xarray object): Dataset/DataArray of the control run.
         """
         # NOTE: These should all be decorators.
-        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         _check_reference_dimensions(self.initialized, xobj)
@@ -441,11 +429,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 return boot
 
 
-class ReferenceEnsemble(PredictionEnsemble):
+class HindcastEnsemble(PredictionEnsemble):
     """An object for climate prediction ensembles initialized by a data-like
     product.
 
-    `ReferenceEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
+    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
     simulations/observations associated with the prediction ensemble for easy
     computation across multiple variables and products.
 
@@ -454,7 +442,7 @@ class ReferenceEnsemble(PredictionEnsemble):
     """
 
     def __init__(self, xobj):
-        """Create a `ReferenceEnsemble` object by inputting output from a
+        """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
 
         Args:
@@ -507,6 +495,7 @@ class ReferenceEnsemble(PredictionEnsemble):
             ref_vars.pop(idx)
         return init_vars, ref_vars
 
+    @check_xarray(1)
     def add_reference(self, xobj, name):
         """Add a reference product for comparison to the initialized ensemble.
 
@@ -515,10 +504,9 @@ class ReferenceEnsemble(PredictionEnsemble):
 
         Args:
             xobj (xarray object): Dataset/DataArray being appended to the
-                                  `ReferenceEnsemble` object.
+                                  `HindcastEnsemble` object.
             name (str): Name of this object (e.g., "reconstruction")
         """
-        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         # TODO: Make sure everything is the same length. Can add keyword
@@ -527,6 +515,7 @@ class ReferenceEnsemble(PredictionEnsemble):
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.reference[name] = xobj
 
+    @check_xarray(1)
     def add_uninitialized(self, xobj):
         """Add a companion uninitialized ensemble for comparison to references.
 
@@ -537,7 +526,6 @@ class ReferenceEnsemble(PredictionEnsemble):
             xobj (xarray object): Dataset/DataArray of the uninitialzed
                                   ensemble.
         """
-        check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         _check_reference_dimensions(self.initialized, xobj)

@@ -7,4 +7,4 @@ from . import bootstrap
 from . import metrics
 from . import comparisons
 # eventually will *only* import these
-from .classes import PerfectModelEnsemble, ReferenceEnsemble
+from .classes import PerfectModelEnsemble, HindcastEnsemble

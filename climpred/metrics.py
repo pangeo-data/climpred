@@ -1,5 +1,4 @@
 import types
-
 import numpy as np
 
 from xskillscore import (crps_ensemble, crps_gaussian, mae, mse, pearson_r,

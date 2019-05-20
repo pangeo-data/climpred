@@ -8,7 +8,20 @@ from .stats import DPP, xr_varweighted_mean_period
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
-    """Get confidence intervals from bootstrapped distribution."""
+    """Get confidence intervals from bootstrapped distribution.
+
+    Needed for bootstrapping confidence intervals and p_values of a metric.
+
+    Args:
+        ds (xarray object): distribution.
+        ci_low (float): low confidence interval.
+        ci_high (float): high confidence interval.
+        dim (str): dimension to apply xr.quantile to. Default: 'bootstrap'
+
+    Returns:
+        uninit_hind (xarray object): uninitialize hindcast with hind.coords.
+    """
+    ## TODO: get rif od try, except logic
     try:  # incase of lazy results compute
         if len(ds.chunks) >= 1:
             ds = ds.compute()
@@ -20,7 +33,23 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
 
 def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
     """Get probability that skill of simple_fct is larger than
-    init skill."""
+    init skill.
+
+    Needed for bootstrapping confidence intervals and p_values of a metric in
+    the hindcast framework. Checks whether a simple forecast like persistence
+    or uninitialized performs better than initialized forecast. Need to keep in
+    mind the orientation of metric (whether larger values are better or worse
+    than smaller ones.)
+
+    Args:
+        simple_fct (xarray object): persistence or uninit skill.
+        init (xarray object): hindcast skill.
+        metric (str): name of metric
+
+    Returns:
+        pv (xarray object): probability that simple forecast performs better
+                            than initialized forecast.
+    """
     pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
     if metric not in POSITIVELY_ORIENTED_METRICS:
         pv = 1 - pv
@@ -28,7 +57,19 @@ def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
 
 
 def bootstrap_uninitialized_ensemble(hind, hist):
-    """Resample uninitialized hindcast from historical members."""
+    """Resample uninitialized hindcast from historical members.
+
+    Needed for bootstrapping confidence intervals and p_values of a metric in
+    the hindcast framework. Takes hind.lead.size timesteps from historical at
+    same forcing and rearranges them into ensemble and member dimensions.
+
+    Args:
+        hind (xarray object): hindcast.
+        hist (xarray object): historical uninitialized.
+
+    Returns:
+        uninit_hind (xarray object): uninitialize hindcast with hind.coords.
+    """
     # find range for bootstrapping
     if 'member' not in hist.coords:
         raise ValueError('Please supply hist with member dim.')

@@ -211,9 +211,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def compute_metric(self,
                        metric='pearson_r',
-                       comparison='m2m',
-                       running=None,
-                       reference_period=None):
+                       comparison='m2m'):
         """Compares the initialized ensemble to the control run.
 
         Args:
@@ -221,10 +219,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
               How to compare the climate prediction ensemble to the control.
-            running (int, default None):
-              Size of the running window for variance smoothing.
-            reference_period (str, default None):
-              Choice of reference period of control.
 
         Returns:
             Result of the comparison as a Dataset.
@@ -237,15 +231,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             return compute_perfect_model(self.initialized,
                                          self.control,
                                          metric=metric,
-                                         comparison=comparison,
-                                         running=running,
-                                         reference_period=reference_period)
+                                         comparison=comparison)
 
     def compute_uninitialized(self,
                               metric='pearson_r',
-                              comparison='m2m',
-                              running=None,
-                              reference_period=None):
+                              comparison='m2e'):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
@@ -255,8 +245,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
               How to compare to the control run.
             running (int, default None):
               Size of the running window for variance smoothing.
-            reference_period (str, default None):
-              Choice of reference period of control.
 
         Returns:
             Result of the comparison as a Dataset.
@@ -268,9 +256,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             return compute_perfect_model(self.uninitialized,
                                          self.control,
                                          metric=metric,
-                                         comparison=comparison,
-                                         running=running,
-                                         reference_period=reference_period)
+                                         comparison=comparison)
 
     def compute_persistence(self, nlags=None, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
@@ -300,7 +286,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             nlags = self.initialized.lead.size
         return compute_persistence(self.initialized,
                                    self.control,
-                                   nlags=nlags,
                                    metric=metric)
 
     def bootstrap(self,
@@ -309,13 +294,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                   comparison='m2e',
                   sig=95,
                   bootstrap=500,
-                  compute_uninitialized_skill=True,
-                  compute_persistence_skill=True,
-                  pers_sig=None,
-                  compute_ci=True,
-                  nlags=None,
-                  running=None,
-                  reference_period='MK'):
+                  pers_sig=None):
         """Bootstrap ensemble simulations with replacement.
 
         Args:
@@ -330,20 +309,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 comparison.
             bootstrap (int, default 500): Number of resampling iterations for
                 bootstrapping with replacement.
-            compute_uninitialized_skill (bool, default True):
-                Whether to compute unintialized skill.
-            compute_persistence_skill (bool, default True):
-                Whether to compute persistence skill.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
-            compute_ci (bool, default True):
-                Whether to compute confidence intervals.
-            nlags (int, default None):
-                Number of lags.
-            running (int, default None):
-                Size of the window for variance smoothing.
-            reference_period (str, default 'MK'):
-                Choice of reference period of control.
 
         Returns:
             Dictionary of Datasets for each variable applied to with the
@@ -369,9 +336,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         """
         # shorthand to adhere to PEP8 column limit.
-        cus = compute_uninitialized_skill
-        cps = compute_persistence_skill
-        ref_pd = reference_period
         if len(self.control) == 0:
             raise ValueError("""You need to add a control dataset before
             attempting to bootstrap.""")
@@ -383,13 +347,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                                            comparison=comparison,
                                            sig=sig,
                                            bootstrap=bootstrap,
-                                           compute_uninitialized_skill=cus,
-                                           compute_persistence_skill=cps,
-                                           pers_sig=pers_sig,
-                                           compute_ci=compute_ci,
-                                           nlags=nlags,
-                                           running=running,
-                                           reference_period=ref_pd)
+                                           pers_sig=pers_sig)
         # compute for all variables in control.
         else:
             if len(self.initialized.data_vars) == 1:
@@ -401,13 +359,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                                                comparison=comparison,
                                                sig=sig,
                                                bootstrap=bootstrap,
-                                               compute_uninitialized_skill=cus,
-                                               compute_persistence_skill=cps,
-                                               pers_sig=pers_sig,
-                                               compute_ci=compute_ci,
-                                               nlags=nlags,
-                                               running=running,
-                                               reference_period=ref_pd)
+                                               pers_sig=pers_sig)
             else:
                 boot = {}
                 for var in self.control.data_vars:
@@ -418,13 +370,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                         comparison=comparison,
                         sig=sig,
                         bootstrap=bootstrap,
-                        compute_uninitialized_skill=cus,
-                        compute_persistence_skill=cps,
-                        pers_sig=pers_sig,
-                        compute_ci=compute_ci,
-                        nlags=nlags,
-                        running=running,
-                        reference_period=ref_pd)
+                        pers_sig=pers_sig)
                     boot[var] = res
                 return boot
 
@@ -535,9 +481,7 @@ class HindcastEnsemble(PredictionEnsemble):
     def compute_metric(self,
                        refname=None,
                        metric='pearson_r',
-                       comparison='e2r',
-                       nlags=None,
-                       return_p=False):
+                       comparison='e2r'):
         """Compares the initialized ensemble to a given reference.
 
         This will automatically run the comparison against all shared variables
@@ -552,11 +496,6 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison (str, default 'e2r'):
               How to compare to the reference. ('e2r' for ensemble mean to
               reference. 'm2r' for each individual member to reference)
-            nlags (int, default None):
-              Number of lags to compute the metric to.
-            return_p (bool, default False):
-              Whether to return p-values associated with a pearson r
-              comparison.
 
         Returns:
             Dataset of comparison results (if comparing to one reference),
@@ -576,9 +515,7 @@ class HindcastEnsemble(PredictionEnsemble):
             return compute_hindcast(self.initialized.drop(drop_init),
                                      self.reference[refname].drop(drop_ref),
                                      metric=metric,
-                                     comparison=comparison,
-                                     nlags=nlags,
-                                     return_p=return_p)
+                                     comparison=comparison)
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
@@ -587,9 +524,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     self.initialized.drop(drop_init),
                     self.reference[refname].drop(drop_ref),
                     metric=metric,
-                    comparison=comparison,
-                    nlags=nlags,
-                    return_p=return_p)
+                    comparison=comparison)
             # Loop through all references and return results as a dictionary
             # with keys corresponding to reference names.
             else:
@@ -600,17 +535,13 @@ class HindcastEnsemble(PredictionEnsemble):
                         self.initialized.drop(drop_init),
                         self.reference[key].drop(drop_ref),
                         metric=metric,
-                        comparison=comparison,
-                        nlags=nlags,
-                        return_p=return_p)
+                        comparison=comparison)
                 return skill
 
     def compute_uninitialized(self,
                               refname=None,
-                              nlags=None,
                               metric='pearson_r',
-                              comparison='e2r',
-                              return_p=False):
+                              comparison='e2r'):
         """Compares the uninitialized ensemble to a given reference.
 
         This will automatically run the comparison against all shared variables
@@ -625,11 +556,6 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison (str, default 'e2r'):
               How to compare to the reference. ('e2r' for ensemble mean to
               reference. 'm2r' for each individual member to reference)
-            nlags (int, default None):
-              Number of lags to compute the metric to.
-            return_p (bool, default False):
-              Whether to return p-values associated with a pearson r
-              comparison.
 
         Returns:
             Dataset of comparison results (if comparing to one reference),
@@ -649,7 +575,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 self.reference[refname].drop(drop_ref),
                 metric=metric,
                 comparison=comparison,
-                return_p=return_p,
             )
         else:
             if len(self.reference) == 1:
@@ -660,7 +585,6 @@ class HindcastEnsemble(PredictionEnsemble):
                     self.reference[refname].drop(drop_ref),
                     metric=metric,
                     comparison=comparison,
-                    return_p=return_p,
                 )
             # Loop through all references and apply comparison.
             else:
@@ -672,7 +596,6 @@ class HindcastEnsemble(PredictionEnsemble):
                         self.reference[key].drop(drop_ref),
                         metric=metric,
                         comparison=comparison,
-                        return_p=return_p,
                     )
                 return u
 
@@ -713,7 +636,6 @@ class HindcastEnsemble(PredictionEnsemble):
         if refname is not None:
             return compute_persistence(self.initialized,
                                        self.reference[refname],
-                                       nlags=nlags,
                                        metric=metric)
         # loop through and apply to all references.
         else:
@@ -721,7 +643,6 @@ class HindcastEnsemble(PredictionEnsemble):
             for key in self.reference:
                 persistence[key] = compute_persistence(self.initialized,
                                                        self.reference[key],
-                                                       nlags=nlags,
                                                        metric=metric)
             return persistence
 

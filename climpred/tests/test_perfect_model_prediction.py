@@ -1,4 +1,3 @@
-import numpy as np
 import pytest
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model

@@ -1,8 +1,9 @@
 import xarray as xr
 
-from .bootstrap import bootstrap_perfect_model, pseudo_ens
-from .prediction import (compute_perfect_model, compute_persistence,
-                         compute_reference, compute_uninitialized)
+from .bootstrap import (bootstrap_perfect_model,
+                        bootstrap_uninit_pm_ensemble_from_control)
+from .prediction import (compute_hindcast, compute_perfect_model,
+                         compute_persistence, compute_uninitialized)
 from .utils import check_xarray
 
 # Both:
@@ -106,7 +107,7 @@ def _display_metadata(self):
             for key in self.reference:
                 summary += f'{key}:\n'
                 N = len(self.reference[key].data_vars)
-                for i in range(1, N+1):
+                for i in range(1, N + 1):
                     summary += '    ' + \
                                str(self.reference[key].data_vars) \
                                .split('\n')[i].strip() + '\n'
@@ -117,7 +118,7 @@ def _display_metadata(self):
         summary += 'Control:\n'
         if any(self.control):
             N = len(self.control.data_vars)
-            for i in range(1, N+1):
+            for i in range(1, N + 1):
                 summary += '    ' + \
                            str(self.control.data_vars) \
                            .split('\n')[i].strip() + '\n'
@@ -141,6 +142,7 @@ class PredictionEnsemble:
     `ReferenceEnsemble`. This cannot be called directly by a user, but
     should house functions that both ensemble types can use.
     """
+
     def __init__(self, xobj):
         check_xarray(xobj)
         if isinstance(xobj, xr.DataArray):
@@ -212,15 +214,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Bootstrapped (uninitialized) ensemble as a Dataset.
         """
         if var is not None:
-            uninit = pseudo_ens(self.initialized[var],
-                                self.control[var]).to_dataset()
+            uninit = bootstrap_uninit_pm_ensemble_from_control(
+                self.initialized[var], self.control[var]).to_dataset()
         else:
-            uninit = pseudo_ens(self.initialized,
-                                self.control)
+            uninit = bootstrap_uninit_pm_ensemble_from_control(
+                self.initialized, self.control)
         self.uninitialized = uninit
 
-    def compute_metric(self, metric='pearson_r', comparison='m2m',
-                       running=None, reference_period=None):
+    def compute_metric(self,
+                       metric='pearson_r',
+                       comparison='m2m',
+                       running=None,
+                       reference_period=None):
         """Compares the initialized ensemble to the control run.
 
         Args:
@@ -248,8 +253,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
                                          running=running,
                                          reference_period=reference_period)
 
-    def compute_uninitialized(self, metric='pearson_r', comparison='m2m',
-                              running=None, reference_period=None):
+    def compute_uninitialized(self,
+                              metric='pearson_r',
+                              comparison='m2m',
+                              running=None,
+                              reference_period=None):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
@@ -303,14 +311,22 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if nlags is None:
             nlags = self.initialized.lead.size
         return compute_persistence(self.initialized,
-                                      self.control,
-                                      nlags=nlags,
-                                      metric=metric)
+                                   self.control,
+                                   nlags=nlags,
+                                   metric=metric)
 
-    def bootstrap(self, var=None, metric='pearson_r', comparison='m2e', sig=95,
-                  bootstrap=500, compute_uninitialized_skill=True,
-                  compute_persistence_skill=True, pers_sig=None,
-                  compute_ci=True, nlags=None, running=None,
+    def bootstrap(self,
+                  var=None,
+                  metric='pearson_r',
+                  comparison='m2e',
+                  sig=95,
+                  bootstrap=500,
+                  compute_uninitialized_skill=True,
+                  compute_persistence_skill=True,
+                  pers_sig=None,
+                  compute_ci=True,
+                  nlags=None,
+                  running=None,
                   reference_period='MK'):
         """Bootstrap ensemble simulations with replacement.
 
@@ -407,19 +423,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
             else:
                 boot = {}
                 for var in self.control.data_vars:
-                    res = bootstrap_perfect_model(self.initialized[var],
-                                                  self.control[var],
-                                                  metric=metric,
-                                                  comparison=comparison,
-                                                  sig=sig,
-                                                  bootstrap=bootstrap,
-                                                  compute_uninitialized_skill=cus,
-                                                  compute_persistence_skill=cps,
-                                                  pers_sig=pers_sig,
-                                                  compute_ci=compute_ci,
-                                                  nlags=nlags,
-                                                  running=running,
-                                                  reference_period=ref_pd)
+                    res = bootstrap_perfect_model(
+                        self.initialized[var],
+                        self.control[var],
+                        metric=metric,
+                        comparison=comparison,
+                        sig=sig,
+                        bootstrap=bootstrap,
+                        compute_uninitialized_skill=cus,
+                        compute_persistence_skill=cps,
+                        pers_sig=pers_sig,
+                        compute_ci=compute_ci,
+                        nlags=nlags,
+                        running=running,
+                        reference_period=ref_pd)
                     boot[var] = res
                 return boot
 
@@ -435,6 +452,7 @@ class ReferenceEnsemble(PredictionEnsemble):
     This object is built on `xarray` and thus requires the input object to
     be an `xarray` Dataset or DataArray.
     """
+
     def __init__(self, xobj):
         """Create a `ReferenceEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
@@ -526,8 +544,12 @@ class ReferenceEnsemble(PredictionEnsemble):
         _check_reference_vars_match_initialized(self.initialized, xobj)
         self.uninitialized = xobj
 
-    def compute_metric(self, refname=None, metric='pearson_r',
-                       comparison='e2r', nlags=None, return_p=False):
+    def compute_metric(self,
+                       refname=None,
+                       metric='pearson_r',
+                       comparison='e2r',
+                       nlags=None,
+                       return_p=False):
         """Compares the initialized ensemble to a given reference.
 
         This will automatically run the comparison against all shared variables
@@ -554,7 +576,7 @@ class ReferenceEnsemble(PredictionEnsemble):
             name.
         """
         # TODO: Check that p-value return is easy on the user.
-        # Note (RXB): compute_reference currently returns the skill results
+        # Note (RXB): compute_hindcast currently returns the skill results
         # and p-values as two separate dictionaries. Need to think of a better
         # way to handle this.
         if len(self.reference) == 0:
@@ -563,7 +585,7 @@ class ReferenceEnsemble(PredictionEnsemble):
         # Computation for a single reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname)
-            return compute_reference(self.initialized.drop(drop_init),
+            return compute_hindcast(self.initialized.drop(drop_init),
                                      self.reference[refname].drop(drop_ref),
                                      metric=metric,
                                      comparison=comparison,
@@ -573,31 +595,33 @@ class ReferenceEnsemble(PredictionEnsemble):
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
                 drop_init, drop_ref = self._vars_to_drop(refname)
-                return compute_reference(self.initialized.drop(drop_init),
-                                         self.reference[refname]
-                                             .drop(drop_ref),
-                                         metric=metric,
-                                         comparison=comparison,
-                                         nlags=nlags,
-                                         return_p=return_p)
+                return compute_hindcast(
+                    self.initialized.drop(drop_init),
+                    self.reference[refname].drop(drop_ref),
+                    metric=metric,
+                    comparison=comparison,
+                    nlags=nlags,
+                    return_p=return_p)
             # Loop through all references and return results as a dictionary
             # with keys corresponding to reference names.
             else:
                 skill = {}
                 for key in self.reference:
                     drop_init, drop_ref = self._vars_to_drop(key)
-                    skill[key] = compute_reference(self.initialized
-                                                       .drop(drop_init),
-                                                   self.reference[key]
-                                                       .drop(drop_ref),
-                                                   metric=metric,
-                                                   comparison=comparison,
-                                                   nlags=nlags,
-                                                   return_p=return_p)
+                    skill[key] = compute_hindcast(
+                        self.initialized.drop(drop_init),
+                        self.reference[key].drop(drop_ref),
+                        metric=metric,
+                        comparison=comparison,
+                        nlags=nlags,
+                        return_p=return_p)
                 return skill
 
-    def compute_uninitialized(self, refname=None, nlags=None,
-                              metric='pearson_r', comparison='e2r',
+    def compute_uninitialized(self,
+                              refname=None,
+                              nlags=None,
+                              metric='pearson_r',
+                              comparison='e2r',
                               return_p=False):
         """Compares the uninitialized ensemble to a given reference.
 
@@ -632,37 +656,36 @@ class ReferenceEnsemble(PredictionEnsemble):
         # Compute for a single reference.
         if refname is not None:
             drop_un, drop_ref = self._vars_to_drop(refname, init=False)
-            return compute_uninitialized(self.uninitialized.drop(drop_un),
-                                         self.reference[refname]
-                                             .drop(drop_ref),
-                                         metric=metric,
-                                         comparison=comparison,
-                                         return_p=return_p,)
+            return compute_uninitialized(
+                self.uninitialized.drop(drop_un),
+                self.reference[refname].drop(drop_ref),
+                metric=metric,
+                comparison=comparison,
+                return_p=return_p,
+            )
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
-                drop_un, drop_ref = self._vars_to_drop(refname,
-                                                       init=False)
-                return compute_uninitialized(self.uninitialized
-                                                 .drop(drop_un),
-                                             self.reference[refname]
-                                                 .drop(drop_ref),
-                                             metric=metric,
-                                             comparison=comparison,
-                                             return_p=return_p,)
+                drop_un, drop_ref = self._vars_to_drop(refname, init=False)
+                return compute_uninitialized(
+                    self.uninitialized.drop(drop_un),
+                    self.reference[refname].drop(drop_ref),
+                    metric=metric,
+                    comparison=comparison,
+                    return_p=return_p,
+                )
             # Loop through all references and apply comparison.
             else:
                 u = {}
                 for key in self.reference:
-                    drop_un, drop_ref = self._vars_to_drop(key,
-                                                           init=False)
-                    u[key] = compute_uninitialized(self.uninitialized
-                                                       .drop(drop_un),
-                                                   self.reference[key]
-                                                       .drop(drop_ref),
-                                                   metric=metric,
-                                                   comparison=comparison,
-                                                   return_p=return_p,)
+                    drop_un, drop_ref = self._vars_to_drop(key, init=False)
+                    u[key] = compute_uninitialized(
+                        self.uninitialized.drop(drop_un),
+                        self.reference[key].drop(drop_ref),
+                        metric=metric,
+                        comparison=comparison,
+                        return_p=return_p,
+                    )
                 return u
 
     def compute_persistence(self, refname=None, nlags=None,
@@ -714,7 +737,10 @@ class ReferenceEnsemble(PredictionEnsemble):
                                                        metric=metric)
             return persistence
 
-    def compute_horizon(self, refname=None,):
+    def compute_horizon(
+            self,
+            refname=None,
+    ):
         """
         Method to compute the predictability horizon.
         """

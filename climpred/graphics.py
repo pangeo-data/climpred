@@ -102,22 +102,23 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped,
     ci_high = 1 - p / 2  # .975
     pers_sig = sig
 
-    init_skill = bootstrapped.sel(i='init', results='skill')
-    init_ci = bootstrapped.sel(i='init',
+    init_skill = bootstrapped.sel(kind='init', results='skill')
+    init_ci = bootstrapped.sel(kind='init',
                                results=[ci_low, ci_high
                                         ]).rename({'results': 'quantile'})
-    uninit_skill = bootstrapped.sel(i='uninit', results='skill').isel(lead=0)
-    uninit_ci = bootstrapped.sel(i='uninit', results=[ci_low,
-                                                      ci_high]).rename({
-                                                          'results':
-                                                          'quantile'
-                                                      }).isel(lead=0)
-    pers_skill = bootstrapped.sel(i='pers', results='skill')
-    pers_ci = bootstrapped.sel(i='pers',
+    uninit_skill = bootstrapped.sel(kind='uninit',
+                                    results='skill').isel(lead=0)
+    uninit_ci = bootstrapped.sel(kind='uninit',
+                                 results=[ci_low,
+                                          ci_high]).rename({'results':
+                                                            'quantile'
+                                                            }).isel(lead=0)
+    pers_skill = bootstrapped.sel(kind='pers', results='skill')
+    pers_ci = bootstrapped.sel(kind='pers',
                                results=[ci_low, ci_high
                                         ]).rename({'results': 'quantile'})
-    p_uninit_over_init = bootstrapped.sel(i='uninit', results='p')
-    p_pers_over_init = bootstrapped.sel(i='pers', results='p')
+    p_uninit_over_init = bootstrapped.sel(kind='uninit', results='p')
+    p_pers_over_init = bootstrapped.sel(kind='pers', results='p')
 
     fontsize = 8
     c_uninit = 'indianred'

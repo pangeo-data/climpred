@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from climpred.bootstrap import bootstrap_perfect_model
+from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.comparisons import ALL_PM_COMPARISONS_DICT
 from climpred.loadutils import open_dataset
 from climpred.metrics import ALL_PM_METRICS_DICT
@@ -64,9 +64,9 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_ds1d, PM_da_control1d,
                                      comparison=comparison,
                                      sig=50,
                                      bootstrap=2)
-    actual_init_skill = actual.sel(i='init', results='skill').isnull().any()
+    actual_init_skill = actual.sel(kind='init', results='skill').isnull().any()
     assert not actual_init_skill
-    actual_uninit_p = actual.sel(i='uninit', results='p').isnull().any()
+    actual_uninit_p = actual.sel(kind='uninit', results='p').isnull().any()
     assert not actual_uninit_p
 
 
@@ -84,10 +84,10 @@ def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d,
                                      sig=50,
                                      bootstrap=2)
     for var in actual.data_vars:
-        actual_init_skill = actual[var].sel(i='init',
+        actual_init_skill = actual[var].sel(kind='init',
                                             results='skill').isnull().any()
         assert not actual_init_skill
     for var in actual.data_vars:
-        actual_uninit_p = actual[var].sel(i='uninit',
+        actual_uninit_p = actual[var].sel(kind='uninit',
                                           results='p').isnull().any()
         assert not actual_uninit_p

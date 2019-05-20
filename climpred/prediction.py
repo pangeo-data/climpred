@@ -78,7 +78,7 @@ def _validate_hindcast_metric(metric):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-def compute_perfect_model(ds, metric='rmse', comparison='m2e'):
+def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
@@ -111,7 +111,7 @@ def compute_perfect_model(ds, metric='rmse', comparison='m2e'):
     return res
 
 
-def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
+def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations).
@@ -122,7 +122,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
 
     Parameters
     ----------
-    ds (xarray object):
+    hind (xarray object):
         Expected to follow package conventions:
         `time` : dim of initialization dates
         `lead` : dim of lead time from those initializations
@@ -142,18 +142,18 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     Returns:
         skill (xarray object): Predictability with main dimension `lag`.
     """
-    check_xarray(ds)
+    check_xarray(hind)
     check_xarray(reference)
-    nlags = ds.lead.size
+    nlags = hind.lead.size
     comparison = get_comparison_function(comparison)
     _validate_hindcast_comparison(comparison)
     metric = get_metric_function(metric)
     _validate_hindcast_metric(metric)
 
-    forecast, reference = comparison(ds, reference)
+    forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
-    # take only inits for which we have references at all leads
+    # take only inits for which we have references at all leahind
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), reference.time.max() - nlags)
     forecast = forecast.where(forecast.time <= imax, drop=True)
@@ -174,7 +174,7 @@ def compute_reference(ds, reference, metric='pearson_r', comparison='e2r'):
     return skill
 
 
-def compute_persistence(ds, reference, metric='pearson_r'):
+def compute_persistence(hind, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
     (e.g., hindcast/assimilation) or a control run.
@@ -186,7 +186,7 @@ def compute_persistence(ds, reference, metric='pearson_r'):
 
 
     Args:
-        ds (xarray object): The initialized ensemble.
+        hind (xarray object): The initialized ensemble.
         reference (xarray object): The reference time series.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
@@ -200,9 +200,9 @@ def compute_persistence(ds, reference, metric='pearson_r'):
     metric = get_metric_function(metric)
     _validate_hindcast_metric(metric)
 
-    plag = []  # holds results of persistence for each lag
-    for lag in ds.lead.values:
-        inits = ds['init'].values
+    plag = []  # holhind results of persistence for each lag
+    for lag in hind.lead.values:
+        inits = hind['init'].values
         ctrl_inits = reference.isel(time=slice(0, -lag))['time'].values
         inits = _intersection(inits, ctrl_inits)
         ref = reference.sel(time=inits + lag)
@@ -210,12 +210,12 @@ def compute_persistence(ds, reference, metric='pearson_r'):
         ref['time'] = fct['time']
         plag.append(metric(ref, fct, dim='time', comparison=_e2c))
     pers = xr.concat(plag, 'lead')
-    pers['lead'] = ds.lead.values
+    pers['lead'] = hind.lead.values
     return pers
 
 
 # ToDo: do we really need a function here
-# or cannot we somehow use compute_reference for that?
+# or cannot we somehow use compute_hindcast for that?
 def compute_uninitialized(uninit,
                           reference,
                           metric='pearson_r',

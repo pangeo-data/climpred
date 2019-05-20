@@ -1,7 +1,3 @@
-"""Objects dealing with decadal prediction metrics."""
-import warnings
-
-import cftime
 import numpy as np
 import xarray as xr
 

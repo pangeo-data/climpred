@@ -9,7 +9,7 @@ A "Minimal, Complete and Verifiable Example" will make it much easier for mainta
 
 #### Problem description
 
-[this should explain **why** the current behavior is a problem and why the expected output is a better solution.]
+This should explain **why** the current behaviour is a problem and why the expected output is a better solution.
 
 #### Expected Output
 

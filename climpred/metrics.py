@@ -2,66 +2,8 @@ import types
 
 import numpy as np
 
-from xskillscore import mae as _mae
-from xskillscore import mse as _mse
-from xskillscore import pearson_r as _pearson_r
-from xskillscore import rmse as _rmse
-
-from .stats import xr_rm_trend
-
-
-def _control_for_reference_period(control, reference_period='MK',
-                                  obs_years=40):
-    """Modifies control according to knowledge approach.
-
-    Args:
-        reference_period (str):
-            'MK' : maximum knowledge
-            'OP' : operational
-            'OP_full_length' : operational observational record length but keep
-                               full length of record.
-        obs_years (int): length of observational record.
-
-    Returns:
-        Control with modifications applied.
-
-    Reference:
-        * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia,Keith
-          Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-          Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-          Journal of the Royal Meteorological Society 142, no. 695
-          (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-    """
-    if reference_period is 'MK':
-        control = control
-    elif reference_period is 'OP_full_length':
-        control = control - \
-            control.rolling(time=obs_years, min_periods=1,
-                            center=True).mean() + control.mean('time')
-    elif reference_period is 'OP':
-        raise ValueError('not yet implemented')
-    else:
-        raise ValueError("choose a reference period")
-    control = xr_rm_trend(control)
-    return control
-
-
-def _get_variance(control, reference_period=None, time_length=None):
-    """Get variance to normalize skill score.
-
-    Args:
-        control (xarray object): Control simulation.
-        reference_period (str): See _control_for_reference_period.
-        time_length (int): Number of time steps to smooth control by before
-                           taking variance.
-
-    """
-    if reference_period is not None and isinstance(time_length, int):
-        control = _control_for_reference_period(
-            control, reference_period=reference_period, obs_years=time_length)
-        return control.var('time')
-    else:
-        return control.var('time')
+from xskillscore import (crps_ensemble, crps_gaussian, mae, mse, pearson_r,
+                         pearson_r_p_value, rmse)
 
 
 def _get_norm_factor(comparison):
@@ -82,14 +24,13 @@ def _get_norm_factor(comparison):
 
     """
     comparison_name = comparison.__name__
-    if comparison_name in ['_m2e', '_e2c']:
+    if comparison_name in ['_m2e', '_e2c', '_e2r']:
         fac = 1
-        return fac
-    elif comparison_name in ['_m2c', '_m2m']:
+    elif comparison_name in ['_m2c', '_m2m', '_m2r']:
         fac = 2
-        return fac
     else:
         raise ValueError('specify comparison to get normalization factor.')
+    return fac
 
 
 def get_metric_function(metric):
@@ -100,18 +41,7 @@ def get_metric_function(metric):
     Currently compatable with functions:
     * compute_persistence()
     * compute_perfect_model()
-    * compute_reference()
-
-    Currently compatable with metrics:
-    * pearson_r
-    * rmse
-    * mae
-    * mse
-    * nrmse
-    * nmae
-    * nmse
-    * msss
-    * uacc
+    * compute_hindcast()
 
     Args:
         metric (str): name of metric.
@@ -128,49 +58,140 @@ def get_metric_function(metric):
     if isinstance(metric, types.FunctionType):
         return metric
     else:
-        pearson = ['pr', 'pearsonr', 'pearson_r']
-        if metric.lower() in pearson:
-            metric = _pearson_r
-        elif metric.lower() == 'rmse':
-            metric = _rmse
-        elif metric.lower() == 'mae':
-            metric = _mae
-        elif metric.lower() == 'mse':
-            metric = _mse
-        elif metric.lower() == 'nrmse':
-            metric = _nrmse
-        elif metric.lower() in ['nev', 'nmse']:
-            metric = _nmse
-        elif metric.lower() in ['ppp', 'msss']:
-            metric = _ppp
-        elif metric.lower() == 'nmae':
-            metric = _nmae
-        elif metric.lower() == 'uacc':
-            metric = _uacc
+        if metric in ALL_HINDCAST_METRICS_DICT.keys():
+            metric = ALL_HINDCAST_METRICS_DICT[metric]
         else:
-            raise ValueError("""Please supply a metric from the following list:
-                'pearson_r'
-                'rmse'
-                'mae'
-                'mse'
-                'nrmse'
-                'nev'
-                'nmse'
-                'ppp'
-                'msss'
-                'nmae'
-                'uacc'
-                """)
+            raise ValueError(f'Please supply a metric from:',
+                             f'{ALL_HINDCAST_METRICS_DICT.keys()}')
         return metric
 
 
-# TODO: Do we need wrappers or should we rather create wrappers for skill score
-#       as used in a specific paper: def Seferian2018(ds, control):
-#       return PM_compute(ds, control, metric=_ppp, comparison=_m2e)
-def _ppp(ds, control, comparison, running=None, reference_period=None):
+# wrap xskillscore metrics to work with comparison argument
+def _pearson_r(forecast, reference, dim='svd', comparison=None):
+    return pearson_r(forecast, reference, dim=dim)
+
+
+def _pearson_r_p_value(forecast, reference, dim='svd', comparison=None):
+    return pearson_r_p_value(forecast, reference, dim=dim)
+
+
+def _mse(forecast, reference, dim='svd', comparison=None):
+    return mse(forecast, reference, dim=dim)
+
+
+def _rmse(forecast, reference, dim='svd', comparison=None):
+    return rmse(forecast, reference, dim=dim)
+
+
+def _mae(forecast, reference, dim='svd', comparison=None):
+    return mae(forecast, reference, dim=dim)
+
+
+def _crps(forecast, reference, dim='svd', comparison=None):
+    return crps_ensemble(forecast, reference).mean(dim)
+
+
+def _crps_gaussian(forecast, mu, sig, dim='svd', comparison=None):
+    return crps_gaussian(forecast, mu, sig).mean(dim)
+
+
+def _crpss(forecast, reference, dim='svd', comparison=None):
+    """
+    Continuous Ranked Probability Skill Score.
+    Reference
+    ---------
+    * Matheson, James E., and Robert L. Winkler. “Scoring Rules for Continuous
+      Probability Distributions.” Management Science 22, no. 10 (June 1, 1976):
+      1087–96. https://doi.org/10/cwwt4g.
+    Range
+    -----
+    perfect: 0
+    max: 0
+    else: negative
+    """
+    mu = reference.mean(dim)
+    sig = reference.std(dim)
+    ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim)
+    forecast_skill = _crps(forecast, reference, dim=dim)
+    skill_score = (ref_skill - forecast_skill) / ref_skill
+    return skill_score
+
+
+def _less(forecast, reference, dim='svd', comparison=None):
+    """
+    Logarithmic Ensemble Spread Score.
+
+    Formula
+    -------
+    .. math:: LESS = ln(\frac{\sigma^2_F}{\sigma^2_R})
+
+    Reference
+    ---------
+    * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
+      Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation of
+      Forecasts by Accuracy and Spread in the MiKlip Decadal Climate Prediction
+      System.” Meteorologische Zeitschrift, December 21, 2016, 631–43.
+      https://doi.org/10/f9jrhw.
+
+    Range
+    -----
+    pos: under-disperive
+    neg: over-disperive
+    perfect: 0
+    """
+    if comparison.__name__ is not '_m2r':
+        raise ValueError("LESS requires member dimension and therefore"
+                         "compute_reference(comparison='m2r')")
+    numerator = _mse(forecast, reference, dim='member').mean(dim)
+    # not corrected for conditional bias yet
+    denominator = _mse(forecast.mean('member'),
+                       reference.mean('member'),
+                       dim=dim)
+    less = np.log(numerator / denominator)
+    return less
+
+
+def _bias(forecast, reference, dim='svd', comparison=None):
+    """(unconditional) bias: https://www.cawcr.gov.au/projects/verification/"""
+    bias = (forecast - reference).mean(dim)
+    return bias
+
+
+def _msss_murphy(forecast, reference, dim='svd', comparison=None):
+    """msss_murphy: https://www-miklip.dkrz.de/about/murcss/"""
+    acc = _pearson_r(forecast, reference, dim=dim)
+    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
+    bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
+    skill = acc**2 - conditional_bias**2 - bias**2
+    return skill
+
+
+def _conditional_bias(forecast, reference, dim='svd', comparison=None):
+    """conditional_bias: https://www-miklip.dkrz.de/about/murcss/"""
+    acc = _pearson_r(forecast, reference, dim=dim)
+    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
+    return conditional_bias
+
+
+def _std_ratio(forecast, reference, dim='svd', comparison=None):
+    """std ratio: https://www-miklip.dkrz.de/about/murcss/"""
+    ratio = forecast.std(dim) / reference.std(dim)
+    return ratio
+
+
+def _bias_slope(forecast, reference, dim='svd', comparison=None):
+    """bias slope: https://www-miklip.dkrz.de/about/murcss/"""
+    std_ratio = _std_ratio(forecast, reference, dim=dim)
+    acc = _pearson_r(forecast, reference, dim=dim)
+    b_s = std_ratio * acc
+    return b_s
+
+
+def _ppp(forecast, reference, dim='svd', comparison=None):
     """Prognostic Potential Predictability (PPP) metric.
 
     .. math:: PPP = 1 - \frac{MSE}{ \sigma_{control} \cdot fac}
+
     Perfect forecast: 1
     Climatology forecast: 0
 
@@ -198,17 +219,14 @@ def _ppp(ds, control, comparison, running=None, reference_period=None):
         ppp_skill (xarray object): skill of PPP.
 
     """
-    supervector_dim = 'svd'
-    forecast, reference = comparison(ds, supervector_dim)
-    mse_skill = _mse(forecast, reference, dim=supervector_dim)
-    var = _get_variance(
-        control, time_length=running, reference_period=reference_period)
+    mse_skill = _mse(forecast, reference, dim=dim)
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
 
 
-def _nrmse(ds, control, comparison, running=None, reference_period=None):
+def _nrmse(forecast, reference, dim='svd', comparison=None):
     """Normalized Root Mean Square Error (NRMSE) metric.
 
     .. math:: NRMSE = \frac{RMSE}{\sigma_{control} \cdot \sqrt{fac}
@@ -240,17 +258,14 @@ def _nrmse(ds, control, comparison, running=None, reference_period=None):
         nrmse_skill (xarray object): skill of NRMSE.
 
     """
-    supervector_dim = 'svd'
-    forecast, reference = comparison(ds, supervector_dim)
-    rmse_skill = _rmse(forecast, reference, dim=supervector_dim)
-    var = _get_variance(
-        control, time_length=running, reference_period=reference_period)
+    rmse_skill = _rmse(forecast, reference, dim=dim)
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
-    nrmse_skill = 1 - rmse_skill / np.sqrt(var) / np.sqrt(fac)
+    nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
 
 
-def _nmse(ds, control, comparison, running=None, reference_period=None):
+def _nmse(forecast, reference, dim='svd', comparison=None):
     """
     Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV) metric.
 
@@ -275,23 +290,23 @@ def _nmse(ds, control, comparison, running=None, reference_period=None):
     Returns:
         nmse_skill (xarray object): skill of NMSE.
     """
-    supervector_dim = 'svd'
-    forecast, reference = comparison(ds, supervector_dim)
-    mse_skill = _mse(forecast, reference, dim=supervector_dim)
-    var = _get_variance(
-        control, time_length=running, reference_period=reference_period)
+    mse_skill = _mse(forecast, reference, dim=dim)
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
-    nmse_skill = 1 - mse_skill / var / fac
+    nmse_skill = mse_skill / var / fac
     return nmse_skill
 
 
-def _nmae(ds, control, comparison, running=None, reference_period=None):
+def _nmae(forecast, reference, dim='svd', comparison=None):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
     Formula
     -------
-    NMAE-SS = 1 - mse / var
+    NMAE-SS = mse / var
+
+    Perfect forecast: 0
+    Climatology forecast: 1
 
     Reference
     ---------
@@ -299,19 +314,15 @@ def _nmae(ds, control, comparison, running=None, reference_period=None):
       Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
       (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
 
-      NOTE: NMSE = - 1 - NEV
     """
-    supervector_dim = 'svd'
-    fct, truth = comparison(ds, supervector_dim)
-    mse_skill = _mse(fct, truth, dim=supervector_dim)
-    var = _get_variance(
-        control, time_length=running, reference_period=reference_period)
+    mse_skill = _mse(forecast, reference, dim=dim)
+    var = reference.std(dim)
     fac = _get_norm_factor(comparison)
-    nmse_skill = 1 - mse_skill / var / fac
+    nmse_skill = mse_skill / var / fac
     return nmse_skill
 
 
-def _uacc(forecast, reference, control, running=None, reference_period=None):
+def _uacc(forecast, reference, dim='svd', comparison=None):
     """
     Unbiased ACC (uACC) metric.
 
@@ -334,5 +345,41 @@ def _uacc(forecast, reference, control, running=None, reference_period=None):
     Returns:
         uacc_skill (xarray object): skill of uACC
     """
-    return np.sqrt(
-        _ppp(forecast, reference, control, running, reference_period))
+    return _ppp(forecast, reference, dim=dim, comparison=comparison)**.5
+
+
+ALL_HINDCAST_METRICS_DICT = {
+    'pearson_r': _pearson_r,
+    'pr': _pearson_r,
+    'acc': _pearson_r,
+    'pearson_r_p_value': _pearson_r_p_value,
+    'rmse': _rmse,
+    'mse': _mse,
+    'mae': _mae,
+    'msss_murphy': _msss_murphy,
+    'conditional_bias': _conditional_bias,
+    'c_b': _conditional_bias,
+    'unconditional_bias': _bias,
+    'u_b': _bias,
+    'bias': _bias,
+    'std_ratio': _std_ratio,
+    'bias_slope': _bias_slope,
+    'crps': _crps,
+    'crpss': _crpss,
+    'less': _less,
+    'nmae': _nmae,
+    'nrmse': _nrmse,
+    'nmse': _nmse,
+    'nev': _nmse,
+    'ppp': _ppp,
+    'msss': _ppp,
+    'uacc': _uacc
+}
+
+ALL_PM_METRICS_DICT = ALL_HINDCAST_METRICS_DICT.copy()
+del ALL_PM_METRICS_DICT['less']
+
+# more positive skill is better than more negative
+POSITIVELY_ORIENTED_METRICS = [
+    'pearson_r', 'msss_murphy', 'ppp', 'msss', 'crpss', 'uacc', 'msss'
+]

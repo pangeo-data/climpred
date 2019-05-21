@@ -35,7 +35,7 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     # https://stackoverflow.com/questions/
     # 7160162/left-matrix-division-and-numpy-solve
     # (A.T\B)*A
-    x, resid, rank, s = np.linalg.lstsq(
+    x, _, _, _ = np.linalg.lstsq(
         sigma_b, mu_x - mu_b)  # sigma_b \ (mu_x - mu_b)
     signal = fac * np.matmul((mu_x.values - mu_b.values), x)
     R = dispersion + signal

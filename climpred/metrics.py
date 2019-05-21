@@ -1,4 +1,5 @@
 import types
+
 import numpy as np
 
 from xskillscore import (crps_ensemble, crps_gaussian, mae, mse, pearson_r,
@@ -40,18 +41,7 @@ def get_metric_function(metric):
     Currently compatable with functions:
     * compute_persistence()
     * compute_perfect_model()
-    * compute_reference()
-
-    Currently compatable with metrics:
-    * pearson_r
-    * rmse
-    * mae
-    * mse
-    * nrmse
-    * nmae
-    * nmse
-    * msss
-    * uacc
+    * compute_hindcast()
 
     Args:
         metric (str): name of metric.
@@ -68,66 +58,11 @@ def get_metric_function(metric):
     if isinstance(metric, types.FunctionType):
         return metric
     else:
-        pearson = ['pr', 'pearsonr', 'pearson_r']
-        if metric.lower() in pearson:
-            metric = _pearson_r
-        elif metric.lower() == 'pearson_r_p_value':
-            metric = _pearson_r_p_value
-        elif metric.lower() == 'rmse':
-            metric = _rmse
-        elif metric.lower() == 'mae':
-            metric = _mae
-        elif metric.lower() == 'mse':
-            metric = _mse
-        elif metric.lower() == 'nrmse':
-            metric = _nrmse
-        elif metric.lower() in ['nev', 'nmse']:
-            metric = _nmse
-        elif metric.lower() in ['ppp', 'msss']:
-            metric = _ppp
-        elif metric.lower() == 'nmae':
-            metric = _nmae
-        elif metric.lower() == 'uacc':
-            metric = _uacc
-        elif metric.lower() == 'msss_murphy':
-            metric = _msss_murphy
-        elif metric.lower() in ['c_b', 'conditional_bias']:
-            metric = _conditional_bias
-        elif metric.lower() in ['u_b', 'unconditional_bias', 'bias']:
-            metric = _bias
-        elif metric.lower() == 'std_ratio':
-            metric = _std_ratio
-        elif metric.lower() == 'bias_slope':
-            metric = _bias_slope
-        elif metric.lower() == 'less':
-            metric = _less
-        elif metric.lower() == 'crps':
-            metric = _crps
-        elif metric.lower() == 'crpss':
-            metric = _crpss
+        if metric in ALL_HINDCAST_METRICS_DICT.keys():
+            metric = ALL_HINDCAST_METRICS_DICT[metric]
         else:
-            raise ValueError("""Please supply a metric from the following list:
-                'pearson_r'
-                'pearson_r_p_value'
-                'rmse'
-                'mae'
-                'mse'
-                'nrmse'
-                'nev'
-                'nmse'
-                'ppp'
-                'msss'
-                'nmae'
-                'uacc'
-                'msss_murphy'
-                'bias'
-                'bias_slope'
-                'conditional_bias'
-                'std_ratio'
-                'crps'
-                'crpss'
-                'less'
-                """)
+            raise ValueError(f'Please supply a metric from:',
+                             f'{ALL_HINDCAST_METRICS_DICT.keys()}')
         return metric
 
 
@@ -208,6 +143,7 @@ def _less(forecast, reference, dim='svd', comparison=None):
         raise ValueError("LESS requires member dimension and therefore"
                          "compute_reference(comparison='m2r')")
     numerator = _mse(forecast, reference, dim='member').mean(dim)
+    # not corrected for conditional bias yet
     denominator = _mse(forecast.mean('member'),
                        reference.mean('member'),
                        dim=dim)
@@ -414,12 +350,17 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
 
 ALL_HINDCAST_METRICS_DICT = {
     'pearson_r': _pearson_r,
+    'pr': _pearson_r,
+    'acc': _pearson_r,
     'pearson_r_p_value': _pearson_r_p_value,
     'rmse': _rmse,
     'mse': _mse,
     'mae': _mae,
     'msss_murphy': _msss_murphy,
     'conditional_bias': _conditional_bias,
+    'c_b': _conditional_bias,
+    'unconditional_bias': _bias,
+    'u_b': _bias,
     'bias': _bias,
     'std_ratio': _std_ratio,
     'bias_slope': _bias_slope,
@@ -429,7 +370,9 @@ ALL_HINDCAST_METRICS_DICT = {
     'nmae': _nmae,
     'nrmse': _nrmse,
     'nmse': _nmse,
+    'nev': _nmse,
     'ppp': _ppp,
+    'msss': _ppp,
     'uacc': _uacc
 }
 
@@ -438,5 +381,5 @@ del ALL_PM_METRICS_DICT['less']
 
 # more positive skill is better than more negative
 POSITIVELY_ORIENTED_METRICS = [
-    'pearson_r', 'msss_murphy', 'ppp', 'msss', 'crpss', 'uacc'
+    'pearson_r', 'msss_murphy', 'ppp', 'msss', 'crpss', 'uacc', 'msss'
 ]

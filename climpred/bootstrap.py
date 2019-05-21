@@ -21,7 +21,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    ## TODO: get rif od try, except logic
+    ## TODO: get rid of try, except logic
     try:  # incase of lazy results compute
         if len(ds.chunks) >= 1:
             ds = ds.compute()
@@ -32,8 +32,8 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
 
 
 def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
-    """Get probability that skill of simple_fct is larger than
-    init skill.
+    """Get probability that skill of a simple forecast (e.g., persistence or
+    uninitlaized skill) is larger than initialized skill.
 
     Needed for bootstrapping confidence intervals and p_values of a metric in
     the hindcast framework. Checks whether a simple forecast like persistence
@@ -71,12 +71,13 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
     # find range for bootstrapping
-    if 'member' not in hist.coords:
-        raise ValueError('Please supply hist with member dim.')
+    if 'member' not in hist.dims:
+        raise ValueError(
+            'Please supply a historical ensemble with a member dimension.')
 
-    first_init = max(hist.time.min().values, hind.init.min().values)
-    last_init = min(hist.time.max().values - hind.lead.size,
-                    hind.init.max().values)
+    first_init = max(hist.time.min().values, hind['init'].min().values)
+    last_init = min(hist.time.max().values - hind['lead'].size,
+                    hind['init'].max().values)
     hind = hind.sel(init=slice(first_init, last_init))
 
     uninit_hind = []
@@ -85,15 +86,15 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         # take random uninitialized members from hist at init forcing
         # (Goddard allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
-            time=slice(init + 1, init + hind.lead.size)).sel(
-                member=random_members).rename({'time': 'lead'})
+            time=slice(init + 1, init + hind['lead'].size),
+            member=random_members).rename({'time': 'lead'})
         uninit_at_one_init_year['lead'] = np.arange(
-            1, 1 + uninit_at_one_init_year.lead.size)
+            1, 1 + uninit_at_one_init_year['lead'].size)
         uninit_at_one_init_year['member'] = np.arange(1,
                                                       1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
-    uninit_hind['init'] = hind.init.values
+    uninit_hind['init'] = hind['init'].values
     return uninit_hind
 
 
@@ -128,10 +129,10 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            [isel_years(control, start, length) for start in startlist],
+            (isel_years(control, start, length) for start in startlist),
             'member')
 
-    return xr.concat([create_pseudo_members(control) for _ in range(nens)],
+    return xr.concat((create_pseudo_members(control) for _ in range(nens)),
                      'init')
 
 

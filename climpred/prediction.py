@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from .comparisons import (ALL_HINDCAST_COMPARISONS_DICT,
-                          ALL_PM_COMPARISONS_DICT, _drop_members, _e2c,
+                          ALL_PM_COMPARISONS_DICT,  _e2c,
                           get_comparison_function)
 from .metrics import (ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT,
                       get_metric_function)
@@ -74,6 +74,7 @@ def _validate_hindcast_metric(metric):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
+check_xarray([0, 1])
 def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework

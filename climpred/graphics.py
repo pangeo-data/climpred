@@ -108,11 +108,11 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped,
                                         ]).rename({'results': 'quantile'})
     uninit_skill = bootstrapped.sel(kind='uninit',
                                     results='skill').isel(lead=0)
-    uninit_ci = bootstrapped.sel(kind='uninit',
-                                 results=[ci_low,
-                                          ci_high]).rename({'results':
-                                                            'quantile'
-                                                            }).isel(lead=0)
+    uninit_ci = bootstrapped.sel(kind='uninit', results=[ci_low,
+                                                         ci_high]).rename({
+                                                             'results':
+                                                             'quantile'
+                                                         }).isel(lead=0)
     pers_skill = bootstrapped.sel(kind='pers', results='skill')
     pers_ci = bootstrapped.sel(kind='pers',
                                results=[ci_low, ci_high
@@ -140,9 +140,10 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped,
                 fmt='--o',
                 capsize=capsize,
                 c=c_uninit,
-                label=(' ').join(['initialized with',
-                                  str(sig) + '%',
-                                  'confidence interval']))
+                label=(' ').join([
+                    'initialized with',
+                    str(sig) + '%', 'confidence interval'
+                ]))
     # uninit
     if p_uninit_over_init is not None:
         # add p-values
@@ -161,9 +162,10 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped,
                     fmt='--o',
                     capsize=capsize,
                     c=c_init,
-                    label=(' ').join(['uninitialized with',
-                                      str(sig) + '%',
-                                      'confidence interval']))
+                    label=(' ').join([
+                        'uninitialized with',
+                        str(sig) + '%', 'confidence interval'
+                    ]))
         ax.axhline(y=uninit_skill, c='steelblue', ls=':')
     # persistence
     if plot_persistence:
@@ -177,9 +179,10 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped,
                         fmt='--o',
                         capsize=capsize,
                         c=c_pers,
-                        label=(' ').join(['persistence with',
-                                          str(pers_sig) + '%',
-                                          'confidence interval']))
+                        label=(' ').join([
+                            'persistence with',
+                            str(pers_sig) + '%', 'confidence interval'
+                        ]))
         for t in pers_skill.lead.values:
             ax.text(pers_skill.lead.sel(lead=t),
                     pers_ci.isel(quantile=0).sel(lead=t).values,

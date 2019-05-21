@@ -12,7 +12,7 @@ from .utils import check_xarray
 
 # -------------------------------------------- #
 # HELPER FUNCTIONS
-# Should only be used internally by esmtools
+# Should only be used internally by climpred
 # -------------------------------------------- #
 def _shift(a, b, lag, dim='time'):
     """
@@ -107,6 +107,7 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     return res
 
 
+check_xarray([0, 1])
 def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score against some reference (hindcast,
@@ -138,8 +139,6 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     Returns:
         skill (xarray object): Predictability with main dimension `lag`.
     """
-    check_xarray(hind)
-    check_xarray(reference)
     nlags = hind.lead.size
 
     comparison = get_comparison_function(comparison)

@@ -646,10 +646,7 @@ class HindcastEnsemble(PredictionEnsemble):
                                                        metric=metric)
             return persistence
 
-    def compute_horizon(
-            self,
-            refname=None,
-    ):
+    def compute_horizon(self, refname=None):
         """
         Method to compute the predictability horizon.
         """

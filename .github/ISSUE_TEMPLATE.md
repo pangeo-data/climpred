@@ -1,3 +1,5 @@
+You are encouraged to add information about all relevant sections, but not required to submit an issue.
+
 #### Code Sample, a copy-pastable example if possible
 
 A "Minimal, Complete and Verifiable Example" will make it much easier for maintainers to help you:

@@ -1,7 +1,7 @@
 import hashlib
 import os as _os
 from urllib.request import urlretrieve as _urlretrieve
-
+import urllib
 from xarray.backends.api import open_dataset as _open_dataset
 
 _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
@@ -62,9 +62,25 @@ def _get_datasets():
         print(f"'{key}': {FILE_DESCRIPTIONS[key]}")
 
 
+def _initialize_proxy(proxy_dict):
+    """Opens a proxy for firewalled servers so that the downloads can go
+    through.
+
+    Args:
+        proxy_dict (dictionary): Keys are either 'http' or 'https' and
+            values are the proxy server.
+
+    Ref: https://stackoverflow.com/questions/22967084/
+         urllib-request-urlretrieve-with-proxy
+    """
+    proxy = urllib.request.ProxyHandler(proxy_dict)
+    opener = urllib.request.build_opener(proxy)
+    urllib.request.install_opener(opener)
+
+
 def open_dataset(name=None, cache=True, cache_dir=_default_cache_dir,
                  github_url='https://github.com/bradyrx/climpred-data',
-                 branch='master', extension=None, **kws):
+                 branch='master', extension=None, proxy_dict=None, **kws):
     """Load example data or a mask from an online repository.
 
     This is a function from `xarray.tutorial` to load an online dataset
@@ -88,13 +104,25 @@ def open_dataset(name=None, cache=True, cache_dir=_default_cache_dir,
         branch: (str, optional) The git branch to download from.
         extension: (str, optional) Subfolder within the repository where the
                    data is stored.
+        proxy_dict: (dict, optional) Dictionary with keys as either 'http' or
+                    'https' and values as the proxy server. This is useful
+                    if you are on a work computer behind a firewall and need
+                    to use a proxy out to download data.
         kws: (dict, optional) Keywords passed to xarray.open_dataset
 
     Returns:
         The desired xarray dataset.
+
+    Examples:
+        >>> from climpred import open_dataset()
+        >>> proxy_dict = {'http': '127.0.0.1'}
+        >>> ds = open_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
     """
     if name is None:
         return _get_datasets()
+
+    if proxy_dict is not None:
+        _initialize_proxy(proxy_dict)
 
     # https://stackoverflow.com/questions/541390/extracting-extension-from-
     # filename-in-python

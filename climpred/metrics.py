@@ -20,7 +20,7 @@ def _get_norm_factor(comparison):
         fac (int): normalization factor.
 
     Raises:
-        ValueError: if comparison is not matching.
+        KeyError: if comparison is not matching.
 
     """
     comparison_name = comparison.__name__
@@ -29,7 +29,7 @@ def _get_norm_factor(comparison):
     elif comparison_name in ['_m2c', '_m2m', '_m2r']:
         fac = 2
     else:
-        raise ValueError('specify comparison to get normalization factor.')
+        raise KeyError('specify comparison to get normalization factor.')
     return fac
 
 
@@ -50,8 +50,7 @@ def get_metric_function(metric):
         metric (function): function object of the metric.
 
     Raises:
-        ValueError: if metric not implemented.
-
+        KeyError: if metric not implemented.
     """
     # catches issues with wrappers, etc. that actually submit the
     # proper underscore function
@@ -61,8 +60,8 @@ def get_metric_function(metric):
         if metric in ALL_HINDCAST_METRICS_DICT.keys():
             metric = ALL_HINDCAST_METRICS_DICT[metric]
         else:
-            raise ValueError(f'Please supply a metric from:',
-                             f'{ALL_HINDCAST_METRICS_DICT.keys()}')
+            raise KeyError(f'Please supply a metric from:',
+                           f'{ALL_HINDCAST_METRICS_DICT.keys()}')
         return metric
 
 
@@ -140,8 +139,8 @@ def _less(forecast, reference, dim='svd', comparison=None):
     perfect: 0
     """
     if comparison.__name__ is not '_m2r':
-        raise ValueError("LESS requires member dimension and therefore"
-                         "compute_reference(comparison='m2r')")
+        raise KeyError("LESS requires member dimension and therefore"
+                       "compute_hindcast(comparison='m2r')")
     numerator = _mse(forecast, reference, dim='member').mean(dim)
     # not corrected for conditional bias yet
     denominator = _mse(forecast.mean('member'),

@@ -15,3 +15,10 @@ class CoordinateError(Error):
     appropriate coordinates."""
     def __init__(self, message):
         self.message = message
+
+
+class VariableError(Error):
+    """Exception raised when the input xarray object doesn't have the
+    appropriate variables."""
+    def __init__(self, message):
+        self.message = message

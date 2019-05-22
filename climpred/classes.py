@@ -5,6 +5,7 @@ from .bootstrap import (bootstrap_perfect_model,
 from .prediction import (compute_hindcast, compute_perfect_model,
                          compute_persistence, compute_uninitialized)
 from .utils import check_xarray
+from .exceptions import (DimensionError, DatasetError, VariableError)
 
 # Both:
 # TODO: add horizon functionality.
@@ -39,7 +40,7 @@ def _check_prediction_ensemble_dimensions(xobj):
     cond = all(dims in xobj.dims for dims in ['init', 'lead'])
     if not cond:
         # create custom error here.
-        raise ValueError("""Your decadal prediction object must contain the
+        raise DimensionError("""Your decadal prediction object must contain the
             dimensions `lead` and `init` at the minimum.""")
 
 
@@ -55,7 +56,7 @@ def _check_reference_dimensions(init, ref):
     if 'member' in init_dims:
         init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
-        raise ValueError("""Dimensions must match initialized
+        raise DimensionError("""Dimensions must match initialized
             prediction ensemble dimensions (excluding `lead` and `member`.)""")
 
 
@@ -72,7 +73,7 @@ def _check_reference_vars_match_initialized(init, ref):
     # https://stackoverflow.com/questions/10668282/
     # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
     if set(init_list).isdisjoint(ref_list):
-        raise ValueError("""Please provide a Dataset/DataArray with at least
+        raise VariableError("""Please provide a Dataset/DataArray with at least
         one matching variable to the initialized prediction ensemble.""")
 
 
@@ -225,7 +226,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
 
         if len(self.control) == 0:
-            raise ValueError("""You need to add a control dataset before
+            raise DatasetError("""You need to add a control dataset before
             attempting to compute predictability.""")
         else:
             return compute_perfect_model(self.initialized,
@@ -250,8 +251,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Result of the comparison as a Dataset.
         """
         if len(self.uninitialized) == 0:
-            raise ValueError("""Uninitialized ensemble not generated. Please
-                             run `pm.generate_ensemble()` first.""")
+            raise DatasetError("""Uninitialized ensemble not generated. Please
+                               run `pm.generate_ensemble()` first.""")
         else:
             return compute_perfect_model(self.uninitialized,
                                          self.control,
@@ -280,7 +281,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
 
         if len(self.control) == 0:
-            raise ValueError("""You need to add a control dataset before
+            raise DatasetError("""You need to add a control dataset before
             attempting to compute a persistence forecast.""")
         if nlags is None:
             nlags = self.initialized.lead.size
@@ -337,7 +338,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         # shorthand to adhere to PEP8 column limit.
         if len(self.control) == 0:
-            raise ValueError("""You need to add a control dataset before
+            raise DatasetError("""You need to add a control dataset before
             attempting to bootstrap.""")
         # compute for single variable.
         if var is not None:
@@ -507,15 +508,15 @@ class HindcastEnsemble(PredictionEnsemble):
         # and p-values as two separate dictionaries. Need to think of a better
         # way to handle this.
         if len(self.reference) == 0:
-            raise ValueError("""You need to add a reference dataset before
+            raise DatasetError("""You need to add a reference dataset before
                 attempting to compute predictability.""")
         # Computation for a single reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname)
             return compute_hindcast(self.initialized.drop(drop_init),
-                                     self.reference[refname].drop(drop_ref),
-                                     metric=metric,
-                                     comparison=comparison)
+                                    self.reference[refname].drop(drop_ref),
+                                    metric=metric,
+                                    comparison=comparison)
         else:
             if len(self.reference) == 1:
                 refname = list(self.reference.keys())[0]
@@ -565,7 +566,7 @@ class HindcastEnsemble(PredictionEnsemble):
         # TODO: Check that p-value return is easy on the user. (see note on
         # compute_metric)
         if len(self.uninitialized) == 0:
-            raise ValueError("""You need to add an uninitialized ensemble
+            raise DatasetError("""You need to add an uninitialized ensemble
                 before attempting to compute its skill.""")
         # Compute for a single reference.
         if refname is not None:
@@ -627,7 +628,7 @@ class HindcastEnsemble(PredictionEnsemble):
               prediction. Oxford University Press, 2007.
         """
         if len(self.reference) == 0:
-            raise ValueError("""You need to add a reference dataset before
+            raise DatasetError("""You need to add a reference dataset before
             attempting to compute persistence forecasts.""")
         # Default to the length of the initialized forecast.
         if nlags is None:

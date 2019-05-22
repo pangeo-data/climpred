@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 
 from .utils import get_dims
+from .exceptions import DimensionError
 
 
 def _drop_members(ds, rmd_member=None):
@@ -16,7 +17,7 @@ def _drop_members(ds, rmd_member=None):
         ds (xarray object): xr.Dataset/xr.DataArray with less members.
 
     Raises:
-        ValueError: if list items are not all in ds.member
+        DimensionError: if list items are not all in ds.member
 
     """
     if rmd_member is None:
@@ -26,7 +27,7 @@ def _drop_members(ds, rmd_member=None):
         for ens in rmd_member:
             member_list.remove(ens)
     else:
-        raise ValueError('select available members only', rmd_member)
+        raise DimensionError('select available members only', rmd_member)
     return ds.sel(member=member_list)
 
 
@@ -85,7 +86,7 @@ def get_comparison_function(comparison):
     elif comparison == 'm2r':
         comparison = _m2r
     else:
-        raise ValueError("""Please supply a comparison from the following list:
+        raise KeyError("""Please supply a comparison from the following list:
             'm2m'
             'm2c'
             'm2e'
@@ -270,9 +271,8 @@ def _m2r(ds, reference):
     """
     # check that this contains more than one member
     if ('member' not in get_dims(ds)) or (ds.member.size == 1):
-        raise ValueError("""Please supply a decadal prediction ensemble with
-            more than one member. You might have input the ensemble mean here
-            although asking for a member-to-reference comparison.""")
+        raise DimensionError("""Please supply a decadal prediction ensemble with
+            more than one member.""")
     else:
         forecast = ds
     reference = reference.expand_dims('member')

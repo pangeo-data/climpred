@@ -253,14 +253,14 @@ def compute_uninitialized(uninit,
 # --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
-def xr_predictability_horizon(skill,
-                              threshold,
-                              limit='upper',
-                              perfect_model=False,
-                              p_values=None,
-                              N=None,
-                              alpha=0.05,
-                              ci=90):
+def predictability_horizon(skill,
+                           threshold,
+                           limit='upper',
+                           perfect_model=False,
+                           p_values=None,
+                           N=None,
+                           alpha=0.05,
+                           ci=90):
     """
     Get predictability horizons for skill better than threshold.
 

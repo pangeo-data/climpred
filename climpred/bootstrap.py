@@ -4,7 +4,7 @@ import xarray as xr
 from .metrics import POSITIVELY_ORIENTED_METRICS
 from .prediction import (compute_hindcast, compute_perfect_model,
                          compute_persistence)
-from .stats import DPP, xr_varweighted_mean_period
+from .stats import DPP, varweighted_mean_period
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
@@ -21,7 +21,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    ## TODO: get rid of try, except logic
+    # TODO: get rid of try, except logic
     try:  # incase of lazy results compute
         if len(ds.chunks) >= 1:
             ds = ds.compute()
@@ -158,10 +158,10 @@ def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
     return threshold
 
 
-def xr_varweighted_mean_period_threshold(control,
-                                         sig=95,
-                                         bootstrap=500,
-                                         **vwmp_kwargs):
+def varweighted_mean_period_threshold(control,
+                                      sig=95,
+                                      bootstrap=500,
+                                      **vwmp_kwargs):
     """Calc vwmp from re-sampled dataset.
 
     """
@@ -172,7 +172,7 @@ def xr_varweighted_mean_period_threshold(control,
         smp_control = control.sel(time=smp_time)
         smp_control['time'] = time
         bootstraped_results.append(
-            xr_varweighted_mean_period(smp_control, **vwmp_kwargs))
+            varweighted_mean_period(smp_control, **vwmp_kwargs))
     threshold = xr.concat(bootstraped_results,
                           'bootstrap').quantile(sig / 100, 'bootstrap')
     return threshold

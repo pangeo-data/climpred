@@ -14,7 +14,7 @@ from .utils import (get_dims, check_xarray)
 # TIME SERIES
 # Functions related to time series.
 # ----------------------------------#
-@check_xarray(0, 1)
+@check_xarray([0, 1])
 def xr_corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 

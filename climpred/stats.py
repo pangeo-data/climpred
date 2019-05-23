@@ -15,7 +15,7 @@ from .utils import (get_dims, check_xarray)
 # Functions related to time series.
 # ----------------------------------#
 @check_xarray([0, 1])
-def xr_corr(x, y, dim='time', lag=0, return_p=False):
+def corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 
     This version calculates the effective degrees of freedom, accounting
@@ -58,7 +58,7 @@ def xr_corr(x, y, dim='time', lag=0, return_p=False):
     else:
         r = pearson_r(x, y, dim)
     if return_p:
-        p = _xr_eff_p_value(x, y, r, dim)
+        p = _eff_p_value(x, y, r, dim)
         # return with proper dimension labeling. would be easier with
         # apply_ufunc, but having trouble getting it to work here. issue
         # probably has to do with core dims.
@@ -70,7 +70,7 @@ def xr_corr(x, y, dim='time', lag=0, return_p=False):
         return r
 
 
-def _xr_eff_p_value(x, y, r, dim):
+def _eff_p_value(x, y, r, dim):
     """Computes p values accounting for autocorrelation in time series.
 
     Args:
@@ -94,7 +94,7 @@ def _xr_eff_p_value(x, y, r, dim):
         """
         shifted = v.isel({dim: slice(1, n)})
         normal = v.isel({dim: slice(0, n-1)})
-        # see explanation in xr_autocorr for this
+        # see explanation in autocorr for this
         if dim not in list(v.coords):
             normal[dim] = np.arange(1, n)
         shifted[dim] = normal[dim]
@@ -117,7 +117,7 @@ def _xr_eff_p_value(x, y, r, dim):
 
 
 @check_xarray(0)
-def xr_rm_poly(ds, order, dim='time'):
+def rm_poly(ds, order, dim='time'):
     """Returns xarray object with nth-order fit removed.
 
     Args:
@@ -211,14 +211,14 @@ def xr_rm_poly(ds, order, dim='time'):
         return da
 
 
-def xr_rm_trend(da, dim='time'):
-    """Calls ``xr_rm_poly`` with an order 1 argument."""
-    return xr_rm_poly(da, 1, dim=dim)
+def rm_trend(da, dim='time'):
+    """Calls ``rm_poly`` with an order 1 argument."""
+    return rm_poly(da, 1, dim=dim)
 
 
 # # TODO: coords lon, lat get lost for curvilinear ds
 @check_xarray(0)
-def xr_varweighted_mean_period(ds, time_dim='time'):
+def varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
     ..math:
@@ -250,7 +250,7 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
 
 
 @check_xarray(0)
-def xr_autocorr(ds, lag=1, dim='time', return_p=False):
+def autocorr(ds, lag=1, dim='time', return_p=False):
     """Calculate the lagged correlation of time series.
 
     Args:
@@ -279,7 +279,7 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
     shifted[dim] = normal[dim]
     r = pearson_r(normal, shifted, dim)
     if return_p:
-        # NOTE: This assumes 2-tailed. Need to update xr_eff_pearsonr
+        # NOTE: This assumes 2-tailed. Need to update eff_pearsonr
         # to utilize xskillscore's metrics but then compute own effective
         # p-value with option for one-tailed.
         p = pearson_r_p_value(normal, shifted, dim)
@@ -289,7 +289,7 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
 
 
 @check_xarray(0)
-def xr_decorrelation_time(da, r=20, dim='time'):
+def decorrelation_time(da, r=20, dim='time'):
     """Calculate the decorrelaton time of a time series.
 
     .. math::
@@ -310,7 +310,7 @@ def xr_decorrelation_time(da, r=20, dim='time'):
 
     """
     one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
+    return one + 2 * xr.concat([autocorr(da, dim=dim, lag=i) ** i for i in
                                 range(1, r)], 'it').sum('it')
 
 

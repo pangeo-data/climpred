@@ -5,6 +5,7 @@ from .metrics import POSITIVELY_ORIENTED_METRICS
 from .prediction import (compute_hindcast, compute_perfect_model,
                          compute_persistence)
 from .stats import DPP, varweighted_mean_period
+from .exceptions import DimensionError
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
@@ -72,7 +73,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     """
     # find range for bootstrapping
     if 'member' not in hist.dims:
-        raise ValueError(
+        raise DimensionError(
             'Please supply a historical ensemble with a member dimension.')
 
     first_init = max(hist.time.min().values, hind['init'].min().values)

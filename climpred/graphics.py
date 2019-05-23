@@ -127,7 +127,7 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped,
     capsize = 4
 
     if pers_sig != sig:
-        raise ValueError('pers_sig != sig not implemented yet.')
+        raise NotImplementedError('pers_sig != sig not implemented yet.')
 
     if ax is None:
         fig, ax = plt.subplots(figsize=(10, 4))

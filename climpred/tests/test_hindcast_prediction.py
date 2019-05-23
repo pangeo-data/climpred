@@ -77,12 +77,12 @@ def uninitialized_da():
 
 
 def test_compute_hindcast_less_e2r(initialized_da, reconstruction_da):
-    """Test raise ValueError for LESS e2r, because needs member."""
-    with pytest.raises(ValueError) as excinfo:
+    """Test raise KeyError for LESS e2r, because needs member."""
+    with pytest.raises(KeyError) as excinfo:
         compute_hindcast(initialized_da,
-                               reconstruction_da,
-                               metric='less',
-                               comparison='e2r')
+                         reconstruction_da,
+                         metric='less',
+                         comparison='e2r')
     assert "LESS requires member dimension" in str(excinfo.value)
 
 

@@ -14,6 +14,7 @@ from .utils import (get_dims, check_xarray)
 # TIME SERIES
 # Functions related to time series.
 # ----------------------------------#
+@check_xarray(0, 1)
 def xr_corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 
@@ -46,8 +47,6 @@ def xr_corr(x, y, dim='time', lag=0, return_p=False):
         If return_p True, associated p values.
 
     """
-    check_xarray(x)
-    check_xarray(y)
     if lag != 0:
         N = x[dim].size
         normal = x.isel({dim: slice(0, N-lag)})
@@ -218,6 +217,7 @@ def xr_rm_trend(da, dim='time'):
 
 
 # # TODO: coords lon, lat get lost for curvilinear ds
+@check_xarray(0)
 def xr_varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
@@ -234,8 +234,6 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
         time_dim (optional str): Name of time dimension.
 
     """
-    check_xarray(ds)
-
     def _create_dataset(ds, f, Pxx, time_dim):
         """
         Organize results of periodogram into clean dataset.
@@ -251,6 +249,7 @@ def xr_varweighted_mean_period(ds, time_dim='time'):
     return T
 
 
+@check_xarray(0)
 def xr_autocorr(ds, lag=1, dim='time', return_p=False):
     """Calculate the lagged correlation of time series.
 
@@ -266,7 +265,6 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
 
         If return_p, also returns their associated p values.
     """
-    check_xarray(ds)
     N = ds[dim].size
     normal = ds.isel({dim: slice(0, N - lag)})
     shifted = ds.isel({dim: slice(0 + lag, N)})
@@ -290,6 +288,7 @@ def xr_autocorr(ds, lag=1, dim='time', return_p=False):
         return r
 
 
+@check_xarray(0)
 def xr_decorrelation_time(da, r=20, dim='time'):
     """Calculate the decorrelaton time of a time series.
 
@@ -310,7 +309,6 @@ def xr_decorrelation_time(da, r=20, dim='time'):
         Decorrelation time of time series.
 
     """
-    check_xarray(da)
     one = da.mean(dim) / da.mean(dim)
     return one + 2 * xr.concat([xr_autocorr(da, dim=dim, lag=i) ** i for i in
                                 range(1, r)], 'it').sum('it')

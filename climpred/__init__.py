@@ -8,3 +8,4 @@ from . import metrics
 from . import comparisons
 # eventually will *only* import these
 from .classes import PerfectModelEnsemble, HindcastEnsemble
+from . import exceptions

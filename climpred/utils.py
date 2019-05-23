@@ -35,8 +35,8 @@ def check_xarray(func, *dec_args):
                 typecheck = type(ds_da)
                 raise IOError(f"""The input data is not an xarray DataArray or
                     Dataset. climpred is built to wrap xarray to make
-                    use of its awesome features. Please input an xarray object and
-                    retry the function.
+                    use of its awesome features. Please input an xarray object
+                    and retry the function.
                     Your input was of type: {typecheck}""")
 
         return func(*args, **kwargs)

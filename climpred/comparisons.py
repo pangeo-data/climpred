@@ -27,7 +27,7 @@ def _drop_members(ds, rmd_member=None):
         for ens in rmd_member:
             member_list.remove(ens)
     else:
-        raise DimensionError('select available members only', rmd_member)
+        raise DimensionError('select available members only')
     return ds.sel(member=member_list)
 
 

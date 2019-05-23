@@ -22,3 +22,9 @@ class VariableError(Error):
     appropriate variables."""
     def __init__(self, message):
         self.message = message
+
+
+class DatasetError(Error):
+    """Exception raised when there is any issues related to a dataset."""
+    def __init__(self, message):
+        self.message = message

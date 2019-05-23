@@ -7,6 +7,7 @@ from scipy.signal import periodogram
 from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
+from .exceptions import DimensionError
 from .utils import (get_dims, check_xarray)
 
 
@@ -129,7 +130,7 @@ def rm_poly(ds, order, dim='time'):
         xarray object with polynomial fit removed.
     """
     if dim not in ds.dims:
-        raise KeyError(
+        raise DimensionError(
             f"Input dim, '{dim}', was not found in the ds; "
             f"found only the following dims: {list(ds.dims)}."
         )
@@ -378,7 +379,7 @@ def DPP(ds, m=10, chunk=True):
             cmin = int(ds['time'].min())
             number_chunks = int(np.floor(ds['time'].size / chunk_length))
         else:
-            raise ValueError('set number_chunks or chunk_length to True')
+            raise KeyError('set number_chunks or chunk_length to True')
         c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
         c = c.expand_dims('c')
         c['c'] = [0]

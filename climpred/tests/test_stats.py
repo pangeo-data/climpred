@@ -3,6 +3,7 @@ import pytest
 import xarray as xr
 
 from climpred.stats import rm_trend
+from climpred.exceptions import DimensionError
 
 
 @pytest.fixture
@@ -25,7 +26,7 @@ def multi_dim_ds():
 
 
 def test_rm_trend_missing_dim():
-    with pytest.raises(KeyError) as excinfo:
+    with pytest.raises(DimensionError) as excinfo:
         rm_trend(xr.DataArray([0, 1, 2]), dim='non_existent')
         assert "Input dim, 'non_existent'" in excinfo.value.message
 

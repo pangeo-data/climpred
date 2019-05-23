@@ -1,7 +1,5 @@
 import types
-
 import numpy as np
-
 from xskillscore import (crps_ensemble, crps_gaussian, mae, mse, pearson_r,
                          pearson_r_p_value, rmse)
 
@@ -139,7 +137,7 @@ def _less(forecast, reference, dim='svd', comparison=None):
     perfect: 0
     """
     if comparison.__name__ is not '_m2r':
-        raise KeyError("LESS requires member dimension and therefore"
+        raise KeyError("LESS requires member dimension and therefore "
                        "compute_hindcast(comparison='m2r')")
     numerator = _mse(forecast, reference, dim='member').mean(dim)
     # not corrected for conditional bias yet

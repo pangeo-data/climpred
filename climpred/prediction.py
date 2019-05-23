@@ -8,6 +8,7 @@ from .metrics import (ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT,
                       get_metric_function)
 from .stats import z_significance
 from .utils import check_xarray
+from .exceptions import DimensionError
 
 
 # -------------------------------------------- #
@@ -44,29 +45,29 @@ def _intersection(lst1, lst2):
 def _validate_PM_comparison(comparison):
     """Validate if comparison is PM comparison."""
     if comparison not in ALL_PM_COMPARISONS_DICT.values():
-        raise ValueError(f'specify comparison from',
-                         f'{ALL_PM_COMPARISONS_DICT.keys()}')
+        raise KeyError(f'specify comparison from',
+                       f'{ALL_PM_COMPARISONS_DICT.keys()}')
 
 
 def _validate_hindcast_comparison(comparison):
     """Validate if comparison is hindcast comparison."""
     if comparison not in ALL_HINDCAST_COMPARISONS_DICT.values():
-        raise ValueError(f'specify comparison from',
-                         f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}')
+        raise KeyError(f'specify comparison from',
+                       f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}')
 
 
 def _validate_PM_metric(metric):
     """Validate if metric is PM metric."""
     if metric not in ALL_PM_METRICS_DICT.values():
-        raise ValueError(f'specify metric argument from',
-                         f'{ALL_PM_METRICS_DICT.keys()}')
+        raise KeyError(f'specify metric argument from',
+                       f'{ALL_PM_METRICS_DICT.keys()}')
 
 
 def _validate_hindcast_metric(metric):
     """Validate if metric is hindcast metric."""
     if metric not in ALL_HINDCAST_METRICS_DICT.values():
-        raise ValueError(f'specify metric argument from',
-                         f'{ALL_HINDCAST_METRICS_DICT.keys()}')
+        raise KeyError(f'specify metric argument from',
+                       f'{ALL_HINDCAST_METRICS_DICT.keys()}')
 
 
 # --------------------------------------------#
@@ -90,8 +91,8 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
         res (xarray object): skill score.
 
     Raises:
-        ValueError: if comarison not implemented.
-                    if metric not implemented.
+        KeyError: if comarison not implemented.
+                  if metric not implemented.
     """
     supervector_dim = 'svd'
     comparison = get_comparison_function(comparison)
@@ -279,14 +280,14 @@ def predictability_horizon(skill,
     """
     if (limit is 'upper') and (not perfect_model):
         if (p_values is None):
-            raise ValueError("""Please submit p values associated with the
+            raise KeyError("""Please submit p values associated with the
                 correlation coefficients.""")
         if (p_values.dims != skill.dims):
-            raise ValueError("""Please submit an xarray object of the same
+            raise DimensionError("""Please submit an xarray object of the same
                 dimensions as `skill` that contains p-values for the skill
                 correlatons.""")
         if N is None:
-            raise ValueError("""Please submit N, the length of the original
+            raise KeyError("""Please submit N, the length of the original
                 time series being correlated.""")
         sig = z_significance(skill, threshold, N, ci)
         ph = ((p_values < alpha) & (sig)).argmin('lead')
@@ -300,7 +301,7 @@ def predictability_horizon(skill,
         # where ph not reached, set max time
         ph_not_reached = (skill < threshold).all('lead')
     else:
-        raise ValueError("""Please either submit 'upper' or 'lower' for the
+        raise KeyError("""Please either submit 'upper' or 'lower' for the
             limit keyword.""")
     ph = ph.where(~ph_not_reached, other=skill['lead'].max())
     # mask out any initial NaNs (land, masked out regions, etc.)

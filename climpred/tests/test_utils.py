@@ -101,3 +101,15 @@ def test_check_xarray_ds_da_args_keys_not(ds1, da2):
         _arbitrary_three_xr_func_args_keys(
             ds1, da=not_a_da, other_da=da2, kwarg1='kwarg1')
     assert 'The input data is not an xarray' in str(e.value)
+
+
+class _ArbitraryClass:
+    @check_xarray(1)
+    def __init__(self, xobj):
+        pass
+
+
+def test_check_xarray_class_not():
+    with pytest.raises(IOError) as e:
+        _ArbitraryClass('totally not a ds')
+    assert 'The input data is not an xarray' in str(e.value)

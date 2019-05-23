@@ -74,7 +74,7 @@ def _validate_hindcast_metric(metric):
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-check_xarray([0, 1])
+@check_xarray([0, 1])
 def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -108,7 +108,7 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     return res
 
 
-check_xarray([0, 1])
+@check_xarray([0, 1])
 def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score against some reference (hindcast,
@@ -171,7 +171,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     return skill
 
 
-check_xarray([0, 1])
+@check_xarray([0, 1])
 def compute_persistence(hind, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -212,7 +212,7 @@ def compute_persistence(hind, reference, metric='pearson_r'):
 
 # ToDo: do we really need a function here
 # or cannot we somehow use compute_hindcast for that?
-check_xarray([0, 1])
+@check_xarray([0, 1])
 def compute_uninitialized(uninit,
                           reference,
                           metric='pearson_r',

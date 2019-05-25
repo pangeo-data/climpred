@@ -24,11 +24,14 @@ install:
   - which conda
   - which python
   - pip install .['graphics']
-  # Solution until proplot goes to PyPI. Most recent PIP can't handle dependency links.
-  - pip install git+https://github.com/lukelbd/proplot.git#egg=proplot
   - python setup.py install --user
   - pip install treon
+  - pip install codecov
+  - pip install pytest-cov
 
 script:
-  - pytest
   - treon notebooks
+  - export CODECOV_TOKEN="884f8514-9e87-4fdc-81f0-ab8e6463e99e"
+  - pytest --cov=./ climpred/tests/
+  - codecov
+

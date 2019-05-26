@@ -46,7 +46,7 @@ def check_xarray(func, *dec_args):
                         object and retry the function.
 
                         Your input was of type: {typecheck}""")
-        except Exception:
+        except IndexError:
             pass
         # this is outside of the try/except so that the traceback is relevant
         # to the actual function call rather than showing a simple Exception

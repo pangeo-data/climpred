@@ -26,12 +26,13 @@ install:
   - pip install .['graphics']
   - python setup.py install --user
   - pip install treon
-  - pip install codecov
   - pip install pytest-cov
+  - pip install coveralls
 
 script:
   - treon notebooks
-  - export CODECOV_TOKEN="884f8514-9e87-4fdc-81f0-ab8e6463e99e"
-  - pytest --cov=./ climpred/tests/
-  - codecov
+  - coverage run --source climpred -m py.test
+  - coverage report
 
+after_success:
+  - coveralls    

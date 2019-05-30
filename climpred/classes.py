@@ -34,14 +34,15 @@ from .exceptions import (DimensionError, DatasetError, VariableError)
 def _check_prediction_ensemble_dimensions(xobj):
     """
     Checks that at the minimum, the climate prediction  object has dimensions
-    `init` and `lead` (i.e., it's a time series with lead
-    times.
+    `init` and `lead` (i.e., it's a time series with lead times.
     """
     cond = all(dims in xobj.dims for dims in ['init', 'lead'])
     if not cond:
         # create custom error here.
-        raise DimensionError("""Your decadal prediction object must contain the
-            dimensions `lead` and `init` at the minimum.""")
+        raise DimensionError(
+            'Your prediction object must contain the '
+            'dimensions `lead` and `init` at the minimum.'
+        )
 
 
 def _check_reference_dimensions(init, ref):
@@ -56,8 +57,11 @@ def _check_reference_dimensions(init, ref):
     if 'member' in init_dims:
         init_dims.remove('member')
     if not (set(ref.dims) == set(init_dims)):
-        raise DimensionError("""Dimensions must match initialized
-            prediction ensemble dimensions (excluding `lead` and `member`.)""")
+        unmatch_dims = set(ref.dims) ^ set(init_dims)
+        raise DimensionError(
+            'Dimensions must match initialized prediction ensemble '
+            f'dimensions; these dimensions do not match: {unmatch_dims}.'
+        )
 
 
 def _check_reference_vars_match_initialized(init, ref):
@@ -68,13 +72,15 @@ def _check_reference_vars_match_initialized(init, ref):
     ref: new addition
     init: dp.initialized
     """
-    init_list = [var for var in init.data_vars]
-    ref_list = [var for var in ref.data_vars]
+    init_vars = list(init.data_vars)
+    ref_vars = list(ref.data_vars)
     # https://stackoverflow.com/questions/10668282/
     # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
-    if set(init_list).isdisjoint(ref_list):
-        raise VariableError("""Please provide a Dataset/DataArray with at least
-        one matching variable to the initialized prediction ensemble.""")
+    if set(init_vars).isdisjoint(ref_vars):
+        raise VariableError(
+            'Please provide a Dataset/DataArray with at least '
+            'one matching variable to the initialized prediction ensemble; '
+            f'got {init_vars} for init and {ref_vars} for ref.')
 
 
 # ----------

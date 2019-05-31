@@ -31,9 +31,7 @@ def _drop_members(ds, rmd_member=None):
     return ds.sel(member=member_list)
 
 
-def _stack_to_supervector(ds,
-                          new_dim='svd',
-                          stacked_dims=('init', 'member')):
+def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
     """
     Stack all stacked_dims (likely init and member) dimensions
      into one supervector dimension to perform metric over.
@@ -86,14 +84,16 @@ def get_comparison_function(comparison):
     elif comparison == 'm2r':
         comparison = _m2r
     else:
-        raise KeyError("""Please supply a comparison from the following list:
+        raise KeyError(
+            """Please supply a comparison from the following list:
             'm2m'
             'm2c'
             'm2e'
             'e2c'
             'e2r'
             'm2r'
-            """)
+            """
+        )
     return comparison
 
 
@@ -126,14 +126,15 @@ def _m2m(ds, supervector_dim='svd'):
         reference = ds.sel(member=m).squeeze()
         for m2 in ds_reduced.member:
             reference_list.append(reference)
-            forecast_list.append(
-                ds_reduced.sel(member=m2).squeeze())
+            forecast_list.append(ds_reduced.sel(member=m2).squeeze())
 
     reference = xr.concat(reference_list, supervector_dim2).stack(
-        svd=(supervector_dim2, 'init'))
+        svd=(supervector_dim2, 'init')
+    )
     reference['svd'] = np.arange(1, 1 + reference.svd.size)
     forecast = xr.concat(forecast_list, supervector_dim2).stack(
-        svd=(supervector_dim2, 'init'))
+        svd=(supervector_dim2, 'init')
+    )
     forecast['svd'] = np.arange(1, 1 + forecast.svd.size)
     return forecast, reference
 
@@ -162,10 +163,8 @@ def _m2e(ds, supervector_dim='svd'):
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list, 'init').rename({'init':
-                                                          supervector_dim})
-    forecast = xr.concat(forecast_list, 'init').rename({'init':
-                                                        supervector_dim})
+    reference = xr.concat(reference_list, 'init').rename({'init': supervector_dim})
+    forecast = xr.concat(forecast_list, 'init').rename({'init': supervector_dim})
     return forecast, reference
 
 
@@ -271,8 +270,10 @@ def _m2r(ds, reference):
     """
     # check that this contains more than one member
     if ('member' not in get_dims(ds)) or (ds.member.size == 1):
-        raise DimensionError("""Please supply a decadal prediction ensemble with
-            more than one member.""")
+        raise DimensionError(
+            """Please supply a decadal prediction ensemble with
+            more than one member."""
+        )
     else:
         forecast = ds
     reference = reference.expand_dims('member')
@@ -282,14 +283,6 @@ def _m2r(ds, reference):
     return forecast, reference
 
 
-ALL_HINDCAST_COMPARISONS_DICT = {
-    'e2r': _e2r,
-    'm2r': _m2r
-}
+ALL_HINDCAST_COMPARISONS_DICT = {'e2r': _e2r, 'm2r': _m2r}
 
-ALL_PM_COMPARISONS_DICT = {
-    'm2c': _m2c,
-    'e2c': _e2c,
-    'm2m': _m2m,
-    'm2e': _m2e
-}
+ALL_PM_COMPARISONS_DICT = {'m2c': _m2c, 'e2c': _e2c, 'm2m': _m2m, 'm2e': _m2e}

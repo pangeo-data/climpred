@@ -9,11 +9,15 @@ from climpred.exceptions import DimensionError
 @pytest.fixture
 def two_dim_da():
     da = xr.DataArray(
-        np.vstack([np.arange(0, 5, 1.),
-                   np.arange(0, 10, 2.),
-                   np.arange(0, 40, 8.),
-                   np.arange(0, 20, 4.)]),
-        dims=['row', 'col']
+        np.vstack(
+            [
+                np.arange(0, 5, 1.0),
+                np.arange(0, 10, 2.0),
+                np.arange(0, 40, 8.0),
+                np.arange(0, 20, 4.0),
+            ]
+        ),
+        dims=['row', 'col'],
     )
     return da
 

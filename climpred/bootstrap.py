@@ -2,8 +2,7 @@ import numpy as np
 import xarray as xr
 
 from .metrics import POSITIVELY_ORIENTED_METRICS
-from .prediction import (compute_hindcast, compute_perfect_model,
-                         compute_persistence)
+from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import DPP, varweighted_mean_period
 from .exceptions import DimensionError
 
@@ -22,12 +21,8 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    # TODO: get rid of try, except logic
-    try:  # incase of lazy results compute
-        if len(ds.chunks) >= 1:
-            ds = ds.compute()
-    except:
-        pass
+    # Loads into memory if a dask array.
+    ds = ds.compute()
     ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
     return ds_ci
 
@@ -74,11 +69,13 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     if 'member' not in hist.dims:
         raise DimensionError(
-            'Please supply a historical ensemble with a member dimension.')
+            'Please supply a historical ensemble with a member dimension.'
+        )
 
     first_init = max(hist.time.min().values, hind['init'].min().values)
-    last_init = min(hist.time.max().values - hind['lead'].size,
-                    hind['init'].max().values)
+    last_init = min(
+        hist.time.max().values - hind['lead'].size, hind['init'].max().values
+    )
     hind = hind.sel(init=slice(first_init, last_init))
 
     uninit_hind = []
@@ -87,12 +84,12 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         # take random uninitialized members from hist at init forcing
         # (Goddard allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
-            time=slice(init + 1, init + hind['lead'].size),
-            member=random_members).rename({'time': 'lead'})
+            time=slice(init + 1, init + hind['lead'].size), member=random_members
+        ).rename({'time': 'lead'})
         uninit_at_one_init_year['lead'] = np.arange(
-            1, 1 + uninit_at_one_init_year['lead'].size)
-        uninit_at_one_init_year['member'] = np.arange(1,
-                                                      1 + len(random_members))
+            1, 1 + uninit_at_one_init_year['lead'].size
+        )
+        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -130,11 +127,10 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist),
-            'member')
+            (isel_years(control, start, length) for start in startlist), 'member'
+        )
 
-    return xr.concat((create_pseudo_members(control) for _ in range(nens)),
-                     'init')
+    return xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
 
 
 def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
@@ -154,15 +150,13 @@ def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
         smp_control = control.sel(time=smp_time)
         smp_control['time'] = time
         bootstraped_results.append(DPP(smp_control, **dpp_kwargs))
-    threshold = xr.concat(bootstraped_results,
-                          'bootstrap').quantile(sig / 100, 'bootstrap')
+    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
+        sig / 100, 'bootstrap'
+    )
     return threshold
 
 
-def varweighted_mean_period_threshold(control,
-                                      sig=95,
-                                      bootstrap=500,
-                                      **vwmp_kwargs):
+def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, **vwmp_kwargs):
     """Calc vwmp from re-sampled dataset.
 
     """
@@ -172,23 +166,25 @@ def varweighted_mean_period_threshold(control,
         smp_time = np.random.choice(time, len(time))
         smp_control = control.sel(time=smp_time)
         smp_control['time'] = time
-        bootstraped_results.append(
-            varweighted_mean_period(smp_control, **vwmp_kwargs))
-    threshold = xr.concat(bootstraped_results,
-                          'bootstrap').quantile(sig / 100, 'bootstrap')
+        bootstraped_results.append(varweighted_mean_period(smp_control, **vwmp_kwargs))
+    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
+        sig / 100, 'bootstrap'
+    )
     return threshold
 
 
-def bootstrap_compute(hind,
-                      reference,
-                      hist=None,
-                      metric='pearson_r',
-                      comparison='m2e',
-                      sig=95,
-                      bootstrap=500,
-                      pers_sig=None,
-                      compute=compute_hindcast,
-                      resample_uninit=bootstrap_uninitialized_ensemble):
+def bootstrap_compute(
+    hind,
+    reference,
+    hist=None,
+    metric='pearson_r',
+    comparison='m2e',
+    sig=95,
+    bootstrap=500,
+    pers_sig=None,
+    compute=compute_hindcast,
+    resample_uninit=bootstrap_uninitialized_ensemble,
+):
     """Bootstrap compute with replacement.
 
     Reference:
@@ -259,18 +255,15 @@ def bootstrap_compute(hind,
         smp = np.random.choice(inits, len(inits))
         smp_hind = hind.sel(init=smp)
         # compute init skill
-        init.append(
-            compute(smp_hind, reference, metric=metric, comparison=comparison))
+        init.append(compute(smp_hind, reference, metric=metric, comparison=comparison))
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use reference = control
             hist = reference
         uninit_hind = resample_uninit(hind, hist)
         # compute uninit skill
         uninit.append(
-            compute(uninit_hind,
-                    reference,
-                    metric=metric,
-                    comparison=comparison))
+            compute(uninit_hind, reference, metric=metric, comparison=comparison)
+        )
         # compute persistence skill
         pers.append(compute_persistence(smp_hind, reference, metric=metric))
     init = xr.concat(init, dim='bootstrap')
@@ -304,8 +297,9 @@ def bootstrap_compute(hind,
     p['kind'] = ['uninit', 'pers']
 
     # ci for each skill
-    ci = xr.concat([init_ci, uninit_ci, pers_ci],
-                   'kind').rename({'quantile': 'results'})
+    ci = xr.concat([init_ci, uninit_ci, pers_ci], 'kind').rename(
+        {'quantile': 'results'}
+    )
     ci['kind'] = ['init', 'uninit', 'pers']
 
     results = xr.concat([skill, p], 'results')
@@ -319,34 +313,40 @@ def bootstrap_compute(hind,
     return results
 
 
-def bootstrap_hindcast(hind,
-                       hist,
-                       reference,
-                       metric='pearson_r',
-                       comparison='e2r',
-                       sig=95,
-                       bootstrap=500,
-                       pers_sig=None):
+def bootstrap_hindcast(
+    hind,
+    hist,
+    reference,
+    metric='pearson_r',
+    comparison='e2r',
+    sig=95,
+    bootstrap=500,
+    pers_sig=None,
+):
     """Wrapper for bootstrap_compute for hindcasts."""
-    return bootstrap_compute(hind,
-                             reference,
-                             hist=hist,
-                             metric=metric,
-                             comparison=comparison,
-                             sig=sig,
-                             bootstrap=bootstrap,
-                             pers_sig=pers_sig,
-                             compute=compute_hindcast,
-                             resample_uninit=bootstrap_uninitialized_ensemble)
+    return bootstrap_compute(
+        hind,
+        reference,
+        hist=hist,
+        metric=metric,
+        comparison=comparison,
+        sig=sig,
+        bootstrap=bootstrap,
+        pers_sig=pers_sig,
+        compute=compute_hindcast,
+        resample_uninit=bootstrap_uninitialized_ensemble,
+    )
 
 
-def bootstrap_perfect_model(ds,
-                            control,
-                            metric='pearson_r',
-                            comparison='m2e',
-                            sig=95,
-                            bootstrap=500,
-                            pers_sig=None):
+def bootstrap_perfect_model(
+    ds,
+    control,
+    metric='pearson_r',
+    comparison='m2e',
+    sig=95,
+    bootstrap=500,
+    pers_sig=None,
+):
     """Wrapper for bootstrap_compute for perfect-model in steady state."""
     return bootstrap_compute(
         ds,
@@ -358,4 +358,5 @@ def bootstrap_perfect_model(ds,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
         compute=compute_perfect_model,
-        resample_uninit=bootstrap_uninit_pm_ensemble_from_control)
+        resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
+    )

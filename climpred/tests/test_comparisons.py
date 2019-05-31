@@ -3,8 +3,14 @@ import pytest
 import xarray as xr
 from xarray.testing import assert_equal
 
-from climpred.comparisons import (_drop_members, _e2c, _m2c, _m2e, _m2m,
-                                  _stack_to_supervector)
+from climpred.comparisons import (
+    _drop_members,
+    _e2c,
+    _m2c,
+    _m2e,
+    _m2m,
+    _stack_to_supervector,
+)
 from climpred.loadutils import open_dataset
 
 
@@ -31,17 +37,17 @@ def m2e(ds, supervector_dim='svd'):
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list,
-                          'init').rename({'init': supervector_dim})
-    forecast = xr.concat(forecast_list,
-                         'init').rename({'init': supervector_dim})
+    reference = xr.concat(reference_list, 'init').rename({'init': supervector_dim})
+    forecast = xr.concat(forecast_list, 'init').rename({'init': supervector_dim})
     return forecast, reference
 
 
 def test_e2c(PM_da_ds1d):
-    """Test ensemble_mean-to-control (which can be any other one member) (e2c) comparison basic functionality.
+    """Test ensemble_mean-to-control (which can be any other one member) (e2c)
+    comparison basic functionality.
 
-    Clean comparison: Remove one control member from ensemble to use as reference. Take the remaining member mean as forecasts."""
+    Clean comparison: Remove one control member from ensemble to use as reference.
+    Take the remaining member mean as forecasts."""
     ds = PM_da_ds1d
     aforecast, areference = _e2c(ds)
 
@@ -66,9 +72,11 @@ def test_e2c(PM_da_ds1d):
 
 
 def test_m2c(PM_da_ds1d):
-    """Test many-to-control (which can be any other one member) (m2c) comparison basic functionality.
+    """Test many-to-control (which can be any other one member) (m2c) comparison basic
+    functionality.
 
-    Clean comparison: Remove one control member from ensemble to use as reference. Take the remaining members as forecasts."""
+    Clean comparison: Remove one control member from ensemble to use as reference.
+    Take the remaining members as forecasts."""
     ds = PM_da_ds1d
     aforecast, areference = _m2c(ds)
 
@@ -93,7 +101,8 @@ def test_m2c(PM_da_ds1d):
 def test_m2e(PM_da_ds1d):
     """Test many-to-ensemble-mean (m2e) comparison basic functionality.
 
-    Clean comparison: Remove one member from ensemble to use as reference. Take the remaining members as forecasts."""
+    Clean comparison: Remove one member from ensemble to use as reference.
+    Take the remaining members as forecasts."""
     ds = PM_da_ds1d
     aforecast, areference = _m2e(ds)
 
@@ -106,10 +115,8 @@ def test_m2e(PM_da_ds1d):
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list,
-                          'init').rename({'init': supervector_dim})
-    forecast = xr.concat(forecast_list,
-                         'init').rename({'init': supervector_dim})
+    reference = xr.concat(reference_list, 'init').rename({'init': supervector_dim})
+    forecast = xr.concat(forecast_list, 'init').rename({'init': supervector_dim})
 
     eforecast, ereference = forecast, reference
     # very weak testing on shape
@@ -123,7 +130,8 @@ def test_m2e(PM_da_ds1d):
 def test_m2m(PM_da_ds1d):
     """Test many-to-many (m2m) comparison basic functionality.
 
-    Clean comparison: Remove one member from ensemble to use as reference. Take the remaining members as forecasts."""
+    Clean comparison: Remove one member from ensemble to use as reference. Take the
+    remaining members as forecasts."""
     ds = PM_da_ds1d
     aforecast, areference = _m2m(ds)
 
@@ -146,5 +154,3 @@ def test_m2m(PM_da_ds1d):
     # very weak testing here
     assert eforecast.size == aforecast.size
     assert ereference.size == areference.size
-    #assert_equal(eforecast,aforecast)
-    #assert_equal(ereference,areference)

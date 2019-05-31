@@ -1,7 +1,14 @@
 import types
 import numpy as np
-from xskillscore import (crps_ensemble, crps_gaussian, mae, mse, pearson_r,
-                         pearson_r_p_value, rmse)
+from xskillscore import (
+    crps_ensemble,
+    crps_gaussian,
+    mae,
+    mse,
+    pearson_r,
+    pearson_r_p_value,
+    rmse,
+)
 
 
 def _get_norm_factor(comparison):
@@ -58,8 +65,9 @@ def get_metric_function(metric):
         if metric in ALL_HINDCAST_METRICS_DICT.keys():
             metric = ALL_HINDCAST_METRICS_DICT[metric]
         else:
-            raise KeyError(f'Please supply a metric from:',
-                           f'{ALL_HINDCAST_METRICS_DICT.keys()}')
+            raise KeyError(
+                f'Please supply a metric from:', f'{ALL_HINDCAST_METRICS_DICT.keys()}'
+            )
         return metric
 
 
@@ -137,13 +145,13 @@ def _less(forecast, reference, dim='svd', comparison=None):
     perfect: 0
     """
     if comparison.__name__ is not '_m2r':
-        raise KeyError("LESS requires member dimension and therefore "
-                       "compute_hindcast(comparison='m2r')")
+        raise KeyError(
+            "LESS requires member dimension and therefore "
+            "compute_hindcast(comparison='m2r')"
+        )
     numerator = _mse(forecast, reference, dim='member').mean(dim)
     # not corrected for conditional bias yet
-    denominator = _mse(forecast.mean('member'),
-                       reference.mean('member'),
-                       dim=dim)
+    denominator = _mse(forecast.mean('member'), reference.mean('member'), dim=dim)
     less = np.log(numerator / denominator)
     return less
 
@@ -159,7 +167,7 @@ def _msss_murphy(forecast, reference, dim='svd', comparison=None):
     acc = _pearson_r(forecast, reference, dim=dim)
     conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
     bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
-    skill = acc**2 - conditional_bias**2 - bias**2
+    skill = acc ** 2 - conditional_bias ** 2 - bias ** 2
     return skill
 
 
@@ -342,7 +350,7 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
     Returns:
         uacc_skill (xarray object): skill of uACC
     """
-    return _ppp(forecast, reference, dim=dim, comparison=comparison)**.5
+    return _ppp(forecast, reference, dim=dim, comparison=comparison) ** 0.5
 
 
 ALL_HINDCAST_METRICS_DICT = {
@@ -370,7 +378,7 @@ ALL_HINDCAST_METRICS_DICT = {
     'nev': _nmse,
     'ppp': _ppp,
     'msss': _ppp,
-    'uacc': _uacc
+    'uacc': _uacc,
 }
 
 ALL_PM_METRICS_DICT = ALL_HINDCAST_METRICS_DICT.copy()
@@ -378,5 +386,11 @@ del ALL_PM_METRICS_DICT['less']
 
 # more positive skill is better than more negative
 POSITIVELY_ORIENTED_METRICS = [
-    'pearson_r', 'msss_murphy', 'ppp', 'msss', 'crpss', 'uacc', 'msss'
+    'pearson_r',
+    'msss_murphy',
+    'ppp',
+    'msss',
+    'crpss',
+    'uacc',
+    'msss',
 ]

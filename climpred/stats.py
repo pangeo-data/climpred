@@ -8,7 +8,7 @@ from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .exceptions import DimensionError
-from .utils import (get_dims, check_xarray)
+from .utils import get_dims, check_xarray
 
 
 # ----------------------------------#
@@ -50,7 +50,7 @@ def corr(x, y, dim='time', lag=0, return_p=False):
     """
     if lag != 0:
         N = x[dim].size
-        normal = x.isel({dim: slice(0, N-lag)})
+        normal = x.isel({dim: slice(0, N - lag)})
         shifted = y.isel({dim: slice(0 + lag, N)})
         if dim not in list(x.coords):
             normal[dim] = np.arange(1, N)
@@ -87,6 +87,7 @@ def _eff_p_value(x, y, r, dim):
         * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
           Vol. 100. Academic press, 2011.
     """
+
     def _compute_autocorr(v, dim, n):
         """
         Return normal and shifted time series
@@ -94,7 +95,7 @@ def _eff_p_value(x, y, r, dim):
         throw an error.
         """
         shifted = v.isel({dim: slice(1, n)})
-        normal = v.isel({dim: slice(0, n-1)})
+        normal = v.isel({dim: slice(0, n - 1)})
         # see explanation in autocorr for this
         if dim not in list(v.coords):
             normal[dim] = np.arange(1, n)
@@ -112,7 +113,7 @@ def _eff_p_value(x, y, r, dim):
     # constrain n_eff to be at maximum the total number of samples
     n_eff = n_eff.where(n_eff <= n, n)
     # compute t-statistic
-    t = r * np.sqrt((n_eff - 2) / (1 - r**2))
+    t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
     p = xr.DataArray(ss.t.sf(np.abs(t), n_eff - 2) * 2)
     return p
 
@@ -206,8 +207,10 @@ def rm_poly(ds, order, dim='time'):
 
     if return_ds:
         # revert back into a dataset
-        return xr.merge(da.sel(variable=var).rename(var).drop('variable')
-                        for var in da['variable'].values)
+        return xr.merge(
+            da.sel(variable=var).rename(var).drop('variable')
+            for var in da['variable'].values
+        )
     else:
         return da
 
@@ -235,6 +238,7 @@ def varweighted_mean_period(ds, time_dim='time'):
         time_dim (optional str): Name of time dimension.
 
     """
+
     def _create_dataset(ds, f, Pxx, time_dim):
         """
         Organize results of periodogram into clean dataset.
@@ -311,8 +315,9 @@ def decorrelation_time(da, r=20, dim='time'):
 
     """
     one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat([autocorr(da, dim=dim, lag=i) ** i for i in
-                                range(1, r)], 'it').sum('it')
+    return one + 2 * xr.concat(
+        [autocorr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it'
+    ).sum('it')
 
 
 # --------------------------------------------#
@@ -384,8 +389,9 @@ def DPP(ds, m=10, chunk=True):
         c = c.expand_dims('c')
         c['c'] = [0]
         for i in range(1, number_chunks):
-            c2 = ds.sel(time=slice(cmin + chunk_length * i,
-                                   cmin + (i + 1) * chunk_length - 1))
+            c2 = ds.sel(
+                time=slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)
+            )
             c2 = c2.expand_dims('c')
             c2['c'] = [i]
             c2['time'] = c['time']
@@ -398,11 +404,9 @@ def DPP(ds, m=10, chunk=True):
 
     if chunk:  # Boer 2004 ppvf
         # first chunk
-        chunked_means = _chunking(
-            ds, chunk_length=m).mean('time')
+        chunked_means = _chunking(ds, chunk_length=m).mean('time')
         # sub means in chunks
-        chunked_deviations = _chunking(
-            ds, chunk_length=m) - chunked_means
+        chunked_deviations = _chunking(ds, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
         s2e = chunked_deviations.var(['time', 'c'])
         s2 = s2v + s2e
@@ -441,13 +445,14 @@ def z_significance(r1, r2, N, ci=90):
     Reference:
         https://www.statisticssolutions.com/comparing-correlation-coefficients/
     """
+
     def _r_to_z(r):
         """Fisher's r to z transformation"""
         return 0.5 * (np.log(1 + r) - np.log(1 - r))
 
     z1, z2 = _r_to_z(r1), _r_to_z(r2)
     difference = np.abs(z1 - z2)
-    zo = difference / (np.sqrt(2*(1 / (N - 3))))
+    zo = difference / (np.sqrt(2 * (1 / (N - 3))))
     confidence = np.zeros_like(zo)
     confidence[:] = _z_score(ci)
     sig = xr.DataArray(zo > confidence)

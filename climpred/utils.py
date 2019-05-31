@@ -6,11 +6,10 @@ import xarray as xr
 # https://stackoverflow.com/questions/10610824/
 # python-shortcut-for-writing-decorators-which-accept-arguments
 def dec_args_kwargs(wrapper):
-    return (
-        lambda *dec_args, **dec_kwargs:
-            lambda func:
-                wrapper(func, *dec_args, **dec_kwargs)
+    return lambda *dec_args, **dec_kwargs: lambda func: wrapper(
+        func, *dec_args, **dec_kwargs
     )
+
 
 # --------------------------------------#
 # CHECKS
@@ -21,6 +20,7 @@ def check_xarray(func, *dec_args):
     Decorate a function to ensure the first arg being submitted is
     either a Dataset or DataArray.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -43,13 +43,15 @@ def check_xarray(func, *dec_args):
                         use of its awesome features. Please input an xarray
                         object and retry the function.
 
-                        Your input was of type: {typecheck}""")
+                        Your input was of type: {typecheck}"""
+                    )
         except IndexError:
             pass
         # this is outside of the try/except so that the traceback is relevant
         # to the actual function call rather than showing a simple Exception
         # (probably IndexError from trying to subselect an empty dec_args list)
         return func(*args, **kwargs)
+
     return wrapper
 
 

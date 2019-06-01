@@ -1,11 +1,13 @@
 import numpy as np
 import xarray as xr
 
-from .comparisons import (ALL_HINDCAST_COMPARISONS_DICT,
-                          ALL_PM_COMPARISONS_DICT,  _e2c,
-                          get_comparison_function)
-from .metrics import (ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT,
-                      get_metric_function)
+from .comparisons import (
+    ALL_HINDCAST_COMPARISONS_DICT,
+    ALL_PM_COMPARISONS_DICT,
+    _e2c,
+    get_comparison_function,
+)
+from .metrics import ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
 from .stats import z_significance
 from .utils import check_xarray
 from .exceptions import DimensionError
@@ -45,29 +47,29 @@ def _intersection(lst1, lst2):
 def _validate_PM_comparison(comparison):
     """Validate if comparison is PM comparison."""
     if comparison not in ALL_PM_COMPARISONS_DICT.values():
-        raise KeyError(f'specify comparison from',
-                       f'{ALL_PM_COMPARISONS_DICT.keys()}')
+        raise KeyError(f'specify comparison from', f'{ALL_PM_COMPARISONS_DICT.keys()}')
 
 
 def _validate_hindcast_comparison(comparison):
     """Validate if comparison is hindcast comparison."""
     if comparison not in ALL_HINDCAST_COMPARISONS_DICT.values():
-        raise KeyError(f'specify comparison from',
-                       f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}')
+        raise KeyError(
+            f'specify comparison from', f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}'
+        )
 
 
 def _validate_PM_metric(metric):
     """Validate if metric is PM metric."""
     if metric not in ALL_PM_METRICS_DICT.values():
-        raise KeyError(f'specify metric argument from',
-                       f'{ALL_PM_METRICS_DICT.keys()}')
+        raise KeyError(f'specify metric argument from', f'{ALL_PM_METRICS_DICT.keys()}')
 
 
 def _validate_hindcast_metric(metric):
     """Validate if metric is hindcast metric."""
     if metric not in ALL_HINDCAST_METRICS_DICT.values():
-        raise KeyError(f'specify metric argument from',
-                       f'{ALL_HINDCAST_METRICS_DICT.keys()}')
+        raise KeyError(
+            f'specify metric argument from', f'{ALL_HINDCAST_METRICS_DICT.keys()}'
+        )
 
 
 # --------------------------------------------#
@@ -102,10 +104,7 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
 
     forecast, reference = comparison(ds, supervector_dim)
 
-    res = metric(forecast,
-                 reference,
-                 dim=supervector_dim,
-                 comparison=comparison)
+    res = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
     return res
 
 
@@ -214,10 +213,7 @@ def compute_persistence(hind, reference, metric='pearson_r'):
 # ToDo: do we really need a function here
 # or cannot we somehow use compute_hindcast for that?
 @check_xarray([0, 1])
-def compute_uninitialized(uninit,
-                          reference,
-                          metric='pearson_r',
-                          comparison='e2r'):
+def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score between an uninitialized ensemble
     and some reference (hindcast, assimilation, reconstruction, observations).
@@ -254,14 +250,16 @@ def compute_uninitialized(uninit,
 # --------------------------------------------#
 # PREDICTABILITY HORIZON
 # --------------------------------------------#
-def predictability_horizon(skill,
-                           threshold,
-                           limit='upper',
-                           perfect_model=False,
-                           p_values=None,
-                           N=None,
-                           alpha=0.05,
-                           ci=90):
+def predictability_horizon(
+    skill,
+    threshold,
+    limit='upper',
+    perfect_model=False,
+    p_values=None,
+    N=None,
+    alpha=0.05,
+    ci=90,
+):
     """
     Get predictability horizons for skill better than threshold.
 
@@ -279,16 +277,22 @@ def predictability_horizon(skill,
         ph (xarray object)
     """
     if (limit is 'upper') and (not perfect_model):
-        if (p_values is None):
-            raise KeyError("""Please submit p values associated with the
-                correlation coefficients.""")
-        if (p_values.dims != skill.dims):
-            raise DimensionError("""Please submit an xarray object of the same
+        if p_values is None:
+            raise KeyError(
+                """Please submit p values associated with the
+                correlation coefficients."""
+            )
+        if p_values.dims != skill.dims:
+            raise DimensionError(
+                """Please submit an xarray object of the same
                 dimensions as `skill` that contains p-values for the skill
-                correlatons.""")
+                correlatons."""
+            )
         if N is None:
-            raise KeyError("""Please submit N, the length of the original
-                time series being correlated.""")
+            raise KeyError(
+                """Please submit N, the length of the original
+                time series being correlated."""
+            )
         sig = z_significance(skill, threshold, N, ci)
         ph = ((p_values < alpha) & (sig)).argmin('lead')
         # where ph not reached, set max time
@@ -301,8 +305,10 @@ def predictability_horizon(skill,
         # where ph not reached, set max time
         ph_not_reached = (skill < threshold).all('lead')
     else:
-        raise KeyError("""Please either submit 'upper' or 'lower' for the
-            limit keyword.""")
+        raise KeyError(
+            """Please either submit 'upper' or 'lower' for the
+            limit keyword."""
+        )
     ph = ph.where(~ph_not_reached, other=skill['lead'].max())
     # mask out any initial NaNs (land, masked out regions, etc.)
     mask = np.asarray(skill.isel({'lead': 0}))

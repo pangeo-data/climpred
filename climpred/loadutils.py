@@ -6,46 +6,43 @@ from xarray.backends.api import open_dataset as _open_dataset
 
 _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
 
-FILE_ALIAS_DICT = {'MPI-control-1D': 'PM_MPI-ESM-LR_control',
-                   'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
-                   'MPI-PM-DP-1D': 'PM_MPI-ESM-LR_ds',
-                   'MPI-PM-DP-3D': 'PM_MPI-ESM-LR_ds3d',
-                   'CESM-DP-SST': 'CESM-DP-LE.SST.global',
-                   'CESM-DP-SSS': 'CESM-DP-LE.SSS.global',
-                   'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
-                   'MPIESM_miklip_baseline1-hind-SST-global':
-                   'MPIESM_miklip_baseline1-hind-SST-global',
-                   'MPIESM_miklip_baseline1-hist-SST-global':
-                   'MPIESM_miklip_baseline1-hist-SST-global',
-                   'MPIESM_miklip_baseline1-assim-SST-global':
-                   'MPIESM_miklip_baseline1-assim-SST-global',
-                   'ERSST': 'ERSSTv4.global.mean',
-                   'FOSI-SST': 'FOSI.SST.global',
-                   'FOSI-SSS': 'FOSI.SSS.global'}
+FILE_ALIAS_DICT = {
+    'MPI-control-1D': 'PM_MPI-ESM-LR_control',
+    'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
+    'MPI-PM-DP-1D': 'PM_MPI-ESM-LR_ds',
+    'MPI-PM-DP-3D': 'PM_MPI-ESM-LR_ds3d',
+    'CESM-DP-SST': 'CESM-DP-LE.SST.global',
+    'CESM-DP-SSS': 'CESM-DP-LE.SSS.global',
+    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
+    'MPIESM_miklip_baseline1-hind-SST-global':
+    'MPIESM_miklip_baseline1-hind-SST-global',
+    'MPIESM_miklip_baseline1-hist-SST-global':
+    'MPIESM_miklip_baseline1-hist-SST-global',
+    'MPIESM_miklip_baseline1-assim-SST-global':
+    'MPIESM_miklip_baseline1-assim-SST-global',
+    'ERSST': 'ERSSTv4.global.mean',
+    'FOSI-SST': 'FOSI.SST.global',
+    'FOSI-SSS': 'FOSI.SSS.global',
+}
 
-FILE_DESCRIPTIONS = {'MPI-PM-DP-1D': 'decadal prediction ensemble area' +
-                                     ' averages of SST/SSS/AMO.',
-                     'MPI-PM-DP-3D': 'decadal prediction ensemble' +
-                                     ' lat/lon/time of SST/SSS/AMO.',
-                     'MPI-control-1D': 'area averages for the control run of' +
-                                       ' SST/SSS.',
-                     'MPI-control-3D': 'lat/lon/time for the control run of' +
-                                       ' SST/SSS.',
-                     'CESM-DP-SST': 'decadal prediction ensemble of global' +
-                                    ' mean SSTs.',
-                     'CESM-DP-SSS': 'decadal prediction ensemble of global' +
-                                    ' mean SSS.',
-                     'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
-                     'MPIESM_miklip_baseline1-hind-SST-global':
-                     'initialized ensemble of global mean SSTs',
-                     'MPIESM_miklip_baseline1-hist-SST-global':
-                     'uninitialized ensemble of global mean SSTs',
-                     'MPIESM_miklip_baseline1-assim-SST-global':
-                     'assimilation in MPI-ESM of global mean SSTs',
-                     'ERSST': 'observations of global mean SSTs.',
-                     'FOSI-SST': 'reconstruction of global mean SSTs.',
-                     'FOSI-SSS': 'reconstruction of global mean SSS.',
-                     }
+FILE_DESCRIPTIONS = {
+    'MPI-PM-DP-1D': 'decadal prediction ensemble area' + ' averages of SST/SSS/AMO.',
+    'MPI-PM-DP-3D': 'decadal prediction ensemble' + ' lat/lon/time of SST/SSS/AMO.',
+    'MPI-control-1D': 'area averages for the control run of' + ' SST/SSS.',
+    'MPI-control-3D': 'lat/lon/time for the control run of' + ' SST/SSS.',
+    'CESM-DP-SST': 'decadal prediction ensemble of global' + ' mean SSTs.',
+    'CESM-DP-SSS': 'decadal prediction ensemble of global' + ' mean SSS.',
+    'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
+    'MPIESM_miklip_baseline1-hind-SST-global':
+    'initialized ensemble of global mean SSTs',
+    'MPIESM_miklip_baseline1-hist-SST-global':
+    'uninitialized ensemble of global mean SSTs',
+    'MPIESM_miklip_baseline1-assim-SST-global':
+    'assimilation in MPI-ESM of global mean SSTs',
+    'ERSST': 'observations of global mean SSTs.',
+    'FOSI-SST': 'reconstruction of global mean SSTs.',
+    'FOSI-SSS': 'reconstruction of global mean SSS.',
+}
 
 
 def _file_md5_checksum(fname):
@@ -78,9 +75,16 @@ def _initialize_proxy(proxy_dict):
     urllib.request.install_opener(opener)
 
 
-def open_dataset(name=None, cache=True, cache_dir=_default_cache_dir,
-                 github_url='https://github.com/bradyrx/climpred-data',
-                 branch='master', extension=None, proxy_dict=None, **kws):
+def open_dataset(
+    name=None,
+    cache=True,
+    cache_dir=_default_cache_dir,
+    github_url='https://github.com/bradyrx/climpred-data',
+    branch='master',
+    extension=None,
+    proxy_dict=None,
+    **kws,
+):
     """Load example data or a mask from an online repository.
 
     This is a function from `xarray.tutorial` to load an online dataset
@@ -147,8 +151,7 @@ def open_dataset(name=None, cache=True, cache_dir=_default_cache_dir,
             _os.mkdir(longdir)
 
         if extension is not None:
-            url = '/'.join((github_url, 'raw', branch, extension,
-                            fullname))
+            url = '/'.join((github_url, 'raw', branch, extension, fullname))
             _urlretrieve(url, localfile)
             url = '/'.join((github_url, 'raw', branch, extension, md5name))
             _urlretrieve(url, md5file)

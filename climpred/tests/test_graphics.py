@@ -1,9 +1,5 @@
-# import matplotlib.pyplot as plt
-
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
-
-# from climpred.graphics import plot_bootstrapped_skill_over_leadyear
-from climpred.loadutils import open_dataset
+from climpred.tutorial import load_dataset
 
 
 def test_mpi_hindcast_plot_bootstrapped_skill_over_leadyear():
@@ -12,9 +8,9 @@ def test_mpi_hindcast_plot_bootstrapped_skill_over_leadyear():
     """
     v = 'SST'
     base = 'MPIESM_miklip_baseline1-'
-    hind = open_dataset(base + 'hind-' + v + '-global')[v]
-    hist = open_dataset(base + 'hist-' + v + '-global')[v]
-    assim = open_dataset(base + 'assim-' + v + '-global')[v]
+    hind = load_dataset(base + 'hind-' + v + '-global')[v]
+    hist = load_dataset(base + 'hist-' + v + '-global')[v]
+    assim = load_dataset(base + 'assim-' + v + '-global')[v]
     # sig = 95
     bootstrap = 5
     res = bootstrap_hindcast(hind, hist, assim, metric='pearson_r', bootstrap=bootstrap)
@@ -26,10 +22,10 @@ def test_mpi_pm_plot_bootstrapped_skill_over_leadyear():
     """
     Checks plots from bootstrap MPI hindcast works.
     """
-    da = open_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
+    da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
     PM_da_ds1d = da['tos']
 
-    da = open_dataset('MPI-control-1D').isel(area=1, period=-1)
+    da = load_dataset('MPI-control-1D').isel(area=1, period=-1)
     PM_da_control1d = da['tos']
 
     # sig = 95

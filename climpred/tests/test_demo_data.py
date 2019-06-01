@@ -1,5 +1,5 @@
 import pytest
-from climpred.loadutils import FILE_ALIAS_DICT, open_dataset
+from climpred.tutorial import FILE_ALIAS_DICT, load_dataset
 
 
 filepaths = list(FILE_ALIAS_DICT.keys())
@@ -9,5 +9,5 @@ filepaths = list(FILE_ALIAS_DICT.keys())
 def test_open_dataset_locally(filepath):
     """Opens all files listed in file_alias_dict."""
     print(filepath)
-    d = open_dataset(filepath)
+    d = load_dataset(filepath)
     assert d.nbytes > 0

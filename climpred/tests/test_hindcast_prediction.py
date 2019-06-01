@@ -5,7 +5,7 @@ from climpred.bootstrap import bootstrap_hindcast
 
 # testing less separately: use ALL_PM_METRICS_DICT
 from climpred.comparisons import ALL_HINDCAST_COMPARISONS_DICT
-from climpred.loadutils import open_dataset
+from climpred.tutorial import load_dataset
 from climpred.metrics import ALL_PM_METRICS_DICT
 from climpred.prediction import (
     compute_hindcast,
@@ -16,7 +16,7 @@ from climpred.prediction import (
 
 @pytest.fixture
 def initialized_ds():
-    da = open_dataset('CESM-DP-SST')
+    da = load_dataset('CESM-DP-SST')
     da = da.sel(init=slice(1955, 2015))
     da = da - da.mean('init')
     return da
@@ -24,7 +24,7 @@ def initialized_ds():
 
 @pytest.fixture
 def initialized_da():
-    da = open_dataset('CESM-DP-SST')['SST']
+    da = load_dataset('CESM-DP-SST')['SST']
     da = da.sel(init=slice(1955, 2015))
     da = da - da.mean('init')
     return da
@@ -32,21 +32,21 @@ def initialized_da():
 
 @pytest.fixture
 def observations_ds():
-    da = open_dataset('ERSST')
+    da = load_dataset('ERSST')
     da = da - da.mean('time')
     return da
 
 
 @pytest.fixture
 def observations_da():
-    da = open_dataset('ERSST')['SST']
+    da = load_dataset('ERSST')['SST']
     da = da - da.mean('time')
     return da
 
 
 @pytest.fixture
 def reconstruction_ds():
-    da = open_dataset('FOSI-SST')
+    da = load_dataset('FOSI-SST')
     # same timeframe as DPLE
     da = da.sel(time=slice(1955, 2015))
     da = da - da.mean('time')
@@ -55,7 +55,7 @@ def reconstruction_ds():
 
 @pytest.fixture
 def reconstruction_da():
-    da = open_dataset('FOSI-SST')['SST']
+    da = load_dataset('FOSI-SST')['SST']
     # same timeframe as DPLE
     da = da.sel(time=slice(1955, 2015))
     da = da - da.mean('time')
@@ -64,7 +64,7 @@ def reconstruction_da():
 
 @pytest.fixture
 def uninitialized_ds():
-    da = open_dataset('CESM-LE')
+    da = load_dataset('CESM-LE')
     # add member coordinate
     da['member'] = np.arange(1, 1 + da.member.size)
     da = da - da.mean('time')
@@ -73,7 +73,7 @@ def uninitialized_ds():
 
 @pytest.fixture
 def uninitialized_da():
-    da = open_dataset('CESM-LE')['SST']
+    da = load_dataset('CESM-LE')['SST']
     # add member coordinate
     da['member'] = np.arange(1, 1 + da.member.size)
     da = da - da.mean('time')

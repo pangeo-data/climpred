@@ -17,8 +17,8 @@ before_install:
   - conda info -a
 
 install:
-  - conda env create -n test_env --file ci/requirements-py36.yml
-  - source activate test_env
+  - conda env create -n climpred-dev --file ci/requirements-py36.yml
+  - source activate climpred-dev
   - conda install pip
   - conda list
   - which conda
@@ -35,4 +35,4 @@ script:
   - coverage report
 
 after_success:
-  - coveralls    
+  - coveralls

@@ -75,7 +75,7 @@ def _initialize_proxy(proxy_dict):
     urllib.request.install_opener(opener)
 
 
-def open_dataset(
+def load_dataset(
     name=None,
     cache=True,
     cache_dir=_default_cache_dir,
@@ -118,9 +118,9 @@ def open_dataset(
         The desired xarray dataset.
 
     Examples:
-        >>> from climpred import open_dataset()
+        >>> from climpred.tutorial import load_dataset()
         >>> proxy_dict = {'http': '127.0.0.1'}
-        >>> ds = open_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
+        >>> ds = load_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
     """
     if name is None:
         return _get_datasets()

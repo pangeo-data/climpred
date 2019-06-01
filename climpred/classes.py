@@ -4,6 +4,7 @@ from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control,
 )
+from .exceptions import DatasetError, DimensionError, VariableError
 from .prediction import (
     compute_hindcast,
     compute_perfect_model,
@@ -11,7 +12,6 @@ from .prediction import (
     compute_uninitialized,
 )
 from .utils import check_xarray
-from .exceptions import DimensionError, DatasetError, VariableError
 
 # Both:
 # TODO: add horizon functionality.

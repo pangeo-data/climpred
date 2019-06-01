@@ -39,7 +39,7 @@ $ git checkout -b your-bugfix-feature-branch-name master
 ```
 3. Install dependencies into a new conda environment.
 ```bash
-$ conda env update -f ci/environment-dev-3.7.yml
+$ conda env update -f ci/requirements-py36.yml
 $ conda activate climpred-dev
 ```
 4. Make an editable install of `climpred` by running the following the main directory:
@@ -58,6 +58,6 @@ Now that you have an environment called `climpred-dev`, you need to activate it 
 
 7. (Optional) Run our testing suite by calling `pytest`. Our continuous integration system will do this automatically on your PR to check if things break, but it's sometimes helpful to do this beforehand so you don't wait around for Travis CI to run a bunch of times.
 
-8. Create a new changelog entry in `CHANGELOG.md, detailing your addition.
+8. Create a new changelog entry in `CHANGELOG.md`, detailing your addition.
 
 9. Create a Pull Request on `climpred`'s repository. We'll review your code and will be eager to add your new features/bugfix to the package!

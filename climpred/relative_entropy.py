@@ -143,7 +143,7 @@ def compute_relative_entropy(
     # dims as I need more members to sample my control distr. properly
     if set(initialized.dims) != set(control_uninitialized.dims):
         warnings.warn(
-            "Warning: initialized and control_uninitialized have different coords."
+            'Warning: initialized and control_uninitialized have different coords.'
         )
         # print(initialized, control_uninitialized)
 

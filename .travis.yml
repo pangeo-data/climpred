@@ -28,11 +28,15 @@ install:
   - pip install treon
   - pip install pytest-cov
   - pip install coveralls
+  - pip install black
+  - pip install flake8
+  - pip install isort
 
 script:
   - treon notebooks
   - coverage run --source climpred -m py.test
   - coverage report
+  - ./ci/run-linter.sh
 
 after_success:
   - coveralls

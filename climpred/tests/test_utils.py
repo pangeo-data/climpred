@@ -1,5 +1,5 @@
-import pytest
 import numpy as np
+import pytest
 import xarray as xr
 
 from climpred.utils import check_xarray

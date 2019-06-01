@@ -1,8 +1,8 @@
 import numpy as np
 import xarray as xr
 
-from .utils import get_dims
 from .exceptions import DimensionError
+from .utils import get_dims
 
 
 def _drop_members(ds, rmd_member=None):

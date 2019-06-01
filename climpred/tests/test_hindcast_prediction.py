@@ -1,17 +1,16 @@
 import numpy as np
 import pytest
-
 from climpred.bootstrap import bootstrap_hindcast
 
 # testing less separately: use ALL_PM_METRICS_DICT
 from climpred.comparisons import ALL_HINDCAST_COMPARISONS_DICT
-from climpred.tutorial import load_dataset
 from climpred.metrics import ALL_PM_METRICS_DICT
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,
     compute_uninitialized,
 )
+from climpred.tutorial import load_dataset
 
 
 @pytest.fixture
@@ -86,7 +85,7 @@ def test_compute_hindcast_less_e2r(initialized_da, reconstruction_da):
         compute_hindcast(
             initialized_da, reconstruction_da, metric='less', comparison='e2r'
         )
-    assert "LESS requires member dimension" in str(excinfo.value)
+    assert 'LESS requires member dimension' in str(excinfo.value)
 
 
 def test_compute_hindcast_less_m2r(initialized_da, reconstruction_da):

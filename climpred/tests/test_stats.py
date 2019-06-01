@@ -2,8 +2,8 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from climpred.stats import rm_trend
 from climpred.exceptions import DimensionError
+from climpred.stats import rm_trend
 
 
 @pytest.fixture

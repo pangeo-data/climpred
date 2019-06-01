@@ -1,4 +1,5 @@
 import types
+
 import numpy as np
 from xskillscore import (
     crps_ensemble,
@@ -144,9 +145,9 @@ def _less(forecast, reference, dim='svd', comparison=None):
     neg: over-disperive
     perfect: 0
     """
-    if comparison.__name__ is not '_m2r':
+    if comparison.__name__ != '_m2r':
         raise KeyError(
-            "LESS requires member dimension and therefore "
+            'LESS requires member dimension and therefore '
             "compute_hindcast(comparison='m2r')"
         )
     numerator = _mse(forecast, reference, dim='member').mean(dim)

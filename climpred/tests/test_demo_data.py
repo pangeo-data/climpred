@@ -1,6 +1,6 @@
 import pytest
-from climpred.tutorial import FILE_ALIAS_DICT, load_dataset
 
+from climpred.tutorial import FILE_ALIAS_DICT, load_dataset
 
 filepaths = list(FILE_ALIAS_DICT.keys())
 

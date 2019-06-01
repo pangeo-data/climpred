@@ -1,53 +1,65 @@
 import hashlib
 import os as _os
-from urllib.request import urlretrieve as _urlretrieve
 import urllib
+from urllib.request import urlretrieve as _urlretrieve
+
 from xarray.backends.api import open_dataset as _open_dataset
 
 _default_cache_dir = _os.sep.join(('~', '.climpred_data'))
 
-FILE_ALIAS_DICT = {
-    'MPI-control-1D': 'PM_MPI-ESM-LR_control',
-    'MPI-control-3D': 'PM_MPI-ESM-LR_control3d',
-    'MPI-PM-DP-1D': 'PM_MPI-ESM-LR_ds',
-    'MPI-PM-DP-3D': 'PM_MPI-ESM-LR_ds3d',
-    'CESM-DP-SST': 'CESM-DP-LE.SST.global',
-    'CESM-DP-SSS': 'CESM-DP-LE.SSS.global',
-    'CESM-LE': 'CESM-LE.global_mean.SST.1955-2015',
-    'MPIESM_miklip_baseline1-hind-SST-global':
+aliases = [
+    'MPI-control-1D',
+    'MPI-control-3D',
+    'MPI-PM-DP-1D',
+    'MPI-PM-DP-3D',
+    'CESM-DP-SST',
+    'CESM-DP-SSS',
+    'CESM-LE',
     'MPIESM_miklip_baseline1-hind-SST-global',
-    'MPIESM_miklip_baseline1-hist-SST-global':
     'MPIESM_miklip_baseline1-hist-SST-global',
-    'MPIESM_miklip_baseline1-assim-SST-global':
     'MPIESM_miklip_baseline1-assim-SST-global',
-    'ERSST': 'ERSSTv4.global.mean',
-    'FOSI-SST': 'FOSI.SST.global',
-    'FOSI-SSS': 'FOSI.SSS.global',
-}
-
-FILE_DESCRIPTIONS = {
-    'MPI-PM-DP-1D': 'decadal prediction ensemble area averages of SST/SSS/AMO.',
-    'MPI-PM-DP-3D': 'decadal prediction ensemble lat/lon/time of SST/SSS/AMO.',
-    'MPI-control-1D': 'area averages for the control run of SST/SSS.',
-    'MPI-control-3D': 'lat/lon/time for the control run of SST/SSS.',
-    'CESM-DP-SST': 'decadal prediction ensemble of global mean SSTs.',
-    'CESM-DP-SSS': 'decadal prediction ensemble of global mean SSS.',
-    'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
-    'MPIESM_miklip_baseline1-hind-SST-global':
+    'ERSST',
+    'FOSI-SST',
+    'FOSI-SSS',
+]
+true_file_names = [
+    'PM_MPI-ESM-LR_control',
+    'PM_MPI-ESM-LR_control3d',
+    'PM_MPI-ESM-LR_ds',
+    'PM_MPI-ESM-LR_ds3d',
+    'CESM-DP-LE.SST.global',
+    'CESM-DP-LE.SSS.global',
+    'CESM-LE.global_mean.SST.1955-2015',
+    'MPIESM_miklip_baseline1-hind-SST-global',
+    'MPIESM_miklip_baseline1-hist-SST-global',
+    'MPIESM_miklip_baseline1-assim-SST-global',
+    'ERSSTv4.global.mean',
+    'FOSI.SST.global',
+    'FOSI.SSS.global',
+]
+file_descriptions = [
+    'decadal prediction ensemble area averages of SST/SSS/AMO.',
+    'decadal prediction ensemble lat/lon/time of SST/SSS/AMO.',
+    'area averages for the control run of SST/SSS.',
+    'lat/lon/time for the control run of SST/SSS.',
+    'decadal prediction ensemble of global mean SSTs.',
+    'decadal prediction ensemble of global mean SSS.',
+    'uninitialized ensemble of global mean SSTs.',
     'initialized ensemble of global mean SSTs',
-    'MPIESM_miklip_baseline1-hist-SST-global':
     'uninitialized ensemble of global mean SSTs',
-    'MPIESM_miklip_baseline1-assim-SST-global':
     'assimilation in MPI-ESM of global mean SSTs',
-    'ERSST': 'observations of global mean SSTs.',
-    'FOSI-SST': 'reconstruction of global mean SSTs.',
-    'FOSI-SSS': 'reconstruction of global mean SSS.',
-}
+    'observations of global mean SSTs.',
+    'reconstruction of global mean SSTs.',
+    'reconstruction of global mean SSS.',
+]
+
+FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))
+FILE_DESCRIPTIONS = dict(zip(aliases, file_descriptions))
 
 
 def _file_md5_checksum(fname):
     hash_md5 = hashlib.md5()
-    with open(fname, "rb") as f:
+    with open(fname, 'rb') as f:
         hash_md5.update(f.read())
     return hash_md5.hexdigest()
 

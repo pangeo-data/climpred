@@ -8,25 +8,23 @@ DESCRIPTION = ('An xarray wrapper for analysis of ensemble forecast models for c
                + 'prediction.')
 URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
-INSTALL_REQUIRES = ['numpy', 'pandas',
-                    'xarray', 'scipy',
-                    'xskillscore', 'eofs',
-                    'cftime', 'bottleneck']
+INSTALL_REQUIRES = ['numpy', 'xarray', 'scipy', 'xskillscore', 'eofs', 'bottleneck']
 TESTS_REQUIRE = ['pytest']
 PYTHON_REQUIRE = '>=3.6'
 EXTRAS = {'graphics': ['matplotlib']}
 
-setup(name=DISTNAME,
-      version=VERSION,
-      description=DESCRIPTION,
-      long_description=open('README.md').read(),
-      url=URL,
-      author=AUTHOR,
-      author_email=AUTHOR_EMAIL,
-      license=LICENSE,
-      packages=find_packages(),
-      install_requires=INSTALL_REQUIRES,
-      python_requires=PYTHON_REQUIRE,
-      tests_require=TESTS_REQUIRE,
-      extras_require=EXTRAS,
-      )
+setup(
+    name=DISTNAME,
+    version=VERSION,
+    description=DESCRIPTION,
+    long_description=open('README.md').read(),
+    url=URL,
+    author=AUTHOR,
+    author_email=AUTHOR_EMAIL,
+    license=LICENSE,
+    packages=find_packages(),
+    install_requires=INSTALL_REQUIRES,
+    python_requires=PYTHON_REQUIRE,
+    tests_require=TESTS_REQUIRE,
+    extras_require=EXTRAS,
+)

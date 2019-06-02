@@ -1,10 +1,10 @@
 import numpy as np
 import xarray as xr
 
+from .exceptions import DimensionError
 from .metrics import POSITIVELY_ORIENTED_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import DPP, varweighted_mean_period
-from .exceptions import DimensionError
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):

@@ -1,9 +1,9 @@
 import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.tutorial import load_dataset
 from climpred.metrics import ALL_PM_METRICS_DICT
 from climpred.prediction import compute_perfect_model, compute_persistence
+from climpred.tutorial import load_dataset
 
 ALL_PM_COMPARISONS_DICT = {'m2c': '', 'e2c': ''}
 

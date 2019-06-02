@@ -153,7 +153,7 @@ def plot_bootstrapped_skill_over_leadyear(
             ax.text(
                 init_skill.lead.sel(lead=t),
                 init_ci.isel(quantile=1).sel(lead=t).values,
-                "%.2f" % float(p_uninit_over_init.sel(lead=t).values),
+                '%.2f' % float(p_uninit_over_init.sel(lead=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',
                 fontsize=fontsize,
@@ -195,7 +195,7 @@ def plot_bootstrapped_skill_over_leadyear(
             ax.text(
                 pers_skill.lead.sel(lead=t),
                 pers_ci.isel(quantile=0).sel(lead=t).values,
-                "%.2f" % float(p_pers_over_init.sel(lead=t).values),
+                '%.2f' % float(p_pers_over_init.sel(lead=t).values),
                 horizontalalignment='center',
                 verticalalignment='bottom',
                 fontsize=fontsize,

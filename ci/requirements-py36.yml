@@ -1,10 +1,9 @@
-name: test_env
+name: climpred-dev
 channels:
   - conda-forge
 dependencies:
   - python=3.6
   - numpy
-  - pandas
   - xarray
   - dask
   - scipy
@@ -13,8 +12,7 @@ dependencies:
   - netcdf4
   - pytest
   - eofs
-  - cftime
-  - bottleneck
-  - matplotlib
-  - netcdf4
-  - lxml 
+  - lxml
+  - pip
+  - pip:
+    - xskillscore

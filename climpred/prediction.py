@@ -7,10 +7,10 @@ from .comparisons import (
     _e2c,
     get_comparison_function,
 )
+from .exceptions import DimensionError
 from .metrics import ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
 from .stats import z_significance
 from .utils import check_xarray
-from .exceptions import DimensionError
 
 
 # -------------------------------------------- #
@@ -28,7 +28,7 @@ def _shift(a, b, lag, dim='time'):
     one xarray object.
     """
     if a[dim].size != b[dim].size:
-        raise IOError("Please provide time series of equal lengths.")
+        raise IOError('Please provide time series of equal lengths.')
     N = a[dim].size
     a = a.isel({dim: slice(0, N - lag)})
     b = b.isel({dim: slice(0 + lag, N)})
@@ -276,7 +276,7 @@ def predictability_horizon(
     Returns:
         ph (xarray object)
     """
-    if (limit is 'upper') and (not perfect_model):
+    if (limit == 'upper') and (not perfect_model):
         if p_values is None:
             raise KeyError(
                 """Please submit p values associated with the
@@ -297,10 +297,10 @@ def predictability_horizon(
         ph = ((p_values < alpha) & (sig)).argmin('lead')
         # where ph not reached, set max time
         ph_not_reached = ((p_values < alpha) & (sig)).all('lead')
-    elif (limit is 'upper') and (perfect_model):
+    elif (limit == 'upper') and (perfect_model):
         ph = (skill > threshold).argmin('lead')
         ph_not_reached = (skill > threshold).all('lead')
-    elif limit is 'lower':
+    elif limit == 'lower':
         ph = (skill < threshold).argmin('lead')
         # where ph not reached, set max time
         ph_not_reached = (skill < threshold).all('lead')

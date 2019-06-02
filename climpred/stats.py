@@ -8,7 +8,7 @@ from scipy.stats import norm
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .exceptions import DimensionError
-from .utils import get_dims, check_xarray
+from .utils import check_xarray, get_dims
 
 
 # ----------------------------------#
@@ -133,7 +133,7 @@ def rm_poly(ds, order, dim='time'):
     if dim not in ds.dims:
         raise DimensionError(
             f"Input dim, '{dim}', was not found in the ds; "
-            f"found only the following dims: {list(ds.dims)}."
+            f'found only the following dims: {list(ds.dims)}.'
         )
 
     # handle both datasets and dataarray

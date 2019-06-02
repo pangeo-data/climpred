@@ -11,19 +11,19 @@ from climpred.comparisons import (
     _m2m,
     _stack_to_supervector,
 )
-from climpred.loadutils import open_dataset
+from climpred.tutorial import load_dataset
 
 
 @pytest.fixture
 def PM_da_ds1d():
-    da = open_dataset('MPI-PM-DP-1D')
+    da = load_dataset('MPI-PM-DP-1D')
     da = da['tos']
     return da
 
 
 @pytest.fixture
 def PM_da_control1d():
-    da = open_dataset('MPI-control-1D')
+    da = load_dataset('MPI-control-1D')
     da = da['tos']
     return da
 

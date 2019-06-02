@@ -1,7 +1,7 @@
 import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.loadutils import open_dataset
+from climpred.tutorial import load_dataset
 from climpred.metrics import ALL_PM_METRICS_DICT
 from climpred.prediction import compute_perfect_model, compute_persistence
 
@@ -10,27 +10,27 @@ ALL_PM_COMPARISONS_DICT = {'m2c': '', 'e2c': ''}
 
 @pytest.fixture
 def PM_da_ds1d():
-    da = open_dataset('MPI-PM-DP-1D')
+    da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
     return da
 
 
 @pytest.fixture
 def PM_da_control1d():
-    da = open_dataset('MPI-control-1D')
+    da = load_dataset('MPI-control-1D')
     da = da['tos'].isel(area=1, period=-1)
     return da
 
 
 @pytest.fixture
 def PM_ds_ds1d():
-    ds = open_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
+    ds = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
     return ds
 
 
 @pytest.fixture
 def PM_ds_control1d():
-    ds = open_dataset('MPI-control-1D').isel(area=1, period=-1)
+    ds = load_dataset('MPI-control-1D').isel(area=1, period=-1)
     return ds
 
 

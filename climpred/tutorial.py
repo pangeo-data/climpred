@@ -26,12 +26,12 @@ FILE_ALIAS_DICT = {
 }
 
 FILE_DESCRIPTIONS = {
-    'MPI-PM-DP-1D': 'decadal prediction ensemble area' + ' averages of SST/SSS/AMO.',
-    'MPI-PM-DP-3D': 'decadal prediction ensemble' + ' lat/lon/time of SST/SSS/AMO.',
-    'MPI-control-1D': 'area averages for the control run of' + ' SST/SSS.',
-    'MPI-control-3D': 'lat/lon/time for the control run of' + ' SST/SSS.',
-    'CESM-DP-SST': 'decadal prediction ensemble of global' + ' mean SSTs.',
-    'CESM-DP-SSS': 'decadal prediction ensemble of global' + ' mean SSS.',
+    'MPI-PM-DP-1D': 'decadal prediction ensemble area averages of SST/SSS/AMO.',
+    'MPI-PM-DP-3D': 'decadal prediction ensemble lat/lon/time of SST/SSS/AMO.',
+    'MPI-control-1D': 'area averages for the control run of SST/SSS.',
+    'MPI-control-3D': 'lat/lon/time for the control run of SST/SSS.',
+    'CESM-DP-SST': 'decadal prediction ensemble of global mean SSTs.',
+    'CESM-DP-SSS': 'decadal prediction ensemble of global mean SSS.',
     'CESM-LE': 'uninitialized ensemble of global mean SSTs.',
     'MPIESM_miklip_baseline1-hind-SST-global':
     'initialized ensemble of global mean SSTs',
@@ -75,7 +75,7 @@ def _initialize_proxy(proxy_dict):
     urllib.request.install_opener(opener)
 
 
-def open_dataset(
+def load_dataset(
     name=None,
     cache=True,
     cache_dir=_default_cache_dir,
@@ -118,9 +118,9 @@ def open_dataset(
         The desired xarray dataset.
 
     Examples:
-        >>> from climpred import open_dataset()
+        >>> from climpred.tutorial import load_dataset()
         >>> proxy_dict = {'http': '127.0.0.1'}
-        >>> ds = open_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
+        >>> ds = load_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
     """
     if name is None:
         return _get_datasets()

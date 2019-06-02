@@ -4,7 +4,8 @@ DISTNAME = 'climpred'
 VERSION = '0.3'
 AUTHOR = 'Riley X. Brady'
 AUTHOR_EMAIL = 'riley.brady@colorado.edu'
-DESCRIPTION = 'An xarray wrapper for analysis of ensemble forecast models for climate prediction.'
+DESCRIPTION = ('An xarray wrapper for analysis of ensemble forecast models for climate '
+               + 'prediction.')
 URL = 'https://github.com/bradyrx/climpred'
 LICENSE = 'MIT'
 INSTALL_REQUIRES = ['numpy', 'pandas',

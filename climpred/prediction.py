@@ -7,9 +7,7 @@ from .comparisons import (
     _e2c,
     get_comparison_function,
 )
-from .exceptions import DimensionError
 from .metrics import ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
-from .stats import z_significance
 from .utils import check_xarray
 
 
@@ -245,73 +243,3 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     uninit, reference = comparison(uninit, reference)
     u = metric(uninit, reference, dim='time', comparison=comparison)
     return u
-
-
-# --------------------------------------------#
-# PREDICTABILITY HORIZON
-# --------------------------------------------#
-def predictability_horizon(
-    skill,
-    threshold,
-    limit='upper',
-    perfect_model=False,
-    p_values=None,
-    N=None,
-    alpha=0.05,
-    ci=90,
-):
-    """
-    Get predictability horizons for skill better than threshold.
-
-    Args:
-        skill (xarray object): skill.
-        threshold (xarray object): threshold.
-        limit (str): bounds for comparison. Default: 'upper'.
-        perfect_model: (optional bool) If True, do not consider p values, N,
-                       etc.
-        p_values: (optional xarray object) If using 'upper' limit, input
-                  a DataArray/Dataset of the same dimensions as skill that
-                  contains p-values for the skill correlatons.
-
-    Returns:
-        ph (xarray object)
-    """
-    if (limit == 'upper') and (not perfect_model):
-        if p_values is None:
-            raise KeyError(
-                """Please submit p values associated with the
-                correlation coefficients."""
-            )
-        if p_values.dims != skill.dims:
-            raise DimensionError(
-                """Please submit an xarray object of the same
-                dimensions as `skill` that contains p-values for the skill
-                correlatons."""
-            )
-        if N is None:
-            raise KeyError(
-                """Please submit N, the length of the original
-                time series being correlated."""
-            )
-        sig = z_significance(skill, threshold, N, ci)
-        ph = ((p_values < alpha) & (sig)).argmin('lead')
-        # where ph not reached, set max time
-        ph_not_reached = ((p_values < alpha) & (sig)).all('lead')
-    elif (limit == 'upper') and (perfect_model):
-        ph = (skill > threshold).argmin('lead')
-        ph_not_reached = (skill > threshold).all('lead')
-    elif limit == 'lower':
-        ph = (skill < threshold).argmin('lead')
-        # where ph not reached, set max time
-        ph_not_reached = (skill < threshold).all('lead')
-    else:
-        raise KeyError(
-            """Please either submit 'upper' or 'lower' for the
-            limit keyword."""
-        )
-    ph = ph.where(~ph_not_reached, other=skill['lead'].max())
-    # mask out any initial NaNs (land, masked out regions, etc.)
-    mask = np.asarray(skill.isel({'lead': 0}))
-    mask = np.isnan(mask)
-    ph = ph.where(~mask, np.nan)
-    return ph

@@ -674,12 +674,3 @@ class HindcastEnsemble(PredictionEnsemble):
                     self.initialized, self.reference[key], metric=metric
                 )
             return persistence
-
-    def compute_horizon(self, refname=None):
-        """
-        Method to compute the predictability horizon.
-        """
-        raise NotImplementedError(
-            """Predictability horizons are not yet fully
-            implemented and tested."""
-        )

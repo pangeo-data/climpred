@@ -1,5 +1,3 @@
-import matplotlib.pyplot as plt
-
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 from climpred.tutorial import load_dataset
@@ -20,6 +18,5 @@ def test_mpi_pm_plot_bootstrapped_skill_over_leadyear():
     res = bootstrap_perfect_model(
         PM_da_ds1d, PM_da_control1d, metric='pearson_r', bootstrap=bootstrap
     )
-    fig, ax = plt.subplots()
-    res_ax = plot_bootstrapped_skill_over_leadyear(res, 95, ax=ax)
+    res_ax = plot_bootstrapped_skill_over_leadyear(res, 95)
     assert res_ax is not None

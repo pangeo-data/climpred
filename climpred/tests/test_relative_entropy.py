@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
@@ -65,6 +64,5 @@ def test_plot_relative_entropy(PM_da_ds3d, PM_da_control3d):
     threshold = bootstrap_relative_entropy(
         PM_da_ds3d, PM_da_control3d, nmember_control=5, neofs=2, bootstrap=2
     )
-    fig, ax = plt.subplots()
     res_ax = plot_relative_entropy(res, threshold)
     assert res_ax is not None

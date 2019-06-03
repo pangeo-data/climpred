@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from climpred.bootstrap import bootstrap_hindcast
 
 # testing less separately: use ALL_PM_METRICS_DICT
@@ -152,7 +153,7 @@ def test_bootstrap_hindcast_da1d_not_nan(
     initialized_da, uninitialized_da, reconstruction_da, metric, comparison
 ):
     """
-    Checks that there are no NaNs on bootstrap perfect_model of 1D da.
+    Checks that there are no NaNs on bootstrap hindcast of 1D da.
     """
     actual = bootstrap_hindcast(
         initialized_da,
@@ -167,3 +168,29 @@ def test_bootstrap_hindcast_da1d_not_nan(
     assert not actual_init_skill
     actual_uninit_p = actual.sel(kind='uninit', results='p').isnull().any()
     assert not actual_uninit_p
+
+
+@pytest.mark.parametrize('metric', ('AnomCorr', 'test', 'None'))
+def test_compute_hindcast_metric_keyerrors(initialized_ds, reconstruction_ds, metric):
+    """
+    Checks that wrong metric names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        compute_hindcast(
+            initialized_ds, reconstruction_ds, comparison='e2c', metric=metric
+        )
+    assert 'supply a metric from' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
+def test_compute_hindcast_comparison_keyerrors(
+    initialized_ds, reconstruction_ds, comparison
+):
+    """
+    Checks that wrong comparison names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        compute_hindcast(
+            initialized_ds, reconstruction_ds, comparison=comparison, metric='mse'
+        )
+    assert 'supply a comparison from' in str(excinfo.value)

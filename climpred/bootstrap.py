@@ -133,6 +133,33 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     return xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
 
 
+def bootstrap_func(
+    func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs
+):
+    """Sig% Threshold of function based on resampling with replacement.
+
+    Reference:
+    * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
+     Intervals for the Correlation Coefficient in Climatology.” Theoretical and
+      Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
+      https://doi.org/10/b6fnsv.
+
+    """
+    bootstraped_results = []
+    resample_dim_values = ds[resample_dim].values
+    for _ in range(bootstrap):
+        smp_resample_dim = np.random.choice(
+            resample_dim_values, len(resample_dim_values)
+        )
+        smp_ds = ds.sel({resample_dim: smp_resample_dim})
+        smp_ds[resample_dim] = resample_dim_values
+        bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
+    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
+        sig / 100, 'bootstrap'
+    )
+    return threshold
+
+
 def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
     """Calc DPP from re-sampled dataset.
 

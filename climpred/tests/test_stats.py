@@ -1,7 +1,9 @@
 import numpy as np
 import pytest
 import xarray as xr
+from scipy.signal import correlate
 
+from climpred.bootstrap import bootstrap_func
 from climpred.exceptions import DimensionError
 from climpred.stats import (
     DPP,
@@ -125,3 +127,22 @@ def test_potential_predictability_likely(control_3d_NA, func):
     control = control_3d_NA
     res = func(control)
     assert res.mean() > 0
+
+
+def test_autocorr(control_3d_NA):
+    """Check autocorr results with scipy."""
+    ds = control_3d_NA.isel(x=5, y=5)
+    actual = autocorr(ds)
+    expected = correlate(ds, ds)
+    np.allclose(actual, expected)
+
+
+def test_bootstrap_DPP_sig50_similar_DPP(control_3d_NA):
+    ds = control_3d_NA
+    bootstrap = 5
+    sig = 50
+    actual = bootstrap_func(DPP, ds, 'time', bootstrap=bootstrap, sig=sig).drop(
+        'quantile'
+    )
+    expected = DPP(ds)
+    xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)

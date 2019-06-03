@@ -1,7 +1,9 @@
+import matplotlib.pyplot as plt
 import numpy as np
 import pytest
 import xarray as xr
 
+from climpred.graphics import plot_relative_entropy
 from climpred.relative_entropy import (
     bootstrap_relative_entropy,
     compute_relative_entropy,
@@ -54,3 +56,15 @@ def test_bootstrap_relative_entropy(PM_da_ds3d, PM_da_control3d):
     actual_any_nan = actual.isnull()
     for var in actual_any_nan.data_vars:
         assert not actual_any_nan[var]
+
+
+def test_plot_relative_entropy(PM_da_ds3d, PM_da_control3d):
+    res = compute_relative_entropy(
+        PM_da_ds3d, PM_da_control3d, nmember_control=5, neofs=2
+    )
+    threshold = bootstrap_relative_entropy(
+        PM_da_ds3d, PM_da_control3d, nmember_control=5, neofs=2, bootstrap=2
+    )
+    fig, ax = plt.subplots()
+    res_ax = plot_relative_entropy(res, threshold)
+    assert res_ax is not None

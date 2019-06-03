@@ -3,7 +3,14 @@ import pytest
 import xarray as xr
 
 from climpred.exceptions import DimensionError
-from climpred.stats import rm_trend
+from climpred.stats import (
+    DPP,
+    autocorr,
+    decorrelation_time,
+    rm_trend,
+    varweighted_mean_period,
+)
+from climpred.tutorial import load_dataset
 
 
 @pytest.fixture
@@ -26,6 +33,13 @@ def two_dim_da():
 def multi_dim_ds():
     ds = xr.tutorial.open_dataset('air_temperature')
     ds = ds.assign(**{'airx2': ds['air'] * 2})
+    return ds
+
+
+@pytest.fixture
+def control_3d_NA():
+    """North Atlantic"""
+    ds = load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
@@ -93,3 +107,21 @@ def test_rm_trend_3d_dataset_dim_order(multi_dim_ds):
     # ensure the dims are back in its original state
     assert list(multi_dim_ds_dt['air'].dims) == ['lon', 'time', 'lat']
     assert list(multi_dim_ds_dt['airx2'].dims) == ['lon', 'time', 'lat']
+
+
+@pytest.mark.parametrize('chunk', (True, False))
+def test_DPP(control_3d_NA, chunk):
+    """Check for positive diagnostic potential predictability in NA SST."""
+    control = control_3d_NA
+    res = DPP(control, chunk=chunk)
+    assert res.mean() > 0
+
+
+@pytest.mark.parametrize(
+    'func', (varweighted_mean_period, decorrelation_time, autocorr)
+)
+def test_potential_predictability_likely(control_3d_NA, func):
+    """Check for positive diagnostic potential predictability in NA SST."""
+    control = control_3d_NA
+    res = func(control)
+    assert res.mean() > 0

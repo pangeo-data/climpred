@@ -57,6 +57,7 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     ax[2].set_title('Dispersion')
     ax[0].set_ylabel('Relative Entropy [ ]')
     ax[0].set_ylim(bottom=0)
+    return ax
 
 
 def plot_bootstrapped_skill_over_leadyear(

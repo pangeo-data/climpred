@@ -108,3 +108,29 @@ def test_bootstrap_perfect_model_ds1d_not_nan(
     for var in actual.data_vars:
         actual_uninit_p = actual[var].sel(kind='uninit', results='p').isnull().any()
         assert not actual_uninit_p
+
+
+@pytest.mark.parametrize('metric', ('AnomCorr', 'test', 'None'))
+def test_compute_perfect_model_metric_keyerrors(PM_da_ds1d, PM_da_control1d, metric):
+    """
+    Checks that wrong metric names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        compute_perfect_model(
+            PM_da_ds1d, PM_da_control1d, comparison='e2c', metric=metric
+        )
+    assert 'supply a metric from' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
+def test_compute_perfect_model_comparison_keyerrors(
+    PM_da_ds1d, PM_da_control1d, comparison
+):
+    """
+    Checks that wrong comparison names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        compute_perfect_model(
+            PM_da_ds1d, PM_da_control1d, comparison=comparison, metric='mse'
+        )
+    assert 'supply a comparison from' in str(excinfo.value)

@@ -1,9 +1,19 @@
 import numpy as np
 import pytest
 import xarray as xr
+from scipy.signal import correlate
 
+from climpred.bootstrap import DPP_threshold, varweighted_mean_period_threshold
 from climpred.exceptions import DimensionError
-from climpred.stats import rm_trend
+from climpred.stats import (
+    DPP,
+    autocorr,
+    corr,
+    decorrelation_time,
+    rm_trend,
+    varweighted_mean_period,
+)
+from climpred.tutorial import load_dataset
 
 
 @pytest.fixture
@@ -26,6 +36,13 @@ def two_dim_da():
 def multi_dim_ds():
     ds = xr.tutorial.open_dataset('air_temperature')
     ds = ds.assign(**{'airx2': ds['air'] * 2})
+    return ds
+
+
+@pytest.fixture
+def control_3d_NA():
+    """North Atlantic"""
+    ds = load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
@@ -93,3 +110,68 @@ def test_rm_trend_3d_dataset_dim_order(multi_dim_ds):
     # ensure the dims are back in its original state
     assert list(multi_dim_ds_dt['air'].dims) == ['lon', 'time', 'lat']
     assert list(multi_dim_ds_dt['airx2'].dims) == ['lon', 'time', 'lat']
+
+
+@pytest.mark.parametrize('chunk', (True, False))
+def test_DPP(control_3d_NA, chunk):
+    """Check for positive diagnostic potential predictability in NA SST."""
+    control = control_3d_NA
+    res = DPP(control, chunk=chunk)
+    assert res.mean() > 0
+
+
+@pytest.mark.parametrize(
+    'func', (varweighted_mean_period, decorrelation_time, autocorr)
+)
+def test_potential_predictability_likely(control_3d_NA, func):
+    """Check for positive diagnostic potential predictability in NA SST."""
+    control = control_3d_NA
+    res = func(control)
+    assert res.mean() > 0
+
+
+def test_autocorr(control_3d_NA):
+    """Check autocorr results with scipy."""
+    ds = control_3d_NA.isel(x=5, y=5)
+    actual = autocorr(ds)
+    expected = correlate(ds, ds)
+    np.allclose(actual, expected)
+
+
+def test_corr(control_3d_NA):
+    """Check autocorr results with scipy."""
+    ds = control_3d_NA.isel(x=5, y=5)
+    lag = 1
+    actual = corr(ds, ds, lag=lag)
+    expected = correlate(ds[:-lag], ds[lag:])
+    np.allclose(actual, expected)
+
+
+def test_bootstrap_DPP_sig50_similar_DPP(control_3d_NA):
+    ds = control_3d_NA
+    bootstrap = 5
+    sig = 50
+    actual = DPP_threshold(ds, bootstrap=bootstrap, sig=sig).drop('quantile')
+    expected = DPP(ds)
+    xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
+
+
+def test_bootstrap_vwmp_sig50_similar_vwmp(control_3d_NA):
+    ds = control_3d_NA
+    bootstrap = 5
+    sig = 50
+    actual = varweighted_mean_period_threshold(ds, bootstrap=bootstrap, sig=sig).drop(
+        'quantile'
+    )
+    expected = varweighted_mean_period(ds)
+    xr.testing.assert_allclose(actual, expected, atol=2, rtol=0.5)
+
+
+def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
+    ds = control_3d_NA
+    bootstrap = 5
+    sig = [5, 95]
+    actual = DPP_threshold(ds, bootstrap=bootstrap, sig=sig)
+    print(actual)
+    assert actual['quantile'].size == len(sig)
+    assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()

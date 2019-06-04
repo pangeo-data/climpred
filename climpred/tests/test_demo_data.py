@@ -11,3 +11,8 @@ def test_open_dataset_locally(filepath):
     print(filepath)
     d = load_dataset(filepath)
     assert d.nbytes > 0
+
+
+def test_load_datasets_empty():
+    actual = load_dataset()
+    assert actual is None

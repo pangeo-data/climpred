@@ -15,25 +15,6 @@ from .utils import check_xarray
 # HELPER FUNCTIONS
 # Should only be used internally by climpred
 # -------------------------------------------- #
-def _shift(a, b, lag, dim='time'):
-    """
-    Helper function to return two shifted time series for applying statistics
-    to lags. This shifts them, and then forces them to have a common dimension
-    so as not to break the metric functions.
-
-    This function is usually applied in a loop. So, one loops over (1, nlags)
-    applying the shift, then the metric, then concatenates all results into
-    one xarray object.
-    """
-    if a[dim].size != b[dim].size:
-        raise IOError('Please provide time series of equal lengths.')
-    N = a[dim].size
-    a = a.isel({dim: slice(0, N - lag)})
-    b = b.isel({dim: slice(0 + lag, N)})
-    b[dim] = a[dim]
-    return a, b
-
-
 def _intersection(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.

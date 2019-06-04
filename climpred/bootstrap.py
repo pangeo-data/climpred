@@ -133,10 +133,10 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     return xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
 
 
-def bootstrap_func(
+def _bootstrap_func(
     func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs
 ):
-    """Sig% Threshold of function based on resampling with replacement.
+    """Sig% threshold of function based on resampling with replacement.
 
     Reference:
     * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
@@ -144,7 +144,23 @@ def bootstrap_func(
       Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
       https://doi.org/10/b6fnsv.
 
+    Args:
+        func (function): function to be bootstrapped.
+        ds (xr.object): first input argument of func.
+        resample_dim (str): dimension to resample from.
+        sig (int,float,list): significance levels to return. Defaults to 95.
+        bootstrap (int): number of resample iterations. Defaults to 500.
+        *func_args (type): `*func_args`.
+        **func_kwargs (type): `**func_kwargs`.
+
+    Returns:
+        sig_level: bootstrapped significance levels with
+                   dimensions of ds and len(sig) if sig is list
     """
+    if isinstance(sig, list):
+        psig = [i / 100 for i in sig]
+    else:
+        psig = sig / 100
     bootstraped_results = []
     resample_dim_values = ds[resample_dim].values
     for _ in range(bootstrap):
@@ -154,14 +170,12 @@ def bootstrap_func(
         smp_ds = ds.sel({resample_dim: smp_resample_dim})
         smp_ds[resample_dim] = resample_dim_values
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
-    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
-        sig / 100, 'bootstrap'
-    )
-    return threshold
+    sig_level = xr.concat(bootstraped_results, 'bootstrap').quantile(psig, 'bootstrap')
+    return sig_level
 
 
-def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
-    """Calc DPP from re-sampled dataset.
+def DPP_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
+    """Calc DPP significance levels from re-sampled dataset.
 
     Reference:
     * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
@@ -169,35 +183,25 @@ def DPP_threshold(control, sig=95, bootstrap=500, **dpp_kwargs):
         Geophysical Research Letters 38, no. 7 (2011).
         https://doi.org/10/ft272w.
 
+    See also:
+    * climpred.bootstrap._bootstrap_func
+    * climpred.stats.DPP
     """
-    bootstraped_results = []
-    time = control.time.values
-    for _ in range(bootstrap):
-        smp_time = np.random.choice(time, len(time))
-        smp_control = control.sel(time=smp_time)
-        smp_control['time'] = time
-        bootstraped_results.append(DPP(smp_control, **dpp_kwargs))
-    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
-        sig / 100, 'bootstrap'
+    return _bootstrap_func(
+        DPP, control, dim, sig=sig, bootstrap=bootstrap, **dpp_kwargs
     )
-    return threshold
 
 
-def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, **vwmp_kwargs):
-    """Calc vwmp from re-sampled dataset.
+def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
+    """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
+    See also:
+    * climpred.bootstrap._bootstrap_func
+    * climpred.stats.varweighted_mean_period
     """
-    bootstraped_results = []
-    time = control.time.values
-    for _ in range(bootstrap):
-        smp_time = np.random.choice(time, len(time))
-        smp_control = control.sel(time=smp_time)
-        smp_control['time'] = time
-        bootstraped_results.append(varweighted_mean_period(smp_control, **vwmp_kwargs))
-    threshold = xr.concat(bootstraped_results, 'bootstrap').quantile(
-        sig / 100, 'bootstrap'
+    return _bootstrap_func(
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap
     )
-    return threshold
 
 
 def bootstrap_compute(

@@ -177,7 +177,7 @@ def test_compute_hindcast_metric_keyerrors(initialized_ds, reconstruction_ds, me
     """
     with pytest.raises(KeyError) as excinfo:
         compute_hindcast(
-            initialized_ds, reconstruction_ds, comparison='e2c', metric=metric
+            initialized_ds, reconstruction_ds, comparison='e2r', metric=metric
         )
     assert 'supply a metric from' in str(excinfo.value)
 

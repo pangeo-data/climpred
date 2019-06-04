@@ -3,7 +3,7 @@ import pytest
 import xarray as xr
 from scipy.signal import correlate
 
-from climpred.bootstrap import bootstrap_func
+from climpred.bootstrap import DPP_threshold, varweighted_mean_period_threshold
 from climpred.exceptions import DimensionError
 from climpred.stats import (
     DPP,
@@ -141,8 +141,27 @@ def test_bootstrap_DPP_sig50_similar_DPP(control_3d_NA):
     ds = control_3d_NA
     bootstrap = 5
     sig = 50
-    actual = bootstrap_func(DPP, ds, 'time', bootstrap=bootstrap, sig=sig).drop(
-        'quantile'
-    )
+    actual = DPP_threshold(ds, bootstrap=bootstrap, sig=sig).drop('quantile')
     expected = DPP(ds)
     xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
+
+
+def test_bootstrap_vwmp_sig50_similar_vwmp(control_3d_NA):
+    ds = control_3d_NA
+    bootstrap = 5
+    sig = 50
+    actual = varweighted_mean_period_threshold(ds, bootstrap=bootstrap, sig=sig).drop(
+        'quantile'
+    )
+    expected = varweighted_mean_period(ds)
+    xr.testing.assert_allclose(actual, expected, atol=2, rtol=0.5)
+
+
+def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
+    ds = control_3d_NA
+    bootstrap = 5
+    sig = [5, 95]
+    actual = DPP_threshold(ds, bootstrap=bootstrap, sig=sig)
+    print(actual)
+    assert actual['quantile'].size == len(sig)
+    assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()

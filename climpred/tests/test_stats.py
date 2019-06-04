@@ -8,6 +8,7 @@ from climpred.exceptions import DimensionError
 from climpred.stats import (
     DPP,
     autocorr,
+    corr,
     decorrelation_time,
     rm_trend,
     varweighted_mean_period,
@@ -134,6 +135,15 @@ def test_autocorr(control_3d_NA):
     ds = control_3d_NA.isel(x=5, y=5)
     actual = autocorr(ds)
     expected = correlate(ds, ds)
+    np.allclose(actual, expected)
+
+
+def test_corr(control_3d_NA):
+    """Check autocorr results with scipy."""
+    ds = control_3d_NA.isel(x=5, y=5)
+    lag = 1
+    actual = corr(ds, ds, lag=lag)
+    expected = correlate(ds[:-lag], ds[lag:])
     np.allclose(actual, expected)
 
 

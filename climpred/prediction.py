@@ -8,7 +8,7 @@ from .comparisons import (
     get_comparison_function,
 )
 from .metrics import ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
-from .utils import check_xarray
+from .checks import is_xarray, is_in_dict
 
 
 # -------------------------------------------- #
@@ -19,44 +19,16 @@ def _intersection(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.
     """
+    # TODO: move this under utils
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
-
-
-def _validate_PM_comparison(comparison):
-    """Validate if comparison is PM comparison."""
-    if comparison not in ALL_PM_COMPARISONS_DICT.values():
-        raise KeyError(f'specify comparison from', f'{ALL_PM_COMPARISONS_DICT.keys()}')
-
-
-def _validate_hindcast_comparison(comparison):
-    """Validate if comparison is hindcast comparison."""
-    if comparison not in ALL_HINDCAST_COMPARISONS_DICT.values():
-        raise KeyError(
-            f'specify comparison from', f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}'
-        )
-
-
-def _validate_PM_metric(metric):
-    """Validate if metric is PM metric."""
-    if metric not in ALL_PM_METRICS_DICT.values():
-        raise KeyError(f'specify metric argument from', f'{ALL_PM_METRICS_DICT.keys()}')
-
-
-def _validate_hindcast_metric(metric):
-    """Validate if metric is hindcast metric."""
-    if metric not in ALL_HINDCAST_METRICS_DICT.values():
-        raise KeyError(
-            f'specify metric argument from', f'{ALL_HINDCAST_METRICS_DICT.keys()}'
-        )
-
 
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -77,9 +49,9 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     """
     supervector_dim = 'svd'
     comparison = get_comparison_function(comparison)
-    _validate_PM_comparison(comparison)
+    is_in_dict(comparison, ALL_PM_COMPARISONS_DICT, 'comparison')
     metric = get_metric_function(metric)
-    _validate_PM_metric(metric)
+    is_in_dict(metric, ALL_PM_METRICS_DICT, 'metric')
 
     forecast, reference = comparison(ds, supervector_dim)
 
@@ -87,7 +59,7 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     return res
 
 
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score against some reference (hindcast,
@@ -122,9 +94,9 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     nlags = hind.lead.size
 
     comparison = get_comparison_function(comparison)
-    _validate_hindcast_comparison(comparison)
+    is_in_dict(comparison, ALL_HINDCAST_COMPARISONS_DICT, 'comparison')
     metric = get_metric_function(metric)
-    _validate_hindcast_metric(metric)
+    is_in_dict(metric, ALL_HINDCAST_METRICS_DICT, 'metric')
 
     forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
@@ -150,7 +122,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     return skill
 
 
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_persistence(hind, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -173,7 +145,7 @@ def compute_persistence(hind, reference, metric='pearson_r'):
                               metric applied.
     """
     metric = get_metric_function(metric)
-    _validate_hindcast_metric(metric)
+    is_in_dict(metric, ALL_HINDCAST_METRICS_DICT, 'metric')
 
     plag = []  # holhind results of persistence for each lag
     for lag in hind.lead.values:
@@ -191,7 +163,7 @@ def compute_persistence(hind, reference, metric='pearson_r'):
 
 # ToDo: do we really need a function here
 # or cannot we somehow use compute_hindcast for that?
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score between an uninitialized ensemble
@@ -218,9 +190,9 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
         u (xarray object): Results from comparison at the first lag.
     """
     comparison = get_comparison_function(comparison)
-    _validate_hindcast_comparison(comparison)
+    is_in_dict(comparison, ALL_HINDCAST_COMPARISONS_DICT, 'comparison')
     metric = get_metric_function(metric)
-    _validate_hindcast_metric(metric)
+    is_in_dict(metric, ALL_HINDCAST_METRICS_DICT, 'metric')
     uninit, reference = comparison(uninit, reference)
     u = metric(uninit, reference, dim='time', comparison=comparison)
     return u

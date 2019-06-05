@@ -11,6 +11,48 @@ from xskillscore import (
     rmse,
 )
 
+ALL_HINDCAST_METRICS_DICT = {
+    'pearson_r': _pearson_r,
+    'pr': _pearson_r,
+    'acc': _pearson_r,
+    'pearson_r_p_value': _pearson_r_p_value,
+    'rmse': _rmse,
+    'mse': _mse,
+    'mae': _mae,
+    'msss_murphy': _msss_murphy,
+    'conditional_bias': _conditional_bias,
+    'c_b': _conditional_bias,
+    'unconditional_bias': _bias,
+    'u_b': _bias,
+    'bias': _bias,
+    'std_ratio': _std_ratio,
+    'bias_slope': _bias_slope,
+    'crps': _crps,
+    'crpss': _crpss,
+    'less': _less,
+    'nmae': _nmae,
+    'nrmse': _nrmse,
+    'nmse': _nmse,
+    'nev': _nmse,
+    'ppp': _ppp,
+    'msss': _ppp,
+    'uacc': _uacc,
+}
+
+ALL_PM_METRICS_DICT = ALL_HINDCAST_METRICS_DICT.copy()
+del ALL_PM_METRICS_DICT['less']
+
+# more positive skill is better than more negative
+POSITIVELY_ORIENTED_METRICS = [
+    'pearson_r',
+    'msss_murphy',
+    'ppp',
+    'msss',
+    'crpss',
+    'uacc',
+    'msss',
+]
+
 
 def _get_norm_factor(comparison):
     """Get normalization factor for PPP, nvar, nRMSE.
@@ -352,46 +394,3 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
         uacc_skill (xarray object): skill of uACC
     """
     return _ppp(forecast, reference, dim=dim, comparison=comparison) ** 0.5
-
-
-ALL_HINDCAST_METRICS_DICT = {
-    'pearson_r': _pearson_r,
-    'pr': _pearson_r,
-    'acc': _pearson_r,
-    'pearson_r_p_value': _pearson_r_p_value,
-    'rmse': _rmse,
-    'mse': _mse,
-    'mae': _mae,
-    'msss_murphy': _msss_murphy,
-    'conditional_bias': _conditional_bias,
-    'c_b': _conditional_bias,
-    'unconditional_bias': _bias,
-    'u_b': _bias,
-    'bias': _bias,
-    'std_ratio': _std_ratio,
-    'bias_slope': _bias_slope,
-    'crps': _crps,
-    'crpss': _crpss,
-    'less': _less,
-    'nmae': _nmae,
-    'nrmse': _nrmse,
-    'nmse': _nmse,
-    'nev': _nmse,
-    'ppp': _ppp,
-    'msss': _ppp,
-    'uacc': _uacc,
-}
-
-ALL_PM_METRICS_DICT = ALL_HINDCAST_METRICS_DICT.copy()
-del ALL_PM_METRICS_DICT['less']
-
-# more positive skill is better than more negative
-POSITIVELY_ORIENTED_METRICS = [
-    'pearson_r',
-    'msss_murphy',
-    'ppp',
-    'msss',
-    'crpss',
-    'uacc',
-    'msss',
-]

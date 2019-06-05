@@ -11,7 +11,12 @@ from .prediction import (
     compute_persistence,
     compute_uninitialized,
 )
-from .utils import check_xarray
+from .checks import (
+    is_xarray,
+    has_prediction_ensemble_dims,
+    match_initialized_dims,
+    match_initialized_vars
+)
 
 # Both:
 # TODO: add horizon functionality.
@@ -32,63 +37,6 @@ from .utils import check_xarray
 
 # PerfectModel:
 # TODO: add relative entropy functionality
-
-
-# --------------
-# VARIOUS CHECKS
-# --------------
-def _check_prediction_ensemble_dimensions(xobj):
-    """
-    Checks that at the minimum, the climate prediction  object has dimensions
-    `init` and `lead` (i.e., it's a time series with lead times.
-    """
-    cond = all(dims in xobj.dims for dims in ['init', 'lead'])
-    if not cond:
-        # create custom error here.
-        raise DimensionError(
-            'Your prediction object must contain the '
-            'dimensions `lead` and `init` at the minimum.'
-        )
-
-
-def _check_reference_dimensions(init, ref):
-    """Checks that the reference matches all initialized dimensions except
-    for 'lead' and 'member'"""
-    # since reference products won't have the initialization dimension,
-    # temporarily rename to time.
-    init = init.rename({'init': 'time'})
-    init_dims = list(init.dims)
-    if 'lead' in init_dims:
-        init_dims.remove('lead')
-    if 'member' in init_dims:
-        init_dims.remove('member')
-    if not (set(ref.dims) == set(init_dims)):
-        unmatch_dims = set(ref.dims) ^ set(init_dims)
-        raise DimensionError(
-            'Dimensions must match initialized prediction ensemble '
-            f'dimensions; these dimensions do not match: {unmatch_dims}.'
-        )
-
-
-def _check_reference_vars_match_initialized(init, ref):
-    """
-    Checks that a new reference (or control) dataset has at least one variable
-    in common with the initialized dataset. This ensures that they can be
-    compared pairwise.
-    ref: new addition
-    init: dp.initialized
-    """
-    init_vars = list(init.data_vars)
-    ref_vars = list(ref.data_vars)
-    # https://stackoverflow.com/questions/10668282/
-    # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
-    if set(init_vars).isdisjoint(ref_vars):
-        raise VariableError(
-            'Please provide a Dataset/DataArray with at least '
-            'one matching variable to the initialized prediction ensemble; '
-            f'got {init_vars} for init and {ref_vars} for ref.'
-        )
-
 
 # ----------
 # Aesthetics
@@ -148,12 +96,12 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
 
-    @check_xarray(1)
+    @is_xarray(1)
     def __init__(self, xobj):
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
-        _check_prediction_ensemble_dimensions(xobj)
+        has_prediction_ensemble_dims(xobj)
         self.initialized = xobj
         self.uninitialized = {}
 
@@ -192,7 +140,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self.control = {}
 
-    @check_xarray(1)
+    @is_xarray(1)
     def add_control(self, xobj):
         """Add the control run that initialized the climate prediction
         ensemble.
@@ -203,8 +151,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # NOTE: These should all be decorators.
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_reference_dimensions(self.initialized, xobj)
-        _check_reference_vars_match_initialized(self.initialized, xobj)
+        match_initialized_dims(self.initialized, xobj)
+        match_initialized_vars(self.initialized, xobj)
         self.control = xobj
 
     def generate_uninitialized(self, var=None):
@@ -467,7 +415,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ref_vars.pop(idx)
         return init_vars, ref_vars
 
-    @check_xarray(1)
+    @is_xarray(1)
     def add_reference(self, xobj, name):
         """Add a reference product for comparison to the initialized ensemble.
 
@@ -483,11 +431,11 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         # TODO: Make sure everything is the same length. Can add keyword
         # to autotrim to the common timeframe?
-        _check_reference_dimensions(self.initialized, xobj)
-        _check_reference_vars_match_initialized(self.initialized, xobj)
+        match_initialized_dims(self.initialized, xobj)
+        match_initialized_vars(self.initialized, xobj)
         self.reference[name] = xobj
 
-    @check_xarray(1)
+    @is_xarray(1)
     def add_uninitialized(self, xobj):
         """Add a companion uninitialized ensemble for comparison to references.
 
@@ -500,8 +448,8 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_reference_dimensions(self.initialized, xobj)
-        _check_reference_vars_match_initialized(self.initialized, xobj)
+        match_initialized_dims(self.initialized, xobj)
+        match_initialized_vars(self.initialized, xobj)
         self.uninitialized = xobj
 
     def compute_metric(self, refname=None, metric='pearson_r', comparison='e2r'):

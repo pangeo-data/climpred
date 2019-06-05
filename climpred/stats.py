@@ -8,14 +8,15 @@ from scipy.signal import periodogram
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .exceptions import DimensionError
-from .utils import check_xarray, get_dims
+from .checks import is_xarray
+from .utils import get_dims
 
 
 # ----------------------------------#
 # TIME SERIES
 # Functions related to time series.
 # ----------------------------------#
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 
@@ -118,7 +119,7 @@ def _eff_p_value(x, y, r, dim):
     return p
 
 
-@check_xarray(0)
+@is_xarray(0)
 def rm_poly(ds, order, dim='time'):
     """Returns xarray object with nth-order fit removed.
 
@@ -221,7 +222,7 @@ def rm_trend(da, dim='time'):
 
 
 # # TODO: coords lon, lat get lost for curvilinear ds
-@check_xarray(0)
+@is_xarray(0)
 def varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
@@ -254,7 +255,7 @@ def varweighted_mean_period(ds, time_dim='time'):
     return T
 
 
-@check_xarray(0)
+@is_xarray(0)
 def autocorr(ds, lag=1, dim='time', return_p=False):
     """Calculate the lagged correlation of time series.
 
@@ -293,7 +294,7 @@ def autocorr(ds, lag=1, dim='time', return_p=False):
         return r
 
 
-@check_xarray(0)
+@is_xarray(0)
 def decorrelation_time(da, r=20, dim='time'):
     """Calculate the decorrelaton time of a time series.
 

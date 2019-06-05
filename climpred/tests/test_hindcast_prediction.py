@@ -4,8 +4,7 @@ import pytest
 from climpred.bootstrap import bootstrap_hindcast
 
 # testing less separately: use ALL_PM_METRICS_DICT
-from climpred.comparisons import ALL_HINDCAST_COMPARISONS_DICT
-from climpred.metrics import ALL_PM_METRICS_DICT
+from climpred.constants import ALL_HINDCAST_COMPARISONS_DICT, ALL_PM_METRICS_DICT
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,
@@ -179,7 +178,7 @@ def test_compute_hindcast_metric_keyerrors(initialized_ds, reconstruction_ds, me
         compute_hindcast(
             initialized_ds, reconstruction_ds, comparison='e2r', metric=metric
         )
-    assert 'supply a metric from' in str(excinfo.value)
+    assert 'Specify metric from' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
@@ -193,4 +192,4 @@ def test_compute_hindcast_comparison_keyerrors(
         compute_hindcast(
             initialized_ds, reconstruction_ds, comparison=comparison, metric='mse'
         )
-    assert 'supply a comparison from' in str(excinfo.value)
+    assert 'Specify comparison from' in str(excinfo.value)

@@ -114,7 +114,12 @@ def _slice_to_correct_time(forecast, reference, resolution='Y', nlags=None):
         nlags = forecast.lead.size
     # take only inits for which we have references at all leahind
     imin = max(forecast.time.min(), reference.time.min())
-    imax = min(forecast.time.max(), reference.time.max() - nlags)
+    imax = min(
+        forecast.time.max(),
+        reference.time.max().values.astype(f'datetime64[{resolution}]') - nlags,
+    )
+    # Some lags force this into a numpy array for some reason.
+    imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)
     reference = reference.where(reference.time >= imin, drop=True)
@@ -122,7 +127,9 @@ def _slice_to_correct_time(forecast, reference, resolution='Y', nlags=None):
 
 
 @check_xarray([0, 1])
-def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
+def compute_hindcast(
+    hind, reference, metric='pearson_r', comparison='e2r', resolution='Y'
+):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations).
@@ -131,29 +138,34 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     coefficients are for potential predictability. If the reference is
     observations, the output correlation coefficients are actual skill.
 
-    Parameters
-    ----------
-    hind (xarray object):
-        Expected to follow package conventions:
-        `time` : dim of initialization dates
-        `lead` : dim of lead time from those initializations
-        Additional dims can be lat, lon, depth.
-    reference (xarray object):
-        reference output/data over same time period.
-    metric (str):
-        Metric used in comparing the decadal prediction ensemble with the
-        reference.
-    comparison (str):
-        How to compare the decadal prediction ensemble to the reference.
-        * e2r : ensemble mean to reference (Default)
-        * m2r : each member to the reference
-    nlags (int): How many lags to compute skill/potential predictability out
-                 to. Default: length of `lead` dim
+    Args:
+        hind (xarray object):
+            Expected to follow package conventions:
+            `time` : dim of initialization dates
+            `lead` : dim of lead time from those initializations
+            Additional dims can be lat, lon, depth.
+        reference (xarray object):
+            reference output/data over same time period.
+        metric (str):
+            Metric used in comparing the decadal prediction ensemble with the
+            reference.
+        comparison (str):
+            How to compare the decadal prediction ensemble to the reference.
+            * e2r : ensemble mean to reference (Default)
+            * m2r : each member to the reference
+        resolution (str):
+            Temporal resolution of the hindcast prediction
+            * 'Y': annual
+            * 'M': monthly
 
     Returns:
         skill (xarray object): Predictability with main dimension `lag`.
     """
     nlags = hind.lead.size
+    if resolution not in ['Y', 'M']:
+        raise ValueError(
+            f"Your resolution of {resolution} is not 'Y' (annual) or 'M' (monthly)."
+        )
 
     comparison = get_comparison_function(comparison)
     _validate_hindcast_comparison(comparison)
@@ -163,14 +175,16 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
-    forecast, reference = _slice_to_correct_time(forecast, reference, nlags=nlags)
+    forecast, reference = _slice_to_correct_time(
+        forecast, reference, nlags=nlags, resolution=resolution
+    )
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
         # take lead year i timeseries and convert to real time
         a = forecast.sel(lead=i).drop('lead')
-        a['time'] = [t + i for t in a.time.values]
+        a['time'] = [t + i for t in a.time.values.astype(f'datetime64[{resolution}]')]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
         plag.append(metric(a, b, dim='time', comparison=comparison))

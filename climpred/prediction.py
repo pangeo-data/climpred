@@ -87,6 +87,20 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     return res
 
 
+def _slice_to_correct_time(forecast, reference, nlags=None):
+    """Reduces the forecast and reference object to a compatable window of time based
+    on their minimum and maximum times and how many lags are being computed."""
+    if nlags is None:
+        nlags = forecast.lead.size
+    # take only inits for which we have references at all leahind
+    imin = max(forecast.time.min(), reference.time.min())
+    imax = min(forecast.time.max(), reference.time.max() - nlags)
+    forecast = forecast.where(forecast.time <= imax, drop=True)
+    forecast = forecast.where(forecast.time >= imin, drop=True)
+    reference = reference.where(reference.time >= imin, drop=True)
+    return forecast, reference
+
+
 @check_xarray([0, 1])
 def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     """
@@ -129,12 +143,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
-    # take only inits for which we have references at all leahind
-    imin = max(forecast.time.min(), reference.time.min())
-    imax = min(forecast.time.max(), reference.time.max() - nlags)
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    reference = reference.where(reference.time >= imin, drop=True)
+    forecast, reference = _slice_to_correct_time(forecast, reference, nlags=nlags)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])

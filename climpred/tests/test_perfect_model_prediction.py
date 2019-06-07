@@ -34,6 +34,25 @@ def PM_ds_control1d():
     return ds
 
 
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+def test_pvalue_from_bootstrapping(PM_da_ds1d, PM_da_control1d, metric):
+    """Test that pvalue of initialized ensemble first lead is close to 0."""
+    sig = 95
+    actual = (
+        bootstrap_perfect_model(
+            PM_da_ds1d,
+            PM_da_control1d,
+            metric=metric,
+            bootstrap=20,
+            comparison='e2c',
+            sig=sig,
+        )
+        .sel(kind='uninit', results='p')
+        .isel(lead=0)
+    )
+    assert actual < 2 * (1 - sig / 100)
+
+
 @pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
 def test_compute_persistence_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d, metric):
     """

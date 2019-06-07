@@ -1,4 +1,5 @@
 import numpy as np
+
 import xarray as xr
 
 from .exceptions import DimensionError
@@ -308,8 +309,8 @@ def bootstrap_compute(
     uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
     pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
 
-    p_uninit_over_init = _pvalue_from_distributions(uninit, init)
-    p_pers_over_init = _pvalue_from_distributions(pers, init)
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
+    p_pers_over_init = _pvalue_from_distributions(pers, init, metric)
 
     # calc skill
     init_skill = compute(hind, reference, metric=metric, comparison=comparison)

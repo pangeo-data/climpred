@@ -342,6 +342,12 @@ def bootstrap_compute(
         results = results.drop(res_drop)
         ci = ci.drop(ci_drop)
     results = xr.concat([results, ci], 'results')
+    results['results'] = [
+        'skill',
+        'p',
+        'low_ci',
+        'high_ci',
+    ]  # add ci levels in metadata
     return results
 
 

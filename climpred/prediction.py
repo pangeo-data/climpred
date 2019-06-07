@@ -87,9 +87,29 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     return res
 
 
-def _slice_to_correct_time(forecast, reference, nlags=None):
+def _slice_to_correct_time(forecast, reference, resolution='Y', nlags=None):
     """Reduces the forecast and reference object to a compatable window of time based
-    on their minimum and maximum times and how many lags are being computed."""
+    on their minimum and maximum times and how many lags are being computed.
+
+    Args:
+        forecast (xarray object):
+            Prediction ensemble
+        reference (xarray object):
+            Reference to compare predictions to
+        resolution (str):
+            Temporal resolution of the predictions
+            'Y': annual
+            'M': monthly
+        nlags (int):
+            Number of lags being computed for the forecast
+
+    Returns:
+        Post-processed forecast and reference, trimmed to the appropriate time lengths.
+    """
+    if resolution not in ['Y', 'M']:
+        raise ValueError(
+            f"Your resolution of {resolution} is not 'Y' (annual) or 'M' (monthly)."
+        )
     if nlags is None:
         nlags = forecast.lead.size
     # take only inits for which we have references at all leahind

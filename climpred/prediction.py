@@ -1,27 +1,14 @@
-import numpy as np
 import xarray as xr
 
-from .comparisons import (
-    ALL_HINDCAST_COMPARISONS_DICT,
+from .comparisons import _e2c
+from .constants import (
+    ALL_PM_METRICS_DICT,
     ALL_PM_COMPARISONS_DICT,
-    _e2c,
-    get_comparison_function,
+    ALL_HINDCAST_METRICS_DICT,
+    ALL_HINDCAST_COMPARISONS_DICT,
 )
-from .metrics import ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
-from .checks import is_xarray, is_in_dict
-
-
-# -------------------------------------------- #
-# HELPER FUNCTIONS
-# Should only be used internally by climpred
-# -------------------------------------------- #
-def _intersection(lst1, lst2):
-    """
-    Custom intersection, since `set.intersection()` changes type of list.
-    """
-    # TODO: move this under utils
-    lst3 = [value for value in lst1 if value in lst2]
-    return np.array(lst3)
+from .utils import get_metric_function, get_comparison_function, intersect
+from .checks import is_xarray
 
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
@@ -48,10 +35,8 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
                   if metric not implemented.
     """
     supervector_dim = 'svd'
-    comparison = get_comparison_function(comparison)
-    is_in_dict(comparison, ALL_PM_COMPARISONS_DICT, 'comparison')
-    metric = get_metric_function(metric)
-    is_in_dict(metric, ALL_PM_METRICS_DICT, 'metric')
+    metric = get_metric_function(metric, ALL_PM_METRICS_DICT)
+    comparison = get_comparison_function(comparison, ALL_PM_COMPARISONS_DICT)
 
     forecast, reference = comparison(ds, supervector_dim)
 
@@ -92,11 +77,8 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
         skill (xarray object): Predictability with main dimension `lag`.
     """
     nlags = hind.lead.size
-
-    comparison = get_comparison_function(comparison)
-    is_in_dict(comparison, ALL_HINDCAST_COMPARISONS_DICT, 'comparison')
-    metric = get_metric_function(metric)
-    is_in_dict(metric, ALL_HINDCAST_METRICS_DICT, 'metric')
+    comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
+    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
 
     forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
@@ -144,14 +126,13 @@ def compute_persistence(hind, reference, metric='pearson_r'):
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    metric = get_metric_function(metric)
-    is_in_dict(metric, ALL_HINDCAST_METRICS_DICT, 'metric')
+    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
 
     plag = []  # holhind results of persistence for each lag
     for lag in hind.lead.values:
         inits = hind['init'].values
         ctrl_inits = reference.isel(time=slice(0, -lag))['time'].values
-        inits = _intersection(inits, ctrl_inits)
+        inits = intersect(inits, ctrl_inits)
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
@@ -189,10 +170,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     Returns:
         u (xarray object): Results from comparison at the first lag.
     """
-    comparison = get_comparison_function(comparison)
-    is_in_dict(comparison, ALL_HINDCAST_COMPARISONS_DICT, 'comparison')
-    metric = get_metric_function(metric)
-    is_in_dict(metric, ALL_HINDCAST_METRICS_DICT, 'metric')
+    comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
+    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
     uninit, reference = comparison(uninit, reference)
     u = metric(uninit, reference, dim='time', comparison=comparison)
     return u

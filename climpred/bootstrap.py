@@ -1,8 +1,9 @@
 import numpy as np
+
 import xarray as xr
 
-from .exceptions import DimensionError
-from .metrics import POSITIVELY_ORIENTED_METRICS
+from .checks import has_dims
+from .constants import POSITIVELY_ORIENTED_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import DPP, varweighted_mean_period
 
@@ -67,10 +68,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
     # find range for bootstrapping
-    if 'member' not in hist.dims:
-        raise DimensionError(
-            'Please supply a historical ensemble with a member dimension.'
-        )
+    has_dims(hist, 'member', 'historical ensemble')
 
     first_init = max(hist.time.min().values, hind['init'].min().values)
     last_init = min(
@@ -308,8 +306,8 @@ def bootstrap_compute(
     uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
     pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
 
-    p_uninit_over_init = _pvalue_from_distributions(uninit, init)
-    p_pers_over_init = _pvalue_from_distributions(pers, init)
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
+    p_pers_over_init = _pvalue_from_distributions(pers, init, metric)
 
     # calc skill
     init_skill = compute(hind, reference, metric=metric, comparison=comparison)

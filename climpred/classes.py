@@ -4,7 +4,6 @@ from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control,
 )
-from .exceptions import DatasetError, DimensionError, VariableError
 from .prediction import (
     compute_hindcast,
     compute_perfect_model,
@@ -12,11 +11,13 @@ from .prediction import (
     compute_uninitialized,
 )
 from .checks import (
+    has_dims,
     is_xarray,
-    has_prediction_ensemble_dims,
+    is_initialized,
     match_initialized_dims,
-    match_initialized_vars
+    match_initialized_vars,
 )
+
 
 # Both:
 # TODO: add horizon functionality.
@@ -101,7 +102,7 @@ class PredictionEnsemble:
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
-        has_prediction_ensemble_dims(xobj)
+        has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
         self.initialized = xobj
         self.uninitialized = {}
 
@@ -188,16 +189,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-
-        if len(self.control) == 0:
-            raise DatasetError(
-                """You need to add a control dataset before
-            attempting to compute predictability."""
-            )
-        else:
-            return compute_perfect_model(
-                self.initialized, self.control, metric=metric, comparison=comparison
-            )
+        is_initialized(self.control, 'control', 'predictability')
+        return compute_perfect_model(
+            self.initialized, self.control, metric=metric, comparison=comparison
+        )
 
     def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
         """Compares the bootstrapped uninitialized run to the control run.
@@ -213,15 +208,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-        if len(self.uninitialized) == 0:
-            raise DatasetError(
-                """Uninitialized ensemble not generated. Please
-                               run `pm.generate_ensemble()` first."""
-            )
-        else:
-            return compute_perfect_model(
-                self.uninitialized, self.control, metric=metric, comparison=comparison
-            )
+        is_initialized(
+            self.uninitialized, 'uninitialized', 'an uninitialized comparison'
+        )
+        return compute_perfect_model(
+            self.uninitialized, self.control, metric=metric, comparison=comparison
+        )
 
     def compute_persistence(self, nlags=None, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
@@ -243,12 +235,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-
-        if len(self.control) == 0:
-            raise DatasetError(
-                """You need to add a control dataset before
-            attempting to compute a persistence forecast."""
-            )
+        is_initialized(self.control, 'control', 'a persistence forecast')
         if nlags is None:
             nlags = self.initialized.lead.size
         return compute_persistence(self.initialized, self.control, metric=metric)
@@ -302,12 +289,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
-        # shorthand to adhere to PEP8 column limit.
-        if len(self.control) == 0:
-            raise DatasetError(
-                """You need to add a control dataset before
-            attempting to bootstrap."""
-            )
+        is_initialized(self.control, 'control', 'a bootstrap')
         # compute for single variable.
         if var is not None:
             return bootstrap_perfect_model(
@@ -477,11 +459,7 @@ class HindcastEnsemble(PredictionEnsemble):
         # Note (RXB): compute_hindcast currently returns the skill results
         # and p-values as two separate dictionaries. Need to think of a better
         # way to handle this.
-        if len(self.reference) == 0:
-            raise DatasetError(
-                """You need to add a reference dataset before
-                attempting to compute predictability."""
-            )
+        is_initialized(self.reference, 'reference', 'predictability')
         # Computation for a single reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname)
@@ -538,11 +516,9 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         # TODO: Check that p-value return is easy on the user. (see note on
         # compute_metric)
-        if len(self.uninitialized) == 0:
-            raise DatasetError(
-                """You need to add an uninitialized ensemble
-                before attempting to compute its skill."""
-            )
+        is_initialized(
+            self.uninitialized, 'uninitialized', 'an uninitialized comparison'
+        )
         # Compute for a single reference.
         if refname is not None:
             drop_un, drop_ref = self._vars_to_drop(refname, init=False)
@@ -601,11 +577,7 @@ class HindcastEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        if len(self.reference) == 0:
-            raise DatasetError(
-                """You need to add a reference dataset before
-            attempting to compute persistence forecasts."""
-            )
+        is_initialized(self.reference, 'reference', 'a persistence forecast')
         # Default to the length of the initialized forecast.
         if nlags is None:
             nlags = self.initialized.lead.size

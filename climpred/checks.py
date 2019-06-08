@@ -2,6 +2,9 @@ from functools import wraps
 
 import xarray as xr
 
+from .exceptions import DatasetError, DimensionError, VariableError
+
+
 # https://stackoverflow.com/questions/10610824/
 # python-shortcut-for-writing-decorators-which-accept-arguments
 def dec_args_kwargs(wrapper):
@@ -19,6 +22,7 @@ def is_xarray(func, *dec_args):
     Decorate a function to ensure the first arg being submitted is
     either a Dataset or DataArray.
     """
+
     @wraps(func)
     def wrapper(*args, **kwargs):
         try:
@@ -53,18 +57,41 @@ def is_xarray(func, *dec_args):
     return wrapper
 
 
-def has_prediction_ensemble_dims(xobj):
+def has_dims(xobj, dims, kind):
     """
-    Checks that at the minimum, the climate prediction  object has dimensions
-    `init` and `lead` (i.e., it's a time series with lead times.
+    Checks that at the minimum, the object has provided dimensions.
     """
-    cond = all(dims in xobj.dims for dims in ['init', 'lead'])
-    if not cond:
-        # create custom error here.
+    if isinstance(dims, str):
+        dims = [dims]
+
+    if not all(dim in xobj.dims for dim in dims):
         raise DimensionError(
-            'Your prediction object must contain the '
-            'dimensions `lead` and `init` at the minimum.'
+            f'Your {kind} object must contain the '
+            f'following dimensions at the minimum: {dims}'
         )
+    return True
+
+
+def has_min_len(arr, len_, kind):
+    """
+    Checks that the array is at least the specified length.
+    """
+    arr_len = len(arr)
+    if arr_len < len_:
+        raise DimensionError(
+            f'Your {kind} array must be at least {len_}, '
+            f'but has only length {arr_len}!'
+        )
+    return True
+
+
+def is_initialized(obj, kind, what):
+    if len(obj) == 0:
+        raise DatasetError(
+            f'You need to add at least one {kind} dataset before '
+            f'attempting to compute {what}.'
+        )
+    return True
 
 
 def match_initialized_dims(init, ref):
@@ -84,6 +111,7 @@ def match_initialized_dims(init, ref):
             'Dimensions must match initialized prediction ensemble '
             f'dimensions; these dimensions do not match: {unmatch_dims}.'
         )
+    return True
 
 
 def match_initialized_vars(init, ref):
@@ -104,9 +132,11 @@ def match_initialized_vars(init, ref):
             'one matching variable to the initialized prediction ensemble; '
             f'got {init_vars} for init and {ref_vars} for ref.'
         )
+    return True
 
 
 def is_in_dict(key, dict_, kind):
     """Check whether a key is in provided dictionary; kind is just a string."""
-    if key not in dict_.values():
-        raise KeyError(f'Specify {kind} from {dict_.keys()}')
+    if key not in dict_.keys():
+        raise KeyError(f'Specify {kind} from {dict_.keys()}: got {key}')
+    return True

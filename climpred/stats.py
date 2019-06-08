@@ -7,9 +7,7 @@ from scipy.signal import periodogram
 
 from xskillscore import pearson_r, pearson_r_p_value
 
-from .exceptions import DimensionError
-from .checks import is_xarray
-from .utils import get_dims
+from .checks import is_xarray, has_dims
 
 
 # ----------------------------------#
@@ -64,7 +62,7 @@ def corr(x, y, dim='time', lag=0, return_p=False):
         # return with proper dimension labeling. would be easier with
         # apply_ufunc, but having trouble getting it to work here. issue
         # probably has to do with core dims.
-        dimlist = get_dims(r)
+        dimlist = list(r.dims)
         for i in range(len(dimlist)):
             p = p.rename({'dim_' + str(i): dimlist[i]})
         return r, p
@@ -131,11 +129,7 @@ def rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
-    if dim not in ds.dims:
-        raise DimensionError(
-            f"Input dim, '{dim}', was not found in the ds; "
-            f'found only the following dims: {list(ds.dims)}.'
-        )
+    has_dims(ds, dim, 'dataset')
 
     # handle both datasets and dataarray
     if isinstance(ds, xr.Dataset):
@@ -244,7 +238,7 @@ def varweighted_mean_period(ds, time_dim='time'):
         """
         Organize results of periodogram into clean dataset.
         """
-        dimlist = [i for i in get_dims(ds) if i not in [time_dim]]
+        dimlist = [i for i in ds.dims if i not in [time_dim]]
         PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
         PSD.coords['freq'] = f
         return PSD

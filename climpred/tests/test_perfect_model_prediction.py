@@ -1,7 +1,7 @@
 import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.metrics import ALL_PM_METRICS_DICT
+from climpred.constants import ALL_PM_METRICS_DICT
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
@@ -32,25 +32,6 @@ def PM_ds_ds1d():
 def PM_ds_control1d():
     ds = load_dataset('MPI-control-1D').isel(area=1, period=-1)
     return ds
-
-
-@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
-def test_pvalue_from_bootstrapping(PM_da_ds1d, PM_da_control1d, metric):
-    """Test that pvalue of initialized ensemble first lead is close to 0."""
-    sig = 95
-    actual = (
-        bootstrap_perfect_model(
-            PM_da_ds1d,
-            PM_da_control1d,
-            metric=metric,
-            bootstrap=20,
-            comparison='e2c',
-            sig=sig,
-        )
-        .sel(kind='uninit', results='p')
-        .isel(lead=0)
-    )
-    assert actual < 2 * (1 - sig / 100)
 
 
 @pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
@@ -138,7 +119,7 @@ def test_compute_perfect_model_metric_keyerrors(PM_da_ds1d, PM_da_control1d, met
         compute_perfect_model(
             PM_da_ds1d, PM_da_control1d, comparison='e2c', metric=metric
         )
-    assert 'supply a metric from' in str(excinfo.value)
+    assert 'Specify metric from' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
@@ -152,4 +133,4 @@ def test_compute_perfect_model_comparison_keyerrors(
         compute_perfect_model(
             PM_da_ds1d, PM_da_control1d, comparison=comparison, metric='mse'
         )
-    assert 'supply a comparison from' in str(excinfo.value)
+    assert 'Specify comparison from' in str(excinfo.value)

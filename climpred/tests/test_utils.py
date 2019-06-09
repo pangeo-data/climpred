@@ -9,30 +9,35 @@ from climpred.comparisons import _m2c
 
 
 def test_get_metric_function():
+    """Test if passing in a string gets the right metric function."""
     actual = get_metric_function('pearson_r', ALL_PM_METRICS_DICT)
     expected = _pearson_r
     assert actual == expected
 
 
 def test_get_metric_function_fail():
+    """Test if passing something not in the dict raises the right error."""
     with pytest.raises(KeyError) as excinfo:
         get_metric_function('not_metric', ALL_PM_METRICS_DICT)
     assert 'Specify metric from' in str(excinfo.value)
 
 
 def test_get_comparison_function():
+    """Test if passing in a string gets the right comparison function."""
     actual = get_comparison_function('m2c', ALL_PM_COMPARISONS_DICT)
     expected = _m2c
     assert actual == expected
 
 
 def test_get_comparison_function_fail():
+    """Test if passing something not in the dict raises the right error."""
     with pytest.raises(KeyError) as excinfo:
         get_comparison_function('not_comparison', ALL_PM_COMPARISONS_DICT)
     assert 'Specify comparison from' in str(excinfo.value)
 
 
 def test_intersect():
+    """Test if the intersect (overlap) of two lists work."""
     x = [1, 5, 6]
     y = [1, 6, 7]
     actual = intersect(x, y)

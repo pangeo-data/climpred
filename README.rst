@@ -11,6 +11,10 @@ An xarray wrapper for analysis of ensemble forecast models for climate predictio
 .. image:: https://coveralls.io/repos/github/bradyrx/climpred/badge.svg?branch=master
     :target: https://coveralls.io/github/bradyrx/climpred?branch=master
 
+.. image:: https://img.shields.io/readthedocs/climpred/latest.svg?style=flat
+    :target: https://climpred.readthedocs.io/en/latest/?badge=latest
+    :alt: Documentation Status
+
 .. image:: https://badges.gitter.im/Join%20Chat.svg
     :target: https://gitter.im/climpred
 
@@ -33,6 +37,6 @@ Installation
 Documentation
 =============
 
-Documentation can be found on this Github's wiki_. It is currently in development and will eventually move to a `sphinx` page.
+Documentation is in development and can be found on readthedocs_.
 
-.. _wiki: https://github.com/bradyrx/climpred/wiki
+.. _readthedocs: https://climpred.readthedocs.io/en/latest/ 

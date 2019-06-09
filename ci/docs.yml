@@ -9,3 +9,5 @@ dependencies:
   - numpy
   - xarray
   - nbsphinx
+  - jupyterlab
+  - netcdf4

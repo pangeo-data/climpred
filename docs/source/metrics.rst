@@ -64,7 +64,7 @@ It puts a greater influence on large errors than small errors, which makes this 
     RMSE = \sqrt{\overline{(f - o)^{2}}}
 
 Probabilistic
-=============
+#############
 
 References
 ==========

@@ -69,6 +69,7 @@ Installation
 
 * :doc:`api`
 * :doc:`contributing`
+* :doc:`changelog`
 * :doc:`contributors`
 
 .. toctree::
@@ -78,4 +79,5 @@ Installation
 
     api
     contributing
+    changelog
     contributors

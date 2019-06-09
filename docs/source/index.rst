@@ -3,15 +3,14 @@ climpred
 
 **User Guide**
 
-* :doc:`examples`
-
 .. toctree::
     :maxdepth: 1
-    :hidden:
-    :caption: User guide
 
     examples
 
+**Reference**
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+    :maxdepth: 2 
+
+    api

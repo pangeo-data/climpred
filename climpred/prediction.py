@@ -54,8 +54,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     coefficients are for potential predictability. If the reference is
     observations, the output correlation coefficients are actual skill.
 
-    Parameters
-    ----------
+    Args:
     hind (xarray object):
         Expected to follow package conventions:
         `time` : dim of initialization dates
@@ -153,8 +152,7 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     Based on Decadal Prediction protocol, this should only be computed for the
     first lag and then projected out to any further lags being analyzed.
 
-    Parameters
-    ----------
+    Args:
     uninit (xarray object):
         uninitialized ensemble.
     reference (xarray object):

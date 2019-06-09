@@ -7,15 +7,14 @@ from scipy.signal import periodogram
 
 from xskillscore import pearson_r, pearson_r_p_value
 
-from .exceptions import DimensionError
-from .utils import check_xarray, get_dims
+from .checks import is_xarray, has_dims
 
 
 # ----------------------------------#
 # TIME SERIES
 # Functions related to time series.
 # ----------------------------------#
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 
@@ -63,7 +62,7 @@ def corr(x, y, dim='time', lag=0, return_p=False):
         # return with proper dimension labeling. would be easier with
         # apply_ufunc, but having trouble getting it to work here. issue
         # probably has to do with core dims.
-        dimlist = get_dims(r)
+        dimlist = list(r.dims)
         for i in range(len(dimlist)):
             p = p.rename({'dim_' + str(i): dimlist[i]})
         return r, p
@@ -118,7 +117,7 @@ def _eff_p_value(x, y, r, dim):
     return p
 
 
-@check_xarray(0)
+@is_xarray(0)
 def rm_poly(ds, order, dim='time'):
     """Returns xarray object with nth-order fit removed.
 
@@ -130,11 +129,7 @@ def rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
-    if dim not in ds.dims:
-        raise DimensionError(
-            f"Input dim, '{dim}', was not found in the ds; "
-            f'found only the following dims: {list(ds.dims)}.'
-        )
+    has_dims(ds, dim, 'dataset')
 
     # handle both datasets and dataarray
     if isinstance(ds, xr.Dataset):
@@ -221,7 +216,7 @@ def rm_trend(da, dim='time'):
 
 
 # # TODO: coords lon, lat get lost for curvilinear ds
-@check_xarray(0)
+@is_xarray(0)
 def varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
@@ -243,7 +238,7 @@ def varweighted_mean_period(ds, time_dim='time'):
         """
         Organize results of periodogram into clean dataset.
         """
-        dimlist = [i for i in get_dims(ds) if i not in [time_dim]]
+        dimlist = [i for i in ds.dims if i not in [time_dim]]
         PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
         PSD.coords['freq'] = f
         return PSD
@@ -254,7 +249,7 @@ def varweighted_mean_period(ds, time_dim='time'):
     return T
 
 
-@check_xarray(0)
+@is_xarray(0)
 def autocorr(ds, lag=1, dim='time', return_p=False):
     """Calculate the lagged correlation of time series.
 
@@ -293,7 +288,7 @@ def autocorr(ds, lag=1, dim='time', return_p=False):
         return r
 
 
-@check_xarray(0)
+@is_xarray(0)
 def decorrelation_time(da, r=20, dim='time'):
     """Calculate the decorrelaton time of a time series.
 

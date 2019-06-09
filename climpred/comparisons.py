@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 
 from .exceptions import DimensionError
-from .utils import get_dims
+from .checks import has_dims, has_min_len
 
 
 def _drop_members(ds, rmd_member=None):
@@ -47,54 +47,6 @@ def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
                             dimension.
     """
     return ds.stack({new_dim: stacked_dims})
-
-
-def get_comparison_function(comparison):
-    """
-    Converts a string comparison entry from the user into an actual
-     function for the package to interpret.
-
-    PERFECT MODEL:
-    m2m: Compare all members to all other members.
-    m2c: Compare all members to the control.
-    m2e: Compare all members to the ensemble mean.
-    e2c: Compare the ensemble mean to the control.
-
-    HINDCAST:
-    e2r: Compare the ensemble mean to the reference.
-    m2r: Compare each ensemble member to the reference.
-
-    Args:
-        comparison (str): name of comparison.
-
-    Returns:
-        comparison (function): comparison function.
-
-    """
-    if comparison == 'm2m':
-        comparison = _m2m
-    elif comparison == 'm2c':
-        comparison = _m2c
-    elif comparison == 'm2e':
-        comparison = _m2e
-    elif comparison == 'e2c':
-        comparison = _e2c
-    elif comparison == 'e2r':
-        comparison = _e2r
-    elif comparison == 'm2r':
-        comparison = _m2r
-    else:
-        raise KeyError(
-            """Please supply a comparison from the following list:
-            'm2m'
-            'm2c'
-            'm2e'
-            'e2c'
-            'e2r'
-            'm2r'
-            """
-        )
-    return comparison
 
 
 # --------------------------------------------#
@@ -245,7 +197,7 @@ def _e2r(ds, reference):
         reference (xarray object): reference.
 
     """
-    if 'member' in get_dims(ds):
+    if 'member' in ds.dims:
         forecast = ds.mean('member')
     else:
         forecast = ds
@@ -269,20 +221,11 @@ def _m2r(ds, reference):
 
     """
     # check that this contains more than one member
-    if ('member' not in get_dims(ds)) or (ds.member.size == 1):
-        raise DimensionError(
-            """Please supply a decadal prediction ensemble with
-            more than one member."""
-        )
-    else:
-        forecast = ds
+    has_dims(ds, 'member', 'decadal prediction ensemble')
+    has_min_len(ds['member'], 1, 'decadal prediction ensemble member')
+    forecast = ds
     reference = reference.expand_dims('member')
     nMember = forecast.member.size
     reference = reference.isel(member=[0] * nMember)
     reference['member'] = forecast['member']
     return forecast, reference
-
-
-ALL_HINDCAST_COMPARISONS_DICT = {'e2r': _e2r, 'm2r': _m2r}
-
-ALL_PM_COMPARISONS_DICT = {'m2c': _m2c, 'e2c': _e2c, 'm2m': _m2m, 'm2e': _m2e}

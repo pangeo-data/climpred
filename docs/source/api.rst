@@ -13,6 +13,16 @@ Prediction
 .. autosummary:: compute_persistence
 .. autosummary:: compute_uninitialized
 
+Bootstrap
+~~~~~~~~~
+.. currentmodule:: climpred.bootstrap
+
+.. autosummary:: bootstrap_uninitialized_ensemble
+.. autosummary:: bootstrap_uninit_pm_ensemble_from_control
+.. autosummary:: DPP_threshold
+.. autosummary:: varweighted_mean_period_threshold
+.. autosummary:: bootstrap_compute
+
 Statistics
 ~~~~~~~~~~
 .. currentmodule:: climpred.stats
@@ -25,6 +35,13 @@ Statistics
 .. autosummary:: decorrelation_time
 .. autosummary:: DPP
 
+Tutorial
+~~~~~~~~
+.. currentmodule:: climpred.tutorial
+
+.. autosummary:: load_dataset
+
+.. Everything below here generates the full API. Above is just one-line summaries.
 .. currentmodule:: climpred.prediction
 
 .. autofunction:: compute_hindcast
@@ -41,3 +58,15 @@ Statistics
 .. autofunction:: autocorr 
 .. autofunction:: decorrelation_time 
 .. autofunction:: DPP 
+
+.. currentmodule:: climpred.bootstrap
+
+.. autofunction:: bootstrap_uninitialized_ensemble
+.. autofunction:: bootstrap_uninit_pm_ensemble_from_control
+.. autofunction:: DPP_threshold
+.. autofunction:: varweighted_mean_period_threshold
+.. autofunction:: bootstrap_compute
+
+.. currentmodule:: climpred.tutorial
+
+.. autofunction:: load_dataset

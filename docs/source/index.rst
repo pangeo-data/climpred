@@ -1,12 +1,12 @@
-climpred
-====================================
+.. include:: ../../README.rst
 
 **User Guide**
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2 
 
     examples
+    metrics
 
 **Reference**
 

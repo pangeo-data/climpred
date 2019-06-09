@@ -1,62 +1,21 @@
-import numpy as np
 import xarray as xr
 
-from .comparisons import (
-    ALL_HINDCAST_COMPARISONS_DICT,
+from .comparisons import _e2c
+from .constants import (
+    ALL_PM_METRICS_DICT,
     ALL_PM_COMPARISONS_DICT,
-    _e2c,
-    get_comparison_function,
+    ALL_HINDCAST_METRICS_DICT,
+    ALL_HINDCAST_COMPARISONS_DICT,
 )
-from .metrics import ALL_HINDCAST_METRICS_DICT, ALL_PM_METRICS_DICT, get_metric_function
-from .utils import check_xarray
-
-
-# -------------------------------------------- #
-# HELPER FUNCTIONS
-# Should only be used internally by climpred
-# -------------------------------------------- #
-def _intersection(lst1, lst2):
-    """
-    Custom intersection, since `set.intersection()` changes type of list.
-    """
-    lst3 = [value for value in lst1 if value in lst2]
-    return np.array(lst3)
-
-
-def _validate_PM_comparison(comparison):
-    """Validate if comparison is PM comparison."""
-    if comparison not in ALL_PM_COMPARISONS_DICT.values():
-        raise KeyError(f'specify comparison from', f'{ALL_PM_COMPARISONS_DICT.keys()}')
-
-
-def _validate_hindcast_comparison(comparison):
-    """Validate if comparison is hindcast comparison."""
-    if comparison not in ALL_HINDCAST_COMPARISONS_DICT.values():
-        raise KeyError(
-            f'specify comparison from', f'{ALL_HINDCAST_COMPARISONS_DICT.keys()}'
-        )
-
-
-def _validate_PM_metric(metric):
-    """Validate if metric is PM metric."""
-    if metric not in ALL_PM_METRICS_DICT.values():
-        raise KeyError(f'specify metric argument from', f'{ALL_PM_METRICS_DICT.keys()}')
-
-
-def _validate_hindcast_metric(metric):
-    """Validate if metric is hindcast metric."""
-    if metric not in ALL_HINDCAST_METRICS_DICT.values():
-        raise KeyError(
-            f'specify metric argument from', f'{ALL_HINDCAST_METRICS_DICT.keys()}'
-        )
-
+from .utils import get_metric_function, get_comparison_function, intersect
+from .checks import is_xarray
 
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
 # predictability.
 # --------------------------------------------#
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -76,10 +35,8 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
                   if metric not implemented.
     """
     supervector_dim = 'svd'
-    comparison = get_comparison_function(comparison)
-    _validate_PM_comparison(comparison)
-    metric = get_metric_function(metric)
-    _validate_PM_metric(metric)
+    metric = get_metric_function(metric, ALL_PM_METRICS_DICT)
+    comparison = get_comparison_function(comparison, ALL_PM_COMPARISONS_DICT)
 
     forecast, reference = comparison(ds, supervector_dim)
 
@@ -125,11 +82,9 @@ def _slice_to_correct_time(forecast, reference, resolution='Y', nlags=None):
     reference = reference.where(reference.time >= imin, drop=True)
     return forecast, reference
 
-
-@check_xarray([0, 1])
-def compute_hindcast(
-    hind, reference, metric='pearson_r', comparison='e2r', resolution='Y'
-):
+  
+@is_xarray([0, 1])
+def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score against some reference (hindcast,
     assimilation, reconstruction, observations).
@@ -166,11 +121,8 @@ def compute_hindcast(
         raise ValueError(
             f"Your resolution of {resolution} is not 'Y' (annual) or 'M' (monthly)."
         )
-
-    comparison = get_comparison_function(comparison)
-    _validate_hindcast_comparison(comparison)
-    metric = get_metric_function(metric)
-    _validate_hindcast_metric(metric)
+    comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
+    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
 
     forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
@@ -193,7 +145,7 @@ def compute_hindcast(
     return skill
 
 
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_persistence(hind, reference, metric='pearson_r'):
     """
     Computes the skill of  a persistence forecast from a reference
@@ -215,14 +167,13 @@ def compute_persistence(hind, reference, metric='pearson_r'):
         pers (xarray object): Results of persistence forecast with the input
                               metric applied.
     """
-    metric = get_metric_function(metric)
-    _validate_hindcast_metric(metric)
+    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
 
     plag = []  # holhind results of persistence for each lag
     for lag in hind.lead.values:
         inits = hind['init'].values
         ctrl_inits = reference.isel(time=slice(0, -lag))['time'].values
-        inits = _intersection(inits, ctrl_inits)
+        inits = intersect(inits, ctrl_inits)
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
@@ -234,7 +185,7 @@ def compute_persistence(hind, reference, metric='pearson_r'):
 
 # ToDo: do we really need a function here
 # or cannot we somehow use compute_hindcast for that?
-@check_xarray([0, 1])
+@is_xarray([0, 1])
 def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
     """
     Compute a predictability skill score between an uninitialized ensemble
@@ -260,10 +211,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     Returns:
         u (xarray object): Results from comparison at the first lag.
     """
-    comparison = get_comparison_function(comparison)
-    _validate_hindcast_comparison(comparison)
-    metric = get_metric_function(metric)
-    _validate_hindcast_metric(metric)
+    comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
+    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
     uninit, reference = comparison(uninit, reference)
     u = metric(uninit, reference, dim='time', comparison=comparison)
     return u

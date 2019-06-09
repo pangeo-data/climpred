@@ -1,7 +1,7 @@
 import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.metrics import ALL_PM_METRICS_DICT
+from climpred.constants import ALL_PM_METRICS_DICT
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
@@ -138,7 +138,7 @@ def test_compute_perfect_model_metric_keyerrors(PM_da_ds1d, PM_da_control1d, met
         compute_perfect_model(
             PM_da_ds1d, PM_da_control1d, comparison='e2c', metric=metric
         )
-    assert 'supply a metric from' in str(excinfo.value)
+    assert 'Specify metric from' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
@@ -152,4 +152,4 @@ def test_compute_perfect_model_comparison_keyerrors(
         compute_perfect_model(
             PM_da_ds1d, PM_da_control1d, comparison=comparison, metric='mse'
         )
-    assert 'supply a comparison from' in str(excinfo.value)
+    assert 'Specify comparison from' in str(excinfo.value)

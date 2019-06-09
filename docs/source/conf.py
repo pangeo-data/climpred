@@ -10,20 +10,21 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-import datetime
 import os
 import sys
-
-import climpred
+import datetime
 
 sys.path.insert(0, os.path.abspath('../..'))
 
 
 # -- Project information -----------------------------------------------------
-
+current_year = datetime.datetime.now().year
 project = 'climpred'
-copyright = '2019, Riley X. Brady and Aaron Spring'
-author = 'Riley X. Brady and Aaron Spring'
+copyright = f'2019-{current_year}, climpred development team'
+author = 'climpred development team'
+
+# NOTE: Will change this when print version is implemented.
+version = '0.3'
 
 
 # -- General configuration ---------------------------------------------------
@@ -37,6 +38,8 @@ extensions = [
     'sphinx.ext.autosummary',
     'sphinx.ext.extlinks',
     'sphinxcontrib.napoleon',
+    'sphinx.ext.imgmath',
+    'sphinx.ext.viewcode',
 ]
 
 extlinks = {
@@ -50,7 +53,11 @@ templates_path = ['_templates']
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['build', '**.ipynb_checkpoints']
+exclude_patterns = ['build', '**.ipynb_checkpoints', 'Thumbs.db', '.DS_Store']
+
+pygments_style = 'sphinx'
+source_suffix = '.rst'
+master_doc = 'index'
 
 
 # -- Options for HTML output -------------------------------------------------

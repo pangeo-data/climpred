@@ -12,5 +12,5 @@ dependencies:
   - jupyterlab
   - netcdf4
   - pip
-  pip:
+  - pip:
     - sphinxcontrib.napoleon

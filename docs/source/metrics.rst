@@ -67,7 +67,7 @@ Probabilistic
 #############
 
 References
-==========
+##########
 
 .. [1] Jolliffe, Ian T., and David B. Stephenson, eds. Forecast verification: a practitioner's guide in atmospheric science. John Wiley & Sons, 2003.
 
@@ -76,4 +76,3 @@ References
 .. [3] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
 
 .. [4] https://en.wikipedia.org/wiki/Mean_squared_error
-

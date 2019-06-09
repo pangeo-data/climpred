@@ -33,4 +33,6 @@ Installation
 Documentation
 =============
 
-Documentation can be found on this Github's [wiki](https://github.com/bradyrx/climpred/wiki). It is currently in development and will eventually move to a `sphinx` page.
+Documentation can be found on this Github's wiki_. It is currently in development and will eventually move to a `sphinx` page.
+
+.. _wiki: https://github.com/bradyrx/climpred/wiki

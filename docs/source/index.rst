@@ -7,6 +7,7 @@
 
     examples
     metrics
+    contributing
 
 **Reference**
 

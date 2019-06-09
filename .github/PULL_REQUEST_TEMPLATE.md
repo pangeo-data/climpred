@@ -22,16 +22,13 @@ Please describe the tests that you ran to verify your changes. This could point 
 -   [ ]  I have added docstrings to all new functions.
 -   [ ]  I have commented my code, particularly in hard-to-understand areas
 -   [ ]  Tests added for `pytest`, if necessary.
+-   [ ]  I have updated the sphinx documentation, if necessary.
 
 ## Pre-Merge Checklist (final steps)
 
 -   [ ]  I have rebased onto master or develop (wherever I am merging) and dealt with any conflicts.
 -   [ ]  I have squashed commits to a reasonable amount, and force-pushed the squashed commits.
--   [ ]  `pytest` runs without breaking.
-
-## Discussion
-
-Add any points to discuss in the PR thread. Issues with the code? Suggestions needed? Philosophy changes to the package?
+-   [ ]  I have run `make html` on the documents to make sure example notebooks still compile.
 
 ## References
 

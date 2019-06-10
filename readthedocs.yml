@@ -1,0 +1,7 @@
+sphinx:
+  configuration: docs/source/conf.py
+conda:
+  file: ci/docs.yml
+python:
+  version: 3.6
+  setup_py_install: true

@@ -99,15 +99,6 @@ def load_dataset(
 ):
     """Load example data or a mask from an online repository.
 
-    This is a function from `xarray.tutorial` to load an online dataset
-    with minimal package imports. I am copying it here because it looks like
-    it will soon be deprecated. Also, I've added the ability to point to
-    data files that are not in the main folder of the repo (i.e., they are
-    in subfolders).
-
-    If no dataset name is provided (i.e., name=None), this function displays
-    the available datasets to load.
-
     Args:
         name: (str, default None) Name of the netcdf file containing the
               dataset, without the .nc extension. If None, this function

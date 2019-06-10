@@ -5,6 +5,7 @@ dependencies:
   - python=3.6
   - numpy
   - xarray
+  - jupyterlab
   - dask
   - scipy
   - matplotlib
@@ -13,6 +14,13 @@ dependencies:
   - pytest
   - eofs
   - lxml
+  - sphinx_rtd_theme
+  - sphinx
+  - nbsphinx
   - pip
   - pip:
-    - xskillscore
+    - git+https://github.com/raybellwaves/xskillscore
+    - pytest-cov
+    - coveralls
+    - sphinxcontrib-napoleon
+    - importlib_metadata

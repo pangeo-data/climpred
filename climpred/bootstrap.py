@@ -2,8 +2,8 @@ import numpy as np
 
 import xarray as xr
 
-from .exceptions import DimensionError
-from .metrics import POSITIVELY_ORIENTED_METRICS
+from .checks import has_dims
+from .constants import POSITIVELY_ORIENTED_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import DPP, varweighted_mean_period
 
@@ -56,9 +56,10 @@ def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
 def bootstrap_uninitialized_ensemble(hind, hist):
     """Resample uninitialized hindcast from historical members.
 
-    Needed for bootstrapping confidence intervals and p_values of a metric in
-    the hindcast framework. Takes hind.lead.size timesteps from historical at
-    same forcing and rearranges them into ensemble and member dimensions.
+    Note:
+        Needed for bootstrapping confidence intervals and p_values of a metric in
+        the hindcast framework. Takes hind.lead.size timesteps from historical at
+        same forcing and rearranges them into ensemble and member dimensions.
 
     Args:
         hind (xarray object): hindcast.
@@ -68,10 +69,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
     # find range for bootstrapping
-    if 'member' not in hist.dims:
-        raise DimensionError(
-            'Please supply a historical ensemble with a member dimension.'
-        )
+    has_dims(hist, 'member', 'historical ensemble')
 
     first_init = max(hist.time.min().values, hind['init'].min().values)
     last_init = min(
@@ -101,9 +99,10 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     """
     Create a pseudo-ensemble from control run.
 
-    Needed for block bootstrapping confidence intervals of a metric in perfect
-    model framework. Takes randomly segments of length of ensemble dataset from
-    control and rearranges them into ensemble and member dimensions.
+    Note:
+        Needed for block bootstrapping confidence intervals of a metric in perfect
+        model framework. Takes randomly segments of length of ensemble dataset from
+        control and rearranges them into ensemble and member dimensions.
 
     Args:
         ds (xarray object): ensemble simulation.
@@ -179,14 +178,14 @@ def DPP_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     """Calc DPP significance levels from re-sampled dataset.
 
     Reference:
-    * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
-        Potential Predictability of Global Temperature and Precipitation.”
-        Geophysical Research Letters 38, no. 7 (2011).
-        https://doi.org/10/ft272w.
+        * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
+          Potential Predictability of Global Temperature and Precipitation.”
+          Geophysical Research Letters 38, no. 7 (2011).
+          https://doi.org/10/ft272w.
 
-    See also:
-    * climpred.bootstrap._bootstrap_func
-    * climpred.stats.DPP
+    See Also:
+        * climpred.bootstrap._bootstrap_func
+        * climpred.stats.DPP
     """
     return _bootstrap_func(
         DPP, control, dim, sig=sig, bootstrap=bootstrap, **dpp_kwargs
@@ -197,8 +196,8 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
-    * climpred.bootstrap._bootstrap_func
-    * climpred.stats.varweighted_mean_period
+        * climpred.bootstrap._bootstrap_func
+        * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
         varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap
@@ -219,13 +218,6 @@ def bootstrap_compute(
 ):
     """Bootstrap compute with replacement.
 
-    Reference:
-      * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
-            Gonzalez, V. Kharin, et al. “A Verification Framework for
-            Interannual-to-Decadal Predictions Experiments.” Climate
-            Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-            https://doi.org/10/f4jjvf.
-
     Args:
         hind (xr.Dataset): prediction ensemble.
         reference (xr.Dataset): reference simulation.
@@ -243,28 +235,34 @@ def bootstrap_compute(
 
     Returns:
         results: (xr.Dataset): bootstrapped results
-        ...contains...
-        init_ci (xr.Dataset): confidence levels of init_skill
-        uninit_ci (xr.Dataset): confidence levels of uninit_skill
-        p_uninit_over_init (xr.Dataset): p-value of the hypothesis
-                                         that the difference of
-                                         skill between the
-                                         initialized and uninitialized
-                                         simulations is smaller or
-                                         equal to zero based on
-                                         bootstrapping with
-                                         replacement.
-                                         Defaults to None.
-        pers_ci (xr.Dataset): confidence levels of pers_skill
-        p_pers_over_init (xr.Dataset): p-value of the hypothesis
-                                       that the difference of
-                                       skill between the
-                                       initialized and persistence
-                                       simulations is smaller or
-                                       equal to zero based on
-                                       bootstrapping with
-                                       replacement.
-                                       Defaults to None.
+            * init_ci (xr.Dataset): confidence levels of init_skill
+            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
+            * p_uninit_over_init (xr.Dataset): p-value of the hypothesis
+                                               that the difference of
+                                               skill between the
+                                               initialized and uninitialized
+                                               simulations is smaller or
+                                               equal to zero based on
+                                               bootstrapping with
+                                               replacement.
+                                               Defaults to None.
+            * pers_ci (xr.Dataset): confidence levels of pers_skill
+            * p_pers_over_init (xr.Dataset): p-value of the hypothesis
+                                             that the difference of
+                                             skill between the
+                                             initialized and persistence
+                                             simulations is smaller or
+                                             equal to zero based on
+                                             bootstrapping with
+                                             replacement.
+                                             Defaults to None.
+
+    Reference:
+        * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
+          Gonzalez, V. Kharin, et al. “A Verification Framework for
+          Interannual-to-Decadal Predictions Experiments.” Climate
+          Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
 
     """
     if pers_sig is None:

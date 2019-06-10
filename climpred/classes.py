@@ -4,14 +4,20 @@ from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control,
 )
-from .exceptions import DatasetError, DimensionError, VariableError
 from .prediction import (
     compute_hindcast,
     compute_perfect_model,
     compute_persistence,
     compute_uninitialized,
 )
-from .utils import check_xarray
+from .checks import (
+    has_dims,
+    is_xarray,
+    is_initialized,
+    match_initialized_dims,
+    match_initialized_vars,
+)
+
 
 # Both:
 # TODO: add horizon functionality.
@@ -32,63 +38,6 @@ from .utils import check_xarray
 
 # PerfectModel:
 # TODO: add relative entropy functionality
-
-
-# --------------
-# VARIOUS CHECKS
-# --------------
-def _check_prediction_ensemble_dimensions(xobj):
-    """
-    Checks that at the minimum, the climate prediction  object has dimensions
-    `init` and `lead` (i.e., it's a time series with lead times.
-    """
-    cond = all(dims in xobj.dims for dims in ['init', 'lead'])
-    if not cond:
-        # create custom error here.
-        raise DimensionError(
-            'Your prediction object must contain the '
-            'dimensions `lead` and `init` at the minimum.'
-        )
-
-
-def _check_reference_dimensions(init, ref):
-    """Checks that the reference matches all initialized dimensions except
-    for 'lead' and 'member'"""
-    # since reference products won't have the initialization dimension,
-    # temporarily rename to time.
-    init = init.rename({'init': 'time'})
-    init_dims = list(init.dims)
-    if 'lead' in init_dims:
-        init_dims.remove('lead')
-    if 'member' in init_dims:
-        init_dims.remove('member')
-    if not (set(ref.dims) == set(init_dims)):
-        unmatch_dims = set(ref.dims) ^ set(init_dims)
-        raise DimensionError(
-            'Dimensions must match initialized prediction ensemble '
-            f'dimensions; these dimensions do not match: {unmatch_dims}.'
-        )
-
-
-def _check_reference_vars_match_initialized(init, ref):
-    """
-    Checks that a new reference (or control) dataset has at least one variable
-    in common with the initialized dataset. This ensures that they can be
-    compared pairwise.
-    ref: new addition
-    init: dp.initialized
-    """
-    init_vars = list(init.data_vars)
-    ref_vars = list(ref.data_vars)
-    # https://stackoverflow.com/questions/10668282/
-    # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
-    if set(init_vars).isdisjoint(ref_vars):
-        raise VariableError(
-            'Please provide a Dataset/DataArray with at least '
-            'one matching variable to the initialized prediction ensemble; '
-            f'got {init_vars} for init and {ref_vars} for ref.'
-        )
-
 
 # ----------
 # Aesthetics
@@ -148,12 +97,12 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
 
-    @check_xarray(1)
+    @is_xarray(1)
     def __init__(self, xobj):
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
-        _check_prediction_ensemble_dimensions(xobj)
+        has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
         self.initialized = xobj
         self.uninitialized = {}
 
@@ -192,7 +141,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self.control = {}
 
-    @check_xarray(1)
+    @is_xarray(1)
     def add_control(self, xobj):
         """Add the control run that initialized the climate prediction
         ensemble.
@@ -203,8 +152,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # NOTE: These should all be decorators.
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_reference_dimensions(self.initialized, xobj)
-        _check_reference_vars_match_initialized(self.initialized, xobj)
+        match_initialized_dims(self.initialized, xobj)
+        match_initialized_vars(self.initialized, xobj)
         self.control = xobj
 
     def generate_uninitialized(self, var=None):
@@ -240,16 +189,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-
-        if len(self.control) == 0:
-            raise DatasetError(
-                """You need to add a control dataset before
-            attempting to compute predictability."""
-            )
-        else:
-            return compute_perfect_model(
-                self.initialized, self.control, metric=metric, comparison=comparison
-            )
+        is_initialized(self.control, 'control', 'predictability')
+        return compute_perfect_model(
+            self.initialized, self.control, metric=metric, comparison=comparison
+        )
 
     def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
         """Compares the bootstrapped uninitialized run to the control run.
@@ -265,15 +208,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-        if len(self.uninitialized) == 0:
-            raise DatasetError(
-                """Uninitialized ensemble not generated. Please
-                               run `pm.generate_ensemble()` first."""
-            )
-        else:
-            return compute_perfect_model(
-                self.uninitialized, self.control, metric=metric, comparison=comparison
-            )
+        is_initialized(
+            self.uninitialized, 'uninitialized', 'an uninitialized comparison'
+        )
+        return compute_perfect_model(
+            self.uninitialized, self.control, metric=metric, comparison=comparison
+        )
 
     def compute_persistence(self, nlags=None, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
@@ -295,12 +235,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-
-        if len(self.control) == 0:
-            raise DatasetError(
-                """You need to add a control dataset before
-            attempting to compute a persistence forecast."""
-            )
+        is_initialized(self.control, 'control', 'a persistence forecast')
         if nlags is None:
             nlags = self.initialized.lead.size
         return compute_persistence(self.initialized, self.control, metric=metric)
@@ -354,12 +289,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
-        # shorthand to adhere to PEP8 column limit.
-        if len(self.control) == 0:
-            raise DatasetError(
-                """You need to add a control dataset before
-            attempting to bootstrap."""
-            )
+        is_initialized(self.control, 'control', 'a bootstrap')
         # compute for single variable.
         if var is not None:
             return bootstrap_perfect_model(
@@ -467,7 +397,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ref_vars.pop(idx)
         return init_vars, ref_vars
 
-    @check_xarray(1)
+    @is_xarray(1)
     def add_reference(self, xobj, name):
         """Add a reference product for comparison to the initialized ensemble.
 
@@ -483,11 +413,11 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         # TODO: Make sure everything is the same length. Can add keyword
         # to autotrim to the common timeframe?
-        _check_reference_dimensions(self.initialized, xobj)
-        _check_reference_vars_match_initialized(self.initialized, xobj)
+        match_initialized_dims(self.initialized, xobj)
+        match_initialized_vars(self.initialized, xobj)
         self.reference[name] = xobj
 
-    @check_xarray(1)
+    @is_xarray(1)
     def add_uninitialized(self, xobj):
         """Add a companion uninitialized ensemble for comparison to references.
 
@@ -500,8 +430,8 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        _check_reference_dimensions(self.initialized, xobj)
-        _check_reference_vars_match_initialized(self.initialized, xobj)
+        match_initialized_dims(self.initialized, xobj)
+        match_initialized_vars(self.initialized, xobj)
         self.uninitialized = xobj
 
     def compute_metric(self, refname=None, metric='pearson_r', comparison='e2r'):
@@ -529,11 +459,7 @@ class HindcastEnsemble(PredictionEnsemble):
         # Note (RXB): compute_hindcast currently returns the skill results
         # and p-values as two separate dictionaries. Need to think of a better
         # way to handle this.
-        if len(self.reference) == 0:
-            raise DatasetError(
-                """You need to add a reference dataset before
-                attempting to compute predictability."""
-            )
+        is_initialized(self.reference, 'reference', 'predictability')
         # Computation for a single reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname)
@@ -590,11 +516,9 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         # TODO: Check that p-value return is easy on the user. (see note on
         # compute_metric)
-        if len(self.uninitialized) == 0:
-            raise DatasetError(
-                """You need to add an uninitialized ensemble
-                before attempting to compute its skill."""
-            )
+        is_initialized(
+            self.uninitialized, 'uninitialized', 'an uninitialized comparison'
+        )
         # Compute for a single reference.
         if refname is not None:
             drop_un, drop_ref = self._vars_to_drop(refname, init=False)
@@ -653,11 +577,7 @@ class HindcastEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        if len(self.reference) == 0:
-            raise DatasetError(
-                """You need to add a reference dataset before
-            attempting to compute persistence forecasts."""
-            )
+        is_initialized(self.reference, 'reference', 'a persistence forecast')
         # Default to the length of the initialized forecast.
         if nlags is None:
             nlags = self.initialized.lead.size

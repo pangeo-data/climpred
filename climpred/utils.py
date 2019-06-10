@@ -1,70 +1,71 @@
-from functools import wraps
+import types
 
-import xarray as xr
+import numpy as np
 
-
-# https://stackoverflow.com/questions/10610824/
-# python-shortcut-for-writing-decorators-which-accept-arguments
-def dec_args_kwargs(wrapper):
-    return lambda *dec_args, **dec_kwargs: lambda func: wrapper(
-        func, *dec_args, **dec_kwargs
-    )
+from .checks import is_in_dict
 
 
-# --------------------------------------#
-# CHECKS
-# --------------------------------------#
-@dec_args_kwargs
-def check_xarray(func, *dec_args):
+def get_metric_function(metric, dict_):
     """
-    Decorate a function to ensure the first arg being submitted is
-    either a Dataset or DataArray.
+    This allows the user to submit a string representing the desired function
+    to anything that takes a metric.
+
+    Currently compatable with functions:
+    * compute_persistence()
+    * compute_perfect_model()
+    * compute_hindcast()
+
+    Args:
+        metric (str): name of metric.
+
+    Returns:
+        metric (function): function object of the metric.
+
+    Raises:
+        KeyError: if metric not implemented.
     """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            ds_da_locs = dec_args[0]
-            if not isinstance(ds_da_locs, list):
-                ds_da_locs = [ds_da_locs]
-
-            for loc in ds_da_locs:
-                if isinstance(loc, int):
-                    ds_da = args[loc]
-                elif isinstance(loc, str):
-                    ds_da = kwargs[loc]
-
-                is_ds_da = isinstance(ds_da, (xr.Dataset, xr.DataArray))
-                if not is_ds_da:
-                    typecheck = type(ds_da)
-                    raise IOError(
-                        f"""The input data is not an xarray DataArray or
-                        Dataset. climpred is built to wrap xarray to make
-                        use of its awesome features. Please input an xarray
-                        object and retry the function.
-
-                        Your input was of type: {typecheck}"""
-                    )
-        except IndexError:
-            pass
-        # this is outside of the try/except so that the traceback is relevant
-        # to the actual function call rather than showing a simple Exception
-        # (probably IndexError from trying to subselect an empty dec_args list)
-        return func(*args, **kwargs)
-
-    return wrapper
+    # catches issues with wrappers, etc. that actually submit the
+    # proper underscore function
+    if isinstance(metric, types.FunctionType):
+        return metric
+    else:
+        is_in_dict(metric, dict_, 'metric')
+        return dict_[metric]
 
 
-# --------------------------------------#
-# Simple get commands for xarray objects
-# --------------------------------------#
-def get_coords(da):
-    return list(da.coords)
+def get_comparison_function(comparison, dict_):
+    """
+    Converts a string comparison entry from the user into an actual
+     function for the package to interpret.
+
+    PERFECT MODEL:
+    m2m: Compare all members to all other members.
+    m2c: Compare all members to the control.
+    m2e: Compare all members to the ensemble mean.
+    e2c: Compare the ensemble mean to the control.
+
+    HINDCAST:
+    e2r: Compare the ensemble mean to the reference.
+    m2r: Compare each ensemble member to the reference.
+
+    Args:
+        comparison (str): name of comparison.
+
+    Returns:
+        comparison (function): comparison function.
+
+    """
+    if isinstance(comparison, types.FunctionType):
+        return comparison
+    else:
+        is_in_dict(comparison, dict_, 'comparison')
+        return dict_[comparison]
 
 
-def get_dims(da):
-    return list(da.dims)
-
-
-def get_vars(ds):
-    return list(ds.data_vars)
+def intersect(lst1, lst2):
+    """
+    Custom intersection, since `set.intersection()` changes type of list.
+    """
+    # TODO: move this under utils
+    lst3 = [value for value in lst1 if value in lst2]
+    return np.array(lst3)

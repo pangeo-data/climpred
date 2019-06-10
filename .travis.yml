@@ -17,7 +17,7 @@ before_install:
   - conda info -a
 
 install:
-  - conda env create -n climpred-dev --file ci/requirements-py36.yml
+  - conda env create -n climpred-dev --file ci/environment-dev-3.6.yml
   - source activate climpred-dev
   - conda install pip
   - conda list
@@ -25,7 +25,6 @@ install:
   - which python
   - pip install .['graphics']
   - python setup.py install --user
-  - pip install treon
   - pip install pytest-cov
   - pip install coveralls
   - pip install black
@@ -33,9 +32,11 @@ install:
   - pip install isort
 
 script:
-  - treon notebooks
   - coverage run --source climpred -m py.test
   - coverage report
+  - pushd docs
+  - make html
+  - popd
   - ./ci/run-linter.sh
 
 after_success:

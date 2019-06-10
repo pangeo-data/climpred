@@ -102,23 +102,20 @@ def plot_bootstrapped_skill_over_leadyear(
             https://doi.org/10/f8wkrs.
 
     """
-    p = (100 - sig) / 100  # 0.05
-    ci_low = p / 2  # 0.025
-    ci_high = 1 - p / 2  # .975
     pers_sig = sig
 
     init_skill = bootstrapped.sel(kind='init', results='skill')
-    init_ci = bootstrapped.sel(kind='init', results=[ci_low, ci_high]).rename(
+    init_ci = bootstrapped.sel(kind='init', results=['low_ci', 'high_ci']).rename(
         {'results': 'quantile'}
     )
     uninit_skill = bootstrapped.sel(kind='uninit', results='skill').isel(lead=0)
     uninit_ci = (
-        bootstrapped.sel(kind='uninit', results=[ci_low, ci_high])
+        bootstrapped.sel(kind='uninit', results=['low_ci', 'high_ci'])
         .rename({'results': 'quantile'})
         .isel(lead=0)
     )
     pers_skill = bootstrapped.sel(kind='pers', results='skill')
-    pers_ci = bootstrapped.sel(kind='pers', results=[ci_low, ci_high]).rename(
+    pers_ci = bootstrapped.sel(kind='pers', results=['low_ci', 'high_ci']).rename(
         {'results': 'quantile'}
     )
     p_uninit_over_init = bootstrapped.sel(kind='uninit', results='p')

@@ -5,6 +5,7 @@ dependencies:
   - python=3.6
   - numpy
   - xarray
+  - jupyterlab
   - dask
   - scipy
   - matplotlib

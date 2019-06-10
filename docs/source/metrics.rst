@@ -2,6 +2,17 @@
 Metrics
 *******
 
+.. msss_murphy
+.. conditional_bias
+.. crps
+.. crpss
+.. less
+.. nmae
+.. nrmse
+.. nmse
+.. ppp
+.. uacc
+
 All high-level functions have an optional "metric" flag that can be called to determine which metric is used in computing predictability (potential predictability or skill).
 
 
@@ -20,11 +31,13 @@ Deterministic metrics quantify the level to which the forecast predicts the obse
 Anomaly Correlation Coefficient (ACC)
 -------------------------------------
 
-``keyword: 'pearson_r'``
+``keyword: 'pearson_r', 'pr', 'acc'``
 
 ``perfect score: 1``
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [2]_. ``climpred`` uses the Pearson correlation coefficient.
+
+To compute the p-value associated with the correlation coefficient, pass ``pearson_r_p_value``.
 
 Mean Absolute Error (MAE)
 -------------------------
@@ -63,6 +76,42 @@ It puts a greater influence on large errors than small errors, which makes this 
 .. math::
     RMSE = \sqrt{\overline{(f - o)^{2}}}
 
+Diagnostics
+###########
+
+
+Bias Slope
+----------
+
+``keyword: 'bias_slope'``
+
+Slope of the linear regression between the forecast and observations [5]_.
+
+.. math::
+    m = \frac{\sigma_{o}}{\sigma_{f}} \cdot \mathrm{ACC}
+
+Standard Ratio
+--------------
+
+``keyword: 'std_ratio'``
+
+Ratio of the standard deviations of the forecast and observations [5]_.
+
+.. math::
+    \frac{\sigma_{o}}{\sigma_{f}}
+
+Unconditional Bias
+------------------
+
+``keyword: 'unconditional_bias', 'u_b', 'bias'``
+
+``perfect score: 0``
+
+The difference between the mean of the forecasts and the mean of the observations. Also known as the overall bias, systematic bias, or unconditional forecasts [2]_.
+
+.. math::
+   \mathrm{bias} = \overline{f} - \overline{o}
+
 Probabilistic
 #############
 
@@ -76,3 +125,5 @@ References
 .. [3] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
 
 .. [4] https://en.wikipedia.org/wiki/Mean_squared_error
+
+.. [5] https://www-miklip.dkrz.de/about/murcss/

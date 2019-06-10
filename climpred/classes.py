@@ -19,26 +19,6 @@ from .checks import (
 )
 
 
-# Both:
-# TODO: add horizon functionality.
-# TODO: add various `get` and `set` functions.
-# TODO: add checks for our package naming conventions. I.e., should
-# have 'member', 'time', etc. Can do this after updating the
-# terminology.
-# TODO: allow user to only compute things for one variable. I.e., if the
-# PredictionEnsemble has multiple variables, maybe you only want to compute
-# for one.
-# TODO: For attributes, don't want them spit out for every `print(dp)` call.
-# Maybe have a decorator under PredictionEnsemble that is .get_attr()
-# TODO: Add attributes to the PredictionEnsemble that will change behavior
-# for some functions. E.g.:
-# temporal_resolution = 'annual'
-# TODO: Add attributes to returned objects. E.g., 'skill' should come back
-# with attribute explaining what two things were compared.
-
-# PerfectModel:
-# TODO: add relative entropy functionality
-
 # ----------
 # Aesthetics
 # ----------
@@ -411,8 +391,6 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        # TODO: Make sure everything is the same length. Can add keyword
-        # to autotrim to the common timeframe?
         match_initialized_dims(self.initialized, xobj)
         match_initialized_vars(self.initialized, xobj)
         self.reference[name] = xobj
@@ -455,10 +433,6 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to reference
             name.
         """
-        # TODO: Check that p-value return is easy on the user.
-        # Note (RXB): compute_hindcast currently returns the skill results
-        # and p-values as two separate dictionaries. Need to think of a better
-        # way to handle this.
         is_initialized(self.reference, 'reference', 'predictability')
         # Computation for a single reference.
         if refname is not None:
@@ -514,8 +488,6 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to reference
             name.
         """
-        # TODO: Check that p-value return is easy on the user. (see note on
-        # compute_metric)
         is_initialized(
             self.uninitialized, 'uninitialized', 'an uninitialized comparison'
         )

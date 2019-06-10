@@ -66,6 +66,5 @@ def intersect(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.
     """
-    # TODO: move this under utils
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)

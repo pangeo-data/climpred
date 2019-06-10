@@ -18,7 +18,7 @@ before_install:
 
 install:
   - conda env create -n climpred-dev --file ci/environment-dev-3.6.yml
-  - conda activate climpred-dev
+  - source activate climpred-dev
   - conda install pip
   - conda list
   - which conda

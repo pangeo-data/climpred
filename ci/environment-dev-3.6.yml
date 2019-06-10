@@ -21,4 +21,5 @@ dependencies:
     - git+https://github.com/raybellwaves/xskillscore
     - pytest-cov
     - coveralls
-    - sphinxcontrib.napoleon
+    - sphinxcontrib-napoleon
+    - importlib_metadata

@@ -13,6 +13,12 @@ dependencies:
   - pytest
   - eofs
   - lxml
+  - sphinx_rtd_theme
+  - sphinx
+  - nbsphinx
   - pip
   - pip:
-    - xskillscore
+    - git+https://github.com/raybellwaves/xskillscore
+    - pytest-cov
+    - coveralls
+    - sphinxcontrib.napoleon

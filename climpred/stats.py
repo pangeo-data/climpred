@@ -18,19 +18,10 @@ from .checks import is_xarray, has_dims
 def corr(x, y, dim='time', lag=0, return_p=False):
     """Computes the Pearson product-moment coefficient of linear correlation.
 
-    This version calculates the effective degrees of freedom, accounting
-    for autocorrelation within each time series that could fluff the
-    significance of the correlation.
-
-    References:
-        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
-          Vol. 100. Academic press, 2011.
-        * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
-          Annular Mode on Southern Ocean circulation and biology." Geophysical
-          Research Letters 32.11 (2005).
-
-    Todo:
-      * Test and adapt for xr.Datasets
+    Note:
+        This version calculates the effective degrees of freedom, accounting
+        for autocorrelation within each time series that could fluff the
+        significance of the correlation.
 
     Args:
         x (xarray object): Independent variable time series or grid of time
@@ -43,8 +34,14 @@ def corr(x, y, dim='time', lag=0, return_p=False):
                                   as well as p values.
     Returns:
         Pearson correlation coefficients
-
         If return_p True, associated p values.
+
+    References:
+        * Wilks, Daniel S. Statistical methods in the atmospheric sciences.
+          Vol. 100. Academic press, 2011.
+        * Lovenduski, Nicole S., and Nicolas Gruber. "Impact of the Southern
+          Annular Mode on Southern Ocean circulation and biology." Geophysical
+          Research Letters 32.11 (2005).
 
     """
     if lag != 0:
@@ -211,7 +208,15 @@ def rm_poly(ds, order, dim='time'):
 
 
 def rm_trend(da, dim='time'):
-    """Calls ``rm_poly`` with an order 1 argument."""
+    """Remove linear trend from time series.
+
+    Args:
+        ds (xarray object): Time series to be detrended.
+        dim (optional str): Dimension over which to remove the linear trend.
+
+    Returns:
+        xarray object with linear trend removed.
+    """
     return rm_poly(da, 1, dim=dim)
 
 
@@ -220,17 +225,17 @@ def rm_trend(da, dim='time'):
 def varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
-    ..math:
-        P_x = \sum_k V(f_k,x) / \sum_k f_k V(f_k,x)
+    .. math::
+        P_{x} = \sum_k V(f_k,x) / \sum_k f_k V(f_k,x)
+
+    Args:
+        ds (xarray object): Time series.
+        time_dim (optional str): Name of time dimension.
 
     Reference:
       * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
         Decadal Predictability in a CGCM." Journal of Climate 23, no. 23
         (August 27, 2010): 6292-6311. https://doi.org/10/bwq92h.
-
-    Args:
-        ds (xarray object): Time series.
-        time_dim (optional str): Name of time dimension.
 
     """
 
@@ -295,11 +300,6 @@ def decorrelation_time(da, r=20, dim='time'):
     .. math::
         tau_{d} = 1 + 2 * \sum_{k=1}^{\inf}(alpha_{k})^{k}
 
-    Reference:
-        * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
-          Research. Cambridge ; New York: Cambridge University Press, 1999.,
-          p.373
-
     Args:
         da (xarray object): Time series.
         r (optional int): Number of iterations to run the above formula.
@@ -307,6 +307,11 @@ def decorrelation_time(da, r=20, dim='time'):
 
     Returns:
         Decorrelation time of time series.
+
+    Reference:
+        * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
+          Research. Cambridge ; New York: Cambridge University Press, 1999.,
+          p.373
 
     """
     one = da.mean(dim) / da.mean(dim)
@@ -321,38 +326,38 @@ def decorrelation_time(da, r=20, dim='time'):
 # --------------------------------------------#
 # # TODO: coords lon, lat get lost for curvilinear ds
 def DPP(ds, m=10, chunk=True):
-    """
-    Calculate Diagnostic Potential Predictability (DPP) as potentially
-    predictable variance fraction (ppvf) in Boer 2004.
-
-    Note: Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
-    in a slightly different way. chunk=False
+    """Calculates the Diagnostic Potential Predictability (DPP)
 
     .. math::
 
-    DPP_{\text{unbiased}}(m)=\frac{\sigma^2_m - 1/m \cdot \sigma^2}{\sigma^2}
+        DPP_{\mathrm{unbiased}}(m) = \\frac{\sigma^{2}_{m} -
+        \\frac{1}{m}\cdot\sigma^{2}}{\sigma^{2}}
 
-    References:
-    * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
-        Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004):
-        29–44. https://doi.org/10/csjjbh.
-    * Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and
-        O2 Fluxes: What Can We Learn from Centuries-Long Climate Models
-        Simulations?” Journal of Geophysical Research: Oceans 120, no. 1
-        (January 2015): 384–404. https://doi.org/10/f63c3h.
-    * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the
-        Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical
-        Research Letters, March 15, 2018. https://doi.org/10/gdb424.
+    Note:
+        Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
+        in a slightly different way. chunk=False
 
     Args:
-    ds (xr.DataArray): control simulation with time dimension as years.
-    m (optional int): separation time scale in years between predictable
-                      low-freq component and high-freq noise.
-    chunk (optional boolean): Whether chunking is applied. Default: True.
+        ds (xr.DataArray): control simulation with time dimension as years.
+        m (optional int): separation time scale in years between predictable
+                          low-freq component and high-freq noise.
+        chunk (optional boolean): Whether chunking is applied. Default: True.
                     If False, then uses Resplandy 2015 / Seferian 2018 method.
 
     Returns:
         dpp (xr.DataArray): ds without time dimension.
+
+    References:
+        * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
+          Coupled Climate Models.” Climate Dynamics 23, no. 1 (August 1, 2004):
+          29–44. https://doi.org/10/csjjbh.
+        * Resplandy, L., R. Séférian, and L. Bopp. “Natural Variability of CO2 and
+          O2 Fluxes: What Can We Learn from Centuries-Long Climate Models
+          Simulations?” Journal of Geophysical Research: Oceans 120, no. 1
+          (January 2015): 384–404. https://doi.org/10/f63c3h.
+        * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing the
+          Decadal Predictability of Land and Ocean Carbon Uptake.” Geophysical
+          Research Letters, March 15, 2018. https://doi.org/10/gdb424.
 
     """
     # TODO: rename or find xr equiv

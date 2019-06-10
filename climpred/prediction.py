@@ -10,6 +10,7 @@ from .constants import (
 from .utils import get_metric_function, get_comparison_function, intersect
 from .checks import is_xarray
 
+
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
 # Highest-level features for computing
@@ -30,9 +31,6 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     Returns:
         res (xarray object): skill score.
 
-    Raises:
-        KeyError: if comarison not implemented.
-                  if metric not implemented.
     """
     supervector_dim = 'svd'
     metric = get_metric_function(metric, ALL_PM_METRICS_DICT)
@@ -46,35 +44,30 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
 
 @is_xarray([0, 1])
 def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
-    """
-    Compute a predictability skill score against some reference (hindcast,
-    assimilation, reconstruction, observations).
+    """Compute a predictability skill score against a reference
 
-    Note that if reference is the reconstruction, the output correlation
-    coefficients are for potential predictability. If the reference is
-    observations, the output correlation coefficients are actual skill.
-
-    Parameters
-    ----------
-    hind (xarray object):
-        Expected to follow package conventions:
-        `time` : dim of initialization dates
-        `lead` : dim of lead time from those initializations
-        Additional dims can be lat, lon, depth.
-    reference (xarray object):
-        reference output/data over same time period.
-    metric (str):
-        Metric used in comparing the decadal prediction ensemble with the
-        reference.
-    comparison (str):
-        How to compare the decadal prediction ensemble to the reference.
-        * e2r : ensemble mean to reference (Default)
-        * m2r : each member to the reference
-    nlags (int): How many lags to compute skill/potential predictability out
-                 to. Default: length of `lead` dim
+    Args:
+        hind (xarray object):
+            Expected to follow package conventions:
+            `time` : dim of initialization dates
+            `lead` : dim of lead time from those initializations
+            Additional dims can be lat, lon, depth.
+        reference (xarray object):
+            reference output/data over same time period.
+        metric (str):
+            Metric used in comparing the decadal prediction ensemble with the
+            reference.
+        comparison (str):
+            How to compare the decadal prediction ensemble to the reference.
+            * e2r : ensemble mean to reference (Default)
+            * m2r : each member to the reference
+        nlags (int): How many lags to compute skill/potential predictability out
+                     to. Default: length of `lead` dim
 
     Returns:
-        skill (xarray object): Predictability with main dimension `lag`.
+        skill (xarray object):
+            Predictability with main dimension ``lag``
+
     """
     nlags = hind.lead.size
     comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
@@ -106,15 +99,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
 
 @is_xarray([0, 1])
 def compute_persistence(hind, reference, metric='pearson_r'):
-    """
-    Computes the skill of  a persistence forecast from a reference
-    (e.g., hindcast/assimilation) or a control run.
-
-    Reference:
-    * Chapter 8 (Short-Term Climate Prediction) in
-        Van den Dool, Huug. Empirical methods in short-term climate prediction.
-        Oxford University Press, 2007.
-
+    """Computes the skill of a persistence forecast from a simulation.
 
     Args:
         hind (xarray object): The initialized ensemble.
@@ -123,8 +108,13 @@ def compute_persistence(hind, reference, metric='pearson_r'):
                       computation. Default: 'pearson_r'
 
     Returns:
-        pers (xarray object): Results of persistence forecast with the input
-                              metric applied.
+        pers (xarray object): Results of persistence forecast with the input metric
+        applied.
+
+    Reference:
+        Chapter 8 (Short-Term Climate Prediction) in
+        Van den Dool, Huug. Empirical methods in short-term climate prediction.
+        Oxford University Press, 2007.
     """
     metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
 
@@ -146,29 +136,28 @@ def compute_persistence(hind, reference, metric='pearson_r'):
 # or cannot we somehow use compute_hindcast for that?
 @is_xarray([0, 1])
 def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
-    """
-    Compute a predictability skill score between an uninitialized ensemble
-    and some reference (hindcast, assimilation, reconstruction, observations).
+    """Compute a predictability score between an uninitialized ensemble and a reference.
 
-    Based on Decadal Prediction protocol, this should only be computed for the
-    first lag and then projected out to any further lags being analyzed.
+    Note:
+        Based on Decadal Prediction protocol, this should only be computed for the
+        first lag and then projected out to any further lags being analyzed.
 
-    Parameters
-    ----------
-    uninit (xarray object):
-        uninitialized ensemble.
-    reference (xarray object):
-        reference output/data over same time period.
-    metric (str):
-        Metric used in comparing the decadal prediction ensemble with the
-        reference.
-    comparison (str):
-        How to compare the decadal prediction ensemble to the reference.
-        * e2r : ensemble mean to reference (Default)
-        * m2r : each member to the reference
+    Args:
+        uninit (xarray object):
+            uninitialized ensemble.
+        reference (xarray object):
+            reference output/data over same time period.
+        metric (str):
+            Metric used in comparing the decadal prediction ensemble with the
+            reference.
+        comparison (str):
+            How to compare the decadal prediction ensemble to the reference.
+                * e2r : ensemble mean to reference (Default)
+                * m2r : each member to the reference
 
     Returns:
         u (xarray object): Results from comparison at the first lag.
+
     """
     comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
     metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)

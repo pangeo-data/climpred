@@ -13,4 +13,5 @@ dependencies:
   - netcdf4
   - pip
   - pip:
-    - sphinxcontrib.napoleon
+    - sphinxcontrib-napoleon
+    - importlib_metadata

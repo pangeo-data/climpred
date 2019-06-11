@@ -69,8 +69,8 @@ def _bootstrap_dim(control, nlead_years, dim, dim_label):
     return control_uninitialized
 
 
-# # TODO: refactoring needed. proposed steps:
-# # first calculate all EOFs. save those. then calc compute_relative_entropy
+# TODO: refactoring needed. proposed steps:
+# first calculate all EOFs. save those. then calc compute_relative_entropy
 def compute_relative_entropy(
     initialized,
     control,

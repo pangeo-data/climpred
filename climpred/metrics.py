@@ -225,31 +225,39 @@ def _msss_murphy(forecast, reference, dim='svd', comparison=None):
           https://doi.org/10/fc7mxd.
     """
     acc = _pearson_r(forecast, reference, dim=dim)
-    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
-    bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
-    skill = acc ** 2 - conditional_bias ** 2 - bias ** 2
+    conditional_bias = _conditional_bias(forecast, reference, dim=dim)
+    uncond_bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
+    skill = acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
     return skill
 
 
 def _conditional_bias(forecast, reference, dim='svd', comparison=None):
-    """Calculate the conditional bias.
+    """Calculate the conditional bias between forecast and reference.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
     """
     acc = _pearson_r(forecast, reference, dim=dim)
-    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
+    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim) ** -1
     return conditional_bias
 
 
 def _std_ratio(forecast, reference, dim='svd', comparison=None):
-    """Calculate the ratio: https://www-miklip.dkrz.de/about/murcss/"""
-    ratio = forecast.std(dim) / reference.std(dim)
+    """Calculate the ratio of standard deviations of reference over forecast.
+
+    Reference:
+     * https://www-miklip.dkrz.de/about/murcss/
+    """
+    ratio = reference.std(dim) / forecast.std(dim)
     return ratio
 
 
 def _bias_slope(forecast, reference, dim='svd', comparison=None):
-    """bias slope: https://www-miklip.dkrz.de/about/murcss/"""
+    """Calculate bias slope between reference and forecast standard deviations.
+
+    Reference:
+     * https://www-miklip.dkrz.de/about/murcss/
+    """
     std_ratio = _std_ratio(forecast, reference, dim=dim)
     acc = _pearson_r(forecast, reference, dim=dim)
     b_s = std_ratio * acc

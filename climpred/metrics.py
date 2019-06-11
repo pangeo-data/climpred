@@ -39,26 +39,100 @@ def _get_norm_factor(comparison):
 
 # wrap xskillscore metrics to work with comparison argument
 def _pearson_r(forecast, reference, dim='svd', comparison=None):
+    """
+    Calculate the Anomaly Correlation Coefficient (ACC).
+
+    .. math::
+        ACC = \\frac{cov}{std std}
+
+    Range:
+        * perfect: 1
+        * min: -1
+
+    See also:
+        * xskillscore.pearson_r
+        * xskillscore.pearson_r_p_value
+    """
     return pearson_r(forecast, reference, dim=dim)
 
 
 def _pearson_r_p_value(forecast, reference, dim='svd', comparison=None):
+    """
+    Calculate the probability associated with the ACC being not random?"""
     return pearson_r_p_value(forecast, reference, dim=dim)
 
 
 def _mse(forecast, reference, dim='svd', comparison=None):
+    """
+    Calculate the Mean Sqaure Error (MSE).
+
+    .. math::
+        MSE = \overline{(f - o)^{2}}
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: \\inf
+
+    See also:
+        * xskillscore.mse
+    """
     return mse(forecast, reference, dim=dim)
 
 
 def _rmse(forecast, reference, dim='svd', comparison=None):
+    """
+    Calculate the Root Mean Sqaure Error (RMSE).
+
+    .. math::
+        RMSE = \sqrt{\overline{(f - o)^{2}}}
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: \\inf
+
+    See also:
+        * xskillscore.rmse
+    """
     return rmse(forecast, reference, dim=dim)
 
 
 def _mae(forecast, reference, dim='svd', comparison=None):
+    """
+    Calculate the Mean Absolute Error (MAE).
+
+    .. math::
+        MSE = \overline{(f - o)^{2}}
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: \\inf
+
+    See also:
+        * xskillscore.mae
+    """
     return mae(forecast, reference, dim=dim)
 
 
 def _crps(forecast, reference, dim='svd', comparison=None):
+    """
+    Continuous Ranked Probability Score.
+
+    References:
+        * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
+          Continuous Probability Distributions.” Management Science 22, no. 10
+          (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
+
+    Range:
+        * perfect: 0
+        * max: 0
+        * else: negative
+
+    See also:
+        * properscoring.crps_ensemble
+    """
     return crps_ensemble(forecast, reference).mean(dim)
 
 
@@ -69,16 +143,23 @@ def _crps_gaussian(forecast, mu, sig, dim='svd', comparison=None):
 def _crpss(forecast, reference, dim='svd', comparison=None):
     """
     Continuous Ranked Probability Skill Score.
-    Reference
-    ---------
-    * Matheson, James E., and Robert L. Winkler. “Scoring Rules for Continuous
-      Probability Distributions.” Management Science 22, no. 10 (June 1, 1976):
-      1087–96. https://doi.org/10/cwwt4g.
-    Range
-    -----
-    perfect: 0
-    max: 0
-    else: negative
+
+    References:
+        * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
+          Continuous Probability Distributions.” Management Science 22, no. 10
+          (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
+        * Gneiting, Tilmann, and Adrian E Raftery. “Strictly Proper Scoring
+          Rules, Prediction, and Estimation.” Journal of the American
+          Statistical Association 102, no. 477 (March 1, 2007): 359–78.
+          https://doi.org/10/c6758w.
+
+    Range:
+        * perfect: 0
+        * max: 0
+        * else: negative
+
+    See also:
+        * properscoring.crps_ensemble
     """
     mu = reference.mean(dim)
     sig = reference.std(dim)
@@ -92,23 +173,19 @@ def _less(forecast, reference, dim='svd', comparison=None):
     """
     Logarithmic Ensemble Spread Score.
 
-    Formula
-    -------
-    .. math:: LESS = ln(\frac{\sigma^2_F}{\sigma^2_R})
+    .. math:: LESS = ln(\\frac{\sigma^2_F}{\sigma^2_R})
 
-    Reference
-    ---------
-    * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
-      Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation of
-      Forecasts by Accuracy and Spread in the MiKlip Decadal Climate Prediction
-      System.” Meteorologische Zeitschrift, December 21, 2016, 631–43.
-      https://doi.org/10/f9jrhw.
+    References:
+        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
+          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
+          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
+          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
+          631–43. https://doi.org/10/f9jrhw.
 
-    Range
-    -----
-    pos: under-disperive
-    neg: over-disperive
-    perfect: 0
+    Range:
+        * pos: under-disperive
+        * neg: over-disperive
+        * perfect: 0
     """
     if comparison.__name__ != '_m2r':
         raise KeyError(
@@ -123,13 +200,30 @@ def _less(forecast, reference, dim='svd', comparison=None):
 
 
 def _bias(forecast, reference, dim='svd', comparison=None):
-    """(unconditional) bias: https://www.cawcr.gov.au/projects/verification/"""
+    """Calculate unconditional bias.
+
+    References:
+        * https://www.cawcr.gov.au/projects/verification/
+
+    Range:
+        * pos: positive bias
+        * neg: negative bias
+        * perfect: 0
+    """
     bias = (forecast - reference).mean(dim)
     return bias
 
 
 def _msss_murphy(forecast, reference, dim='svd', comparison=None):
-    """msss_murphy: https://www-miklip.dkrz.de/about/murcss/"""
+    """Calculate Murphy's Mean Square Skill Score (MSSS).
+
+    References:
+        * https://www-miklip.dkrz.de/about/murcss/
+        * Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
+          Their Relationships to the Correlation Coefficient.” Monthly Weather
+          Review 116, no. 12 (December 1, 1988): 2417–24.
+          https://doi.org/10/fc7mxd.
+    """
     acc = _pearson_r(forecast, reference, dim=dim)
     conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
     bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
@@ -138,14 +232,18 @@ def _msss_murphy(forecast, reference, dim='svd', comparison=None):
 
 
 def _conditional_bias(forecast, reference, dim='svd', comparison=None):
-    """conditional_bias: https://www-miklip.dkrz.de/about/murcss/"""
+    """Calculate the conditional bias.
+
+    References:
+        * https://www-miklip.dkrz.de/about/murcss/
+    """
     acc = _pearson_r(forecast, reference, dim=dim)
     conditional_bias = acc - _std_ratio(forecast, reference, dim=dim)
     return conditional_bias
 
 
 def _std_ratio(forecast, reference, dim='svd', comparison=None):
-    """std ratio: https://www-miklip.dkrz.de/about/murcss/"""
+    """Calculate the ratio: https://www-miklip.dkrz.de/about/murcss/"""
     ratio = forecast.std(dim) / reference.std(dim)
     return ratio
 
@@ -161,10 +259,12 @@ def _bias_slope(forecast, reference, dim='svd', comparison=None):
 def _ppp(forecast, reference, dim='svd', comparison=None):
     """Prognostic Potential Predictability (PPP) metric.
 
-    .. math:: PPP = 1 - \frac{MSE}{ \sigma_{control} \cdot fac}
+    .. math:: PPP = 1 - \\frac{MSE}{ \sigma_{control} \cdot fac}
 
-    Perfect forecast: 1
-    Climatology forecast: 0
+    Range:
+        * 1: perfect forecast
+        * positive: better than climatology forecast
+        * negative: worse than climatology forecast
 
     References:
       * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
@@ -178,17 +278,6 @@ def _ppp(forecast, reference, dim='svd', comparison=None):
         Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
-        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
-        comparison (function): comparison function.
-        running (int): smoothing of control. Default: None (no smoothing).
-        reference_period (str): see _control_for_reference_period.
-
-    Returns:
-        ppp_skill (xarray object): skill of PPP.
-
     """
     mse_skill = _mse(forecast, reference, dim=dim)
     var = reference.std(dim)
@@ -200,12 +289,13 @@ def _ppp(forecast, reference, dim='svd', comparison=None):
 def _nrmse(forecast, reference, dim='svd', comparison=None):
     """Normalized Root Mean Square Error (NRMSE) metric.
 
-    .. math:: NRMSE = \frac{RMSE}{\sigma_{control} \cdot \sqrt{fac}
-                    = sqrt{ \frac{MSE}{ \sigma^2_{control} \cdot fac} }
+    .. math:: NRMSE = \\frac{RMSE}{\sigma_{control} \cdot \sqrt{fac} }
+                    = \\sqrt{ \\frac{MSE}{ \sigma^2_{control} \cdot fac} }
 
-    Perfect forecast: 0
-    Climatology forecast: 1
-
+    Range:
+        * 0: perfect forecast: 0
+        * 0 - 1: better than climatology forecast
+        * > 1: worse than climatology forecast
 
     References:
       * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
@@ -218,16 +308,6 @@ def _nrmse(forecast, reference, dim='svd', comparison=None):
         Journal of the Royal Meteorological Society 142, no. 695
         (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
 
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
-        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
-        comparison (function): comparison function.
-        running (int): smoothing of control. Default: None (no smoothing).
-        reference_period (str): see _control_for_reference_period.
-
-    Returns:
-        nrmse_skill (xarray object): skill of NRMSE.
-
     """
     rmse_skill = _rmse(forecast, reference, dim=dim)
     var = reference.std(dim)
@@ -238,28 +318,19 @@ def _nrmse(forecast, reference, dim='svd', comparison=None):
 
 def _nmse(forecast, reference, dim='svd', comparison=None):
     """
-    Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV) metric.
+    Calculate Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV).
 
+    .. math:: NMSE = NEV = \\frac{MSE}{\sigma^2_{control} \cdot fac}
 
-    .. math:: NMSE = NEV = frac{MSE}{\sigma^2_{control} \cdot fac}
+    Range:
+        * 0: perfect forecast: 0
+        * 0 - 1: better than climatology forecast
+        * > 1: worse than climatology forecast
 
-    Perfect forecast: 0
-    Climatology forecast: 1
-
-    Reference:
-    * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
-      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
-        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
-        comparison (function): comparison function.
-        running (int): smoothing of control. Default: None (no smoothing).
-        reference_period (str): see _control_for_reference_period.
-
-    Returns:
-        nmse_skill (xarray object): skill of NMSE.
+    References:
+        * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+          North Atlantic Multidecadal Variability.” Climate Dynamics 13,
+          no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
     """
     mse_skill = _mse(forecast, reference, dim=dim)
     var = reference.std(dim)
@@ -272,48 +343,42 @@ def _nmae(forecast, reference, dim='svd', comparison=None):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
-    Formula
-    -------
-    NMAE-SS = mse / var
+    .. math:: NMAE = \\frac{MAE}{\sigma^2_{reference} \cdot fac}
 
-    Perfect forecast: 0
-    Climatology forecast: 1
+    Range:
+        * 0: perfect forecast: 0
+        * 0 - 1: better than climatology forecast
+        * > 1: worse than climatology forecast
 
-    Reference
-    ---------
-    - Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North
-      Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-      (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    References:
+        * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+          North Atlantic Multidecadal Variability.” Climate Dynamics 13, no.
+          7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
 
     """
-    mse_skill = _mse(forecast, reference, dim=dim)
+    mae_skill = _mae(forecast, reference, dim=dim)
+    # TODO: check if this is the expected normalization
     var = reference.std(dim)
     fac = _get_norm_factor(comparison)
-    nmse_skill = mse_skill / var / fac
+    nmse_skill = mae_skill / var / fac
     return nmse_skill
 
 
 def _uacc(forecast, reference, dim='svd', comparison=None):
     """
-    Unbiased ACC (uACC) metric.
+    Calculate Bushuk's unbiased ACC (uACC).
 
     .. math::
         uACC = \sqrt{PPP} = \sqrt{MSSS}
 
-    Reference
-    * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-      Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-      Prediction: Potential versus Operational Seasonal Forecast Skill.
-      Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    Range:
+        * 1: perfect
+        * 0 - 1: better than climatology
 
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member dimension.
-        control (xarray object): xr.Dataset/xr.DataArray of control simulation.
-        comparison (function): comparison function.
-        running (int): smoothing of control. Default: None (no smoothing).
-        reference_period (str): see _control_for_reference_period.
-
-    Returns:
-        uacc_skill (xarray object): skill of uACC
+    References:
+        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+          Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+          Prediction: Potential versus Operational Seasonal Forecast Skill.
+          Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
     return _ppp(forecast, reference, dim=dim, comparison=comparison) ** 0.5

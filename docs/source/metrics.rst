@@ -2,20 +2,29 @@
 Metrics
 *******
 
-All high-level functions have an optional "metric" flag that can be called to determine which metric is used in computing predictability (potential predictability or skill).
-
+All high-level functions have an optional "metric" argument that can be called to determine which metric is used in computing predictability (potential predictability or prediction skill).
 
 .. note::
 
     We use the phrase 'observations' here to refer to the 'truth' data to which
     we compare the forecast. These metrics can also be applied in reference
-    to a control simulation, reconstruction, observations, etc. This would just change the resulting
-    score from referencing skill to referencing potential predictability.
+    to a control simulation, reconstruction, observations, etc. This would just
+    change the resulting score from referencing skill to referencing potential
+    predictability.
+
+.. currentmodule:: climpred.metrics
+
+Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by ``compute_hindcast`` or ``compute_perfect_model`` to specify over which dimensions the ``metric`` is applied. See ``comparison.page``, ``compute_philosophy``
+# ToDo: add links between pages
+
 
 Deterministic
 #############
 
-Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [1]_.
+Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [1]_. :cite:`Jolliffe2011`
+
+Core Metrics
+============
 
 Anomaly Correlation Coefficient (ACC)
 -------------------------------------
@@ -26,17 +35,7 @@ Anomaly Correlation Coefficient (ACC)
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [2]_. ``climpred`` uses the Pearson correlation coefficient.
 
-Mean Absolute Error (MAE)
--------------------------
-
-``keyword: 'mae'``
-
-``perfect score: 0``
-
-The average of the absolute differences between forecasts and observations [2]_. A more robust measure of forecast accuracy than root mean square error or mean square error which is sensitive to large outlier forecast errors [3]_.
-
-.. math::
-    MAE = (\overline{\vert f - o \vert})
+.. autofunction:: _pearson_r
 
 Mean Squared Error (MSE)
 ------------------------
@@ -49,6 +48,8 @@ The average of the squared difference between forecasts and observations. This i
 
 .. math::
     MSE = \overline{(f - o)^{2}}
+
+.. autofunction:: _mse
 
 Root Mean Square Error (RMSE)
 -----------------------------
@@ -63,13 +64,63 @@ It puts a greater influence on large errors than small errors, which makes this 
 .. math::
     RMSE = \sqrt{\overline{(f - o)^{2}}}
 
+.. autofunction:: _rmse
+
+Mean Absolute Error (MAE)
+-------------------------
+
+``keyword: 'mae'``
+
+``perfect score: 0``
+
+The average of the absolute differences between forecasts and observations [2]_. A more robust measure of forecast accuracy than root mean square error or mean square error which is sensitive to large outlier forecast errors [3]_.
+
+.. math::
+    MAE = (\overline{\vert f - o \vert})
+.. autofunction:: _mae
+
+
+Derived Metrics
+===============
+
+Normalization based on comparison type. Comparison versus mean requires different normalization than comparison against every member (see ``climpred.metrics._get_norm_factor``).
+
+.. autofunction:: _ppp
+.. autofunction:: _nmse
+.. autofunction:: _nmae
+.. autofunction:: _nrmse
+
+
+Murphy decomposition metrics
+============================
+
+:cite:`Murphy1988`
+
+.. autofunction:: _std_ratio
+.. autofunction:: _bias
+.. autofunction:: _bias_slope
+.. autofunction:: _conditional_bias
+.. autofunction:: _msss_murphy
+
+
+Other metrics
+=============
+
+.. autofunction:: _less
+
+
 Probabilistic
 #############
 
+.. autofunction:: _crps
+.. autofunction:: _crpss
+
+
+.. bibliography:: refs.bib
+
+below old: to be transfered to refs.bib or deleted
 References
 ##########
-
-.. [1] Jolliffe, Ian T., and David B. Stephenson, eds. Forecast verification: a practitioner's guide in atmospheric science. John Wiley & Sons, 2003.
 
 .. [2] http://www.nws.noaa.gov/oh/rfcdev/docs/Glossary_Verification_Metrics.pdf
 

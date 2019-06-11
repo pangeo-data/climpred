@@ -9,14 +9,6 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     """
     Compute the relative entropy formula given in Branstator and Teng, (2010).
 
-    References:
-        - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
-            Decadal Predictability in a CGCM.” Journal of Climate 23, no. 23
-            (August 27, 2010): 6292–6311. https://doi.org/10/bwq92h.
-        - Kleeman, Richard. “Measuring Dynamical Prediction Utility Using
-            Relative Entropy.” Journal of the Atmospheric Sciences 59, no. 13
-            (July 1, 2002): 2057–72. https://doi.org/10/fqwxpk.
-
     Args:
         sigma_b (xr.DataArray): covariance matrix of baseline distribution
         sigma_x (xr.DataArray): covariance matrix of forecast distribution
@@ -28,6 +20,15 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
         R (float): relative entropy
         dispersion (float): dispersion component
         signal (float): signal component
+
+    References:
+        - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
+            Decadal Predictability in a CGCM.” Journal of Climate 23, no. 23
+            (August 27, 2010): 6292–6311. https://doi.org/10/bwq92h.
+        - Kleeman, Richard. “Measuring Dynamical Prediction Utility Using
+            Relative Entropy.” Journal of the Atmospheric Sciences 59, no. 13
+            (July 1, 2002): 2057–72. https://doi.org/10/fqwxpk.
+
     """
     fac = 0.5
     dispersion = fac * (
@@ -106,7 +107,6 @@ def compute_relative_entropy(
 
     Returns:
         rel_ent (xr.Dataset): relative entropy
-
     """
     # Defaults
     if neofs is None:

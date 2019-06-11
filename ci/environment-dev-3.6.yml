@@ -23,4 +23,5 @@ dependencies:
     - pytest-cov
     - coveralls
     - sphinxcontrib-napoleon
+    - sphinxcontrib-bibtex
     - importlib_metadata

@@ -2,7 +2,7 @@
 Metrics
 *******
 
-All high-level functions have an optional "metric" argument that can be called to determine which metric is used in computing predictability (potential predictability or prediction skill).
+All high-level functions have an optional ``metric`` argument that can be called to determine which metric is used in computing predictability (potential predictability or prediction skill).
 
 .. note::
 
@@ -14,14 +14,14 @@ All high-level functions have an optional "metric" argument that can be called t
 
 .. currentmodule:: climpred.metrics
 
-Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by ``compute_hindcast`` or ``compute_perfect_model`` to specify over which dimensions the ``metric`` is applied. See ``comparison.page``, ``compute_philosophy``
+Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by ``compute_hindcast`` or ``compute_perfect_model`` to specify over which dimensions the ``metric`` is applied. See ``comparison.page``
 # ToDo: add links between pages
 
 
 Deterministic
 #############
 
-Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [1]_. :cite:`Jolliffe2011`
+Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [1]_  [Jolliffe2011]_.
 
 Core Metrics
 ============
@@ -29,25 +29,20 @@ Core Metrics
 Anomaly Correlation Coefficient (ACC)
 -------------------------------------
 
-``keyword: 'pearson_r'``
-
-``perfect score: 1``
+``keyword: 'pearson_r','pr','acc'``
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [2]_. ``climpred`` uses the Pearson correlation coefficient.
 
 .. autofunction:: _pearson_r
+
 
 Mean Squared Error (MSE)
 ------------------------
 
 ``keyword: 'mse'``
 
-``perfect score: 0``
-
 The average of the squared difference between forecasts and observations. This incorporates both the variance and bias of the estimator [4]_.
 
-.. math::
-    MSE = \overline{(f - o)^{2}}
 
 .. autofunction:: _mse
 
@@ -56,13 +51,8 @@ Root Mean Square Error (RMSE)
 
 ``keyword: 'rmse'``
 
-``perfect score: 0``
-
 The square root of the average of the squared differences between forecasts and observations [2]_.
 It puts a greater influence on large errors than small errors, which makes this a good choice if large errors are undesirable or one wants to be a more conservative forecaster.
-
-.. math::
-    RMSE = \sqrt{\overline{(f - o)^{2}}}
 
 .. autofunction:: _rmse
 
@@ -71,30 +61,52 @@ Mean Absolute Error (MAE)
 
 ``keyword: 'mae'``
 
-``perfect score: 0``
-
 The average of the absolute differences between forecasts and observations [2]_. A more robust measure of forecast accuracy than root mean square error or mean square error which is sensitive to large outlier forecast errors [3]_.
 
-.. math::
-    MAE = (\overline{\vert f - o \vert})
 .. autofunction:: _mae
 
 
 Derived Metrics
 ===============
 
-Normalization based on comparison type. Comparison versus mean requires different normalization than comparison against every member (see ``climpred.metrics._get_norm_factor``).
+Distance-based metrics like ``mse`` can be normalized to 1. The normalization factor depends on the comparison type choosen, eg. the distance between an ensemble member and the ensemble mean is half the distance of an ensemble member with other ensemble members. (see ``climpred.metrics._get_norm_factor``).
+
+
+Mean Square Skill Score (MSSS)
+------------------------------
+
+``keyword: 'msss','ppp'``
 
 .. autofunction:: _ppp
+
+Normalized Mean Square Error (NMSE)
+-----------------------------------
+
+``keyword: 'nmse'``
+
 .. autofunction:: _nmse
+
+
+Normalized Mean Absolute Error (NMAE)
+-------------------------------------
+
+``keyword: 'nmae'``
+
 .. autofunction:: _nmae
+
+
+Normalized Root Mean Square Error (NRMSE)
+-----------------------------------------
+
+``keyword: 'nrmse'``
+
 .. autofunction:: _nrmse
 
 
 Murphy decomposition metrics
 ============================
 
-:cite:`Murphy1988`
+[Murphy1988]_
 
 .. autofunction:: _std_ratio
 .. autofunction:: _bias
@@ -116,9 +128,6 @@ Probabilistic
 .. autofunction:: _crpss
 
 
-.. bibliography:: refs.bib
-
-below old: to be transfered to refs.bib or deleted
 References
 ##########
 
@@ -126,4 +135,6 @@ References
 
 .. [3] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
 
-.. [4] https://en.wikipedia.org/wiki/Mean_squared_error
+.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003, doi:10.1002/9781119960003.
+
+.. [Murphy1988] Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient. Monthly Weather Review, 116(12):2417–2424, December 1988. doi:10/fc7mxd.

@@ -38,9 +38,10 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
     'sphinx.ext.extlinks',
+    'sphinx.ext.intersphinx',
     'sphinxcontrib.napoleon',
     'sphinx.ext.imgmath',
-    'sphinxcontrib.bibtex',
+    # 'sphinxcontrib.bibtex',
     'sphinx.ext.viewcode',
 ]
 
@@ -76,3 +77,15 @@ html_theme_options = {'logo_only': False, 'style_nav_header_background': '#fcfcf
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
+
+# Example configuration for intersphinx: refer to the Python standard library.
+
+intersphinx_mapping = {
+    'python': ('https://docs.python.org/3/', None),
+    # 'xarray': ('https://http://xarray.pydata.org/en/stable/generated/', None),
+    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    'iris': ('http://scitools.org.uk/iris/docs/latest/', None),
+    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+    'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
+    'matplotlib': ('https://matplotlib.org/', None),
+}

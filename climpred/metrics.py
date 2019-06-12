@@ -1,4 +1,5 @@
 import numpy as np
+
 from xskillscore import (
     crps_ensemble,
     crps_gaussian,
@@ -37,13 +38,15 @@ def _get_norm_factor(comparison):
     return fac
 
 
-# wrap xskillscore metrics to work with comparison argument
 def _pearson_r(forecast, reference, dim='svd', comparison=None):
     """
     Calculate the Anomaly Correlation Coefficient (ACC).
 
     .. math::
-        ACC = \\frac{cov}{std std}
+        ACC = \\frac{cov(f, o)}{\sigma_{f}\cdot\sigma_{o}}
+
+    .. note::
+        Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
 
     Range:
         * perfect: 1
@@ -58,7 +61,7 @@ def _pearson_r(forecast, reference, dim='svd', comparison=None):
 
 def _pearson_r_p_value(forecast, reference, dim='svd', comparison=None):
     """
-    Calculate the probability associated with the ACC being not random?"""
+    Calculate the probability associated with the ACC not being random."""
     return pearson_r_p_value(forecast, reference, dim=dim)
 
 
@@ -72,7 +75,7 @@ def _mse(forecast, reference, dim='svd', comparison=None):
     Range:
         * perfect: 0
         * min: 0
-        * max: \\inf
+        * max: ∞
 
     See also:
         * xskillscore.mse
@@ -90,7 +93,7 @@ def _rmse(forecast, reference, dim='svd', comparison=None):
     Range:
         * perfect: 0
         * min: 0
-        * max: \\inf
+        * max: ∞
 
     See also:
         * xskillscore.rmse
@@ -108,7 +111,7 @@ def _mae(forecast, reference, dim='svd', comparison=None):
     Range:
         * perfect: 0
         * min: 0
-        * max: \\inf
+        * max: ∞
 
     See also:
         * xskillscore.mae
@@ -173,7 +176,7 @@ def _less(forecast, reference, dim='svd', comparison=None):
     """
     Logarithmic Ensemble Spread Score.
 
-    .. math:: LESS = ln(\\frac{\sigma^2_F}{\sigma^2_R})
+    .. math:: LESS = ln(\\frac{\sigma^2_f}{\sigma^2_o})
 
     References:
         * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,

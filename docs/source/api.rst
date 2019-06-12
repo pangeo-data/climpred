@@ -62,11 +62,10 @@ Tutorial
 
 .. currentmodule:: climpred.bootstrap
 
-.. autofunction:: bootstrap_uninitialized_ensemble
-.. autofunction:: bootstrap_uninit_pm_ensemble_from_control
 .. autofunction:: DPP_threshold
 .. autofunction:: varweighted_mean_period_threshold
-.. autofunction:: bootstrap_compute
+.. autofunction:: bootstrap_perfect_model
+.. autofunction:: bootstrap_hindcast
 
 .. currentmodule:: climpred.tutorial
 

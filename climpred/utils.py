@@ -2,10 +2,13 @@ import types
 
 import numpy as np
 
-from .checks import is_in_dict
+from . import metrics
+from . import comparisons
+from .checks import is_in_list
+from .constants import METRIC_ALIASES
 
 
-def get_metric_function(metric, dict_):
+def get_metric_function(metric, list_):
     """
     This allows the user to submit a string representing the desired function
     to anything that takes a metric.
@@ -29,11 +32,14 @@ def get_metric_function(metric, dict_):
     if isinstance(metric, types.FunctionType):
         return metric
     else:
-        is_in_dict(metric, dict_, 'metric')
-        return dict_[metric]
+        # equivalent of: `if metric in METRIC_ALIASES;
+        # METRIC_ALIASES[metric]; else metric`
+        is_in_list(metric, list_, 'metric')
+        metric = METRIC_ALIASES.get(metric, metric)
+        return getattr(metrics, '_' + metric)
 
 
-def get_comparison_function(comparison, dict_):
+def get_comparison_function(comparison, list_):
     """
     Converts a string comparison entry from the user into an actual
      function for the package to interpret.
@@ -58,8 +64,9 @@ def get_comparison_function(comparison, dict_):
     if isinstance(comparison, types.FunctionType):
         return comparison
     else:
-        is_in_dict(comparison, dict_, 'comparison')
-        return dict_[comparison]
+        is_in_list(comparison, list_, 'comparison')
+        comparison = METRIC_ALIASES.get(comparison, comparison)
+        return getattr(comparisons, '_' + comparison)
 
 
 def intersect(lst1, lst2):

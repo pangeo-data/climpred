@@ -13,25 +13,26 @@ Prediction
 .. autosummary:: compute_persistence
 .. autosummary:: compute_uninitialized
 
+
 Bootstrap
 ~~~~~~~~~
 .. currentmodule:: climpred.bootstrap
 
-.. autosummary:: bootstrap_uninitialized_ensemble
-.. autosummary:: bootstrap_uninit_pm_ensemble_from_control
 .. autosummary:: DPP_threshold
 .. autosummary:: varweighted_mean_period_threshold
-.. autosummary:: bootstrap_compute
+.. autosummary:: bootstrap_perfect_model
+.. autosummary:: bootstrap_hindcast
+
 
 Statistics
 ~~~~~~~~~~
 .. currentmodule:: climpred.stats
 
 .. autosummary:: corr
-.. autosummary:: rm_poly 
-.. autosummary:: rm_trend 
-.. autosummary:: varweighted_mean_period 
-.. autosummary:: autocorr 
+.. autosummary:: rm_poly
+.. autosummary:: rm_trend
+.. autosummary:: varweighted_mean_period
+.. autosummary:: autocorr
 .. autosummary:: decorrelation_time
 .. autosummary:: DPP
 
@@ -52,20 +53,19 @@ Tutorial
 .. currentmodule:: climpred.stats
 
 .. autofunction:: corr
-.. autofunction:: rm_poly 
-.. autofunction:: rm_trend 
-.. autofunction:: varweighted_mean_period 
-.. autofunction:: autocorr 
-.. autofunction:: decorrelation_time 
-.. autofunction:: DPP 
+.. autofunction:: rm_poly
+.. autofunction:: rm_trend
+.. autofunction:: varweighted_mean_period
+.. autofunction:: autocorr
+.. autofunction:: decorrelation_time
+.. autofunction:: DPP
 
 .. currentmodule:: climpred.bootstrap
 
-.. autofunction:: bootstrap_uninitialized_ensemble
-.. autofunction:: bootstrap_uninit_pm_ensemble_from_control
 .. autofunction:: DPP_threshold
 .. autofunction:: varweighted_mean_period_threshold
-.. autofunction:: bootstrap_compute
+.. autofunction:: bootstrap_perfect_model
+.. autofunction:: bootstrap_hindcast
 
 .. currentmodule:: climpred.tutorial
 

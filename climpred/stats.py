@@ -2,12 +2,12 @@
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
-import xarray as xr
 from scipy.signal import periodogram
 
+import xarray as xr
 from xskillscore import pearson_r, pearson_r_p_value
 
-from .checks import is_xarray, has_dims
+from .checks import has_dims, is_xarray
 
 
 # ----------------------------------#
@@ -360,7 +360,7 @@ def DPP(ds, m=10, chunk=True):
           Research Letters, March 15, 2018. https://doi.org/10/gdb424.
 
     """
-    # TODO: rename or find xr equiv
+
     def _chunking(ds, number_chunks=False, chunk_length=False):
         """
         Separate data into chunks and reshapes chunks in a c dimension.

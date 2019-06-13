@@ -62,7 +62,7 @@ pygments_style = 'sphinx'
 source_suffix = '.rst'
 master_doc = 'index'
 
-
+nbsphinx_timeout = 60
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -82,10 +82,10 @@ html_theme_options = {'logo_only': False, 'style_nav_header_background': '#fcfcf
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
-    # 'xarray': ('https://http://xarray.pydata.org/en/stable/generated/', None),
-    'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
-    'iris': ('http://scitools.org.uk/iris/docs/latest/', None),
+    # 'xarray': ('https://http://xarray.pydata.org/en/stable/', None),
+    # 'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
+    # 'iris': ('http://scitools.org.uk/iris/docs/latest/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
-    'matplotlib': ('https://matplotlib.org/', None),
+    # 'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
+    # 'matplotlib': ('https://matplotlib.org/', None),
 }

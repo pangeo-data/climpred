@@ -14,5 +14,4 @@ dependencies:
   - pip
   - pip:
     - sphinxcontrib-napoleon
-    - sphinxcontrib-bibtex
     - importlib_metadata

@@ -21,7 +21,7 @@ Internally, all metric functions require ``forecast`` and ``reference`` as input
 Deterministic
 #############
 
-Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [1]_  [Jolliffe2011]_.
+Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [Jolliffe2011]_.
 
 Core Metrics
 ============
@@ -41,7 +41,7 @@ Mean Squared Error (MSE)
 
 ``keyword: 'mse'``
 
-The average of the squared difference between forecasts and observations. This incorporates both the variance and bias of the estimator [4]_.
+The average of the squared difference between forecasts and observations. This incorporates both the variance and bias of the estimator.
 
 
 .. autofunction:: _mse

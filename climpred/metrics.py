@@ -248,7 +248,7 @@ def _conditional_bias(forecast, reference, dim='svd', comparison=None):
 def _std_ratio(forecast, reference, dim='svd', comparison=None):
     """Calculate the ratio of standard deviations of reference over forecast.
 
-    Reference:
+    References:
      * https://www-miklip.dkrz.de/about/murcss/
     """
     ratio = reference.std(dim) / forecast.std(dim)
@@ -258,7 +258,7 @@ def _std_ratio(forecast, reference, dim='svd', comparison=None):
 def _bias_slope(forecast, reference, dim='svd', comparison=None):
     """Calculate bias slope between reference and forecast standard deviations.
 
-    Reference:
+    References:
      * https://www-miklip.dkrz.de/about/murcss/
     """
     std_ratio = _std_ratio(forecast, reference, dim=dim)

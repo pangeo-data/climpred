@@ -12,7 +12,7 @@ These different comparisons demand for a normalization factor to arrive at a nor
 
 While HindcastEnsemble skill is computed over all `initializations` ``init`` of the hindcast, the resulting skill is a mean forecast skill over all initializations.
 PerfectModelEnsemble skill is computed over a supervector comprised of all initializations and members, which allows the computation of the ACC-based skill [Bushuk2018]_, but also returns a mean forecast skill over all initializations.
-The supervector approach shown in [Bushuk2018]_ and just calculating a distance-based metric like ``rmse`` over the member dimension as in [Griffies1997` yield very similar results.
+The supervector approach shown in [Bushuk2018]_ and just calculating a distance-based metric like ``rmse`` over the member dimension as in [Griffies1997]_ yield very similar results.
 
 HindcastEnsemble
 ################

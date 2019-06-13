@@ -2,6 +2,14 @@
 Changelog History
 =================
 
+climpred v1.0 (2019-xx-xx)
+==========================
+
+Features
+--------
+- Bootstrap prediction skill based on resampling with replacement consistently in ``ReferenceEnsemble`` and ``PerfectModelEnsemble``. (:pr:`128`) `Aaron Spring`_
+- Consistent bootstrap function for ``climpred.stats`` functions via ``bootstrap_func`` wrapper. (:pr:`167`) `Aaron Spring`_
+- many more metrics. (:pr:`128`) `Aaron Spring`_
 
 climpred v0.3 (2019-04-27)
 ==========================
@@ -13,7 +21,8 @@ Features
 - Introduces object-oriented system to ``climpred``, with classes ``ReferenceEnsemble`` and ``PerfectModelEnsemble``. (:pr:`86`) `Riley X. Brady`_
 - Expands bootstrapping module for perfect-module configurations. (:pr:`78`, :pr:`87`) `Aaron Spring`_
 - Adds functions for computing Relative Entropy (:pr:`73`) `Aaron Spring`_
-- Sets more intelligible dimension expectations for ``climpred``: (:pr:`98`, :pr:`105`) `Riley X. Brady`_ and `Aaron Spring`_.
+- Sets more intelligible dimension expectations for ``climpred`` (:pr:`98`, :pr:`105`) `Riley X. Brady`_ and `Aaron Spring`_:
+
     -   ``init``:  initialization dates for the prediction ensemble
     -   ``lead``:  retrospective forecasts from prediction ensemble; returned dimension for prediction calculations
     -   ``time``:  time dimension for control runs, references, etc.
@@ -29,8 +38,8 @@ Bug Fixes
 ---------
 - ``xr_rm_poly`` can now operate on Datasets and with multiple variables. It also interpolates across NaNs in time series. (:pr:`94`) `Andrew Huang`_
 - Travis CI, ``treon``, and ``pytest`` all run for automated testing of new features. (:pr:`98`, :pr:`105`, :pr:`106`) `Riley X. Brady`_ and `Aaron Spring`_
-- Clean up ``check_xarray`` decorators and make sure that they work. (:pr:`142`) `Andrew Huang_`
-- Ensures that ``help()`` returns proper docstring even with decorators. (:pr:`149`) `Andrew Huang_`
+- Clean up ``check_xarray`` decorators and make sure that they work. (:pr:`142`) `Andrew Huang`_
+- Ensures that ``help()`` returns proper docstring even with decorators. (:pr:`149`) `Andrew Huang`_
 - Fixes bootstrap so p values are correct. (:pr:`170`) `Aaron Spring`_
 
 Internals/Minor Fixes

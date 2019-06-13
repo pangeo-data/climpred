@@ -14,8 +14,7 @@ All high-level functions have an optional ``metric`` argument that can be called
 
 .. currentmodule:: climpred.metrics
 
-Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by ``compute_hindcast`` or ``compute_perfect_model`` to specify over which dimensions the ``metric`` is applied. See ``comparison.page``
-# ToDo: add links between pages
+Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by ``compute_hindcast`` or ``compute_perfect_model`` to specify over which dimensions the ``metric`` is applied. See :ref:`comparisons`.
 
 
 Deterministic

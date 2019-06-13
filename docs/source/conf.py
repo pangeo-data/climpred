@@ -42,6 +42,7 @@ extensions = [
     'sphinxcontrib.napoleon',
     'sphinx.ext.imgmath',
     # 'sphinxcontrib.bibtex',
+    'sphinx.ext.autosectionlabel',
     'sphinx.ext.viewcode',
 ]
 

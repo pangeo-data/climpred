@@ -9,7 +9,7 @@ Features
 --------
 - Bootstrap prediction skill based on resampling with replacement consistently in ``ReferenceEnsemble`` and ``PerfectModelEnsemble``. (:pr:`128`) `Aaron Spring`_
 - Consistent bootstrap function for ``climpred.stats`` functions via ``bootstrap_func`` wrapper. (:pr:`167`) `Aaron Spring`_
-- many more metrics. (:pr:`128`) `Aaron Spring`_
+- many more metrics: ``_msss_murphy``, ``_less`` and probabilistic ``_crps``, ``_crpss`` (:pr:`128`) `Aaron Spring`_
 
 climpred v0.3 (2019-04-27)
 ==========================

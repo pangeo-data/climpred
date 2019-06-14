@@ -34,8 +34,8 @@ def get_metric_function(metric, list_):
     else:
         # equivalent of: `if metric in METRIC_ALIASES;
         # METRIC_ALIASES[metric]; else metric`
-        is_in_list(metric, list_, 'metric')
         metric = METRIC_ALIASES.get(metric, metric)
+        is_in_list(metric, list_, 'metric')
         return getattr(metrics, '_' + metric)
 
 
@@ -64,7 +64,6 @@ def get_comparison_function(comparison, list_):
     if isinstance(comparison, types.FunctionType):
         return comparison
     else:
-        is_in_list(comparison, list_, 'comparison')
         comparison = METRIC_ALIASES.get(comparison, comparison)
         return getattr(comparisons, '_' + comparison)
 

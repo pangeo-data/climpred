@@ -1,6 +1,7 @@
 import types
 
 import numpy as np
+import xarray as xr
 
 from . import metrics
 from . import comparisons
@@ -74,3 +75,25 @@ def intersect(lst1, lst2):
     """
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
+
+
+def reduce_time_series(forecast, reference, nlags):
+    """Reduces forecast and reference to common time frame for prediction and lag.
+
+    Args:
+        forecast (`xarray` object): prediction ensemble with inits.
+        reference (`xarray` object): reference being compared to (for skill,
+                                     persistence, etc.)
+        nlags (int): number of lags being computed
+
+    Returns:
+       forecast (`xarray` object): prediction ensemble reduced to
+       reference (`xarray` object):
+    """
+    imin = max(forecast.time.min(), reference.time.min())
+    imax = min(forecast.time.max(), reference.time.max() - nlags)
+    imax = xr.DataArray(imax).rename('time')
+    forecast = forecast.where(forecast.time <= imax, drop=True)
+    forecast = forecast.where(forecast.time >= imin, drop=True)
+    reference = reference.where(reference.time >= imin, drop=True)
+    return forecast, reference

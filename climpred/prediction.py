@@ -7,7 +7,7 @@ from .constants import (
     HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
 )
-from .utils import get_metric_function, get_comparison_function, intersect
+from .utils import get_metric_function, get_comparison_function, reduce_time_series
 from .checks import is_xarray
 
 
@@ -43,7 +43,9 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
 
 
 @is_xarray([0, 1])
-def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
+def compute_hindcast(
+    hind, reference, metric='pearson_r', comparison='e2r', max_dfs=False
+):
     """Compute a predictability skill score against a reference
 
     Args:
@@ -63,6 +65,13 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
             * m2r : each member to the reference
         nlags (int): How many lags to compute skill/potential predictability out
                      to. Default: length of `lead` dim
+        max_dfs (bool):
+            If True, maximize the degrees of freedom by slicing `hind` and `reference`
+            to a common time frame at each lead.
+
+            If False (default), then slice to a common time frame prior to computing
+            metric. This philosophy follows the thought that each lead should be based
+            on the same set of initializations.
 
     Returns:
         skill (xarray object):
@@ -77,15 +86,14 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
     # take only inits for which we have references at all leahind
-    imin = max(forecast.time.min(), reference.time.min())
-    imax = min(forecast.time.max(), reference.time.max() - nlags)
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    reference = reference.where(reference.time >= imin, drop=True)
+    if not max_dfs:
+        forecast, reference = reduce_time_series(forecast, reference, nlags)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
+        if max_dfs:
+            forecast, reference = reduce_time_series(forecast, reference, i)
         # take lead year i timeseries and convert to real time
         a = forecast.sel(lead=i).drop('lead')
         a['time'] = [t + i for t in a.time.values]
@@ -98,7 +106,7 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
 
 
 @is_xarray([0, 1])
-def compute_persistence(hind, reference, metric='pearson_r'):
+def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
     """Computes the skill of a persistence forecast from a simulation.
 
     Args:
@@ -106,6 +114,13 @@ def compute_persistence(hind, reference, metric='pearson_r'):
         reference (xarray object): The reference time series.
         metric (str): Metric name to apply at each lag for the persistence
                       computation. Default: 'pearson_r'
+        max_dfs (bool):
+            If True, maximize the degrees of freedom by slicing `hind` and `reference`
+            to a common time frame at each lead.
+
+            If False (default), then slice to a common time frame prior to computing
+            metric. This philosophy follows the thought that each lead should be based
+            on the same set of initializations.
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input metric
@@ -117,12 +132,22 @@ def compute_persistence(hind, reference, metric='pearson_r'):
         Oxford University Press, 2007.
     """
     metric = get_metric_function(metric, HINDCAST_METRICS)
+    nlags = max(hind.lead.values)
+    # temporarily change `init` to `time` for comparison to reference time.
+    hind = hind.rename({'init': 'time'})
+    if not max_dfs:
+        # slices down to inits in common with hindcast, plus gives enough room
+        # for maximum lead time forecast.
+        a, _ = reduce_time_series(hind, reference, nlags)
+        inits = a['time']
 
-    plag = []  # holhind results of persistence for each lag
+    plag = []
     for lag in hind.lead.values:
-        inits = hind['init'].values
-        ctrl_inits = reference.isel(time=slice(0, -lag))['time'].values
-        inits = intersect(inits, ctrl_inits)
+        if max_dfs:
+            # slices down to inits in common with hindcast, but only gives enough
+            # room for lead from current forecast
+            a, _ = reduce_time_series(hind, reference, lag)
+            inits = a['time']
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']

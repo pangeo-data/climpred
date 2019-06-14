@@ -1,8 +1,8 @@
 import numpy as np
 import xarray as xr
 
-from .exceptions import DimensionError
 from .checks import has_dims, has_min_len
+from .exceptions import DimensionError
 
 
 def _drop_members(ds, rmd_member=None):
@@ -55,8 +55,7 @@ def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
 # --------------------------------------------#
 def _m2m(ds, supervector_dim='svd'):
     """
-    Create two supervectors to compare all members to all other members in
-     turn.
+    Create two supervectors to compare all members to all others in turn.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -65,9 +64,7 @@ def _m2m(ds, supervector_dim='svd'):
                                Default: 'svd'
 
     Returns:
-        forecast (xarray object): forecast.
-        reference (xarray object): reference.
-
+        xr.object: forecast, reference.
     """
     supervector_dim2 = 'svd2'
     reference_list = []
@@ -103,9 +100,7 @@ def _m2e(ds, supervector_dim='svd'):
                                Default: 'svd'
 
     Returns:
-        forecast (xarray object): forecast.
-        reference (xarray object): reference.
-
+        xr.object: forecast, reference.
     """
     reference_list = []
     forecast_list = []
@@ -133,9 +128,7 @@ def _m2c(ds, supervector_dim='svd', control_member=None):
                         reference. Default 0
 
     Returns:
-        forecast (xarray object): forecast.
-        reference (xarray object): reference.
-
+        xr.object: forecast, reference.
     """
     if control_member is None:
         control_member = [0]
@@ -161,8 +154,7 @@ def _e2c(ds, supervector_dim='svd', control_member=None):
                         reference. Default 0
 
     Returns:
-        forecast (xarray object): forecast.
-        reference (xarray object): reference.
+        xr.object: forecast, reference.
     """
     if control_member is None:
         control_member = [0]
@@ -193,9 +185,7 @@ def _e2r(ds, reference):
         reference (xarray object): reference xr.Dataset/xr.DataArray.
 
     Returns:
-        forecast (xarray object): forecast.
-        reference (xarray object): reference.
-
+        xr.object: forecast, reference.
     """
     if 'member' in ds.dims:
         forecast = ds.mean('member')
@@ -216,9 +206,7 @@ def _m2r(ds, reference):
         reference (xarray object): reference xr.Dataset/xr.DataArray.
 
     Returns:
-        forecast (xarray object): forecast.
-        reference (xarray object): reference.
-
+        xr.object: forecast, reference.
     """
     # check that this contains more than one member
     has_dims(ds, 'member', 'decadal prediction ensemble')

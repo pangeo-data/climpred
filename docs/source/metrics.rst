@@ -30,7 +30,7 @@ Anomaly Correlation Coefficient (ACC)
 
 ``keyword: 'pearson_r','pr','acc'``
 
-A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [2]_. ``climpred`` uses the Pearson correlation coefficient.
+A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [Jolliffe2011]_. ``climpred`` uses the Pearson correlation coefficient.
 
 .. autofunction:: _pearson_r
 
@@ -50,7 +50,7 @@ Root Mean Square Error (RMSE)
 
 ``keyword: 'rmse'``
 
-The square root of the average of the squared differences between forecasts and observations [2]_.
+The square root of the average of the squared differences between forecasts and observations [Jolliffe2011]_.
 It puts a greater influence on large errors than small errors, which makes this a good choice if large errors are undesirable or one wants to be a more conservative forecaster.
 
 .. autofunction:: _rmse
@@ -60,7 +60,7 @@ Mean Absolute Error (MAE)
 
 ``keyword: 'mae'``
 
-The average of the absolute differences between forecasts and observations [2]_. A more robust measure of forecast accuracy than root mean square error or mean square error which is sensitive to large outlier forecast errors [3]_.
+The average of the absolute differences between forecasts and observations [Jolliffe2011]_. A more robust measure of forecast accuracy than root mean square error or mean square error which is sensitive to large outlier forecast errors [EOS]_.
 
 .. autofunction:: _mae
 
@@ -81,7 +81,7 @@ Mean Square Skill Score (MSSS)
 Normalized Mean Square Error (NMSE)
 -----------------------------------
 
-``keyword: 'nmse'``
+``keyword: 'nmse','nev'``
 
 .. autofunction:: _nmse
 
@@ -118,6 +118,7 @@ Other metrics
 =============
 
 .. autofunction:: _less
+.. autofunction:: _uacc
 
 
 Probabilistic
@@ -130,9 +131,7 @@ Probabilistic
 References
 ##########
 
-.. [2] http://www.nws.noaa.gov/oh/rfcdev/docs/Glossary_Verification_Metrics.pdf
-
-.. [3] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
+.. [EOS] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
 
 .. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003, doi:10.1002/9781119960003.
 

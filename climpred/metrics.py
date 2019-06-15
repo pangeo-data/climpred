@@ -43,7 +43,7 @@ def _pearson_r(forecast, reference, dim='svd', comparison=None):
     Calculate the Anomaly Correlation Coefficient (ACC).
 
     .. math::
-        ACC = \\frac{cov(f, o)}{\sigma_{f}\cdot\sigma_{o}}
+        ACC = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
 
     .. note::
         Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
@@ -61,7 +61,8 @@ def _pearson_r(forecast, reference, dim='svd', comparison=None):
 
 def _pearson_r_p_value(forecast, reference, dim='svd', comparison=None):
     """
-    Calculate the probability associated with the ACC not being random."""
+    Calculate the probability associated with the ACC not being random.
+    """
     return pearson_r_p_value(forecast, reference, dim=dim)
 
 
@@ -70,7 +71,7 @@ def _mse(forecast, reference, dim='svd', comparison=None):
     Calculate the Mean Sqaure Error (MSE).
 
     .. math::
-        MSE = \overline{(f - o)^{2}}
+        MSE = \\overline{(f - o)^{2}}
 
     Range:
         * perfect: 0
@@ -88,7 +89,7 @@ def _rmse(forecast, reference, dim='svd', comparison=None):
     Calculate the Root Mean Sqaure Error (RMSE).
 
     .. math::
-        RMSE = \sqrt{\overline{(f - o)^{2}}}
+        RMSE = \\sqrt{\\overline{(f - o)^{2}}}
 
     Range:
         * perfect: 0
@@ -106,7 +107,7 @@ def _mae(forecast, reference, dim='svd', comparison=None):
     Calculate the Mean Absolute Error (MAE).
 
     .. math::
-        MSE = \overline{(f - o)^{2}}
+        MSE = \\overline{(f - o)^{2}}
 
     Range:
         * perfect: 0
@@ -121,7 +122,7 @@ def _mae(forecast, reference, dim='svd', comparison=None):
 
 def _crps(forecast, reference, dim='svd', comparison=None):
     """
-    Continuous Ranked Probability Score.
+    Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
 
     References:
         * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
@@ -145,7 +146,10 @@ def _crps_gaussian(forecast, mu, sig, dim='svd', comparison=None):
 
 def _crpss(forecast, reference, dim='svd', comparison=None):
     """
-    Continuous Ranked Probability Skill Score.
+    Continuous Ranked Probability Skill Score is strictly proper.
+
+    .. math::
+        CRPSS = \\frac{CRPS_{clim}-CRPS_{init}}{CRPS_{clim}}
 
     References:
         * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
@@ -157,9 +161,9 @@ def _crpss(forecast, reference, dim='svd', comparison=None):
           https://doi.org/10/c6758w.
 
     Range:
-        * perfect: 0
-        * max: 0
-        * else: negative
+        * perfect: 1
+        * pos: better than climatology forecast
+        * neg: worse than climatology forecast
 
     See also:
         * properscoring.crps_ensemble
@@ -176,7 +180,7 @@ def _less(forecast, reference, dim='svd', comparison=None):
     """
     Logarithmic Ensemble Spread Score.
 
-    .. math:: LESS = ln(\\frac{\sigma^2_f}{\sigma^2_o})
+    .. math:: LESS = ln(\\frac{\\sigma^2_f}{\\sigma^2_o})
 
     References:
         * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
@@ -205,6 +209,9 @@ def _less(forecast, reference, dim='svd', comparison=None):
 def _bias(forecast, reference, dim='svd', comparison=None):
     """Calculate unconditional bias.
 
+    .. math::
+        bias = f - o
+
     References:
         * https://www.cawcr.gov.au/projects/verification/
 
@@ -219,6 +226,10 @@ def _bias(forecast, reference, dim='svd', comparison=None):
 
 def _msss_murphy(forecast, reference, dim='svd', comparison=None):
     """Calculate Murphy's Mean Square Skill Score (MSSS).
+
+    .. math::
+        MSSS_{Murphy} = r_{fo}^2 - [\\text{conditional bias}]^2 -\
+         [\\frac{\\text{(unconditional) bias}}{\\sigma_o}]^2
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -237,6 +248,9 @@ def _msss_murphy(forecast, reference, dim='svd', comparison=None):
 def _conditional_bias(forecast, reference, dim='svd', comparison=None):
     """Calculate the conditional bias between forecast and reference.
 
+    .. math::
+        \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
+
     References:
         * https://www-miklip.dkrz.de/about/murcss/
     """
@@ -248,6 +262,9 @@ def _conditional_bias(forecast, reference, dim='svd', comparison=None):
 def _std_ratio(forecast, reference, dim='svd', comparison=None):
     """Calculate the ratio of standard deviations of reference over forecast.
 
+    ..math ::
+        \\text{std ratio}=\\frac{\\sigma{r}}{f}}
+
     References:
      * https://www-miklip.dkrz.de/about/murcss/
     """
@@ -257,6 +274,9 @@ def _std_ratio(forecast, reference, dim='svd', comparison=None):
 
 def _bias_slope(forecast, reference, dim='svd', comparison=None):
     """Calculate bias slope between reference and forecast standard deviations.
+
+    .. math::
+        \\text{bias slope}= r_{fo} * \\text{std ratio}
 
     References:
      * https://www-miklip.dkrz.de/about/murcss/
@@ -270,7 +290,7 @@ def _bias_slope(forecast, reference, dim='svd', comparison=None):
 def _ppp(forecast, reference, dim='svd', comparison=None):
     """Prognostic Potential Predictability (PPP) metric.
 
-    .. math:: PPP = 1 - \\frac{MSE}{ \sigma_{control} \cdot fac}
+    .. math:: PPP = 1 - \\frac{MSE}{ \\sigma_{control} \\cdot fac}
 
     Range:
         * 1: perfect forecast
@@ -300,11 +320,11 @@ def _ppp(forecast, reference, dim='svd', comparison=None):
 def _nrmse(forecast, reference, dim='svd', comparison=None):
     """Normalized Root Mean Square Error (NRMSE) metric.
 
-    .. math:: NRMSE = \\frac{RMSE}{\sigma_{control} \cdot \sqrt{fac} }
-                    = \\sqrt{ \\frac{MSE}{ \sigma^2_{control} \cdot fac} }
+    .. math:: NRMSE = \\frac{RMSE}{\\sigma_{control} \\cdot \\sqrt{fac} }
+                    = \\sqrt{ \\frac{MSE}{ \\sigma^2_{control} \\cdot fac} }
 
     Range:
-        * 0: perfect forecast: 0
+        * 0: perfect forecast
         * 0 - 1: better than climatology forecast
         * > 1: worse than climatology forecast
 
@@ -331,7 +351,7 @@ def _nmse(forecast, reference, dim='svd', comparison=None):
     """
     Calculate Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV).
 
-    .. math:: NMSE = NEV = \\frac{MSE}{\sigma^2_{control} \cdot fac}
+    .. math:: NMSE = NEV = \\frac{MSE}{\\sigma^2_{control} \\cdot fac}
 
     Range:
         * 0: perfect forecast: 0
@@ -354,7 +374,7 @@ def _nmae(forecast, reference, dim='svd', comparison=None):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
-    .. math:: NMAE = \\frac{MAE}{\sigma^2_{reference} \cdot fac}
+    .. math:: NMAE = \\frac{MAE}{\\sigma^2_{reference} \\cdot fac}
 
     Range:
         * 0: perfect forecast: 0
@@ -380,16 +400,17 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
     Calculate Bushuk's unbiased ACC (uACC).
 
     .. math::
-        uACC = \sqrt{PPP} = \sqrt{MSSS}
+        uACC = \\sqrt{PPP} = \\sqrt{MSSS}
 
     Range:
         * 1: perfect
         * 0 - 1: better than climatology
 
     References:
-        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-          Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-          Prediction: Potential versus Operational Seasonal Forecast Skill.
-          Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
+         Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
+         Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
+         Forecast Skill. Climate Dynamics, June 9, 2018.
+         https://doi.org/10/gd7hfq.
     """
     return _ppp(forecast, reference, dim=dim, comparison=comparison) ** 0.5

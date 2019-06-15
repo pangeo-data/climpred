@@ -65,7 +65,7 @@ def get_comparison_function(comparison, list_):
     if isinstance(comparison, types.FunctionType):
         return comparison
     else:
-        comparison = METRIC_ALIASES.get(comparison, comparison)
+        is_in_list(comparison, list_, 'comparison')
         return getattr(comparisons, '_' + comparison)
 
 

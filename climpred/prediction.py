@@ -2,10 +2,10 @@ import xarray as xr
 
 from .comparisons import _e2c
 from .constants import (
-    ALL_PM_METRICS_DICT,
-    ALL_PM_COMPARISONS_DICT,
-    ALL_HINDCAST_METRICS_DICT,
-    ALL_HINDCAST_COMPARISONS_DICT,
+    PM_METRICS,
+    PM_COMPARISONS,
+    HINDCAST_METRICS,
+    HINDCAST_COMPARISONS,
 )
 from .utils import get_metric_function, get_comparison_function, reduce_time_series
 from .checks import is_xarray
@@ -33,8 +33,8 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
 
     """
     supervector_dim = 'svd'
-    metric = get_metric_function(metric, ALL_PM_METRICS_DICT)
-    comparison = get_comparison_function(comparison, ALL_PM_COMPARISONS_DICT)
+    metric = get_metric_function(metric, PM_METRICS)
+    comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
     forecast, reference = comparison(ds, supervector_dim)
 
@@ -79,8 +79,8 @@ def compute_hindcast(
 
     """
     nlags = hind.lead.size
-    comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
-    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
+    comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
+    metric = get_metric_function(metric, HINDCAST_METRICS)
 
     forecast, reference = comparison(hind, reference)
     # think in real time dimension: real time = init + lag
@@ -131,8 +131,8 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
         Van den Dool, Huug. Empirical methods in short-term climate prediction.
         Oxford University Press, 2007.
     """
+    metric = get_metric_function(metric, HINDCAST_METRICS)
     nlags = max(hind.lead.values)
-    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
     if not max_dfs:
@@ -184,8 +184,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
         u (xarray object): Results from comparison at the first lag.
 
     """
-    comparison = get_comparison_function(comparison, ALL_HINDCAST_COMPARISONS_DICT)
-    metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
+    comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
+    metric = get_metric_function(metric, HINDCAST_METRICS)
     uninit, reference = comparison(uninit, reference)
     u = metric(uninit, reference, dim='time', comparison=comparison)
     return u

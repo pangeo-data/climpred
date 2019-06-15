@@ -32,6 +32,10 @@ Anomaly Correlation Coefficient (ACC)
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [2]_. ``climpred`` uses the Pearson correlation coefficient.
 
+.. note::
+
+    The p-value associated with the ACC can be computed using keywords ``pearson_r_p_value``, ``pval``, or ``pvalue``.
+
 .. autofunction:: _pearson_r
 
 

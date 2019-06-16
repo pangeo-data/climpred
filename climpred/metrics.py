@@ -12,7 +12,7 @@ from xskillscore import (
 
 
 def _get_norm_factor(comparison):
-    """Get normalization factor for PPP, nvar, nRMSE.
+    """Get normalization factor for PPP, NMSE, NRMSE, MSSS.
 
     Used in compute_perfect_model. Comparison 'm2e' gets smaller rmse's than
     'm2m' by design, see Seferian et al. 2018. 'm2m', 'm2c' ensemble variance
@@ -124,15 +124,15 @@ def _crps(forecast, reference, dim='svd', comparison=None):
     """
     Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
 
-    References:
-        * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
-          Continuous Probability Distributions.” Management Science 22, no. 10
-          (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
-
     Range:
         * perfect: 0
         * max: 0
         * else: negative
+
+    References:
+        * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
+          Continuous Probability Distributions.” Management Science 22, no. 10
+          (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
 
     See also:
         * properscoring.crps_ensemble
@@ -151,6 +151,11 @@ def _crpss(forecast, reference, dim='svd', comparison=None):
     .. math::
         CRPSS = \\frac{CRPS_{clim}-CRPS_{init}}{CRPS_{clim}}
 
+    Range:
+        * perfect: 1
+        * pos: better than climatology forecast
+        * neg: worse than climatology forecast
+
     References:
         * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
           Continuous Probability Distributions.” Management Science 22, no. 10
@@ -159,11 +164,6 @@ def _crpss(forecast, reference, dim='svd', comparison=None):
           Rules, Prediction, and Estimation.” Journal of the American
           Statistical Association 102, no. 477 (March 1, 2007): 359–78.
           https://doi.org/10/c6758w.
-
-    Range:
-        * perfect: 1
-        * pos: better than climatology forecast
-        * neg: worse than climatology forecast
 
     See also:
         * properscoring.crps_ensemble
@@ -212,13 +212,14 @@ def _bias(forecast, reference, dim='svd', comparison=None):
     .. math::
         bias = f - o
 
-    References:
-        * https://www.cawcr.gov.au/projects/verification/
-
     Range:
         * pos: positive bias
         * neg: negative bias
         * perfect: 0
+
+    References:
+        * https://www.cawcr.gov.au/projects/verification/
+        * https://www-miklip.dkrz.de/about/murcss/
     """
     bias = (forecast - reference).mean(dim)
     return bias
@@ -248,8 +249,7 @@ def _msss_murphy(forecast, reference, dim='svd', comparison=None):
 def _conditional_bias(forecast, reference, dim='svd', comparison=None):
     """Calculate the conditional bias between forecast and reference.
 
-    .. math::
-        \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
+    .. math:: \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -262,8 +262,7 @@ def _conditional_bias(forecast, reference, dim='svd', comparison=None):
 def _std_ratio(forecast, reference, dim='svd', comparison=None):
     """Calculate the ratio of standard deviations of reference over forecast.
 
-    ..math ::
-        \\text{std ratio}=\\frac{\\sigma{r}}{f}}
+    .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
 
     References:
      * https://www-miklip.dkrz.de/about/murcss/
@@ -275,8 +274,7 @@ def _std_ratio(forecast, reference, dim='svd', comparison=None):
 def _bias_slope(forecast, reference, dim='svd', comparison=None):
     """Calculate bias slope between reference and forecast standard deviations.
 
-    .. math::
-        \\text{bias slope}= r_{fo} * \\text{std ratio}
+    .. math:: \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
 
     References:
      * https://www-miklip.dkrz.de/about/murcss/
@@ -290,7 +288,7 @@ def _bias_slope(forecast, reference, dim='svd', comparison=None):
 def _ppp(forecast, reference, dim='svd', comparison=None):
     """Prognostic Potential Predictability (PPP) metric.
 
-    .. math:: PPP = 1 - \\frac{MSE}{ \\sigma_{control} \\cdot fac}
+    .. math:: PPP = 1 - \\frac{MSE}{ \\sigma_{ref} \\cdot fac}
 
     Range:
         * 1: perfect forecast
@@ -320,8 +318,8 @@ def _ppp(forecast, reference, dim='svd', comparison=None):
 def _nrmse(forecast, reference, dim='svd', comparison=None):
     """Normalized Root Mean Square Error (NRMSE) metric.
 
-    .. math:: NRMSE = \\frac{RMSE}{\\sigma_{control} \\cdot \\sqrt{fac} }
-                    = \\sqrt{ \\frac{MSE}{ \\sigma^2_{control} \\cdot fac} }
+    .. math:: NRMSE = \\frac{RMSE}{\\sigma_{o} \\cdot \\sqrt{fac} }
+                    = \\sqrt{ \\frac{MSE}{ \\sigma^2_{o} \\cdot fac} }
 
     Range:
         * 0: perfect forecast
@@ -351,7 +349,7 @@ def _nmse(forecast, reference, dim='svd', comparison=None):
     """
     Calculate Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV).
 
-    .. math:: NMSE = NEV = \\frac{MSE}{\\sigma^2_{control} \\cdot fac}
+    .. math:: NMSE = NEV = \\frac{MSE}{\\sigma^2_{o} \\cdot fac}
 
     Range:
         * 0: perfect forecast: 0
@@ -374,7 +372,7 @@ def _nmae(forecast, reference, dim='svd', comparison=None):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
-    .. math:: NMAE = \\frac{MAE}{\\sigma^2_{reference} \\cdot fac}
+    .. math:: NMAE = \\frac{MAE}{\\sigma^2_{o} \\cdot fac}
 
     Range:
         * 0: perfect forecast: 0
@@ -399,8 +397,7 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
     """
     Calculate Bushuk's unbiased ACC (uACC).
 
-    .. math::
-        uACC = \\sqrt{PPP} = \\sqrt{MSSS}
+    .. math:: uACC = \\sqrt{PPP} = \\sqrt{MSSS}
 
     Range:
         * 1: perfect
@@ -408,9 +405,10 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
 
     References:
         * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
-         Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
-         Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
-         Forecast Skill. Climate Dynamics, June 9, 2018.
-         https://doi.org/10/gd7hfq.
+          Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
+          Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
+          Forecast Skill. Climate Dynamics, June 9, 2018.
+          https://doi.org/10/gd7hfq.
+
     """
     return _ppp(forecast, reference, dim=dim, comparison=comparison) ** 0.5

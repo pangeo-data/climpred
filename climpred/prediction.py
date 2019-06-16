@@ -1,14 +1,14 @@
 import xarray as xr
 
+from .checks import is_xarray
 from .comparisons import _e2c
 from .constants import (
-    ALL_PM_METRICS_DICT,
-    ALL_PM_COMPARISONS_DICT,
-    ALL_HINDCAST_METRICS_DICT,
     ALL_HINDCAST_COMPARISONS_DICT,
+    ALL_HINDCAST_METRICS_DICT,
+    ALL_PM_COMPARISONS_DICT,
+    ALL_PM_METRICS_DICT,
 )
-from .utils import get_metric_function, get_comparison_function, intersect
-from .checks import is_xarray
+from .utils import get_comparison_function, get_metric_function, intersect
 
 
 # --------------------------------------------#
@@ -23,10 +23,11 @@ def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
     simulation dataset.
 
     Args:
-        ds (xarray object): ensemble with dimensions time and member.
-        control (xarray object): control with dimensions time.
-        metric (str): metric name see get_metric_function.
-        comparison (str): comparison name see get_comparison_function.
+        ds (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
+        control (xarray object): control with dimension ``time``.
+        metric (str): `metric` name, see :py:func:`climpred.utils.get_metric_function`.
+        comparison (str): `comparison` name, see
+                          :py:func:`climpred.utils.get_comparison_function`.
 
     Returns:
         res (xarray object): skill score.
@@ -49,18 +50,21 @@ def compute_hindcast(hind, reference, metric='pearson_r', comparison='e2r'):
     Args:
         hind (xarray object):
             Expected to follow package conventions:
-            `time` : dim of initialization dates
-            `lead` : dim of lead time from those initializations
-            Additional dims can be lat, lon, depth.
+
+            * ``init`` : dim of initialization dates
+            * ``lead`` : dim of lead time from those initializations
+
+            Additional dims can be member, lat, lon, depth, ...
         reference (xarray object):
             reference output/data over same time period.
         metric (str):
             Metric used in comparing the decadal prediction ensemble with the
-            reference.
+            reference (see :py:func:`climpred.utils.get_metric_function`).
         comparison (str):
-            How to compare the decadal prediction ensemble to the reference.
-            * e2r : ensemble mean to reference (Default)
-            * m2r : each member to the reference
+            How to compare the decadal prediction ensemble to the reference:
+
+                * e2r : ensemble mean to reference (Default)
+                * m2r : each member to the reference
         nlags (int): How many lags to compute skill/potential predictability out
                      to. Default: length of `lead` dim
 
@@ -112,9 +116,9 @@ def compute_persistence(hind, reference, metric='pearson_r'):
         applied.
 
     Reference:
-        Chapter 8 (Short-Term Climate Prediction) in
-        Van den Dool, Huug. Empirical methods in short-term climate prediction.
-        Oxford University Press, 2007.
+        * Chapter 8 (Short-Term Climate Prediction) in Van den Dool, Huug.
+          Empirical methods in short-term climate prediction.
+          Oxford University Press, 2007.
     """
     metric = get_metric_function(metric, ALL_HINDCAST_METRICS_DICT)
 
@@ -151,7 +155,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
             Metric used in comparing the decadal prediction ensemble with the
             reference.
         comparison (str):
-            How to compare the decadal prediction ensemble to the reference.
+            How to compare the decadal prediction ensemble to the reference:
+
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
 

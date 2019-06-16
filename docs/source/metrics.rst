@@ -6,15 +6,15 @@ All high-level functions have an optional ``metric`` argument that can be called
 
 .. note::
 
-    We use the phrase 'observations' here to refer to the 'truth' data to which
-    we compare the forecast. These metrics can also be applied in reference
+    We use the phrase 'observations' ``o`` here to refer to the 'truth' data to which
+    we compare the forecast ``f``. These metrics can also be applied in reference
     to a control simulation, reconstruction, observations, etc. This would just
     change the resulting score from referencing skill to referencing potential
     predictability.
 
 .. currentmodule:: climpred.metrics
 
-Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by ``compute_hindcast`` or ``compute_perfect_model`` to specify over which dimensions the ``metric`` is applied. See :ref:`comparisons`.
+Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by :py:func:`climpred.prediction.compute_hindcast` or :py:func:`climpred.prediction.compute_perfect_model` to specify over which dimensions the ``metric`` is applied. See :ref:`comparisons`.
 
 
 Deterministic
@@ -68,7 +68,7 @@ The average of the absolute differences between forecasts and observations [Joll
 Derived Metrics
 ===============
 
-Distance-based metrics like ``mse`` can be normalized to 1. The normalization factor depends on the comparison type choosen, eg. the distance between an ensemble member and the ensemble mean is half the distance of an ensemble member with other ensemble members. (see ``climpred.metrics._get_norm_factor``).
+Distance-based metrics like ``mse`` can be normalized to 1. The normalization factor depends on the comparison type choosen, eg. the distance between an ensemble member and the ensemble mean is half the distance of an ensemble member with other ensemble members. (see :py:func:`climpred.metrics._get_norm_factor`).
 
 
 Mean Square Skill Score (MSSS)
@@ -133,6 +133,6 @@ References
 
 .. [EOS] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
 
-.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003, doi:10.1002/9781119960003.
+.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003, https://doi.org/10.1002/9781119960003.
 
-.. [Murphy1988] Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient. Monthly Weather Review, 116(12):2417–2424, December 1988. doi:10/fc7mxd.
+.. [Murphy1988] Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient. Monthly Weather Review, 116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.

@@ -265,7 +265,7 @@ def _std_ratio(forecast, reference, dim='svd', comparison=None):
     .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
 
     References:
-     * https://www-miklip.dkrz.de/about/murcss/
+        * https://www-miklip.dkrz.de/about/murcss/
     """
     ratio = reference.std(dim) / forecast.std(dim)
     return ratio
@@ -277,7 +277,7 @@ def _bias_slope(forecast, reference, dim='svd', comparison=None):
     .. math:: \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
 
     References:
-     * https://www-miklip.dkrz.de/about/murcss/
+        * https://www-miklip.dkrz.de/about/murcss/
     """
     std_ratio = _std_ratio(forecast, reference, dim=dim)
     acc = _pearson_r(forecast, reference, dim=dim)
@@ -409,6 +409,5 @@ def _uacc(forecast, reference, dim='svd', comparison=None):
           Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
           Forecast Skill. Climate Dynamics, June 9, 2018.
           https://doi.org/10/gd7hfq.
-
     """
     return _ppp(forecast, reference, dim=dim, comparison=comparison) ** 0.5

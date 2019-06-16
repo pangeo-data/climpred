@@ -34,6 +34,8 @@ A measure of the linear association between the forecast and observations that i
 
 .. autofunction:: _pearson_r
 
+.. note:: The p-value associated with the ACC can be computed using keywords ``pearson_r_p_value``, ``pval``, or ``pvalue``.
+
 
 Mean Squared Error (MSE)
 ------------------------
@@ -55,6 +57,7 @@ It puts a greater influence on large errors than small errors, which makes this 
 
 .. autofunction:: _rmse
 
+
 Mean Absolute Error (MAE)
 -------------------------
 
@@ -65,18 +68,12 @@ The average of the absolute differences between forecasts and observations [Joll
 .. autofunction:: _mae
 
 
+
 Derived Metrics
 ===============
 
 Distance-based metrics like ``mse`` can be normalized to 1. The normalization factor depends on the comparison type choosen, eg. the distance between an ensemble member and the ensemble mean is half the distance of an ensemble member with other ensemble members. (see :py:func:`climpred.metrics._get_norm_factor`).
 
-
-Mean Square Skill Score (MSSS)
-------------------------------
-
-``keyword: 'msss','ppp'``
-
-.. autofunction:: _ppp
 
 Normalized Mean Square Error (NMSE)
 -----------------------------------
@@ -102,10 +99,18 @@ Normalized Root Mean Square Error (NRMSE)
 .. autofunction:: _nrmse
 
 
+Mean Square Skill Score (MSSS)
+------------------------------
+
+``keyword: 'msss','ppp'``
+
+.. autofunction:: _ppp
+
+
 Murphy decomposition metrics
 ============================
 
-[Murphy1988]_
+[Murphy1988]_ relates the MSSS with ACC and unconditional bias.
 
 .. autofunction:: _std_ratio
 .. autofunction:: _bias
@@ -133,6 +138,6 @@ References
 
 .. [EOS] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
 
-.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003, https://doi.org/10.1002/9781119960003.
+.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003.
 
 .. [Murphy1988] Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient. Monthly Weather Review, 116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.

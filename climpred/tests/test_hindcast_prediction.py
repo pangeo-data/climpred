@@ -3,8 +3,8 @@ import pytest
 
 from climpred.bootstrap import bootstrap_hindcast
 
-# testing less separately: use ALL_PM_METRICS_DICT
-from climpred.constants import ALL_HINDCAST_COMPARISONS_DICT, ALL_PM_METRICS_DICT
+# testing less separately: use PM_METRICS
+from climpred.constants import HINDCAST_COMPARISONS, PM_METRICS
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,
@@ -100,8 +100,8 @@ def test_compute_hindcast_less_m2r(initialized_da, reconstruction_da):
     assert not actual
 
 
-@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
-@pytest.mark.parametrize('comparison', ALL_HINDCAST_COMPARISONS_DICT.keys())
+@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 def test_compute_hindcast(initialized_ds, reconstruction_ds, metric, comparison):
     """
     Checks that compute reference works without breaking.
@@ -117,7 +117,7 @@ def test_compute_hindcast(initialized_ds, reconstruction_ds, metric, comparison)
         assert not res[var]
 
 
-@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
+@pytest.mark.parametrize('metric', PM_METRICS)
 def test_persistence(initialized_da, reconstruction_da, metric):
     """
     Checks that compute persistence works without breaking.
@@ -130,8 +130,8 @@ def test_persistence(initialized_da, reconstruction_da, metric):
     assert not res
 
 
-@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
-@pytest.mark.parametrize('comparison', ALL_HINDCAST_COMPARISONS_DICT.keys())
+@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 def test_uninitialized(uninitialized_da, reconstruction_da, metric, comparison):
     """
     Checks that compute uninitialized works without breaking.
@@ -146,8 +146,8 @@ def test_uninitialized(uninitialized_da, reconstruction_da, metric, comparison):
     assert not res
 
 
-@pytest.mark.parametrize('comparison', ALL_HINDCAST_COMPARISONS_DICT.keys())
-@pytest.mark.parametrize('metric', ALL_PM_METRICS_DICT.keys())
+@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
+@pytest.mark.parametrize('metric', PM_METRICS)
 def test_bootstrap_hindcast_da1d_not_nan(
     initialized_da, uninitialized_da, reconstruction_da, metric, comparison
 ):

@@ -135,8 +135,8 @@ def match_initialized_vars(init, ref):
     return True
 
 
-def is_in_dict(key, dict_, kind):
-    """Check whether a key is in provided dictionary; kind is just a string."""
-    if key not in dict_.keys():
-        raise KeyError(f'Specify {kind} from {dict_.keys()}: got {key}')
+def is_in_list(item, list_, kind):
+    """Check whether an item is in a list; kind is just a string."""
+    if item not in list_:
+        raise KeyError(f'Specify {kind} from {list_}: got {item}')
     return True

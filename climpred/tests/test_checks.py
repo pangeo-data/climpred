@@ -9,7 +9,7 @@ from climpred.checks import (
     is_initialized,
     match_initialized_dims,
     match_initialized_vars,
-    is_in_dict,
+    is_in_list,
 )
 from climpred.exceptions import DatasetError, DimensionError, VariableError
 
@@ -220,15 +220,15 @@ def test_match_initialized_vars_fail(ds1, ds2):
     assert 'Please provide a Dataset/DataArray with at least' in str(e.value)
 
 
-def test_is_in_dict():
+def test_is_in_list():
     """Test if check works if key is in dict."""
-    some_dict = {'key': 'value'}
-    assert is_in_dict('key', some_dict, 'metric')
+    some_list = ['key']
+    assert is_in_list('key', some_list, 'metric')
 
 
-def test_is_in_dict_fail():
+def test_is_in_list_fail():
     """Test if check works if key is not in dict."""
-    some_dict = {'key': 'value'}
+    some_list = ['key']
     with pytest.raises(KeyError) as e:
-        is_in_dict('not_key', some_dict, 'metric')
+        is_in_list('not_key', some_list, 'metric')
     assert 'Specify metric from' in str(e.value)

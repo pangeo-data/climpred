@@ -9,8 +9,6 @@ from .constants import (
     HINDCAST_COMPARISONS,
 )
 from .utils import get_metric_function, get_comparison_function, reduce_time_series
-from .checks import is_xarray
-
 
 
 # --------------------------------------------#

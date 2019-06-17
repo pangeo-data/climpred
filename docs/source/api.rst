@@ -42,6 +42,18 @@ Tutorial
 
 .. autosummary:: load_dataset
 
+Misc
+~~~~
+.. currentmodule:: climpred.utils
+
+.. autosummary:: get_metric_function
+.. autosummary:: get_comparison_function
+
+.. currentmodule:: climpred.metrics
+
+.. autosummary:: _get_norm_factor
+
+
 .. Everything below here generates the full API. Above is just one-line summaries.
 .. currentmodule:: climpred.prediction
 
@@ -70,3 +82,12 @@ Tutorial
 .. currentmodule:: climpred.tutorial
 
 .. autofunction:: load_dataset
+
+.. currentmodule:: climpred.utils
+
+.. autofunction:: get_metric_function
+.. autofunction:: get_comparison_function
+
+.. currentmodule:: climpred.metrics
+
+.. autofunction:: _get_norm_factor

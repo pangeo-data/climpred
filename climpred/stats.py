@@ -226,7 +226,7 @@ def varweighted_mean_period(ds, time_dim='time'):
     """Calculate the variance weighted mean period of time series.
 
     .. math::
-        P_{x} = \sum_k V(f_k,x) / \sum_k f_k V(f_k,x)
+        P_{x} = \\frac{\\sum_k V(f_k,x)}{\\sum_k f_k  \\cdot V(f_k,x)}
 
     Args:
         ds (xarray object): Time series.
@@ -298,7 +298,7 @@ def decorrelation_time(da, r=20, dim='time'):
     """Calculate the decorrelaton time of a time series.
 
     .. math::
-        tau_{d} = 1 + 2 * \sum_{k=1}^{\inf}(alpha_{k})^{k}
+        \\tau_{d} = 1 + 2 * \\sum_{k=1}^{r}(\\alpha_{k})^{k}
 
     Args:
         da (xarray object): Time series.
@@ -330,8 +330,8 @@ def DPP(ds, m=10, chunk=True):
 
     .. math::
 
-        DPP_{\mathrm{unbiased}}(m) = \\frac{\sigma^{2}_{m} -
-        \\frac{1}{m}\cdot\sigma^{2}}{\sigma^{2}}
+        DPP_{\\mathrm{unbiased}}(m) = \\frac{\\sigma^{2}_{m} -
+        \\frac{1}{m}\\cdot\\sigma^{2}}{\\sigma^{2}}
 
     Note:
         Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP

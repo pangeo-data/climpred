@@ -42,7 +42,7 @@ Installation
     :maxdepth: 1
     :hidden:
     :caption: Getting Started
-     
+
     why-climpred
     quick-start
     sample-data.ipynb
@@ -56,9 +56,9 @@ Installation
 * :doc:`terminology`
 
 .. toctree::
-    :maxdepth: 1 
+    :maxdepth: 1
     :hidden:
-    :caption: User GUide
+    :caption: User Guide
 
     setting-up-data
     metrics
@@ -73,7 +73,7 @@ Installation
 * :doc:`contributors`
 
 .. toctree::
-    :maxdepth: 1 
+    :maxdepth: 1
     :hidden:
     :caption: Help & Reference
 

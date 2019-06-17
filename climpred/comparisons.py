@@ -1,4 +1,5 @@
 import numpy as np
+
 import xarray as xr
 
 from .checks import has_dims, has_min_len
@@ -175,9 +176,7 @@ def _e2c(ds, supervector_dim='svd', control_member=None):
 # --------------------------------------------#
 def _e2r(ds, reference):
     """
-    For a hindcast-based decadal prediction ensemble. This compares the
-    ensemble mean prediction to the reference (hindcast, simulation,
-    observations).
+    Compare the ensemble mean forecast to a reference in HindcastEnsemble.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -196,9 +195,7 @@ def _e2r(ds, reference):
 
 def _m2r(ds, reference):
     """
-    For a hindcast-based decadal prediction ensemble. This compares each
-    member individually to the reference (hindcast, simulation,
-    observations).
+    Compares each member individually to a reference in HindcastEnsemble.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble

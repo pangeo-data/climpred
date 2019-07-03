@@ -1,3 +1,4 @@
+import numpy as np
 import xarray as xr
 
 from .checks import is_xarray
@@ -8,7 +9,12 @@ from .constants import (
     HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
 )
-from .utils import get_metric_function, get_comparison_function, reduce_time_series
+from .utils import (
+    get_metric_function,
+    get_comparison_function,
+    reduce_time_series,
+    intersect,
+)
 
 
 # --------------------------------------------#
@@ -161,13 +167,13 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
     return pers
 
 
-# ToDo: do we really need a function here
-# or cannot we somehow use compute_hindcast for that?
 @is_xarray([0, 1])
-def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
+def compute_uninitialized(
+    uninit, reference, metric='pearson_r', comparison='e2r', nlags=None
+):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
-    Note:
+    .. note::
         Based on Decadal Prediction protocol, this should only be computed for the
         first lag and then projected out to any further lags being analyzed.
 
@@ -177,13 +183,14 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
         reference (xarray object):
             reference output/data over same time period.
         metric (str):
-            Metric used in comparing the decadal prediction ensemble with the
-            reference.
+            Metric used in comparing the uninitialized ensemble with the reference.
         comparison (str):
-            How to compare the decadal prediction ensemble to the reference:
-
+            How to compare the uninitialized ensemble to the reference:
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
+        nlags (int):
+            Number of lags to broadcast to. The metric is only computed to the first
+            lag and then broadcasted forward to this many lags.
 
     Returns:
         u (xarray object): Results from comparison at the first lag.
@@ -191,6 +198,15 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     """
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, HINDCAST_METRICS)
-    uninit, reference = comparison(uninit, reference)
-    u = metric(uninit, reference, dim='time', comparison=comparison)
-    return u
+    forecast, reference = comparison(uninit, reference)
+    # Find common times between two for proper comparison.
+    common_time = intersect(forecast['time'].values, reference['time'].values)
+    forecast = forecast.sel(time=common_time)
+    reference = reference.sel(time=common_time)
+    u = metric(forecast, reference, dim='time', comparison=comparison)
+    if nlags is None:
+        return u
+    else:
+        u = xr.concat([u] * nlags, dim='lead')
+        u['lead'] = np.arange(1, nlags + 1)
+        return u

@@ -1,0 +1,5 @@
+numpy
+xarray
+scipy
+xskillscore
+eofs

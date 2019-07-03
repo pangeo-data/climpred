@@ -23,7 +23,7 @@ from .utils import (
 # predictability.
 # --------------------------------------------#
 @is_xarray([0, 1])
-def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
+def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
@@ -88,7 +88,7 @@ def compute_hindcast(
             Predictability with main dimension ``lag``
 
     """
-    nlags = hind.lead.size
+    nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, HINDCAST_METRICS)
 

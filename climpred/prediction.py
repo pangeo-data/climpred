@@ -1,5 +1,6 @@
+import numpy as np
 import xarray as xr
-
+import warnings
 from .checks import is_xarray
 from .comparisons import _e2c
 from .constants import (
@@ -8,7 +9,12 @@ from .constants import (
     HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
 )
-from .utils import get_metric_function, get_comparison_function, reduce_time_series
+from .utils import (
+    get_metric_function,
+    get_comparison_function,
+    reduce_time_series,
+    intersect,
+)
 
 
 # --------------------------------------------#
@@ -135,23 +141,59 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
+
+    def process_time(a, b, nlags=None):
+        """
+        Finds common inits between the initialized ensemble and reference.
+        """
+        # Finds common init years.
+        new_time = intersect(a, b)
+        # Trims off to the number of lags required.
+        return new_time[:-nlags]
+
+    def return_inits(reference, inits):
+        """
+        Checks to see if persistence can be computed starting with the year prior
+        to initialization (which is protocol). If the user doesn't have or doesn't
+        submit a reference with a time period spanning earlier than the first
+        initialization, throw a warning and compute starting with the first
+        initialization.
+        """
+        try:
+            reference.sel(time=inits - 1)
+            inits -= 1
+        except KeyError:
+            # throw warning
+            earlier_time = hind.time[0].values - 1
+            warnings.warn(
+                f"""Persistence is being computed starting from the first
+            initialization. Note that protocol suggests that initialization is
+            computed starting from the time step *prior* to initialization. If
+            available, please submit a reference with at least one time step
+            prior to the first initialization.
+
+            i.e., submit a reference starting from at least {earlier_time}
+            """
+            )
+        return inits
+
     metric = get_metric_function(metric, HINDCAST_METRICS)
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
     if not max_dfs:
-        # slices down to inits in common with hindcast, plus gives enough room
-        # for maximum lead time forecast.
-        a, _ = reduce_time_series(hind, reference, nlags)
-        inits = a['time']
+        # slices down to common inits with hindcast, plus gives enough room
+        # for the maximum lead time forecast.
+        inits = process_time(hind['time'], reference['time'], nlags=nlags)
+        inits = return_inits(reference, inits)
 
     plag = []
     for lag in hind.lead.values:
         if max_dfs:
             # slices down to inits in common with hindcast, but only gives enough
             # room for lead from current forecast
-            a, _ = reduce_time_series(hind, reference, lag)
-            inits = a['time']
+            inits = process_time(hind['time'], reference['time'], nlags=lag)
+            inits = return_inits(reference, inits)
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
@@ -161,13 +203,13 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
     return pers
 
 
-# ToDo: do we really need a function here
-# or cannot we somehow use compute_hindcast for that?
 @is_xarray([0, 1])
-def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
+def compute_uninitialized(
+    uninit, reference, metric='pearson_r', comparison='e2r', nlags=None
+):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
-    Note:
+    .. note::
         Based on Decadal Prediction protocol, this should only be computed for the
         first lag and then projected out to any further lags being analyzed.
 
@@ -177,13 +219,14 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
         reference (xarray object):
             reference output/data over same time period.
         metric (str):
-            Metric used in comparing the decadal prediction ensemble with the
-            reference.
+            Metric used in comparing the uninitialized ensemble with the reference.
         comparison (str):
-            How to compare the decadal prediction ensemble to the reference:
-
+            How to compare the uninitialized ensemble to the reference:
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
+        nlags (int):
+            Number of lags to broadcast to. The metric is only computed to the first
+            lag and then broadcasted forward to this many lags.
 
     Returns:
         u (xarray object): Results from comparison at the first lag.
@@ -191,6 +234,15 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     """
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, HINDCAST_METRICS)
-    uninit, reference = comparison(uninit, reference)
-    u = metric(uninit, reference, dim='time', comparison=comparison)
-    return u
+    forecast, reference = comparison(uninit, reference)
+    # Find common times between two for proper comparison.
+    common_time = intersect(forecast['time'].values, reference['time'].values)
+    forecast = forecast.sel(time=common_time)
+    reference = reference.sel(time=common_time)
+    u = metric(forecast, reference, dim='time', comparison=comparison)
+    if nlags is None:
+        return u
+    else:
+        u = xr.concat([u] * nlags, dim='lead')
+        u['lead'] = np.arange(1, nlags + 1)
+        return u

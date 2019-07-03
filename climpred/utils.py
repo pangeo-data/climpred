@@ -73,6 +73,17 @@ def intersect(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.
     """
+
+    def conv_xarray(lst):
+        # Quick conversion to array if xarray object comes in.
+        # This list comprehension can't handle xarray objects.
+        if isinstance(lst, xr.DataArray):
+            return lst.values
+        else:
+            return lst
+
+    lst1 = conv_xarray(lst1)
+    lst2 = conv_xarray(lst2)
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
 

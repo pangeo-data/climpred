@@ -141,6 +141,12 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
           Oxford University Press, 2007.
     """
     metric = get_metric_function(metric, HINDCAST_METRICS)
+    # If lead 0, need to make modifications to get proper persistence, since persistence
+    # at lead 0 is == 1.
+    if [0] in hind.lead.values:
+        hind = hind.copy()
+        hind['lead'] += 1
+        hind['init'] -= 1
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
@@ -197,5 +203,5 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    u = metric(forecast, reference, dim='time', comparison=comparison)
-    return u
+    uninit = metric(forecast, reference, dim='time', comparison=comparison)
+    return uninit

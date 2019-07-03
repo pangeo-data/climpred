@@ -153,6 +153,19 @@ def test_persistence(initialized_da, reconstruction_da, metric):
 
 
 @pytest.mark.parametrize('metric', PM_METRICS)
+def test_persistence_lead0_lead1(
+    initialized_ds, initialized_ds_lead0, reconstruction_ds, metric
+):
+    """
+    Checks that compute persistence returns the same results with a lead-0 and lead-1
+    framework.
+    """
+    res1 = compute_persistence(initialized_ds, reconstruction_ds, metric=metric)
+    res2 = compute_persistence(initialized_ds_lead0, reconstruction_ds, metric=metric)
+    assert (res1.SST.values == res2.SST.values).all()
+
+
+@pytest.mark.parametrize('metric', PM_METRICS)
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 def test_uninitialized(uninitialized_da, reconstruction_da, metric, comparison):
     """

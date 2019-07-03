@@ -138,7 +138,11 @@ def test_uninitialized(uninitialized_da, reconstruction_da, metric, comparison):
     """
     res = (
         compute_uninitialized(
-            uninitialized_da, reconstruction_da, metric=metric, comparison=comparison
+            uninitialized_da,
+            reconstruction_da,
+            metric=metric,
+            comparison=comparison,
+            nlags=5,
         )
         .isnull()
         .any()

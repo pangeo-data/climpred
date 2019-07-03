@@ -118,6 +118,10 @@ def _eff_p_value(x, y, r, dim):
 def rm_poly(ds, order, dim='time'):
     """Returns xarray object with nth-order fit removed.
 
+    .. note::
+        This automatically performs a linear interpolation across any NaNs in the time
+        series.
+
     Args:
         ds (xarray object): Time series to be detrended.
         order (int): Order of polynomial fit to be removed.
@@ -168,14 +172,15 @@ def rm_poly(ds, order, dim='time'):
     # check if there's any NaNs in the provided dim because
     # interpolate_na is computationally expensive to run regardless of NaNs
     if any(nan_locs.sum(axis=0)) > 0:
+        # Could do a check to see if there's any NaNs that aren't bookended.
+        # [0, np.nan, 2], can interpolate.
+        da = da.interpolate_na(dim)
         if any(nan_locs[0, :]):
             # [np.nan, 1, 2], no first value to interpolate from; back fill
             da = da.bfill(dim)
-        elif any(nan_locs[-1, :]):
+        if any(nan_locs[-1, :]):
             # [0, 1, np.nan], no last value to interpolate from; forward fill
             da = da.ffill(dim)
-        else:  # [0, np.nan, 2], can interpolate
-            da = da.interpolate_na(dim)
 
     # this handles the other axes; doesn't matter since it won't affect the fit
     da = da.fillna(0)

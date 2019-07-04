@@ -16,19 +16,12 @@ climpred: analysis of ensemble forecast models for climate prediction
 .. image:: https://badges.gitter.im/Join%20Chat.svg
     :target: https://gitter.im/climpred
 
-Release
-=======
-
-We are diligently working on our v1 release. The goal for v1 is to have ``climpred`` ready to take in subseasonal-to-seasonal and seasonal-to-decadal prediction ensembles and to perform determinstic skill metrics on them. We will have early-stage objects (``HindcastEnsemble`` and ``PerfectModelEnsemble``) to make computations easier on the user. We will also have documentation ready so the capabilities of ``climpred`` are more clear.
-
-In the meantime, you can install the package following the steps below and reference the notebooks for guidance. Please raise any issues if you encounter any bugs or have any ideas; you can also raise a PR to add new features. Feel free to contact us if you have questions.
-
 Installation
 ============
 
 .. code-block:: bash
 
-    pip install git+https://github.com/bradyrx/climpred
+    pip install climpred 
 
 **Getting Started**
 
@@ -70,6 +63,7 @@ Installation
 * :doc:`api`
 * :doc:`contributing`
 * :doc:`changelog`
+* :doc:`release_procedure`
 * :doc:`contributors`
 
 .. toctree::
@@ -80,4 +74,5 @@ Installation
     api
     contributing
     changelog
+    release_procedure
     contributors

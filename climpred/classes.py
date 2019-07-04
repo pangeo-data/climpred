@@ -408,7 +408,7 @@ class HindcastEnsemble(PredictionEnsemble):
         self.uninitialized = xobj
 
     def compute_metric(
-        self, refname=None, metric='pearson_r', comparison='e2r', max_dfs=False
+        self, refname=None, metric='pearson_r', comparison='e2r', max_dof=False
     ):
         """Compares the initialized ensemble to a given reference.
 
@@ -424,7 +424,7 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison (str, default 'e2r'):
               How to compare to the reference. ('e2r' for ensemble mean to
               reference. 'm2r' for each individual member to reference)
-            max_dfs (bool, default False):
+            max_dof (bool, default False):
               If True, maximize the degrees of freedom for each lag calculation.
 
         Returns:
@@ -441,7 +441,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 self.reference[refname].drop(drop_ref),
                 metric=metric,
                 comparison=comparison,
-                max_dfs=max_dfs,
+                max_dof=max_dof,
             )
         else:
             if len(self.reference) == 1:
@@ -452,7 +452,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     self.reference[refname].drop(drop_ref),
                     metric=metric,
                     comparison=comparison,
-                    max_dfs=max_dfs,
+                    max_dof=max_dof,
                 )
             # Loop through all references and return results as a dictionary
             # with keys corresponding to reference names.
@@ -465,7 +465,7 @@ class HindcastEnsemble(PredictionEnsemble):
                         self.reference[key].drop(drop_ref),
                         metric=metric,
                         comparison=comparison,
-                        max_dfs=max_dfs,
+                        max_dof=max_dof,
                     )
                 return skill
 
@@ -525,7 +525,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     )
                 return u
 
-    def compute_persistence(self, refname=None, metric='pearson_r', max_dfs=False):
+    def compute_persistence(self, refname=None, metric='pearson_r', max_dof=False):
         """Compute a simple persistence forecast for a reference.
 
         This simply applies some metric between the reference and itself out
@@ -537,7 +537,7 @@ class HindcastEnsemble(PredictionEnsemble):
               `None`, compute for all references.
             metric (str, default 'pearson_r'):
               Metric to apply to the persistence forecast.
-            max_dfs (bool, default False):
+            max_dof (bool, default False):
               If True, maximize the degrees of freedom for each lag calculation.
 
         Returns:
@@ -557,16 +557,25 @@ class HindcastEnsemble(PredictionEnsemble):
                 self.initialized,
                 self.reference[refname],
                 metric=metric,
-                max_dfs=max_dfs,
+                max_dof=max_dof,
             )
         # loop through and apply to all references.
         else:
-            persistence = {}
-            for key in self.reference:
-                persistence[key] = compute_persistence(
+            if len(self.reference) == 1:
+                refname = list(self.reference.keys())[0]
+                return compute_persistence(
                     self.initialized,
-                    self.reference[key],
+                    self.reference[refname],
                     metric=metric,
-                    max_dfs=max_dfs,
+                    max_dof=max_dof,
                 )
+            else:
+                persistence = {}
+                for key in self.reference:
+                    persistence[key] = compute_persistence(
+                        self.initialized,
+                        self.reference[key],
+                        metric=metric,
+                        max_dof=max_dof,
+                    )
             return persistence

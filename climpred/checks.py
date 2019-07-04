@@ -95,10 +95,9 @@ def is_initialized(obj, kind, what):
 
 
 def match_initialized_dims(init, ref, uninitialized=False):
-    """Checks that the reference matches all initialized dimensions except
-    for 'lead' and 'member'
+    """Checks that the reference dimensions match appropriate initialized dimensions.
 
-    If uninitialized, ignore member.
+    If uninitialized, ignore 'member'. Otherwise, ignore 'lead' and 'member'.
     """
     # since reference products won't have the initialization dimension,
     # temporarily rename to time.

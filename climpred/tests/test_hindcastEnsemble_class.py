@@ -102,7 +102,7 @@ def test_compute_metric(initialized_ds, reconstruction_ds, observations_ds):
     hindcast.compute_metric()  # compute over all references
     hindcast.compute_metric('reconstruction')  # compute over single reference
     # test all keywords
-    hindcast.compute_metric(max_dfs=True, metric='rmse', comparison='m2r')
+    hindcast.compute_metric(max_dof=True, metric='rmse', comparison='m2r')
 
 
 def test_compute_metric_single(initialized_ds, reconstruction_ds):

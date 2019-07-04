@@ -2,14 +2,30 @@
 Changelog History
 =================
 
-climpred v1.0 (2019-xx-xx)
-==========================
+climpred v1.0.0 (2019-07-03)
+============================
+``climpred`` v1.0.0 represents the first stable release of the package. It includes ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects to perform analysis with. It offers a suite of deterministic and probabilistic metrics that are optimized to be run on single time series or grids of data (e.g., lat, lon, and depth). Currently, ``climpred`` only supports annual forecasts.
 
 Features
 --------
 - Bootstrap prediction skill based on resampling with replacement consistently in ``ReferenceEnsemble`` and ``PerfectModelEnsemble``. (:pr:`128`) `Aaron Spring`_
 - Consistent bootstrap function for ``climpred.stats`` functions via ``bootstrap_func`` wrapper. (:pr:`167`) `Aaron Spring`_
 - many more metrics: ``_msss_murphy``, ``_less`` and probabilistic ``_crps``, ``_crpss`` (:pr:`128`) `Aaron Spring`_
+
+Bug Fixes
+---------
+- ``compute_uninitialized`` now trims input data to the same time window. (:pr:`193`) `Riley X. Brady`_
+- ``rm_poly`` now properly interpolates/fills NaNs. (:pr:`192`) `Riley X. Brady`_
+
+Internals/Minor Fixes
+---------------------
+- The ``climpred`` version can be printed. (:pr:`195`) `Riley X. Brady`_
+- Constants are made elegant and pushed to a separate module. (:pr:`184`) `Andrew Huang`_
+- Checks are consolidated to their own module. (:pr:`173`) `Andrew Huang`_
+
+Documentation
+-------------
+- Documentation built extensively in multiple PRs.
 
 
 climpred v0.3 (2019-04-27)

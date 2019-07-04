@@ -15,6 +15,7 @@ Internals/Minor Fixes
 ---------------------
 - Force ``xskillscore`` version 0.0.4 or higher to avoid ``ImportError`` (:pr:`204`) `Riley X. Brady`_.
 - Change ``max_dfs`` keyword to ``max_dof`` (:pr:`199`) `Riley X. Brady`_.
+- Add testing for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`199`) `Riley X. Brady`_
 
 climpred v1.0.0 (2019-07-03)
 ============================

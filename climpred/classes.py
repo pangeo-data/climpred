@@ -195,13 +195,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             self.uninitialized, self.control, metric=metric, comparison=comparison
         )
 
-    def compute_persistence(self, nlags=None, metric='pearson_r'):
+    def compute_persistence(self, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
 
         Args:
-            nlags (int, default None):
-              Number of lags to compute persistence forecast to. If None,
-              compute to the length of the initialized forecasts.
             metric (str, default 'pearson_r'):
               Metric to apply to the persistence forecast.
 
@@ -216,8 +213,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
               prediction. Oxford University Press, 2007.
         """
         is_initialized(self.control, 'control', 'a persistence forecast')
-        if nlags is None:
-            nlags = self.initialized.lead.size
         return compute_persistence(self.initialized, self.control, metric=metric)
 
     def bootstrap(
@@ -530,9 +525,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     )
                 return u
 
-    def compute_persistence(
-        self, refname=None, nlags=None, metric='pearson_r', max_dfs=False
-    ):
+    def compute_persistence(self, refname=None, metric='pearson_r', max_dfs=False):
         """Compute a simple persistence forecast for a reference.
 
         This simply applies some metric between the reference and itself out
@@ -542,9 +535,6 @@ class HindcastEnsemble(PredictionEnsemble):
             refname (str, default None):
               Name of reference to compute the persistence forecast for. If
               `None`, compute for all references.
-            nlags (int, default None):
-              Number of lags to compute persistence forecast to. If None,
-              compute to the length of the initialized forecasts.
             metric (str, default 'pearson_r'):
               Metric to apply to the persistence forecast.
             max_dfs (bool, default False):
@@ -561,9 +551,6 @@ class HindcastEnsemble(PredictionEnsemble):
               prediction. Oxford University Press, 2007.
         """
         is_initialized(self.reference, 'reference', 'a persistence forecast')
-        # Default to the length of the initialized forecast.
-        if nlags is None:
-            nlags = self.initialized.lead.size
         # apply to single reference.
         if refname is not None:
             return compute_persistence(

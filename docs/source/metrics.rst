@@ -112,26 +112,75 @@ Murphy decomposition metrics
 
 [Murphy1988]_ relates the MSSS with ACC and unconditional bias.
 
-.. autofunction:: _std_ratio
-.. autofunction:: _bias
-.. autofunction:: _bias_slope
-.. autofunction:: _conditional_bias
-.. autofunction:: _msss_murphy
+Standard Ratio
+--------------
 
+``keyword: 'std_ratio'``
+
+.. autofunction:: _std_ratio
+
+Unconditional Bias
+------------------
+
+``keyword: 'bias', 'unconditional_bias', 'u_b'``
+
+.. autofunction:: _bias
+
+Bias Slope
+----------
+
+``keyword: 'bias_slope'``
+
+.. autofunction:: _bias_slope
+
+Conditional Bias
+----------------
+
+``keyword: 'conditional_bias', c_b'``
+
+.. autofunction:: _conditional_bias
+
+Murphy's Mean Square Skill Score
+--------------------------------
+
+``keyword: 'msss_murphy'``
+
+.. autofunction:: _msss_murphy
 
 Other metrics
 =============
 
+Logarithmic Ensemble Spread Score
+---------------------------------
+
+``keyword: 'less'``
+
 .. autofunction:: _less
+
+Unbiased ACC
+------------
+
+``keyword: 'uacc'``
+
 .. autofunction:: _uacc
 
 
 Probabilistic
 #############
 
-.. autofunction:: _crps
-.. autofunction:: _crpss
+Continuous Ranked Probability Score
+-----------------------------------
 
+``keyword: 'crps'``
+
+.. autofunction:: _crps
+
+Continuous Ranked Probability Skill Score
+-----------------------------------------
+
+``keyword: 'crpss'``
+
+.. autofunction:: _crpss
 
 References
 ##########

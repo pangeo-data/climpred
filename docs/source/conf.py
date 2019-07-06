@@ -89,4 +89,8 @@ intersphinx_mapping = {
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
     # 'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
     # 'matplotlib': ('https://matplotlib.org/', None),
-}
+    }
+
+# Should only be uncommented when testing page development while notebooks
+# are breaking.
+# nbsphinx_allow_errors = True

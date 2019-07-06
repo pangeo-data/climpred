@@ -73,6 +73,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 * :doc:`comparisons`
 * :doc:`metrics`
 * :doc:`terminology`
+* :doc:`baselines`
 
 .. toctree::
     :maxdepth: 1
@@ -83,6 +84,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
     metrics
     comparisons
     terminology
+    baselines
 
 **Help & Reference**
 

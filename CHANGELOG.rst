@@ -2,6 +2,13 @@
 Changelog History
 =================
 
+climpred v1.0.1 (2019-07-04)
+============================
+
+Internals/Minor Fixes
+---------------------
+- Force ``xskillscore`` version 0.0.4 or higher to avoid ``ImportError`` (:pr:`204`) `Riley X. Brady`_.
+
 climpred v1.0.0 (2019-07-03)
 ============================
 ``climpred`` v1.0.0 represents the first stable release of the package. It includes ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects to perform analysis with. It offers a suite of deterministic and probabilistic metrics that are optimized to be run on single time series or grids of data (e.g., lat, lon, and depth). Currently, ``climpred`` only supports annual forecasts.

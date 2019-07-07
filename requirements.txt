@@ -1,5 +1,5 @@
 numpy
 xarray
 scipy
-xskillscore
+xskillscore>=0.0.4
 eofs

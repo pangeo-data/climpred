@@ -19,7 +19,7 @@ dependencies:
   - nbsphinx
   - pip
   - pip:
-    - git+https://github.com/raybellwaves/xskillscore
+    - xskillscore>=0.0.4
     - pytest-cov
     - coveralls
     - sphinxcontrib-napoleon

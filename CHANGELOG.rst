@@ -8,10 +8,14 @@ climpred v1.0.1 (2019-07-04)
 Bug Fixes
 ---------
 - Accomodate for lead-zero within the ``lead`` dimension (:pr:`196`) `Riley X. Brady`_.
+- Fix issue with adding uninitialized ensemble to ``HindcastEnsemble`` object (:pr:`199`) `Riley X. Brady`_.
+- Allow ``max_dof`` keyword to be passed to ``compute_metric`` and ``compute_persistence`` for ``HindcastEnsemble`` (:pr:`199`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
 - Force ``xskillscore`` version 0.0.4 or higher to avoid ``ImportError`` (:pr:`204`) `Riley X. Brady`_.
+- Change ``max_dfs`` keyword to ``max_dof`` (:pr:`199`) `Riley X. Brady`_.
+- Add testing for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`199`) `Riley X. Brady`_
 
 climpred v1.0.0 (2019-07-03)
 ============================

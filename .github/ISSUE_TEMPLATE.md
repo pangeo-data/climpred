@@ -15,7 +15,7 @@ This should explain **why** the current behaviour is a problem and why the expec
 
 #### Expected Output
 
-#### Output of `xr.show_versions()`
+#### Output of `climpred.show_versions()`
 
 <details>
 # Paste the output here xr.show_versions() here

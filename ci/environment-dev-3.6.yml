@@ -24,3 +24,4 @@ dependencies:
     - coveralls
     - sphinxcontrib-napoleon
     - importlib_metadata
+    - sphinx-automodapi

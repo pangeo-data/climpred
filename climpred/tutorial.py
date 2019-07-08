@@ -14,6 +14,7 @@ aliases = [
     'MPI-PM-DP-3D',
     'CESM-DP-SST',
     'CESM-DP-SSS',
+    'CESM-DP-SST-3D',
     'CESM-LE',
     'MPIESM_miklip_baseline1-hind-SST-global',
     'MPIESM_miklip_baseline1-hist-SST-global',
@@ -21,6 +22,7 @@ aliases = [
     'ERSST',
     'FOSI-SST',
     'FOSI-SSS',
+    'FOSI-SST-3D',
 ]
 true_file_names = [
     'PM_MPI-ESM-LR_control',
@@ -29,6 +31,7 @@ true_file_names = [
     'PM_MPI-ESM-LR_ds3d',
     'CESM-DP-LE.SST.global',
     'CESM-DP-LE.SSS.global',
+    'CESM-DP-LE.SST.eastern_pacific',
     'CESM-LE.global_mean.SST.1955-2015',
     'MPIESM_miklip_baseline1-hind-SST-global',
     'MPIESM_miklip_baseline1-hist-SST-global',
@@ -36,6 +39,7 @@ true_file_names = [
     'ERSSTv4.global.mean',
     'FOSI.SST.global',
     'FOSI.SSS.global',
+    'FOSI.SST.eastern_pacific',
 ]
 file_descriptions = [
     'decadal prediction ensemble area averages of SST/SSS/AMO.',
@@ -44,6 +48,7 @@ file_descriptions = [
     'lat/lon/time for the control run of SST/SSS.',
     'decadal prediction ensemble of global mean SSTs.',
     'decadal prediction ensemble of global mean SSS.',
+    'decadal prediction ensemble of eastern Pacific SSTs.',
     'uninitialized ensemble of global mean SSTs.',
     'initialized ensemble of global mean SSTs',
     'uninitialized ensemble of global mean SSTs',
@@ -51,6 +56,7 @@ file_descriptions = [
     'observations of global mean SSTs.',
     'reconstruction of global mean SSTs.',
     'reconstruction of global mean SSS.',
+    'reconstruction of eastern Pacific SSTs',
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))

@@ -1,4 +1,3 @@
-import numpy as np
 import xarray as xr
 
 from .checks import is_xarray
@@ -23,7 +22,7 @@ from .utils import (
 # predictability.
 # --------------------------------------------#
 @is_xarray([0, 1])
-def compute_perfect_model(ds, control, metric='rmse', comparison='m2e'):
+def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
@@ -88,7 +87,7 @@ def compute_hindcast(
             Predictability with main dimension ``lag``
 
     """
-    nlags = hind.lead.size
+    nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, HINDCAST_METRICS)
 
@@ -142,6 +141,12 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
           Oxford University Press, 2007.
     """
     metric = get_metric_function(metric, HINDCAST_METRICS)
+    # If lead 0, need to make modifications to get proper persistence, since persistence
+    # at lead 0 is == 1.
+    if [0] in hind.lead.values:
+        hind = hind.copy()
+        hind['lead'] += 1
+        hind['init'] -= 1
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
@@ -168,9 +173,7 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dfs=False):
 
 
 @is_xarray([0, 1])
-def compute_uninitialized(
-    uninit, reference, metric='pearson_r', comparison='e2r', nlags=None
-):
+def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
     .. note::
@@ -188,9 +191,6 @@ def compute_uninitialized(
             How to compare the uninitialized ensemble to the reference:
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
-        nlags (int):
-            Number of lags to broadcast to. The metric is only computed to the first
-            lag and then broadcasted forward to this many lags.
 
     Returns:
         u (xarray object): Results from comparison at the first lag.
@@ -203,10 +203,5 @@ def compute_uninitialized(
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    u = metric(forecast, reference, dim='time', comparison=comparison)
-    if nlags is None:
-        return u
-    else:
-        u = xr.concat([u] * nlags, dim='lead')
-        u['lead'] = np.arange(1, nlags + 1)
-        return u
+    uninit = metric(forecast, reference, dim='time', comparison=comparison)
+    return uninit

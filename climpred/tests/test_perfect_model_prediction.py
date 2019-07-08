@@ -16,6 +16,16 @@ def PM_da_ds1d():
 
 
 @pytest.fixture
+def PM_da_ds1d_lead0():
+    da = load_dataset('MPI-PM-DP-1D')
+    da = da['tos'].isel(area=1, period=-1)
+    # Convert to lead zero for testing
+    da['lead'] -= 1
+    da['init'] += 1
+    return da
+
+
+@pytest.fixture
 def PM_da_control1d():
     da = load_dataset('MPI-control-1D')
     da = da['tos'].isel(area=1, period=-1)
@@ -65,13 +75,25 @@ def test_compute_persistence_ds1d_not_nan(PM_ds_ds1d, PM_ds_control1d, metric):
         assert not actual[var]
 
 
+@pytest.mark.parametrize('metric', PM_METRICS)
+def test_compute_persistence_lead0_lead1(
+    PM_da_ds1d, PM_da_ds1d_lead0, PM_da_control1d, metric
+):
+    """
+    Checks that persistence forecast results are identical for a lead 0 and lead 1 setup
+    """
+    res1 = compute_persistence(PM_da_ds1d, PM_da_control1d, metric=metric)
+    res2 = compute_persistence(PM_da_ds1d_lead0, PM_da_control1d, metric=metric)
+    assert (res1.values == res2.values).all()
+
+
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('metric', PM_METRICS)
 def test_compute_perfect_model_da1d_not_nan(
     PM_da_ds1d, PM_da_control1d, comparison, metric
 ):
     """
-    Checks that there are no NaNs on persistence forecast of 1D time series.
+    Checks that there are no NaNs on perfect model metrics of 1D time series.
     """
     actual = (
         compute_perfect_model(
@@ -81,6 +103,23 @@ def test_compute_perfect_model_da1d_not_nan(
         .any()
     )
     assert not actual
+
+
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+@pytest.mark.parametrize('metric', PM_METRICS)
+def test_compute_perfect_model_lead0_lead1(
+    PM_da_ds1d, PM_da_ds1d_lead0, PM_da_control1d, comparison, metric
+):
+    """
+    Checks that metric results are identical for a lead 0 and lead 1 setup.
+    """
+    res1 = compute_perfect_model(
+        PM_da_ds1d, PM_da_control1d, comparison=comparison, metric=metric
+    )
+    res2 = compute_perfect_model(
+        PM_da_ds1d_lead0, PM_da_control1d, comparison=comparison, metric=metric
+    )
+    assert (res1.values == res2.values).all()
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)

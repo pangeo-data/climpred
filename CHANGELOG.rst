@@ -5,6 +5,10 @@ Changelog History
 climpred v1.0.1 (2019-07-04)
 ============================
 
+Bug Fixes
+---------
+- Accomodate for lead-zero within the ``lead`` dimension (:pr:`196`) `Riley X. Brady`_.
+
 Internals/Minor Fixes
 ---------------------
 - Force ``xskillscore`` version 0.0.4 or higher to avoid ``ImportError`` (:pr:`204`) `Riley X. Brady`_.

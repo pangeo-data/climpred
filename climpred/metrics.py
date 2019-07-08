@@ -1,5 +1,5 @@
 import numpy as np
-
+import warnings
 from xskillscore import (
     crps_ensemble,
     crps_gaussian,
@@ -63,7 +63,13 @@ def _pearson_r_p_value(forecast, reference, dim='svd', comparison=None):
     """
     Calculate the probability associated with the ACC not being random.
     """
-    return pearson_r_p_value(forecast, reference, dim=dim)
+    # p-value returns a runtime error when working with NaNs, such as on a climate
+    # model grid. We can avoid this annoying output by specifically suppressing
+    # warning here.
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        pval = pearson_r_p_value(forecast, reference, dim=dim)
+    return pval
 
 
 def _mse(forecast, reference, dim='svd', comparison=None):

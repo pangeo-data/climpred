@@ -23,7 +23,7 @@ install:
   - conda list
   - which conda
   - which python
-  - pip install .['graphics']
+  - pip install .
   - python setup.py install --user
   - pip install pytest-cov
   - pip install coveralls

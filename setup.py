@@ -22,14 +22,11 @@ CLASSIFIERS = [
     'Programming Language :: Python :: 3.8',
 ]
 
-EXTRAS = {'graphics': ['matplotlib']}
-
 setup(
     maintainer='Riley X. Brady and Aaron Spring',
     maintainer_email='riley.brady@colorado.edu',
     description='An xarray wrapper for analysis of ensemble forecast models for climate'
     + ' prediction.',
-    extras_require=EXTRAS,
     install_requires=install_requires,
     python_requires='>=3.6',
     license='MIT',

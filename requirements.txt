@@ -3,3 +3,4 @@ xarray
 scipy
 xskillscore>=0.0.4
 eofs
+matplotlib

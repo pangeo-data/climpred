@@ -10,6 +10,10 @@ climpred: analysis of ensemble forecast models for climate prediction
 .. image:: https://img.shields.io/pypi/v/climpred.svg
    :target: https://pypi.python.org/pypi/climpred/
 
+.. image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
+    :target: https://anaconda.org/conda-forge/climpred
+    :alt: Conda Version
+
 .. image:: https://coveralls.io/repos/github/bradyrx/climpred/badge.svg?branch=master
     :target: https://coveralls.io/github/bradyrx/climpred?branch=master
 
@@ -26,9 +30,17 @@ climpred: analysis of ensemble forecast models for climate prediction
 Installation
 ============
 
+You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
+
 .. code-block:: bash
 
     pip install climpred
+
+.. code-block:: bash
+
+    conda install -c conda-forge climpred
+
+You can also install the bleeding edge (pre-release versions) by cloning this repository and running ``pip install . --upgrade`` in the main directory
 
 **Getting Started**
 

@@ -23,3 +23,19 @@ a minor version adds functionality, and a patch covers bug fixes.
     $ git clean -xfd  # remove any files not checked into git
     $ python setup.py sdist bdist_wheel --universal  # build package
     $ twine upload dist/*  # register and push to pypi
+
+#. Update climpred conda-forge feedstock
+
+ * Fork `climpred-feedstock repository <https://github.com/conda-forge/climpred-feedstock>`_ 
+ * Clone this fork and edit recipe::
+
+        $ git clone git@github.com:username/climpred-feedstock.git
+        $ cd climpred-feedstock
+        $ cd recipe
+        $ # edit meta.yaml 
+
+ - Update version 
+ - Get sha256 from pypi.org for `climpred <https://pypi.org/project/climpred/#files>`_
+ - Fill in the rest of information as described `here <https://github.com/conda-forge/climpred-feedstock#updating-climpred-feedstock>`_
+
+ * Commit and submit a PR

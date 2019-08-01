@@ -3,10 +3,15 @@ import types
 import numpy as np
 import xarray as xr
 
-from . import metrics
-from . import comparisons
+from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import METRIC_ALIASES
+from .constants import (
+    HINDCAST_COMPARISONS,
+    HINDCAST_METRICS,
+    METRIC_ALIASES,
+    PM_COMPARISONS,
+    PM_METRICS,
+)
 
 
 def get_metric_function(metric, list_):
@@ -97,3 +102,51 @@ def reduce_time_series(forecast, reference, nlags):
     forecast = forecast.where(forecast.time >= imin, drop=True)
     reference = reference.where(reference.time >= imin, drop=True)
     return forecast, reference
+
+
+def assign_climpred_compute_to_attrs(
+    skill,
+    ds,
+    function_name='compute_perfect_model',
+    metadata_dict=dict(),
+    metric=None,
+    comparison=None,
+):
+    """Write information about prediction skill into attrs."""
+    import datetime
+
+    # assign old attrs
+    # idea: set xr.set_options(keep_attrs=True) for climpred?
+    skill.attrs = ds.attrs
+
+    # climpred info
+    skill.attrs[
+        'Prediction skill'
+    ]: f'calculated by climpred https://climpred.readthedocs.io/'
+    skill.attrs['skill calculated by function'] = function_name
+    skill.attrs['number of initializations'] = ds.init.size
+    skill.attrs['number of members'] = ds.member.size
+
+    if 'perfect_model' in function_name:
+        comparison = get_comparison_function(comparison, PM_COMPARISONS).__name__[1:]
+        metric = get_metric_function(metric, PM_METRICS).__name__[1:]
+    elif 'hindcast' in function_name:
+        comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS).__name__[
+            1:
+        ]
+        metric = get_metric_function(metric, HINDCAST_METRICS).__name__[1:]
+
+    skill.attrs['metric'] = metric
+    skill.attrs['comparison'] = comparison
+
+    if metric in ['pearson_r']:
+        skill.attrs['units'] = '[ ]'
+
+    # write optional information
+    for key, val in metadata_dict.items():
+        skill.attrs[key] = val
+
+    skill.attrs[
+        'date'
+    ] = f'created on {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
+    return skill

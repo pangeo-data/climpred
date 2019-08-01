@@ -1,11 +1,12 @@
-import pytest
-
 import numpy as np
-
-from climpred.utils import get_metric_function, get_comparison_function, intersect
-from climpred.constants import PM_METRICS, PM_COMPARISONS
-from climpred.metrics import _pearson_r
+import pytest
+from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import _m2c
+from climpred.constants import PM_COMPARISONS, PM_METRICS
+from climpred.metrics import _pearson_r
+from climpred.prediction import compute_hindcast, compute_perfect_model
+from climpred.tutorial import load_dataset
+from climpred.utils import get_comparison_function, get_metric_function, intersect
 
 
 def test_get_metric_function():
@@ -43,3 +44,71 @@ def test_intersect():
     actual = intersect(x, y)
     expected = np.array([1, 6])
     assert all(a == e for a, e in zip(actual, expected))
+
+
+def test_da_assign_climpred_compute_to_attrs():
+    """Test assigning attrs for compute_perfect_model and dataarrays."""
+    v = 'tos'
+    metric = 'pearson_r'
+    comparison = 'm2e'
+    da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
+    control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
+    actual = compute_perfect_model(
+        da, control, metric=metric, comparison=comparison
+    ).attrs
+    assert actual['metric'] == metric
+    assert actual['comparison'] == comparison
+    if metric == 'pearson_r':
+        assert actual['units'] == '[ ]'
+    assert actual['skill calculated by function'] == 'compute_perfect_model'
+
+
+def test_ds_assign_climpred_compute_to_attrs():
+    """Test assigning attrs for datasets."""
+    metric = 'pearson_r'
+    comparison = 'm2e'
+    da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
+    control = load_dataset('MPI-control-1D').isel(area=1, period=-1)
+    actual = compute_perfect_model(
+        da, control, metric=metric, comparison=comparison
+    ).attrs
+    assert actual['metric'] == metric
+    assert actual['comparison'] == comparison
+    if metric == 'pearson_r':
+        assert actual['units'] == '[ ]'
+    assert actual['skill calculated by function'] == 'compute_perfect_model'
+
+
+def test_bootstrap_pm_assign_climpred_compute_to_attrs():
+    """Test assigning attrs for bootstrap_perfect_model."""
+    v = 'tos'
+    metric = 'pearson_r'
+    comparison = 'm2e'
+    bootstrap = 3
+    sig = 95
+    da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
+    control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
+    actual = bootstrap_perfect_model(
+        da, control, metric=metric, comparison=comparison, bootstrap=bootstrap, sig=sig
+    ).attrs
+    assert actual['metric'] == metric
+    assert actual['comparison'] == comparison
+    assert actual['bootstrap iterations'] == bootstrap
+    assert str(round((1 - sig / 100) / 2, 3)) in actual['confidence interval levels']
+    if metric == 'pearson_r':
+        assert actual['units'] == '[ ]'
+    assert 'bootstrap' in actual['skill calculated by function']
+
+
+def test_hindcast_assign_climpred_compute_to_attrs():
+    """Test assigning attrs for compute_hindcast."""
+    metric = 'pearson_r'
+    comparison = 'e2r'
+    da = load_dataset('CESM-DP-SST')
+    control = load_dataset('ERSST')
+    actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
+    assert actual['metric'] == metric
+    assert actual['comparison'] == comparison
+    if metric == 'pearson_r':
+        assert actual['units'] == '[ ]'
+    assert actual['skill calculated by function'] == 'compute_hindcast'

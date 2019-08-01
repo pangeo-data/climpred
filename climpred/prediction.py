@@ -1,18 +1,21 @@
+import inspect
+
 import xarray as xr
 
 from .checks import is_xarray
 from .comparisons import _e2c
 from .constants import (
-    PM_METRICS,
-    PM_COMPARISONS,
-    HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
+    HINDCAST_METRICS,
+    PM_COMPARISONS,
+    PM_METRICS,
 )
 from .utils import (
-    get_metric_function,
+    assign_climpred_compute_to_attrs,
     get_comparison_function,
-    reduce_time_series,
+    get_metric_function,
     intersect,
+    reduce_time_series,
 )
 
 
@@ -35,7 +38,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
                           :py:func:`climpred.utils.get_comparison_function`.
 
     Returns:
-        res (xarray object): skill score.
+        skill (xarray object): skill score.
 
     """
     supervector_dim = 'svd'
@@ -44,8 +47,15 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
 
     forecast, reference = comparison(ds, supervector_dim)
 
-    res = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
-    return res
+    skill = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
+    skill = assign_climpred_compute_to_attrs(
+        skill,
+        ds,
+        function_name=inspect.stack()[0][3],
+        metric=metric,
+        comparison=comparison,
+    )
+    return skill
 
 
 @is_xarray([0, 1])
@@ -111,6 +121,13 @@ def compute_hindcast(
         plag.append(metric(a, b, dim='time', comparison=comparison))
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
+    skill = assign_climpred_compute_to_attrs(
+        skill,
+        hind,
+        function_name=inspect.stack()[0][3],
+        metric=metric,
+        comparison=comparison,
+    )
     return skill
 
 
@@ -203,5 +220,12 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    uninit = metric(forecast, reference, dim='time', comparison=comparison)
-    return uninit
+    uninit_skill = metric(forecast, reference, dim='time', comparison=comparison)
+    uninit_skill = assign_climpred_compute_to_attrs(
+        uninit_skill,
+        uninit,
+        function_name=inspect.stack()[0][3],
+        metric=metric,
+        comparison=comparison,
+    )
+    return uninit_skill

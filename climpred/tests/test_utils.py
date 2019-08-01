@@ -59,7 +59,7 @@ def test_da_assign_climpred_compute_to_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
-        assert actual['units'] == '[ ]'
+        assert actual['units'] == ' '
     assert actual['skill calculated by function'] == 'compute_perfect_model'
 
 
@@ -75,7 +75,7 @@ def test_ds_assign_climpred_compute_to_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
-        assert actual['units'] == '[ ]'
+        assert actual['units'] == ' '
     assert actual['skill calculated by function'] == 'compute_perfect_model'
 
 
@@ -96,7 +96,7 @@ def test_bootstrap_pm_assign_climpred_compute_to_attrs():
     assert actual['bootstrap iterations'] == bootstrap
     assert str(round((1 - sig / 100) / 2, 3)) in actual['confidence interval levels']
     if metric == 'pearson_r':
-        assert actual['units'] == '[ ]'
+        assert actual['units'] == ' '
     assert 'bootstrap' in actual['skill calculated by function']
 
 
@@ -110,5 +110,5 @@ def test_hindcast_assign_climpred_compute_to_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
-        assert actual['units'] == '[ ]'
+        assert actual['units'] == ' '
     assert actual['skill calculated by function'] == 'compute_hindcast'

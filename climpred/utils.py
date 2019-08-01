@@ -109,7 +109,7 @@ def assign_climpred_compute_to_attrs(
     skill,
     ds,
     function_name='compute_perfect_model',
-    metadata_dict=dict(),
+    metadata_dict=None,
     metric=None,
     comparison=None,
 ):
@@ -140,9 +140,11 @@ def assign_climpred_compute_to_attrs(
     skill.attrs['comparison'] = comparison
 
     if metric in ['pearson_r']:
-        skill.attrs['units'] = '[ ]'
+        skill.attrs['units'] = ' '
 
     # write optional information
+    if metadata_dict is None:
+        metadata_dict = dict()
     for key, val in metadata_dict.items():
         skill.attrs[key] = val
 

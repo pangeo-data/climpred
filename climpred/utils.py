@@ -124,7 +124,8 @@ def assign_climpred_compute_to_attrs(
         'Prediction skill'
     ]: f'calculated by climpred https://climpred.readthedocs.io/'
     skill.attrs['skill calculated by function'] = function_name
-    skill.attrs['number of initializations'] = ds.init.size
+    if 'init' in ds.coords:
+        skill.attrs['number of initializations'] = ds.init.size
     skill.attrs['number of members'] = ds.member.size
 
     if 'perfect_model' in function_name:

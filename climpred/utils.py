@@ -1,3 +1,4 @@
+import datetime
 import types
 
 import numpy as np
@@ -113,10 +114,7 @@ def assign_climpred_compute_to_attrs(
     comparison=None,
 ):
     """Write information about prediction skill into attrs."""
-    import datetime
-
     # assign old attrs
-    # idea: set xr.set_options(keep_attrs=True) for climpred?
     skill.attrs = ds.attrs
 
     # climpred info
@@ -126,7 +124,8 @@ def assign_climpred_compute_to_attrs(
     skill.attrs['skill calculated by function'] = function_name
     if 'init' in ds.coords:
         skill.attrs['number of initializations'] = ds.init.size
-    skill.attrs['number of members'] = ds.member.size
+    if 'member' in ds.coords:
+        skill.attrs['number of members'] = ds.member.size
 
     if 'perfect_model' in function_name:
         comparison = get_comparison_function(comparison, PM_COMPARISONS).__name__[1:]

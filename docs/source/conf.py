@@ -37,11 +37,11 @@ extensions = [
     'nbsphinx',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
+    'sphinx_automodapi.automodapi',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.napoleon',
     'sphinx.ext.imgmath',
-    # 'sphinxcontrib.bibtex',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.viewcode',
 ]
@@ -90,3 +90,7 @@ intersphinx_mapping = {
     # 'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
     # 'matplotlib': ('https://matplotlib.org/', None),
 }
+
+# Should only be uncommented when testing page development while notebooks
+# are breaking.
+# nbsphinx_allow_errors = True

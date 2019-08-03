@@ -41,7 +41,7 @@ If you are reporting a bug, please include:
 
 * Your operating system name and version.
 * Any details about your local setup that might be helpful in troubleshooting,
-  specifically the Python interpreter version, installed libraries, and esmlab
+  specifically the Python interpreter version, installed libraries, and ``climpred`` 
   version.
 * Detailed steps to reproduce the bug.
 
@@ -94,7 +94,7 @@ Preparing Pull Requests
 
 
 #. Fork the
-   `esmlab GitHub repository <https://github.com/bradyrx/climpred>`__.  It's
+   `climpred GitHub repository <https://github.com/bradyrx/climpred>`__.  It's
    fine to use ``climpred`` as your fork repository name because it will live
    under your user.
 
@@ -117,7 +117,7 @@ Preparing Pull Requests
     $ conda env update -f ci/environment-dev-3.7.yml
     $ conda activate climpred-dev
 
-#. Make an editable install of esmlab by running::
+#. Make an editable install of climpred by running::
 
     $ pip install -e .
 
@@ -172,8 +172,8 @@ Preparing Pull Requests
 
 #. Finally, submit a pull request through the GitHub website using this data::
 
-    head-fork: YOUR_GITHUB_USERNAME/esmlab
+    head-fork: YOUR_GITHUB_USERNAME/climpred
     compare: your-branch-name
 
-    base-fork: NCAR/esmlab
+    base-fork: bradyrx/climpred
     base: master          # if it's a bugfix or feature

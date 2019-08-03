@@ -11,7 +11,9 @@ dependencies:
   - nbsphinx
   - jupyterlab
   - netcdf4
+  - cartopy
   - pip
   - pip:
     - sphinxcontrib-napoleon
     - importlib_metadata
+    - sphinx-automodapi

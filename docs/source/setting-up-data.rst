@@ -15,7 +15,7 @@ See the below table for a summary of dimensions used in ``climpred``, and data t
 +------------+-----------------------------------+-----------------------------------------------+
 | ``lead``   | ``int``                           | lead timestep after initialization [``init``] |
 +------------+-----------------------------------+-----------------------------------------------+
-| ``init``   | ``int``, ``datetime``, ``cftime`` | initialization: start date of experiment      |
+| ``init``   | ``int``                           | initialization: start date of experiment      |
 +------------+-----------------------------------+-----------------------------------------------+
 | ``member`` | ``int``, ``str``                  | ensemble member                               |
 +------------+-----------------------------------+-----------------------------------------------+

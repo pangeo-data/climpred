@@ -27,6 +27,15 @@ climpred: analysis of ensemble forecast models for climate prediction
     :alt: license
     :target: ../../LICENSE.txt
 
+Version 1 Release
+=================
+
+v1.0.1 of ``climpred`` is our first bare-bones release to the community. **We currently only support annual forecasts**, but our focus is to support sub-annual (*e.g.*, seasonal, monthly, weekly, daily) in our next major release. We provide a host of deterministic metrics_, as well as some probabilistic metrics, although the latter have not been tested rigorously. We support both perfect-model and hindcast prediction ensembles, and provide ``PerfectModelEnsemble`` and ``HindcastEnsemble`` classes to make analysis easier.
+
+See `quick start <https://climpred.readthedocs.io/en/latest/quick-start.html>`_ and our `examples <https://climpred.readthedocs.io/en/latest/examples.html>`_ to get started.
+
+.. _metrics: https://climpred.readthedocs.io/en/latest/metrics.html
+
 Installation
 ============
 
@@ -47,7 +56,6 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 
 * :doc:`why-climpred`
 * :doc:`quick-start`
-* :doc:`sample-data`
 * :doc:`examples`
 
 .. toctree::
@@ -56,8 +64,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
     :caption: Getting Started
 
     why-climpred
-    quick-start
-    sample-data.ipynb
+    quick-start.ipynb
     examples
 
 **User Guide**
@@ -66,6 +73,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 * :doc:`comparisons`
 * :doc:`metrics`
 * :doc:`terminology`
+* :doc:`baselines`
 
 .. toctree::
     :maxdepth: 1
@@ -76,6 +84,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
     metrics
     comparisons
     terminology
+    baselines
 
 **Help & Reference**
 

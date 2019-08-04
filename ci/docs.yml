@@ -1,6 +1,7 @@
 name: climpred-docs
 channels:
   - conda-forge
+  - anaconda
 dependencies:
   - python=3.6
   - sphinx_rtd_theme
@@ -12,6 +13,7 @@ dependencies:
   - jupyterlab
   - netcdf4
   - cartopy
+  - bottleneck
   - pip
   - pip:
     - sphinxcontrib-napoleon

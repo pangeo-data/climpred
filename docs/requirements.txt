@@ -1,0 +1,12 @@
+sphinx
+sphinxcontrib-napoleon
+importlib_metadata
+sphinx-automodapi
+sphinx_rtd_theme
+nbsphinx
+bottleneck
+matplotlib
+numpy
+xarray
+jupyterlab
+netcdf4

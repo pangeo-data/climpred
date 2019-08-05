@@ -11,7 +11,7 @@ from .constants import (
     PM_METRICS,
 )
 from .utils import (
-    assign_climpred_compute_to_attrs,
+    assign_attrs,
     get_comparison_function,
     get_metric_function,
     intersect,
@@ -48,7 +48,8 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
     forecast, reference = comparison(ds, supervector_dim)
 
     skill = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
-    skill = assign_climpred_compute_to_attrs(
+    # Attach climpred compute information to skill
+    skill = assign_attrs(
         skill,
         ds,
         function_name=inspect.stack()[0][3],
@@ -121,7 +122,8 @@ def compute_hindcast(
         plag.append(metric(a, b, dim='time', comparison=comparison))
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
-    skill = assign_climpred_compute_to_attrs(
+    # Attach climpred compute information to skill
+    skill = assign_attrs(
         skill,
         hind,
         function_name=inspect.stack()[0][3],
@@ -221,7 +223,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
     uninit_skill = metric(forecast, reference, dim='time', comparison=comparison)
-    uninit_skill = assign_climpred_compute_to_attrs(
+    # Attach climpred compute information to skill
+    uninit_skill = assign_attrs(
         uninit_skill,
         uninit,
         function_name=inspect.stack()[0][3],

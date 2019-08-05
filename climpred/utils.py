@@ -105,50 +105,70 @@ def reduce_time_series(forecast, reference, nlags):
     return forecast, reference
 
 
-def assign_climpred_compute_to_attrs(
-    skill,
-    ds,
-    function_name='compute_perfect_model',
-    metadata_dict=None,
-    metric=None,
-    comparison=None,
+def assign_attrs(
+    skill, ds, function_name, metadata_dict=None, metric=None, comparison=None
 ):
-    """Write information about prediction skill into attrs."""
+    """Write information about prediction skill into attrs.
+
+    Args:
+        skill (`xarray` object): prediction skill.
+        ds (`xarray` object): prediction ensemble with inits.
+        function_name (str): name of compute function
+        metadata_dict (dict): optional attrs
+        metric (str) : metric used in comparing the forecast and reference.
+        comparison (str): how to compare the forecast and reference.
+
+    Returns:
+       skill (`xarray` object): prediction skill with additional attrs.
+    """
     # assign old attrs
     skill.attrs = ds.attrs
 
     # climpred info
     skill.attrs[
-        'Prediction skill'
-    ]: f'calculated by climpred https://climpred.readthedocs.io/'
+        'prediction skill'
+    ] = f'calculated by climpred https://climpred.readthedocs.io/'
     skill.attrs['skill calculated by function'] = function_name
     if 'init' in ds.coords:
         skill.attrs['number of initializations'] = ds.init.size
     if 'member' in ds.coords:
         skill.attrs['number of members'] = ds.member.size
 
-    if 'perfect_model' in function_name:
-        comparison = get_comparison_function(comparison, PM_COMPARISONS).__name__[1:]
-        metric = get_metric_function(metric, PM_METRICS).__name__[1:]
-    elif 'hindcast' in function_name:
-        comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS).__name__[
-            1:
-        ]
-        metric = get_metric_function(metric, HINDCAST_METRICS).__name__[1:]
+    ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
+    ALL_METRICS = HINDCAST_METRICS + PM_METRICS
+    comparison = get_comparison_function(comparison, ALL_COMPARISONS).__name__.lstrip(
+        '_'
+    )
+    metric = get_metric_function(metric, ALL_METRICS).__name__.lstrip('_')
 
     skill.attrs['metric'] = metric
     skill.attrs['comparison'] = comparison
 
-    if metric in ['pearson_r']:
+    # adapt units
+    dimension_less_metrics = [
+        'pearson_r',
+        'pearson_r_p_value',
+        'msss_murphy',
+        'std_ratio',
+        'bias_slope',
+        'conditional_bias',
+        'ppp',
+        'nrmse',
+        'nmse',
+        'nmae',
+        'uacc',
+    ]
+    if metric in dimension_less_metrics:
         skill.attrs['units'] = ' '
+    if metric == 'mse' and skill.attrs['units']:
+        skill.attrs['units'] = f"({skill.attrs['units']})^2"
 
     # write optional information
     if metadata_dict is None:
         metadata_dict = dict()
-    for key, val in metadata_dict.items():
-        skill.attrs[key] = val
+    skill.attrs.update(metadata_dict)
 
     skill.attrs[
-        'date'
-    ] = f'created on {datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
+        'created'
+    ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
     return skill

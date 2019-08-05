@@ -46,7 +46,7 @@ def test_intersect():
     assert all(a == e for a, e in zip(actual, expected))
 
 
-def test_da_assign_climpred_compute_to_attrs():
+def test_da_assign_attrs():
     """Test assigning attrs for compute_perfect_model and dataarrays."""
     v = 'tos'
     metric = 'pearson_r'
@@ -56,14 +56,19 @@ def test_da_assign_climpred_compute_to_attrs():
     actual = compute_perfect_model(
         da, control, metric=metric, comparison=comparison
     ).attrs
+    print(actual)
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
         assert actual['units'] == ' '
     assert actual['skill calculated by function'] == 'compute_perfect_model'
+    assert (
+        actual['prediction skill']
+        == 'calculated by climpred https://climpred.readthedocs.io/'
+    )
 
 
-def test_ds_assign_climpred_compute_to_attrs():
+def test_ds_assign_attrs():
     """Test assigning attrs for datasets."""
     metric = 'pearson_r'
     comparison = 'm2e'
@@ -79,7 +84,7 @@ def test_ds_assign_climpred_compute_to_attrs():
     assert actual['skill calculated by function'] == 'compute_perfect_model'
 
 
-def test_bootstrap_pm_assign_climpred_compute_to_attrs():
+def test_bootstrap_pm_assign_attrs():
     """Test assigning attrs for bootstrap_perfect_model."""
     v = 'tos'
     metric = 'pearson_r'
@@ -100,7 +105,7 @@ def test_bootstrap_pm_assign_climpred_compute_to_attrs():
     assert 'bootstrap' in actual['skill calculated by function']
 
 
-def test_hindcast_assign_climpred_compute_to_attrs():
+def test_hindcast_assign_attrs():
     """Test assigning attrs for compute_hindcast."""
     metric = 'pearson_r'
     comparison = 'e2r'

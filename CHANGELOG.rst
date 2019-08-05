@@ -5,6 +5,10 @@ Changelog History
 climpred v1.0.2 (2019-07-##)
 ============================
 
+Features
+--------
+- Write information about skill computation to netcdf attributes(:pr:`213`) `Aaron Spring`_
+
 Internals/Minor Fixes
 ---------------------
 - Add `matplotlib` as a main dependency so that a direct pip installation works (:pr:`211`) `Riley X. Brady`_.

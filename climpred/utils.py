@@ -126,13 +126,13 @@ def assign_attrs(
 
     # climpred info
     skill.attrs[
-        'prediction skill'
+        'prediction_skill'
     ] = f'calculated by climpred https://climpred.readthedocs.io/'
-    skill.attrs['skill calculated by function'] = function_name
+    skill.attrs['skill_calculated_by_function'] = function_name
     if 'init' in ds.coords:
-        skill.attrs['number of initializations'] = ds.init.size
+        skill.attrs['number_of_initializations'] = ds.init.size
     if 'member' in ds.coords:
-        skill.attrs['number of members'] = ds.member.size
+        skill.attrs['number_of_members'] = ds.member.size
 
     ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
     ALL_METRICS = HINDCAST_METRICS + PM_METRICS
@@ -140,7 +140,7 @@ def assign_attrs(
         '_'
     )
     metric = get_metric_function(metric, ALL_METRICS).__name__.lstrip('_')
-
+    print(metric)
     skill.attrs['metric'] = metric
     skill.attrs['comparison'] = comparison
 
@@ -148,6 +148,7 @@ def assign_attrs(
     dimension_less_metrics = [
         'pearson_r',
         'pearson_r_p_value',
+        'crpss',
         'msss_murphy',
         'std_ratio',
         'bias_slope',
@@ -157,9 +158,10 @@ def assign_attrs(
         'nmse',
         'nmae',
         'uacc',
+        'less',
     ]
     if metric in dimension_less_metrics:
-        skill.attrs['units'] = ' '
+        skill.attrs['units'] = 'None'
     if metric == 'mse' and skill.attrs['units']:
         skill.attrs['units'] = f"({skill.attrs['units']})^2"
 

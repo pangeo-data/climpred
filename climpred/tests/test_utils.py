@@ -60,10 +60,10 @@ def test_da_assign_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
-        assert actual['units'] == ' '
-    assert actual['skill calculated by function'] == 'compute_perfect_model'
+        assert actual['units'] == 'None'
+    assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
     assert (
-        actual['prediction skill']
+        actual['prediction_skill']
         == 'calculated by climpred https://climpred.readthedocs.io/'
     )
 
@@ -80,8 +80,8 @@ def test_ds_assign_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
-        assert actual['units'] == ' '
-    assert actual['skill calculated by function'] == 'compute_perfect_model'
+        assert actual['units'] == 'None'
+    assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
 
 
 def test_bootstrap_pm_assign_attrs():
@@ -98,11 +98,11 @@ def test_bootstrap_pm_assign_attrs():
     ).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
-    assert actual['bootstrap iterations'] == bootstrap
-    assert str(round((1 - sig / 100) / 2, 3)) in actual['confidence interval levels']
+    assert actual['bootstrap_iterations'] == bootstrap
+    assert str(round((1 - sig / 100) / 2, 3)) in actual['confidence_interval_levels']
     if metric == 'pearson_r':
-        assert actual['units'] == ' '
-    assert 'bootstrap' in actual['skill calculated by function']
+        assert actual['units'] == 'None'
+    assert 'bootstrap' in actual['skill_calculated_by_function']
 
 
 def test_hindcast_assign_attrs():
@@ -115,5 +115,5 @@ def test_hindcast_assign_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
-        assert actual['units'] == ' '
-    assert actual['skill calculated by function'] == 'compute_hindcast'
+        assert actual['units'] == 'None'
+    assert actual['skill_calculated_by_function'] == 'compute_hindcast'

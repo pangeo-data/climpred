@@ -345,8 +345,8 @@ def bootstrap_compute(
     results['results'] = ['skill', 'p', 'low_ci', 'high_ci']
     # Attach climpred compute information to skill
     metadata_dict = {
-        'confidence interval levels': f'{ci_high} {ci_low}',
-        'bootstrap iterations': bootstrap,
+        'confidence_interval_levels': f'{ci_high}-{ci_low}',
+        'bootstrap_iterations': bootstrap,
         'p': 'probability that initialized forecast performs \
                           better than reference forecast',
     }

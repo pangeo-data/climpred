@@ -162,7 +162,7 @@ def assign_attrs(
     ]
     if metric in dimension_less_metrics:
         skill.attrs['units'] = 'None'
-    if metric == 'mse' and skill.attrs['units']:
+    if metric == 'mse' and 'units' in skill.attrs:
         skill.attrs['units'] = f"({skill.attrs['units']})^2"
 
     # write optional information

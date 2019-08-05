@@ -34,8 +34,6 @@ A measure of the linear association between the forecast and observations that i
 
 .. autofunction:: _pearson_r
 
-.. note:: The p-value associated with the ACC can be computed using keywords ``pearson_r_p_value``, ``pval``, or ``pvalue``.
-
 
 Mean Squared Error (MSE)
 ------------------------

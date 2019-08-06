@@ -75,8 +75,7 @@ def spatial_smoothing_xrcoarsen(ds, coarsen_dict=None, how='mean'):
     """
     if coarsen_dict is None:
         # guess spatial dims
-        spatial_dims_to_smooth = ds.dims.drop(
-            ['time', 'lead', 'member', 'init'])
+        spatial_dims_to_smooth = ds.dims.drop(['time', 'lead', 'member', 'init'])
         # write coarsen to dict to coarsen similar to 5x5 degree
         pass  # not implemented
     # check whether coarsen dims are possible
@@ -134,8 +133,7 @@ def _reset_temporal_axis(ds_smoothed, smooth=4, dim='time'):
     """Reduce and reset temporal axis. See temporal_smoothing(). Might be
      used after calculation of skill to maintain readable labels for skill
       computation."""
-    new_time = [str(t) + '-' + str(t + smooth - 1)
-                for t in ds_smoothed[dim].values]
+    new_time = [str(t) + '-' + str(t + smooth - 1) for t in ds_smoothed[dim].values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
 

@@ -1,11 +1,13 @@
-import numpy as np
+import inspect
 
+import numpy as np
 import xarray as xr
 
 from .checks import has_dims
 from .constants import POSITIVELY_ORIENTED_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import DPP, varweighted_mean_period
+from .utils import assign_attrs
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
@@ -340,12 +342,22 @@ def bootstrap_compute(
         results = results.drop(res_drop)
         ci = ci.drop(ci_drop)
     results = xr.concat([results, ci], 'results')
-    results['results'] = [
-        'skill',
-        'p',
-        'low_ci',
-        'high_ci',
-    ]  # add ci levels in metadata
+    results['results'] = ['skill', 'p', 'low_ci', 'high_ci']
+    # Attach climpred compute information to skill
+    metadata_dict = {
+        'confidence_interval_levels': f'{ci_high}-{ci_low}',
+        'bootstrap_iterations': bootstrap,
+        'p': 'probability that initialized forecast performs \
+                          better than reference forecast',
+    }
+    results = assign_attrs(
+        results,
+        hind,
+        metric=metric,
+        comparison=comparison,
+        function_name=inspect.stack()[0][3],  # take function.__name__
+        metadata_dict=metadata_dict,
+    )
     return results
 
 

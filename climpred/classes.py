@@ -4,18 +4,18 @@ from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control,
 )
+from .checks import (
+    has_dims,
+    is_initialized,
+    is_xarray,
+    match_initialized_dims,
+    match_initialized_vars,
+)
 from .prediction import (
     compute_hindcast,
     compute_perfect_model,
     compute_persistence,
     compute_uninitialized,
-)
-from .checks import (
-    has_dims,
-    is_xarray,
-    is_initialized,
-    match_initialized_dims,
-    match_initialized_vars,
 )
 
 
@@ -90,6 +90,9 @@ class PredictionEnsemble:
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
         return _display_metadata(self)
+
+    def smooth(self):
+        pass
 
 
 class PerfectModelEnsemble(PredictionEnsemble):

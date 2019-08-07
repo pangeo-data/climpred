@@ -287,14 +287,28 @@ def bootstrap_compute(
         smp = np.random.choice(inits, len(inits))
         smp_hind = hind.sel(init=smp)
         # compute init skill
-        init.append(compute(smp_hind, reference, metric=metric, comparison=comparison))
+        init.append(
+            compute(
+                smp_hind,
+                reference,
+                metric=metric,
+                comparison=comparison,
+                assign_climpred_attrs=False,
+            )
+        )
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use reference = control
             hist = reference
         uninit_hind = resample_uninit(hind, hist)
         # compute uninit skill
         uninit.append(
-            compute(uninit_hind, reference, metric=metric, comparison=comparison)
+            compute(
+                uninit_hind,
+                reference,
+                metric=metric,
+                comparison=comparison,
+                assign_climpred_attrs=False,
+            )
         )
         # compute persistence skill
         pers.append(compute_persistence(smp_hind, reference, metric=metric))

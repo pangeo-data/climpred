@@ -140,7 +140,6 @@ def assign_attrs(
         '_'
     )
     metric = get_metric_function(metric, ALL_METRICS).__name__.lstrip('_')
-    print(metric)
     skill.attrs['metric'] = metric
     skill.attrs['comparison'] = comparison
 

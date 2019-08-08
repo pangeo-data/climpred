@@ -9,6 +9,7 @@ from climpred.tutorial import load_dataset
 
 try:
     from climpred.smoothing import spatial_smoothing_xesmf
+    import xesmf as xe
 
     xesmf_loaded = True
 except:
@@ -87,6 +88,19 @@ def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims(pm_da_control3d):
         assert actual_x == expected_x
 
 
+def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_no_coarsen_dict(
+    pm_da_control3d
+):
+    """Test whether spatial dimsizes are properly reduced if no coarsen_dict given."""
+    da = pm_da_control3d
+    coarsen_dict = {'x': 2, 'y': 2}
+    actual = spatial_smoothing_xrcoarsen(da, coarsen_dict=None)
+    for dim in coarsen_dict:
+        actual_x = actual[dim].size
+        expected_x = pm_da_control3d[dim].size // coarsen_dict[dim]
+        assert actual_x == expected_x
+
+
 def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_CESM(fosi_3d):
     """Test whether spatial dimsizes are properly reduced."""
     da = fosi_3d.isel(nlon=slice(0, 24), nlat=slice(0, 36))
@@ -98,34 +112,31 @@ def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_CESM(fosi_3d):
         assert actual_x == expected_x
 
 
-if xesmf_loaded:
+@pytest.mark.skipif(not xesmf_loaded, reason='xesmf not installed')
+def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(pm_da_control3d):
+    """Test whether spatial dimsizes are properly reduced."""
+    da = pm_da_control3d
+    step = 5
+    actual = spatial_smoothing_xesmf(da, d_lon_lat_dict={'lon': step})
+    expected_lat_size = 180 // step
+    assert actual['lon'].size < da.lon.size
+    assert actual['lat'].size == expected_lat_size
 
-    def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(pm_da_control3d):
-        """Test whether spatial dimsizes are properly reduced."""
-        da = pm_da_control3d
-        step = 5
-        actual = spatial_smoothing_xesmf(da, d_lon_lat_dict={'lon': step})
-        # expected_lon_size = 360 // step
-        expected_lat_size = 180 // step
-        # assert actual['lon'].size == expected_lon_size
-        assert actual['lon'].size < da.lon.size
-        assert actual['lat'].size == expected_lat_size
 
-    def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(fosi_3d):
-        """Test whether spatial dimsizes are properly reduced."""
-        da = fosi_3d
-        step = 5
-        actual = spatial_smoothing_xesmf(da, d_lon_lat_dict={'lat': step})
-        # expected_lon = (fosi.TLAT.max() - fosi.TLAT.min()) // step
-        # expected_lon = (fosi.TLON.max() - fosi.TLON.min()) // step
-        # assert actual['lon'].size == expected_lon
-        # assert actual['lat'].size == expected_lat
-        assert actual['lon'].size < da.nlon.size
-        assert actual['lat'].size < da.nlat.size
+@pytest.mark.skipif(not xesmf_loaded, reason='xesmf not installed')
+def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(fosi_3d):
+    """Test whether spatial dimsizes are properly reduced."""
+    da = fosi_3d
+    step = 0.1
+    actual = spatial_smoothing_xesmf(da, d_lon_lat_dict={'lat': step})
+    # test whether upsampled
+    assert actual['lon'].size >= da.nlon.size
+    assert actual['lat'].size >= da.nlat.size
 
 
 def test_smooth_goddard_2013(pm_da_control3d):
-    """Test whether Goddard 2013 recommendations are fulfilled by smooth_Goddard_2013."""
+    """Test whether Goddard 2013 recommendations are fulfilled by
+    smooth_Goddard_2013."""
     da = pm_da_control3d
     actual = smooth_goddard_2013(da)
     # tests whether nlat, nlon got reduced

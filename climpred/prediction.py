@@ -26,7 +26,7 @@ from .utils import (
 # --------------------------------------------#
 @is_xarray([0, 1])
 def compute_perfect_model(
-    ds, control, metric='pearson_r', comparison='m2e', assign_climpred_attrs=True
+    ds, control, metric='pearson_r', comparison='m2e', add_attrs=True
 ):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -51,7 +51,7 @@ def compute_perfect_model(
 
     skill = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
     # Attach climpred compute information to skill
-    if assign_climpred_attrs:
+    if add_attrs:
         skill = assign_attrs(
             skill,
             ds,
@@ -64,12 +64,7 @@ def compute_perfect_model(
 
 @is_xarray([0, 1])
 def compute_hindcast(
-    hind,
-    reference,
-    metric='pearson_r',
-    comparison='e2r',
-    max_dof=False,
-    assign_climpred_attrs=True,
+    hind, reference, metric='pearson_r', comparison='e2r', max_dof=False, add_attrs=True
 ):
     """Compute a predictability skill score against a reference
 
@@ -131,7 +126,7 @@ def compute_hindcast(
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     # Attach climpred compute information to skill
-    if assign_climpred_attrs:
+    if add_attrs:
         skill = assign_attrs(
             skill,
             hind,
@@ -202,7 +197,7 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False):
 
 @is_xarray([0, 1])
 def compute_uninitialized(
-    uninit, reference, metric='pearson_r', comparison='e2r', assign_climpred_attrs=True
+    uninit, reference, metric='pearson_r', comparison='e2r', add_attrs=True
 ):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
@@ -235,7 +230,7 @@ def compute_uninitialized(
     reference = reference.sel(time=common_time)
     uninit_skill = metric(forecast, reference, dim='time', comparison=comparison)
     # Attach climpred compute information to skill
-    if assign_climpred_attrs:
+    if add_attrs:
         uninit_skill = assign_attrs(
             uninit_skill,
             uninit,

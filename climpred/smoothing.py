@@ -28,7 +28,7 @@ def spatial_smoothing_xesmf(
         Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
      d_lon_lat_dict : dict, optional
         Longitude/Latitude step size, i.e. grid resolution; if not provided,
-        Longitude will equal 1 and Latitude will equal Longitude
+        Longitude will equal 5 and Latitude will equal Longitude
      method : str
         Regridding method. Options are
         - 'bilinear'
@@ -55,7 +55,8 @@ def spatial_smoothing_xesmf(
 
     if xe is None:
         raise ImportError(
-            'xesmf is not installed; see https://xesmf.readthedocs.io/en/latest/installation.html'
+            'xesmf is not installed; see'
+            'https://xesmf.readthedocs.io/en/latest/installation.html'
         )
 
     def _regrid_it(da, d_lon, d_lat, **kwargs):
@@ -79,21 +80,19 @@ def spatial_smoothing_xesmf(
         da : xarray DataArray with coordinate values
         """
 
-        def warn_lon_lat_dne(da):
+        def check_lon_lat_present(da):
             if 'lat' in ds.coords and 'lon' in ds.coords:
                 return da
-            # elif 'lat_b' in ds.coords and 'lon_b' in ds.coords:
-            #    da = da.rename({'lat_b': 'lat', 'lon_b': 'lon'})
-            #    return da
+            # for CESM POP grid
             elif 'TLAT' in ds.coords and 'TLONG' in ds.coords:
                 da = da.rename({'TLAT': 'lat', 'TLONG': 'lon'})
                 return da
             else:
                 raise ValueError(
-                    'lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename'
+                    'lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename.'
                 )
 
-        da = warn_lon_lat_dne(da)
+        da = check_lon_lat_present(da)
         grid_out = {
             'lon': np.arange(da.lon.min(), da.lon.max() + d_lon, d_lon),
             'lat': np.arange(da.lat.min(), da.lat.max() + d_lat, d_lat),
@@ -148,7 +147,21 @@ def spatial_smoothing_xrcoarsen(ds, coarsen_dict=None, how='mean'):
             if dim in ds.dims:
                 spatial_dims_to_smooth.remove(dim)
         # write coarsen to dict to coarsen similar to 5x5 degree
-        pass  # not implemented
+        coarsen_dict = dict()
+        step = 2
+        print(
+            f'no coarsen_dict given. created for dims \
+            {spatial_dims_to_smooth} with step {step}'
+        )
+        if len(spatial_dims_to_smooth) == 2:
+            for dim in spatial_dims_to_smooth:
+                coarsen_dict[dim] = step
+        else:
+            raise ValueError(
+                f'Tried to guess coarsen_dict. Found {spatial_dims_to_smooth},\
+                  but length != 2. Please provide coarsen_dict.'
+            )
+
     # check whether coarsen dims are possible
     for dim in coarsen_dict:
         if dim not in ds.dims:
@@ -156,13 +169,13 @@ def spatial_smoothing_xrcoarsen(ds, coarsen_dict=None, how='mean'):
         else:
             if ds[dim].size % coarsen_dict[dim] != 0:
                 raise ValueError(
-                    coarsen_dict[dim], 'does not divide', ds[dim].size, 'in', dim
+                    coarsen_dict[dim], 'does not divide evenly', ds[dim].size, 'in', dim
                 )
     ds_out = getattr(ds.coarsen(coarsen_dict), how)()
     return ds_out
 
 
-def temporal_smoothing(ds, smooth_dict={'time': 4}, how='mean', rename_dim=True):
+def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
     Reference:
@@ -184,16 +197,19 @@ def temporal_smoothing(ds, smooth_dict={'time': 4}, how='mean', rename_dim=True)
 
     """
     # unpack dict
+    if smooth_dict is None:
+        smooth_dict = {'time': 4}
     if len(smooth_dict) != 1:
         raise ValueError('smooth_dict doesnt contain only entry.', smooth_dict)
-    smooth = [i for i in smooth_dict.values()][0]
-    dim = [i for i in smooth_dict.keys()][0]
+    smooth = list(smooth_dict.values())[0]
+    dim = list(smooth_dict.keys())[0]
     # aggreate based on how
     ds_smoothed = getattr(ds.rolling(smooth_dict, center=False), how)()
     # remove first all-nans
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
     if rename_dim:
-        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_dict=smooth_dict)
+        ds_smoothed = _reset_temporal_axis(
+            ds_smoothed, smooth_dict=smooth_dict)
     return ds_smoothed
 
 
@@ -203,11 +219,10 @@ def _reset_temporal_axis(ds_smoothed, smooth_dict={'time': 4}):
     computation."""
     if len(smooth_dict) != 1:
         raise ValueError('smooth_dict doesnt contain only entry.', smooth_dict)
-    dim = [i for i in smooth_dict.keys()][0]
-    smooth = [i for i in smooth_dict.values()][0]
-    print('dim', dim)
-    print('smooth', smooth)
-    new_time = [str(t) + '-' + str(t + smooth - 1) for t in ds_smoothed[dim].values]
+    smooth = list(smooth_dict.values())[0]
+    dim = list(smooth_dict.keys())[0]
+    new_time = [str(t) + '-' + str(t + smooth - 1)
+                for t in ds_smoothed[dim].values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
 
@@ -216,7 +231,7 @@ def smooth_goddard_2013(
     ds,
     smooth_dict={'time': 4},
     d_lon_lat_dict={'lon': 5},
-    coarsen_dict={'x': 2, 'y': 2},
+    coarsen_dict=None,
     how='mean',
 ):
     """Wrapper to smooth as suggested by Goddard et al. 2013."""
@@ -224,7 +239,12 @@ def smooth_goddard_2013(
     ds = temporal_smoothing(ds, smooth_dict=smooth_dict)
     try:  # xesmf has priority
         ds = spatial_smoothing_xesmf(ds, d_lon_lat_dict=d_lon_lat_dict)
-    except:  # otherwise use coarsen
-        ds = spatial_smoothing_xrcoarsen(ds, coarsen_dict=coarsen_dict, how=how)
-        print('spatial xesmf smoothing didnt work, tried ')
+    except Exception as e:  # otherwise use coarsen
+        ds = spatial_smoothing_xrcoarsen(
+            ds, coarsen_dict=coarsen_dict, how=how)
+        print(
+            f'spatial xesmf smoothing didnt work. \
+            tried spatial_smoothing_xesmf and got {e}.\
+            then spatial_smoothing_xrcoarsen'
+        )
     return ds

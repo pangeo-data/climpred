@@ -293,7 +293,7 @@ def bootstrap_compute(
                 reference,
                 metric=metric,
                 comparison=comparison,
-                assign_climpred_attrs=False,
+                add_attrs=False,
             )
         )
         # generate uninitialized ensemble from hist
@@ -307,7 +307,7 @@ def bootstrap_compute(
                 reference,
                 metric=metric,
                 comparison=comparison,
-                assign_climpred_attrs=False,
+                add_attrs=False,
             )
         )
         # compute persistence skill

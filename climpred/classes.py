@@ -92,7 +92,14 @@ class PredictionEnsemble:
         return _display_metadata(self)
 
     def smooth(self):
-        pass
+        from climpred.smoothing import smooth_goddard_2013
+
+        # get proper smoothing function based on smooth args
+        smooth_fct = smooth_goddard_2013  # shortcut
+        self.initialized = smooth_fct(self.initialized, smooth_dict={'init': 4})
+        # check for other objects in  PredictionEnsemble
+        if isinstance(self.uninitialized, xr.Dataset):
+            self.uninitialized = smooth_fct(self.uninitialized, smooth_dict={'time': 4})
 
 
 class PerfectModelEnsemble(PredictionEnsemble):

@@ -208,8 +208,7 @@ def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
     # remove first all-nans
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
     if rename_dim:
-        ds_smoothed = _reset_temporal_axis(
-            ds_smoothed, smooth_dict=smooth_dict)
+        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_dict=smooth_dict)
     return ds_smoothed
 
 
@@ -221,8 +220,7 @@ def _reset_temporal_axis(ds_smoothed, smooth_dict={'time': 4}):
         raise ValueError('smooth_dict doesnt contain only entry.', smooth_dict)
     smooth = list(smooth_dict.values())[0]
     dim = list(smooth_dict.keys())[0]
-    new_time = [str(t) + '-' + str(t + smooth - 1)
-                for t in ds_smoothed[dim].values]
+    new_time = [str(t) + '-' + str(t + smooth - 1) for t in ds_smoothed[dim].values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
 
@@ -240,8 +238,7 @@ def smooth_goddard_2013(
     try:  # xesmf has priority
         ds = spatial_smoothing_xesmf(ds, d_lon_lat_dict=d_lon_lat_dict)
     except Exception as e:  # otherwise use coarsen
-        ds = spatial_smoothing_xrcoarsen(
-            ds, coarsen_dict=coarsen_dict, how=how)
+        ds = spatial_smoothing_xrcoarsen(ds, coarsen_dict=coarsen_dict, how=how)
         print(
             f'spatial xesmf smoothing didnt work. \
             tried spatial_smoothing_xesmf and got {e}.\

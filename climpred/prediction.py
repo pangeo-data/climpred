@@ -25,7 +25,9 @@ from .utils import (
 # predictability.
 # --------------------------------------------#
 @is_xarray([0, 1])
-def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
+def compute_perfect_model(
+    ds, control, metric='pearson_r', comparison='m2e', add_attrs=True
+):
     """
     Compute a predictability skill score for a perfect-model framework
     simulation dataset.
@@ -36,6 +38,7 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
         metric (str): `metric` name, see :py:func:`climpred.utils.get_metric_function`.
         comparison (str): `comparison` name, see
                           :py:func:`climpred.utils.get_comparison_function`.
+        add_attrs (bool): write climpred compute args to attrs. default: True
 
     Returns:
         skill (xarray object): skill score.
@@ -49,19 +52,20 @@ def compute_perfect_model(ds, control, metric='pearson_r', comparison='m2e'):
 
     skill = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
     # Attach climpred compute information to skill
-    skill = assign_attrs(
-        skill,
-        ds,
-        function_name=inspect.stack()[0][3],
-        metric=metric,
-        comparison=comparison,
-    )
+    if add_attrs:
+        skill = assign_attrs(
+            skill,
+            ds,
+            function_name=inspect.stack()[0][3],
+            metric=metric,
+            comparison=comparison,
+        )
     return skill
 
 
 @is_xarray([0, 1])
 def compute_hindcast(
-    hind, reference, metric='pearson_r', comparison='e2r', max_dof=False
+    hind, reference, metric='pearson_r', comparison='e2r', max_dof=False, add_attrs=True
 ):
     """Compute a predictability skill score against a reference
 
@@ -92,6 +96,8 @@ def compute_hindcast(
             If False (default), then slice to a common time frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+        add_attrs (bool): write climpred compute args to attrs. default: True
+
 
     Returns:
         skill (xarray object):
@@ -123,13 +129,14 @@ def compute_hindcast(
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     # Attach climpred compute information to skill
-    skill = assign_attrs(
-        skill,
-        hind,
-        function_name=inspect.stack()[0][3],
-        metric=metric,
-        comparison=comparison,
-    )
+    if add_attrs:
+        skill = assign_attrs(
+            skill,
+            hind,
+            function_name=inspect.stack()[0][3],
+            metric=metric,
+            comparison=comparison,
+        )
     return skill
 
 
@@ -192,7 +199,9 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False):
 
 
 @is_xarray([0, 1])
-def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r'):
+def compute_uninitialized(
+    uninit, reference, metric='pearson_r', comparison='e2r', add_attrs=True
+):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
     .. note::
@@ -210,6 +219,8 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
             How to compare the uninitialized ensemble to the reference:
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
+        add_attrs (bool): write climpred compute args to attrs. default: True
+
 
     Returns:
         u (xarray object): Results from comparison at the first lag.
@@ -224,11 +235,12 @@ def compute_uninitialized(uninit, reference, metric='pearson_r', comparison='e2r
     reference = reference.sel(time=common_time)
     uninit_skill = metric(forecast, reference, dim='time', comparison=comparison)
     # Attach climpred compute information to skill
-    uninit_skill = assign_attrs(
-        uninit_skill,
-        uninit,
-        function_name=inspect.stack()[0][3],
-        metric=metric,
-        comparison=comparison,
-    )
+    if add_attrs:
+        uninit_skill = assign_attrs(
+            uninit_skill,
+            uninit,
+            function_name=inspect.stack()[0][3],
+            metric=metric,
+            comparison=comparison,
+        )
     return uninit_skill

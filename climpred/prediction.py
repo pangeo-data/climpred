@@ -38,6 +38,7 @@ def compute_perfect_model(
         metric (str): `metric` name, see :py:func:`climpred.utils.get_metric_function`.
         comparison (str): `comparison` name, see
                           :py:func:`climpred.utils.get_comparison_function`.
+        add_attrs (bool): write climpred compute args to attrs. default: True
 
     Returns:
         skill (xarray object): skill score.
@@ -95,6 +96,8 @@ def compute_hindcast(
             If False (default), then slice to a common time frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+        add_attrs (bool): write climpred compute args to attrs. default: True
+
 
     Returns:
         skill (xarray object):
@@ -216,6 +219,8 @@ def compute_uninitialized(
             How to compare the uninitialized ensemble to the reference:
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
+        add_attrs (bool): write climpred compute args to attrs. default: True
+
 
     Returns:
         u (xarray object): Results from comparison at the first lag.

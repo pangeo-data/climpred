@@ -14,6 +14,7 @@ Internals/Minor Fixes
 ---------------------
 - Add `matplotlib` as a main dependency so that a direct pip installation works (:pr:`211`) `Riley X. Brady`_.
 - ``climpred`` is now installable from conda-forge (:pr:`212`) `Riley X. Brady`_.
+- Fix erroneous descriptions of sample datasets (:pr:`226`) `Riley X. Brady`_.
 
 climpred v1.0.1 (2019-07-04)
 ============================

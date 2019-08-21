@@ -15,42 +15,38 @@ def spatial_smoothing_xesmf(
     reuse_weights=True,
 ):
     """
-    Quick regridding
+    Quick regridding function. Adapted from
+    https://github.com/JiaweiZhuang/xESMF/pull/27/files#diff-b537ef68c98c2ec11e64e4803fe4a113R105.
 
-    Parameters
-    ----------
-    ds : xarray DataSet
-        Contain input and output grid coordinates. Look for variables
-        ``lon``, ``lat``, and optionally ``lon_b``, ``lat_b`` for
-        conservative method.
-         Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
-        or 2D (Ny, Nx) for general curvilinear grids.
-        Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
-     d_lon_lat_dict : dict, optional
-        Longitude/Latitude step size, i.e. grid resolution; if not provided,
-        Longitude will equal 5 and Latitude will equal Longitude
-     method : str
-        Regridding method. Options are
-        - 'bilinear'
-        - 'conservative', **need grid corner information**
-        - 'patch'
-        - 'nearest_s2d'
-        - 'nearest_d2s'
-     periodic : bool, optional
-        Periodic in longitude? Default to False.
-        Only useful for global grids with non-conservative regridding.
-        Will be forced to False for conservative regridding.
-     filename : str, optional
-        Name for the weight file. The default naming scheme is::
-             {method}_{Ny_in}x{Nx_in}_{Ny_out}x{Nx_out}.nc
-         e.g. bilinear_400x600_300x400.nc
-     reuse_weights : bool, optional
-        Whether to read existing weight file to save computing time.
-        False by default (i.e. re-compute, not reuse).
+    Args:
+        ds (xarray-object): Contain input and output grid coordinates.
+            Look for variables ``lon``, ``lat``, and optionally ``lon_b``,
+            ``lat_b`` for conservative method.
+            Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
+            or 2D (Ny, Nx) for general curvilinear grids.
+            Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
+         d_lon_lat_dict (dict): optional
+            Longitude/Latitude step size (grid resolution); if not provided,
+            lon will equal 5 and lat will equal lon
+            (optional)
+         method (str): Regridding method. Options are:
+            - 'bilinear'
+            - 'conservative', **need grid corner information**
+            - 'patch'
+            - 'nearest_s2d'
+            - 'nearest_d2s'
+         periodic (bool): Periodic in longitude? Default to False. optional
+            Only useful for global grids with non-conservative regridding.
+            Will be forced to False for conservative regridding.
+         filename (str): Name for the weight file. (optional)
+            The default naming scheme is:
+                 {method}_{Ny_in}x{Nx_in}_{Ny_out}x{Nx_out}.nc
+                 e.g. bilinear_400x600_300x400.nc
+         reuse_weights (bool) Whether to read existing weight file to save
+            computing time. False by default. (optional)
 
-    Returns
-    -------
-    ds : xarray DataSet with coordinate values or DataArray
+        Returns:
+            ds (xarray.object) regridded
     """
 
     if xe is None:
@@ -62,26 +58,24 @@ def spatial_smoothing_xesmf(
     def _regrid_it(da, d_lon, d_lat, **kwargs):
         """
         Global 2D rectilinear grid centers and bounds
-         Parameters
-        ----------
-        da : xarray DataArray
-            Contain input and output grid coordinates. Look for variables
-            ``lon``, ``lat``, and optionally ``lon_b``, ``lat_b`` for
-            conservative method.
-             Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
-            or 2D (Ny, Nx) for general curvilinear grids.
-            Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
-         d_lon : float
-            Longitude step size, i.e. grid resolution
-         d_lat : float
-            Latitude step size, i.e. grid resolution
-         Returns
-        -------
-        da : xarray DataArray with coordinate values
+
+        Args:
+            da (xarray.DataArray): Contain input and output grid coords.
+                Look for variables ``lon``, ``lat``, ``lon_b``, ``lat_b`` for
+                conservative method, and ``TLAT``, ``TLON`` for CESM POP grid
+                Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
+                or 2D (Ny, Nx) for general curvilinear grids.
+                Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
+            d_lon (float): Longitude step size, i.e. grid resolution
+            d_lat (float): Latitude step size, i.e. grid resolution
+        Returns:
+            da : xarray DataArray with coordinate values
         """
 
         def check_lon_lat_present(da):
             if 'lat' in ds.coords and 'lon' in ds.coords:
+                return da
+            elif 'lat_b' in ds.coords and 'lon_b' in ds.coords:
                 return da
             # for CESM POP grid
             elif 'TLAT' in ds.coords and 'TLONG' in ds.coords:
@@ -105,7 +99,7 @@ def spatial_smoothing_xesmf(
     elif 'lat' not in d_lon_lat_dict:
         d_lon_lat_dict['lat'] = d_lon_lat_dict['lon']
     else:
-        raise ValueError('please provide either lon or lat in d_lon_lat_dict.')
+        raise ValueError('please provide either `lon` or `lat` in d_lon_lat_dict.')
 
     kwargs = {
         'd_lon': d_lon_lat_dict['lon'],
@@ -199,10 +193,16 @@ def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
     # unpack dict
     if smooth_dict is None:
         smooth_dict = {'time': 4}
-    if len(smooth_dict) != 1:
-        raise ValueError('smooth_dict doesnt contain only entry.', smooth_dict)
+    if not ('time' not in smooth_dict or 'lead' not in smooth_dict):
+        raise ValueError('smooth_dict doesnt contain a time dimension.', smooth_dict)
     smooth = list(smooth_dict.values())[0]
     dim = list(smooth_dict.keys())[0]
+    # fix to smooth either lead or time depending
+    time_dims = ['time', 'lead']
+    if dim not in ds.dims:
+        time_dims.remove(dim)
+        dim = time_dims[0]
+        smooth_dict = {dim: smooth}
     # aggreate based on how
     ds_smoothed = getattr(ds.rolling(smooth_dict, center=False), how)()
     # remove first all-nans
@@ -216,8 +216,8 @@ def _reset_temporal_axis(ds_smoothed, smooth_dict={'time': 4}):
     """Reduce and reset temporal axis. See temporal_smoothing(). Might be
     used after calculation of skill to maintain readable labels for skill
     computation."""
-    if len(smooth_dict) != 1:
-        raise ValueError('smooth_dict doesnt contain only entry.', smooth_dict)
+    if not ('time' not in smooth_dict or 'lead' not in smooth_dict):
+        raise ValueError('smooth_dict doesnt contain a time dimension.', smooth_dict)
     smooth = list(smooth_dict.values())[0]
     dim = list(smooth_dict.keys())[0]
     new_time = [str(t) + '-' + str(t + smooth - 1) for t in ds_smoothed[dim].values]
@@ -227,7 +227,7 @@ def _reset_temporal_axis(ds_smoothed, smooth_dict={'time': 4}):
 
 def smooth_goddard_2013(
     ds,
-    smooth_dict={'time': 4},
+    smooth_dict={'lead': 4},
     d_lon_lat_dict={'lon': 5},
     coarsen_dict=None,
     how='mean',

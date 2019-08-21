@@ -17,11 +17,18 @@ from .prediction import (
     compute_persistence,
     compute_uninitialized,
 )
-
+from .smoothing import (
+    smooth_goddard_2013,
+    spatial_smoothing_xesmf,
+    spatial_smoothing_xrcoarsen,
+    temporal_smoothing,
+)
 
 # ----------
 # Aesthetics
 # ----------
+
+
 def _display_metadata(self):
     """
     This is called in the following case:
@@ -91,15 +98,55 @@ class PredictionEnsemble:
     def __repr__(self):
         return _display_metadata(self)
 
-    def smooth(self):
-        from climpred.smoothing import smooth_goddard_2013
+    def smooth(self, smooth_dict='goddard2013'):
+        """Smooth all entries of PredictionEnsemble in the same manner to be
+        able to still calculate prediction skill afterwards.
 
+        Args:
+          xobj (xarray object):
+            decadal prediction ensemble output.
+
+        Attributes:
+            smooth_dict (dict or str): Dictionary to specify the dims to
+                smooth combaticle with `spatial_smoothing_xesmf`,
+                `temporal_smoothing` or `spatial_smoothing_xrcoarsen`.
+                Shortcut for Goddard et al. 2013 recommendations:
+                'goddard2013'
+        """
         # get proper smoothing function based on smooth args
-        smooth_fct = smooth_goddard_2013  # shortcut
-        self.initialized = smooth_fct(self.initialized, smooth_dict={'init': 4})
+        if isinstance(smooth_dict, str):
+            if smooth_dict == 'goddard2013':
+                smooth_fct = smooth_goddard_2013
+                smooth_dict = {'lead': 4}  # default
+            else:
+                raise ValueError(
+                    'Please provide from list of available smoothings: \
+                     ["goddard2013"]'
+                )
+        elif isinstance(smooth_dict, dict):
+            print(smooth_dict, type(smooth_dict))
+            if 'lon' in smooth_dict or 'lat' in smooth_dict:
+                smooth_fct = spatial_smoothing_xesmf
+            elif 'lead' in smooth_dict:
+                smooth_fct = temporal_smoothing
+            elif list(smooth_dict.keys())[0] in list(self.initialized.dims):
+                smooth_fct = spatial_smoothing_xrcoarsen
+            else:
+                raise ValueError(
+                    'Please provide kwargs to fulfill functions: \
+                     ["spatial_smoothing_xesmf", "temporal_smoothing", \
+                     "spatial_smoothing_xrcoarsen"].'
+                )
+        else:
+            raise ValueError(
+                'Please provide kwargs as str or dict and not', type(smooth_dict)
+            )
+        self.initialized = smooth_fct(self.initialized, smooth_dict)
         # check for other objects in  PredictionEnsemble
+        # better: for obj in self: do smooth
         if isinstance(self.uninitialized, xr.Dataset):
-            self.uninitialized = smooth_fct(self.uninitialized, smooth_dict={'time': 4})
+            self.uninitialized = smooth_fct(self.uninitialized, smooth_dict)
+        # self.reference not implemented
 
 
 class PerfectModelEnsemble(PredictionEnsemble):

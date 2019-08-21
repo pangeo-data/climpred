@@ -9,10 +9,9 @@ from climpred.tutorial import load_dataset
 
 try:
     from climpred.smoothing import spatial_smoothing_xesmf
-    import xesmf as xe
 
     xesmf_loaded = True
-except:
+except ImportError:
     xesmf_loaded = False
 
 

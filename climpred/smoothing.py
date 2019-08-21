@@ -207,6 +207,7 @@ def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
     ds_smoothed = getattr(ds.rolling(smooth_dict, center=False), how)()
     # remove first all-nans
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
+    ds_smoothed[dim] = ds.isel({dim: slice(None, -smooth + 1)})[dim]
     if rename_dim:
         ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_dict=smooth_dict)
     return ds_smoothed

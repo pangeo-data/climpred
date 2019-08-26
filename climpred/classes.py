@@ -61,7 +61,8 @@ def _display_metadata(self):
             N = len(self.control.data_vars)
             for i in range(1, N + 1):
                 summary += (
-                    '    ' + str(self.control.data_vars).split('\n')[i].strip() + '\n'
+                    '    ' +
+                    str(self.control.data_vars).split('\n')[i].strip() + '\n'
                 )
         else:
             summary += '    None\n'
@@ -98,7 +99,7 @@ class PredictionEnsemble:
     def __repr__(self):
         return _display_metadata(self)
 
-    def smooth(self, smooth_dict='goddard2013'):
+    def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
@@ -107,29 +108,46 @@ class PredictionEnsemble:
             decadal prediction ensemble output.
 
         Attributes:
-            smooth_dict (dict or str): Dictionary to specify the dims to
+            smooth_kws (dict or str): Dictionary to specify the dims to
                 smooth combaticle with `spatial_smoothing_xesmf`,
                 `temporal_smoothing` or `spatial_smoothing_xrcoarsen`.
                 Shortcut for Goddard et al. 2013 recommendations:
                 'goddard2013'
+
+        Example:
+        >>> PredictionEnsemble.smooth(smooth_kws={'time': 2,
+            'lat': 5, 'lon': 4'})
+        >>> PredictionEnsemble.smooth(smooth_kws='goddard2013')
         """
         # get proper smoothing function based on smooth args
-        if isinstance(smooth_dict, str):
-            if smooth_dict == 'goddard2013':
+        if isinstance(smooth_kws, str):
+            if 'goddard' in smooth_kws:
                 smooth_fct = smooth_goddard_2013
-                smooth_dict = {'lead': 4}  # default
+                smooth_kws = {'lead': 4}  # default
             else:
                 raise ValueError(
                     'Please provide from list of available smoothings: \
                      ["goddard2013"]'
                 )
-        elif isinstance(smooth_dict, dict):
-            print(smooth_dict, type(smooth_dict))
-            if 'lon' in smooth_dict or 'lat' in smooth_dict:
+        elif isinstance(smooth_kws, dict):
+            non_time_dims = [dim for dim in smooth_kws.keys() if dim not in [
+                'time', 'lead']]
+            if len(non_time_dims) > 0:
+                non_time_dims = non_time_dims[0]
+            print(non_time_dims, 'non_time_dims')
+            # goddard when time_dim and lon/lat given
+            if ('lon' in smooth_kws or 'lat' in smooth_kws) and ('lead' in smooth_kws or 'time' in smooth_kws):
+                smooth_fct = smooth_goddard_2013
+            # fail goddard and fall back to xrcoarsen when
+            # coarsen dim and time_dim provided
+            elif (non_time_dims is not []) and (non_time_dims in list(self.initialized.dims)) and ('lead' in smooth_kws or 'time' in smooth_kws):
+                smooth_fct = smooth_goddard_2013
+            # else only one smoothing operation
+            elif 'lon' in smooth_kws or 'lat' in smooth_kws:
                 smooth_fct = spatial_smoothing_xesmf
-            elif 'lead' in smooth_dict:
+            elif 'lead' in smooth_kws:
                 smooth_fct = temporal_smoothing
-            elif list(smooth_dict.keys())[0] in list(self.initialized.dims):
+            elif non_time_dims in list(self.initialized.dims):
                 smooth_fct = spatial_smoothing_xrcoarsen
             else:
                 raise ValueError(
@@ -139,13 +157,14 @@ class PredictionEnsemble:
                 )
         else:
             raise ValueError(
-                'Please provide kwargs as str or dict and not', type(smooth_dict)
+                'Please provide kwargs as str or dict and not', type(
+                    smooth_kws)
             )
-        self.initialized = smooth_fct(self.initialized, smooth_dict)
+        self.initialized = smooth_fct(self.initialized, smooth_kws)
         # check for other objects in  PredictionEnsemble
         # better: for obj in self: do smooth
         if isinstance(self.uninitialized, xr.Dataset):
-            self.uninitialized = smooth_fct(self.uninitialized, smooth_dict)
+            self.uninitialized = smooth_fct(self.uninitialized, smooth_kws)
         # self.reference not implemented
 
 

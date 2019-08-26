@@ -1,14 +1,16 @@
 import numpy as np
 
+from .checks import is_xarray
 try:
     import xesmf as xe
 except ImportError:
     xe = None
 
 
+@is_xarray(0)
 def spatial_smoothing_xesmf(
     ds,
-    d_lon_lat_dict={'lon': 5, 'lat': 5},
+    d_lon_lat_kws={'lon': 5, 'lat': 5},
     method='bilinear',
     periodic=False,
     filename=None,
@@ -25,7 +27,7 @@ def spatial_smoothing_xesmf(
             Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
             or 2D (Ny, Nx) for general curvilinear grids.
             Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
-         d_lon_lat_dict (dict): optional
+         d_lon_lat_kws (dict): optional
             Longitude/Latitude step size (grid resolution); if not provided,
             lon will equal 5 and lat will equal lon
             (optional)
@@ -94,16 +96,17 @@ def spatial_smoothing_xesmf(
         regridder = xe.Regridder(da, grid_out, **kwargs)
         return regridder(da)
 
-    if 'lon' not in d_lon_lat_dict:
-        d_lon_lat_dict['lon'] = d_lon_lat_dict['lat']
-    elif 'lat' not in d_lon_lat_dict:
-        d_lon_lat_dict['lat'] = d_lon_lat_dict['lon']
+    if 'lon' not in d_lon_lat_kws:
+        d_lon_lat_kws['lon'] = d_lon_lat_kws['lat']
+    elif 'lat' not in d_lon_lat_kws:
+        d_lon_lat_kws['lat'] = d_lon_lat_kws['lon']
     else:
-        raise ValueError('please provide either `lon` or `lat` in d_lon_lat_dict.')
+        raise ValueError(
+            'please provide either `lon` or `lat` in d_lon_lat_kws.')
 
     kwargs = {
-        'd_lon': d_lon_lat_dict['lon'],
-        'd_lat': d_lon_lat_dict['lat'],
+        'd_lon': d_lon_lat_kws['lon'],
+        'd_lat': d_lon_lat_kws['lat'],
         'method': method,
         'periodic': periodic,
         'filename': filename,
@@ -115,7 +118,8 @@ def spatial_smoothing_xesmf(
     return ds
 
 
-def spatial_smoothing_xrcoarsen(ds, coarsen_dict=None, how='mean'):
+@is_xarray(0)
+def spatial_smoothing_xrcoarsen(ds, coarsen_kws=None, how='mean'):
     """Apply spatial smoothing by regridding to `boxsize` grid.
 
     Reference:
@@ -127,49 +131,51 @@ def spatial_smoothing_xrcoarsen(ds, coarsen_dict=None, how='mean'):
 
     Args:
         ds (xr.object): input. xr.DataArray prefered.
-        coarsen_dict (dict): coarsen spatial latitudes.
+        coarsen_kws (dict): coarsen spatial latitudes.
         how (str): aggregation type for coarsening. default: 'mean'
 
     Returns:
         ds_smoothed (xr.object): boxsize-regridded input
 
     """
-    if coarsen_dict is None:
+    if coarsen_kws is None:
         # guess spatial dims
         spatial_dims_to_smooth = list(ds.dims)
         for dim in ['time', 'lead', 'member', 'init']:
             if dim in ds.dims:
                 spatial_dims_to_smooth.remove(dim)
         # write coarsen to dict to coarsen similar to 5x5 degree
-        coarsen_dict = dict()
+        coarsen_kws = dict()
         step = 2
         print(
-            f'no coarsen_dict given. created for dims \
+            f'no coarsen_kws given. created for dims \
             {spatial_dims_to_smooth} with step {step}'
         )
         if len(spatial_dims_to_smooth) == 2:
             for dim in spatial_dims_to_smooth:
-                coarsen_dict[dim] = step
+                coarsen_kws[dim] = step
         else:
             raise ValueError(
-                f'Tried to guess coarsen_dict. Found {spatial_dims_to_smooth},\
-                  but length != 2. Please provide coarsen_dict.'
+                f'Tried to guess coarsen_kws. Found {spatial_dims_to_smooth},\
+                  but length != 2. Please provide coarsen_kws.'
             )
 
     # check whether coarsen dims are possible
-    for dim in coarsen_dict:
+    for dim in coarsen_kws:
         if dim not in ds.dims:
             raise ValueError(dim, 'not in ds')
         else:
-            if ds[dim].size % coarsen_dict[dim] != 0:
+            if ds[dim].size % coarsen_kws[dim] != 0:
                 raise ValueError(
-                    coarsen_dict[dim], 'does not divide evenly', ds[dim].size, 'in', dim
+                    coarsen_kws[dim], 'does not divide evenly', ds[dim].size, 'in', dim
                 )
-    ds_out = getattr(ds.coarsen(coarsen_dict), how)()
+    # equivalent of doing ds.mean() if how == 'mean'
+    ds_out = getattr(ds.coarsen(coarsen_kws), how)()
     return ds_out
 
 
-def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
+@is_xarray(0)
+def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
     Reference:
@@ -181,7 +187,7 @@ def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
 
     Args:
         ds (xr.object): input.
-        smooth_dict (dict): length of smoothing of timesteps.
+        smooth_kws (dict): length of smoothing of timesteps.
                       Defaults to {'time':4} (see Goddard et al. 2013).
         how (str): aggregation type for smoothing. default: 'mean'
 
@@ -191,55 +197,63 @@ def temporal_smoothing(ds, smooth_dict=None, how='mean', rename_dim=True):
 
     """
     # unpack dict
-    if smooth_dict is None:
-        smooth_dict = {'time': 4}
-    if not ('time' not in smooth_dict or 'lead' not in smooth_dict):
-        raise ValueError('smooth_dict doesnt contain a time dimension.', smooth_dict)
-    smooth = list(smooth_dict.values())[0]
-    dim = list(smooth_dict.keys())[0]
+    if not isinstance(smooth_kws, dict):
+        raise ValueError(
+            'Please provide smooth_kws as dict, found ', type(smooth_kws))
+    if not ('time' in smooth_kws or 'lead' in smooth_kws):
+        raise ValueError(
+            'smooth_kws doesnt contain a time dimension (either "lead" or "time").', smooth_kws)
+    smooth = list(smooth_kws.values())[0]
+    dim = list(smooth_kws.keys())[0]
     # fix to smooth either lead or time depending
     time_dims = ['time', 'lead']
     if dim not in ds.dims:
         time_dims.remove(dim)
         dim = time_dims[0]
-        smooth_dict = {dim: smooth}
+        smooth_kws = {dim: smooth}
     # aggreate based on how
-    ds_smoothed = getattr(ds.rolling(smooth_dict, center=False), how)()
+    ds_smoothed = getattr(ds.rolling(smooth_kws, center=False), how)()
     # remove first all-nans
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
     ds_smoothed[dim] = ds.isel({dim: slice(None, -smooth + 1)})[dim]
     if rename_dim:
-        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_dict=smooth_dict)
+        ds_smoothed = _reset_temporal_axis(
+            ds_smoothed, smooth_kws=smooth_kws)
     return ds_smoothed
 
 
-def _reset_temporal_axis(ds_smoothed, smooth_dict={'time': 4}):
+@is_xarray(0)
+def _reset_temporal_axis(ds_smoothed, smooth_kws={'time': 4}):
     """Reduce and reset temporal axis. See temporal_smoothing(). Might be
     used after calculation of skill to maintain readable labels for skill
     computation."""
-    if not ('time' not in smooth_dict or 'lead' not in smooth_dict):
-        raise ValueError('smooth_dict doesnt contain a time dimension.', smooth_dict)
-    smooth = list(smooth_dict.values())[0]
-    dim = list(smooth_dict.keys())[0]
-    new_time = [str(t) + '-' + str(t + smooth - 1) for t in ds_smoothed[dim].values]
+    if not ('time' in smooth_kws or 'lead' in smooth_kws):
+        raise ValueError(
+            'smooth_kws doesnt contain a time dimension.', smooth_kws)
+    smooth = list(smooth_kws.values())[0]
+    dim = list(smooth_kws.keys())[0]
+    new_time = [f'{t}-{t + smooth - 1}'
+                for t in ds_smoothed[dim].values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
 
 
+@is_xarray(0)
 def smooth_goddard_2013(
     ds,
-    smooth_dict={'lead': 4},
-    d_lon_lat_dict={'lon': 5},
-    coarsen_dict=None,
+    smooth_kws={'lead': 4},
+    d_lon_lat_kws={'lon': 5},
+    coarsen_kws=None,
     how='mean',
 ):
     """Wrapper to smooth as suggested by Goddard et al. 2013."""
     # first temporal smoothing
-    ds = temporal_smoothing(ds, smooth_dict=smooth_dict)
+    ds = temporal_smoothing(ds, smooth_kws=smooth_kws)
     try:  # xesmf has priority
-        ds = spatial_smoothing_xesmf(ds, d_lon_lat_dict=d_lon_lat_dict)
+        ds = spatial_smoothing_xesmf(ds, d_lon_lat_kws=d_lon_lat_kws)
     except Exception as e:  # otherwise use coarsen
-        ds = spatial_smoothing_xrcoarsen(ds, coarsen_dict=coarsen_dict, how=how)
+        ds = spatial_smoothing_xrcoarsen(
+            ds, coarsen_kws=coarsen_kws, how=how)
         print(
             f'spatial xesmf smoothing didnt work. \
             tried spatial_smoothing_xesmf and got {e}.\

@@ -59,9 +59,9 @@ def test_reset_temporal_axis_lead(pm_da_ds3d):
     dim = 'lead'
     smooth_kws = {dim: smooth}
     first_ori = pm_da_ds3d.lead[0].values
-    first_actual = _reset_temporal_axis(pm_da_ds3d, smooth_kws=smooth_kws)[
-        dim
-    ].values[0]
+    first_actual = _reset_temporal_axis(pm_da_ds3d, smooth_kws=smooth_kws)[dim].values[
+        0
+    ]
     first_expected = f'{first_ori}-{first_ori+smooth*1-1}'
     print(first_actual, first_expected)
     assert first_actual == first_expected
@@ -71,8 +71,7 @@ def test_temporal_smoothing_reduce_length(pm_da_control3d):
     """Test whether dimsize is reduced properly."""
     smooth = 10
     smooth_kws = {'time': smooth}
-    actual = temporal_smoothing(
-        pm_da_control3d, smooth_kws=smooth_kws).time.size
+    actual = temporal_smoothing(pm_da_control3d, smooth_kws=smooth_kws).time.size
     expected = pm_da_control3d.time.size - smooth + 1
     assert actual == expected
 
@@ -91,7 +90,8 @@ def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims(pm_da_control3d):
 def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_no_coarsen_kws(
     pm_da_control3d
 ):
-    """Test whether spatial dimsizes are properly reduced if no coarsen_kws given."""
+    """Test whether spatial dimsizes are properly reduced if no coarsen_kws
+    given."""
     da = pm_da_control3d
     coarsen_kws = {'x': 2, 'y': 2}
     actual = spatial_smoothing_xrcoarsen(da, coarsen_kws=None)

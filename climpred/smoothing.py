@@ -1,6 +1,7 @@
 import numpy as np
 
 from .checks import is_xarray
+
 try:
     import xesmf as xe
 except ImportError:
@@ -101,8 +102,7 @@ def spatial_smoothing_xesmf(
     elif 'lat' not in d_lon_lat_kws:
         d_lon_lat_kws['lat'] = d_lon_lat_kws['lon']
     else:
-        raise ValueError(
-            'please provide either `lon` or `lat` in d_lon_lat_kws.')
+        raise ValueError('please provide either `lon` or `lat` in d_lon_lat_kws.')
 
     kwargs = {
         'd_lon': d_lon_lat_kws['lon'],
@@ -198,11 +198,13 @@ def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
     """
     # unpack dict
     if not isinstance(smooth_kws, dict):
-        raise ValueError(
-            'Please provide smooth_kws as dict, found ', type(smooth_kws))
+        raise ValueError('Please provide smooth_kws as dict, found ', type(smooth_kws))
     if not ('time' in smooth_kws or 'lead' in smooth_kws):
         raise ValueError(
-            'smooth_kws doesnt contain a time dimension (either "lead" or "time").', smooth_kws)
+            'smooth_kws doesnt contain a time dimension \
+            (either "lead" or "time").',
+            smooth_kws,
+        )
     smooth = list(smooth_kws.values())[0]
     dim = list(smooth_kws.keys())[0]
     # fix to smooth either lead or time depending
@@ -217,8 +219,7 @@ def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
     ds_smoothed[dim] = ds.isel({dim: slice(None, -smooth + 1)})[dim]
     if rename_dim:
-        ds_smoothed = _reset_temporal_axis(
-            ds_smoothed, smooth_kws=smooth_kws)
+        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_kws=smooth_kws)
     return ds_smoothed
 
 
@@ -228,23 +229,17 @@ def _reset_temporal_axis(ds_smoothed, smooth_kws={'time': 4}):
     used after calculation of skill to maintain readable labels for skill
     computation."""
     if not ('time' in smooth_kws or 'lead' in smooth_kws):
-        raise ValueError(
-            'smooth_kws doesnt contain a time dimension.', smooth_kws)
+        raise ValueError('smooth_kws doesnt contain a time dimension.', smooth_kws)
     smooth = list(smooth_kws.values())[0]
     dim = list(smooth_kws.keys())[0]
-    new_time = [f'{t}-{t + smooth - 1}'
-                for t in ds_smoothed[dim].values]
+    new_time = [f'{t}-{t + smooth - 1}' for t in ds_smoothed[dim].values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
 
 
 @is_xarray(0)
 def smooth_goddard_2013(
-    ds,
-    smooth_kws={'lead': 4},
-    d_lon_lat_kws={'lon': 5},
-    coarsen_kws=None,
-    how='mean',
+    ds, smooth_kws={'lead': 4}, d_lon_lat_kws={'lon': 5}, coarsen_kws=None, how='mean'
 ):
     """Wrapper to smooth as suggested by Goddard et al. 2013."""
     # first temporal smoothing
@@ -252,8 +247,7 @@ def smooth_goddard_2013(
     try:  # xesmf has priority
         ds = spatial_smoothing_xesmf(ds, d_lon_lat_kws=d_lon_lat_kws)
     except Exception as e:  # otherwise use coarsen
-        ds = spatial_smoothing_xrcoarsen(
-            ds, coarsen_kws=coarsen_kws, how=how)
+        ds = spatial_smoothing_xrcoarsen(ds, coarsen_kws=coarsen_kws, how=how)
         print(
             f'spatial xesmf smoothing didnt work. \
             tried spatial_smoothing_xesmf and got {e}.\

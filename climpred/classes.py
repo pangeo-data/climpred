@@ -61,8 +61,7 @@ def _display_metadata(self):
             N = len(self.control.data_vars)
             for i in range(1, N + 1):
                 summary += (
-                    '    ' +
-                    str(self.control.data_vars).split('\n')[i].strip() + '\n'
+                    '    ' + str(self.control.data_vars).split('\n')[i].strip() + '\n'
                 )
         else:
             summary += '    None\n'
@@ -130,17 +129,24 @@ class PredictionEnsemble:
                      ["goddard2013"]'
                 )
         elif isinstance(smooth_kws, dict):
-            non_time_dims = [dim for dim in smooth_kws.keys() if dim not in [
-                'time', 'lead']]
+            non_time_dims = [
+                dim for dim in smooth_kws.keys() if dim not in ['time', 'lead']
+            ]
             if len(non_time_dims) > 0:
                 non_time_dims = non_time_dims[0]
             print(non_time_dims, 'non_time_dims')
             # goddard when time_dim and lon/lat given
-            if ('lon' in smooth_kws or 'lat' in smooth_kws) and ('lead' in smooth_kws or 'time' in smooth_kws):
+            if ('lon' in smooth_kws or 'lat' in smooth_kws) and (
+                'lead' in smooth_kws or 'time' in smooth_kws
+            ):
                 smooth_fct = smooth_goddard_2013
             # fail goddard and fall back to xrcoarsen when
             # coarsen dim and time_dim provided
-            elif (non_time_dims is not []) and (non_time_dims in list(self.initialized.dims)) and ('lead' in smooth_kws or 'time' in smooth_kws):
+            elif (
+                (non_time_dims is not [])
+                and (non_time_dims in list(self.initialized.dims))
+                and ('lead' in smooth_kws or 'time' in smooth_kws)
+            ):
                 smooth_fct = smooth_goddard_2013
             # else only one smoothing operation
             elif 'lon' in smooth_kws or 'lat' in smooth_kws:
@@ -157,8 +163,7 @@ class PredictionEnsemble:
                 )
         else:
             raise ValueError(
-                'Please provide kwargs as str or dict and not', type(
-                    smooth_kws)
+                'Please provide kwargs as str or dict and not', type(smooth_kws)
             )
         self.initialized = smooth_fct(self.initialized, smooth_kws)
         # check for other objects in  PredictionEnsemble

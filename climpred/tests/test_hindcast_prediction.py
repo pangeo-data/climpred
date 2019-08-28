@@ -121,20 +121,18 @@ def test_compute_hindcast(initialized_ds, reconstruction_ds, metric, comparison)
         assert not res[var]
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
-@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 def test_compute_hindcast_lead0_lead1(
-    initialized_ds, initialized_ds_lead0, reconstruction_ds, metric, comparison
+    initialized_ds, initialized_ds_lead0, reconstruction_ds
 ):
     """
     Checks that compute hindcast returns the same results with a lead-0 and lead-1
     framework.
     """
     res1 = compute_hindcast(
-        initialized_ds, reconstruction_ds, metric=metric, comparison=comparison
+        initialized_ds, reconstruction_ds, metric='rmse', comparison='e2r'
     )
     res2 = compute_hindcast(
-        initialized_ds_lead0, reconstruction_ds, metric=metric, comparison=comparison
+        initialized_ds_lead0, reconstruction_ds, metric='rmse', comparison='e2r'
     )
     assert (res1.SST.values == res2.SST.values).all()
 
@@ -152,28 +150,25 @@ def test_persistence(initialized_da, reconstruction_da, metric):
     assert not res
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
 def test_persistence_lead0_lead1(
-    initialized_ds, initialized_ds_lead0, reconstruction_ds, metric
+    initialized_ds, initialized_ds_lead0, reconstruction_ds
 ):
     """
     Checks that compute persistence returns the same results with a lead-0 and lead-1
     framework.
     """
-    res1 = compute_persistence(initialized_ds, reconstruction_ds, metric=metric)
-    res2 = compute_persistence(initialized_ds_lead0, reconstruction_ds, metric=metric)
+    res1 = compute_persistence(initialized_ds, reconstruction_ds, metric='rmse')
+    res2 = compute_persistence(initialized_ds_lead0, reconstruction_ds, metric='rmse')
     assert (res1.SST.values == res2.SST.values).all()
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
-@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
-def test_uninitialized(uninitialized_da, reconstruction_da, metric, comparison):
+def test_uninitialized(uninitialized_da, reconstruction_da):
     """
     Checks that compute uninitialized works without breaking.
     """
     res = (
         compute_uninitialized(
-            uninitialized_da, reconstruction_da, metric=metric, comparison=comparison
+            uninitialized_da, reconstruction_da, metric='rmse', comparison='e2r'
         )
         .isnull()
         .any()
@@ -181,10 +176,8 @@ def test_uninitialized(uninitialized_da, reconstruction_da, metric, comparison):
     assert not res
 
 
-@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
 def test_bootstrap_hindcast_da1d_not_nan(
-    initialized_da, uninitialized_da, reconstruction_da, metric, comparison
+    initialized_da, uninitialized_da, reconstruction_da
 ):
     """
     Checks that there are no NaNs on bootstrap hindcast of 1D da.
@@ -193,8 +186,8 @@ def test_bootstrap_hindcast_da1d_not_nan(
         initialized_da,
         uninitialized_da,
         reconstruction_da,
-        metric=metric,
-        comparison=comparison,
+        metric='rmse',
+        comparison='e2r',
         sig=50,
         bootstrap=2,
     )

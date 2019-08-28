@@ -6,7 +6,7 @@ import xarray as xr
 from .checks import has_dims
 from .constants import POSITIVELY_ORIENTED_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
-from .stats import DPP, varweighted_mean_period
+from .stats import dpp, varweighted_mean_period
 from .utils import assign_attrs
 
 
@@ -176,8 +176,8 @@ def _bootstrap_func(
     return sig_level
 
 
-def DPP_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
-    """Calc DPP significance levels from re-sampled dataset.
+def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
+    """Calc dpp significance levels from re-sampled dataset.
 
     Reference:
         * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
@@ -187,10 +187,10 @@ def DPP_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
 
     See Also:
         * climpred.bootstrap._bootstrap_func
-        * climpred.stats.DPP
+        * climpred.stats.dpp
     """
     return _bootstrap_func(
-        DPP, control, dim, sig=sig, bootstrap=bootstrap, **dpp_kwargs
+        dpp, control, dim, sig=sig, bootstrap=bootstrap, **dpp_kwargs
     )
 
 
@@ -217,6 +217,7 @@ def bootstrap_compute(
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
+    **kwargs,
 ):
     """Bootstrap compute with replacement.
 
@@ -294,6 +295,7 @@ def bootstrap_compute(
                 metric=metric,
                 comparison=comparison,
                 add_attrs=False,
+                **kwargs,
             )
         )
         # generate uninitialized ensemble from hist
@@ -308,10 +310,11 @@ def bootstrap_compute(
                 metric=metric,
                 comparison=comparison,
                 add_attrs=False,
+                **kwargs,
             )
         )
         # compute persistence skill
-        pers.append(compute_persistence(smp_hind, reference, metric=metric))
+        pers.append(compute_persistence(smp_hind, reference, metric=metric, **kwargs))
     init = xr.concat(init, dim='bootstrap')
     uninit = xr.concat(uninit, dim='bootstrap')
     pers = xr.concat(pers, dim='bootstrap')
@@ -364,6 +367,7 @@ def bootstrap_compute(
         'p': 'probability that initialized forecast performs \
                           better than reference forecast',
     }
+    metadata_dict.update(kwargs)
     results = assign_attrs(
         results,
         hind,
@@ -384,6 +388,7 @@ def bootstrap_hindcast(
     sig=95,
     bootstrap=500,
     pers_sig=None,
+    **kwargs,
 ):
     """Wrapper for bootstrap_compute for hindcasts."""
     return bootstrap_compute(
@@ -397,6 +402,7 @@ def bootstrap_hindcast(
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
+        **kwargs,
     )
 
 
@@ -408,6 +414,7 @@ def bootstrap_perfect_model(
     sig=95,
     bootstrap=500,
     pers_sig=None,
+    **kwargs,
 ):
     """Wrapper for bootstrap_compute for perfect-model in steady state."""
     return bootstrap_compute(
@@ -421,4 +428,5 @@ def bootstrap_perfect_model(
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
+        **kwargs,
     )

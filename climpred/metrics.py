@@ -131,7 +131,7 @@ def _mae(forecast, reference, dim='svd', comparison=None):
 
 def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kwargs):
     """
-    Brier score (BS) is a probabilistic accuracy metric.
+    Brier score (BS) is a probabilistic accuracy metric. Provide threshold via kwargs.
 
     .. math::
         BS = \\frac{1}{N}\\sum_{i=1}^{N}(f_i - o_i)^{2})
@@ -151,7 +151,7 @@ def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kw
         * properscoring.threshold_brier_score
     """
     if 'threshold' not in kwargs:
-        threshold = forecast.mean(['lead', 'member'])
+        threshold = forecast.mean(['lead', dim])
         warnings.warn('no threshold given in kwargs, takes mean forecast.')
     else:
         threshold = kwargs['threshold']

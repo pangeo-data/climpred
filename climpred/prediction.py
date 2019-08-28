@@ -61,6 +61,7 @@ def compute_perfect_model(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            metadata_dict=kwargs,
         )
     return skill
 
@@ -144,6 +145,7 @@ def compute_hindcast(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            metadata_dict=kwargs,
         )
     return skill
 
@@ -252,5 +254,6 @@ def compute_uninitialized(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            metadata_dict=kwargs,
         )
     return uninit_skill

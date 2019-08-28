@@ -158,6 +158,7 @@ def assign_attrs(
         'nmae',
         'uacc',
         'less',
+        'threshold_brier_score',
     ]
     if metric in dimension_less_metrics:
         skill.attrs['units'] = 'None'

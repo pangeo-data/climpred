@@ -151,7 +151,7 @@ def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kw
         * properscoring.threshold_brier_score
     """
     if 'threshold' not in kwargs:
-        threshold = forecast.mean(['lead', dim])
+        threshold = forecast.mean()
         warnings.warn('no threshold given in kwargs, takes mean forecast.')
     else:
         threshold = kwargs['threshold']

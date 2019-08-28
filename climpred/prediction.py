@@ -26,7 +26,7 @@ from .utils import (
 # --------------------------------------------#
 @is_xarray([0, 1])
 def compute_perfect_model(
-    ds, control, metric='pearson_r', comparison='m2e', add_attrs=True
+    ds, control, metric='pearson_r', comparison='m2e', add_attrs=True, **kwargs
 ):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -50,7 +50,9 @@ def compute_perfect_model(
 
     forecast, reference = comparison(ds, supervector_dim)
 
-    skill = metric(forecast, reference, dim=supervector_dim, comparison=comparison)
+    skill = metric(
+        forecast, reference, dim=supervector_dim, comparison=comparison, **kwargs
+    )
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -65,7 +67,13 @@ def compute_perfect_model(
 
 @is_xarray([0, 1])
 def compute_hindcast(
-    hind, reference, metric='pearson_r', comparison='e2r', max_dof=False, add_attrs=True
+    hind,
+    reference,
+    metric='pearson_r',
+    comparison='e2r',
+    max_dof=False,
+    add_attrs=True,
+    **kwargs
 ):
     """Compute a predictability skill score against a reference
 
@@ -125,7 +133,7 @@ def compute_hindcast(
         a['time'] = [t + i for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
-        plag.append(metric(a, b, dim='time', comparison=comparison))
+        plag.append(metric(a, b, dim='time', comparison=comparison, **kwargs))
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     # Attach climpred compute information to skill
@@ -141,7 +149,7 @@ def compute_hindcast(
 
 
 @is_xarray([0, 1])
-def compute_persistence(hind, reference, metric='pearson_r', max_dof=False):
+def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kwargs):
     """Computes the skill of a persistence forecast from a simulation.
 
     Args:
@@ -192,7 +200,7 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False):
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
-        plag.append(metric(ref, fct, dim='time', comparison=_e2c))
+        plag.append(metric(ref, fct, dim='time', comparison=_e2c, **kwargs))
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
     return pers
@@ -200,7 +208,7 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False):
 
 @is_xarray([0, 1])
 def compute_uninitialized(
-    uninit, reference, metric='pearson_r', comparison='e2r', add_attrs=True
+    uninit, reference, metric='pearson_r', comparison='e2r', add_attrs=True, **kwargs
 ):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
@@ -233,7 +241,9 @@ def compute_uninitialized(
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    uninit_skill = metric(forecast, reference, dim='time', comparison=comparison)
+    uninit_skill = metric(
+        forecast, reference, dim='time', comparison=comparison, **kwargs
+    )
     # Attach climpred compute information to skill
     if add_attrs:
         uninit_skill = assign_attrs(

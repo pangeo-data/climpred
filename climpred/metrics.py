@@ -1,5 +1,7 @@
-import numpy as np
 import warnings
+
+import numpy as np
+
 from xskillscore import (
     crps_ensemble,
     crps_gaussian,
@@ -8,6 +10,7 @@ from xskillscore import (
     pearson_r,
     pearson_r_p_value,
     rmse,
+    threshold_brier_score,
 )
 
 
@@ -124,6 +127,35 @@ def _mae(forecast, reference, dim='svd', comparison=None):
         * xskillscore.mae
     """
     return mae(forecast, reference, dim=dim)
+
+
+def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kwargs):
+    """
+    Brier score (BS) is a probabilistic accuracy metric.
+
+    .. math::
+        BS = \\frac{1}{N}\\sum_{i=1}^{N}(f_i - o_i)^{2})
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: 1
+
+    References:
+        * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
+        PROBABILITY.” Monthly Weather Review 78, no. 1 (1950).
+        https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
+
+
+    See also:
+        * properscoring.threshold_brier_score
+    """
+    if 'threshold' not in kwargs:
+        threshold = forecast.mean(['lead', 'member'])
+        warnings.warn('no threshold given in kwargs, takes mean forecast.')
+    else:
+        threshold = kwargs['threshold']
+    return threshold_brier_score(forecast, reference, threshold).mean(dim)
 
 
 def _crps(forecast, reference, dim='svd', comparison=None):

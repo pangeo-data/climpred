@@ -122,21 +122,17 @@ def test_compute_perfect_model_lead0_lead1(
     assert (res1.values == res2.values).all()
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
-def test_bootstrap_perfect_model_da1d_not_nan(
-    pm_da_ds1d, pm_da_control1d, metric, comparison
-):
+def test_bootstrap_perfect_model_da1d_not_nan(pm_da_ds1d, pm_da_control1d):
     """
     Checks that there are no NaNs on bootstrap perfect_model of 1D da.
     """
     actual = bootstrap_perfect_model(
         pm_da_ds1d,
         pm_da_control1d,
-        metric=metric,
-        comparison=comparison,
+        metric='rmse',
+        comparison='e2c',
         sig=50,
-        bootstrap=2,
+        bootstrap=10,
     )
     actual_init_skill = actual.sel(kind='init', results='skill').isnull().any()
     assert not actual_init_skill

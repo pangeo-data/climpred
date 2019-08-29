@@ -17,6 +17,7 @@ HINDCAST_METRICS = [
     'nmse',
     'ppp',
     'uacc',
+    # 'brier_score',
     'threshold_brier_score',
 ]
 
@@ -33,7 +34,7 @@ METRIC_ALIASES = {
     'u_b': 'bias',
     'nev': 'nmse',
     'msss': 'ppp',
-    'brier': 'threshold_brier_score',
+    'brier': 'brier_score',
 }
 
 # more positive skill is better than more negative

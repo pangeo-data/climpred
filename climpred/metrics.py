@@ -3,6 +3,7 @@ import warnings
 import numpy as np
 
 from xskillscore import (
+    brier_score,
     crps_ensemble,
     crps_gaussian,
     mae,
@@ -129,12 +130,30 @@ def _mae(forecast, reference, dim='svd', comparison=None):
     return mae(forecast, reference, dim=dim)
 
 
+def _brier_score(forecast, reference, dim='svd', comparison=None):
+    """Calculate Brier score for forecasts on binary reference.
+
+    ..math:
+        BS(f, o) = (f - o)^2
+
+    Reference:
+        * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
+        PROBABILITY.” Monthly Weather Review 78, no. 1 (1950).
+        https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
+
+    See also:
+        * properscoring.brier_score
+    """
+    return brier_score(reference, forecast).mean(dim)
+
+
 def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kwargs):
     """
-    Brier score (BS) is a probabilistic accuracy metric. Provide threshold via kwargs.
+    Calculate the Brier scores of an ensemble for exceeding given thresholds.
+    Provide threshold via kwargs.
 
     .. math::
-        BS = \\frac{1}{N}\\sum_{i=1}^{N}(f_i - o_i)^{2})
+        CRPS(F, x) = \int_z BS(F(z), H(z - x)) dz
 
     Range:
         * perfect: 0
@@ -155,7 +174,7 @@ def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kw
         warnings.warn('no threshold given in kwargs, takes mean forecast.')
     else:
         threshold = kwargs['threshold']
-    return threshold_brier_score(forecast, reference, threshold).mean(dim)
+    return threshold_brier_score(reference, forecast, threshold).mean(dim)
 
 
 def _crps(forecast, reference, dim='svd', comparison=None):
@@ -175,7 +194,7 @@ def _crps(forecast, reference, dim='svd', comparison=None):
     See also:
         * properscoring.crps_ensemble
     """
-    return crps_ensemble(forecast, reference).mean(dim)
+    return crps_ensemble(reference, forecast).mean(dim)
 
 
 def _crps_gaussian(forecast, mu, sig, dim='svd', comparison=None):

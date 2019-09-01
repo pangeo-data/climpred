@@ -55,6 +55,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 
 
 * :doc:`why-climpred`
+* :doc:`scope` 
 * :doc:`quick-start`
 * :doc:`examples`
 
@@ -64,6 +65,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
     :caption: Getting Started
 
     why-climpred
+    scope
     quick-start.ipynb
     examples
 

@@ -123,11 +123,20 @@ def compute_hindcast(
             Predictability with main dimension ``lag``
 
     """
+    if metric in PROBABILISTIC_METRICS:
+        if metric == 'e2r':
+            raise ValueError(
+                'Probabilistic metric `', metric, '` requires comparison `m2r`'
+            )
+        else:
+            stack = False
+    else:
+        stack = True
     nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, HINDCAST_METRICS)
 
-    forecast, reference = comparison(hind, reference)
+    forecast, reference = comparison(hind, reference, stack=stack)
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
     # take only inits for which we have references at all leahind
@@ -136,6 +145,8 @@ def compute_hindcast(
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
+    print(forecast)
+    print(reference)
     for i in forecast.lead.values:
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
@@ -144,6 +155,8 @@ def compute_hindcast(
         a['time'] = [t + i for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
+        print(a.dims)
+        print(b.dims)
         plag.append(metric(a, b, dim='time', comparison=comparison, **kwargs))
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values

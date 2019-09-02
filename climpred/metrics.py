@@ -236,7 +236,7 @@ def _crpss(forecast, reference, dim='member', comparison=None, **kwargs):
         * properscoring.crps_ensemble
     """
     # available climpred dimensions
-    rdim = ['lead', 'init']
+    rdim = [dim for dim in reference.dims if dim in ['lead', 'init']]
     mu = reference.mean(rdim)
     sig = reference.std(rdim)
 

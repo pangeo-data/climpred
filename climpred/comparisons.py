@@ -206,7 +206,7 @@ def _e2r(ds, reference):
     return forecast, reference
 
 
-def _m2r(ds, reference):
+def _m2r(ds, reference, stack=True):
     """
     Compares each member individually to a reference in HindcastEnsemble.
 
@@ -222,8 +222,9 @@ def _m2r(ds, reference):
     has_dims(ds, 'member', 'decadal prediction ensemble')
     has_min_len(ds['member'], 1, 'decadal prediction ensemble member')
     forecast = ds
-    reference = reference.expand_dims('member')
-    nMember = forecast.member.size
-    reference = reference.isel(member=[0] * nMember)
-    reference['member'] = forecast['member']
+    if stack:
+        reference = reference.expand_dims('member')
+        nMember = forecast.member.size
+        reference = reference.isel(member=[0] * nMember)
+        reference['member'] = forecast['member']
     return forecast, reference

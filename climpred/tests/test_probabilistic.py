@@ -1,5 +1,5 @@
 import pytest
-from climpred.constants import METRICS_PROBABISTIC
+from climpred.constants import PROBABILISTIC_METRICS
 from climpred.prediction import compute_perfect_model
 from climpred.tutorial import load_dataset
 
@@ -21,7 +21,7 @@ def pm_da_control1d():
 
 
 @pytest.mark.parametrize('comparison', ['m2c', 'm2m'])
-@pytest.mark.parametrize('metric', METRICS_PROBABISTIC)
+@pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 def test_compute_perfect_model_da1d_not_nan_probabilistic(
     pm_da_ds1d, pm_da_control1d, metric, comparison
 ):

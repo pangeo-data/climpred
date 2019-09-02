@@ -1,7 +1,6 @@
 import pytest
-
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import PM_METRICS
+from climpred.constants import DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
@@ -63,7 +62,7 @@ def test_pvalue_from_bootstrapping(pm_da_ds1d, pm_da_control1d, metric):
     assert actual < 2 * (1 - sig / 100)
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS)
 def test_compute_persistence_ds1d_not_nan(pm_ds_ds1d, pm_ds_control1d, metric):
     """
     Checks that there are no NaNs on persistence forecast of 1D time series.
@@ -75,7 +74,7 @@ def test_compute_persistence_ds1d_not_nan(pm_ds_ds1d, pm_ds_control1d, metric):
         assert not actual[var]
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS)
 def test_compute_persistence_lead0_lead1(
     pm_da_ds1d, pm_da_ds1d_lead0, pm_da_control1d, metric
 ):
@@ -88,7 +87,7 @@ def test_compute_persistence_lead0_lead1(
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS)
 def test_compute_perfect_model_da1d_not_nan(
     pm_da_ds1d, pm_da_control1d, comparison, metric
 ):
@@ -106,7 +105,7 @@ def test_compute_perfect_model_da1d_not_nan(
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS)
 def test_compute_perfect_model_lead0_lead1(
     pm_da_ds1d, pm_da_ds1d_lead0, pm_da_control1d, comparison, metric
 ):

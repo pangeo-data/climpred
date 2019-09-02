@@ -5,11 +5,12 @@ import xarray as xr
 from .checks import is_xarray
 from .comparisons import _e2c
 from .constants import (
+    DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
-    METRICS_PROBABISTIC,
     PM_COMPARISONS,
     PM_METRICS,
+    PROBABILISTIC_METRICS,
 )
 from .utils import (
     assign_attrs,
@@ -46,7 +47,7 @@ def compute_perfect_model(
 
     """
     supervector_dim = 'svd'
-    if metric in METRICS_PROBABISTIC:
+    if metric in PROBABILISTIC_METRICS:
         if comparison is ['e2c', 'm2e']:
             raise ValueError(
                 'Probabilistic metrics cannot work with comparison', comparison
@@ -185,11 +186,11 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kw
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
-    if metric in METRICS_PROBABISTIC:
+    if metric in PROBABILISTIC_METRICS:
         raise ValueError(
             'probabilistic metric ', metric, 'cannot compute persistence forecast.'
         )
-    metric = get_metric_function(metric, HINDCAST_METRICS)
+    metric = get_metric_function(metric, DETERMINISTIC_HINDCAST_METRICS)
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
     if [0] in hind.lead.values:
@@ -250,7 +251,7 @@ def compute_uninitialized(
 
     """
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
-    metric = get_metric_function(metric, HINDCAST_METRICS)
+    metric = get_metric_function(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, reference = comparison(uninit, reference)
     # Find common times between two for proper comparison.
     common_time = intersect(forecast['time'].values, reference['time'].values)

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import _m2c
-from climpred.constants import PM_COMPARISONS, PM_METRICS
+from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
 from climpred.metrics import _pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
@@ -11,7 +11,7 @@ from climpred.utils import get_comparison_function, get_metric_function, interse
 
 def test_get_metric_function():
     """Test if passing in a string gets the right metric function."""
-    actual = get_metric_function('pearson_r', PM_METRICS)
+    actual = get_metric_function('pearson_r', DETERMINISTIC_PM_METRICS)
     expected = _pearson_r
     assert actual == expected
 
@@ -19,7 +19,7 @@ def test_get_metric_function():
 def test_get_metric_function_fail():
     """Test if passing something not in the dict raises the right error."""
     with pytest.raises(KeyError) as excinfo:
-        get_metric_function('not_metric', PM_METRICS)
+        get_metric_function('not_metric', DETERMINISTIC_PM_METRICS)
     assert 'Specify metric from' in str(excinfo.value)
 
 

@@ -1,4 +1,4 @@
-HINDCAST_METRICS = [
+DETERMINISTIC_HINDCAST_METRICS = [
     'pearson_r',
     'pearson_r_p_value',
     'rmse',
@@ -9,20 +9,16 @@ HINDCAST_METRICS = [
     'bias',
     'std_ratio',
     'bias_slope',
-    'crps',
-    'crpss',
     'less',
     'nmae',
     'nrmse',
     'nmse',
     'ppp',
     'uacc',
-    # 'brier_score',
-    'threshold_brier_score',
 ]
 
-PM_METRICS = HINDCAST_METRICS.copy()
-PM_METRICS.remove('less')
+DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
+DETERMINISTIC_PM_METRICS.remove('less')
 
 METRIC_ALIASES = {
     'pr': 'pearson_r',
@@ -48,7 +44,27 @@ POSITIVELY_ORIENTED_METRICS = [
     'msss',
 ]
 
-METRICS_PROBABISTIC = ['threshold_brier_score', 'crps', 'crpss']
+DIMENSIONLESS_METRICS = [
+    'pearson_r',
+    'pearson_r_p_value',
+    'crpss',
+    'msss_murphy',
+    'std_ratio',
+    'bias_slope',
+    'conditional_bias',
+    'ppp',
+    'nrmse',
+    'nmse',
+    'nmae',
+    'uacc',
+    'less',
+    'threshold_brier_score',
+]
+
+PROBABILISTIC_METRICS = ['threshold_brier_score', 'crps', 'crpss']
+
+HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
+PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
 
 HINDCAST_COMPARISONS = ['e2r', 'm2r']
 PM_COMPARISONS = ['m2c', 'e2c', 'm2m', 'm2e']

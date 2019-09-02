@@ -7,11 +7,12 @@ import xarray as xr
 from . import comparisons, metrics
 from .checks import is_in_list
 from .constants import (
+    DETERMINISTIC_HINDCAST_METRICS,
+    DETERMINISTIC_PM_METRICS,
+    DIMENSIONLESS_METRICS,
     HINDCAST_COMPARISONS,
-    HINDCAST_METRICS,
     METRIC_ALIASES,
     PM_COMPARISONS,
-    PM_METRICS,
 )
 
 
@@ -135,7 +136,7 @@ def assign_attrs(
         skill.attrs['number_of_members'] = ds.member.size
 
     ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
-    ALL_METRICS = HINDCAST_METRICS + PM_METRICS
+    ALL_METRICS = DETERMINISTIC_HINDCAST_METRICS + DETERMINISTIC_PM_METRICS
     comparison = get_comparison_function(comparison, ALL_COMPARISONS).__name__.lstrip(
         '_'
     )
@@ -144,23 +145,7 @@ def assign_attrs(
     skill.attrs['comparison'] = comparison
 
     # adapt units
-    dimension_less_metrics = [
-        'pearson_r',
-        'pearson_r_p_value',
-        'crpss',
-        'msss_murphy',
-        'std_ratio',
-        'bias_slope',
-        'conditional_bias',
-        'ppp',
-        'nrmse',
-        'nmse',
-        'nmae',
-        'uacc',
-        'less',
-        'threshold_brier_score',
-    ]
-    if metric in dimension_less_metrics:
+    if metric in DIMENSIONLESS_METRICS:
         skill.attrs['units'] = 'None'
     if metric == 'mse' and 'units' in skill.attrs:
         skill.attrs['units'] = f"({skill.attrs['units']})^2"

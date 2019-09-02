@@ -2,7 +2,7 @@
 Changelog History
 =================
 
-climpred v1.0.2 (2019-07-##)
+climpred v1.1 (2019-08-##)
 ============================
 
 Features
@@ -15,6 +15,11 @@ Internals/Minor Fixes
 - Add `matplotlib` as a main dependency so that a direct pip installation works (:pr:`211`) `Riley X. Brady`_.
 - ``climpred`` is now installable from conda-forge (:pr:`212`) `Riley X. Brady`_.
 - Fix erroneous descriptions of sample datasets (:pr:`226`) `Riley X. Brady`_.
+- Benchmarking time and peak memory of compute functions with `asv` (:pr:`231`) `Aaron Spring`_
+
+Documentation
+-------------
+- Add scope of package to docs for clarity for users and developers. (:pr:`235`) `Riley X. Brady`_.
 
 climpred v1.0.1 (2019-07-04)
 ============================

@@ -4,7 +4,7 @@
     "version": 1,
 
     // The name of the project being benchmarked
-    "project": "project",
+    "project": "climpred",
 
     // The project's homepage
     "project_url": "https://climpred.readthedocs.io/",

@@ -14,7 +14,7 @@ Internals/Minor Fixes
 - Add `matplotlib` as a main dependency so that a direct pip installation works (:pr:`211`) `Riley X. Brady`_.
 - ``climpred`` is now installable from conda-forge (:pr:`212`) `Riley X. Brady`_.
 - Fix erroneous descriptions of sample datasets (:pr:`226`) `Riley X. Brady`_.
-- Benchmarking time and peak memory of compute functions with `asv` (:pr:`2xx`) `Aaron Spring`_
+- Benchmarking time and peak memory of compute functions with `asv` (:pr:`231`) `Aaron Spring`_
 
 Documentation
 -------------

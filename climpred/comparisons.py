@@ -1,5 +1,4 @@
 import numpy as np
-
 import xarray as xr
 
 from .checks import has_dims, has_min_len
@@ -54,7 +53,7 @@ def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
 # PERFECT-MODEL COMPARISONS
 # based on supervector approach
 # --------------------------------------------#
-def _m2m(ds, supervector_dim='svd'):
+def _m2m(ds, supervector_dim='svd', stack=True):
     """
     Create two supervectors to compare all members to all others in turn.
 
@@ -74,22 +73,30 @@ def _m2m(ds, supervector_dim='svd'):
         # drop the member being reference
         ds_reduced = _drop_members(ds, rmd_member=[m])
         reference = ds.sel(member=m).squeeze()
-        for m2 in ds_reduced.member:
+        if stack:
+            for m2 in ds_reduced.member:
+                reference_list.append(reference)
+                forecast_list.append(ds_reduced.sel(member=m2).squeeze())
+        else:
             reference_list.append(reference)
-            forecast_list.append(ds_reduced.sel(member=m2).squeeze())
+            forecast_list.append(ds_reduced)
 
-    reference = xr.concat(reference_list, supervector_dim2).stack(
-        svd=(supervector_dim2, 'init')
-    )
+    if stack:
+        reference = xr.concat(reference_list, supervector_dim2).stack(
+            svd=(supervector_dim2, 'init')
+        )
+        forecast = xr.concat(forecast_list, supervector_dim2).stack(
+            svd=(supervector_dim2, 'init')
+        )
+    else:
+        reference = xr.concat(reference_list, supervector_dim)
+        forecast = xr.concat(forecast_list, supervector_dim)
     reference['svd'] = np.arange(1, 1 + reference.svd.size)
-    forecast = xr.concat(forecast_list, supervector_dim2).stack(
-        svd=(supervector_dim2, 'init')
-    )
     forecast['svd'] = np.arange(1, 1 + forecast.svd.size)
     return forecast, reference
 
 
-def _m2e(ds, supervector_dim='svd'):
+def _m2e(ds, supervector_dim='svd', stack=True):
     """
     Create two supervectors to compare all members to ensemble mean while
      leaving out the reference when creating the forecasts.
@@ -108,15 +115,18 @@ def _m2e(ds, supervector_dim='svd'):
     for m in ds.member.values:
         forecast = _drop_members(ds, rmd_member=[m]).mean('member')
         reference = ds.sel(member=m).squeeze()
-        forecast, reference = xr.broadcast(forecast, reference)
+        if stack:
+            forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
+    print('forecast_list', forecast_list[0].dims)
+    print('reference_list', reference_list[0].dims)
     reference = xr.concat(reference_list, 'init').rename({'init': supervector_dim})
     forecast = xr.concat(forecast_list, 'init').rename({'init': supervector_dim})
     return forecast, reference
 
 
-def _m2c(ds, supervector_dim='svd', control_member=None):
+def _m2c(ds, supervector_dim='svd', control_member=None, stack=True):
     """
     Create two supervectors to compare all members to control.
 
@@ -136,13 +146,16 @@ def _m2c(ds, supervector_dim='svd', control_member=None):
     reference = ds.isel(member=control_member).squeeze()
     # drop the member being reference
     ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    forecast, reference = xr.broadcast(ds_dropped, reference)
-    forecast = _stack_to_supervector(forecast, new_dim=supervector_dim)
-    reference = _stack_to_supervector(reference, new_dim=supervector_dim)
+    if stack:
+        forecast, reference = xr.broadcast(ds_dropped, reference)
+        forecast = _stack_to_supervector(forecast, new_dim=supervector_dim)
+        reference = _stack_to_supervector(reference, new_dim=supervector_dim)
+    else:
+        forecast = ds_dropped
     return forecast, reference
 
 
-def _e2c(ds, supervector_dim='svd', control_member=None):
+def _e2c(ds, supervector_dim='svd', control_member=None, stack=True):
     """
     Create two supervectors to compare ensemble mean to control.
 

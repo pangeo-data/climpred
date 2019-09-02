@@ -1,11 +1,12 @@
 import warnings
 
 import numpy as np
-
+from scipy.stats import norm
 from xskillscore import (
     brier_score,
     crps_ensemble,
     crps_gaussian,
+    crps_quadrature,
     mae,
     mse,
     pearson_r,
@@ -13,6 +14,8 @@ from xskillscore import (
     rmse,
     threshold_brier_score,
 )
+
+# TODO: remove comparison=None
 
 
 def _get_norm_factor(comparison):
@@ -147,7 +150,9 @@ def _brier_score(forecast, reference, dim='svd', comparison=None):
     return brier_score(reference, forecast).mean(dim)
 
 
-def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kwargs):
+def _threshold_brier_score(
+    forecast, reference, dim='member', comparison=None, **kwargs
+):
     """
     Calculate the Brier scores of an ensemble for exceeding given thresholds.
     Provide threshold via kwargs.
@@ -170,14 +175,14 @@ def _threshold_brier_score(forecast, reference, dim='svd', comparison=None, **kw
         * properscoring.threshold_brier_score
     """
     if 'threshold' not in kwargs:
-        threshold = forecast.mean()
-        warnings.warn('no threshold given in kwargs, takes mean forecast.')
+        raise ValueError('Please provide threshold.')
     else:
         threshold = kwargs['threshold']
-    return threshold_brier_score(reference, forecast, threshold).mean(dim)
+    # switch args b/c xskillscore.threshold_brier_score(obs, forecasts)
+    return threshold_brier_score(reference, forecast, threshold)
 
 
-def _crps(forecast, reference, dim='svd', comparison=None):
+def _crps(forecast, reference, comparison=None, **kwargs):
     """
     Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
 
@@ -194,14 +199,21 @@ def _crps(forecast, reference, dim='svd', comparison=None):
     See also:
         * properscoring.crps_ensemble
     """
-    return crps_ensemble(reference, forecast).mean(dim)
+    # switch positions because xskillscore.crps_ensemble(obs, forecasts)
+    return crps_ensemble(reference, forecast)
 
 
-def _crps_gaussian(forecast, mu, sig, dim='svd', comparison=None):
-    return crps_gaussian(forecast, mu, sig).mean(dim)
+def _crps_gaussian(forecast, mu, sig, comparison=None, **kwargs):
+    return crps_gaussian(forecast, mu, sig)
 
 
-def _crpss(forecast, reference, dim='svd', comparison=None):
+def _crps_quadrature(
+    forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, comparison=None, **kwargs
+):
+    return crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
+
+
+def _crpss(forecast, reference, dim='member', comparison=None, **kwargs):
     """
     Continuous Ranked Probability Skill Score is strictly proper.
 
@@ -225,9 +237,35 @@ def _crpss(forecast, reference, dim='svd', comparison=None):
     See also:
         * properscoring.crps_ensemble
     """
-    mu = reference.mean(dim)
-    sig = reference.std(dim)
-    ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim)
+    # available climpred dimensions
+    rdim = ['lead', 'init']
+    mu = reference.mean(rdim)
+    sig = reference.std(rdim)
+
+    if 'gaussian' in kwargs:
+        gaussian = kwargs['gaussian']
+    else:
+        gaussian = True
+    if gaussian:
+        ref_skill = _crps_gaussian(forecast, mu, sig)
+    else:
+        if 'cdf_or_dist' in kwargs:
+            cdf_or_dist = kwargs['cdf_or_dist']
+        else:
+            cdf_or_dist = norm
+        if 'xmin' in kwargs:
+            xmin = kwargs['xmin']
+        else:
+            xmin = None
+        if 'xmax' in kwargs:
+            xmax = kwargs['xmax']
+        else:
+            xmax = None
+        if 'tol' in kwargs:
+            tol = kwargs['tol']
+        else:
+            tol = 1e6
+        ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
     forecast_skill = _crps(forecast, reference, dim=dim)
     skill_score = (ref_skill - forecast_skill) / ref_skill
     return skill_score

@@ -48,5 +48,7 @@ POSITIVELY_ORIENTED_METRICS = [
     'msss',
 ]
 
+METRICS_PROBABISTIC = ['threshold_brier_score', 'crps', 'crpss']
+
 HINDCAST_COMPARISONS = ['e2r', 'm2r']
 PM_COMPARISONS = ['m2c', 'e2c', 'm2m', 'm2e']

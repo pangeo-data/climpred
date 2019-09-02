@@ -7,6 +7,7 @@ from .comparisons import _e2c
 from .constants import (
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
+    METRICS_PROBABISTIC,
     PM_COMPARISONS,
     PM_METRICS,
 )
@@ -45,10 +46,18 @@ def compute_perfect_model(
 
     """
     supervector_dim = 'svd'
+    if metric in METRICS_PROBABISTIC:
+        if comparison is ['e2c', 'm2e']:
+            raise ValueError(
+                'Probabilistic metrics cannot work with comparison', comparison
+            )
+        stack = False
+    else:
+        stack = True
     metric = get_metric_function(metric, PM_METRICS)
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
-    forecast, reference = comparison(ds, supervector_dim)
+    forecast, reference = comparison(ds, supervector_dim, stack=stack)
 
     skill = metric(
         forecast, reference, dim=supervector_dim, comparison=comparison, **kwargs
@@ -176,6 +185,10 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kw
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
+    if metric in METRICS_PROBABISTIC:
+        raise ValueError(
+            'probabilistic metric ', metric, 'cannot compute persistence forecast.'
+        )
     metric = get_metric_function(metric, HINDCAST_METRICS)
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.

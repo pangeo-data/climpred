@@ -119,10 +119,13 @@ def test_compute_uninitialized(
     hindcast = HindcastEnsemble(initialized_ds)
     hindcast.add_reference(reconstruction_ds, 'reconstruction')
     hindcast.add_uninitialized(uninitialized_ds)
-    hindcast.compute_uninitialized()  # single reference, no declaration of name.
+    # single reference, no declaration of name.
+    hindcast.compute_uninitialized()
     hindcast.add_reference(observations_ds, 'observations')
-    hindcast.compute_uninitialized()  # multiple references, no name declaration.
-    hindcast.compute_uninitialized('reconstruction')  # multiple references, call one.
+    # multiple references, no name declaration.
+    hindcast.compute_uninitialized()
+    # multiple references, call one.
+    hindcast.compute_uninitialized('reconstruction')
     hindcast.compute_uninitialized(metric='rmse', comparison='m2r')
 
 

@@ -61,7 +61,7 @@ DIMENSIONLESS_METRICS = [
     'threshold_brier_score',
 ]
 
-PROBABILISTIC_METRICS = ['threshold_brier_score', 'crps', 'crpss']
+PROBABILISTIC_METRICS = ['threshold_brier_score', 'crps', 'crpss', 'brier_score']
 
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS

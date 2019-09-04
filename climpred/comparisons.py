@@ -71,7 +71,11 @@ def _m2m(ds, supervector_dim='svd', stack=True):
     forecast_list = []
     for m in ds.member.values:
         # drop the member being reference
-        ds_reduced = _drop_members(ds, rmd_member=[m])
+        if stack:
+            ds_reduced = _drop_members(ds, rmd_member=[m])
+        else:
+            # TODO: when not stacked I have one identical
+            ds_reduced = ds
         reference = ds.sel(member=m).squeeze()
         if stack:
             for m2 in ds_reduced.member:
@@ -88,11 +92,14 @@ def _m2m(ds, supervector_dim='svd', stack=True):
         forecast = xr.concat(forecast_list, supervector_dim2).stack(
             svd=(supervector_dim2, 'init')
         )
+        reference['svd'] = np.arange(1, 1 + reference.svd.size)
+        forecast['svd'] = np.arange(1, 1 + forecast.svd.size)
     else:
+        supervector_dim = 'forecast_member'
         reference = xr.concat(reference_list, supervector_dim)
         forecast = xr.concat(forecast_list, supervector_dim)
-    reference['svd'] = np.arange(1, 1 + reference.svd.size)
-    forecast['svd'] = np.arange(1, 1 + forecast.svd.size)
+        reference[supervector_dim] = np.arange(1, 1 + reference[supervector_dim].size)
+        forecast[supervector_dim] = np.arange(1, 1 + forecast[supervector_dim].size)
     return forecast, reference
 
 
@@ -115,12 +122,9 @@ def _m2e(ds, supervector_dim='svd', stack=True):
     for m in ds.member.values:
         forecast = _drop_members(ds, rmd_member=[m]).mean('member')
         reference = ds.sel(member=m).squeeze()
-        if stack:
-            forecast, reference = xr.broadcast(forecast, reference)
+        forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
-    print('forecast_list', forecast_list[0].dims)
-    print('reference_list', reference_list[0].dims)
     reference = xr.concat(reference_list, 'init').rename({'init': supervector_dim})
     forecast = xr.concat(forecast_list, 'init').rename({'init': supervector_dim})
     return forecast, reference
@@ -187,7 +191,7 @@ def _e2c(ds, supervector_dim='svd', control_member=None, stack=True):
 # REFERENCE COMPARISONS
 # based on supervector approach
 # --------------------------------------------#
-def _e2r(ds, reference):
+def _e2r(ds, reference, stack=True):
     """
     Compare the ensemble mean forecast to a reference in HindcastEnsemble.
 

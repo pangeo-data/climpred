@@ -9,7 +9,6 @@ from .constants import (
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
     PM_COMPARISONS,
-    PM_METRICS,
     PROBABILISTIC_METRICS,
 )
 from .utils import (
@@ -53,16 +52,37 @@ def compute_perfect_model(
                 'Probabilistic metrics cannot work with comparison', comparison
             )
         stack = False
+    elif 'stack' in kwargs:
+        stack = kwargs['stack']
     else:
         stack = True
-    metric = get_metric_function(metric, PM_METRICS)
+
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
     forecast, reference = comparison(ds, supervector_dim, stack=stack)
 
+    # in case you want to compute skill over member dim
+    if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):
+        print('deterministic: apply metric over member dim')
+        forecast, reference = xr.broadcast(forecast, reference)
+        if comparison.__name__ == '_m2m':
+            supervector_dim = 'forecast_member'
+            print('use forecast_member')
+        else:
+            supervector_dim = 'member'
+
+    metric = get_metric_function(metric, HINDCAST_METRICS)
+
     skill = metric(
         forecast, reference, dim=supervector_dim, comparison=comparison, **kwargs
     )
+
+    # correction for distance based metrics in m2m comparison
+    if comparison.__name__ == 'm2m' and not stack:
+        skill = skill.mean('forecast_member')
+        if metric.__name__ in ['rmse', 'mse', 'mae']:
+            M = forecast.member.size
+            skill = skill * (M / (M - 1))
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -130,13 +150,32 @@ def compute_hindcast(
             )
         else:
             stack = False
+    elif 'stack' in kwargs:
+        stack = kwargs['stack']
     else:
         stack = True
     nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
-    metric = get_metric_function(metric, HINDCAST_METRICS)
 
     forecast, reference = comparison(hind, reference, stack=stack)
+
+    print(forecast.dims != reference.dims)
+    print(not stack)
+    print(metric in DETERMINISTIC_HINDCAST_METRICS)
+    # in case you want to compute skill over member dim
+    # and (metric not in PROBABILISTIC_METRICS):
+    if (
+        (forecast.dims != reference.dims)
+        and not stack
+        and metric in DETERMINISTIC_HINDCAST_METRICS
+    ):
+        print('deterministic: apply metric over member dim')
+        dim_to_apply_metric_to = 'member'
+    else:
+        dim_to_apply_metric_to = 'time'
+
+    metric = get_metric_function(metric, HINDCAST_METRICS)
+
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
     # take only inits for which we have references at all leahind
@@ -145,8 +184,6 @@ def compute_hindcast(
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
-    print(forecast)
-    print(reference)
     for i in forecast.lead.values:
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
@@ -155,11 +192,17 @@ def compute_hindcast(
         a['time'] = [t + i for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
-        print(a.dims)
-        print(b.dims)
-        plag.append(metric(a, b, dim='time', comparison=comparison, **kwargs))
+        # broadcast dims when apply over member
+        if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
+            a, b = xr.broadcast(a, b)
+        plag.append(
+            metric(a, b, dim=dim_to_apply_metric_to, comparison=comparison, **kwargs)
+        )
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
+    # rename back to init
+    if 'time' in skill.dims and dim_to_apply_metric_to == 'member':
+        skill = skill.rename({'time': 'init'})
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(

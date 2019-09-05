@@ -1,4 +1,5 @@
 import pytest
+from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
@@ -63,7 +64,6 @@ def test_reset_temporal_axis_lead(pm_da_ds3d):
         0
     ]
     first_expected = f'{first_ori}-{first_ori+smooth*1-1}'
-    print(first_actual, first_expected)
     assert first_actual == first_expected
 
 
@@ -96,9 +96,9 @@ def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_no_coarsen_kws(
     coarsen_kws = {'x': 2, 'y': 2}
     actual = spatial_smoothing_xrcoarsen(da, coarsen_kws=None)
     for dim in coarsen_kws:
-        actual_x = actual[dim].size
-        expected_x = pm_da_control3d[dim].size // coarsen_kws[dim]
-        assert actual_x == expected_x
+        actual_dim_size = actual[dim].size
+        expected_dim_size = pm_da_control3d[dim].size // coarsen_kws[dim]
+        assert actual_dim_size == expected_dim_size
 
 
 def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_CESM(fosi_3d):
@@ -139,7 +139,19 @@ def test_smooth_goddard_2013(pm_da_control3d):
     smooth_Goddard_2013."""
     da = pm_da_control3d
     actual = smooth_goddard_2013(da)
+    # test that x, y not in dims
+    assert 'x' not in actual.dims
+    assert 'y' not in actual.dims
     # tests whether nlat, nlon got reduced
-    assert actual.time.size <= da.time.size
-    assert actual.lon.size <= da.lon.size
-    assert actual.lat.size <= da.lat.size
+    assert actual.time.size < da.time.size
+    assert actual.lon.size < da.lon.size
+    assert actual.lat.size < da.lat.size
+
+
+def test_compute_after_smooth_goddard_2013(pm_da_ds3d, pm_da_control3d):
+    """Test compute_perfect_model works after smoothings."""
+    pm_da_control3d = smooth_goddard_2013(pm_da_control3d)
+    pm_da_ds3d = smooth_goddard_2013(pm_da_ds3d)
+    actual = compute_perfect_model(pm_da_ds3d, pm_da_control3d)
+    north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
+    assert not north_atlantic.isnull().any()

@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 
 from .checks import is_xarray
@@ -76,18 +78,26 @@ def spatial_smoothing_xesmf(
         """
 
         def check_lon_lat_present(da):
-            if 'lat' in ds.coords and 'lon' in ds.coords:
-                return da
-            elif 'lat_b' in ds.coords and 'lon_b' in ds.coords:
-                return da
-            # for CESM POP grid
-            elif 'TLAT' in ds.coords and 'TLONG' in ds.coords:
-                da = da.rename({'TLAT': 'lat', 'TLONG': 'lon'})
-                return da
+            if method == 'conservative':
+                if 'lat_b' in ds.coords and 'lon_b' in ds.coords:
+                    return da
+                else:
+                    raise ValueError(
+                        'if method == "conservative", lat_b and lon_b are required.'
+                    )
             else:
-                raise ValueError(
-                    'lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename.'
-                )
+                if 'lat' in ds.coords and 'lon' in ds.coords:
+                    return da
+                elif 'lat_b' in ds.coords and 'lon_b' in ds.coords:
+                    return da
+                # for CESM POP grid
+                elif 'TLAT' in ds.coords and 'TLONG' in ds.coords:
+                    da = da.rename({'TLAT': 'lat', 'TLONG': 'lon'})
+                    return da
+                else:
+                    raise ValueError(
+                        'lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename.'
+                    )
 
         da = check_lon_lat_present(da)
         grid_out = {
@@ -97,12 +107,15 @@ def spatial_smoothing_xesmf(
         regridder = xe.Regridder(da, grid_out, **kwargs)
         return regridder(da)
 
-    if 'lon' not in d_lon_lat_kws:
+    # check if lon or/and lat missing
+    if ('lon' in d_lon_lat_kws) and ('lat' in d_lon_lat_kws):
+        pass
+    elif ('lon' not in d_lon_lat_kws) and ('lat' in d_lon_lat_kws):
         d_lon_lat_kws['lon'] = d_lon_lat_kws['lat']
-    elif 'lat' not in d_lon_lat_kws:
+    elif ('lat' not in d_lon_lat_kws) and ('lon' in d_lon_lat_kws):
         d_lon_lat_kws['lat'] = d_lon_lat_kws['lon']
     else:
-        raise ValueError('please provide either `lon` or `lat` in d_lon_lat_kws.')
+        raise ValueError('please provide either `lon` or/and `lat` in d_lon_lat_kws.')
 
     kwargs = {
         'd_lon': d_lon_lat_kws['lon'],
@@ -147,27 +160,21 @@ def spatial_smoothing_xrcoarsen(ds, coarsen_kws=None, how='mean'):
         # write coarsen to dict to coarsen similar to 5x5 degree
         coarsen_kws = dict()
         step = 2
-        print(
+        for dim in spatial_dims_to_smooth:
+            coarsen_kws[dim] = step
+        warnings.warn(
             f'no coarsen_kws given. created for dims \
             {spatial_dims_to_smooth} with step {step}'
         )
-        if len(spatial_dims_to_smooth) == 2:
-            for dim in spatial_dims_to_smooth:
-                coarsen_kws[dim] = step
-        else:
-            raise ValueError(
-                f'Tried to guess coarsen_kws. Found {spatial_dims_to_smooth},\
-                  but length != 2. Please provide coarsen_kws.'
-            )
-
     # check whether coarsen dims are possible
     for dim in coarsen_kws:
         if dim not in ds.dims:
-            raise ValueError(dim, 'not in ds')
+            raise ValueError(f'{dim} not in ds')
         else:
             if ds[dim].size % coarsen_kws[dim] != 0:
                 raise ValueError(
-                    coarsen_kws[dim], 'does not divide evenly', ds[dim].size, 'in', dim
+                    f'{coarsen_kws[dim]} does not divide',
+                    f'evenly {ds[dim].size} in {dim}',
                 )
     # equivalent of doing ds.mean() if how == 'mean'
     ds_out = getattr(ds.coarsen(coarsen_kws), how)()
@@ -179,21 +186,23 @@ def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
     Reference:
-      * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
-            Gonzalez, V. Kharin, et al. “A Verification Framework for
-            Interannual-to-Decadal Predictions Experiments.” Climate
-            Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-            https://doi.org/10/f4jjvf.
+    * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
+     Gonzalez, V. Kharin, et al. “A Verification Framework for
+     Interannual - to - Decadal Predictions Experiments.” Climate
+     Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+     https: // doi.org / 10 / f4jjvf.
 
     Args:
-        ds (xr.object): input.
-        smooth_kws (dict): length of smoothing of timesteps.
-                      Defaults to {'time':4} (see Goddard et al. 2013).
-        how (str): aggregation type for smoothing. default: 'mean'
+        ds(xr.object): input.
+        smooth_kws(dict): length of smoothing of timesteps.
+                          Defaults to {'time': 4} (see Goddard et al. 2013).
+        how(str): aggregation type for smoothing. default: 'mean'
+        rename_dim(bool): Whether labels should be changed to
+                          `'1-(smooth-1)', '...', ...`. default: True.
 
     Returns:
-        ds_smoothed (xr.object): input with `smooth` timesteps less and
-                                 labeling '1-(smooth-1)','...', ... .
+        ds_smoothed(xr.object): input with `smooth` timesteps less
+        and labeling '1-(smooth-1)', '...', ... .
 
     """
     # unpack dict
@@ -239,18 +248,55 @@ def _reset_temporal_axis(ds_smoothed, smooth_kws={'time': 4}):
 
 @is_xarray(0)
 def smooth_goddard_2013(
-    ds, smooth_kws={'lead': 4}, d_lon_lat_kws={'lon': 5}, coarsen_kws=None, how='mean'
+    ds,
+    smooth_kws={'lead': 4},
+    d_lon_lat_kws={'lon': 5, 'lat': 5},
+    coarsen_kws=None,
+    how='mean',
+    rename_dim=True,
 ):
-    """Wrapper to smooth as suggested by Goddard et al. 2013."""
+    """Wrapper to smooth as suggested by Goddard et al. 2013:
+        - 4-year composites
+        - 5x5 degree regridding
+
+    Reference:
+    * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
+        Gonzalez, V. Kharin, et al. “A Verification Framework for
+        Interannual - to - Decadal Predictions Experiments.” Climate
+        Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+        https: // doi.org / 10 / f4jjvf.
+
+    Args:
+        ds(xr.object): input.
+        smooth_kws(dict): length of smoothing of timesteps (applies to `lead`
+                          in forecast and `time` in reference).
+                          Default: {'time': 4} (see Goddard et al. 2013).
+        d_lon_lat_kws (dict): target grid for regridding.
+                              Default: {'lon':5 , 'lat': 5}
+        coarsen_kws (dict): grid coarsening steps in case xesmf regridding
+                            fails. default: None.
+        how(str): aggregation type for smoothing. default: 'mean'
+        rename_dim(bool): Whether labels should be changed to
+                          `'1-(smooth-1)', '...', ...`. default: True.
+
+    Returns:
+        ds_smoothed_regridded (xr.object): input with `smooth` timesteps less
+                                           and labeling '1-(smooth-1)', '...' .
+
+    """
     # first temporal smoothing
-    ds = temporal_smoothing(ds, smooth_kws=smooth_kws)
+    ds_smoothed = temporal_smoothing(ds, smooth_kws=smooth_kws)
     try:  # xesmf has priority
-        ds = spatial_smoothing_xesmf(ds, d_lon_lat_kws=d_lon_lat_kws)
+        ds_smoothed_regridded = spatial_smoothing_xesmf(
+            ds_smoothed, d_lon_lat_kws=d_lon_lat_kws
+        )
     except Exception as e:  # otherwise use coarsen
-        ds = spatial_smoothing_xrcoarsen(ds, coarsen_kws=coarsen_kws, how=how)
+        ds_smoothed_regridded = spatial_smoothing_xrcoarsen(
+            ds_smoothed, coarsen_kws=coarsen_kws, how=how
+        )
         print(
             f'spatial xesmf smoothing didnt work. \
             tried spatial_smoothing_xesmf and got {e}.\
             then spatial_smoothing_xrcoarsen'
         )
-    return ds
+    return ds_smoothed_regridded

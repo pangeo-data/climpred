@@ -108,7 +108,7 @@ class PredictionEnsemble:
 
         Attributes:
             smooth_kws (dict or str): Dictionary to specify the dims to
-                smooth combaticle with `spatial_smoothing_xesmf`,
+                smooth compatible with `spatial_smoothing_xesmf`,
                 `temporal_smoothing` or `spatial_smoothing_xrcoarsen`.
                 Shortcut for Goddard et al. 2013 recommendations:
                 'goddard2013'

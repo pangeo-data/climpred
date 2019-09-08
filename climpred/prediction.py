@@ -1,4 +1,5 @@
 import inspect
+import warnings
 
 import xarray as xr
 
@@ -27,7 +28,13 @@ from .utils import (
 # --------------------------------------------#
 @is_xarray([0, 1])
 def compute_perfect_model(
-    ds, control, metric='pearson_r', comparison='m2e', add_attrs=True, **kwargs
+    ds,
+    control,
+    metric='pearson_r',
+    comparison='m2e',
+    dim=['member', 'init'],
+    add_attrs=True,
+    **kwargs
 ):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -39,23 +46,28 @@ def compute_perfect_model(
         metric (str): `metric` name, see :py:func:`climpred.utils.get_metric_function`.
         comparison (str): `comparison` name, see
                           :py:func:`climpred.utils.get_comparison_function`.
+        dim (str or list): dimension to apply metric over. default: ['member', 'init']
         add_attrs (bool): write climpred compute args to attrs. default: True
 
     Returns:
-        skill (xarray object): skill score.
+        skill (xarray object): skill score with dimension as input without dim.
 
     """
-    supervector_dim = 'svd'
     if metric in PROBABILISTIC_METRICS:
         if comparison is ['e2c', 'm2e']:
             raise ValueError(
                 'Probabilistic metrics cannot work with comparison', comparison
             )
         stack = False
-    elif 'stack' in kwargs:
-        stack = kwargs['stack']
-    else:
+    elif set(dim) == set(['init', 'member']):
+        supervector_dim = 'svd'
         stack = True
+    else:
+        if metric in ['pr', 'pearson_r', 'acc']:
+            warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
+        stack = False
+    if not stack:
+        supervector_dim = None
 
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
@@ -63,11 +75,11 @@ def compute_perfect_model(
 
     # in case you want to compute skill over member dim
     if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):
-        print('deterministic: apply metric over member dim')
+        # broadcast when deterministic dim=member
         forecast, reference = xr.broadcast(forecast, reference)
+        # m2m creates additional forecast_member when over dim member
         if comparison.__name__ == '_m2m':
             supervector_dim = 'forecast_member'
-            print('use forecast_member')
         else:
             supervector_dim = 'member'
 
@@ -102,6 +114,7 @@ def compute_hindcast(
     reference,
     metric='pearson_r',
     comparison='e2r',
+    dim='init',
     max_dof=False,
     add_attrs=True,
     **kwargs
@@ -126,6 +139,7 @@ def compute_hindcast(
 
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
+        dim (str or list): dimension to apply metric over. default: 'init'
         nlags (int): How many lags to compute skill/potential predictability out
                      to. Default: length of `lead` dim
         max_dof (bool):
@@ -140,7 +154,7 @@ def compute_hindcast(
 
     Returns:
         skill (xarray object):
-            Predictability with main dimension ``lag``
+            Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
     if metric in PROBABILISTIC_METRICS:
@@ -150,10 +164,10 @@ def compute_hindcast(
             )
         else:
             stack = False
-    elif 'stack' in kwargs:
-        stack = kwargs['stack']
-    else:
+    elif dim == 'init':
         stack = True
+    elif dim == 'member':
+        stack = False
     nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
 
@@ -201,7 +215,7 @@ def compute_hindcast(
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     # rename back to init
-    if 'time' in skill.dims and dim_to_apply_metric_to == 'member':
+    if 'time' in skill.dims:  # when dim was 'member'
         skill = skill.rename({'time': 'init'})
     # Attach climpred compute information to skill
     if add_attrs:
@@ -280,7 +294,13 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kw
 
 @is_xarray([0, 1])
 def compute_uninitialized(
-    uninit, reference, metric='pearson_r', comparison='e2r', add_attrs=True, **kwargs
+    uninit,
+    reference,
+    metric='pearson_r',
+    comparison='e2r',
+    dim='time',
+    add_attrs=True,
+    **kwargs
 ):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
@@ -306,6 +326,8 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
+    if dim != 'time':
+        print('uninit over member')
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, reference = comparison(uninit, reference)
@@ -313,9 +335,7 @@ def compute_uninitialized(
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    uninit_skill = metric(
-        forecast, reference, dim='time', comparison=comparison, **kwargs
-    )
+    uninit_skill = metric(forecast, reference, dim=dim, comparison=comparison, **kwargs)
     # Attach climpred compute information to skill
     if add_attrs:
         uninit_skill = assign_attrs(

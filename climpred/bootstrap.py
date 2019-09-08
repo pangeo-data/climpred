@@ -94,6 +94,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
+    # uninit_hind['member'] = hind.member.values
     return uninit_hind
 
 
@@ -212,6 +213,7 @@ def bootstrap_compute(
     hist=None,
     metric='pearson_r',
     comparison='m2e',
+    dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -227,6 +229,7 @@ def bootstrap_compute(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
+        dim (str or list): dimension to apply metric over. default: 'init'
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         bootstrap (int): number of resampling iterations (bootstrap
@@ -279,14 +282,25 @@ def bootstrap_compute(
     ci_high_pers = 1 - p_pers / 2
 
     inits = hind.init.values
+    members = hind.member.values
     init = []
     uninit = []
     pers = []
+
+    if dim == 'member':
+        to_be_shuffled = members
+        shuffle_dim = 'member'
+    elif 'init' in dim:  # also allows ['init','member']
+        to_be_shuffled = inits
+        shuffle_dim = 'init'
+    print(shuffle_dim, dim, to_be_shuffled)
     # resample with replacement
     # DoTo: parallelize loop
     for _ in range(bootstrap):
-        smp = np.random.choice(inits, len(inits))
-        smp_hind = hind.sel(init=smp)
+        smp = np.random.choice(to_be_shuffled, len(to_be_shuffled))
+        smp_hind = hind.sel({shuffle_dim: smp})
+        if shuffle_dim == 'member':
+            smp_hind['member'] = np.arange(1, 1 + smp_hind.member.size)
         # compute init skill
         init.append(
             compute(
@@ -295,6 +309,7 @@ def bootstrap_compute(
                 metric=metric,
                 comparison=comparison,
                 add_attrs=False,
+                dim=dim,
                 **kwargs,
             )
         )
@@ -309,6 +324,7 @@ def bootstrap_compute(
                 reference,
                 metric=metric,
                 comparison=comparison,
+                dim=dim,
                 add_attrs=False,
                 **kwargs,
             )
@@ -330,7 +346,7 @@ def bootstrap_compute(
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric)
 
     # calc skill
-    init_skill = compute(hind, reference, metric=metric, comparison=comparison)
+    init_skill = compute(hind, reference, metric=metric, comparison=comparison, dim=dim)
     uninit_skill = uninit.mean('bootstrap')
     pers_skill = compute_persistence(hind, reference, metric=metric)
 
@@ -385,6 +401,7 @@ def bootstrap_hindcast(
     reference,
     metric='pearson_r',
     comparison='e2r',
+    dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -397,6 +414,7 @@ def bootstrap_hindcast(
         hist=hist,
         metric=metric,
         comparison=comparison,
+        dim=dim,
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
@@ -411,6 +429,7 @@ def bootstrap_perfect_model(
     control,
     metric='pearson_r',
     comparison='m2e',
+    dim=['member', 'init'],
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -423,6 +442,7 @@ def bootstrap_perfect_model(
         hist=None,
         metric=metric,
         comparison=comparison,
+        dim=dim,
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,

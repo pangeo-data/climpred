@@ -131,7 +131,7 @@ def _mae(forecast, reference, dim='svd', **kwargs):
     return mae(forecast, reference, dim=dim)
 
 
-def _brier_score(forecast, reference, dim='svd', **kwargs):
+def _brier_score(forecast, reference, **kwargs):
     """Calculate Brier score for forecasts on binary reference.
 
     ..math:
@@ -145,12 +145,18 @@ def _brier_score(forecast, reference, dim='svd', **kwargs):
     See also:
         * properscoring.brier_score
     """
-    return brier_score(reference, forecast).mean(dim)
+    if 'func' in kwargs:
+        func = kwargs['func']
+    else:
+        raise ValueError(
+            'Please provide a function `func` to be applied to comparison and \
+             reference to get values in  interval [0,1]; \
+             see properscoring.brier_score.'
+        )
+    return brier_score(func(reference), func(forecast).mean('member'))
 
 
-def _threshold_brier_score(
-    forecast, reference, dim='member', comparison=None, **kwargs
-):
+def _threshold_brier_score(forecast, reference, **kwargs):
     """
     Calculate the Brier scores of an ensemble for exceeding given thresholds.
     Provide threshold via kwargs.
@@ -162,6 +168,12 @@ def _threshold_brier_score(
         * perfect: 0
         * min: 0
         * max: 1
+
+    Args:
+        * forecast (xr.object)
+        * reference (xr.object)
+        * threshold (int, float, xr.object): Threshold to check exceedance,
+            see properscoring.threshold_brier_score (required)
 
     References:
         * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
@@ -180,7 +192,7 @@ def _threshold_brier_score(
     return threshold_brier_score(reference, forecast, threshold)
 
 
-def _crps(forecast, reference, comparison=None, **kwargs):
+def _crps(forecast, reference, **kwargs):
     """
     Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
 
@@ -201,22 +213,34 @@ def _crps(forecast, reference, comparison=None, **kwargs):
     return crps_ensemble(reference, forecast)
 
 
-def _crps_gaussian(forecast, mu, sig, comparison=None, **kwargs):
+def _crps_gaussian(forecast, mu, sig, **kwargs):
+    """CRPS assuming a guassian distribution. Helper function for CRPSS.
+    See properscoring.crps_gaussian and xskillscore.crps_gaussian."""
     return crps_gaussian(forecast, mu, sig)
 
 
-def _crps_quadrature(
-    forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, comparison=None, **kwargs
-):
+def _crps_quadrature(forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, **kwargs):
+    """CRPS assuming distribution cdf_or_dist. Helper function for CRPSS.
+    See properscoring.crps_quadrature and xskillscore.crps_quadrature."""
     return crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
 
 
-def _crpss(forecast, reference, dim='member', comparison=None, **kwargs):
+def _crpss(forecast, reference, **kwargs):
     """
     Continuous Ranked Probability Skill Score is strictly proper.
 
     .. math::
         CRPSS = \\frac{CRPS_{clim}-CRPS_{init}}{CRPS_{clim}}
+
+    Args:
+        * forecast (xr.object):
+        * reference (xr.object):
+        * gaussian (bool): Assuming gaussian distribution for baseline skill.
+                           Default: True (optional)
+        * cdf_or_dist (scipy.stats): distribution to assume if not gaussian.
+                                     default: scipy.stats.norm
+        * xmin, xmax, tol: only relevant if not gaussian
+                           see xskillscore.crps_quadrature
 
     Range:
         * perfect: 1
@@ -234,6 +258,7 @@ def _crpss(forecast, reference, dim='member', comparison=None, **kwargs):
 
     See also:
         * properscoring.crps_ensemble
+        * xskillscore.crps_ensemble
     """
     # available climpred dimensions
     rdim = [tdim for tdim in reference.dims if tdim in ['lead', 'init', 'time']]
@@ -264,7 +289,7 @@ def _crpss(forecast, reference, dim='member', comparison=None, **kwargs):
         else:
             tol = 1e6
         ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
-    forecast_skill = _crps(forecast, reference, dim=dim)
+    forecast_skill = _crps(forecast, reference)
     skill_score = (ref_skill - forecast_skill) / ref_skill
     return skill_score
 

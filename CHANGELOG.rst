@@ -9,13 +9,18 @@ Features
 --------
 - Write information about skill computation to netcdf attributes (:pr:`213`) `Aaron Spring`_
 - Add metric `brier_score` (:pr:`232`) `Aaron Spring`_
+- allow `compute_hindcast` and `compute_perfect_model` to specify which
+    dimension `dim` to calculate metric over (:pr:`232`) `Aaron Spring`_
+
 
 Bug Fixes
 ---------
-- correct implementation of probabilistic metrics from xskillscore (:pr:`232`) `Aaron Spring`_
+- correct implementation of probabilistic metrics from xskillscore, now
+    requires xskillscore>=0.05 (:pr:`232`) `Aaron Spring`_
 
 Internals/Minor Fixes
 ---------------------
+- rename .stats.DPP to dpp (:pr:`232`) `Aaron Spring`_
 - Add `matplotlib` as a main dependency so that a direct pip installation works (:pr:`211`) `Riley X. Brady`_.
 - ``climpred`` is now installable from conda-forge (:pr:`212`) `Riley X. Brady`_.
 - Fix erroneous descriptions of sample datasets (:pr:`226`) `Riley X. Brady`_.

@@ -143,9 +143,23 @@ def test_bootstrap_hindcast_dim(initialized_da, uninitialized_da, observations_d
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize('dim', ('init', 'member', ['init', 'member']))
 def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison):
-    """Test whether bootstrap_hindcast calcs skill over all possible dims
+    """Test whether compute_pm calcs skill over all possible dims
     and comparisons."""
     actual = compute_perfect_model(
         pm_da_ds1d, pm_da_control1d, metric='rmse', dim=dim, comparison=comparison
     )
+    print(actual)
+    assert not actual.isnull().any()
+
+
+@pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
+@pytest.mark.parametrize('dim', ('init', 'member'))
+def test_compute_hindcast_dims(initialized_da, observations_da, dim, comparison):
+    """Test whether compute_hindcast calcs skill over all possible dims
+    and comparisons."""
+    actual = compute_hindcast(
+        initialized_da, observations_da, metric='rmse', dim=dim, comparison=comparison
+    )
+    if 'init' in actual.dims:
+        actual = actual.mean('init')
     assert not actual.isnull().any()

@@ -90,9 +90,13 @@ def compute_perfect_model(
     )
 
     # correction for distance based metrics in m2m comparison
-    if comparison.__name__ == 'm2m' and not stack:
-        skill = skill.mean('forecast_member')
-        if metric.__name__ in ['rmse', 'mse', 'mae']:
+    comparison_name = comparison.__name__
+    metric_name = metric.__name__
+    if metric_name == '_crpss' and (dim == 'member' or comparison_name == '_m2m'):
+        if 'forecast_member' in skill.dims:
+            skill = skill.mean('forecast_member')
+        if metric_name in ['_rmse', '_mse', '_mae']:
+            # m2m stack=False has one identical comparison
             M = forecast.member.size
             skill = skill * (M / (M - 1))
     # Attach climpred compute information to skill

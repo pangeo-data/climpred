@@ -43,7 +43,7 @@ def _get_norm_factor(comparison):
     return fac
 
 
-def _pearson_r(forecast, reference, dim='svd', comparison=None):
+def _pearson_r(forecast, reference, dim='svd', **kwargs):
     """
     Calculate the Anomaly Correlation Coefficient (ACC).
 
@@ -137,6 +137,13 @@ def _brier_score(forecast, reference, **kwargs):
     ..math:
         BS(f, o) = (f - o)^2
 
+    Args:
+        * forecast (xr.object)
+        * reference (xr.object)
+        * func (function): function to be applied to reference and forecasts
+                           and then mean('member') to get forecasts and
+                           reference in interval [0,1]  (required)
+
     Reference:
         * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
         PROBABILITY.” Monthly Weather Review 78, no. 1 (1950).
@@ -144,6 +151,7 @@ def _brier_score(forecast, reference, **kwargs):
 
     See also:
         * properscoring.brier_score
+        * xskillscore.brier_scoreq
     """
     if 'func' in kwargs:
         func = kwargs['func']
@@ -183,6 +191,7 @@ def _threshold_brier_score(forecast, reference, **kwargs):
 
     See also:
         * properscoring.threshold_brier_score
+        * xskillscore.threshold_brier_score
     """
     if 'threshold' not in kwargs:
         raise ValueError('Please provide threshold.')
@@ -198,8 +207,8 @@ def _crps(forecast, reference, **kwargs):
 
     Range:
         * perfect: 0
-        * max: 0
-        * else: negative
+        * min: 0
+        * max: ∞
 
     References:
         * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
@@ -208,6 +217,7 @@ def _crps(forecast, reference, **kwargs):
 
     See also:
         * properscoring.crps_ensemble
+        * xskillscore.crps_ensemble
     """
     # switch positions because xskillscore.crps_ensemble(obs, forecasts)
     return crps_ensemble(reference, forecast)
@@ -230,7 +240,7 @@ def _crpss(forecast, reference, **kwargs):
     Continuous Ranked Probability Skill Score is strictly proper.
 
     .. math::
-        CRPSS = \\frac{CRPS_{clim}-CRPS_{init}}{CRPS_{clim}}
+        CRPSS = 1 - \\frac{CRPS_{init}}{CRPS_{clim}}
 
     Args:
         * forecast (xr.object):
@@ -290,10 +300,11 @@ def _crpss(forecast, reference, **kwargs):
             tol = 1e6
         ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
     forecast_skill = _crps(forecast, reference)
-    skill_score = (ref_skill - forecast_skill) / ref_skill
+    skill_score = 1 - forecast_skill / ref_skill.mean('member')
     return skill_score
 
 
+# TODO: fit into new probabilistic framework
 def _less(forecast, reference, dim='svd', **kwargs):
     """
     Logarithmic Ensemble Spread Score.

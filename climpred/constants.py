@@ -9,7 +9,6 @@ DETERMINISTIC_HINDCAST_METRICS = [
     'bias',
     'std_ratio',
     'bias_slope',
-    'less',
     'nmae',
     'nrmse',
     'nmse',
@@ -18,7 +17,6 @@ DETERMINISTIC_HINDCAST_METRICS = [
 ]
 
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
-DETERMINISTIC_PM_METRICS.remove('less')
 
 METRIC_ALIASES = {
     'pr': 'pearson_r',
@@ -61,7 +59,13 @@ DIMENSIONLESS_METRICS = [
     'threshold_brier_score',
 ]
 
-PROBABILISTIC_METRICS = ['threshold_brier_score', 'crps', 'crpss', 'brier_score']
+PROBABILISTIC_METRICS = [
+    'threshold_brier_score',
+    'crps',
+    'crpss',
+    'brier_score',
+    'less',
+]
 
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS

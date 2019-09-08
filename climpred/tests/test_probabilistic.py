@@ -7,6 +7,8 @@ from climpred.constants import (
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 
+PROBABILISTIC_METRICS.remove('less')
+
 
 @pytest.fixture
 def pm_da_ds1d():
@@ -157,14 +159,10 @@ def test_hindcast_crpss_orientation(initialized_da, observations_da):
     """
     Checks that CRPSS hindcast as skill score > 0.
     """
-    print('M =', initialized_da.member.size)
-    print(float(initialized_da.isel(lead=0).mean()), float(observations_da.mean()))
     actual = compute_hindcast(
         initialized_da, observations_da, comparison='m2r', metric='crpss'
     )
-    print(actual)
     actual = actual.mean('init')
-    print(actual)
     assert not (actual.isel(lead=[0, 1]) < 0).any()
 
 
@@ -177,5 +175,4 @@ def test_pm_crpss_orientation(pm_da_ds1d, pm_da_control1d):
             pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss'
         )
     ).mean('init')
-    print(actual)
     assert not (actual.isel(lead=[0, 1]) < 0).any()

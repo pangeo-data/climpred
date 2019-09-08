@@ -80,15 +80,7 @@ def uninitialized_da():
     return da
 
 
-def test_compute_hindcast_less_e2r(initialized_da, reconstruction_da):
-    """Test raise KeyError for LESS e2r, because needs member."""
-    with pytest.raises(KeyError) as excinfo:
-        compute_hindcast(
-            initialized_da, reconstruction_da, metric='less', comparison='e2r'
-        )
-    assert 'LESS requires member dimension' in str(excinfo.value)
-
-
+@pytest.mark.skip(reason='less not properly implemented')
 def test_compute_hindcast_less_m2r(initialized_da, reconstruction_da):
     """Test LESS m2r runs through."""
     actual = (

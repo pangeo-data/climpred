@@ -92,7 +92,7 @@ def compute_perfect_model(
     # correction for distance based metrics in m2m comparison
     comparison_name = comparison.__name__
     metric_name = metric.__name__
-    if metric_name == '_crpss' and (dim == 'member' or comparison_name == '_m2m'):
+    if 'crps' in metric_name and comparison_name == '_m2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
         if metric_name in ['_rmse', '_mse', '_mae']:

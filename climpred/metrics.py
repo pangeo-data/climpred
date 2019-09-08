@@ -318,18 +318,13 @@ def _less(forecast, reference, dim='svd', **kwargs):
           Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
           631–43. https://doi.org/10/f9jrhw.
 
+    # TODO: not yet fully understood!
+
     Range:
         * pos: under-disperive
         * neg: over-disperive
         * perfect: 0
     """
-    if 'comparison' in kwargs:
-        comparison = kwargs['comparison']
-    if comparison.__name__ != '_m2r':
-        raise KeyError(
-            'LESS requires member dimension and therefore '
-            "compute_hindcast(comparison='m2r')"
-        )
     numerator = _mse(forecast, reference, dim='member').mean(dim)
     # not corrected for conditional bias yet
     denominator = _mse(forecast.mean('member'), reference.mean('member'), dim=dim)

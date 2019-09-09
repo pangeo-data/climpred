@@ -121,7 +121,12 @@ def test_bootstrap_pm_dim(pm_da_ds1d, pm_da_control1d):
         bootstrap=3,
     )
     assert 'init' in actual.dims
-    assert actual.isnull().any()
+    for kind in ['init', 'uninit']:
+        actualk = actual.sel(kind=kind, results='skill')
+        if 'init' in actualk.coords:
+            actualk = actualk.mean('init')
+        actualk = actualk.isnull().any()
+        assert not actualk
 
 
 def test_bootstrap_hindcast_dim(initialized_da, uninitialized_da, observations_da):
@@ -137,7 +142,12 @@ def test_bootstrap_hindcast_dim(initialized_da, uninitialized_da, observations_d
         bootstrap=3,
     )
     assert 'init' in actual.dims
-    assert actual.mean('init').isnull().any()
+    for kind in ['init', 'uninit']:
+        actualk = actual.sel(kind=kind, results='skill')
+        if 'init' in actualk.coords:
+            actualk = actualk.mean('init')
+        actualk = actualk.isnull().any()
+        assert not actualk
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
@@ -148,7 +158,6 @@ def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison):
     actual = compute_perfect_model(
         pm_da_ds1d, pm_da_control1d, metric='rmse', dim=dim, comparison=comparison
     )
-    print(actual)
     assert not actual.isnull().any()
 
 

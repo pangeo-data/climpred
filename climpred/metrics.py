@@ -15,6 +15,8 @@ from xskillscore import (
     threshold_brier_score,
 )
 
+from .constants import climpred_dims
+
 
 def _get_norm_factor(comparison):
     """Get normalization factor for PPP, NMSE, NRMSE, MSSS.
@@ -271,7 +273,7 @@ def _crpss(forecast, reference, **kwargs):
         * xskillscore.crps_ensemble
     """
     # available climpred dimensions
-    rdim = [tdim for tdim in reference.dims if tdim in ['lead', 'init', 'time']]
+    rdim = [tdim for tdim in reference.dims if tdim in climpred_dims + ['time']]
     mu = reference.mean(rdim)
     sig = reference.std(rdim)
 

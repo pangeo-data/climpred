@@ -75,3 +75,5 @@ PM_COMPARISONS = ['m2c', 'e2c', 'm2m', 'm2e']
 
 PROBABILISTIC_PM_COMPARISONS = ['m2c', 'm2m']
 PROBABILISTIC_HINDCAST_COMPARISONS = ['m2r']
+
+climpred_dims = ['init', 'member', 'lead']

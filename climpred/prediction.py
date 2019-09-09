@@ -11,6 +11,7 @@ from .constants import (
     HINDCAST_METRICS,
     PM_COMPARISONS,
     PROBABILISTIC_METRICS,
+    PROBABILISTIC_PM_COMPARISONS,
 )
 from .utils import (
     assign_attrs,
@@ -34,7 +35,7 @@ def compute_perfect_model(
     comparison='m2e',
     dim=['member', 'init'],
     add_attrs=True,
-    **kwargs
+    **kwargs,
 ):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -54,11 +55,13 @@ def compute_perfect_model(
 
     """
     if metric in PROBABILISTIC_METRICS:
-        if comparison is ['e2c', 'm2e']:
+        if comparison not in PROBABILISTIC_PM_COMPARISONS:
             raise ValueError(
-                'Probabilistic metrics cannot work with comparison', comparison
+                f'Probabilistic metric {metric} cannot work with comparison \
+                 {comparison}'
             )
         stack = False
+        # dim = 'member'
     elif set(dim) == set(['init', 'member']):
         supervector_dim = 'svd'
         stack = True
@@ -66,8 +69,9 @@ def compute_perfect_model(
         if metric in ['pr', 'pearson_r', 'acc']:
             warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
         stack = False
+
     if not stack:
-        supervector_dim = None
+        supervector_dim = dim
 
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
@@ -90,12 +94,12 @@ def compute_perfect_model(
     )
 
     # correction for distance based metrics in m2m comparison
-    comparison_name = comparison.__name__
-    metric_name = metric.__name__
-    if 'crps' in metric_name and comparison_name == '_m2m':
+    comparison_name = comparison.__name__[1:]
+    metric_name = metric.__name__[1:]
+    if metric_name in PROBABILISTIC_METRICS and comparison_name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
-        if metric_name in ['_rmse', '_mse', '_mae']:
+        if metric_name in ['rmse', 'mse', 'mae']:  # TODO: more metrics
             # m2m stack=False has one identical comparison
             M = forecast.member.size
             skill = skill * (M / (M - 1))
@@ -121,7 +125,7 @@ def compute_hindcast(
     dim='init',
     max_dof=False,
     add_attrs=True,
-    **kwargs
+    **kwargs,
 ):
     """Compute a predictability skill score against a reference
 
@@ -177,17 +181,12 @@ def compute_hindcast(
 
     forecast, reference = comparison(hind, reference, stack=stack)
 
-    print(forecast.dims != reference.dims)
-    print(not stack)
-    print(metric in DETERMINISTIC_HINDCAST_METRICS)
     # in case you want to compute skill over member dim
-    # and (metric not in PROBABILISTIC_METRICS):
     if (
         (forecast.dims != reference.dims)
         and not stack
         and metric in DETERMINISTIC_HINDCAST_METRICS
     ):
-        print('deterministic: apply metric over member dim')
         dim_to_apply_metric_to = 'member'
     else:
         dim_to_apply_metric_to = 'time'
@@ -207,15 +206,21 @@ def compute_hindcast(
             forecast, reference = reduce_time_series(forecast, reference, i)
         # take lead year i timeseries and convert to real time
         a = forecast.sel(lead=i).drop('lead')
-        a['time'] = [t + i for t in a.time.values]
+        a['time'] = [int(t + i) for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
-        plag.append(
-            metric(a, b, dim=dim_to_apply_metric_to, comparison=comparison, **kwargs)
-        )
+        # print('\n', 'forecast a', a)
+        # print('reference b', b, '\n', dim_to_apply_metric_to)
+        # probabilistic dont care about dim
+        s = metric(a, b, dim=dim_to_apply_metric_to, comparison=comparison, **kwargs)
+        if (
+            'time' in s.coords and dim_to_apply_metric_to == 'time'
+        ):  # time issue # TODO: remove
+            s = s.mean('time')
+        plag.append(s)
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     # rename back to init
@@ -304,7 +309,7 @@ def compute_uninitialized(
     comparison='e2r',
     dim='time',
     add_attrs=True,
-    **kwargs
+    **kwargs,
 ):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 

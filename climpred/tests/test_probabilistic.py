@@ -1,4 +1,5 @@
 import pytest
+from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_METRICS,
@@ -91,13 +92,13 @@ def test_compute_hindcast_probabilistic(
     Checks that compute hindcast works without breaking.
     """
     if 'threshold' in metric:
-        threshold = 10.5
+        threshold = 0.5  # initialized_da.mean()
     else:
         threshold = None
     if metric == 'brier_score':
 
         def func(x):
-            return x > 0
+            return x > 0.5
 
     else:
         func = None
@@ -110,9 +111,94 @@ def test_compute_hindcast_probabilistic(
         func=func,
     )
     # mean init because skill has still coords for init lead
-    res = res.mean('init')
+    print(res)
+    if 'init' in res.coords:
+        res = res.mean('init')
+    print(res)
     res = res.isnull().any()
     assert not res
+
+
+@pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
+@pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
+def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
+    pm_da_ds1d, pm_da_control1d, metric, comparison
+):
+    """
+    Checks that there are no NaNs on perfect model probabilistic metrics of 1D
+    time series.
+    """
+    if 'threshold' in metric:
+        threshold = 10.5
+    else:
+        threshold = None
+
+    if metric == 'brier_score':
+
+        def func(x):
+            return x > 0
+
+    else:
+        func = None
+
+    actual = bootstrap_perfect_model(
+        pm_da_ds1d,
+        pm_da_control1d,
+        comparison=comparison,
+        metric=metric,
+        threshold=threshold,
+        gaussian=True,
+        func=func,
+        bootstrap=3,
+    )
+    for kind in ['init', 'uninit']:
+        actualk = actual.sel(kind=kind, results='skill')
+        if 'init' in actualk.coords:
+            actualk = actualk.mean('init')
+        actualk = actualk.isnull().any()
+        assert not actualk
+
+
+# @pytest.mark.skip('reason=s')
+@pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
+@pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
+def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
+    initialized_da, uninitialized_da, observations_da, metric, comparison
+):
+    """
+    Checks that there are no NaNs on hindcast probabilistic metrics of 1D
+    time series.
+    """
+    if 'threshold' in metric:
+        threshold = 10.5
+    else:
+        threshold = None
+
+    if metric == 'brier_score':
+
+        def func(x):
+            return x > 0
+
+    else:
+        func = None
+
+    actual = bootstrap_hindcast(
+        initialized_da,
+        uninitialized_da,
+        observations_da,
+        comparison=comparison,
+        metric=metric,
+        threshold=threshold,
+        gaussian=True,
+        func=func,
+        bootstrap=3,
+    )
+    for kind in ['init', 'uninit']:
+        actualk = actual.sel(kind=kind, results='skill')
+        if 'init' in actualk.coords:
+            actualk = actualk.mean('init')
+        actualk = actualk.isnull().any()
+        assert not actualk
 
 
 @pytest.mark.skip(reason='takes quite long')
@@ -162,7 +248,8 @@ def test_hindcast_crpss_orientation(initialized_da, observations_da):
     actual = compute_hindcast(
         initialized_da, observations_da, comparison='m2r', metric='crpss'
     )
-    actual = actual.mean('init')
+    if 'init' in actual.coords:
+        actual = actual.mean('init')
     assert not (actual.isel(lead=[0, 1]) < 0).any()
 
 
@@ -170,9 +257,9 @@ def test_pm_crpss_orientation(pm_da_ds1d, pm_da_control1d):
     """
     Checks that CRPSS in PM as skill score > 0.
     """
-    actual = (
-        compute_perfect_model(
-            pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss'
-        )
-    ).mean('init')
+    actual = compute_perfect_model(
+        pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss'
+    )
+    if 'init' in actual.coords:
+        actual = actual.mean('init')
     assert not (actual.isel(lead=[0, 1]) < 0).any()

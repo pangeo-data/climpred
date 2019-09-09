@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 
 from .checks import has_dims
-from .constants import POSITIVELY_ORIENTED_METRICS
+from .constants import POSITIVELY_ORIENTED_METRICS, PROBABILISTIC_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import assign_attrs
@@ -293,7 +293,8 @@ def bootstrap_compute(
     elif 'init' in dim:  # also allows ['init','member']
         to_be_shuffled = inits
         shuffle_dim = 'init'
-    print(shuffle_dim, dim, to_be_shuffled)
+    else:
+        raise ValueError('Shuffle either `member` or `init`; not', dim)
     # resample with replacement
     # DoTo: parallelize loop
     for _ in range(bootstrap):
@@ -302,17 +303,22 @@ def bootstrap_compute(
         if shuffle_dim == 'member':
             smp_hind['member'] = np.arange(1, 1 + smp_hind.member.size)
         # compute init skill
-        init.append(
-            compute(
-                smp_hind,
-                reference,
-                metric=metric,
-                comparison=comparison,
-                add_attrs=False,
-                dim=dim,
-                **kwargs,
-            )
+        init_skill = compute(
+            smp_hind,
+            reference,
+            metric=metric,
+            comparison=comparison,
+            add_attrs=False,
+            dim=dim,
+            **kwargs,
         )
+        if (
+            shuffle_dim == 'init'
+            and metric in PROBABILISTIC_METRICS
+            and 'init' in init_skill.coords
+        ):
+            init_skill['init'] = hind.init.values
+        init.append(init_skill)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use reference = control
             hist = reference
@@ -330,25 +336,52 @@ def bootstrap_compute(
             )
         )
         # compute persistence skill
-        pers.append(compute_persistence(smp_hind, reference, metric=metric, **kwargs))
+        if metric not in PROBABILISTIC_METRICS:
+            pers.append(
+                compute_persistence(smp_hind, reference, metric=metric, **kwargs)
+            )
     init = xr.concat(init, dim='bootstrap')
+    if 'member' in init.coords:  # remove useless member = 0 coords after m2c
+        if init.member.size == 1:
+            del init['member']
     uninit = xr.concat(uninit, dim='bootstrap')
-    pers = xr.concat(pers, dim='bootstrap')
+    if pers != []:
+        pers = xr.concat(pers, dim='bootstrap')
+        pers_output = True
+    else:
+        pers_output = False
 
-    if set(pers.coords) != set(init.coords):
-        init, pers = xr.broadcast(init, pers)
+    if pers_output:
+        if set(pers.coords) != set(init.coords):
+            init, pers = xr.broadcast(init, pers)
+    else:
+        # set all outputs to false
+        pers = init.isnull()
 
     init_ci = _distribution_to_ci(init, ci_low, ci_high)
     uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-    pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
+    if pers_output:
+        pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
+    else:
+        pers_ci = init_ci == -999
 
     p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric)
 
     # calc skill
-    init_skill = compute(hind, reference, metric=metric, comparison=comparison, dim=dim)
+    init_skill = compute(
+        hind, reference, metric=metric, comparison=comparison, dim=dim, **kwargs
+    )
+    if 'init' in init_skill:
+        init_skill = init_skill.mean('init')
+    if 'member' in init_skill.coords:  # remove useless member = 0 coords after m2c
+        if init_skill.member.size == 1:
+            del init_skill['member']
     uninit_skill = uninit.mean('bootstrap')
-    pers_skill = compute_persistence(hind, reference, metric=metric)
+    if metric not in PROBABILISTIC_METRICS:
+        pers_skill = compute_persistence(hind, reference, metric=metric, **kwargs)
+    else:
+        pers_skill = init_skill.isnull()
 
     if set(pers_skill.coords) != set(init_skill.coords):
         init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)

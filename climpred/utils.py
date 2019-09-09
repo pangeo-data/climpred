@@ -13,6 +13,7 @@ from .constants import (
     HINDCAST_COMPARISONS,
     METRIC_ALIASES,
     PM_COMPARISONS,
+    PROBABILISTIC_METRICS,
 )
 
 
@@ -136,7 +137,11 @@ def assign_attrs(
         skill.attrs['number_of_members'] = ds.member.size
 
     ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
-    ALL_METRICS = DETERMINISTIC_HINDCAST_METRICS + DETERMINISTIC_PM_METRICS
+    ALL_METRICS = (
+        DETERMINISTIC_HINDCAST_METRICS
+        + DETERMINISTIC_PM_METRICS
+        + PROBABILISTIC_METRICS
+    )
     comparison = get_comparison_function(comparison, ALL_COMPARISONS).__name__.lstrip(
         '_'
     )
@@ -149,6 +154,14 @@ def assign_attrs(
         skill.attrs['units'] = 'None'
     if metric == 'mse' and 'units' in skill.attrs:
         skill.attrs['units'] = f"({skill.attrs['units']})^2"
+
+    # check for none attrs and remove
+    del_list = []
+    for key, value in metadata_dict.items():
+        if value is None and key != 'units':
+            del_list.append(key)
+    for entry in del_list:
+        del metadata_dict[entry]
 
     # write optional information
     if metadata_dict is None:

@@ -9,14 +9,12 @@ Features
 --------
 - Write information about skill computation to netcdf attributes (:pr:`213`) `Aaron Spring`_
 - Add metric `brier_score` (:pr:`232`) `Aaron Spring`_
-- allow `compute_hindcast` and `compute_perfect_model` to specify which
-    dimension `dim` to calculate metric over (:pr:`232`) `Aaron Spring`_
+- allow `compute_hindcast` and `compute_perfect_model` to specify which dimension `dim` to calculate metric over (:pr:`232`) `Aaron Spring`_
 
 
 Bug Fixes
 ---------
-- correct implementation of probabilistic metrics from xskillscore, now
-    requires xskillscore>=0.05 (:pr:`232`) `Aaron Spring`_
+- correct implementation of probabilistic metrics from xskillscore, now requires xskillscore>=0.05 (:pr:`232`) `Aaron Spring`_
 
 Internals/Minor Fixes
 ---------------------

@@ -153,7 +153,7 @@ def _brier_score(forecast, reference, **kwargs):
 
     See also:
         * properscoring.brier_score
-        * xskillscore.brier_scoreq
+        * xskillscore.brier_score
     """
     if 'func' in kwargs:
         func = kwargs['func']

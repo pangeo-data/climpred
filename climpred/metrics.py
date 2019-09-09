@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import xarray as xr
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
@@ -306,8 +307,7 @@ def _crpss(forecast, reference, **kwargs):
     return skill_score
 
 
-# TODO: fit into new probabilistic framework
-def _less(forecast, reference, dim='svd', **kwargs):
+def _less(forecast, reference, **kwargs):
     """
     Logarithmic Ensemble Spread Score.
 
@@ -327,11 +327,51 @@ def _less(forecast, reference, dim='svd', **kwargs):
         * neg: over-disperive
         * perfect: 0
     """
-    numerator = _mse(forecast, reference, dim='member').mean(dim)
+    dim2 = 'init'  # [i for i in forecast.dims if i != 'member']
+    if 'init' in forecast.coords:
+        dim2 = 'init'
+    elif 'time' in forecast.coords:
+        dim2 = 'time'
+
+    forecast, ref2 = xr.broadcast(forecast, reference)
+    numerator = _mse(forecast, ref2, dim='member').mean(dim2)
     # not corrected for conditional bias yet
-    denominator = _mse(forecast.mean('member'), reference.mean('member'), dim=dim)
+    denominator = _mse(forecast.mean('member'), ref2.mean('member'), dim=dim2)
     less = np.log(numerator / denominator)
     return less
+
+
+def _crpss_es(forecast, reference, **kwargs):
+    """CRPSS Ensemble Spread.
+
+    .. math:: CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o}))
+
+    References:
+        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
+          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
+          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
+          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
+          631–43. https://doi.org/10/f9jrhw.
+
+    # TODO: not yet fully understood!
+
+    Range:
+        * perfect: 0
+    """
+    rdim = [tdim for tdim in reference.dims if tdim in climpred_dims + ['time']]
+    dim2 = 'init'
+    if 'init' in forecast.coords:
+        dim2 = 'init'
+    elif 'time' in forecast.coords:
+        dim2 = 'time'
+
+    mu = reference.mean(rdim)
+    forecast, ref2 = xr.broadcast(forecast, reference)
+    sig_R = _mse(forecast, ref2, dim='member').mean(dim2)
+    sig_H = _mse(forecast.mean(dim2), ref2.mean(dim2), 'member')
+    crps_H = _crps_gaussian(forecast, mu, sig_H)
+    crps_R = _crps_gaussian(forecast, mu, sig_R)
+    return 1 - crps_H / crps_R
 
 
 def _bias(forecast, reference, dim='svd', **kwargs):

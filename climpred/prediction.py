@@ -212,8 +212,6 @@ def compute_hindcast(
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
-        # print('\n', 'forecast a', a)
-        # print('reference b', b, '\n', dim_to_apply_metric_to)
         # probabilistic dont care about dim
         s = metric(a, b, dim=dim_to_apply_metric_to, comparison=comparison, **kwargs)
         if (
@@ -335,8 +333,6 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
-    if dim != 'time':
-        print('uninit over member')
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_function(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, reference = comparison(uninit, reference)

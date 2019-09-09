@@ -8,7 +8,7 @@ from climpred.constants import (
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 
-PROBABILISTIC_METRICS.remove('less')
+# PROBABILISTIC_METRICS.remove('less')
 
 
 @pytest.fixture

@@ -60,6 +60,7 @@ DIMENSIONLESS_METRICS = [
 ]
 
 PROBABILISTIC_METRICS = [
+    'crpss_es',
     'threshold_brier_score',
     'crps',
     'crpss',

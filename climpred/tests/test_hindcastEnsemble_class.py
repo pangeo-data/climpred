@@ -19,6 +19,18 @@ def initialized_da():
 
 
 @pytest.fixture
+def fosi_3d():
+    ds = load_dataset('FOSI-SST-3D')
+    return ds
+
+
+@pytest.fixture
+def dple_3d():
+    ds = load_dataset('CESM-DP-SST-3D')
+    return ds
+
+
+@pytest.fixture
 def observations_ds():
     da = load_dataset('ERSST')
     return da
@@ -119,10 +131,13 @@ def test_compute_uninitialized(
     hindcast = HindcastEnsemble(initialized_ds)
     hindcast.add_reference(reconstruction_ds, 'reconstruction')
     hindcast.add_uninitialized(uninitialized_ds)
-    hindcast.compute_uninitialized()  # single reference, no declaration of name.
+    # single reference, no declaration of name.
+    hindcast.compute_uninitialized()
     hindcast.add_reference(observations_ds, 'observations')
-    hindcast.compute_uninitialized()  # multiple references, no name declaration.
-    hindcast.compute_uninitialized('reconstruction')  # multiple references, call one.
+    # multiple references, no name declaration.
+    hindcast.compute_uninitialized()
+    # multiple references, call one.
+    hindcast.compute_uninitialized('reconstruction')
     hindcast.compute_uninitialized(metric='rmse', comparison='m2r')
 
 
@@ -134,3 +149,41 @@ def test_compute_persistence(initialized_ds, reconstruction_ds, observations_ds)
     hindcast.compute_persistence()
     hindcast.compute_persistence('observations')
     hindcast.compute_persistence(metric='rmse')
+
+
+def test_smooth_goddard(fosi_3d, dple_3d):
+    """Test whether goddard smoothing function reduces ntime."""
+    hindcast = HindcastEnsemble(dple_3d.isel(nlat=slice(1, None)))
+    hindcast.add_reference(fosi_3d.isel(nlat=slice(1, None)), 'reconstruction')
+    hindcast.add_uninitialized(fosi_3d.isel(nlat=slice(1, None)))
+    initialized_before = hindcast.initialized
+    hindcast.smooth(smooth_kws='goddard2013')
+    actual_initialized = hindcast.initialized
+    dim = 'lead'
+    assert actual_initialized[dim].size < initialized_before[dim].size
+    for dim in ['nlon', 'nlat']:
+        assert actual_initialized[dim[1:]].size < initialized_before[dim].size
+
+
+def test_smooth_coarsen(fosi_3d, dple_3d):
+    """Test whether coarsening reduces dim.size."""
+    hindcast = HindcastEnsemble(dple_3d)
+    hindcast.add_reference(fosi_3d, 'reconstruction')
+    hindcast.add_uninitialized(fosi_3d)
+    initialized_before = hindcast.initialized
+    dim = 'nlon'
+    hindcast.smooth(smooth_kws={dim: 2})
+    actual_initialized = hindcast.initialized
+    assert initialized_before[dim].size // 2 == actual_initialized[dim].size
+
+
+def test_smooth_temporal(fosi_3d, dple_3d):
+    """Test whether coarsening reduces dim.size."""
+    hindcast = HindcastEnsemble(dple_3d)
+    hindcast.add_reference(fosi_3d, 'reconstruction')
+    hindcast.add_uninitialized(fosi_3d)
+    initialized_before = hindcast.initialized
+    dim = 'lead'
+    hindcast.smooth(smooth_kws={dim: 4})
+    actual_initialized = hindcast.initialized
+    assert initialized_before[dim].size > actual_initialized[dim].size

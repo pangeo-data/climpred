@@ -8,6 +8,7 @@ climpred v1.1 (2019-08-##)
 Features
 --------
 - Write information about skill computation to netcdf attributes(:pr:`213`) `Aaron Spring`_
+- temporal and spatial smoothing module (:pr:`224`) `Aaron Spring`_
 
 Internals/Minor Fixes
 ---------------------

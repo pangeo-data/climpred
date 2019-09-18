@@ -94,7 +94,6 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
-    # uninit_hind['member'] = hind.member.values
     return uninit_hind
 
 

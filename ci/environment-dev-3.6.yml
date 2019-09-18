@@ -9,6 +9,7 @@ dependencies:
   - dask
   - numba
   - scipy
+  - esmpy
   - matplotlib
   - bottleneck
   - netcdf4
@@ -22,6 +23,7 @@ dependencies:
   - pip
   - pip:
     - xskillscore>=0.0.5
+    - xesmf
     - pytest-cov
     - coveralls
     - sphinxcontrib-napoleon

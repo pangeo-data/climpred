@@ -2,13 +2,14 @@ from pkg_resources import DistributionNotFound, get_distribution
 
 from . import (
     bootstrap,
-    constants,
     comparisons,
+    constants,
     exceptions,
     graphics,
     metrics,
     prediction,
     relative_entropy,
+    smoothing,
     stats,
     tutorial,
 )

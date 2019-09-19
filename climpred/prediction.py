@@ -9,6 +9,7 @@ from .constants import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
+    PM_METRICS,
     PM_COMPARISONS,
     PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
@@ -35,7 +36,7 @@ def compute_perfect_model(
     comparison='m2e',
     dim=['member', 'init'],
     add_attrs=True,
-    **kwargs,
+    **metric_kwargs,
 ):
     """
     Compute a predictability skill score for a perfect-model framework
@@ -49,11 +50,17 @@ def compute_perfect_model(
                           :py:func:`climpred.utils.get_comparison_function`.
         dim (str or list): dimension to apply metric over. default: ['member', 'init']
         add_attrs (bool): write climpred compute args to attrs. default: True
+        ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
-        skill (xarray object): skill score with dimension as input without dim.
+        skill (xarray object): skill score with dimensions as input `ds`
+                               without `dim`.
 
     """
+    # if stack, comparisons return forecast with member dim and reference
+    # without member dim which is needed for probabilistic
+    # if not stack, comparisons return forecast and reference with member dim
+    # which is neeeded for deterministic
     if metric in PROBABILISTIC_METRICS:
         if comparison not in PROBABILISTIC_PM_COMPARISONS:
             raise ValueError(
@@ -63,19 +70,20 @@ def compute_perfect_model(
         stack = False
         # dim = 'member'
     elif set(dim) == set(['init', 'member']):
-        supervector_dim = 'svd'
+        dim_to_apply_metric_to = 'svd'
         stack = True
     else:
         if metric in ['pr', 'pearson_r', 'acc']:
+            # it doesnt fail though; we could also raise ValueError here
             warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
         stack = False
 
     if not stack:
-        supervector_dim = dim
+        dim_to_apply_metric_to = dim
 
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
-    forecast, reference = comparison(ds, supervector_dim, stack=stack)
+    forecast, reference = comparison(ds, dim_to_apply_metric_to, stack=stack)
 
     # in case you want to compute skill over member dim
     if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):
@@ -83,14 +91,18 @@ def compute_perfect_model(
         forecast, reference = xr.broadcast(forecast, reference)
         # m2m creates additional forecast_member when over dim member
         if comparison.__name__ == '_m2m':
-            supervector_dim = 'forecast_member'
+            dim_to_apply_metric_to = 'forecast_member'
         else:
-            supervector_dim = 'member'
+            dim_to_apply_metric_to = 'member'
 
-    metric = get_metric_function(metric, HINDCAST_METRICS)
+    metric = get_metric_function(metric, PM_METRICS)
 
     skill = metric(
-        forecast, reference, dim=supervector_dim, comparison=comparison, **kwargs
+        forecast,
+        reference,
+        dim=dim_to_apply_metric_to,
+        comparison=comparison,
+        **metric_kwargs,
     )
 
     # correction for distance based metrics in m2m comparison
@@ -99,10 +111,9 @@ def compute_perfect_model(
     if metric_name in PROBABILISTIC_METRICS and comparison_name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
-        if metric_name in ['rmse', 'mse', 'mae']:  # TODO: more metrics
-            # m2m stack=False has one identical comparison
-            M = forecast.member.size
-            skill = skill * (M / (M - 1))
+        # m2m stack=False has one identical comparison
+        M = forecast.member.size
+        skill = skill * (M / (M - 1))
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -111,7 +122,7 @@ def compute_perfect_model(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
-            metadata_dict=kwargs,
+            metadata_dict=metric_kwargs,
         )
     return skill
 
@@ -125,7 +136,7 @@ def compute_hindcast(
     dim='init',
     max_dof=False,
     add_attrs=True,
-    **kwargs,
+    **metric_kwargs,
 ):
     """Compute a predictability skill score against a reference
 
@@ -158,6 +169,7 @@ def compute_hindcast(
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
         add_attrs (bool): write climpred compute args to attrs. default: True
+        ** metric_kwargs (dict): additional keywords to be passed to metric
 
 
     Returns:
@@ -165,10 +177,14 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
+    # if stack, comparisons return forecast with member dim and reference
+    # without member dim which is needed for probabilistic
+    # if not stack, comparisons return forecast and reference with member dim
+    # which is neeeded for deterministic
     if metric in PROBABILISTIC_METRICS:
-        if metric == 'e2r':
+        if comparison == 'e2r':
             raise ValueError(
-                'Probabilistic metric `', metric, '` requires comparison `m2r`'
+                f'Probabilistic metric `{metric}` requires comparison `m2r`.'
             )
         else:
             stack = False
@@ -176,6 +192,12 @@ def compute_hindcast(
         stack = True
     elif dim == 'member':
         stack = False
+    else:
+        raise ValueError(
+            f'Please use a probabilistic metric [now {metric}] ',
+            f'and the comparison `m2r` [now {comparison}] or ',
+            f'specify dim from ["init", "member"], now: {dim}.',
+        )
     nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
 
@@ -213,7 +235,9 @@ def compute_hindcast(
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
         # probabilistic dont care about dim
-        s = metric(a, b, dim=dim_to_apply_metric_to, comparison=comparison, **kwargs)
+        s = metric(
+            a, b, dim=dim_to_apply_metric_to, comparison=comparison, **metric_kwargs
+        )
         if (
             'time' in s.coords and dim_to_apply_metric_to == 'time'
         ):  # time issue # TODO: remove
@@ -232,13 +256,15 @@ def compute_hindcast(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
-            metadata_dict=kwargs,
+            metadata_dict=metric_kwargs,
         )
     return skill
 
 
 @is_xarray([0, 1])
-def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kwargs):
+def compute_persistence(
+    hind, reference, metric='pearson_r', max_dof=False, **metric_kwargs
+):
     """Computes the skill of a persistence forecast from a simulation.
 
     Args:
@@ -253,6 +279,7 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kw
             If False (default), then slice to a common time frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+        ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input metric
@@ -293,7 +320,7 @@ def compute_persistence(hind, reference, metric='pearson_r', max_dof=False, **kw
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
-        plag.append(metric(ref, fct, dim='time', comparison=_e2c, **kwargs))
+        plag.append(metric(ref, fct, dim='time', comparison=_e2c, **metric_kwargs))
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
     return pers
@@ -307,7 +334,7 @@ def compute_uninitialized(
     comparison='e2r',
     dim='time',
     add_attrs=True,
-    **kwargs,
+    **metric_kwargs,
 ):
     """Compute a predictability score between an uninitialized ensemble and a reference.
 
@@ -327,6 +354,7 @@ def compute_uninitialized(
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
         add_attrs (bool): write climpred compute args to attrs. default: True
+        ** metric_kwargs (dict): additional keywords to be passed to metric
 
 
     Returns:
@@ -340,7 +368,9 @@ def compute_uninitialized(
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    uninit_skill = metric(forecast, reference, dim=dim, comparison=comparison, **kwargs)
+    uninit_skill = metric(
+        forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
+    )
     # Attach climpred compute information to skill
     if add_attrs:
         uninit_skill = assign_attrs(
@@ -349,6 +379,6 @@ def compute_uninitialized(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
-            metadata_dict=kwargs,
+            metadata_dict=metric_kwargs,
         )
     return uninit_skill

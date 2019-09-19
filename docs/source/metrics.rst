@@ -188,14 +188,14 @@ Logarithmic Ensemble Skill Score
 Brier Score
 -----------
 
-``keyword: 'brier_score'``
+``keyword: 'brier_score', 'brier', 'bs'``
 
 .. autofunction:: _brier_score
 
 Threshold Brier Score
 ---------------------
 
-``keyword: 'threshold_brier_score'``
+``keyword: 'threshold_brier_score', 'tbs'``
 
 .. autofunction:: _threshold_brier_score
 

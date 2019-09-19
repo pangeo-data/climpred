@@ -218,7 +218,7 @@ def bootstrap_compute(
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
-    **kwargs,
+    **metric_kwargs,
 ):
     """Bootstrap compute with replacement.
 
@@ -237,6 +237,7 @@ def bootstrap_compute(
         compute_persistence_skill (bool): Defaults to True.
         nlags (type): number of lags persistence forecast skill.
                       Defaults to hind.lead.size.
+        ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
         results: (xr.Dataset): bootstrapped results
@@ -309,7 +310,7 @@ def bootstrap_compute(
             comparison=comparison,
             add_attrs=False,
             dim=dim,
-            **kwargs,
+            **metric_kwargs,
         )
         if (
             shuffle_dim == 'init'
@@ -331,13 +332,13 @@ def bootstrap_compute(
                 comparison=comparison,
                 dim=dim,
                 add_attrs=False,
-                **kwargs,
+                **metric_kwargs,
             )
         )
         # compute persistence skill
         if metric not in PROBABILISTIC_METRICS:
             pers.append(
-                compute_persistence(smp_hind, reference, metric=metric, **kwargs)
+                compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     if 'member' in init.coords:  # remove useless member = 0 coords after m2c
@@ -369,7 +370,7 @@ def bootstrap_compute(
 
     # calc skill
     init_skill = compute(
-        hind, reference, metric=metric, comparison=comparison, dim=dim, **kwargs
+        hind, reference, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
@@ -378,7 +379,9 @@ def bootstrap_compute(
             del init_skill['member']
     uninit_skill = uninit.mean('bootstrap')
     if metric not in PROBABILISTIC_METRICS:
-        pers_skill = compute_persistence(hind, reference, metric=metric, **kwargs)
+        pers_skill = compute_persistence(
+            hind, reference, metric=metric, **metric_kwargs
+        )
     else:
         pers_skill = init_skill.isnull()
 
@@ -415,7 +418,7 @@ def bootstrap_compute(
         'p': 'probability that initialized forecast performs \
                           better than reference forecast',
     }
-    metadata_dict.update(kwargs)
+    metadata_dict.update(metric_kwargs)
     results = assign_attrs(
         results,
         hind,
@@ -437,7 +440,7 @@ def bootstrap_hindcast(
     sig=95,
     bootstrap=500,
     pers_sig=None,
-    **kwargs,
+    **metric_kwargs,
 ):
     """Wrapper for bootstrap_compute for hindcasts."""
     return bootstrap_compute(
@@ -452,7 +455,7 @@ def bootstrap_hindcast(
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
-        **kwargs,
+        **metric_kwargs,
     )
 
 
@@ -465,7 +468,7 @@ def bootstrap_perfect_model(
     sig=95,
     bootstrap=500,
     pers_sig=None,
-    **kwargs,
+    **metric_kwargs,
 ):
     """Wrapper for bootstrap_compute for perfect-model in steady state."""
     return bootstrap_compute(
@@ -480,5 +483,5 @@ def bootstrap_perfect_model(
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
-        **kwargs,
+        **metric_kwargs,
     )

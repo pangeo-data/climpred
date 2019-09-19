@@ -159,7 +159,6 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         assert not actualk
 
 
-# @pytest.mark.skip('reason=s')
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 def test_bootstrap_hindcast_da1d_not_nan_probabilistic(

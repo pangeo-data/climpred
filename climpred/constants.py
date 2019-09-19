@@ -29,6 +29,8 @@ METRIC_ALIASES = {
     'nev': 'nmse',
     'msss': 'ppp',
     'brier': 'brier_score',
+    'bs': 'brier_score',
+    'tbs': 'threshold_brier_score',
 }
 
 # more positive skill is better than more negative

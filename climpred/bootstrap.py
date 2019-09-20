@@ -351,18 +351,17 @@ def bootstrap_compute(
     else:
         pers_output = False
 
+    init_ci = _distribution_to_ci(init, ci_low, ci_high)
+    uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
+    # probabilistic metrics wont have persistence forecast
+    # therefore only get CI if values
     if pers_output:
         if set(pers.coords) != set(init.coords):
             init, pers = xr.broadcast(init, pers)
+        pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
     else:
         # set all outputs to false
         pers = init.isnull()
-
-    init_ci = _distribution_to_ci(init, ci_low, ci_high)
-    uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-    if pers_output:
-        pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-    else:
         pers_ci = init_ci == -999
 
     p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)

@@ -16,7 +16,7 @@ from xskillscore import (
     threshold_brier_score,
 )
 
-from .constants import climpred_dims
+from .constants import CLIMPRED_ENSEMBLE_DIMS
 
 
 def _get_norm_factor(comparison):
@@ -43,6 +43,7 @@ def _get_norm_factor(comparison):
         fac = 2
     else:
         raise KeyError('specify comparison to get normalization factor.')
+    print('factor:', fac)
     return fac
 
 
@@ -292,7 +293,9 @@ def _crpss(forecast, reference, **kwargs):
         * xskillscore.crps_ensemble
     """
     # available climpred dimensions
-    rdim = [tdim for tdim in reference.dims if tdim in climpred_dims + ['time']]
+    rdim = [
+        tdim for tdim in reference.dims if tdim in CLIMPRED_ENSEMBLE_DIMS + ['time']
+    ]
     mu = reference.mean(rdim)
     sig = reference.std(rdim)
 
@@ -319,14 +322,14 @@ def _crpss(forecast, reference, **kwargs):
         if 'tol' in kwargs:
             tol = kwargs['tol']
         else:
-            tol = 1e6
+            tol = 1e-6
         ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
     forecast_skill = _crps(forecast, reference)
     skill_score = 1 - forecast_skill / ref_skill.mean('member')
     return skill_score
 
 
-def _less(forecast, reference, **kwargs):
+def _log_ens_spread_score(forecast, reference, **kwargs):
     """
     Logarithmic Ensemble Spread Score.
 
@@ -346,17 +349,20 @@ def _less(forecast, reference, **kwargs):
         * neg: over-disperive
         * perfect: 0
     """
-    dim2 = 'init'  # [i for i in forecast.dims if i != 'member']
-    if 'init' in forecast.coords:
+    if 'init' in forecast.dims:
         dim2 = 'init'
-    elif 'time' in forecast.coords:
+    elif 'time' in forecast.dims:
         dim2 = 'time'
+    else:
+        raise ValueError('dim2 not found automatically in', forecast.dims)
 
+    # broadcast to use _mse
     forecast, ref2 = xr.broadcast(forecast, reference)
-    numerator = _mse(forecast, ref2, dim='member').mean(dim2)
     # not corrected for conditional bias yet
+    numerator = _mse(forecast, ref2, dim='member').mean(dim2)
     denominator = _mse(forecast.mean('member'), ref2.mean('member'), dim=dim2)
     less = np.log(numerator / denominator)
+    # assert False
     return less
 
 
@@ -377,20 +383,27 @@ def _crpss_es(forecast, reference, **kwargs):
     Range:
         * perfect: 0
     """
-    rdim = [tdim for tdim in reference.dims if tdim in climpred_dims + ['time']]
-    dim2 = 'init'
-    if 'init' in forecast.coords:
+    # helper dim to calc mu
+    rdim = [
+        tdim for tdim in reference.dims if tdim in CLIMPRED_ENSEMBLE_DIMS + ['time']
+    ]
+    # inside compute_perfect_model
+    if 'init' in forecast.dims:
         dim2 = 'init'
-    elif 'time' in forecast.coords:
+    # inside compute_hindcast
+    elif 'time' in forecast.dims:
         dim2 = 'time'
+    else:
+        raise ValueError('dim2 not found automatically in ', forecast.dims)
 
     mu = reference.mean(rdim)
     forecast, ref2 = xr.broadcast(forecast, reference)
-    sig_R = _mse(forecast, ref2, dim='member').mean(dim2)
-    sig_H = _mse(forecast.mean(dim2), ref2.mean(dim2), 'member')
-    crps_H = _crps_gaussian(forecast, mu, sig_H)
-    crps_R = _crps_gaussian(forecast, mu, sig_R)
-    return 1 - crps_H / crps_R
+    sig_r = _mse(forecast, ref2, dim='member').mean(dim2)
+    sig_h = _mse(forecast.mean(dim2), ref2.mean(dim2), 'member')
+    crps_h = _crps_gaussian(forecast, mu, sig_h)
+    crps_r = _crps_gaussian(forecast, mu, sig_r)
+    # assert False
+    return 1 - crps_h / crps_r
 
 
 def _bias(forecast, reference, dim='svd', **kwargs):
@@ -508,10 +521,7 @@ def _ppp(forecast, reference, dim='svd', **kwargs):
         comparison = kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize PPP. \
-                          Not found in',
-            kwargs,
-        )
+            'Comparison needed to normalize PPP. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
@@ -553,10 +563,7 @@ def _nrmse(forecast, reference, dim='svd', **kwargs):
         comparison = kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize NRMSE. \
-                          Not found in',
-            kwargs,
-        )
+            'Comparison needed to normalize NRMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
     return nrmse_skill
@@ -591,10 +598,7 @@ def _nmse(forecast, reference, dim='svd', **kwargs):
         comparison = kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize NMSE. \
-                          Not found in',
-            kwargs,
-        )
+            'Comparison needed to normalize NMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
@@ -604,7 +608,7 @@ def _nmae(forecast, reference, dim='svd', **kwargs):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
-    .. math:: NMAE = \\frac{MAE}{\\sigma^2_{o} \\cdot fac}
+    .. math:: NMAE = \\frac{MAE}{\\sigma_{o} \\cdot fac}
 
     Args:
         * forecast (xr.object)
@@ -625,19 +629,16 @@ def _nmae(forecast, reference, dim='svd', **kwargs):
 
     """
     mae_skill = _mae(forecast, reference, dim=dim)
-    # TODO: check if this is the expected normalization
-    var = reference.std(dim)
+    var = reference.std(dim).mean()
+    print('var', var)
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize NMSE. \
-                          Not found in',
-            kwargs,
-        )
+            'Comparison needed to normalize NMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
-    nmse_skill = mae_skill / var / fac
-    return nmse_skill
+    nmae_skill = mae_skill / var / np.sqrt(fac)
+    return nmae_skill
 
 
 def _uacc(forecast, reference, dim='svd', **kwargs):

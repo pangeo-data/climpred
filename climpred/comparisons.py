@@ -62,6 +62,10 @@ def _m2m(ds, supervector_dim='svd', stack=True):
                             dimension.
         supervector_dim (str): name of new supervector dimension.
                                Default: 'svd'
+        stack (bool): if True, forecast and reference have member dim and both
+                      get stacked to new supervector_dim
+                      if False, only forecast has member dim
+                      (needed for probabilistic metrics)
 
     Returns:
         xr.object: forecast, reference.
@@ -113,6 +117,9 @@ def _m2e(ds, supervector_dim='svd', stack=True):
                             dimension.
         supervector_dim (str): name of new supervector dimension.
                                Default: 'svd'
+        stack (bool): needed for probabilistic metrics.
+                      therefore useless in m2e comparison,
+                      but expected by internal API.
 
     Returns:
         xr.object: forecast, reference.
@@ -141,6 +148,10 @@ def _m2c(ds, supervector_dim='svd', control_member=None, stack=True):
                                Default: 'svd'
         control_member: list of the one integer member serving as
                         reference. Default 0
+        stack (bool): if True, forecast and reference have member dim and both
+                      get stacked to new supervector_dim
+                      if False, only forecast has member dim
+                      (needed for probabilistic metrics)
 
     Returns:
         xr.object: forecast, reference.
@@ -170,6 +181,9 @@ def _e2c(ds, supervector_dim='svd', control_member=None, stack=True):
                                Default: 'svd'
         control_member: list of the one integer member serving as
                         reference. Default 0
+        stack (bool): needed for probabilistic metrics.
+                      therefore useless in m2e comparison,
+                      but expected by internal API.
 
     Returns:
         xr.object: forecast, reference.
@@ -199,6 +213,9 @@ def _e2r(ds, reference, stack=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
+        stack (bool): needed for probabilistic metrics.
+                      therefore useless in m2e comparison,
+                      but expected by internal API.
 
     Returns:
         xr.object: forecast, reference.
@@ -218,6 +235,10 @@ def _m2r(ds, reference, stack=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
+        stack (bool): if True, forecast and reference have member dim and both
+                      get stacked to new supervector_dim
+                      if False, only forecast has member dim
+                      (needed for probabilistic metrics)
 
     Returns:
         xr.object: forecast, reference.

@@ -35,7 +35,7 @@ def compute_perfect_model(
     control,
     metric='pearson_r',
     comparison='m2e',
-    dim=['member', 'init'],
+    dim=None,
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -58,6 +58,8 @@ def compute_perfect_model(
                                without `dim`.
 
     """
+    if dim is None:
+        dim = ['init', 'member']
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # if stack, comparisons return forecast with member dim and reference
@@ -225,9 +227,9 @@ def compute_hindcast(
 
     # in case you want to compute skill over member dim
     if (
-        (forecast.dims != reference.dims)
-        and not stack
-        and metric in DETERMINISTIC_HINDCAST_METRICS
+        (forecast.dims != reference.dims) and
+        not stack and
+        metric in DETERMINISTIC_HINDCAST_METRICS
     ):
         dim_to_apply_metric_to = 'member'
     else:

@@ -82,9 +82,10 @@ def compute_perfect_model(
         dim_to_apply_metric_to = 'svd'
         stack = True
     else:
-        if metric in ['pr', 'pearson_r', 'acc']:
+        if metric == 'pearson_r':
             # it doesnt fail though; we could also raise ValueError here
-            warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
+            warnings.warn(
+                'ACC doesnt work on dim other than ["init", "member"]')
         stack = False
 
     if not stack:
@@ -121,8 +122,7 @@ def compute_perfect_model(
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
         # m2m stack=False has one identical comparison
-        M = forecast.member.size
-        skill = skill * (M / (M - 1))
+        skill = skill * (forecast.member.size / (forecast.member.size - 1))
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -340,7 +340,8 @@ def compute_persistence(
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
-        plag.append(metric(ref, fct, dim='time', comparison=_e2c, **metric_kwargs))
+        plag.append(metric(ref, fct, dim='time',
+                           comparison=_e2c, **metric_kwargs))
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
     return pers

@@ -341,8 +341,6 @@ def _log_ens_spread_score(forecast, reference, **kwargs):
           Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
           631–43. https://doi.org/10/f9jrhw.
 
-    # TODO: not yet fully understood!
-
     Range:
         * pos: under-disperive
         * neg: over-disperive
@@ -376,10 +374,9 @@ def _crpss_es(forecast, reference, **kwargs):
           Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
           631–43. https://doi.org/10/f9jrhw.
 
-    # TODO: not yet fully understood!
-
     Range:
         * perfect: 0
+        * else: negative
     """
     # helper dim to calc mu
     rdim = [
@@ -517,7 +514,8 @@ def _ppp(forecast, reference, dim='svd', **kwargs):
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize PPP. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize PPP. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
@@ -558,7 +556,8 @@ def _nrmse(forecast, reference, dim='svd', **kwargs):
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize NRMSE. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize NRMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     nrmse_skill = rmse_skill / std / np.sqrt(fac)
     return nrmse_skill
@@ -592,7 +591,8 @@ def _nmse(forecast, reference, dim='svd', **kwargs):
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize NMSE. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize NMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
@@ -627,7 +627,8 @@ def _nmae(forecast, reference, dim='svd', **kwargs):
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize NMSE. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize NMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     nmae_skill = mae_skill / std / fac
     return nmae_skill

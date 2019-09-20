@@ -13,6 +13,7 @@ from .constants import (
     PM_COMPARISONS,
     PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
+    METRIC_ALIASES,
 )
 from .utils import (
     assign_attrs,
@@ -57,6 +58,8 @@ def compute_perfect_model(
                                without `dim`.
 
     """
+    # get metric function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
     # if stack, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
     # if not stack, comparisons return forecast and reference with member dim
@@ -64,11 +67,17 @@ def compute_perfect_model(
     if metric in PROBABILISTIC_METRICS:
         if comparison not in PROBABILISTIC_PM_COMPARISONS:
             raise ValueError(
-                f'Probabilistic metric {metric} cannot work with comparison \
-                 {comparison}'
+                f'Probabilistic metric {metric} cannot work with '
+                f'comparison {comparison}.'
             )
         stack = False
-        # dim = 'member'
+        if dim != 'member':
+            warnings.warn(
+                f'Probabilistic metric {metric} requires to be '
+                f'computed over dimension `dim="member"`. '
+                f'Set automatically.'
+            )
+            dim = 'member'
     elif set(dim) == set(['init', 'member']):
         dim_to_apply_metric_to = 'svd'
         stack = True
@@ -177,17 +186,28 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
+    # get metric function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
+
     # if stack, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
     # if not stack, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
+
+    print(metric, comparison)
     if metric in PROBABILISTIC_METRICS:
-        if comparison == 'e2r':
+        if comparison != 'm2r':
             raise ValueError(
                 f'Probabilistic metric `{metric}` requires comparison `m2r`.'
             )
-        else:
-            stack = False
+        stack = False
+        if dim != 'member':
+            warnings.warn(
+                f'Probabilistic metric {metric} requires to be '
+                f'computed over dimension `dim="member"`. '
+                f'Set automatically.'
+            )
+            dim = 'member'
     elif dim == 'init':
         stack = True
     elif dim == 'member':

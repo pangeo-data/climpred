@@ -1,13 +1,16 @@
 import numpy as np
 import pytest
 from climpred.bootstrap import bootstrap_hindcast
-from climpred.constants import DETERMINISTIC_PM_METRICS, HINDCAST_COMPARISONS
+from climpred.constants import DETERMINISTIC_HINDCAST_METRICS, HINDCAST_COMPARISONS
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,
     compute_uninitialized,
 )
 from climpred.tutorial import load_dataset
+
+# uacc is sqrt(ppp), fails when ppp negative
+DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
 
 @pytest.fixture
@@ -93,7 +96,7 @@ def test_compute_hindcast_less_m2r(initialized_da, reconstruction_da):
     assert not actual
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_HINDCAST_METRICS)
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 def test_compute_hindcast(initialized_ds, reconstruction_ds, metric, comparison):
     """
@@ -126,7 +129,7 @@ def test_compute_hindcast_lead0_lead1(
     assert (res1.SST.values == res2.SST.values).all()
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_HINDCAST_METRICS)
 def test_persistence(initialized_da, reconstruction_da, metric):
     """
     Checks that compute persistence works without breaking.

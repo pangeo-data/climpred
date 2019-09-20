@@ -4,6 +4,10 @@ from climpred.constants import DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
+# uacc is sqrt(ppp), fails when ppp negative
+DETERMINISTIC_PM_METRICS.remove('uacc')
+
+# run less tests
 PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 
 

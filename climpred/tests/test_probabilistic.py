@@ -4,6 +4,8 @@ from climpred.constants import (
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
+    PM_COMPARISONS,
+    METRIC_ALIASES,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
@@ -78,6 +80,7 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
         threshold=threshold,
         gaussian=True,
         func=func,
+        dim='member',
     )
     actual = actual.isnull().any()
     assert not actual
@@ -109,12 +112,11 @@ def test_compute_hindcast_probabilistic(
         comparison=comparison,
         threshold=threshold,
         func=func,
+        dim='member',
     )
     # mean init because skill has still coords for init lead
-    print(res)
     if 'init' in res.coords:
         res = res.mean('init')
-    print(res)
     res = res.isnull().any()
     assert not res
 
@@ -150,6 +152,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         gaussian=True,
         func=func,
         bootstrap=3,
+        dim='member',
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
@@ -191,6 +194,7 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         gaussian=True,
         func=func,
         bootstrap=3,
+        dim='member',
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
@@ -214,6 +218,7 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
             comparison='m2c',
             metric='crpss',
             gaussian=False,
+            dim='member',
         )
         .isnull()
         .any()
@@ -233,6 +238,7 @@ def test_compute_hindcast_da1d_not_nan_crpss_quadratic(initialized_da, observati
             comparison='m2r',
             metric='crpss',
             gaussian=False,
+            dim='member',
         )
         .isnull()
         .any()
@@ -245,7 +251,7 @@ def test_hindcast_crpss_orientation(initialized_da, observations_da):
     Checks that CRPSS hindcast as skill score > 0.
     """
     actual = compute_hindcast(
-        initialized_da, observations_da, comparison='m2r', metric='crpss'
+        initialized_da, observations_da, comparison='m2r', metric='crpss', dim='member'
     )
     if 'init' in actual.coords:
         actual = actual.mean('init')
@@ -257,8 +263,85 @@ def test_pm_crpss_orientation(pm_da_ds1d, pm_da_control1d):
     Checks that CRPSS in PM as skill score > 0.
     """
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss'
+        pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss', dim='member'
     )
     if 'init' in actual.coords:
         actual = actual.mean('init')
     assert not (actual.isel(lead=[0, 1]) < 0).any()
+
+
+# test api
+
+
+NON_PROBABILISTIC_PM_COMPARISONS = list(
+    set(PM_COMPARISONS) - set(PROBABILISTIC_PM_COMPARISONS)
+)
+
+
+# Probabilistic PM metrics dont work with non-prob. PM comparison m2e and e2c
+@pytest.mark.parametrize('comparison', NON_PROBABILISTIC_PM_COMPARISONS)
+@pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
+def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
+    pm_da_ds1d, pm_da_control1d, metric, comparison
+):
+    with pytest.raises(ValueError) as excinfo:
+        compute_perfect_model(
+            pm_da_ds1d, pm_da_control1d, comparison=comparison, metric=metric
+        )
+    assert (
+        f'Probabilistic metric {metric} cannot work with comparison {comparison}'
+        in str(excinfo.value)
+    )
+
+
+@pytest.mark.parametrize('dim', ['init', ['init', 'member']])
+@pytest.mark.parametrize('metric', ['crps'])
+def test_compute_pm_probabilistic_metric_not_dim_member_warn(
+    pm_da_ds1d, pm_da_control1d, metric, dim
+):
+    with pytest.warns(UserWarning) as record:
+        compute_perfect_model(
+            pm_da_ds1d, pm_da_control1d, comparison='m2c', metric=metric, dim=dim
+        )
+    expected = (
+        f'Probabilistic metric {metric} requires to be '
+        f'computed over dimension `dim="member"`. '
+        f'Set automatically.'
+    )
+    assert record[0].message.args[0] == expected
+
+
+@pytest.mark.parametrize('metric', ['less', 'crps'])
+def test_compute_hindcast_probabilistic_metric_e2r_fails(
+    initialized_da, observations_da, metric
+):
+    metric = METRIC_ALIASES.get(metric, metric)
+    with pytest.raises(ValueError) as excinfo:
+        compute_hindcast(
+            initialized_da,
+            observations_da,
+            comparison='e2r',
+            metric=metric,
+            dim='member',
+        )
+    assert f'Probabilistic metric `{metric}` requires comparison `m2r`.' in str(
+        excinfo.value
+    )
+
+
+@pytest.mark.parametrize('dim', ['init'])
+@pytest.mark.parametrize('metric', ['crps', 'less'])
+def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
+    initialized_da, observations_da, metric, dim
+):
+    metric = METRIC_ALIASES.get(metric, metric)
+    with pytest.warns(UserWarning) as record:
+        compute_hindcast(
+            initialized_da, observations_da, comparison='m2r', metric=metric, dim=dim
+        )
+    expected = (
+        f'Probabilistic metric {metric} requires to be '
+        f'computed over dimension `dim="member"`. '
+        f'Set automatically.'
+    )
+    assert record[0].message.args[0] == expected

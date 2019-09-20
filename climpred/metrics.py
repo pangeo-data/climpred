@@ -43,7 +43,6 @@ def _get_norm_factor(comparison):
         fac = 2
     else:
         raise KeyError('specify comparison to get normalization factor.')
-    print('factor:', fac)
     return fac
 
 
@@ -362,7 +361,6 @@ def _log_ens_spread_score(forecast, reference, **kwargs):
     numerator = _mse(forecast, ref2, dim='member').mean(dim2)
     denominator = _mse(forecast.mean('member'), ref2.mean('member'), dim=dim2)
     less = np.log(numerator / denominator)
-    # assert False
     return less
 
 
@@ -400,9 +398,8 @@ def _crpss_es(forecast, reference, **kwargs):
     forecast, ref2 = xr.broadcast(forecast, reference)
     sig_r = _mse(forecast, ref2, dim='member').mean(dim2)
     sig_h = _mse(forecast.mean(dim2), ref2.mean(dim2), 'member')
-    crps_h = _crps_gaussian(forecast, mu, sig_h)
-    crps_r = _crps_gaussian(forecast, mu, sig_r)
-    # assert False
+    crps_h = _crps_gaussian(forecast, mu, sig_h).mean('member')
+    crps_r = _crps_gaussian(forecast, mu, sig_r).mean('member')
     return 1 - crps_h / crps_r
 
 
@@ -488,7 +485,7 @@ def _bias_slope(forecast, reference, dim='svd', **kwargs):
 def _ppp(forecast, reference, dim='svd', **kwargs):
     """Prognostic Potential Predictability (PPP) metric.
 
-    .. math:: PPP = 1 - \\frac{MSE}{ \\sigma_{ref} \\cdot fac}
+    .. math:: PPP = 1 - \\frac{MSE}{ \\sigma^2_{ref} \\cdot fac}
 
     Args:
         * forecast (xr.object)
@@ -516,12 +513,11 @@ def _ppp(forecast, reference, dim='svd', **kwargs):
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
     mse_skill = _mse(forecast, reference, dim=dim)
-    var = reference.std(dim)
+    var = reference.var(dim)
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError(
-            'Comparison needed to normalize PPP. Not found in', kwargs)
+        raise ValueError('Comparison needed to normalize PPP. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
@@ -558,14 +554,13 @@ def _nrmse(forecast, reference, dim='svd', **kwargs):
 
     """
     rmse_skill = _rmse(forecast, reference, dim=dim)
-    var = reference.std(dim)
+    std = reference.std(dim)
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError(
-            'Comparison needed to normalize NRMSE. Not found in', kwargs)
+        raise ValueError('Comparison needed to normalize NRMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
-    nrmse_skill = rmse_skill / np.sqrt(var) / np.sqrt(fac)
+    nrmse_skill = rmse_skill / std / np.sqrt(fac)
     return nrmse_skill
 
 
@@ -593,12 +588,11 @@ def _nmse(forecast, reference, dim='svd', **kwargs):
           no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
     """
     mse_skill = _mse(forecast, reference, dim=dim)
-    var = reference.std(dim)
+    var = reference.var(dim)
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', kwargs)
+        raise ValueError('Comparison needed to normalize NMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
@@ -629,15 +623,13 @@ def _nmae(forecast, reference, dim='svd', **kwargs):
 
     """
     mae_skill = _mae(forecast, reference, dim=dim)
-    var = reference.std(dim).mean()
-    print('var', var)
+    std = reference.std(dim).mean()
     if 'comparison' in kwargs:
         comparison = kwargs['comparison']
     else:
-        raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', kwargs)
+        raise ValueError('Comparison needed to normalize NMSE. Not found in', kwargs)
     fac = _get_norm_factor(comparison)
-    nmae_skill = mae_skill / var / np.sqrt(fac)
+    nmae_skill = mae_skill / std / fac
     return nmae_skill
 
 

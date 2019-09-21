@@ -3,4 +3,4 @@ DPP_threshold
 
 .. currentmodule:: climpred.bootstrap
 
-.. autofunction:: DPP_threshold
+.. autofunction:: dpp_threshold

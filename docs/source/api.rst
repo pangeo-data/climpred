@@ -19,7 +19,7 @@ Bootstrap
 .. automodsumm:: climpred.bootstrap
     :functions-only:
     :toctree: api
-    :skip: DPP, bootstrap_compute, bootstrap_uninit_pm_ensemble_from_control, bootstrap_uninitialized_ensemble, compute_persistence, compute_hindcast, compute_perfect_model, has_dims, varweighted_mean_period
+    :skip: dpp, bootstrap_compute, bootstrap_uninit_pm_ensemble_from_control, bootstrap_uninitialized_ensemble, compute_persistence, compute_hindcast, compute_perfect_model, has_dims, varweighted_mean_period
 
 Statistics
 ~~~~~~~~~~

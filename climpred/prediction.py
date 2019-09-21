@@ -86,8 +86,7 @@ def compute_perfect_model(
     else:
         if metric == 'pearson_r':
             # it doesnt fail though; we could also raise ValueError here
-            warnings.warn(
-                'ACC doesnt work on dim other than ["init", "member"]')
+            warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
         stack = False
 
     if not stack:
@@ -195,8 +194,6 @@ def compute_hindcast(
     # without member dim which is needed for probabilistic
     # if not stack, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
-
-    print(metric, comparison)
     if metric in PROBABILISTIC_METRICS:
         if comparison != 'm2r':
             raise ValueError(
@@ -227,9 +224,9 @@ def compute_hindcast(
 
     # in case you want to compute skill over member dim
     if (
-        (forecast.dims != reference.dims) and
-        not stack and
-        metric in DETERMINISTIC_HINDCAST_METRICS
+        (forecast.dims != reference.dims)
+        and not stack
+        and metric in DETERMINISTIC_HINDCAST_METRICS
     ):
         dim_to_apply_metric_to = 'member'
     else:
@@ -342,8 +339,7 @@ def compute_persistence(
         ref = reference.sel(time=inits + lag)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
-        plag.append(metric(ref, fct, dim='time',
-                           comparison=_e2c, **metric_kwargs))
+        plag.append(metric(ref, fct, dim='time', comparison=_e2c, **metric_kwargs))
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
     return pers

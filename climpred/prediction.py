@@ -86,7 +86,10 @@ def compute_perfect_model(
     else:
         if metric == 'pearson_r':
             # it doesnt fail though; we could also raise ValueError here
-            warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
+            warnings.warn(
+                'ACC doesnt work on dim other than'
+                '["init", "member"] in perfect-model framework.'
+            )
         stack_dims = False
 
     if not stack_dims:
@@ -104,7 +107,7 @@ def compute_perfect_model(
         if comparison.__name__ == '_m2m':
             dim_to_apply_metric_to = 'forecast_member'
         else:
-            dim_to_apply_metric_to = 'member'
+            dim_to_apply_metric_to = dim
 
     metric = get_metric_function(metric, PM_METRICS)
 
@@ -118,10 +121,14 @@ def compute_perfect_model(
 
     # correction for distance based metrics in m2m comparison
     comparison_name = comparison.__name__[1:]
-    metric_name = metric.__name__[1:]
-    if metric_name in PROBABILISTIC_METRICS and comparison_name == 'm2m':
+    # fix for m2m TODO
+    if comparison_name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
+        if dim == 'member' and 'member' in skill.dims:
+            skill = skill.mean('member')
+        if dim == 'init' and 'init' in skill.dims:
+            skill = skill.mean('init')
         # m2m stack_dims=False has one identical comparison
         skill = skill * (forecast.member.size / (forecast.member.size - 1))
     # Attach climpred compute information to skill
@@ -253,21 +260,17 @@ def compute_hindcast(
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
-        # probabilistic dont care about dim
-        s = metric(
-            a, b, dim=dim_to_apply_metric_to, comparison=comparison, **metric_kwargs
+        plag.append(
+            metric(
+                a, b, dim=dim_to_apply_metric_to, comparison=comparison, **metric_kwargs
+            )
         )
-        if (
-            'time' in s.coords and dim_to_apply_metric_to == 'time'
-        ):  # time issue # TODO: remove
-            s = s.mean('time')
-        plag.append(s)
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
     # rename back to init
     if 'time' in skill.dims:  # when dim was 'member'
         skill = skill.rename({'time': 'init'})
-    # Attach climpred compute information to skill
+    # attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
             skill,

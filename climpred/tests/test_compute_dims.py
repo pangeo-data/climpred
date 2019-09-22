@@ -4,6 +4,7 @@ from climpred.constants import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_PM_COMPARISONS,
+    PROBABILISTIC_METRICS,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
@@ -150,25 +151,46 @@ def test_bootstrap_hindcast_dim(initialized_da, uninitialized_da, observations_d
         assert not actualk
 
 
+@pytest.mark.parametrize('metric', ('rmse', 'crpss'))
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize('dim', ('init', 'member', ['init', 'member']))
-def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison):
+def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison, metric):
     """Test whether compute_pm calcs skill over all possible dims
-    and comparisons."""
+    and comparisons and just reduces the result by dim."""
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, metric='rmse', dim=dim, comparison=comparison
+        pm_da_ds1d, pm_da_control1d, metric=metric, dim=dim, comparison=comparison
     )
+    # change dim as automatically in compute functions for probabilistic
+    print('actual.dims', actual.dims)
+    print('dim', dim)
+    if dim in ['init', ['init', 'member']] and metric in PROBABILISTIC_METRICS:
+        dim = ['member']
+    elif isinstance(dim, str):
+        dim = [dim]
+    print('dim', dim)
+    # check whether only dim got reduced from coords
+    assert set(pm_da_ds1d.dims) - set(actual.dims) == set(dim)
+    # check whether all nan
     assert not actual.isnull().any()
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
+@pytest.mark.parametrize('metric', ('rmse', 'crpss', 'crpss_es'))
 @pytest.mark.parametrize('dim', ('init', 'member'))
-def test_compute_hindcast_dims(initialized_da, observations_da, dim, comparison):
+def test_compute_hindcast_dims(
+    initialized_da, observations_da, dim, comparison, metric
+):
     """Test whether compute_hindcast calcs skill over all possible dims
-    and comparisons."""
+    and comparisons and just reduces the result by dim."""
     actual = compute_hindcast(
-        initialized_da, observations_da, metric='rmse', dim=dim, comparison=comparison
+        initialized_da, observations_da, metric=metric, dim=dim, comparison=comparison
     )
+    # change dim as automatically in compute functions for probabilistic
+    if dim == 'init' and metric in PROBABILISTIC_METRICS:
+        dim = 'member'
+    # check whether only dim got reduced from coords
+    assert set(initialized_da.dims) - set(actual.dims) == set([dim])
+    # check whether all nan
     if 'init' in actual.dims:
         actual = actual.mean('init')
     assert not actual.isnull().any()

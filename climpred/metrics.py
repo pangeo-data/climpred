@@ -344,8 +344,10 @@ def _log_ens_spread_score(forecast, reference, **kwargs):
         * neg: over-disperive
         * perfect: 0
     """
+    # compute_perfect_model path
     if 'init' in forecast.dims:
         dim2 = 'init'
+    # compute_hindcast path
     elif 'time' in forecast.dims:
         dim2 = 'time'
     else:

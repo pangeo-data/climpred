@@ -271,8 +271,6 @@ def bootstrap_compute(
           https://doi.org/10/f4jjvf.
 
     """
-    if dim is None:
-        dim = ['init', 'member']
     if pers_sig is None:
         pers_sig = sig
 
@@ -283,16 +281,18 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    inits = hind.init.values
-    members = hind.member.values
     init = []
     uninit = []
     pers = []
 
-    if dim == 'member':
+    # which dim should be resampled: member or init
+    if dim == 'member' and 'member' in hind.dims:
+        members = hind.member.values
         to_be_shuffled = members
         shuffle_dim = 'member'
-    elif 'init' in dim:  # also allows ['init','member']
+    elif 'init' in dim and 'init' in hind.dims:
+        # also allows ['init','member']
+        inits = hind.init.values
         to_be_shuffled = inits
         shuffle_dim = 'init'
     else:
@@ -314,12 +314,13 @@ def bootstrap_compute(
             dim=dim,
             **metric_kwargs,
         )
+        # reset inits when probabilistic, otherwise tests fail
         if (
             shuffle_dim == 'init'
             and metric in PROBABILISTIC_METRICS
             and 'init' in init_skill.coords
         ):
-            init_skill['init'] = hind.init.values
+            init_skill['init'] = inits
         init.append(init_skill)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use reference = control
@@ -338,46 +339,52 @@ def bootstrap_compute(
             )
         )
         # compute persistence skill
+        # impossible for probabilistic
         if metric not in PROBABILISTIC_METRICS:
             pers.append(
                 compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
-    if 'member' in init.coords:  # remove useless member = 0 coords after m2c
+    # remove useless member = 0 coords after m2c
+    if 'member' in init.coords and init.member.size == 1:
         if init.member.size == 1:
             del init['member']
     uninit = xr.concat(uninit, dim='bootstrap')
+    # when persistence is not computed set flag
     if pers != []:
         pers = xr.concat(pers, dim='bootstrap')
         pers_output = True
     else:
         pers_output = False
 
+    # get confidence intervals CI
     init_ci = _distribution_to_ci(init, ci_low, ci_high)
     uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
     # probabilistic metrics wont have persistence forecast
-    # therefore only get CI if values
+    # therefore only get CI if persistence was computed
     if pers_output:
         if set(pers.coords) != set(init.coords):
             init, pers = xr.broadcast(init, pers)
         pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
     else:
-        # set all outputs to false
+        # otherwise set all persistence outputs to false
         pers = init.isnull()
         pers_ci = init_ci == -999
 
+    # pvalue whether uninit or pers better than init forecast
     p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric)
 
-    # calc skill
+    # calc mean skill without any resampling
     init_skill = compute(
         hind, reference, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
-    if 'member' in init_skill.coords:  # remove useless member = 0 coords after m2c
-        if init_skill.member.size == 1:
-            del init_skill['member']
+    # remove useless member = 0 coords after m2c
+    if 'member' in init_skill.coords and init_skill.member.size == 1:
+        del init_skill['member']
+    # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if metric not in PROBABILISTIC_METRICS:
         pers_skill = compute_persistence(
@@ -385,7 +392,7 @@ def bootstrap_compute(
         )
     else:
         pers_skill = init_skill.isnull()
-
+    # align to prepare for concat
     if set(pers_skill.coords) != set(init_skill.coords):
         init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)
 
@@ -472,6 +479,8 @@ def bootstrap_perfect_model(
     **metric_kwargs,
 ):
     """Wrapper for bootstrap_compute for perfect-model in steady state."""
+    if dim is None:
+        dim = ['init', 'member']
     return bootstrap_compute(
         ds,
         control,

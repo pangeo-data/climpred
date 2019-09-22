@@ -33,7 +33,7 @@ def _drop_members(ds, rmd_member=None):
 
 def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
     """
-    Stack all stacked_dims (likely init and member) dimensions
+    Stack stacked_dims (default init and member) dimensions
      into one supervector dimension to perform metric over.
 
     Args:
@@ -53,7 +53,7 @@ def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
 # PERFECT-MODEL COMPARISONS
 # based on supervector approach
 # --------------------------------------------#
-def _m2m(ds, supervector_dim='svd', stack=True):
+def _m2m(ds, supervector_dim='svd', stack_dims=True):
     """
     Create two supervectors to compare all members to all others in turn.
 
@@ -62,7 +62,7 @@ def _m2m(ds, supervector_dim='svd', stack=True):
                             dimension.
         supervector_dim (str): name of new supervector dimension.
                                Default: 'svd'
-        stack (bool): if True, forecast and reference have member dim and both
+        stack_dims (bool): if True, forecast and reference have member dim and both
                       get stacked to new supervector_dim
                       if False, only forecast has member dim
                       (needed for probabilistic metrics)
@@ -75,13 +75,13 @@ def _m2m(ds, supervector_dim='svd', stack=True):
     forecast_list = []
     for m in ds.member.values:
         # drop the member being reference
-        if stack:
+        if stack_dims:
             ds_reduced = _drop_members(ds, rmd_member=[m])
         else:
             # TODO: when not stacked I have one identical
             ds_reduced = ds
         reference = ds.sel(member=m).squeeze()
-        if stack:
+        if stack_dims:
             for m2 in ds_reduced.member:
                 reference_list.append(reference)
                 forecast_list.append(ds_reduced.sel(member=m2).squeeze())
@@ -89,7 +89,7 @@ def _m2m(ds, supervector_dim='svd', stack=True):
             reference_list.append(reference)
             forecast_list.append(ds_reduced)
 
-    if stack:
+    if stack_dims:
         reference = xr.concat(reference_list, supervector_dim2).stack(
             svd=(supervector_dim2, 'init')
         )
@@ -107,7 +107,7 @@ def _m2m(ds, supervector_dim='svd', stack=True):
     return forecast, reference
 
 
-def _m2e(ds, supervector_dim='svd', stack=True):
+def _m2e(ds, supervector_dim='svd', stack_dims=True):
     """
     Create two supervectors to compare all members to ensemble mean while
      leaving out the reference when creating the forecasts.
@@ -117,7 +117,7 @@ def _m2e(ds, supervector_dim='svd', stack=True):
                             dimension.
         supervector_dim (str): name of new supervector dimension.
                                Default: 'svd'
-        stack (bool): needed for probabilistic metrics.
+        stack_dims (bool): needed for probabilistic metrics.
                       therefore useless in m2e comparison,
                       but expected by internal API.
 
@@ -137,7 +137,7 @@ def _m2e(ds, supervector_dim='svd', stack=True):
     return forecast, reference
 
 
-def _m2c(ds, supervector_dim='svd', control_member=None, stack=True):
+def _m2c(ds, supervector_dim='svd', control_member=None, stack_dims=True):
     """
     Create two supervectors to compare all members to control.
 
@@ -148,7 +148,7 @@ def _m2c(ds, supervector_dim='svd', control_member=None, stack=True):
                                Default: 'svd'
         control_member: list of the one integer member serving as
                         reference. Default 0
-        stack (bool): if True, forecast and reference have member dim and both
+        stack_dims (bool): if True, forecast and reference have member dim and both
                       get stacked to new supervector_dim
                       if False, only forecast has member dim
                       (needed for probabilistic metrics)
@@ -161,7 +161,7 @@ def _m2c(ds, supervector_dim='svd', control_member=None, stack=True):
     reference = ds.isel(member=control_member).squeeze()
     # drop the member being reference
     ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    if stack:
+    if stack_dims:
         forecast, reference = xr.broadcast(ds_dropped, reference)
         forecast = _stack_to_supervector(forecast, new_dim=supervector_dim)
         reference = _stack_to_supervector(reference, new_dim=supervector_dim)
@@ -170,7 +170,7 @@ def _m2c(ds, supervector_dim='svd', control_member=None, stack=True):
     return forecast, reference
 
 
-def _e2c(ds, supervector_dim='svd', control_member=None, stack=True):
+def _e2c(ds, supervector_dim='svd', control_member=None, stack_dims=True):
     """
     Create two supervectors to compare ensemble mean to control.
 
@@ -181,7 +181,7 @@ def _e2c(ds, supervector_dim='svd', control_member=None, stack=True):
                                Default: 'svd'
         control_member: list of the one integer member serving as
                         reference. Default 0
-        stack (bool): needed for probabilistic metrics.
+        stack_dims (bool): needed for probabilistic metrics.
                       therefore useless in m2e comparison,
                       but expected by internal API.
 
@@ -205,7 +205,7 @@ def _e2c(ds, supervector_dim='svd', control_member=None, stack=True):
 # REFERENCE COMPARISONS
 # based on supervector approach
 # --------------------------------------------#
-def _e2r(ds, reference, stack=True):
+def _e2r(ds, reference, stack_dims=True):
     """
     Compare the ensemble mean forecast to a reference in HindcastEnsemble.
 
@@ -213,7 +213,7 @@ def _e2r(ds, reference, stack=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
-        stack (bool): needed for probabilistic metrics.
+        stack_dims (bool): needed for probabilistic metrics.
                       therefore useless in m2e comparison,
                       but expected by internal API.
 
@@ -227,7 +227,7 @@ def _e2r(ds, reference, stack=True):
     return forecast, reference
 
 
-def _m2r(ds, reference, stack=True):
+def _m2r(ds, reference, stack_dims=True):
     """
     Compares each member individually to a reference in HindcastEnsemble.
 
@@ -235,7 +235,7 @@ def _m2r(ds, reference, stack=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
-        stack (bool): if True, forecast and reference have member dim and both
+        stack_dims (bool): if True, forecast and reference have member dim and both
                       get stacked to new supervector_dim
                       if False, only forecast has member dim
                       (needed for probabilistic metrics)
@@ -247,7 +247,7 @@ def _m2r(ds, reference, stack=True):
     has_dims(ds, 'member', 'decadal prediction ensemble')
     has_min_len(ds['member'], 1, 'decadal prediction ensemble member')
     forecast = ds
-    if stack:
+    if stack_dims:
         reference = reference.expand_dims('member')
         nMember = forecast.member.size
         reference = reference.isel(member=[0] * nMember)

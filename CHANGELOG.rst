@@ -2,7 +2,7 @@
 Changelog History
 =================
 
-climpred v1.1 (2019-09-##)
+climpred v1.1 (2019-09-22)
 ============================
 
 Features

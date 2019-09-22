@@ -16,7 +16,7 @@ from xskillscore import (
     threshold_brier_score,
 )
 
-from .constants import CLIMPRED_ENSEMBLE_DIMS
+from .constants import CLIMPRED_DIMS
 
 
 def _get_norm_factor(comparison):
@@ -291,10 +291,8 @@ def _crpss(forecast, reference, **kwargs):
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
     """
-    # available climpred dimensions
-    rdim = [
-        tdim for tdim in reference.dims if tdim in CLIMPRED_ENSEMBLE_DIMS + ['time']
-    ]
+    # available climpred dimensions to take mean and std over
+    rdim = [tdim for tdim in reference.dims if tdim in CLIMPRED_DIMS]
     mu = reference.mean(rdim)
     sig = reference.std(rdim)
 
@@ -379,9 +377,7 @@ def _crpss_es(forecast, reference, **kwargs):
         * else: negative
     """
     # helper dim to calc mu
-    rdim = [
-        tdim for tdim in reference.dims if tdim in CLIMPRED_ENSEMBLE_DIMS + ['time']
-    ]
+    rdim = [tdim for tdim in reference.dims if tdim in CLIMPRED_DIMS + ['time']]
     # inside compute_perfect_model
     if 'init' in forecast.dims:
         dim2 = 'init'

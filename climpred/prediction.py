@@ -62,9 +62,9 @@ def compute_perfect_model(
         dim = ['init', 'member']
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
-    # if stack, comparisons return forecast with member dim and reference
+    # if stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
-    # if not stack, comparisons return forecast and reference with member dim
+    # if not stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
     if metric in PROBABILISTIC_METRICS:
         if comparison not in PROBABILISTIC_PM_COMPARISONS:
@@ -72,7 +72,7 @@ def compute_perfect_model(
                 f'Probabilistic metric {metric} cannot work with '
                 f'comparison {comparison}.'
             )
-        stack = False
+        stack_dims = False
         if dim != 'member':
             warnings.warn(
                 f'Probabilistic metric {metric} requires to be '
@@ -82,19 +82,19 @@ def compute_perfect_model(
             dim = 'member'
     elif set(dim) == set(['init', 'member']):
         dim_to_apply_metric_to = 'svd'
-        stack = True
+        stack_dims = True
     else:
         if metric == 'pearson_r':
             # it doesnt fail though; we could also raise ValueError here
             warnings.warn('ACC doesnt work on dim other than ["init", "member"]')
-        stack = False
+        stack_dims = False
 
-    if not stack:
+    if not stack_dims:
         dim_to_apply_metric_to = dim
 
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
-    forecast, reference = comparison(ds, dim_to_apply_metric_to, stack=stack)
+    forecast, reference = comparison(ds, dim_to_apply_metric_to, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
     if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):
@@ -122,7 +122,7 @@ def compute_perfect_model(
     if metric_name in PROBABILISTIC_METRICS and comparison_name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
-        # m2m stack=False has one identical comparison
+        # m2m stack_dims=False has one identical comparison
         skill = skill * (forecast.member.size / (forecast.member.size - 1))
     # Attach climpred compute information to skill
     if add_attrs:
@@ -190,16 +190,16 @@ def compute_hindcast(
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
 
-    # if stack, comparisons return forecast with member dim and reference
+    # if stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
-    # if not stack, comparisons return forecast and reference with member dim
+    # if not stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
     if metric in PROBABILISTIC_METRICS:
         if comparison != 'm2r':
             raise ValueError(
                 f'Probabilistic metric `{metric}` requires comparison `m2r`.'
             )
-        stack = False
+        stack_dims = False
         if dim != 'member':
             warnings.warn(
                 f'Probabilistic metric {metric} requires to be '
@@ -208,9 +208,9 @@ def compute_hindcast(
             )
             dim = 'member'
     elif dim == 'init':
-        stack = True
+        stack_dims = True
     elif dim == 'member':
-        stack = False
+        stack_dims = False
     else:
         raise ValueError(
             f'Please use a probabilistic metric [now {metric}] ',
@@ -220,12 +220,12 @@ def compute_hindcast(
     nlags = max(hind.lead.values)
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
 
-    forecast, reference = comparison(hind, reference, stack=stack)
+    forecast, reference = comparison(hind, reference, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
     if (
         (forecast.dims != reference.dims)
-        and not stack
+        and not stack_dims
         and metric in DETERMINISTIC_HINDCAST_METRICS
     ):
         dim_to_apply_metric_to = 'member'

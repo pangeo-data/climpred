@@ -50,12 +50,12 @@ def observations_da():
     return da
 
 
-@pytest.mark.parametrize('stack', [True, False])
+@pytest.mark.parametrize('stack_dims', [True, False])
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
-def test_pm_comparison_stack(pm_da_ds1d, comparison, stack):
+def test_pm_comparison_stack_dims(pm_da_ds1d, comparison, stack_dims):
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison(pm_da_ds1d, stack=stack)
-    if stack:
+    actual_f, actual_r = comparison(pm_da_ds1d, stack_dims=stack_dims)
+    if stack_dims:
         assert 'svd' in actual_f.dims
         assert 'member' not in actual_f.dims
     else:
@@ -90,23 +90,23 @@ def test_compute_hindcast_dim_over_member(initialized_da, observations_da, compa
     assert not actual.mean('init').isnull().any()
 
 
-def test_compute_perfect_model_stack_True_and_False_quite_close(
+def test_compute_perfect_model_stack_dims_True_and_False_quite_close(
     pm_da_ds1d, pm_da_control1d
 ):
-    """Test whether dim=['init','member'] for stack=False and
-    dim='member' for stack=True give similar results."""
-    stack_true = compute_perfect_model(
+    """Test whether dim=['init','member'] for stack_dims=False and
+    dim='member' for stack_dims=True give similar results."""
+    stack_dims_true = compute_perfect_model(
         pm_da_ds1d,
         pm_da_control1d,
         comparison='m2c',
         metric='rmse',
         dim=['init', 'member'],
     )
-    stack_false = compute_perfect_model(
+    stack_dims_false = compute_perfect_model(
         pm_da_ds1d, pm_da_control1d, comparison='m2c', metric='rmse', dim='member'
     ).mean(['init'])
     # no more than 10% difference
-    assert_allclose(stack_true, stack_false, rtol=0.1, atol=0.03)
+    assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
 
 
 def test_bootstrap_pm_dim(pm_da_ds1d, pm_da_control1d):

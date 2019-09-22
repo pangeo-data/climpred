@@ -89,4 +89,6 @@ PROBABILISTIC_PM_COMPARISONS = ['m2c', 'm2m']
 PROBABILISTIC_HINDCAST_COMPARISONS = ['m2r']
 
 # for general checks of climpred-required dimensions
+
 CLIMPRED_ENSEMBLE_DIMS = ['init', 'member', 'lead']
+CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']

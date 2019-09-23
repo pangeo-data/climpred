@@ -6,12 +6,12 @@ a minor version adds functionality, and a patch covers bug fixes.
 
 #. Create a new branch ``release-vX.x.x`` with the version for the release.
 
- * Update `CHANGELOG.rst` 
+ * Update `CHANGELOG.rst`
  * Make sure all new changes, features are reflected in the documentation.
 
-#. Open a new pull request for this branch targeting `master` 
+#. Open a new pull request for this branch targeting `master`
 
-#. After all tests pass and the PR has been approved, merge the PR into ``master`` 
+#. After all tests pass and the PR has been approved, merge the PR into ``master``
 
 #. Tag a release and push to github::
 
@@ -24,17 +24,24 @@ a minor version adds functionality, and a patch covers bug fixes.
     $ python setup.py sdist bdist_wheel --universal  # build package
     $ twine upload dist/*  # register and push to pypi
 
+#. Update the stable branch (used by ReadTheDocs)::
+
+    $ git checkout stable
+    $ git rebase master
+    $ git push -f origin stable
+    $ git checkout master
+
 #. Update climpred conda-forge feedstock
 
- * Fork `climpred-feedstock repository <https://github.com/conda-forge/climpred-feedstock>`_ 
+ * Fork `climpred-feedstock repository <https://github.com/conda-forge/climpred-feedstock>`_
  * Clone this fork and edit recipe::
 
         $ git clone git@github.com:username/climpred-feedstock.git
         $ cd climpred-feedstock
         $ cd recipe
-        $ # edit meta.yaml 
+        $ # edit meta.yaml
 
- - Update version 
+ - Update version
  - Get sha256 from pypi.org for `climpred <https://pypi.org/project/climpred/#files>`_
  - Fill in the rest of information as described `here <https://github.com/conda-forge/climpred-feedstock#updating-climpred-feedstock>`_
 

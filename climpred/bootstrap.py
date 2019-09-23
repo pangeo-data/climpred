@@ -177,7 +177,7 @@ def _bootstrap_func(
 
 
 def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
-    """Calc dpp significance levels from re-sampled dataset.
+    """Calc DPP significance levels from re-sampled dataset.
 
     Reference:
         * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
@@ -185,7 +185,7 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
           Geophysical Research Letters 38, no. 7 (2011).
           https://doi.org/10/ft272w.
 
-    See Also:
+    See also:
         * climpred.bootstrap._bootstrap_func
         * climpred.stats.dpp
     """
@@ -231,13 +231,21 @@ def bootstrap_compute(
         dim (str or list): dimension to apply metric over. default: 'init'
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
+        pers_sig (int): Significance level for persistence skill confidence levels.
+                        Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        compute_uninitialized_skill (bool): Defaults to True.
-        compute_persistence_skill (bool): Defaults to True.
-        nlags (type): number of lags persistence forecast skill.
-                      Defaults to hind.lead.size.
+        compute (func): function to compute skill.
+                        Choose from
+                        [:py:func:`climpred.prediction.compute_perfect_model`,
+                         :py:func:`climpred.prediction.compute_hindcast`].
+        resample_uninit (func): function to create an uninitialized ensemble
+                        from a control simulation or uninitialized large
+                        ensemble. Choose from:
+                        [:py:func:`bootstrap_uninitialized_ensemble`,
+                         :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
         ** metric_kwargs (dict): additional keywords to be passed to metric
+            (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
         results: (xr.Dataset): bootstrapped results
@@ -270,14 +278,17 @@ def bootstrap_compute(
           Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
           https://doi.org/10/f4jjvf.
 
+    See also:
+        * climpred.bootstrap.bootstrap_hindcast
+        * climpred.bootstrap.bootstrap_perfect_model
     """
     if pers_sig is None:
         pers_sig = sig
 
-    p = (100 - sig) / 100  # 0.05
-    ci_low = p / 2  # 0.025
-    ci_high = 1 - p / 2  # 0.975
-    p_pers = (100 - pers_sig) / 100  # 0.5
+    p = (100 - sig) / 100
+    ci_low = p / 2
+    ci_high = 1 - p / 2
+    p_pers = (100 - pers_sig) / 100
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
@@ -450,7 +461,60 @@ def bootstrap_hindcast(
     pers_sig=None,
     **metric_kwargs,
 ):
-    """Wrapper for bootstrap_compute for hindcasts."""
+    """Bootstrap compute with replacement. Wrapper of
+     py:func:`bootstrap_compute` for hindcasts.
+
+    Args:
+        hind (xr.Dataset): prediction ensemble.
+        reference (xr.Dataset): reference simulation.
+        hist (xr.Dataset): historical/uninitialized simulation.
+        metric (str): `metric`. Defaults to 'pearson_r'.
+        comparison (str): `comparison`. Defaults to 'e2r'.
+        dim (str): dimension to apply metric over. default: 'init'
+        sig (int): Significance level for uninitialized and
+                   initialized skill. Defaults to 95.
+        pers_sig (int): Significance level for persistence skill confidence levels.
+                        Defaults to sig.
+        bootstrap (int): number of resampling iterations (bootstrap
+                         with replacement). Defaults to 500.
+        ** metric_kwargs (dict): additional keywords to be passed to metric
+            (see the arguments required for a given metric in :ref:`Metrics`).
+
+    Returns:
+        results: (xr.Dataset): bootstrapped results
+            * init_ci (xr.Dataset): confidence levels of init_skill
+            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
+            * p_uninit_over_init (xr.Dataset): p-value of the hypothesis
+                                               that the difference of
+                                               skill between the
+                                               initialized and uninitialized
+                                               simulations is smaller or
+                                               equal to zero based on
+                                               bootstrapping with
+                                               replacement.
+                                               Defaults to None.
+            * pers_ci (xr.Dataset): confidence levels of pers_skill
+            * p_pers_over_init (xr.Dataset): p-value of the hypothesis
+                                             that the difference of
+                                             skill between the
+                                             initialized and persistence
+                                             simulations is smaller or
+                                             equal to zero based on
+                                             bootstrapping with
+                                             replacement.
+                                             Defaults to None.
+
+    Reference:
+        * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
+          Gonzalez, V. Kharin, et al. “A Verification Framework for
+          Interannual-to-Decadal Predictions Experiments.” Climate
+          Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
+
+    See also:
+        * climpred.bootstrap.bootstrap_compute
+        * climpred.prediction.compute_hindcast
+    """
     return bootstrap_compute(
         hind,
         reference,
@@ -478,7 +542,61 @@ def bootstrap_perfect_model(
     pers_sig=None,
     **metric_kwargs,
 ):
-    """Wrapper for bootstrap_compute for perfect-model in steady state."""
+    """Bootstrap compute with replacement. Wrapper of
+     py:func:`bootstrap_compute` for perfect-model framework.
+
+    Args:
+        hind (xr.Dataset): prediction ensemble.
+        reference (xr.Dataset): reference simulation.
+        hist (xr.Dataset): historical/uninitialized simulation.
+        metric (str): `metric`. Defaults to 'pearson_r'.
+        comparison (str): `comparison`. Defaults to 'm2e'.
+        dim (str): dimension to apply metric over. default: ['init', 'member']
+        sig (int): Significance level for uninitialized and
+                   initialized skill. Defaults to 95.
+        pers_sig (int): Significance level for persistence skill confidence levels.
+                        Defaults to sig.
+        bootstrap (int): number of resampling iterations (bootstrap
+                         with replacement). Defaults to 500.
+        ** metric_kwargs (dict): additional keywords to be passed to metric
+            (see the arguments required for a given metric in :ref:`Metrics`).
+
+    Returns:
+        results: (xr.Dataset): bootstrapped results
+            * init_ci (xr.Dataset): confidence levels of init_skill
+            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
+            * p_uninit_over_init (xr.Dataset): p-value of the hypothesis
+                                               that the difference of
+                                               skill between the
+                                               initialized and uninitialized
+                                               simulations is smaller or
+                                               equal to zero based on
+                                               bootstrapping with
+                                               replacement.
+                                               Defaults to None.
+            * pers_ci (xr.Dataset): confidence levels of pers_skill
+            * p_pers_over_init (xr.Dataset): p-value of the hypothesis
+                                             that the difference of
+                                             skill between the
+                                             initialized and persistence
+                                             simulations is smaller or
+                                             equal to zero based on
+                                             bootstrapping with
+                                             replacement.
+                                             Defaults to None.
+
+    Reference:
+        * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
+          Gonzalez, V. Kharin, et al. “A Verification Framework for
+          Interannual-to-Decadal Predictions Experiments.” Climate
+          Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
+
+    See also:
+        * climpred.bootstrap.bootstrap_compute
+        * climpred.prediction.compute_perfect_model
+    """
+
     if dim is None:
         dim = ['init', 'member']
     return bootstrap_compute(

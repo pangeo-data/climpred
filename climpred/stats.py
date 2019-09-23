@@ -339,8 +339,8 @@ def dpp(ds, m=10, chunk=True):
         \\frac{1}{m}\\cdot\\sigma^{2}}{\\sigma^{2}}
 
     Note:
-        Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased dpp
-        in a slightly different way. chunk=False
+        Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
+        in a slightly different way: chunk=False.
 
     Args:
         ds (xr.DataArray): control simulation with time dimension as years.

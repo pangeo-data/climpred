@@ -55,7 +55,7 @@ def observations_da():
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 def test_pm_comparison_stack_dims(pm_da_ds1d, comparison, stack_dims):
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison(pm_da_ds1d, stack_dims=stack_dims)
+    actual_f, _ = comparison(pm_da_ds1d, stack_dims=stack_dims)
     if stack_dims:
         assert 'svd' in actual_f.dims
         assert 'member' not in actual_f.dims
@@ -161,13 +161,10 @@ def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison, metric):
         pm_da_ds1d, pm_da_control1d, metric=metric, dim=dim, comparison=comparison
     )
     # change dim as automatically in compute functions for probabilistic
-    print('actual.dims', actual.dims)
-    print('dim', dim)
     if dim in ['init', ['init', 'member']] and metric in PROBABILISTIC_METRICS:
         dim = ['member']
     elif isinstance(dim, str):
         dim = [dim]
-    print('dim', dim)
     # check whether only dim got reduced from coords
     assert set(pm_da_ds1d.dims) - set(actual.dims) == set(dim)
     # check whether all nan

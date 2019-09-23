@@ -78,7 +78,13 @@ def _m2m(ds, supervector_dim='svd', stack_dims=True):
         if stack_dims:
             ds_reduced = _drop_members(ds, rmd_member=[m])
         else:
-            # TODO: when not stacked I have one identical
+            # TODO: when not stack_dims, m2m create a member vs forecast_member
+            # matrix with the diagonal empty if there would be the following line:
+            # ds_reduced = _drop_members(ds, rmd_member=[m])
+            # if the verification member is not left out (as now), there is one
+            # identical comparison, which inflates the skill. To partly fix
+            # this there is a m2m correction applied in the end of
+            # compute_perfect_model.
             ds_reduced = ds
         reference = ds.sel(member=m).squeeze()
         if stack_dims:

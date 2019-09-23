@@ -46,12 +46,15 @@ def compute_perfect_model(
     Args:
         ds (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
         control (xarray object): control with dimension ``time``.
-        metric (str): `metric` name, see :py:func:`climpred.utils.get_metric_function`.
-        comparison (str): `comparison` name, see
-                          :py:func:`climpred.utils.get_comparison_function`.
+        metric (str): `metric` name, see
+         :py:func:`climpred.utils.get_metric_function` and (see :ref:`Metrics`).
+        comparison (str): `comparison` name defines what to take as forecast
+            and verification (see
+            :py:func:`climpred.utils.get_comparison_function` and :ref:`Comparisons`).
         dim (str or list): dimension to apply metric over. default: ['member', 'init']
         add_attrs (bool): write climpred compute args to attrs. default: True
-        ** metric_kwargs (dict): additional keywords to be passed to metric
+        ** metric_kwargs (dict): additional keywords to be passed to metric.
+            (see the arguments required for a given metric in metrics.py)
 
     Returns:
         skill (xarray object): skill score with dimensions as input `ds`
@@ -160,24 +163,22 @@ def compute_hindcast(
     Args:
         hind (xarray object):
             Expected to follow package conventions:
-
             * ``init`` : dim of initialization dates
             * ``lead`` : dim of lead time from those initializations
-
             Additional dims can be member, lat, lon, depth, ...
         reference (xarray object):
             reference output/data over same time period.
         metric (str):
             Metric used in comparing the decadal prediction ensemble with the
-            reference (see :py:func:`climpred.utils.get_metric_function`).
+            reference
+            (see :py:func:`climpred.utils.get_metric_function` and :ref:`Metrics`).
         comparison (str):
             How to compare the decadal prediction ensemble to the reference:
 
                 * e2r : ensemble mean to reference (Default)
                 * m2r : each member to the reference
+                (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
-        nlags (int): How many lags to compute skill/potential predictability out
-                     to. Default: length of `lead` dim
         max_dof (bool):
             If True, maximize the degrees of freedom by slicing `hind` and `reference`
             to a common time frame at each lead.
@@ -187,7 +188,7 @@ def compute_hindcast(
             on the same set of initializations.
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
-
+            (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
         skill (xarray object):
@@ -302,6 +303,7 @@ def compute_persistence(
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
         ** metric_kwargs (dict): additional keywords to be passed to metric
+            (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
         pers (xarray object): Results of persistence forecast with the input metric

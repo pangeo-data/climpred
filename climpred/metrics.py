@@ -46,7 +46,7 @@ def _get_norm_factor(comparison):
     return fac
 
 
-def _pearson_r(forecast, reference, dim='svd', **kwargs):
+def _pearson_r(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the Anomaly Correlation Coefficient (ACC).
 
@@ -67,7 +67,7 @@ def _pearson_r(forecast, reference, dim='svd', **kwargs):
     return pearson_r(forecast, reference, dim=dim)
 
 
-def _pearson_r_p_value(forecast, reference, dim='svd', **kwargs):
+def _pearson_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the probability associated with the ACC not being random.
     """
@@ -80,7 +80,7 @@ def _pearson_r_p_value(forecast, reference, dim='svd', **kwargs):
     return pval
 
 
-def _mse(forecast, reference, dim='svd', **kwargs):
+def _mse(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the Mean Sqaure Error (MSE).
 
@@ -98,7 +98,7 @@ def _mse(forecast, reference, dim='svd', **kwargs):
     return mse(forecast, reference, dim=dim)
 
 
-def _rmse(forecast, reference, dim='svd', **kwargs):
+def _rmse(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the Root Mean Sqaure Error (RMSE).
 
@@ -116,7 +116,7 @@ def _rmse(forecast, reference, dim='svd', **kwargs):
     return rmse(forecast, reference, dim=dim)
 
 
-def _mae(forecast, reference, dim='svd', **kwargs):
+def _mae(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the Mean Absolute Error (MAE).
 
@@ -134,7 +134,7 @@ def _mae(forecast, reference, dim='svd', **kwargs):
     return mae(forecast, reference, dim=dim)
 
 
-def _brier_score(forecast, reference, **kwargs):
+def _brier_score(forecast, reference, **metric_kwargs):
     """Calculate Brier score for forecasts on binary reference.
 
     ..math:
@@ -146,7 +146,7 @@ def _brier_score(forecast, reference, **kwargs):
         * func (function): function to be applied to reference and forecasts
                            and then mean('member') to get forecasts and
                            reference in interval [0,1].
-                           (required to be added via **kwargs)
+                           (required to be added via **metric_kwargs)
 
     Reference:
         * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
@@ -161,8 +161,8 @@ def _brier_score(forecast, reference, **kwargs):
         * properscoring.brier_score
         * xskillscore.brier_score
     """
-    if 'func' in kwargs:
-        func = kwargs['func']
+    if 'func' in metric_kwargs:
+        func = metric_kwargs['func']
     else:
         raise ValueError(
             'Please provide a function `func` to be applied to comparison and \
@@ -172,10 +172,10 @@ def _brier_score(forecast, reference, **kwargs):
     return brier_score(func(reference), func(forecast).mean('member'))
 
 
-def _threshold_brier_score(forecast, reference, **kwargs):
+def _threshold_brier_score(forecast, reference, **metric_kwargs):
     """
     Calculate the Brier scores of an ensemble for exceeding given thresholds.
-    Provide threshold via kwargs.
+    Provide threshold via metric_kwargs.
 
     .. math::
         CRPS(F, x) = \int_z BS(F(z), H(z - x)) dz
@@ -190,7 +190,7 @@ def _threshold_brier_score(forecast, reference, **kwargs):
         * reference (xr.object)
         * threshold (int, float, xr.object): Threshold to check exceedance,
             see properscoring.threshold_brier_score
-            (required to be added via **kwargs)
+            (required to be added via **metric_kwargs)
 
     References:
         * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
@@ -205,15 +205,15 @@ def _threshold_brier_score(forecast, reference, **kwargs):
         * properscoring.threshold_brier_score
         * xskillscore.threshold_brier_score
     """
-    if 'threshold' not in kwargs:
+    if 'threshold' not in metric_kwargs:
         raise ValueError('Please provide threshold.')
     else:
-        threshold = kwargs['threshold']
+        threshold = metric_kwargs['threshold']
     # switch args b/c xskillscore.threshold_brier_score(obs, forecasts)
     return threshold_brier_score(reference, forecast, threshold)
 
 
-def _crps(forecast, reference, **kwargs):
+def _crps(forecast, reference, **metric_kwargs):
     """
     Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
 
@@ -235,19 +235,21 @@ def _crps(forecast, reference, **kwargs):
     return crps_ensemble(reference, forecast)
 
 
-def _crps_gaussian(forecast, mu, sig, **kwargs):
+def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
     """CRPS assuming a guassian distribution. Helper function for CRPSS.
     See properscoring.crps_gaussian and xskillscore.crps_gaussian."""
     return crps_gaussian(forecast, mu, sig)
 
 
-def _crps_quadrature(forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, **kwargs):
+def _crps_quadrature(
+    forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, **metric_kwargs
+):
     """CRPS assuming distribution cdf_or_dist. Helper function for CRPSS.
     See properscoring.crps_quadrature and xskillscore.crps_quadrature."""
     return crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
 
 
-def _crpss(forecast, reference, **kwargs):
+def _crpss(forecast, reference, **metric_kwargs):
     """
     Continuous Ranked Probability Skill Score is strictly proper. When assuming
      a gaussian distribution of forecasts, use default gaussian=True. If
@@ -296,28 +298,28 @@ def _crpss(forecast, reference, **kwargs):
     mu = reference.mean(rdim)
     sig = reference.std(rdim)
 
-    # checking kwargs, if not found use defaults: gaussian, else crps_quadrature
-    if 'gaussian' in kwargs:
-        gaussian = kwargs['gaussian']
+    # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
+    if 'gaussian' in metric_kwargs:
+        gaussian = metric_kwargs['gaussian']
     else:
         gaussian = True
     if gaussian:
         ref_skill = _crps_gaussian(forecast, mu, sig)
     else:
-        if 'cdf_or_dist' in kwargs:
-            cdf_or_dist = kwargs['cdf_or_dist']
+        if 'cdf_or_dist' in metric_kwargs:
+            cdf_or_dist = metric_kwargs['cdf_or_dist']
         else:
             cdf_or_dist = norm
-        if 'xmin' in kwargs:
-            xmin = kwargs['xmin']
+        if 'xmin' in metric_kwargs:
+            xmin = metric_kwargs['xmin']
         else:
             xmin = None
-        if 'xmax' in kwargs:
-            xmax = kwargs['xmax']
+        if 'xmax' in metric_kwargs:
+            xmax = metric_kwargs['xmax']
         else:
             xmax = None
-        if 'tol' in kwargs:
-            tol = kwargs['tol']
+        if 'tol' in metric_kwargs:
+            tol = metric_kwargs['tol']
         else:
             tol = 1e-6
         ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
@@ -326,7 +328,7 @@ def _crpss(forecast, reference, **kwargs):
     return skill_score
 
 
-def _crpss_es(forecast, reference, **kwargs):
+def _crpss_es(forecast, reference, **metric_kwargs):
     """CRPSS Ensemble Spread.
 
     .. math:: CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o}))
@@ -366,7 +368,7 @@ def _crpss_es(forecast, reference, **kwargs):
     return 1 - crps_h / crps_r
 
 
-def _bias(forecast, reference, dim='svd', **kwargs):
+def _bias(forecast, reference, dim='svd', **metric_kwargs):
     """Calculate unconditional bias.
 
     .. math::
@@ -385,7 +387,7 @@ def _bias(forecast, reference, dim='svd', **kwargs):
     return bias
 
 
-def _msss_murphy(forecast, reference, dim='svd', **kwargs):
+def _msss_murphy(forecast, reference, dim='svd', **metric_kwargs):
     """Calculate Murphy's Mean Square Skill Score (MSSS).
 
     .. math::
@@ -406,7 +408,7 @@ def _msss_murphy(forecast, reference, dim='svd', **kwargs):
     return skill
 
 
-def _conditional_bias(forecast, reference, dim='svd', **kwargs):
+def _conditional_bias(forecast, reference, dim='svd', **metric_kwargs):
     """Calculate the conditional bias between forecast and reference.
 
     .. math:: \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
@@ -419,7 +421,7 @@ def _conditional_bias(forecast, reference, dim='svd', **kwargs):
     return conditional_bias
 
 
-def _std_ratio(forecast, reference, dim='svd', **kwargs):
+def _std_ratio(forecast, reference, dim='svd', **metric_kwargs):
     """Calculate the ratio of standard deviations of reference over forecast.
 
     .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
@@ -431,7 +433,7 @@ def _std_ratio(forecast, reference, dim='svd', **kwargs):
     return ratio
 
 
-def _bias_slope(forecast, reference, dim='svd', **kwargs):
+def _bias_slope(forecast, reference, dim='svd', **metric_kwargs):
     """Calculate bias slope between reference and forecast standard deviations.
 
     .. math:: \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
@@ -445,7 +447,7 @@ def _bias_slope(forecast, reference, dim='svd', **kwargs):
     return b_s
 
 
-def _ppp(forecast, reference, dim='svd', **kwargs):
+def _ppp(forecast, reference, dim='svd', **metric_kwargs):
     """Prognostic Potential Predictability (PPP) metric.
 
     .. math:: PPP = 1 - \\frac{MSE}{ \\sigma^2_{ref} \\cdot fac}
@@ -455,7 +457,7 @@ def _ppp(forecast, reference, dim='svd', **kwargs):
         * reference (xr.object)
         * dim (str): dimension to apply metric to
         * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **kwargs)
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 1: perfect forecast
@@ -477,16 +479,18 @@ def _ppp(forecast, reference, dim='svd', **kwargs):
     """
     mse_skill = _mse(forecast, reference, dim=dim)
     var = reference.var(dim)
-    if 'comparison' in kwargs:
-        comparison = kwargs['comparison']
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize PPP. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize PPP. Not found in', metric_kwargs
+        )
     fac = _get_norm_factor(comparison)
     ppp_skill = 1 - mse_skill / var / fac
     return ppp_skill
 
 
-def _nrmse(forecast, reference, dim='svd', **kwargs):
+def _nrmse(forecast, reference, dim='svd', **metric_kwargs):
     """Normalized Root Mean Square Error (NRMSE) metric.
 
     .. math:: NRMSE = \\frac{RMSE}{\\sigma_{o} \\cdot \\sqrt{fac} }
@@ -497,7 +501,7 @@ def _nrmse(forecast, reference, dim='svd', **kwargs):
         * reference (xr.object)
         * dim (str): dimension to apply metric to
         * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **kwargs)
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 0: perfect forecast
@@ -518,16 +522,18 @@ def _nrmse(forecast, reference, dim='svd', **kwargs):
     """
     rmse_skill = _rmse(forecast, reference, dim=dim)
     std = reference.std(dim)
-    if 'comparison' in kwargs:
-        comparison = kwargs['comparison']
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize NRMSE. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
+        )
     fac = _get_norm_factor(comparison)
     nrmse_skill = rmse_skill / std / np.sqrt(fac)
     return nrmse_skill
 
 
-def _nmse(forecast, reference, dim='svd', **kwargs):
+def _nmse(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV).
 
@@ -538,7 +544,7 @@ def _nmse(forecast, reference, dim='svd', **kwargs):
         * reference (xr.object)
         * dim (str): dimension to apply metric to
         * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **kwargs)
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 0: perfect forecast: 0
@@ -552,16 +558,18 @@ def _nmse(forecast, reference, dim='svd', **kwargs):
     """
     mse_skill = _mse(forecast, reference, dim=dim)
     var = reference.var(dim)
-    if 'comparison' in kwargs:
-        comparison = kwargs['comparison']
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize NMSE. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+        )
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
 
 
-def _nmae(forecast, reference, dim='svd', **kwargs):
+def _nmae(forecast, reference, dim='svd', **metric_kwargs):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
@@ -572,7 +580,7 @@ def _nmae(forecast, reference, dim='svd', **kwargs):
         * reference (xr.object)
         * dim (str): dimension to apply metric to
         * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **kwargs)
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 0: perfect forecast: 0
@@ -587,16 +595,18 @@ def _nmae(forecast, reference, dim='svd', **kwargs):
     """
     mae_skill = _mae(forecast, reference, dim=dim)
     std = reference.std(dim).mean()
-    if 'comparison' in kwargs:
-        comparison = kwargs['comparison']
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
     else:
-        raise ValueError('Comparison needed to normalize NMSE. Not found in', kwargs)
+        raise ValueError(
+            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+        )
     fac = _get_norm_factor(comparison)
     nmae_skill = mae_skill / std / fac
     return nmae_skill
 
 
-def _uacc(forecast, reference, dim='svd', **kwargs):
+def _uacc(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate Bushuk's unbiased ACC (uACC).
 
@@ -613,4 +623,4 @@ def _uacc(forecast, reference, dim='svd', **kwargs):
           Forecast Skill. Climate Dynamics, June 9, 2018.
           https://doi.org/10/gd7hfq.
     """
-    return _ppp(forecast, reference, dim=dim, **kwargs) ** 0.5
+    return _ppp(forecast, reference, dim=dim, **metric_kwargs) ** 0.5

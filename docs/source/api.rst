@@ -10,7 +10,7 @@ Prediction
 .. automodsumm:: climpred.prediction
     :functions-only:
     :toctree: api
-    :skip: get_comparison_function, get_metric_function, intersect, is_xarray, reduce_time_series
+    :skip: get_comparison_function, get_metric_function, intersect, is_xarray, reduce_time_series, assign_attrs
 
 
 Bootstrap
@@ -19,7 +19,7 @@ Bootstrap
 .. automodsumm:: climpred.bootstrap
     :functions-only:
     :toctree: api
-    :skip: DPP, bootstrap_compute, bootstrap_uninit_pm_ensemble_from_control, bootstrap_uninitialized_ensemble, compute_persistence, compute_hindcast, compute_perfect_model, has_dims, varweighted_mean_period
+    :skip: dpp, compute_persistence, compute_hindcast, compute_perfect_model, has_dims, varweighted_mean_period, assign_attrs
 
 Statistics
 ~~~~~~~~~~

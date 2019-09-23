@@ -7,6 +7,7 @@ dependencies:
   - xarray
   - jupyterlab
   - dask
+  - numba
   - scipy
   - esmpy
   - matplotlib
@@ -21,7 +22,7 @@ dependencies:
   - cartopy
   - pip
   - pip:
-    - xskillscore>=0.0.4
+    - xskillscore>=0.0.5
     - xesmf
     - pytest-cov
     - coveralls

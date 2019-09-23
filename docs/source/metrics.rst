@@ -105,6 +105,14 @@ Mean Square Skill Score (MSSS)
 .. autofunction:: _ppp
 
 
+Unbiased ACC
+------------
+
+``keyword: 'uacc'``
+
+.. autofunction:: _uacc
+
+
 Murphy decomposition metrics
 ============================
 
@@ -145,23 +153,6 @@ Murphy's Mean Square Skill Score
 
 .. autofunction:: _msss_murphy
 
-Other metrics
-=============
-
-Logarithmic Ensemble Spread Score
----------------------------------
-
-``keyword: 'less'``
-
-.. autofunction:: _less
-
-Unbiased ACC
-------------
-
-``keyword: 'uacc'``
-
-.. autofunction:: _uacc
-
 
 Probabilistic
 #############
@@ -179,6 +170,28 @@ Continuous Ranked Probability Skill Score
 ``keyword: 'crpss'``
 
 .. autofunction:: _crpss
+
+Continuous Ranked Probability Skill Score Ensemble Spread
+---------------------------------------------------------
+
+``keyword: 'crpss_es'``
+
+.. autofunction:: _crpss_es
+
+Brier Score
+-----------
+
+``keyword: 'brier_score', 'brier', 'bs'``
+
+.. autofunction:: _brier_score
+
+Threshold Brier Score
+---------------------
+
+``keyword: 'threshold_brier_score', 'tbs'``
+
+.. autofunction:: _threshold_brier_score
+
 
 References
 ##########

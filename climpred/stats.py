@@ -1,10 +1,10 @@
 """Objects dealing with timeseries and ensemble statistics."""
 import numpy as np
 import numpy.polynomial.polynomial as poly
+import xarray as xr
+
 import scipy.stats as ss
 from scipy.signal import periodogram
-
-import xarray as xr
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .checks import has_dims, is_xarray
@@ -330,8 +330,8 @@ def decorrelation_time(da, r=20, dim='time'):
 # Functions related to DPP from Boer et al.
 # --------------------------------------------#
 # TODO: coords lon, lat get lost for curvilinear ds
-def DPP(ds, m=10, chunk=True):
-    """Calculates the Diagnostic Potential Predictability (DPP)
+def dpp(ds, m=10, chunk=True):
+    """Calculates the Diagnostic Potential Predictability (dpp)
 
     .. math::
 
@@ -340,7 +340,7 @@ def DPP(ds, m=10, chunk=True):
 
     Note:
         Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
-        in a slightly different way. chunk=False
+        in a slightly different way: chunk=False.
 
     Args:
         ds (xr.DataArray): control simulation with time dimension as years.
@@ -371,11 +371,11 @@ def DPP(ds, m=10, chunk=True):
         Separate data into chunks and reshapes chunks in a c dimension.
 
         Specify either the number chunks or the length of chunks.
-        Needed for DPP.
+        Needed for dpp.
 
         Args:
             ds (xr.DataArray): control simulation with time dimension as years.
-            chunk_length (int): see DPP(m)
+            chunk_length (int): see dpp(m)
             number_chunks (int): number of chunks in the return data.
 
         Returns:

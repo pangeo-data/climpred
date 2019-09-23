@@ -1,10 +1,14 @@
 import pytest
-
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import PM_METRICS
+from climpred.constants import DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
+# uacc is sqrt(ppp), fails when ppp negative
+DETERMINISTIC_PM_METRICS_LUACC = DETERMINISTIC_PM_METRICS.copy()
+DETERMINISTIC_PM_METRICS_LUACC.remove('uacc')
+
+# run less tests
 PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 
 
@@ -63,7 +67,7 @@ def test_pvalue_from_bootstrapping(pm_da_ds1d, pm_da_control1d, metric):
     assert actual < 2 * (1 - sig / 100)
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_persistence_ds1d_not_nan(pm_ds_ds1d, pm_ds_control1d, metric):
     """
     Checks that there are no NaNs on persistence forecast of 1D time series.
@@ -75,7 +79,7 @@ def test_compute_persistence_ds1d_not_nan(pm_ds_ds1d, pm_ds_control1d, metric):
         assert not actual[var]
 
 
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_persistence_lead0_lead1(
     pm_da_ds1d, pm_da_ds1d_lead0, pm_da_control1d, metric
 ):
@@ -88,7 +92,7 @@ def test_compute_persistence_lead0_lead1(
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_perfect_model_da1d_not_nan(
     pm_da_ds1d, pm_da_control1d, comparison, metric
 ):
@@ -106,7 +110,7 @@ def test_compute_perfect_model_da1d_not_nan(
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_perfect_model_lead0_lead1(
     pm_da_ds1d, pm_da_ds1d_lead0, pm_da_control1d, comparison, metric
 ):
@@ -122,19 +126,15 @@ def test_compute_perfect_model_lead0_lead1(
     assert (res1.values == res2.values).all()
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
-def test_bootstrap_perfect_model_da1d_not_nan(
-    pm_da_ds1d, pm_da_control1d, metric, comparison
-):
+def test_bootstrap_perfect_model_da1d_not_nan(pm_da_ds1d, pm_da_control1d):
     """
     Checks that there are no NaNs on bootstrap perfect_model of 1D da.
     """
     actual = bootstrap_perfect_model(
         pm_da_ds1d,
         pm_da_control1d,
-        metric=metric,
-        comparison=comparison,
+        metric='rmse',
+        comparison='e2c',
         sig=50,
         bootstrap=2,
     )
@@ -144,19 +144,15 @@ def test_bootstrap_perfect_model_da1d_not_nan(
     assert not actual_uninit_p
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', PM_METRICS)
-def test_bootstrap_perfect_model_ds1d_not_nan(
-    pm_ds_ds1d, pm_ds_control1d, metric, comparison
-):
+def test_bootstrap_perfect_model_ds1d_not_nan(pm_ds_ds1d, pm_ds_control1d):
     """
     Checks that there are no NaNs on bootstrap perfect_model of 1D ds.
     """
     actual = bootstrap_perfect_model(
         pm_ds_ds1d,
         pm_ds_control1d,
-        metric=metric,
-        comparison=comparison,
+        metric='rmse',
+        comparison='e2c',
         sig=50,
         bootstrap=2,
     )

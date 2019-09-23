@@ -2,16 +2,23 @@
 Changelog History
 =================
 
-climpred v1.1 (2019-08-##)
+climpred v1.1 (2019-09-23)
 ============================
 
 Features
 --------
 - Write information about skill computation to netcdf attributes(:pr:`213`) `Aaron Spring`_
-- temporal and spatial smoothing module (:pr:`224`) `Aaron Spring`_
+- Temporal and spatial smoothing module (:pr:`224`) `Aaron Spring`_
+- Add metrics `brier_score`, `threshold_brier_score` and `crpss_es` (:pr:`232`) `Aaron Spring`_
+- Allow `compute_hindcast` and `compute_perfect_model` to specify which dimension `dim` to calculate metric over (:pr:`232`) `Aaron Spring`_
+
+Bug Fixes
+---------
+- Correct implementation of probabilistic metrics from `xskillscore` in `compute_perfect_model`, `bootstrap_perfect_model`, `compute_hindcast` and `bootstrap_hindcast`, now requires xskillscore>=0.05 (:pr:`232`) `Aaron Spring`_
 
 Internals/Minor Fixes
 ---------------------
+- Rename .stats.DPP to dpp (:pr:`232`) `Aaron Spring`_
 - Add `matplotlib` as a main dependency so that a direct pip installation works (:pr:`211`) `Riley X. Brady`_.
 - ``climpred`` is now installable from conda-forge (:pr:`212`) `Riley X. Brady`_.
 - Fix erroneous descriptions of sample datasets (:pr:`226`) `Riley X. Brady`_.

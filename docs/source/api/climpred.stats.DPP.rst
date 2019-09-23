@@ -3,4 +3,4 @@ DPP
 
 .. currentmodule:: climpred.stats
 
-.. autofunction:: DPP
+.. autofunction:: dpp

@@ -236,8 +236,12 @@ def _crps(forecast, reference, **metric_kwargs):
 
 
 def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
-    """CRPS assuming a guassian distribution. Helper function for CRPSS.
-    See properscoring.crps_gaussian and xskillscore.crps_gaussian."""
+    """CRPS assuming a gaussian distribution. Helper function for CRPSS.
+
+    See also:
+        * properscoring.crps_gaussian
+        * xskillscore.crps_gaussian
+    """
     return crps_gaussian(forecast, mu, sig)
 
 
@@ -245,16 +249,21 @@ def _crps_quadrature(
     forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, **metric_kwargs
 ):
     """CRPS assuming distribution cdf_or_dist. Helper function for CRPSS.
-    See properscoring.crps_quadrature and xskillscore.crps_quadrature."""
+
+    See also:
+        * properscoring.crps_quadrature
+        * xskillscore.crps_quadrature
+    """
     return crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
 
 
 def _crpss(forecast, reference, **metric_kwargs):
-    """
-    Continuous Ranked Probability Skill Score is strictly proper. When assuming
-     a gaussian distribution of forecasts, use default gaussian=True. If
-     not gaussian, you may specify the distribution type, xmin/xmax/tolerance
-     for integration (see xskillscore.crps_quadrature).
+    """Continuous Ranked Probability Skill Score
+
+    .. note::
+        When assuming a gaussian distribution of forecasts, use default gaussian=True.
+        If not gaussian, you may specify the distribution type, xmin/xmax/tolerance
+        for integration (see xskillscore.crps_quadrature).
 
     .. math::
         CRPSS = 1 - \\frac{CRPS_{init}}{CRPS_{clim}}

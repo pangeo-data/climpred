@@ -9,7 +9,7 @@ Features
 --------
 - Write information about skill computation to netcdf attributes(:pr:`213`) `Aaron Spring`_
 - Temporal and spatial smoothing module (:pr:`224`) `Aaron Spring`_
-- Add metrics `brier_score`, `threshold_brier_score`, `crpss_es` and `less` (:pr:`232`) `Aaron Spring`_
+- Add metrics `brier_score`, `threshold_brier_score` and `crpss_es` (:pr:`232`) `Aaron Spring`_
 - Allow `compute_hindcast` and `compute_perfect_model` to specify which dimension `dim` to calculate metric over (:pr:`232`) `Aaron Spring`_
 
 Bug Fixes

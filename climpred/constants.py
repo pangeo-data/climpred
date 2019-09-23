@@ -34,7 +34,6 @@ METRIC_ALIASES = {
     'brier': 'brier_score',
     'bs': 'brier_score',
     'tbs': 'threshold_brier_score',
-    'less': 'log_ens_spread_score',
 }
 
 # more positive skill is better than more negative
@@ -63,7 +62,6 @@ DIMENSIONLESS_METRICS = [
     'nmse',
     'nmae',
     'uacc',
-    'less',
     'threshold_brier_score',
 ]
 
@@ -74,7 +72,6 @@ PROBABILISTIC_METRICS = [
     'crps',
     'crpss',
     'brier_score',
-    'log_ens_spread_score',
 ]
 
 # combined allowed metrics for compute_hindcast and compute_perfect_model

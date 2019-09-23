@@ -10,8 +10,6 @@ from climpred.constants import (
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 
-# PROBABILISTIC_METRICS.remove('less')
-
 
 @pytest.fixture
 def pm_da_ds1d():
@@ -311,7 +309,7 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
     assert record[0].message.args[0] == expected
 
 
-@pytest.mark.parametrize('metric', ['less', 'crps'])
+@pytest.mark.parametrize('metric', ['crps'])
 def test_compute_hindcast_probabilistic_metric_e2r_fails(
     initialized_da, observations_da, metric
 ):
@@ -330,7 +328,7 @@ def test_compute_hindcast_probabilistic_metric_e2r_fails(
 
 
 @pytest.mark.parametrize('dim', ['init'])
-@pytest.mark.parametrize('metric', ['crps', 'less'])
+@pytest.mark.parametrize('metric', ['crps'])
 def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
     initialized_da, observations_da, metric, dim
 ):

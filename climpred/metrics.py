@@ -326,42 +326,6 @@ def _crpss(forecast, reference, **kwargs):
     return skill_score
 
 
-def _log_ens_spread_score(forecast, reference, **kwargs):
-    """
-    Logarithmic Ensemble Spread Score.
-
-    .. math:: LESS = ln(\\frac{\\sigma^2_f}{\\sigma^2_o})
-
-    References:
-        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
-          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
-          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
-          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
-          631–43. https://doi.org/10/f9jrhw.
-
-    Range:
-        * pos: under-disperive
-        * neg: over-disperive
-        * perfect: 0
-    """
-    # compute_perfect_model path
-    if 'init' in forecast.dims:
-        dim2 = 'init'
-    # compute_hindcast path
-    elif 'time' in forecast.dims:
-        dim2 = 'time'
-    else:
-        raise ValueError('dim2 not found automatically in', forecast.dims)
-
-    # broadcast to use _mse
-    forecast, ref2 = xr.broadcast(forecast, reference)
-    # not corrected for conditional bias yet
-    numerator = _mse(forecast, ref2, dim='member').mean(dim2)
-    denominator = _mse(forecast.mean('member'), ref2.mean('member'), dim=dim2)
-    less = np.log(numerator / denominator)
-    return less
-
-
 def _crpss_es(forecast, reference, **kwargs):
     """CRPSS Ensemble Spread.
 

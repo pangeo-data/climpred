@@ -178,13 +178,6 @@ Continuous Ranked Probability Skill Score Ensemble Spread
 
 .. autofunction:: _crpss_es
 
-Logarithmic Ensemble Skill Score
---------------------------------
-
-``keyword: 'log_ens_spread_score', 'less'``
-
-.. autofunction:: _log_ens_spread_score
-
 Brier Score
 -----------
 

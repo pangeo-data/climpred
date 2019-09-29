@@ -14,7 +14,7 @@ from . import (
     tutorial,
 )
 
-from .classes import HindcastEnsemble, PerfectModelEnsemble, PredictionEnsemble
+from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .versioning.print_versions import show_versions
 
 try:

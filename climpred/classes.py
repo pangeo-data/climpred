@@ -104,8 +104,7 @@ class PredictionEnsemble:
     def __repr__(self):
         # REINSTATE THIS.
         return 'Printing is temporarily disabled.'
-
-    #        return _display_metadata(self)
+        # return _display_metadata(self)
 
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.
@@ -118,16 +117,59 @@ class PredictionEnsemble:
 
         def wrapper(*args, **kwargs):
             """Applies arbitrary function to all datasets in the PredictionEnsemble
-            object."""
-            # Got this from: https://stackoverflow.com/questions/41919499/
-            # how-to-call-undefined-methods-sequentially-in-python-class
-            self._datasets = {
-                k: getattr(v, name)(*args, **kwargs)
-                for (k, v) in self._datasets.items()
-            }
-            return self
+            object.
 
+            Got this from: https://stackoverflow.com/questions/41919499/
+            how-to-call-undefined-methods-sequentially-in-python-class
+            """
+
+            def _apply_func(v, name, *args, **kwargs):
+                """Handles exceptions in our dictionary comprehension.
+
+                In other words, this will skip applying the arbitrary function
+                to a sub-dataset if a ValueError is thrown. This specifically
+                targets cases where certain datasets don't have the given
+                dim that's being called. E.g., ``.isel(lead=0)`` should only
+                be applied to the initialized dataset.
+
+                Ref: https://stackoverflow.com/questions/1528237/
+                how-to-handle-exceptions-in-a-list-comprehensions
+                """
+                try:
+                    return getattr(v, name)(*args, **kwargs)
+                except ValueError:
+                    return v
+
+            # Create temporary copy to modify to avoid inplace operation.
+            datasets = self._datasets.copy()
+            # Apply this arbitrary function to our nested dictionary,
+            # based on https://stackoverflow.com/questions/17915117/
+            # nested-dictionary-comprehension-python
+            datasets = {
+                outer_k: {
+                    inner_k: _apply_func(inner_v, name, *args, **kwargs)
+                    for inner_k, inner_v in outer_v.items()
+                }
+                for outer_k, outer_v in self._datasets.items()
+            }
+            # Instantiates new object with the modified datasets.
+            return self._construct_direct(datasets)
+
+        # Remove rergistered attribute.
+        delattr(self, name)
         return wrapper
+
+    @classmethod
+    def _construct_direct(cls, datasets):
+        """Shortcut around __init__ for internal use to avoid inplace
+        operations.
+
+        Pulled from xarrray Dataset class.
+        https://github.com/pydata/xarray/blob/master/xarray/core/dataset.py
+        """
+        obj = object.__new__(cls)
+        obj._datasets = datasets
+        return obj
 
     def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be
@@ -244,8 +286,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # NOTE: These should all be decorators.
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self.initialized, xobj)
-        match_initialized_vars(self.initialized, xobj)
+        # match_initialized_dims(self.initialized, xobj)
+        # match_initialized_vars(self.initialized, xobj)
         self.control = xobj
 
     def generate_uninitialized(self, var=None):
@@ -445,7 +487,7 @@ class HindcastEnsemble(PredictionEnsemble):
                          uninitialized ensemble run.
         """
         super().__init__(xobj)
-        self.reference = {}
+        self._datasets.update({'reference': {}})
 
     def _vars_to_drop(self, ref, init=True):
         """Returns list of variables to drop when comparing
@@ -498,9 +540,9 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self.initialized, xobj)
-        match_initialized_vars(self.initialized, xobj)
-        self.reference[name] = xobj
+        match_initialized_dims(self._datasets['initialized'], xobj)
+        match_initialized_vars(self._datasets['initialized'], xobj)
+        self._datasets['reference'].update({name: xobj})
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
@@ -515,8 +557,8 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self.initialized, xobj, uninitialized=True)
-        match_initialized_vars(self.initialized, xobj)
+        # match_initialized_dims(self.initialized, xobj, uninitialized=True)
+        # match_initialized_vars(self.initialized, xobj)
         self.uninitialized = xobj
 
     def compute_metric(

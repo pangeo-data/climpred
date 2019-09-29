@@ -13,7 +13,8 @@ from . import (
     stats,
     tutorial,
 )
-from .classes import HindcastEnsemble, PerfectModelEnsemble
+
+from .classes import HindcastEnsemble, PerfectModelEnsemble, PredictionEnsemble
 from .versioning.print_versions import show_versions
 
 try:

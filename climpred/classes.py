@@ -24,11 +24,10 @@ from .smoothing import (
     temporal_smoothing,
 )
 
+
 # ----------
 # Aesthetics
 # ----------
-
-
 def _display_metadata(self):
     """
     This is called in the following case:
@@ -90,13 +89,45 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
-        self.initialized = xobj
-        self.uninitialized = {}
+        # RXB:
+        # Will store all datasets in a large dictionary to make things like __getattr__
+        # easy, i.e., we can loop through everything at once. We can reserve certain
+        # names ('initialized', 'uninitialized', etc.) for special cases for applying
+        # prediction functions to.
+        #
+        # Perhaps a future solution is to have a nested dictionary so you can have
+        # multiple prediction ensembles under the 'initialized' sub-dictionary.
+        self._datasets = {'initialized': xobj}
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
-        return _display_metadata(self)
+        # REINSTATE THIS.
+        return 'Printing is temporarily disabled.'
+
+    #        return _display_metadata(self)
+
+    def __getattr__(self, name):
+        """Allows for xarray methods to be applied to our prediction objects.
+
+        Args:
+            * name: Function, e.g., .isel() or .sum().
+        """
+        # Temporarily registers attribute with the object.
+        setattr(self, name, self)
+
+        def wrapper(*args, **kwargs):
+            """Applies arbitrary function to all datasets in the PredictionEnsemble
+            object."""
+            # Got this from: https://stackoverflow.com/questions/41919499/
+            # how-to-call-undefined-methods-sequentially-in-python-class
+            self._datasets = {
+                k: getattr(v, name)(*args, **kwargs)
+                for (k, v) in self._datasets.items()
+            }
+            return self
+
+        return wrapper
 
     def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be

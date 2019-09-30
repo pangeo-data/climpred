@@ -21,6 +21,7 @@ dependencies:
   - nbsphinx
   - cartopy
   - pip
+  - tqdm
   - pip:
     - xskillscore>=0.0.5
     - xesmf

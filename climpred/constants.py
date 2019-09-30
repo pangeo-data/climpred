@@ -46,6 +46,7 @@ POSITIVELY_ORIENTED_METRICS = [
     'crpss',
     'uacc',
     'msss',
+    'crpss_es',
 ]
 
 # needed to set attrs['units'] to None

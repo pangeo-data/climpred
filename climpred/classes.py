@@ -89,15 +89,9 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
-        # RXB:
-        # Will store all datasets in a large dictionary to make things like __getattr__
-        # easy, i.e., we can loop through everything at once. We can reserve certain
-        # names ('initialized', 'uninitialized', etc.) for special cases for applying
-        # prediction functions to.
-        #
-        # Perhaps a future solution is to have a nested dictionary so you can have
-        # multiple prediction ensembles under the 'initialized' sub-dictionary.
         self._datasets = {'initialized': xobj}
+        # Reserve sub-dictionary for an uninitialized run.
+        self._datasets.update({'uninitialized': {}})
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
@@ -273,7 +267,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
 
         super().__init__(xobj)
-        self.control = {}
+        # Reserve sub-dictionary for the control simulation.
+        self._datasets.update({'control': {}})
 
     @is_xarray(1)
     def add_control(self, xobj):
@@ -286,9 +281,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # NOTE: These should all be decorators.
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        # match_initialized_dims(self.initialized, xobj)
-        # match_initialized_vars(self.initialized, xobj)
-        self.control = xobj
+        match_initialized_dims(self._datasets['initialized'], xobj)
+        match_initialized_vars(self._datasets['initialized'], xobj)
+        self._datasets.update({'control': xobj})
 
     def generate_uninitialized(self, var=None):
         """Generate an uninitialized ensemble by bootstrapping the
@@ -309,7 +304,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             uninit = bootstrap_uninit_pm_ensemble_from_control(
                 self.initialized, self.control
             )
-        self.uninitialized = uninit
+        self._datasets.update({'uninitialized': uninit})
 
     def compute_metric(self, metric='pearson_r', comparison='m2m'):
         """Compares the initialized ensemble to the control run.
@@ -510,10 +505,10 @@ class HindcastEnsemble(PredictionEnsemble):
           and reference Datasets.
         """
         if init:
-            init_vars = [var for var in self.initialized.data_vars]
+            init_vars = [var for var in self._datasets['initialized'].data_vars]
         else:
-            init_vars = [var for var in self.uninitialized.data_vars]
-        ref_vars = [var for var in self.reference[ref].data_vars]
+            init_vars = [var for var in self._datasets['uninitialized'].data_vars]
+        ref_vars = [var for var in self._datasets['reference'][ref].data_vars]
         # find what variable they have in common.
         intersect = set(ref_vars).intersection(init_vars)
         # perhaps could be done cleaner than this.
@@ -557,9 +552,9 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        # match_initialized_dims(self.initialized, xobj, uninitialized=True)
-        # match_initialized_vars(self.initialized, xobj)
-        self.uninitialized = xobj
+        match_initialized_dims(self._datasets['initialized'], xobj, uninitialized=True)
+        match_initialized_vars(self._datasets['initialized'], xobj)
+        self._datasets.update({'uninitialized': xobj})
 
     def compute_metric(
         self, refname=None, metric='pearson_r', comparison='e2r', max_dof=False
@@ -586,24 +581,24 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to reference
             name.
         """
-        is_initialized(self.reference, 'reference', 'predictability')
+        is_initialized(self._datasets['reference'], 'reference', 'predictability')
         # Computation for a single reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname)
             return compute_hindcast(
-                self.initialized.drop(drop_init),
-                self.reference[refname].drop(drop_ref),
+                self._datasets['initialized'].drop(drop_init),
+                self._datasets['reference'][refname].drop(drop_ref),
                 metric=metric,
                 comparison=comparison,
                 max_dof=max_dof,
             )
         else:
-            if len(self.reference) == 1:
-                refname = list(self.reference.keys())[0]
+            if len(self._datasets['reference']) == 1:
+                refname = list(self._datasets['reference'].keys())[0]
                 drop_init, drop_ref = self._vars_to_drop(refname)
                 return compute_hindcast(
-                    self.initialized.drop(drop_init),
-                    self.reference[refname].drop(drop_ref),
+                    self._datasets['initialized'].drop(drop_init),
+                    self._datasets['reference'][refname].drop(drop_ref),
                     metric=metric,
                     comparison=comparison,
                     max_dof=max_dof,
@@ -612,11 +607,11 @@ class HindcastEnsemble(PredictionEnsemble):
             # with keys corresponding to reference names.
             else:
                 skill = {}
-                for key in self.reference:
+                for key in self._datasets['reference']:
                     drop_init, drop_ref = self._vars_to_drop(key)
                     skill[key] = compute_hindcast(
-                        self.initialized.drop(drop_init),
-                        self.reference[key].drop(drop_ref),
+                        self._datasets['initialized'].drop(drop_init),
+                        self._datasets['reference'][key].drop(drop_ref),
                         metric=metric,
                         comparison=comparison,
                         max_dof=max_dof,

@@ -86,6 +86,7 @@ def has_min_len(arr, len_, kind):
 
 
 def is_initialized(obj, kind, what):
+    """Checks that the PredictionEnsemble has an initialized dataset in it."""
     if len(obj) == 0:
         raise DatasetError(
             f'You need to add at least one {kind} dataset before '

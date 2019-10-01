@@ -16,6 +16,13 @@ While HindcastEnsemble skill is computed over all initializations ``init`` of th
 PerfectModelEnsemble skill is computed over a supervector comprised of all initializations and members, which allows the computation of the ACC-based skill [Bushuk2018]_, but also returns a mean forecast skill over all initializations.
 The supervector approach shown in [Bushuk2018]_ and just calculating a distance-based metric like ``rmse`` over the member dimension as in [Griffies1997]_ yield very similar results.
 
+
+Compute over dimension
+######################
+
+The optional argument ``dim`` defines over which dimension a metric is computed. We can apply a metric over ``dim`` from [``'init'``, ``'member'``, ``['member', 'init']``] in :py:func:`climpred.prediction.compute_perfect_model` and [``'init'``, ``'member'``] in :py:func:`climpred.prediction.compute_hindcast`. The resulting skill is then reduced by this ``dim``. Therefore, applying a metric over dim='member' creates a skill for all initialisations individually. This can show the initial conditions dependence of skill. Likewise when computing skill over ``'init'``, we get skill for each member. This ``dim`` argument is different from the ``comparison`` argument which just specifies how ``forecast`` and ``reference`` are defined.
+However, this above logic applies to deterministic metrics. Probabilistic metrics need to be applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``] in :py:func:`climpred.prediction.compute_perfect_model` and ``'m2r'`` comparison in :py:func:`climpred.prediction.compute_hindcast`. Using a probabilistic metric automatically switches internally to using ``dim='member'``.
+
 HindcastEnsemble
 ################
 

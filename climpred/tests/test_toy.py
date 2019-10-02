@@ -51,7 +51,6 @@ def test_larger_ensemble_less_skill_spread_than_smaller():
         noise_amplitude=noise_amplitude,
         plot=False,
     )
-    print(ss_large)
     assert (
         ss_small.isel(lead=slice(3, None)).std('bootstrap')
         > ss_large.isel(lead=slice(3, None)).std('bootstrap')

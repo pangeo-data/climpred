@@ -156,9 +156,9 @@ def test_smooth_goddard(fosi_3d, dple_3d):
     hindcast = HindcastEnsemble(dple_3d.isel(nlat=slice(1, None)))
     hindcast.add_reference(fosi_3d.isel(nlat=slice(1, None)), 'reconstruction')
     hindcast.add_uninitialized(fosi_3d.isel(nlat=slice(1, None)))
-    initialized_before = hindcast.initialized
-    hindcast.smooth(smooth_kws='goddard2013')
-    actual_initialized = hindcast.initialized
+    initialized_before = hindcast._datasets['initialized']
+    hindcast = hindcast.smooth(smooth_kws='goddard2013')
+    actual_initialized = hindcast._datasets['initialized']
     dim = 'lead'
     assert actual_initialized[dim].size < initialized_before[dim].size
     for dim in ['nlon', 'nlat']:
@@ -170,10 +170,10 @@ def test_smooth_coarsen(fosi_3d, dple_3d):
     hindcast = HindcastEnsemble(dple_3d)
     hindcast.add_reference(fosi_3d, 'reconstruction')
     hindcast.add_uninitialized(fosi_3d)
-    initialized_before = hindcast.initialized
+    initialized_before = hindcast._datasets['initialized']
     dim = 'nlon'
-    hindcast.smooth(smooth_kws={dim: 2})
-    actual_initialized = hindcast.initialized
+    hindcast = hindcast.smooth(smooth_kws={dim: 2})
+    actual_initialized = hindcast._datasets['initialized']
     assert initialized_before[dim].size // 2 == actual_initialized[dim].size
 
 
@@ -182,8 +182,8 @@ def test_smooth_temporal(fosi_3d, dple_3d):
     hindcast = HindcastEnsemble(dple_3d)
     hindcast.add_reference(fosi_3d, 'reconstruction')
     hindcast.add_uninitialized(fosi_3d)
-    initialized_before = hindcast.initialized
+    initialized_before = hindcast._datasets['initialized']
     dim = 'lead'
-    hindcast.smooth(smooth_kws={dim: 4})
-    actual_initialized = hindcast.initialized
+    hindcast = hindcast.smooth(smooth_kws={dim: 4})
+    actual_initialized = hindcast._datasets['initialized']
     assert initialized_before[dim].size > actual_initialized[dim].size

@@ -149,7 +149,7 @@ class PredictionEnsemble:
             # Instantiates new object with the modified datasets.
             return self._construct_direct(datasets)
 
-        # Remove rergistered attribute.
+        # Remove registered attribute.
         delattr(self, name)
         return wrapper
 
@@ -164,6 +164,14 @@ class PredictionEnsemble:
         obj = object.__new__(cls)
         obj._datasets = datasets
         return obj
+
+    def get_initialized(self):
+        """Returns the xarray dataset for the initialized ensemble."""
+        return self._datasets['initialized']
+
+    def get_uninitialized(self):
+        """Returns the xarray dataset for the uninitialized ensemble."""
+        return self._datasets['uninitialized']
 
     def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be
@@ -211,7 +219,7 @@ class PredictionEnsemble:
             # coarsen dim and time_dim provided
             elif (
                 (non_time_dims is not [])
-                and (non_time_dims in list(self.initialized.dims))
+                and (non_time_dims in list(self._datasets['initialized'].dims))
                 and ('lead' in smooth_kws or 'time' in smooth_kws)
             ):
                 smooth_fct = smooth_goddard_2013
@@ -220,7 +228,7 @@ class PredictionEnsemble:
                 smooth_fct = spatial_smoothing_xesmf
             elif 'lead' in smooth_kws:
                 smooth_fct = temporal_smoothing
-            elif non_time_dims in list(self.initialized.dims):
+            elif non_time_dims in list(self._datasets['initialized'].dims):
                 smooth_fct = spatial_smoothing_xrcoarsen
             else:
                 raise ValueError(
@@ -232,12 +240,20 @@ class PredictionEnsemble:
             raise ValueError(
                 'Please provide kwargs as str or dict and not', type(smooth_kws)
             )
-        self.initialized = smooth_fct(self.initialized, smooth_kws)
-        # check for other objects in  PredictionEnsemble
-        # better: for obj in self: do smooth
-        if isinstance(self.uninitialized, xr.Dataset):
-            self.uninitialized = smooth_fct(self.uninitialized, smooth_kws)
-        # self.reference not implemented
+        # Apply throughout the dataset
+        # TODO: Parallelize
+        datasets = self._datasets.copy()
+        datasets['initialized'] = smooth_fct(self._datasets['initialized'], smooth_kws)
+        # Apply if uninitialized, control, reference exist.
+        if self._datasets['uninitialized']:
+            datasets['uninitialized'] = smooth_fct(
+                self._datasets['uninitialized'], smooth_kws
+            )
+        if type(self).__name__ == 'PerfectModelEnsemble':
+            if self._datasets['control']:
+                datasets['control'] = smooth_fct(self._datasets['control'], smooth_kws)
+        # if type(self).__name__ == 'HindcastEnsemble':
+        return self._construct_direct(datasets)
 
 
 class PerfectModelEnsemble(PredictionEnsemble):
@@ -251,6 +267,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
+    # ---------------
+    # Magic Functions
+    # ---------------
     def __init__(self, xobj):
         """Create a `PerfectModelEnsemble` object by inputting output from the
         control run in `xarray` format.
@@ -270,6 +289,33 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # Reserve sub-dictionary for the control simulation.
         self._datasets.update({'control': {}})
 
+    # ----------------
+    # Helper Functions
+    # ----------------
+    def _apply_climpred_function(self, func, input_dict=None, **kwargs):
+        """Helper function to loop through references and apply an arbitrary climpred function.
+
+        Args:
+            func (function): climpred function to apply to object.
+            input_dict (dict): dictionary with the following things:
+                * ensemble: initialized or uninitialized ensemble.
+                * control: control dictionary from HindcastEnsemble.
+                * var: name of variable to target.
+        """
+        ensemble = input_dict['ensemble']
+        control = input_dict['control']
+        var = input_dict['var']
+
+        # Compute for single variable.
+        if var is not None:
+            return func(ensemble[var], control[var], **kwargs)
+        # Compute for all variables in control.
+        else:
+            return func(ensemble, control, **kwargs)
+
+    # ---------------
+    # Object Builders
+    # ---------------
     @is_xarray(1)
     def add_control(self, xobj):
         """Add the control run that initialized the climate prediction
@@ -298,14 +344,24 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         if var is not None:
             uninit = bootstrap_uninit_pm_ensemble_from_control(
-                self.initialized[var], self.control[var]
+                self._datasets['initialized'][var], self._datasets['control'][var]
             ).to_dataset()
         else:
             uninit = bootstrap_uninit_pm_ensemble_from_control(
-                self.initialized, self.control
+                self._datasets['initialized'], self._datasets['control']
             )
         self._datasets.update({'uninitialized': uninit})
 
+    # -----------------
+    # Getters & Setters
+    # -----------------
+    def get_control(self):
+        """Returns the control as an xarray dataset."""
+        return self._datasets['control']
+
+    # ------------------
+    # Analysis Functions
+    # ------------------
     def compute_metric(self, metric='pearson_r', comparison='m2m'):
         """Compares the initialized ensemble to the control run.
 
@@ -318,9 +374,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-        is_initialized(self.control, 'control', 'predictability')
+        is_initialized(self._datasets['control'], 'control', 'predictability')
         return compute_perfect_model(
-            self.initialized, self.control, metric=metric, comparison=comparison
+            self._datasets['initialized'],
+            self._datasets['control'],
+            metric=metric,
+            comparison=comparison,
         )
 
     def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
@@ -338,10 +397,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Result of the comparison as a Dataset.
         """
         is_initialized(
-            self.uninitialized, 'uninitialized', 'an uninitialized comparison'
+            self._datasets['uninitialized'],
+            'uninitialized',
+            'an uninitialized comparison',
         )
         return compute_perfect_model(
-            self.uninitialized, self.control, metric=metric, comparison=comparison
+            self._datasets['uninitialized'],
+            self._datasets['control'],
+            metric=metric,
+            comparison=comparison,
         )
 
     def compute_persistence(self, metric='pearson_r'):
@@ -361,8 +425,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        is_initialized(self.control, 'control', 'a persistence forecast')
-        return compute_persistence(self.initialized, self.control, metric=metric)
+        is_initialized(self._datasets['control'], 'control', 'a persistence forecast')
+        return compute_persistence(
+            self._datasets['initialized'], self._datasets['control'], metric=metric
+        )
 
     def bootstrap(
         self,
@@ -413,46 +479,21 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
-        is_initialized(self.control, 'control', 'a bootstrap')
-        # compute for single variable.
-        if var is not None:
-            return bootstrap_perfect_model(
-                self.initialized[var],
-                self.control[var],
-                metric=metric,
-                comparison=comparison,
-                sig=sig,
-                bootstrap=bootstrap,
-                pers_sig=pers_sig,
-            )
-        # compute for all variables in control.
-        else:
-            if len(self.initialized.data_vars) == 1:
-                for var in self.initialized.data_vars:
-                    var = var
-                return bootstrap_perfect_model(
-                    self.initialized[var],
-                    self.control[var],
-                    metric=metric,
-                    comparison=comparison,
-                    sig=sig,
-                    bootstrap=bootstrap,
-                    pers_sig=pers_sig,
-                )
-            else:
-                boot = {}
-                for var in self.control.data_vars:
-                    res = bootstrap_perfect_model(
-                        self.initialized[var],
-                        self.control[var],
-                        metric=metric,
-                        comparison=comparison,
-                        sig=sig,
-                        bootstrap=bootstrap,
-                        pers_sig=pers_sig,
-                    )
-                    boot[var] = res
-                return boot
+        is_initialized(self._datasets['control'], 'control', 'a bootstrap')
+        input_dict = {
+            'ensemble': self._datasets['initialized'],
+            'control': self._datasets['control'],
+            'var': var,
+        }
+        return self._apply_climpred_function(
+            bootstrap_perfect_model,
+            input_dict=input_dict,
+            metric=metric,
+            comparison=comparison,
+            sig=sig,
+            bootstrap=bootstrap,
+            pers_sig=pers_sig,
+        )
 
 
 class HindcastEnsemble(PredictionEnsemble):
@@ -467,6 +508,9 @@ class HindcastEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
+    # ---------------
+    # Magic Functions
+    # ---------------
     def __init__(self, xobj):
         """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
@@ -483,6 +527,46 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         super().__init__(xobj)
         self._datasets.update({'reference': {}})
+
+    # ----------------
+    # Helper Functions
+    # ----------------
+    def _apply_climpred_function(self, func, input_dict=None, **kwargs):
+        """Helper function to loop through references and apply an arbitrary climpred function.
+
+        Args:
+            func (function): climpred function to apply to object.
+            input_dict (dict): dictionary with the following things:
+                * ensemble: initialized or uninitialized ensemble.
+                * reference: reference dictionary from HindcastEnsemble.
+                * refname: name of reference to target.
+                * init: bool of whether or not it's the initialized ensemble.
+        """
+        ensemble = input_dict['ensemble']
+        reference = input_dict['reference']
+        refname = input_dict['refname']
+        init = input_dict['init']
+
+        # Apply only to specific reference.
+        if refname is not None:
+            drop_init, drop_ref = self._vars_to_drop(refname, init=init)
+            ensemble = ensemble.drop(drop_init)
+            reference = reference[refname].drop(drop_ref)
+            return func(ensemble, reference, **kwargs)
+        else:
+            # If only one reference, just apply to that one.
+            if len(reference) == 1:
+                refname = list(reference.keys())[0]
+                drop_init, drop_ref = self._vars_to_drop(refname, init=init)
+                return func(ensemble, reference[refname], **kwargs)
+            # Loop through references, apply function, and store in dictionary.
+            # TODO: Parallelize this process.
+            else:
+                result = {}
+                for refname, _ in reference.items():
+                    drop_init, drop_ref = self._vars_to_drop(refname, init=init)
+                    result[refname] = func(ensemble, reference[refname], **kwargs)
+                return result
 
     def _vars_to_drop(self, ref, init=True):
         """Returns list of variables to drop when comparing
@@ -521,6 +605,9 @@ class HindcastEnsemble(PredictionEnsemble):
             ref_vars.pop(idx)
         return init_vars, ref_vars
 
+    # ---------------
+    # Object Builders
+    # ---------------
     @is_xarray(1)
     def add_reference(self, xobj, name):
         """Add a reference product for comparison to the initialized ensemble.
@@ -537,7 +624,13 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
-        self._datasets['reference'].update({name: xobj})
+
+        def wrapper(xobj, name):
+            datasets = self._datasets.copy()
+            datasets['reference'].update({name: xobj})
+            return self._construct_direct(datasets)
+
+        return wrapper(xobj, name)
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
@@ -556,6 +649,27 @@ class HindcastEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets['initialized'], xobj)
         self._datasets.update({'uninitialized': xobj})
 
+    # -----------------
+    # Getters & Setters
+    # -----------------
+    def get_reference(self, name=None):
+        """Returns the given reference(s).
+
+        Args:
+            name (str): Name of the reference to return (optional)
+
+        Returns:
+            Dictionary of xarray datasets (if name is ``None``) or single xarray
+            dataset.
+        """
+        if name is None:
+            return self._datasets['reference']
+        else:
+            return self._datasets['reference'][name]
+
+    # ------------------
+    # Analysis Functions
+    # ------------------
     def compute_metric(
         self, refname=None, metric='pearson_r', comparison='e2r', max_dof=False
     ):
@@ -582,41 +696,19 @@ class HindcastEnsemble(PredictionEnsemble):
             name.
         """
         is_initialized(self._datasets['reference'], 'reference', 'predictability')
-        # Computation for a single reference.
-        if refname is not None:
-            drop_init, drop_ref = self._vars_to_drop(refname)
-            return compute_hindcast(
-                self._datasets['initialized'].drop(drop_init),
-                self._datasets['reference'][refname].drop(drop_ref),
-                metric=metric,
-                comparison=comparison,
-                max_dof=max_dof,
-            )
-        else:
-            if len(self._datasets['reference']) == 1:
-                refname = list(self._datasets['reference'].keys())[0]
-                drop_init, drop_ref = self._vars_to_drop(refname)
-                return compute_hindcast(
-                    self._datasets['initialized'].drop(drop_init),
-                    self._datasets['reference'][refname].drop(drop_ref),
-                    metric=metric,
-                    comparison=comparison,
-                    max_dof=max_dof,
-                )
-            # Loop through all references and return results as a dictionary
-            # with keys corresponding to reference names.
-            else:
-                skill = {}
-                for key in self._datasets['reference']:
-                    drop_init, drop_ref = self._vars_to_drop(key)
-                    skill[key] = compute_hindcast(
-                        self._datasets['initialized'].drop(drop_init),
-                        self._datasets['reference'][key].drop(drop_ref),
-                        metric=metric,
-                        comparison=comparison,
-                        max_dof=max_dof,
-                    )
-                return skill
+        input_dict = {
+            'ensemble': self._datasets['initialized'],
+            'reference': self._datasets['reference'],
+            'refname': refname,
+            'init': True,
+        }
+        return self._apply_climpred_function(
+            compute_hindcast,
+            input_dict=input_dict,
+            metric=metric,
+            comparison=comparison,
+            max_dof=max_dof,
+        )
 
     def compute_uninitialized(self, refname=None, metric='pearson_r', comparison='e2r'):
         """Compares the uninitialized ensemble to a given reference.
@@ -640,39 +732,22 @@ class HindcastEnsemble(PredictionEnsemble):
             name.
         """
         is_initialized(
-            self.uninitialized, 'uninitialized', 'an uninitialized comparison'
+            self._datasets['uninitialized'],
+            'uninitialized',
+            'an uninitialized comparison',
         )
-        # Compute for a single reference.
-        if refname is not None:
-            drop_un, drop_ref = self._vars_to_drop(refname, init=False)
-            return compute_uninitialized(
-                self.uninitialized.drop(drop_un),
-                self.reference[refname].drop(drop_ref),
-                metric=metric,
-                comparison=comparison,
-            )
-        else:
-            if len(self.reference) == 1:
-                refname = list(self.reference.keys())[0]
-                drop_un, drop_ref = self._vars_to_drop(refname, init=False)
-                return compute_uninitialized(
-                    self.uninitialized.drop(drop_un),
-                    self.reference[refname].drop(drop_ref),
-                    metric=metric,
-                    comparison=comparison,
-                )
-            # Loop through all references and apply comparison.
-            else:
-                u = {}
-                for key in self.reference:
-                    drop_un, drop_ref = self._vars_to_drop(key, init=False)
-                    u[key] = compute_uninitialized(
-                        self.uninitialized.drop(drop_un),
-                        self.reference[key].drop(drop_ref),
-                        metric=metric,
-                        comparison=comparison,
-                    )
-                return u
+        input_dict = {
+            'ensemble': self._datasets['uninitialized'],
+            'reference': self._datasets['reference'],
+            'refname': refname,
+            'init': False,
+        }
+        return self._apply_climpred_function(
+            compute_uninitialized,
+            input_dict=input_dict,
+            metric=metric,
+            comparison=comparison,
+        )
 
     def compute_persistence(self, refname=None, metric='pearson_r', max_dof=False):
         """Compute a simple persistence forecast for a reference.
@@ -699,32 +774,15 @@ class HindcastEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        is_initialized(self.reference, 'reference', 'a persistence forecast')
-        # apply to single reference.
-        if refname is not None:
-            return compute_persistence(
-                self.initialized,
-                self.reference[refname],
-                metric=metric,
-                max_dof=max_dof,
-            )
-        # loop through and apply to all references.
-        else:
-            if len(self.reference) == 1:
-                refname = list(self.reference.keys())[0]
-                return compute_persistence(
-                    self.initialized,
-                    self.reference[refname],
-                    metric=metric,
-                    max_dof=max_dof,
-                )
-            else:
-                persistence = {}
-                for key in self.reference:
-                    persistence[key] = compute_persistence(
-                        self.initialized,
-                        self.reference[key],
-                        metric=metric,
-                        max_dof=max_dof,
-                    )
-            return persistence
+        is_initialized(
+            self._datasets['reference'], 'reference', 'a persistence forecast'
+        )
+        input_dict = {
+            'ensemble': self._datasets['initialized'],
+            'reference': self._datasets['reference'],
+            'refname': refname,
+            'init': True,
+        }
+        return self._apply_climpred_function(
+            compute_persistence, input_dict=input_dict, metric=metric, max_dof=max_dof
+        )

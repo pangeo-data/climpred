@@ -84,3 +84,45 @@ def test_bootstrap(pm_ds_ds1d, pm_ds_control1d):
     pm = PerfectModelEnsemble(pm_ds_ds1d)
     pm = pm.add_control(pm_ds_control1d)
     pm.bootstrap(bootstrap=2)
+
+
+def test_get_initialized(pm_ds_ds1d):
+    """Test whether get_initialized function works."""
+    pm = PerfectModelEnsemble(pm_ds_ds1d)
+    init = pm.get_initialized()
+    assert init == pm._datasets['initialized']
+
+
+def test_get_uninitialized(pm_ds_ds1d, pm_ds_control1d):
+    """Test whether get_uninitialized function works."""
+    pm = PerfectModelEnsemble(pm_ds_ds1d)
+    pm = pm.add_control(pm_ds_control1d)
+    pm = pm.generate_uninitialized()
+    uninit = pm.get_uninitialized()
+    assert uninit == pm._datasets['uninitialized']
+
+
+def test_get_control(pm_ds_ds1d, pm_ds_control1d):
+    """Test whether get_control function works."""
+    pm = PerfectModelEnsemble(pm_ds_ds1d)
+    pm = pm.add_control(pm_ds_control1d)
+    ctrl = pm.get_control()
+    assert ctrl == pm._datasets['control']
+
+
+def test_inplace(pm_ds_ds1d, pm_ds_control1d):
+    """Tests that inplace operations do not work."""
+    pm = PerfectModelEnsemble(pm_ds_ds1d)
+    # Adding a control.
+    pm.add_control(pm_ds_control1d)
+    with_ctrl = pm.add_control(pm_ds_control1d)
+    assert pm != with_ctrl
+    # Adding an uninitialized ensemble.
+    pm = pm.add_control(pm_ds_control1d)
+    pm.generate_uninitialized()
+    with_uninit = pm.generate_uninitialized()
+    assert pm != with_uninit
+    # Applying arbitrary func.
+    pm.sum('init')
+    summed = pm.sum('init')
+    assert pm != summed

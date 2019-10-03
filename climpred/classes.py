@@ -6,11 +6,12 @@ from .bootstrap import (
 )
 from .checks import (
     has_dims,
-    is_initialized,
+    has_dataset,
     is_xarray,
     match_initialized_dims,
     match_initialized_vars,
 )
+from .exceptions import DimensionError
 from .prediction import (
     compute_hindcast,
     compute_perfect_model,
@@ -136,7 +137,12 @@ class PredictionEnsemble:
                 """
                 try:
                     return getattr(v, name)(*args, **kwargs)
-                except ValueError:
+                # ValueError : Cases such as .sum(dim='time'). This doesn't apply
+                # it to the given dataset if the dimension doesn't exist.
+                #
+                # DimensionError: This accounts for our custom error when applying
+                # some stats functions.
+                except (ValueError, DimensionError):
                     return v
 
             # Create temporary copy to modify to avoid inplace operation.
@@ -235,7 +241,6 @@ class PredictionEnsemble:
             ]
             if len(non_time_dims) > 0:
                 non_time_dims = non_time_dims[0]
-            print(non_time_dims, 'non_time_dims')
             # goddard when time_dim and lon/lat given
             if ('lon' in smooth_kws or 'lat' in smooth_kws) and (
                 'lead' in smooth_kws or 'time' in smooth_kws
@@ -410,6 +415,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Bootstrapped (uninitialized) ensemble as a Dataset.
         """
+        has_dataset(
+            self._datasets['control'], 'control', 'generate an uninitialized ensemble.'
+        )
+
         if var is not None:
             uninit = bootstrap_uninit_pm_ensemble_from_control(
                 self._datasets['initialized'][var], self._datasets['control'][var]
@@ -446,7 +455,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-        is_initialized(self._datasets['control'], 'control', 'predictability')
+        has_dataset(self._datasets['control'], 'control', 'compute a metric')
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
@@ -476,10 +485,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-        is_initialized(
+        has_dataset(
             self._datasets['uninitialized'],
             'uninitialized',
-            'an uninitialized comparison',
+            'compute an uninitialized metric',
         )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
@@ -513,7 +522,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        is_initialized(self._datasets['control'], 'control', 'a persistence forecast')
+        has_dataset(
+            self._datasets['control'], 'control', 'compute a persistence forecast'
+        )
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
@@ -573,7 +584,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
-        is_initialized(self._datasets['control'], 'control', 'a bootstrap')
+        has_dataset(self._datasets['control'], 'control', 'bootstrap')
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
@@ -761,7 +772,11 @@ class HindcastEnsemble(PredictionEnsemble):
             dataset.
         """
         if name is None:
-            return self._datasets['reference']
+            if len(self._datasets['reference']) == 1:
+                key = list(self._datasets['reference'].keys())[0]
+                return self._datasets['reference'][key]
+            else:
+                return self._datasets['reference']
         else:
             return self._datasets['reference'][name]
 
@@ -793,7 +808,7 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to reference
             name.
         """
-        is_initialized(self._datasets['reference'], 'reference', 'predictability')
+        has_dataset(self._datasets['reference'], 'reference', 'compute a metric')
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'reference': self._datasets['reference'],
@@ -829,10 +844,10 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to reference
             name.
         """
-        is_initialized(
+        has_dataset(
             self._datasets['uninitialized'],
             'uninitialized',
-            'an uninitialized comparison',
+            'compute an uninitialized metric',
         )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
@@ -872,8 +887,8 @@ class HindcastEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        is_initialized(
-            self._datasets['reference'], 'reference', 'a persistence forecast'
+        has_dataset(
+            self._datasets['reference'], 'reference', 'compute a persistence forecast'
         )
         input_dict = {
             'ensemble': self._datasets['initialized'],

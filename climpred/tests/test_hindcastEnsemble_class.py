@@ -194,3 +194,57 @@ def test_smooth_temporal(fosi_3d, dple_3d):
     hindcast = hindcast.smooth(smooth_kws={dim: 4})
     actual_initialized = hindcast._datasets['initialized']
     assert initialized_before[dim].size > actual_initialized[dim].size
+
+
+def test_isel_xarray_func(initialized_ds, reconstruction_ds):
+    """Test whether applying isel to the objects works."""
+    hindcast = HindcastEnsemble(initialized_ds)
+    hindcast = hindcast.add_reference(reconstruction_ds, 'FOSI')
+    hindcast = hindcast.isel(lead=0, init=slice(0, 3)).isel(time=slice(5, 10))
+    assert hindcast.get_initialized().init.size == 3
+    assert hindcast.get_initialized().lead.size == 1
+    assert hindcast.get_reference('FOSI').time.size == 5
+
+
+def test_get_initialized(initialized_ds):
+    """Test whether get_initialized function works."""
+    hindcast = HindcastEnsemble(initialized_ds)
+    init = hindcast.get_initialized()
+    assert init == hindcast._datasets['initialized']
+
+
+def test_get_uninitialized(initialized_ds, uninitialized_ds):
+    """Test whether get_uninitialized function works."""
+    hindcast = HindcastEnsemble(initialized_ds)
+    hindcast = hindcast.add_uninitialized(uninitialized_ds)
+    uninit = hindcast.get_uninitialized()
+    assert uninit == hindcast._datasets['uninitialized']
+
+
+def test_get_reference(initialized_ds, reconstruction_ds):
+    """Tests whether get_reference function works."""
+    hindcast = HindcastEnsemble(initialized_ds)
+    hindcast = hindcast.add_reference(reconstruction_ds, 'FOSI')
+    # Without name keyword.
+    ref = hindcast.get_reference()
+    assert ref == hindcast._datasets['reference']['FOSI']
+    # With name keyword.
+    ref = hindcast.get_reference('FOSI')
+    assert ref == hindcast._datasets['reference']['FOSI']
+
+
+def test_inplace(initialized_ds, reconstruction_ds, uninitialized_ds):
+    """Tests that inplace operations do not work."""
+    hindcast = HindcastEnsemble(initialized_ds)
+    # Adding a reference.
+    hindcast.add_reference(reconstruction_ds, 'FOSI')
+    with_ref = hindcast.add_reference(reconstruction_ds, 'FOSI')
+    assert hindcast != with_ref
+    # Adding an uninitialized ensemble.
+    hindcast.add_uninitialized(uninitialized_ds)
+    with_uninit = hindcast.add_uninitialized(uninitialized_ds)
+    assert hindcast != with_uninit
+    # Applying arbitrary func.
+    hindcast.sum('init')
+    summed = hindcast.sum('init')
+    assert hindcast != summed

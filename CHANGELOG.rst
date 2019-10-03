@@ -7,7 +7,7 @@ climpred v1.1.1 (2019-##-##)
 
 Features
 --------
-- Apply arbitrary ``xarray`` functions to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
+- Apply arbitrary ``xarray`` methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
 - Add "getter" methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` to retrieve ``xarray`` datasets from the objects (:pr:`243`) `Riley X. Brady`_.
 
 Bug Fixes

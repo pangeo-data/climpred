@@ -39,16 +39,18 @@ def _display_metadata(self):
     """
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
-    summary += '    ' + str(self.initialized.data_vars)[18:].strip() + '\n'
+    summary += '    ' + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
     if isinstance(self, HindcastEnsemble):
-        if any(self.reference):
-            for key in self.reference:
+        if any(self._datasets['reference']):
+            for key in self._datasets['reference']:
                 summary += f'{key}:\n'
-                N = len(self.reference[key].data_vars)
+                N = len(self._datasets['reference'][key].data_vars)
                 for i in range(1, N + 1):
                     summary += (
                         '    '
-                        + str(self.reference[key].data_vars).split('\n')[i].strip()
+                        + str(self._datasets['reference'][key].data_vars)
+                        .split('\n')[i]
+                        .strip()
                         + '\n'
                     )
         else:
@@ -56,17 +58,19 @@ def _display_metadata(self):
             summary += '    None\n'
     elif isinstance(self, PerfectModelEnsemble):
         summary += 'Control:\n'
-        if any(self.control):
-            N = len(self.control.data_vars)
+        if any(self._datasets['control']):
+            N = len(self._datasets['control'].data_vars)
             for i in range(1, N + 1):
                 summary += (
-                    '    ' + str(self.control.data_vars).split('\n')[i].strip() + '\n'
+                    '    '
+                    + str(self._datasets['control'].data_vars).split('\n')[i].strip()
+                    + '\n'
                 )
         else:
             summary += '    None\n'
-    if any(self.uninitialized):
+    if any(self._datasets['uninitialized']):
         summary += 'Uninitialized:\n'
-        summary += '    ' + str(self.uninitialized.data_vars)[18:].strip()
+        summary += '    ' + str(self._datasets['uninitialized'].data_vars)[18:].strip()
     else:
         summary += 'Uninitialized:\n'
         summary += '    None'
@@ -83,6 +87,9 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
 
+    # ---------------
+    # Magic Functions
+    # ---------------
     @is_xarray(1)
     def __init__(self, xobj):
         if isinstance(xobj, xr.DataArray):
@@ -96,9 +103,7 @@ class PredictionEnsemble:
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
-        # REINSTATE THIS.
-        return 'Printing is temporarily disabled.'
-        # return _display_metadata(self)
+        return _display_metadata(self)
 
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.
@@ -136,16 +141,28 @@ class PredictionEnsemble:
 
             # Create temporary copy to modify to avoid inplace operation.
             datasets = self._datasets.copy()
-            # Apply this arbitrary function to our nested dictionary,
-            # based on https://stackoverflow.com/questions/17915117/
-            # nested-dictionary-comprehension-python
-            datasets = {
-                outer_k: {
-                    inner_k: _apply_func(inner_v, name, *args, **kwargs)
-                    for inner_k, inner_v in outer_v.items()
-                }
-                for outer_k, outer_v in self._datasets.items()
-            }
+
+            # More explicit than nested dictionary comprehension.
+            for outer_k, outer_v in datasets.items():
+                # If initialized, control, uninitialized and just a singular
+                # dataset, apply the function directly to it.
+                if isinstance(outer_v, xr.Dataset):
+                    datasets.update(
+                        {outer_k: _apply_func(outer_v, name, *args, **kwargs)}
+                    )
+                else:
+                    # If a nested dictionary is encountered (i.e., a set of references)
+                    # apply to each individually.
+                    #
+                    # Similar to the ``add_reference`` method, this only seems to avoid
+                    # inplace operations by copying the nested dictionary separately and
+                    # then updating the main dictionary.
+                    temporary_dataset = self._datasets[outer_k].copy()
+                    for inner_k, inner_v in temporary_dataset.items():
+                        temporary_dataset.update(
+                            {inner_k: _apply_func(inner_v, name, *args, **kwargs)}
+                        )
+                    datasets.update({outer_k: temporary_dataset})
             # Instantiates new object with the modified datasets.
             return self._construct_direct(datasets)
 
@@ -153,6 +170,9 @@ class PredictionEnsemble:
         delattr(self, name)
         return wrapper
 
+    # ----------------
+    # Helper Functions
+    # ----------------
     @classmethod
     def _construct_direct(cls, datasets):
         """Shortcut around __init__ for internal use to avoid inplace
@@ -165,6 +185,9 @@ class PredictionEnsemble:
         obj._datasets = datasets
         return obj
 
+    # -----------------
+    # Getters & Setters
+    # -----------------
     def get_initialized(self):
         """Returns the xarray dataset for the initialized ensemble."""
         return self._datasets['initialized']
@@ -173,6 +196,9 @@ class PredictionEnsemble:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets['uninitialized']
 
+    # ------------------
+    # Analysis Functions
+    # ------------------
     def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
@@ -301,17 +327,57 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 * ensemble: initialized or uninitialized ensemble.
                 * control: control dictionary from HindcastEnsemble.
                 * var: name of variable to target.
+                * init (bool): True if the initialized ensemble, False if uninitialized.
         """
         ensemble = input_dict['ensemble']
         control = input_dict['control']
         var = input_dict['var']
+        init = input_dict['init']
 
         # Compute for single variable.
         if var is not None:
             return func(ensemble[var], control[var], **kwargs)
         # Compute for all variables in control.
         else:
+            init_vars, ctrl_vars = self._vars_to_drop(init=init)
+            ensemble = ensemble.drop(init_vars)
+            control = control.drop(ctrl_vars)
             return func(ensemble, control, **kwargs)
+
+    def _vars_to_drop(self, init=True):
+        """Returns list of variables to drop when comparing
+        initialized/uninitialized to a control.
+
+        This is useful if the two products being compared do not share the same
+        variables. I.e., if the control has ['SST'] and the initialized has
+        ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
+        from the initialized.
+
+        Args:
+          init (bool, default True):
+            If `True`, check variables on the initialized.
+            If `False`, check variables on the uninitialized.
+
+        Returns:
+          Lists of variables to drop from the initialized/uninitialized
+          and control Datasets.
+        """
+        if init:
+            init_vars = [var for var in self._datasets['initialized'].data_vars]
+        else:
+            init_vars = [var for var in self._datasets['uninitialized'].data_vars]
+        ctrl_vars = [var for var in self._datasets['control'].data_vars]
+        # find what variable they have in common.
+        intersect = set(ctrl_vars).intersection(init_vars)
+        # perhaps could be done cleaner than this.
+        for var in intersect:
+            # generates a list of variables to drop from each product being
+            # compared.
+            idx = init_vars.index(var)
+            init_vars.pop(idx)
+            idx = ctrl_vars.index(var)
+            ctrl_vars.pop(idx)
+        return init_vars, ctrl_vars
 
     # ---------------
     # Object Builders
@@ -329,7 +395,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
-        self._datasets.update({'control': xobj})
+        datasets = self._datasets.copy()
+        datasets.update({'control': xobj})
+        return self._construct_direct(datasets)
 
     def generate_uninitialized(self, var=None):
         """Generate an uninitialized ensemble by bootstrapping the
@@ -350,7 +418,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             uninit = bootstrap_uninit_pm_ensemble_from_control(
                 self._datasets['initialized'], self._datasets['control']
             )
-        self._datasets.update({'uninitialized': uninit})
+        datasets = self._datasets.copy()
+        datasets.update({'uninitialized': uninit})
+        return self._construct_direct(datasets)
 
     # -----------------
     # Getters & Setters
@@ -362,10 +432,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
     # ------------------
     # Analysis Functions
     # ------------------
-    def compute_metric(self, metric='pearson_r', comparison='m2m'):
+    def compute_metric(self, var=None, metric='pearson_r', comparison='m2m'):
         """Compares the initialized ensemble to the control run.
 
         Args:
+            var (optional str, default None):
+                Variable to compute persistence over.
             metric (str, default 'pearson_r'):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
@@ -375,17 +447,25 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Result of the comparison as a Dataset.
         """
         is_initialized(self._datasets['control'], 'control', 'predictability')
-        return compute_perfect_model(
-            self._datasets['initialized'],
-            self._datasets['control'],
+        input_dict = {
+            'ensemble': self._datasets['initialized'],
+            'control': self._datasets['control'],
+            'var': var,
+            'init': True,
+        }
+        return self._apply_climpred_function(
+            compute_perfect_model,
+            input_dict=input_dict,
             metric=metric,
             comparison=comparison,
         )
 
-    def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
+    def compute_uninitialized(self, var=None, metric='pearson_r', comparison='m2e'):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
+            var (optional str, default None):
+                Variable to compute persistence over.
             metric (str, default 'pearson_r'):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
@@ -401,19 +481,27 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'uninitialized',
             'an uninitialized comparison',
         )
-        return compute_perfect_model(
-            self._datasets['uninitialized'],
-            self._datasets['control'],
+        input_dict = {
+            'ensemble': self._datasets['uninitialized'],
+            'control': self._datasets['control'],
+            'var': var,
+            'init': False,
+        }
+        return self._apply_climpred_function(
+            compute_perfect_model,
+            input_dict=input_dict,
             metric=metric,
             comparison=comparison,
         )
 
-    def compute_persistence(self, metric='pearson_r'):
+    def compute_persistence(self, var=None, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
 
         Args:
+            var (optional str, default None):
+                Variable to compute persistence over.
             metric (str, default 'pearson_r'):
-              Metric to apply to the persistence forecast.
+                Metric to apply to the persistence forecast.
 
         Returns:
             Dataset of persistence forecast results (if refname is declared),
@@ -426,8 +514,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
               prediction. Oxford University Press, 2007.
         """
         is_initialized(self._datasets['control'], 'control', 'a persistence forecast')
-        return compute_persistence(
-            self._datasets['initialized'], self._datasets['control'], metric=metric
+        input_dict = {
+            'ensemble': self._datasets['initialized'],
+            'control': self._datasets['control'],
+            'var': var,
+            'init': True,
+        }
+        return self._apply_climpred_function(
+            compute_persistence, input_dict=input_dict, metric=metric
         )
 
     def bootstrap(
@@ -442,7 +536,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Bootstrap ensemble simulations with replacement.
 
         Args:
-            var (str, default None):
+            var (optional str, default None):
                 Variable to apply bootstrapping to.
             metric (str, default 'pearson_r'):
                 Metric to apply for bootstrapping.
@@ -484,6 +578,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
             'var': var,
+            'init': True,
         }
         return self._apply_climpred_function(
             bootstrap_perfect_model,
@@ -625,12 +720,13 @@ class HindcastEnsemble(PredictionEnsemble):
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
 
-        def wrapper(xobj, name):
-            datasets = self._datasets.copy()
-            datasets['reference'].update({name: xobj})
-            return self._construct_direct(datasets)
-
-        return wrapper(xobj, name)
+        # For some reason, I could only get the non-inplace method to work
+        # by updating the nested dictionaries separately.
+        datasets_ref = self._datasets['reference'].copy()
+        datasets = self._datasets.copy()
+        datasets_ref.update({name: xobj})
+        datasets.update({'reference': datasets_ref})
+        return self._construct_direct(datasets)
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
@@ -647,7 +743,9 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj, uninitialized=True)
         match_initialized_vars(self._datasets['initialized'], xobj)
-        self._datasets.update({'uninitialized': xobj})
+        datasets = self._datasets.copy()
+        datasets.update({'uninitialized': xobj})
+        return self._construct_direct(datasets)
 
     # -----------------
     # Getters & Setters

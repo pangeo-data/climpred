@@ -5,6 +5,22 @@ Changelog History
 climpred v1.1.1 (2019-##-##)
 ============================
 
+Features
+--------
+- Apply arbitrary ``xarray`` functions to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
+- Add "getter" methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` to retrieve ``xarray`` datasets from the objects (:pr:`243`) `Riley X. Brady`_.
+
+Bug Fixes
+---------
+
+Internals/Minor Fixes
+---------------------
+- Add ``tqdm`` progress bar to ``bootstrap_compute`` (:pr:`244`) `Aaron Spring`_.
+- Remove inplace behavior for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
+
+Documentation
+-------------
+- Add documentation for smoothing and compute over dimension (:pr:`244`) `Aaron Spring`_.
 
 climpred v1.1.0 (2019-09-23)
 ============================

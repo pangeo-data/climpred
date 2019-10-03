@@ -83,32 +83,37 @@ def test_hindcastEnsemble_init_da(initialized_da):
 def test_add_reference(initialized_ds, reconstruction_ds):
     """Test to see if a reference can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_reference(reconstruction_ds, 'reconstruction')
+    hindcast = hindcast.add_reference(reconstruction_ds, 'reconstruction')
+    # Will fail if this comes back empty.
+    assert hindcast.get_reference()
 
 
 def test_add_reference_da(initialized_ds, observations_da):
     """Test to see if a reference can be added to the HindcastEnsemble as a da"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_reference(observations_da, 'observations')
+    hindcast = hindcast.add_reference(observations_da, 'observations')
+    assert hindcast.get_reference()
 
 
 def test_add_uninitialized(initialized_ds, uninitialized_ds):
     """Test to see if an uninitialized ensemble can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_uninitialized(uninitialized_ds)
+    hindcast = hindcast.add_uninitialized(uninitialized_ds)
+    assert hindcast.get_uninitialized()
 
 
 def test_add_uninitialized_da(initialized_ds, uninitialized_da):
     """Test to see if da uninitialized ensemble can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_uninitialized(uninitialized_da)
+    hindcast = hindcast.add_uninitialized(uninitialized_da)
+    assert hindcast.get_uninitialized()
 
 
 def test_compute_metric(initialized_ds, reconstruction_ds, observations_ds):
     """Test to see if compute_metric can be run from the HindcastEnsemble"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_reference(reconstruction_ds, 'reconstruction')
-    hindcast.add_reference(observations_ds, 'observations')
+    hindcast = hindcast.add_reference(reconstruction_ds, 'reconstruction')
+    hindcast = hindcast.add_reference(observations_ds, 'observations')
     # Don't need to check for NaNs, etc. since that's handled in the prediction
     # module testing.
     hindcast.compute_metric()  # compute over all references
@@ -120,7 +125,7 @@ def test_compute_metric(initialized_ds, reconstruction_ds, observations_ds):
 def test_compute_metric_single(initialized_ds, reconstruction_ds):
     """Test to see if compute_metric automatically works with a single reference"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_reference(reconstruction_ds, 'reconstruction')
+    hindcast = hindcast.add_reference(reconstruction_ds, 'reconstruction')
     hindcast.compute_metric()
 
 
@@ -129,11 +134,11 @@ def test_compute_uninitialized(
 ):
     """Test to see if compute_uninitialized can be frun from the HindcastEnsemble"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_reference(reconstruction_ds, 'reconstruction')
-    hindcast.add_uninitialized(uninitialized_ds)
+    hindcast = hindcast.add_reference(reconstruction_ds, 'reconstruction')
+    hindcast = hindcast.add_uninitialized(uninitialized_ds)
     # single reference, no declaration of name.
     hindcast.compute_uninitialized()
-    hindcast.add_reference(observations_ds, 'observations')
+    hindcast = hindcast.add_reference(observations_ds, 'observations')
     # multiple references, no name declaration.
     hindcast.compute_uninitialized()
     # multiple references, call one.
@@ -144,8 +149,8 @@ def test_compute_uninitialized(
 def test_compute_persistence(initialized_ds, reconstruction_ds, observations_ds):
     """Test to see if compute_persistence can be run from the HindcastEnsemble"""
     hindcast = HindcastEnsemble(initialized_ds)
-    hindcast.add_reference(reconstruction_ds, 'reconstruction')
-    hindcast.add_reference(observations_ds, 'observations')
+    hindcast = hindcast.add_reference(reconstruction_ds, 'reconstruction')
+    hindcast = hindcast.add_reference(observations_ds, 'observations')
     hindcast.compute_persistence()
     hindcast.compute_persistence('observations')
     hindcast.compute_persistence(metric='rmse')
@@ -154,8 +159,10 @@ def test_compute_persistence(initialized_ds, reconstruction_ds, observations_ds)
 def test_smooth_goddard(fosi_3d, dple_3d):
     """Test whether goddard smoothing function reduces ntime."""
     hindcast = HindcastEnsemble(dple_3d.isel(nlat=slice(1, None)))
-    hindcast.add_reference(fosi_3d.isel(nlat=slice(1, None)), 'reconstruction')
-    hindcast.add_uninitialized(fosi_3d.isel(nlat=slice(1, None)))
+    hindcast = hindcast.add_reference(
+        fosi_3d.isel(nlat=slice(1, None)), 'reconstruction'
+    )
+    hindcast = hindcast.add_uninitialized(fosi_3d.isel(nlat=slice(1, None)))
     initialized_before = hindcast._datasets['initialized']
     hindcast = hindcast.smooth(smooth_kws='goddard2013')
     actual_initialized = hindcast._datasets['initialized']
@@ -168,8 +175,8 @@ def test_smooth_goddard(fosi_3d, dple_3d):
 def test_smooth_coarsen(fosi_3d, dple_3d):
     """Test whether coarsening reduces dim.size."""
     hindcast = HindcastEnsemble(dple_3d)
-    hindcast.add_reference(fosi_3d, 'reconstruction')
-    hindcast.add_uninitialized(fosi_3d)
+    hindcast = hindcast.add_reference(fosi_3d, 'reconstruction')
+    hindcast = hindcast.add_uninitialized(fosi_3d)
     initialized_before = hindcast._datasets['initialized']
     dim = 'nlon'
     hindcast = hindcast.smooth(smooth_kws={dim: 2})
@@ -180,8 +187,8 @@ def test_smooth_coarsen(fosi_3d, dple_3d):
 def test_smooth_temporal(fosi_3d, dple_3d):
     """Test whether coarsening reduces dim.size."""
     hindcast = HindcastEnsemble(dple_3d)
-    hindcast.add_reference(fosi_3d, 'reconstruction')
-    hindcast.add_uninitialized(fosi_3d)
+    hindcast = hindcast.add_reference(fosi_3d, 'reconstruction')
+    hindcast = hindcast.add_uninitialized(fosi_3d)
     initialized_before = hindcast._datasets['initialized']
     dim = 'lead'
     hindcast = hindcast.smooth(smooth_kws={dim: 4})

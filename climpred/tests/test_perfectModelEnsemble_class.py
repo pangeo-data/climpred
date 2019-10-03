@@ -45,40 +45,42 @@ def test_perfectModelEnsemble_init_da(pm_da_ds1d):
 def test_add_control(pm_ds_ds1d, pm_ds_control1d):
     """Test to see if control can be added to PerfectModelEnsemble"""
     pm = PerfectModelEnsemble(pm_ds_ds1d)
-    pm.add_control(pm_ds_control1d)
+    pm = pm.add_control(pm_ds_control1d)
+    assert pm.get_control()
 
 
 def test_generate_uninit(pm_ds_ds1d, pm_ds_control1d):
     """Test to see if uninitialized ensemble can be bootstrapped"""
     pm = PerfectModelEnsemble(pm_ds_ds1d)
-    pm.add_control(pm_ds_control1d)
-    pm.generate_uninitialized()
+    pm = pm.add_control(pm_ds_control1d)
+    pm = pm.generate_uninitialized()
+    assert pm.get_uninitialized()
 
 
 def test_compute_metric(pm_ds_ds1d, pm_ds_control1d):
     """Test that metric can be computed for perfect model ensemble"""
     pm = PerfectModelEnsemble(pm_ds_ds1d)
-    pm.add_control(pm_ds_control1d)
+    pm = pm.add_control(pm_ds_control1d)
     pm.compute_metric()
 
 
 def test_compute_uninitialized(pm_ds_ds1d, pm_ds_control1d):
     """Test that compute uninitialized can be run for perfect model ensemble"""
     pm = PerfectModelEnsemble(pm_ds_ds1d)
-    pm.add_control(pm_ds_control1d)
-    pm.generate_uninitialized()
+    pm = pm.add_control(pm_ds_control1d)
+    pm = pm.generate_uninitialized()
     pm.compute_uninitialized()
 
 
 def test_compute_persistence(pm_ds_ds1d, pm_ds_control1d):
     """Test that compute persistence can be run for perfect model ensemble"""
     pm = PerfectModelEnsemble(pm_ds_ds1d)
-    pm.add_control(pm_ds_control1d)
+    pm = pm.add_control(pm_ds_control1d)
     pm.compute_persistence()
 
 
 def test_bootstrap(pm_ds_ds1d, pm_ds_control1d):
     """Test that perfect model ensemble object can be bootstrapped"""
     pm = PerfectModelEnsemble(pm_ds_ds1d)
-    pm.add_control(pm_ds_control1d)
+    pm = pm.add_control(pm_ds_control1d)
     pm.bootstrap(bootstrap=2)

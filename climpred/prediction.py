@@ -3,17 +3,17 @@ import warnings
 
 import xarray as xr
 
-from .checks import is_xarray
+from .checks import is_in_list, is_xarray
 from .comparisons import _e2c
 from .constants import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
-    PM_METRICS,
+    METRIC_ALIASES,
     PM_COMPARISONS,
+    PM_METRICS,
     PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
-    METRIC_ALIASES,
 )
 from .utils import (
     assign_attrs,
@@ -63,6 +63,7 @@ def compute_perfect_model(
     """
     if dim is None:
         dim = ['init', 'member']
+    is_in_list(dim, ['member', 'init', ['init', 'member']], '')
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # if stack_dims, comparisons return forecast with member dim and reference
@@ -195,6 +196,7 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
+    is_in_list(dim, ['member', 'init'], str)
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
 

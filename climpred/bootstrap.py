@@ -3,6 +3,7 @@ import inspect
 import numpy as np
 import xarray as xr
 
+from tqdm import tqdm
 from .checks import has_dims
 from .constants import POSITIVELY_ORIENTED_METRICS, PROBABILISTIC_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
@@ -310,7 +311,7 @@ def bootstrap_compute(
         raise ValueError('Shuffle either `member` or `init`; not', dim)
     # resample with replacement
     # DoTo: parallelize loop
-    for _ in range(bootstrap):
+    for _ in tqdm(range(bootstrap), desc='bootstrapping iteration'):
         smp = np.random.choice(to_be_shuffled, len(to_be_shuffled))
         smp_hind = hind.sel({shuffle_dim: smp})
         if shuffle_dim == 'member':

@@ -17,11 +17,20 @@ signal_amplitude = control.std().values
 signal_P = 8
 
 
-def ramp(lead, a=0.2, A_tot=0.5, t_opt=0.1, r=1.8):
-    """A weighting function that starts at 0 and approaches 1."""
-    A = A_tot * (
-        1.0 / (1 + a * np.exp((t_opt - lead) / r)) - 1.0 / (1 + a * np.exp((t_opt) / r))
-    )
+def ramp(lead, a=0.2, t_opt=0.1, r=1.8):
+    """A weighting function that starts at 0 and approaches 1 to mimick increasing noise.
+
+    Args:
+        lead (xr.DataArray): lead times to create synthetic data for.
+        a (type): shape of ramping up. Defaults to 0.2.
+        t_opt (type): lead time near to saturation. Defaults to 0.1.
+        r (type): intensity of ramping up. Defaults to 1.8.
+
+    Returns:
+        np.array: weighting ramping up to 1.
+
+    """
+    A = 1.0 / (1 + a * np.exp((t_opt - lead) / r)) - 1.0 / (1 + a * np.exp((t_opt) / r))
     A[0] = 0
     A = A / A[-1]
     return A
@@ -30,7 +39,19 @@ def ramp(lead, a=0.2, A_tot=0.5, t_opt=0.1, r=1.8):
 def create_noise(
     lead=lead, ninit=3, nmember=3, noise_amplitude=noise_amplitude, ramp=ramp
 ):
-    """Create gaussian noise."""
+    """Create gaussian noise.
+
+    Args:
+        lead (xr.DataArray): lead times to create synthetic data for.
+        ninit (type): number of initialzations. Defaults to 3.
+        nmember (type): number of members. Defaults to 3.
+        noise_amplitude (type): amplitude of the gaussian noise.
+        ramp (type): Ramping up function.
+
+    Returns:
+        xr.DataArray: ramped up noise with initializations and members
+
+    """
     noise = (
         noise_amplitude
         * xr.DataArray(
@@ -48,7 +69,18 @@ def create_noise(
 def signal(
     lead=lead, signal_amplitude=signal_amplitude, signal_P=signal_P, lead_offset=0
 ):
-    """The signal to be predicted."""
+    """The low-frequency signal to be predicted.
+
+    Args:
+        lead (xr.DataArray): lead times to create synthetic data for.
+        signal_amplitude (float): amplitude of the signal.
+        signal_P (float): period of the signal.
+        lead_offset (float): phase of the signal. Defaults to 0.
+
+    Returns:
+        xr.DataArray: signal to be predicted
+
+    """
     return signal_amplitude * xr.DataArray(
         np.sin((lead - lead_offset) * np.pi * 2 / signal_P)
     )
@@ -61,8 +93,23 @@ def create_initialized(
     signal_amplitude=signal_amplitude,
     noise_amplitude=noise_amplitude,
     signal_P=signal_P,
+    ramp=ramp,
 ):
-    """Create initialized ensemble."""
+    """Create initialized ensemble.
+
+    Args:
+        lead (xr.DataArray): lead times to create synthetic data for.
+        ninit (type): number of initialzations. Defaults to 3.
+        nmember (type): number of members. Defaults to 3.
+        noise_amplitude (type): amplitude of the gaussian noise.
+        ramp (np.array): Ramping up function.
+        signal_amplitude (float): amplitude of the signal.
+        signal_P (float): period of the signal.
+
+    Returns:
+        xr.DataArray: initialized ensemble with potentially predictable variation.
+
+    """
     # span range of initial conditions
     init_range = 2 * signal_P
     to = xr.DataArray(np.random.rand(ninit) * init_range - init_range, dims='init')
@@ -70,25 +117,54 @@ def create_initialized(
     init = signal(
         lead=lead, lead_offset=to, signal_amplitude=signal_amplitude, signal_P=signal_P
     ) + create_noise(
-        lead=lead, ninit=ninit, nmember=nmember, noise_amplitude=noise_amplitude
+        lead=lead,
+        ninit=ninit,
+        nmember=nmember,
+        noise_amplitude=noise_amplitude,
+        ramp=ramp,
     )
     return init
 
 
 def run_skill_for_ensemble(
+    lead=lead,
     nmember=5,
     ninit=5,
     signal_P=signal_P,
     signal_amplitude=signal_amplitude,
     noise_amplitude=noise_amplitude,
-    metric='rmse',
+    ramp=ramp,
     bootstrap=10,
     plot=True,
     ax=None,
     label=None,
     color='k',
+    compute=compute_perfect_model,
     **metric_kwargs,
 ):
+    """Short summary.
+
+    Args:
+        lead (xr.DataArray): lead times to create synthetic data for.
+        ninit (type): number of initialzations. Defaults to 3.
+        nmember (type): number of members. Defaults to 3.
+        noise_amplitude (type): amplitude of the gaussian noise.
+        ramp (np.array): Ramping up function.
+        signal_amplitude (float): amplitude of the signal.
+        signal_P (float): period of the signal.
+        bootstrap (int): bootstrap iterations to calc synthetic skill. Defaults to 10.
+        plot (bool): plot as boxplot. Defaults to True.
+        ax (plt.axes): using existing ax. Defaults to None.
+        label (str): label in legend. Defaults to None.
+        color (str): color of boxplot. Defaults to 'k'.
+        compute (function): compute_perfect_model or compute_hindcast
+        **metric_kwargs (type): Argument to be passed to compute `**metric_kwargs`.
+
+    Returns:
+        whisker_line: to use in legend, if plot.
+        xr.DataArray: skill, else.
+
+    """
     s = []
     # for i in tqdm(range(bootstrap),desc='bootstrap'):
     for i in range(bootstrap):
@@ -113,6 +189,7 @@ def run_skill_for_ensemble(
             label=label,
             flierprops={'markeredgecolor': color},
         )
+        metric = metric_kwargs['metric'] if 'metric' in metric_kwargs else ''
         ax.set_title(f'metric: {metric}, nmember: {nmember} ninit:{ninit}')
         return bp['whiskers'][0]
     else:
@@ -134,19 +211,6 @@ def shuffle(ds, dim='initialization'):
     return shuffled
 
 
-def uninit_ensemble(ds, ds2, dim='init'):
-    """
-    Shuffle initializations to uninitialize the data.
-    """
-
-    shuffledlist = []
-    for ds_m in list(ds.member.values):
-        shuffledlist.append(shuffle(ds.sel(member=ds_m), dim=dim))
-
-    shuffled = xr.concat(shuffledlist, dim='member')
-    return shuffled
-
-
 def uninit_ensemble_ori(ds, ds2, dim='init', only_first=True):
     """
     Shuffle ensemble members to uninitialize the data.
@@ -160,11 +224,10 @@ def uninit_ensemble_ori(ds, ds2, dim='init', only_first=True):
         shuffledlist.append(shuffle(ds_m, dim=dim))
 
     shuffled = xr.concat(shuffledlist, dim='member')
+    # broadcast lead0 to all leads
     if only_first:
         shuffled = shuffled.isel(lead=[0] * (shuffled.lead.size))
         shuffled['lead'] = ds.lead.values
-    else:
-        pass
     return shuffled
 
 
@@ -178,7 +241,7 @@ def bootstrap_perfect_model_toy(
     bootstrap=5,
     pers_sig=None,
 ):
-    """Use bootstrap_compute with different resampling function for large ensembles."""
+    """bootstrap_compute for large ensembles."""
     if dim is None:
         dim = ['init', 'member']
     return bootstrap_compute(

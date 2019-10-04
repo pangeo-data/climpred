@@ -4,14 +4,14 @@ Changelog History
 
 climpred v1.1.1 (2019-##-##)
 ============================
-
+- Estimate spread in skill for different ensemble sizes (:pr:`246`)`Aaron Spring`_
 
 climpred v1.1.0 (2019-09-23)
 ============================
 
 Features
 --------
-- Write information about skill computation to netcdf attributes(:pr:`213`) `Aaron Spring`_
+- Write information about skill computation to netcdf attributes (:pr:`213`) `Aaron Spring`_
 - Temporal and spatial smoothing module (:pr:`224`) `Aaron Spring`_
 - Add metrics `brier_score`, `threshold_brier_score` and `crpss_es` (:pr:`232`) `Aaron Spring`_
 - Allow `compute_hindcast` and `compute_perfect_model` to specify which dimension `dim` to calculate metric over (:pr:`232`) `Aaron Spring`_

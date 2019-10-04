@@ -5,10 +5,9 @@ from climpred.toy import create_initialized, run_skill_for_ensemble
 from climpred.tutorial import load_dataset
 from xarray.testing import assert_allclose
 
+# standard parameters; can be changed
 lead = xr.DataArray(np.arange(0, 20, 1), dims='lead')
 lead['lead'] = lead.values
-
-
 control = load_dataset('MPI-control-1D')['tos'].isel(period=-1, area=1)
 # amplitudes of the signal and noise
 noise_amplitude = control.std().values * 2.5
@@ -23,9 +22,8 @@ def test_initialized_has_skill():
     """
     ds = create_initialized(
         lead=lead,
-        ninits=10,
+        ninit=10,
         nmember=10,
-        init_range=150,
         signal_amplitude=signal_amplitude,
         noise_amplitude=noise_amplitude,
     )
@@ -37,16 +35,15 @@ def test_initialized_has_skill():
 
 def test_larger_ensemble_less_skill_spread_than_smaller():
     ss_small = run_skill_for_ensemble(
-        ninits=3,
+        ninit=3,
         nmember=3,
         signal_amplitude=signal_amplitude,
         noise_amplitude=noise_amplitude,
         plot=False,
     )
     ss_large = run_skill_for_ensemble(
-        ninits=10,
+        ninit=10,
         nmember=10,
-        init_range=150,
         signal_amplitude=signal_amplitude,
         noise_amplitude=noise_amplitude,
         plot=False,

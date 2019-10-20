@@ -18,8 +18,8 @@ An xarray wrapper for analysis of ensemble forecast models for climate predictio
 .. image:: https://coveralls.io/repos/github/bradyrx/climpred/badge.svg?branch=master
     :target: https://coveralls.io/github/bradyrx/climpred?branch=master
 
-.. image:: https://img.shields.io/readthedocs/climpred/latest.svg?style=flat
-    :target: https://climpred.readthedocs.io/en/latest/?badge=latest
+.. image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
+    :target: https://climpred.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg

@@ -112,8 +112,6 @@ class PredictionEnsemble:
         Args:
             * name: Function, e.g., .isel() or .sum().
         """
-        # Temporarily registers attribute with the object.
-        setattr(self, name, self)
 
         def wrapper(*args, **kwargs):
             """Applies arbitrary function to all datasets in the PredictionEnsemble
@@ -172,8 +170,6 @@ class PredictionEnsemble:
             # Instantiates new object with the modified datasets.
             return self._construct_direct(datasets)
 
-        # Remove registered attribute.
-        delattr(self, name)
         return wrapper
 
     # ----------------
@@ -280,7 +276,7 @@ class PredictionEnsemble:
             datasets['uninitialized'] = smooth_fct(
                 self._datasets['uninitialized'], smooth_kws
             )
-        if type(self).__name__ == 'PerfectModelEnsemble':
+        if isinstance(self, PerfectModelEnsemble):
             if self._datasets['control']:
                 datasets['control'] = smooth_fct(self._datasets['control'], smooth_kws)
         # if type(self).__name__ == 'HindcastEnsemble':
@@ -331,23 +327,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict (dict): dictionary with the following things:
                 * ensemble: initialized or uninitialized ensemble.
                 * control: control dictionary from HindcastEnsemble.
-                * var: name of variable to target.
                 * init (bool): True if the initialized ensemble, False if uninitialized.
         """
         ensemble = input_dict['ensemble']
         control = input_dict['control']
-        var = input_dict['var']
         init = input_dict['init']
-
-        # Compute for single variable.
-        if var is not None:
-            return func(ensemble[var], control[var], **kwargs)
-        # Compute for all variables in control.
-        else:
-            init_vars, ctrl_vars = self._vars_to_drop(init=init)
-            ensemble = ensemble.drop(init_vars)
-            control = control.drop(ctrl_vars)
-            return func(ensemble, control, **kwargs)
+        init_vars, ctrl_vars = self._vars_to_drop(init=init)
+        ensemble = ensemble.drop(init_vars)
+        control = control.drop(ctrl_vars)
+        return func(ensemble, control, **kwargs)
 
     def _vars_to_drop(self, init=True):
         """Returns list of variables to drop when comparing
@@ -367,10 +355,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
           Lists of variables to drop from the initialized/uninitialized
           and control Datasets.
         """
-        if init:
-            init_vars = [var for var in self._datasets['initialized'].data_vars]
-        else:
-            init_vars = [var for var in self._datasets['uninitialized'].data_vars]
+        init_str = 'initialized' if init else 'uninitialized'
+        init_vars = [var for var in self._datasets[init_str].data_vars]
         ctrl_vars = [var for var in self._datasets['control'].data_vars]
         # find what variable they have in common.
         intersect = set(ctrl_vars).intersection(init_vars)
@@ -404,13 +390,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         datasets.update({'control': xobj})
         return self._construct_direct(datasets)
 
-    def generate_uninitialized(self, var=None):
+    def generate_uninitialized(self):
         """Generate an uninitialized ensemble by bootstrapping the
         initialized prediction ensemble.
-
-        Args:
-            var (str, default None):
-              Name of variable to be bootstrapped.
 
         Returns:
             Bootstrapped (uninitialized) ensemble as a Dataset.
@@ -419,14 +401,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             self._datasets['control'], 'control', 'generate an uninitialized ensemble.'
         )
 
-        if var is not None:
-            uninit = bootstrap_uninit_pm_ensemble_from_control(
-                self._datasets['initialized'][var], self._datasets['control'][var]
-            ).to_dataset()
-        else:
-            uninit = bootstrap_uninit_pm_ensemble_from_control(
-                self._datasets['initialized'], self._datasets['control']
-            )
+        uninit = bootstrap_uninit_pm_ensemble_from_control(
+            self._datasets['initialized'], self._datasets['control']
+        )
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': uninit})
         return self._construct_direct(datasets)
@@ -441,12 +418,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
     # ------------------
     # Analysis Functions
     # ------------------
-    def compute_metric(self, var=None, metric='pearson_r', comparison='m2m'):
+    def compute_metric(self, metric='pearson_r', comparison='m2m'):
         """Compares the initialized ensemble to the control run.
 
         Args:
-            var (optional str, default None):
-                Variable to compute persistence over.
             metric (str, default 'pearson_r'):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
@@ -459,7 +434,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
-            'var': var,
             'init': True,
         }
         return self._apply_climpred_function(
@@ -469,12 +443,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison=comparison,
         )
 
-    def compute_uninitialized(self, var=None, metric='pearson_r', comparison='m2e'):
+    def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
-            var (optional str, default None):
-                Variable to compute persistence over.
             metric (str, default 'pearson_r'):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
@@ -493,7 +465,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
             'control': self._datasets['control'],
-            'var': var,
             'init': False,
         }
         return self._apply_climpred_function(
@@ -503,12 +474,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison=comparison,
         )
 
-    def compute_persistence(self, var=None, metric='pearson_r'):
+    def compute_persistence(self, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
 
         Args:
-            var (optional str, default None):
-                Variable to compute persistence over.
             metric (str, default 'pearson_r'):
                 Metric to apply to the persistence forecast.
 
@@ -528,7 +497,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
-            'var': var,
             'init': True,
         }
         return self._apply_climpred_function(
@@ -536,19 +504,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
 
     def bootstrap(
-        self,
-        var=None,
-        metric='pearson_r',
-        comparison='m2e',
-        sig=95,
-        bootstrap=500,
-        pers_sig=None,
+        self, metric='pearson_r', comparison='m2e', sig=95, bootstrap=500, pers_sig=None
     ):
         """Bootstrap ensemble simulations with replacement.
 
         Args:
-            var (optional str, default None):
-                Variable to apply bootstrapping to.
             metric (str, default 'pearson_r'):
                 Metric to apply for bootstrapping.
             comparison (str, default 'm2e'):
@@ -588,7 +548,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
-            'var': var,
             'init': True,
         }
         return self._apply_climpred_function(

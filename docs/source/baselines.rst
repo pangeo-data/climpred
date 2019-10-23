@@ -2,14 +2,14 @@
 Baseline Forecasts
 ******************
 
-To quantify the quality of an initialized forecast, it is useful to judge it against some simple baseline forecast. ``climpred`` currently supports a persistence forecast, but future releases will allow computation of other baseline forecasts. Consider opening a `Pull Request <https://climpred.readthedocs.io/en/latest/contributing.html>`_ to get it implemented more quickly. 
+To quantify the quality of an initialized forecast, it is useful to judge it against some simple baseline forecast. ``climpred`` currently supports a persistence forecast, but future releases will allow computation of other baseline forecasts. Consider opening a `Pull Request <contributing.html>`_ to get it implemented more quickly.
 
 **Persistence Forecast**: Whatever is observed at the time of initialization is forecasted to persist into the forecast period [Jolliffe2012]_. You can compute this via ``compute_persistence``.
 
-**Damped Persistence Forecast**: (*Not Implemented*) The amplitudes of the anomalies reduce in time exponentially at a time scale of the local autocorrelation [Yuan2016]_. 
+**Damped Persistence Forecast**: (*Not Implemented*) The amplitudes of the anomalies reduce in time exponentially at a time scale of the local autocorrelation [Yuan2016]_.
 
 .. math::
-    
+
     v_{dp}(t) = v(0)e^{-\alpha t}
 
 **Climatology**: (*Not Implemented*) The average values at the temporal forecast resolution (e.g., annual, monthly) over some long period, which is usually 30 years [Jolliffe2012]_.

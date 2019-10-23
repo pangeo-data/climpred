@@ -30,11 +30,11 @@ climpred: analysis of ensemble forecast models for climate prediction
 Version 1 Release
 =================
 
-v1.0.1 of ``climpred`` is our first bare-bones release to the community. **We currently only support annual forecasts**, but our focus is to support sub-annual (*e.g.*, seasonal, monthly, weekly, daily) in our next major release. We provide a host of deterministic metrics_, as well as some probabilistic metrics, although the latter have not been tested rigorously. We support both perfect-model and hindcast prediction ensembles, and provide ``PerfectModelEnsemble`` and ``HindcastEnsemble`` classes to make analysis easier.
+v1.0.1 of ``climpred`` was our first bare-bones release to the community. **We currently only support annual forecasts**, but our focus is to support sub-annual (*e.g.*, seasonal, monthly, weekly, daily) in our next major release. We provide a host of deterministic metrics_, as well as some probabilistic metrics, although the latter have not been tested rigorously. We support both perfect-model and hindcast prediction ensembles, and provide ``PerfectModelEnsemble`` and ``HindcastEnsemble`` classes to make analysis easier.
 
-See `quick start <https://climpred.readthedocs.io/en/latest/quick-start.html>`_ and our `examples <https://climpred.readthedocs.io/en/latest/examples.html>`_ to get started.
+See `quick start <quick-start.html>`_ and our `examples <examples.html>`_ to get started.
 
-.. _metrics: https://climpred.readthedocs.io/en/latest/metrics.html
+.. _metrics: metrics.html
 
 Installation
 ============
@@ -55,7 +55,7 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 
 
 * :doc:`why-climpred`
-* :doc:`scope` 
+* :doc:`scope`
 * :doc:`quick-start`
 * :doc:`examples`
 

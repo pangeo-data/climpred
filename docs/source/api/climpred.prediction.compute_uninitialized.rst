@@ -1,5 +1,5 @@
-compute_uninitialized
-=====================
+climpred.prediction.compute\_uninitialized
+==========================================
 
 .. currentmodule:: climpred.prediction
 

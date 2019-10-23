@@ -38,17 +38,20 @@ def _display_metadata(self):
     print(dp)
     ```
     """
+    SPACE = '    '
     header = f'<climpred.{type(self).__name__}>'
     summary = header + '\nInitialized Ensemble:\n'
-    summary += '    ' + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
+    summary += SPACE + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
     if isinstance(self, HindcastEnsemble):
+        # Prints out reference names and associated variables if they exist. If not,
+        # just write "None".
         if any(self._datasets['reference']):
             for key in self._datasets['reference']:
                 summary += f'{key}:\n'
-                N = len(self._datasets['reference'][key].data_vars)
-                for i in range(1, N + 1):
+                num_ref = len(self._datasets['reference'][key].data_vars)
+                for i in range(1, num_ref + 1):
                     summary += (
-                        '    '
+                        SPACE
                         + str(self._datasets['reference'][key].data_vars)
                         .split('\n')[i]
                         .strip()
@@ -56,25 +59,27 @@ def _display_metadata(self):
                     )
         else:
             summary += 'References:\n'
-            summary += '    None\n'
+            summary += SPACE + 'None\n'
     elif isinstance(self, PerfectModelEnsemble):
         summary += 'Control:\n'
+        # Prints out control variables if a control is appended. If not,
+        # just write "None".
         if any(self._datasets['control']):
-            N = len(self._datasets['control'].data_vars)
-            for i in range(1, N + 1):
+            num_ctrl = len(self._datasets['control'].data_vars)
+            for i in range(1, num_ctrl + 1):
                 summary += (
-                    '    '
+                    SPACE
                     + str(self._datasets['control'].data_vars).split('\n')[i].strip()
                     + '\n'
                 )
         else:
-            summary += '    None\n'
+            summary += SPACE + 'None\n'
     if any(self._datasets['uninitialized']):
         summary += 'Uninitialized:\n'
-        summary += '    ' + str(self._datasets['uninitialized'].data_vars)[18:].strip()
+        summary += SPACE + str(self._datasets['uninitialized'].data_vars)[18:].strip()
     else:
         summary += 'Uninitialized:\n'
-        summary += '    None'
+        summary += SPACE + 'None'
     return summary
 
 
@@ -88,18 +93,18 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
 
-    # ---------------
-    # Magic Functions
-    # ---------------
+    # -------------
+    # Magic Methods
+    # -------------
     @is_xarray(1)
     def __init__(self, xobj):
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
-        self._datasets = {'initialized': xobj}
-        # Reserve sub-dictionary for an uninitialized run.
-        self._datasets.update({'uninitialized': {}})
+        # Add initialized dictionary and reserve sub-dictionary for an uninitialized
+        # run.
+        self._datasets = {'initialized': xobj, 'uninitialized': {}}
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
@@ -294,9 +299,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    # ---------------
-    # Magic Functions
-    # ---------------
+    # -------------
+    # Magic Methods
+    # -------------
     def __init__(self, xobj):
         """Create a `PerfectModelEnsemble` object by inputting output from the
         control run in `xarray` format.
@@ -356,8 +361,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
           and control Datasets.
         """
         init_str = 'initialized' if init else 'uninitialized'
-        init_vars = [var for var in self._datasets[init_str].data_vars]
-        ctrl_vars = [var for var in self._datasets['control'].data_vars]
+        init_vars = list(self._datasets[init_str])
+        ctrl_vars = list(self._datasets['control'])
         # find what variable they have in common.
         intersect = set(ctrl_vars).intersection(init_vars)
         # perhaps could be done cleaner than this.
@@ -573,9 +578,9 @@ class HindcastEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    # ---------------
-    # Magic Functions
-    # ---------------
+    # -------------
+    # Magic Methods
+    # -------------
     def __init__(self, xobj):
         """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
@@ -628,7 +633,7 @@ class HindcastEnsemble(PredictionEnsemble):
             # TODO: Parallelize this process.
             else:
                 result = {}
-                for refname, _ in reference.items():
+                for refname in reference.keys():
                     drop_init, drop_ref = self._vars_to_drop(refname, init=init)
                     result[refname] = func(ensemble, reference[refname], **kwargs)
                 return result
@@ -677,9 +682,6 @@ class HindcastEnsemble(PredictionEnsemble):
     def add_reference(self, xobj, name):
         """Add a reference product for comparison to the initialized ensemble.
 
-        NOTE: There is currently no check to ensure that these objects cover
-        the same time frame.
-
         Args:
             xobj (xarray object): Dataset/DataArray being appended to the
                                   `HindcastEnsemble` object.
@@ -701,9 +703,6 @@ class HindcastEnsemble(PredictionEnsemble):
     @is_xarray(1)
     def add_uninitialized(self, xobj):
         """Add a companion uninitialized ensemble for comparison to references.
-
-        NOTE: There is currently no check to ensure that these objects cover
-        the same time frame as the initialized ensemble.
 
         Args:
             xobj (xarray object): Dataset/DataArray of the uninitialzed

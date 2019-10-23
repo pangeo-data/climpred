@@ -1,6 +1,6 @@
 # Configuration file for the Sphinx documentation builder.
 #
-# This file only contains a selection of the most common options. For a full
+# u This file only contains a selection of the most common options. For a full
 # list see the documentation:
 # http://www.sphinx-doc.org/en/master/config
 
@@ -37,7 +37,6 @@ extensions = [
     'nbsphinx',
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
-    'sphinx_automodapi.automodapi',
     'sphinx.ext.extlinks',
     'sphinx.ext.intersphinx',
     'sphinxcontrib.napoleon',

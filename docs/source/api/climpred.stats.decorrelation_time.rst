@@ -1,5 +1,5 @@
-decorrelation_time
-==================
+climpred.stats.decorrelation\_time
+==================================
 
 .. currentmodule:: climpred.stats
 

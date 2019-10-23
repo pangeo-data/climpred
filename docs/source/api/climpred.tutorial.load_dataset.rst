@@ -1,5 +1,5 @@
-load_dataset
-============
+climpred.tutorial.load\_dataset
+===============================
 
 .. currentmodule:: climpred.tutorial
 

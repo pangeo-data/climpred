@@ -1,5 +1,5 @@
-DPP
-===
+climpred.stats.dpp
+==================
 
 .. currentmodule:: climpred.stats
 

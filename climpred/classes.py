@@ -363,17 +363,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         init_str = 'initialized' if init else 'uninitialized'
         init_vars = list(self._datasets[init_str])
         ctrl_vars = list(self._datasets['control'])
-        # find what variable they have in common.
-        intersect = set(ctrl_vars).intersection(init_vars)
-        # perhaps could be done cleaner than this.
-        for var in intersect:
-            # generates a list of variables to drop from each product being
-            # compared.
-            idx = init_vars.index(var)
-            init_vars.pop(idx)
-            idx = ctrl_vars.index(var)
-            ctrl_vars.pop(idx)
-        return init_vars, ctrl_vars
+        # Make lists of variables to drop that aren't in common
+        # with one another.
+        init_vars_to_drop = list(set(init_vars) - set(ctrl_vars))
+        ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
+        return init_vars_to_drop, ctrl_vars_to_drop
 
     # ---------------
     # Object Builders
@@ -663,17 +657,11 @@ class HindcastEnsemble(PredictionEnsemble):
         else:
             init_vars = [var for var in self._datasets['uninitialized'].data_vars]
         ref_vars = [var for var in self._datasets['reference'][ref].data_vars]
-        # find what variable they have in common.
-        intersect = set(ref_vars).intersection(init_vars)
-        # perhaps could be done cleaner than this.
-        for var in intersect:
-            # generates a list of variables to drop from each product being
-            # compared.
-            idx = init_vars.index(var)
-            init_vars.pop(idx)
-            idx = ref_vars.index(var)
-            ref_vars.pop(idx)
-        return init_vars, ref_vars
+        # Make lists of variables to drop that aren't in common
+        # with one another.
+        init_vars_to_drop = list(set(init_vars) - set(ref_vars))
+        ref_vars_to_drop = list(set(ref_vars) - set(init_vars))
+        return init_vars_to_drop, ref_vars_to_drop
 
     # ---------------
     # Object Builders

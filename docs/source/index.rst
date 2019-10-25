@@ -17,8 +17,9 @@ climpred: analysis of ensemble forecast models for climate prediction
 .. image:: https://coveralls.io/repos/github/bradyrx/climpred/badge.svg?branch=master
     :target: https://coveralls.io/github/bradyrx/climpred?branch=master
 
-.. image:: https://img.shields.io/readthedocs/climpred/latest.svg?style=flat
-    :target: https://climpred.readthedocs.io/en/latest/?badge=latest
+.. image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
+    :target: https://climpred.readthedocs.io/en/stable/?badge=stable
+    :alt: Documentation Status
 
 .. image:: https://badges.gitter.im/Join%20Chat.svg
     :target: https://gitter.im/climpred
@@ -72,17 +73,19 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 **User Guide**
 
 * :doc:`setting-up-data`
+* :doc:`prediction-ensemble-object`
 * :doc:`comparisons`
 * :doc:`metrics`
 * :doc:`terminology`
 * :doc:`baselines`
 
 .. toctree::
-    :maxdepth: 1
+    :maxdepth: 2
     :hidden:
     :caption: User Guide
 
     setting-up-data
+    prediction-ensemble-object.ipynb
     metrics
     comparisons
     terminology

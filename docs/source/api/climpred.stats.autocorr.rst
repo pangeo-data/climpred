@@ -1,5 +1,5 @@
-autocorr
-========
+climpred.stats.autocorr
+=======================
 
 .. currentmodule:: climpred.stats
 

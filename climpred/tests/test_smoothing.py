@@ -88,7 +88,7 @@ def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims(pm_da_control3d):
 
 
 def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_no_coarsen_kws(
-    pm_da_control3d
+    pm_da_control3d,
 ):
     """Test whether spatial dimsizes are properly reduced if no coarsen_kws
     given."""

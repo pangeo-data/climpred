@@ -1,5 +1,5 @@
-DPP threshold
-=============
+climpred.bootstrap.dpp\_threshold
+=================================
 
 .. currentmodule:: climpred.bootstrap
 

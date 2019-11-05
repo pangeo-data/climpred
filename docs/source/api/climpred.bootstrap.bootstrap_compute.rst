@@ -1,5 +1,5 @@
-bootstrap_compute
-=================
+climpred.bootstrap.bootstrap\_compute
+=====================================
 
 .. currentmodule:: climpred.bootstrap
 

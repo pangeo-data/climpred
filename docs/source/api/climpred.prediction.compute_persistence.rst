@@ -1,5 +1,5 @@
-compute_persistence
-===================
+climpred.prediction.compute\_persistence
+========================================
 
 .. currentmodule:: climpred.prediction
 

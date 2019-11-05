@@ -1,5 +1,5 @@
-bootstrap_hindcast
-==================
+climpred.bootstrap.bootstrap\_hindcast
+======================================
 
 .. currentmodule:: climpred.bootstrap
 

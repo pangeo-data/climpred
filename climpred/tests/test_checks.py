@@ -6,7 +6,7 @@ from climpred.checks import (
     is_xarray,
     has_dims,
     has_min_len,
-    is_initialized,
+    has_dataset,
     match_initialized_dims,
     match_initialized_vars,
     is_in_list,
@@ -182,17 +182,17 @@ def test_has_min_len_fail(da1):
     assert 'Your arbitrary array must be at least' in str(e.value)
 
 
-def test_is_initialized():
+def test_has_dataset():
     """Test if check works for a non-empty list."""
     obj = [5]
-    assert is_initialized(obj, 'list', 'something')
+    assert has_dataset(obj, 'list', 'something')
 
 
-def test_is_initialized_fail():
+def test_has_dataset_fail():
     """Test if check works to fail for an empty list."""
     obj = []
     with pytest.raises(DatasetError) as e:
-        is_initialized(obj, 'test', 'something')
+        has_dataset(obj, 'test', 'something')
     assert 'You need to add at least one test dataset' in str(e.value)
 
 

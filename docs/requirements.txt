@@ -9,3 +9,4 @@ numpy
 xarray
 jupyterlab
 netcdf4
+tqdm

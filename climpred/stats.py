@@ -328,7 +328,7 @@ def decorrelation_time(da, r=20, dim='time'):
 # Diagnostic Potential Predictability (DPP)
 # Functions related to DPP from Boer et al.
 # --------------------------------------------#
-def dpp(ds, m=10, chunk=True):
+def dpp(ds, dim='time', m=10, chunk=True):
     """Calculates the Diagnostic Potential Predictability (dpp)
 
     .. math::
@@ -342,6 +342,7 @@ def dpp(ds, m=10, chunk=True):
 
     Args:
         ds (xr.DataArray): control simulation with time dimension as years.
+        dim (str): dimension to apply DPP on. Default: time.
         m (optional int): separation time scale in years between predictable
                           low-freq component and high-freq noise.
         chunk (optional boolean): Whether chunking is applied. Default: True.
@@ -364,7 +365,7 @@ def dpp(ds, m=10, chunk=True):
 
     """
 
-    def _chunking(ds, number_chunks=False, chunk_length=False):
+    def _chunking(ds, dim='time', number_chunks=False, chunk_length=False):
         """
         Separate data into chunks and reshapes chunks in a c dimension.
 
@@ -373,6 +374,7 @@ def dpp(ds, m=10, chunk=True):
 
         Args:
             ds (xr.DataArray): control simulation with time dimension as years.
+            dim (str): dimension to apply chunking to. Default: time
             chunk_length (int): see dpp(m)
             number_chunks (int): number of chunks in the return data.
 
@@ -381,37 +383,37 @@ def dpp(ds, m=10, chunk=True):
 
         """
         if number_chunks and not chunk_length:
-            chunk_length = np.floor(ds['time'].size / number_chunks)
-            cmin = int(ds['time'].min())
+            chunk_length = np.floor(ds[dim].size / number_chunks)
+            cmin = int(ds[dim].min())
         elif not number_chunks and chunk_length:
-            cmin = int(ds['time'].min())
-            number_chunks = int(np.floor(ds['time'].size / chunk_length))
+            cmin = int(ds[dim].min())
+            number_chunks = int(np.floor(ds[dim].size / chunk_length))
         else:
             raise KeyError('set number_chunks or chunk_length to True')
-        c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
+        c = ds.sel({dim: slice(cmin, cmin + chunk_length - 1)})
         c = c.expand_dims('c')
         c['c'] = [0]
         for i in range(1, number_chunks):
             c2 = ds.sel(
-                time=slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)
+                {dim: slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)}
             )
             c2 = c2.expand_dims('c')
             c2['c'] = [i]
-            c2['time'] = c['time']
+            c2[dim] = c[dim]
             c = xr.concat([c, c2], 'c')
         return c
 
     if not chunk:  # Resplandy 2015, Seferian 2018
-        s2v = ds.rolling(time=m).mean().var('time')
-        s2 = ds.var('time')
+        s2v = ds.rolling({dim: m}).mean().var(dim)
+        s2 = ds.var(dim)
 
     if chunk:  # Boer 2004 ppvf
         # first chunk
-        chunked_means = _chunking(ds, chunk_length=m).mean('time')
+        chunked_means = _chunking(ds, dim=dim, chunk_length=m).mean(dim)
         # sub means in chunks
-        chunked_deviations = _chunking(ds, chunk_length=m) - chunked_means
+        chunked_deviations = _chunking(ds, dim=dim, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
-        s2e = chunked_deviations.var(['time', 'c'])
+        s2e = chunked_deviations.var([dim, 'c'])
         s2 = s2v + s2e
     dpp = (s2v - s2 / (m)) / s2
     return dpp

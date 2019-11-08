@@ -180,16 +180,47 @@ def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
 @pytest.mark.parametrize(
     'func', (dpp, varweighted_mean_period, decorrelation_time, autocorr)
 )
-def test_stats_functions_dask(control_3d_NA, func):
-    control_chunked = control_3d_NA.chunk({'x': 5, 'y': 5})
-    res_chunked = func(control_chunked)
-    res = func(control_3d_NA)
-    # check for chunks
-    assert dask.is_dask_collection(res_chunked)
-    assert res_chunked.chunks is not None
-    # check for no chunks
-    assert not dask.is_dask_collection(res)
-    assert res.chunks is None
+def test_stats_functions_dask_single_chunk(control_3d_NA, func):
+    step = -1  # single chunk
+    for chunk_dim in control_3d_NA.dims:
+        control_chunked = control_3d_NA.chunk({chunk_dim: step})
+        for dim in control_3d_NA.dims:
+            if dim != chunk_dim:
+                print(dim, chunk_dim, func.__name__)
+                res_chunked = func(control_chunked, dim=dim)
+                res = func(control_3d_NA, dim=dim)
+                # check for chunks
+                assert dask.is_dask_collection(res_chunked)
+                assert res_chunked.chunks is not None
+                # check for no chunks
+                assert not dask.is_dask_collection(res)
+                assert res.chunks is None
 
-    # check for identical result
-    assert_allclose(res, res_chunked.compute())
+                # check for identical result
+                assert_allclose(res, res_chunked.compute())
+            else:  # connat chunk on func(dim)
+                with pytest.raises(ValueError) as excinfo:
+                    res_chunked = func(control_chunked, dim=dim)
+                assert f"dimension '{chunk_dim}' on" in str(excinfo.value)
+                assert "apply_ufunc with dask='parallelized'" in str(excinfo.value)
+
+
+@pytest.mark.parametrize('func', [dpp])
+def test_stats_functions_dask_many_chunks(control_3d_NA, func):
+    """Check whether selected stats functions be chunked in all combinations."""
+    step = 5  # 2 chunks
+    for chunk_dim in control_3d_NA.dims:
+        control_chunked = control_3d_NA.chunk({chunk_dim: step})
+        for dim in control_3d_NA.dims:
+            if dim != chunk_dim:
+                res_chunked = func(control_chunked, dim=dim)
+                res = func(control_3d_NA, dim=dim)
+                # check for chunks
+                assert dask.is_dask_collection(res_chunked)
+                assert res_chunked.chunks is not None
+                # check for no chunks
+                assert not dask.is_dask_collection(res)
+                assert res.chunks is None
+
+                # check for identical result
+                assert_allclose(res, res_chunked.compute())

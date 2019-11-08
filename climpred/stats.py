@@ -1,10 +1,10 @@
 """Objects dealing with timeseries and ensemble statistics."""
 import numpy as np
 import numpy.polynomial.polynomial as poly
-import xarray as xr
-
 import scipy.stats as ss
-from scipy.signal import periodogram
+import xarray as xr
+from xrft import power_spectrum
+
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .checks import has_dims, is_xarray
@@ -130,6 +130,7 @@ def rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
+    # TODO: adapt for dask
     has_dims(ds, dim, 'dataset')
 
     # handle both datasets and dataarray
@@ -225,38 +226,36 @@ def rm_trend(da, dim='time'):
     return rm_poly(da, 1, dim=dim)
 
 
-# TODO: coords lon, lat get lost for curvilinear ds
 @is_xarray(0)
-def varweighted_mean_period(ds, time_dim='time'):
-    """Calculate the variance weighted mean period of time series.
+def varweighted_mean_period(ds, dim='time', **kwargs):
+    """Calculate the variance weighted mean period of time series based on
+    xrft.power_spectrum.
 
     .. math::
         P_{x} = \\frac{\\sum_k V(f_k,x)}{\\sum_k f_k  \\cdot V(f_k,x)}
 
     Args:
-        ds (xarray object): Time series.
-        time_dim (optional str): Name of time dimension.
+        ds (xarray object): input data including dim.
+        dim (optional str): Name of time dimension.
+        for **kwargs see xrft.power_spectrum
 
     Reference:
       * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
         Decadal Predictability in a CGCM." Journal of Climate 23, no. 23
         (August 27, 2010): 6292-6311. https://doi.org/10/bwq92h.
 
+    See also:
+    https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
-
-    def _create_dataset(ds, f, Pxx, time_dim):
-        """
-        Organize results of periodogram into clean dataset.
-        """
-        dimlist = [i for i in ds.dims if i not in [time_dim]]
-        PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
-        PSD.coords['freq'] = f
-        return PSD
-
-    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
-    PSD = _create_dataset(ds, f, Pxx, time_dim)
-    T = PSD.sum('freq') / ((PSD * PSD.freq).sum('freq'))
-    return T
+    # set nans to 0
+    ds = ds.fillna(0.0)
+    ps = power_spectrum(ds, dim=dim, **kwargs)
+    ps = ps.where(ps[f'freq_{dim}'] > 0)
+    # weighted average
+    vwmp = ps.sum(f'freq_{dim}') / ((ps * ps[f'freq_{dim}']).sum(f'freq_{dim}'))
+    del vwmp[f'freq_{dim}_spacing']
+    vwmp = vwmp.assign_coords(ds.drop(dim).coords)
+    return vwmp
 
 
 @is_xarray(0)
@@ -329,7 +328,6 @@ def decorrelation_time(da, r=20, dim='time'):
 # Diagnostic Potential Predictability (DPP)
 # Functions related to DPP from Boer et al.
 # --------------------------------------------#
-# TODO: coords lon, lat get lost for curvilinear ds
 def dpp(ds, m=10, chunk=True):
     """Calculates the Diagnostic Potential Predictability (dpp)
 

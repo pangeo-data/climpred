@@ -1,7 +1,7 @@
+import dask
 import numpy as np
 import pytest
 import xarray as xr
-
 from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
 from climpred.exceptions import DimensionError
 from climpred.stats import (
@@ -14,6 +14,7 @@ from climpred.stats import (
 )
 from climpred.tutorial import load_dataset
 from scipy.signal import correlate
+from xarray.testing import assert_allclose
 
 
 @pytest.fixture
@@ -172,6 +173,23 @@ def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
     bootstrap = 5
     sig = [5, 95]
     actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig)
-    print(actual)
     assert actual['quantile'].size == len(sig)
     assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()
+
+
+@pytest.mark.parametrize(
+    'func', (dpp, varweighted_mean_period, decorrelation_time, autocorr)
+)
+def test_stats_functions_dask(control_3d_NA, func):
+    control_chunked = control_3d_NA.chunk({'x': 5, 'y': 5})
+    res_chunked = func(control_chunked)
+    res = func(control_3d_NA)
+    # check for chunks
+    assert dask.is_dask_collection(res_chunked)
+    assert res_chunked.chunks is not None
+    # check for no chunks
+    assert not dask.is_dask_collection(res)
+    assert res.chunks is None
+
+    # check for identical result
+    assert_allclose(res, res_chunked.compute())

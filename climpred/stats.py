@@ -1,10 +1,10 @@
 """Objects dealing with timeseries and ensemble statistics."""
 import numpy as np
 import numpy.polynomial.polynomial as poly
-import xarray as xr
-
 import scipy.stats as ss
+import xarray as xr
 from scipy.signal import periodogram
+
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .checks import has_dims, is_xarray
@@ -256,6 +256,8 @@ def varweighted_mean_period(ds, time_dim='time'):
     f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
     PSD = _create_dataset(ds, f, Pxx, time_dim)
     T = PSD.sum('freq') / ((PSD * PSD.freq).sum('freq'))
+    # reset coords which were not set by create dataset
+    T = T.assign_coords(**ds.drop(time_dim).coords)
     return T
 
 

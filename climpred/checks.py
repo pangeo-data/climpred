@@ -1,3 +1,4 @@
+import warnings
 from functools import wraps
 
 import xarray as xr
@@ -143,3 +144,15 @@ def match_initialized_vars(init, ref):
             f'got {init_vars} for init and {ref_vars} for ref.'
         )
     return True
+
+
+def have_same_coords(a, b):
+    """Checks that two xarray objects have the same coords and returns bool."""
+    res = True
+    for c in a.coords.merge(b.coords).coords:
+        try:
+            (a[c] == b[c]).all()
+        except KeyError:
+            warnings.warn(f'Coords are not equal in {c}.')
+            res = False
+    return res

@@ -3,8 +3,8 @@ from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_PM_COMPARISONS,
     PROBABILISTIC_METRICS,
+    PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset

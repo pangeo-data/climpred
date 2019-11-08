@@ -1,8 +1,8 @@
 import numpy as np
 import pytest
 import xarray as xr
-
 from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
+from climpred.checks import have_same_coords
 from climpred.exceptions import DimensionError
 from climpred.stats import (
     autocorr,
@@ -172,6 +172,11 @@ def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
     bootstrap = 5
     sig = [5, 95]
     actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig)
-    print(actual)
     assert actual['quantile'].size == len(sig)
     assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()
+
+
+@pytest.mark.parametrize('func', (dpp, varweighted_mean_period))
+def test_stats_func_keeps_coords(control_3d_NA, func):
+    res = func(control_3d_NA)
+    assert have_same_coords(res, control_3d_NA.drop('time'))

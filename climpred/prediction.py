@@ -2,6 +2,7 @@ import inspect
 import warnings
 
 import xarray as xr
+import pandas as pd
 
 from .checks import is_in_list, is_xarray
 from .comparisons import __e2c
@@ -185,6 +186,8 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
+    print('IN COMpUTE HINDCAST')
+
     is_in_list(dim, ['member', 'init'], str)
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -237,6 +240,7 @@ def compute_hindcast(
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
+
     # take only inits for which we have references at all leahind
     if not max_dof:
         forecast, reference = reduce_time_series(forecast, reference, nlags)
@@ -248,8 +252,22 @@ def compute_hindcast(
             forecast, reference = reduce_time_series(forecast, reference, i)
         # take lead year i timeseries and convert to real time
         a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = [int(t + i) for t in a.time.values]
-        # take real time reference of real time forecast years
+
+        # Annual
+        # a['time']=pd.to_datetime(a['time'].dt.strftime('%Y0101 00:00')) \
+        #           + pd.DateOffset(years=i)
+
+        #  Monthly
+        # a['time']=pd.to_datetime(a['time'].dt.strftime('%Y%m%d 00:00')) \
+        #           + pd.DateOffset(months=i)
+
+        # Daily
+        a['time'] = pd.to_datetime(
+            a['time'].dt.strftime('%Y%m%d 00:00')
+        ) + pd.DateOffset(days=i)
+        # print(a.time.values)
+
+        # take real time reference of real time forecast dates
         b = reference.sel(time=a.time.values)
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
@@ -261,6 +279,15 @@ def compute_hindcast(
                 }
             )
         # broadcast dims when apply over member
+
+        # Had to rechunk to put time all in 1 chunk,
+        # also testing mmember all in one chunk?
+        # Runs really slow even though I am testing with a subsetted region
+
+        a = a.chunk({'time': -1})
+        b = b.chunk({'time': -1})
+        # print(a)
+        # print(b)
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
         plag.append(

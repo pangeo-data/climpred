@@ -3,6 +3,9 @@ import datetime
 import numpy as np
 import xarray as xr
 
+# KVP added
+import pandas as pd
+
 from . import comparisons, metrics
 from .checks import is_in_list
 from .constants import METRIC_ALIASES
@@ -89,8 +92,25 @@ def reduce_time_series(forecast, reference, nlags):
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
-    imin = max(forecast.time.min(), reference.time.min())
-    imax = min(forecast.time.max(), reference.time.max() - nlags)
+
+    imin = max(forecast.time[0], reference.time[0])
+
+    # Annual
+    # xx=pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00')) \
+    # - pd.DateOffset(years=nlags)
+    # print(xx)
+
+    # Monthly
+    # xx=pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00')) \
+    #        - pd.DateOffset(months=nlags)
+
+    # Dailys
+    xx = pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00')) - pd.DateOffset(
+        days=nlags
+    )
+
+    imax = min(forecast.time[-1], xx[-1])
+
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)

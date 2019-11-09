@@ -85,12 +85,20 @@ def has_min_len(arr, len_, kind):
     return True
 
 
-def is_initialized(obj, kind, what):
+def has_dataset(obj, kind, what):
+    """Checks that the PredictionEnsemble has a specific dataset in it."""
     if len(obj) == 0:
         raise DatasetError(
             f'You need to add at least one {kind} dataset before '
-            f'attempting to compute {what}.'
+            f'attempting to {what}.'
         )
+    return True
+
+
+def is_in_list(item, list_, kind):
+    """Check whether an item is in a list; kind is just a string."""
+    if item not in list_:
+        raise KeyError(f'Specify {kind} from {list_}: got {item}')
     return True
 
 
@@ -134,11 +142,4 @@ def match_initialized_vars(init, ref):
             'one matching variable to the initialized prediction ensemble; '
             f'got {init_vars} for init and {ref_vars} for ref.'
         )
-    return True
-
-
-def is_in_list(item, list_, kind):
-    """Check whether an item is in a list; kind is just a string."""
-    if item not in list_:
-        raise KeyError(f'Specify {kind} from {list_}: got {item}')
     return True

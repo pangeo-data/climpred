@@ -1,5 +1,5 @@
-bootstrap_perfect_model
-=======================
+climpred.bootstrap.bootstrap\_perfect\_model
+============================================
 
 .. currentmodule:: climpred.bootstrap
 

@@ -4,33 +4,155 @@ API Reference
 This page provides an auto-generated summary of climpred's API.
 For more details and examples, refer to the relevant chapters in the main part of the documentation.
 
-Prediction
-~~~~~~~~~~
+High-Level Classes
+------------------
 
-.. automodsumm:: climpred.prediction
-    :functions-only:
-    :toctree: api
-    :skip: get_comparison_function, get_metric_function, intersect, is_xarray, reduce_time_series, assign_attrs
+.. currentmodule:: climpred.classes
 
+
+A primary feature of ``climpred`` is our prediction ensemble objects, ``HindcastEnsemble`` and ``PerfectModelEnsemble``. Users can append their initialized ensemble to these classes, as well as an arbitrary number of references (assimilations, reconstructions, observations), control runs, and uninitialized ensembles.
+
+HindcastEnsemble
+~~~~~~~~~~~~~~~~
+
+A ``HindcastEnsemble`` is a prediction ensemble that is initialized off of some form of observations (an assimilation, renanalysis, etc.). Thus, it is anticipated that forecasts are verified against observation-like references. Read more about the terminology `here <terminology.html>`_.
+
+.. autosummary::
+    :toctree: api/
+
+    HindcastEnsemble
+
+-------------------------
+Add and Retrieve Datasets
+-------------------------
+
+.. autosummary::
+    :toctree: api/
+
+    HindcastEnsemble.__init__
+    HindcastEnsemble.add_reference
+    HindcastEnsemble.add_uninitialized
+    HindcastEnsemble.get_initialized
+    HindcastEnsemble.get_reference
+    HindcastEnsemble.get_uninitialized
+
+------------------
+Analysis Functions
+------------------
+
+.. autosummary::
+    :toctree: api/
+
+    HindcastEnsemble.compute_metric
+    HindcastEnsemble.compute_persistence
+    HindcastEnsemble.compute_uninitialized
+
+--------------
+Pre-Processing
+--------------
+
+.. autosummary::
+    :toctree: api/
+
+    HindcastEnsemble.smooth
+
+PerfectModelEnsemble
+~~~~~~~~~~~~~~~~~~~~
+
+A ``PerfectModelEnsemble`` is a prediction ensemble that is initialized off of a control simulation for a number of randomly chosen initialization dates. Thus, forecasts cannot be verified against real-world observations. Instead, they are `compared <comparisons.html>`_ to one another and to the original control run. Read more about the terminology `here <terminology.html>`_.
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble
+
+-------------------------
+Add and Retrieve Datasets
+-------------------------
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble.__init__
+    PerfectModelEnsemble.add_control
+    PerfectModelEnsemble.get_initialized
+    PerfectModelEnsemble.get_control
+    PerfectModelEnsemble.get_uninitialized
+
+------------------
+Analysis Functions
+------------------
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble.bootstrap
+    PerfectModelEnsemble.compute_metric
+    PerfectModelEnsemble.compute_persistence
+    PerfectModelEnsemble.compute_uninitialized
+
+-------------
+Generate Data
+-------------
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble.generate_uninitialized
+
+
+Direct Function Calls
+---------------------
+
+A user can directly call functions in ``climpred``. This requires entering more arguments, e.g. the initialized ensemble ``xr.Dataset``/``xr.DataArray`` directly as well as a reference product or control run. Our objects ``HindcastEnsemble`` and ``PerfectModelEnsemble`` wrap most of these functions, making the analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will likely depricate the ability to call them directly.
 
 Bootstrap
 ~~~~~~~~~
+.. currentmodule:: climpred.bootstrap
 
-.. automodsumm:: climpred.bootstrap
-    :functions-only:
-    :toctree: api
-    :skip: dpp, compute_persistence, compute_hindcast, compute_perfect_model, has_dims, varweighted_mean_period, assign_attrs
+.. autosummary::
+    :toctree: api/
+
+    bootstrap_compute
+    bootstrap_hindcast
+    bootstrap_perfect_model
+    bootstrap_uninit_pm_ensemble_from_control
+    bootstrap_uninitialized_ensemble
+    dpp_threshold
+    varweighted_mean_period_threshold
+
+Prediction
+~~~~~~~~~~
+.. currentmodule:: climpred.prediction
+
+.. autosummary::
+    :toctree: api/
+
+    compute_hindcast
+    compute_perfect_model
+    compute_persistence
+    compute_uninitialized
 
 Statistics
 ~~~~~~~~~~
+.. currentmodule:: climpred.stats
 
-.. automodsumm:: climpred.stats
-    :toctree: api
-    :skip: has_dims, is_xarray, pearson_r, pearson_r_p_value, periodogram
+.. autosummary::
+    :toctree: api/
+
+    autocorr
+    corr
+    decorrelation_time
+    dpp
+    rm_poly
+    rm_trend
+    varweighted_mean_period
 
 Tutorial
 ~~~~~~~~
+.. currentmodule:: climpred.tutorial
 
-.. automodsumm:: climpred.tutorial
-    :toctree: api
-    :functions-only:
+.. autosummary::
+    :toctree: api/
+
+    load_dataset

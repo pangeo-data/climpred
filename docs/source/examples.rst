@@ -2,7 +2,7 @@ Examples
 ========
 
 .. toctree::
-    :maxdepth: 2
+    :maxdepth: 1
 
     examples/perfect-model-predictability-demo.ipynb
     examples/tropical-pacific-ssts.ipynb

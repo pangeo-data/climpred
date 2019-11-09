@@ -4,7 +4,7 @@ Contribution Guide
 
 Contributions are highly welcomed and appreciated.  Every little help counts,
 so do not hesitate! You can make a high impact on ``climpred`` just by using it and
-reporting `issues <https://github.com/bradyrx/climpred/issues>`_. 
+reporting `issues <https://github.com/bradyrx/climpred/issues>`_.
 
 The following sections cover some general guidelines
 regarding development in ``climpred`` for maintainers and contributors.
@@ -24,8 +24,8 @@ Feature requests and feedback
 -----------------------------
 
 We are eager to hear about your requests for new features and any suggestions about the
-API, infrastructure, and so on. Feel free to submit these as 
-`issues <https://github.com/bradyrx/climpred/issues/new>`_ with the label "feature request." 
+API, infrastructure, and so on. Feel free to submit these as
+`issues <https://github.com/bradyrx/climpred/issues/new>`_ with the label "feature request."
 
 Please make sure to explain in detail how the feature should work and keep the scope as
 narrow as possible. This will make it easier to implement in small PRs.
@@ -43,7 +43,7 @@ If you are reporting a bug, please include:
 
 * Your operating system name and version.
 * Any details about your local setup that might be helpful in troubleshooting,
-  specifically the Python interpreter version, installed libraries, and ``climpred`` 
+  specifically the Python interpreter version, installed libraries, and ``climpred``
   version.
 * Detailed steps to reproduce the bug.
 
@@ -73,7 +73,7 @@ Write documentation
 You can also edit documentation files directly in the GitHub web interface,
 without using a local copy.  This can be convenient for small fixes.
 
-Our documentation is written in reStructuredText. You can follow our conventions in already written documents. Some helpful guides are located `here <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_ and `here <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`_. 
+Our documentation is written in reStructuredText. You can follow our conventions in already written documents. Some helpful guides are located `here <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_ and `here <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`_.
 
 .. note::
     Build the documentation locally with the following command:
@@ -86,6 +86,7 @@ Our documentation is written in reStructuredText. You can follow our conventions
 
     The built documentation should be available in the ``docs/build/``.
 
+If you need to add new functions to the API, run ``sphinx-autogen -o api api.rst`` from the ``docs/source`` directory and add the functions to ``api.rst``.
 
  .. _`pull requests`:
 .. _pull-requests:
@@ -103,7 +104,7 @@ Preparing Pull Requests
    to the upstream (main project), and create a branch::
 
     $ git clone git@github.com:YOUR_GITHUB_USERNAME/climpred.git
-    $ cd climpred 
+    $ cd climpred
     $ git remote add upstream git@github.com:bradyrx/climpred.git
 
     # now, to fix a bug or add feature create your own branch off "master":
@@ -166,7 +167,7 @@ Preparing Pull Requests
 
    - Add yourself to list of authors at the end of ``CHANGELOG.rst`` file if not there yet, in alphabetical order.
 
- #. Add yourself to the `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>_` list via ``docs/source/contributors.rst``. 
+ #. Add yourself to the `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>_` list via ``docs/source/contributors.rst``.
 
 #. Finally, submit a pull request through the GitHub website using this data::
 
@@ -176,6 +177,6 @@ Preparing Pull Requests
     base-fork: bradyrx/climpred
     base: master
 
-Note that you can create the Pull Request while you're working on this. The PR will update 
-as you add more commits. ``climpred`` developers and contributors can then review your code 
+Note that you can create the Pull Request while you're working on this. The PR will update
+as you add more commits. ``climpred`` developers and contributors can then review your code
 and offer suggestions.

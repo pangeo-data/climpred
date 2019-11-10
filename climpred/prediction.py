@@ -182,13 +182,6 @@ def compute_hindcast(
                 * m2r : each member to the reference
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
-        lead_res (str): sring indicating temporal resolution of the lead dimension:
-                * annual : 1-year (default)
-                * seasonal : 3-month
-                * monthly:  1-month
-                * weekly: 7-day
-                * pentad: 5-day
-                * daily: 1-day
         max_dof (bool):
             If True, maximize the degrees of freedom by slicing `hind` and `reference`
             to a common time frame at each lead.

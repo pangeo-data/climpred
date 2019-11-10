@@ -187,8 +187,6 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
-    print('IN COMpUTE HINDCAST!!!!!')
-
     is_in_list(dim, ['member', 'init'], str)
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -254,17 +252,11 @@ def compute_hindcast(
 
         # take lead  i timeseries and convert to real time based on temporal
         # resolution of lead (lead_res)
-        # offset_args_dict={forecast['lead'].attrs['units']: i }
         offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], i)
         a = forecast.sel(lead=i).drop_vars('lead')
         a['time'] = pd.to_datetime(
             a['time'].dt.strftime('%Y%m%d 00:00')
         ) + pd.DateOffset(**offset_args_dict)
-        #        else:
-        #            raise ValueError(
-        #               f'{lead_res} is not a valid resolution use',
-        #               f'annual,seasonal,monthly,weekly,pentad,daily',
-        #            )
 
         # take real time reference of real time forecast dates
         b = reference.sel(time=a.time.values)
@@ -376,7 +368,13 @@ def compute_persistence(
             # room for lead from current forecast
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
-        ref = reference.sel(time=inits + lag)
+
+        offset_args_dict = get_lead_pdoffset_args(hind['lead'].attrs['units'], lag)
+        target_dates = pd.to_datetime(
+            inits.dt.strftime('%Y%m%d 00:00')
+        ) + pd.DateOffset(**offset_args_dict)
+
+        ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
         plag.append(

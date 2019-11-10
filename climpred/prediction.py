@@ -22,6 +22,7 @@ from .utils import (
     get_metric_class,
     intersect,
     reduce_time_series,
+    get_lead_pdoffset_args,
 )
 
 
@@ -170,6 +171,13 @@ def compute_hindcast(
                 * m2r : each member to the reference
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
+        lead_res (str): sring indicating temporal resolution of the lead dimension:
+                * annual : 1-year (default)
+                * seasonal : 3-month
+                * monthly:  1-month
+                * weekly: 7-day
+                * pentad: 5-day
+                * daily: 1-day
         max_dof (bool):
             If True, maximize the degrees of freedom by slicing `hind` and `reference`
             to a common time frame at each lead.
@@ -186,7 +194,7 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
-    print('IN COMpUTE HINDCAST')
+    print('IN COMpUTE HINDCAST!!!!!')
 
     is_in_list(dim, ['member', 'init'], str)
     # get metric function name, not the alias
@@ -250,22 +258,20 @@ def compute_hindcast(
     for i in forecast.lead.values:
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
-        # take lead year i timeseries and convert to real time
+
+        # take lead  i timeseries and convert to real time based on temporal
+        # resolution of lead (lead_res)
+        # offset_args_dict={forecast['lead'].attrs['units']: i }
+        offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], i)
         a = forecast.sel(lead=i).drop_vars('lead')
-
-        # Annual
-        # a['time']=pd.to_datetime(a['time'].dt.strftime('%Y0101 00:00')) \
-        #           + pd.DateOffset(years=i)
-
-        #  Monthly
-        # a['time']=pd.to_datetime(a['time'].dt.strftime('%Y%m%d 00:00')) \
-        #           + pd.DateOffset(months=i)
-
-        # Daily
         a['time'] = pd.to_datetime(
             a['time'].dt.strftime('%Y%m%d 00:00')
-        ) + pd.DateOffset(days=i)
-        # print(a.time.values)
+        ) + pd.DateOffset(**offset_args_dict)
+        #        else:
+        #            raise ValueError(
+        #               f'{lead_res} is not a valid resolution use',
+        #               f'annual,seasonal,monthly,weekly,pentad,daily',
+        #            )
 
         # take real time reference of real time forecast dates
         b = reference.sel(time=a.time.values)
@@ -284,10 +290,11 @@ def compute_hindcast(
         # also testing mmember all in one chunk?
         # Runs really slow even though I am testing with a subsetted region
 
+        # Rechunk to single chunk over time to avoid error
         a = a.chunk({'time': -1})
         b = b.chunk({'time': -1})
-        # print(a)
-        # print(b)
+
+        # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
         plag.append(

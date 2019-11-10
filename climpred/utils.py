@@ -87,13 +87,6 @@ def reduce_time_series(forecast, reference, nlags):
         reference (`xarray` object): reference being compared to (for skill,
                                      persistence, etc.)
         nlags (int): number of lags being computed
-        lead_res (str): sring indicating temporal resolution of the lead dimension:
-                * annual : 1-year (default)
-                * seasonal : 3-month
-                * monthly:  1-month
-                * weekly: 7-day
-                * pentad: 5-day
-                * daily: 1-day
     Returns:
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):

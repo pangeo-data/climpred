@@ -96,29 +96,26 @@ def reduce_time_series(forecast, reference, nlags):
         reference (`xarray` object): reference being compared to (for skill,
                                      persistence, etc.)
         nlags (int): number of lags being computed
-
+        lead_res (str): sring indicating temporal resolution of the lead dimension:
+                * annual : 1-year (default)
+                * seasonal : 3-month
+                * monthly:  1-month
+                * weekly: 7-day
+                * pentad: 5-day
+                * daily: 1-day
     Returns:
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
 
     imin = max(forecast.time[0], reference.time[0])
+    offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], nlags)
+    #    offset_args_dict={forecast['lead'].attrs['units']: nlags }
+    ref_dates = pd.to_datetime(
+        reference.time.dt.strftime('%Y%m%d 00:00')
+    ) - pd.DateOffset(**offset_args_dict)
 
-    # Annual
-    # xx=pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00')) \
-    # - pd.DateOffset(years=nlags)
-    # print(xx)
-
-    # Monthly
-    # xx=pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00')) \
-    #        - pd.DateOffset(months=nlags)
-
-    # Dailys
-    xx = pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00')) - pd.DateOffset(
-        days=nlags
-    )
-
-    imax = min(forecast.time[-1], xx[-1])
+    imax = min(forecast.time[-1], ref_dates[-1])
 
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
@@ -192,3 +189,20 @@ def assign_attrs(
         'created'
     ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
     return skill
+
+
+def get_lead_pdoffset_args(units, lead):
+
+    lead_units_list = ['years', 'months', 'weeks', 'days']
+
+    if units in lead_units_list:
+        offset_args_dict = {units: lead}
+    elif units == 'seasons':
+        offset_args_dict = {'months': lead + 3}
+    elif units == 'pentads':
+        offset_args_dict = {'days': lead + 5}
+    else:
+        offset_args_dict = {units: lead}
+        print(units, ' is not a valid choice')
+
+    return offset_args_dict

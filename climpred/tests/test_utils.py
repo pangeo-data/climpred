@@ -6,7 +6,26 @@ from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
 from climpred.metrics import _pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
-from climpred.utils import get_comparison_function, get_metric_function, intersect
+from climpred.utils import (
+    copy_coords_from_to,
+    get_comparison_function,
+    get_metric_function,
+    intersect,
+)
+
+
+@pytest.fixture
+def control_ds_3d():
+    """North Atlantic xr.Dataset."""
+    ds = load_dataset('MPI-control-3D').sel(x=slice(120, 130), y=slice(50, 60))
+    return ds
+
+
+@pytest.fixture
+def control_da_3d():
+    """North Atlantic xr.DataArray."""
+    da = load_dataset('MPI-control-3D').sel(x=slice(120, 130), y=slice(50, 60))['tos']
+    return da
 
 
 def test_get_metric_function():
@@ -56,7 +75,6 @@ def test_da_assign_attrs():
     actual = compute_perfect_model(
         da, control, metric=metric, comparison=comparison
     ).attrs
-    print(actual)
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
@@ -117,3 +135,43 @@ def test_hindcast_assign_attrs():
     if metric == 'pearson_r':
         assert actual['units'] == 'None'
     assert actual['skill_calculated_by_function'] == 'compute_hindcast'
+
+
+def test_copy_coords_from_to_ds(control_ds_3d):
+    """Test whether coords are copied from one xr object to another."""
+    #
+    xro = control_ds_3d
+    c_1time = xro.isel(time=4).drop('time')
+    assert not 'time' in c_1time.coords
+    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
+    assert (c_1time.time == xro.isel(time=2).time).all()
+
+
+def test_copy_coords_from_to_da(control_da_3d):
+    """Test whether coords are copied from one xr object to another."""
+    #
+    xro = control_da_3d
+    c_1time = xro.isel(time=4).drop('time')
+    assert not 'time' in c_1time.coords
+    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
+    assert (c_1time.time == xro.isel(time=2).time).all()
+
+
+def test_copy_coords_from_to_ds_chunk(control_ds_3d):
+    """Test whether coords are copied from one xr object to another."""
+    #
+    xro = control_ds_3d.chunk({'time': 5})
+    c_1time = xro.isel(time=4).drop('time')
+    assert not 'time' in c_1time.coords
+    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
+    assert (c_1time.time == xro.isel(time=2).time).all()
+
+
+def test_copy_coords_from_to_da_chunk(control_da_3d):
+    """Test whether coords are copied from one xr object to another."""
+    #
+    xro = control_da_3d.chunk({'time': 5})
+    c_1time = xro.isel(time=4).drop('time')
+    assert not 'time' in c_1time.coords
+    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
+    assert (c_1time.time == xro.isel(time=2).time).all()

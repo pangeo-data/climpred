@@ -8,6 +8,7 @@ from xrft import power_spectrum
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .checks import has_dims, is_xarray
+from .utils import copy_coords_from_to
 
 
 # ----------------------------------#
@@ -254,7 +255,9 @@ def varweighted_mean_period(ds, dim='time', **kwargs):
     # weighted average
     vwmp = ps.sum(f'freq_{dim}') / ((ps * ps[f'freq_{dim}']).sum(f'freq_{dim}'))
     del vwmp[f'freq_{dim}_spacing']
-    vwmp = vwmp.assign_coords(ds.drop(dim).coords)
+    print(vwmp.coords)
+    print(ds.drop(dim).coords)
+    vwmp = copy_coords_from_to(ds.drop(dim), vwmp)
     return vwmp
 
 
@@ -318,8 +321,7 @@ def decorrelation_time(da, r=20, dim='time'):
           p.373
 
     """
-    one = da.mean(dim) / da.mean(dim)
-    return one + 2 * xr.concat(
+    return xr.full_like(da.isel({dim: 0}, drop=True), 1.0) + 2 * xr.concat(
         [autocorr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it'
     ).sum('it')
 

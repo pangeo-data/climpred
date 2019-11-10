@@ -224,7 +224,7 @@ def test_compute_pm_dask_spatial(ds_3d_NA, control_3d_NA, comparison, metric):
             assert res_chunked.chunks is not None
 
 
-@pytest.mark.parametrize('metric', ('rmse', 'pearson_r', 'crps'))
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_compute_pm_dask_climpred_dims(ds_3d_NA, control_3d_NA, comparison, metric):
     """Chunking along climpred dims if available."""

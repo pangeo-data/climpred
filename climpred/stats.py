@@ -228,7 +228,7 @@ def rm_trend(da, dim='time'):
 
 
 @is_xarray(0)
-def varweighted_mean_period(ds, dim='time', **kwargs):
+def varweighted_mean_period(da, dim='time', **kwargs):
     """Calculate the variance weighted mean period of time series based on
     xrft.power_spectrum.
 
@@ -236,7 +236,7 @@ def varweighted_mean_period(ds, dim='time', **kwargs):
         P_{x} = \\frac{\\sum_k V(f_k,x)}{\\sum_k f_k  \\cdot V(f_k,x)}
 
     Args:
-        ds (xarray object): input data including dim.
+        da (xarray object): input data including dim.
         dim (optional str): Name of time dimension.
         for **kwargs see xrft.power_spectrum
 
@@ -249,15 +249,20 @@ def varweighted_mean_period(ds, dim='time', **kwargs):
     https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
     # set nans to 0
-    ds = ds.fillna(0.0)
-    ps = power_spectrum(ds, dim=dim, **kwargs)
+    if isinstance(da, xr.Dataset):
+        da = da[da.data_vars[0]]
+        print('convert xr.Dataset to xr.DataArray.')
+    da = da.fillna(0.0)
+    ps = power_spectrum(da, dim=dim, **kwargs)
+    # take pos freqs
     ps = ps.where(ps[f'freq_{dim}'] > 0)
     # weighted average
     vwmp = ps.sum(f'freq_{dim}') / ((ps * ps[f'freq_{dim}']).sum(f'freq_{dim}'))
     del vwmp[f'freq_{dim}_spacing']
-    print(vwmp.coords)
-    print(ds.drop(dim).coords)
-    vwmp = copy_coords_from_to(ds.drop(dim), vwmp)
+    try:
+        vwmp = copy_coords_from_to(da.drop(dim), vwmp)
+    except ValueError:
+        print('Couldnt keep coorda.')
     return vwmp
 
 
@@ -321,7 +326,7 @@ def decorrelation_time(da, r=20, dim='time'):
           p.373
 
     """
-    return xr.full_like(da.isel({dim: 0}, drop=True), 1.0) + 2 * xr.concat(
+    return (da.isel(time=0, drop=True) / da.isel(time=0, drop=True)) + 2 * xr.concat(
         [autocorr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it'
     ).sum('it')
 

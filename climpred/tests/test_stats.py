@@ -181,7 +181,7 @@ def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
 # @pytest.mark.parametrize(
 #    'func', (dpp, varweighted_mean_period, decorrelation_time, autocorr)
 # )
-@pytest.mark.parametrize('func', (dpp, autocorr))
+@pytest.mark.parametrize('func', (dpp, autocorr, varweighted_mean_period))
 def test_stats_functions_dask_single_chunk(control_3d_NA, func):
     """Test stats functions when single chunk not along dim."""
     step = -1  # single chunk
@@ -189,13 +189,6 @@ def test_stats_functions_dask_single_chunk(control_3d_NA, func):
         control_chunked = control_3d_NA.chunk({chunk_dim: step})
         for dim in control_3d_NA.dims:
             if dim != chunk_dim:
-                print(
-                    control_3d_NA.coords,
-                    control_chunked.coords,
-                    dim,
-                    chunk_dim,
-                    func.__name__,
-                )
                 res_chunked = func(control_chunked, dim=dim)
                 res = func(control_3d_NA, dim=dim)
                 # check for chunks
@@ -209,15 +202,15 @@ def test_stats_functions_dask_single_chunk(control_3d_NA, func):
 
 
 # @pytest.mark.skip(reason='dask doesnt work yet on all stats funcs')
-# @pytest.mark.parametrize('func', [dpp, autocorr, varweighted_mean_period, decorrelation_time])
-@pytest.mark.parametrize('func', [dpp, autocorr])
+# @pytest.mark.parametrize('func',
+#   [dpp, autocorr, varweighted_mean_period, decorrelation_time])
+@pytest.mark.parametrize('func', [dpp, autocorr, varweighted_mean_period])
 def test_stats_functions_dask_many_chunks(control_3d_NA, func):
-    """Check whether selected stats functions be chunked in multiple chunks and computed along other dim."""
+    """Check whether selected stats functions be chunked in multiple chunks and
+     computed along other dim."""
     step = 1
-    print(control_3d_NA.shape)
     for chunk_dim in control_3d_NA.dims:
         control_chunked = control_3d_NA.chunk({chunk_dim: step})
-        print(control_chunked.chunks)
         for dim in control_3d_NA.dims:
             if dim != chunk_dim and dim in control_chunked.dims:
                 res_chunked = func(control_chunked, dim=dim)

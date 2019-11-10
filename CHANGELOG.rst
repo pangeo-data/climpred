@@ -8,7 +8,7 @@ climpred v1.1.1 (2019-##-##)
 Features
 --------
 - Added tests for chunking with `dask` (:pr:`258`) `Aaron Spring`_.
-- Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period` (:pr:`258`) `Aaron Spring`_.
+- Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period`. Keeps coords. (:pr:`258`) `Aaron Spring`_.
 - Add `dim='time'` in `stats.dpp` (:pr:`258`) `Aaron Spring`_.
 - Apply arbitrary ``xarray`` methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
 - Add "getter" methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` to retrieve ``xarray`` datasets from the objects (:pr:`243`) `Riley X. Brady`_.

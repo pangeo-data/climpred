@@ -4,14 +4,8 @@ import pytest
 import xarray as xr
 from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
 from climpred.exceptions import DimensionError
-from climpred.stats import (
-    autocorr,
-    corr,
-    decorrelation_time,
-    dpp,
-    rm_trend,
-    varweighted_mean_period,
-)
+from climpred.stats import (autocorr, corr, decorrelation_time, dpp, rm_trend,
+                            varweighted_mean_period)
 from climpred.tutorial import load_dataset
 from scipy.signal import correlate
 from xarray.testing import assert_allclose
@@ -43,7 +37,8 @@ def multi_dim_ds():
 @pytest.fixture
 def control_3d_NA():
     """North Atlantic"""
-    ds = load_dataset('MPI-control-3D')['tos'].isel(x=slice(130, 136), y=slice(30, 36))
+    ds = load_dataset(
+        'MPI-control-3D')['tos'].isel(x=slice(110, 120), y=slice(50, 60))
     return ds
 
 
@@ -127,6 +122,7 @@ def test_dpp(control_3d_NA, chunk):
 def test_potential_predictability_likely(control_3d_NA, func):
     """Check for positive diagnostic potential predictability in NA SST."""
     control = control_3d_NA
+    print(control.dims)
     res = func(control)
     assert res.mean() > 0
 

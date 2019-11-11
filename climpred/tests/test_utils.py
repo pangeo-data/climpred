@@ -141,7 +141,7 @@ def test_copy_coords_from_to_ds(control_ds_3d):
     #
     xro = control_ds_3d
     c_1time = xro.isel(time=4).drop('time')
-    assert not 'time' in c_1time.coords
+    assert 'time' not in c_1time.coords
     c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
     assert (c_1time.time == xro.isel(time=2).time).all()
 
@@ -151,7 +151,7 @@ def test_copy_coords_from_to_da(control_da_3d):
     #
     xro = control_da_3d
     c_1time = xro.isel(time=4).drop('time')
-    assert not 'time' in c_1time.coords
+    assert 'time' not in c_1time.coords
     c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
     assert (c_1time.time == xro.isel(time=2).time).all()
 
@@ -161,7 +161,7 @@ def test_copy_coords_from_to_ds_chunk(control_ds_3d):
     #
     xro = control_ds_3d.chunk({'time': 5})
     c_1time = xro.isel(time=4).drop('time')
-    assert not 'time' in c_1time.coords
+    assert 'time' not in c_1time.coords
     c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
     assert (c_1time.time == xro.isel(time=2).time).all()
 
@@ -171,6 +171,6 @@ def test_copy_coords_from_to_da_chunk(control_da_3d):
     #
     xro = control_da_3d.chunk({'time': 5})
     c_1time = xro.isel(time=4).drop('time')
-    assert not 'time' in c_1time.coords
+    assert 'time' not in c_1time.coords
     c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
     assert (c_1time.time == xro.isel(time=2).time).all()

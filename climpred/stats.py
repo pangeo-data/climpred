@@ -250,16 +250,24 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     """
     # set nans to 0
     if isinstance(da, xr.Dataset):
-        da = da[list(da.data_vars)[0]]
-        print('convert xr.Dataset to xr.DataArray.')
+        raise ValueError('require xr.Dataset')
     da = da.fillna(0.0)
-    ps = power_spectrum(da, dim=[dim], **kwargs)
+    # dim should be list
+    if type(dim) == str:
+        print('change dim from str to [str]')
+        dim = [dim]
+    print('inside vwmp', dim, type(dim))
+    assert isinstance(dim, list)
+    ps = power_spectrum(da, dim=dim, **kwargs)
     # take pos freqs
-    ps = ps.where(ps[f'freq_{dim}'] > 0)
+    for d in dim:
+        ps = ps.where(ps[f'freq_{d}'] > 0)
     # weighted average
-    vwmp = ps.sum(f'freq_{dim}') / \
-        ((ps * ps[f'freq_{dim}']).sum(f'freq_{dim}'))
-    del vwmp[f'freq_{dim}_spacing']
+    vwmp = ps
+    for d in dim:
+        vwmp = vwmp.sum(f'freq_{d}') / ((vwmp * vwmp[f'freq_{d}']).sum(f'freq_{d}'))
+    for d in dim:
+        del vwmp[f'freq_{d}_spacing']
     try:
         vwmp = copy_coords_from_to(da.drop(dim), vwmp)
     except ValueError:
@@ -403,8 +411,7 @@ def dpp(ds, dim='time', m=10, chunk=True):
         c['c'] = [0]
         for i in range(1, number_chunks):
             c2 = ds.sel(
-                {dim: slice(cmin + chunk_length * i, cmin
-                            + (i + 1) * chunk_length - 1)}
+                {dim: slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)}
             )
             c2 = c2.expand_dims('c')
             c2['c'] = [i]
@@ -420,8 +427,7 @@ def dpp(ds, dim='time', m=10, chunk=True):
         # first chunk
         chunked_means = _chunking(ds, dim=dim, chunk_length=m).mean(dim)
         # sub means in chunks
-        chunked_deviations = _chunking(
-            ds, dim=dim, chunk_length=m) - chunked_means
+        chunked_deviations = _chunking(ds, dim=dim, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
         s2e = chunked_deviations.var([dim, 'c'])
         s2 = s2v + s2e

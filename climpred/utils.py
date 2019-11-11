@@ -184,6 +184,7 @@ def copy_coords_from_to(xro_from, xro_to):
         xro_to = xro_to.assign_coords(**xro_from.coords)
     else:
         raise ValueError(
-            f'xro_from and xro_to must be both either xr.DataArray or xr.Dataset, found {type(xro_from)} {type(xro_to)}.'
+            f'xro_from and xro_to must be both either xr.DataArray or',
+            f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
         )
     return xro_to

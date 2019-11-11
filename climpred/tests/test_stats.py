@@ -204,7 +204,7 @@ def test_stats_functions_dask_single_chunk(control_3d_NA, func):
 
 # @pytest.mark.skip(reason='dask doesnt work yet on all stats funcs')
 # @pytest.mark.parametrize('func',
-#   [dpp, autocorr, varweighted_mean_period, decorrelation_time])
+#    [dpp, autocorr, varweighted_mean_period, decorrelation_time])
 @pytest.mark.parametrize('func', [dpp, autocorr, varweighted_mean_period])
 def test_stats_functions_dask_many_chunks(control_3d_NA, func):
     """Check whether selected stats functions be chunked in multiple chunks and
@@ -222,15 +222,15 @@ def test_stats_functions_dask_many_chunks(control_3d_NA, func):
                 # check for no chunks
                 assert not dask.is_dask_collection(res)
                 assert res.chunks is None
-
                 # check for identical result
                 assert_allclose(res, res_chunked.compute())
 
 
-def test_varweighted_mean_period(control_3d_NA):
+def test_varweighted_mean_period_dim(control_3d_NA):
+    """Test varweighted_mean_period for different dims."""
     for d in control_3d_NA.dims:
-        print(d, type(d))
+        # single dim
         varweighted_mean_period(control_3d_NA, dim=d)
+        # all but one dim
         di = [di for di in control_3d_NA.dims if di != d]
-        print(di)
         varweighted_mean_period(control_3d_NA, dim=di)

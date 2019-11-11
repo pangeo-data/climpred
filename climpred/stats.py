@@ -1,4 +1,6 @@
 """Objects dealing with timeseries and ensemble statistics."""
+import warnings
+
 import numpy as np
 import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
@@ -254,9 +256,7 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     da = da.fillna(0.0)
     # dim should be list
     if type(dim) == str:
-        print('change dim from str to [str]')
         dim = [dim]
-    print('inside vwmp', dim, type(dim))
     assert isinstance(dim, list)
     ps = power_spectrum(da, dim=dim, **kwargs)
     # take pos freqs
@@ -271,7 +271,7 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     try:
         vwmp = copy_coords_from_to(da.drop(dim), vwmp)
     except ValueError:
-        print("Couldn't keep coords.")
+        warnings.warn("Couldn't keep coords.")
     return vwmp
 
 

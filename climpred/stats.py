@@ -257,13 +257,12 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     # take pos freqs
     ps = ps.where(ps[f'freq_{dim}'] > 0)
     # weighted average
-    vwmp = ps.sum(f'freq_{dim}') / \
-        ((ps * ps[f'freq_{dim}']).sum(f'freq_{dim}'))
+    vwmp = ps.sum(f'freq_{dim}') / ((ps * ps[f'freq_{dim}']).sum(f'freq_{dim}'))
     del vwmp[f'freq_{dim}_spacing']
     try:
         vwmp = copy_coords_from_to(da.drop(dim), vwmp)
     except ValueError:
-        print('Couldnt keep coorda.')
+        print("Couldn't keep coords.")
     return vwmp
 
 
@@ -403,8 +402,7 @@ def dpp(ds, dim='time', m=10, chunk=True):
         c['c'] = [0]
         for i in range(1, number_chunks):
             c2 = ds.sel(
-                {dim: slice(cmin + chunk_length * i, cmin
-                            + (i + 1) * chunk_length - 1)}
+                {dim: slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)}
             )
             c2 = c2.expand_dims('c')
             c2['c'] = [i]
@@ -420,8 +418,7 @@ def dpp(ds, dim='time', m=10, chunk=True):
         # first chunk
         chunked_means = _chunking(ds, dim=dim, chunk_length=m).mean(dim)
         # sub means in chunks
-        chunked_deviations = _chunking(
-            ds, dim=dim, chunk_length=m) - chunked_means
+        chunked_deviations = _chunking(ds, dim=dim, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
         s2e = chunked_deviations.var([dim, 'c'])
         s2 = s2v + s2e

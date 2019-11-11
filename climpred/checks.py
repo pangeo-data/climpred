@@ -143,3 +143,21 @@ def match_initialized_vars(init, ref):
             f'got {init_vars} for init and {ref_vars} for ref.'
         )
     return True
+
+
+def has_valid_lead_units(xobj):
+    valid_lead_units = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
+
+    if hasattr(xobj['lead'], 'units'):
+
+        if not xobj['lead'].attrs['units'] in valid_lead_units:
+            raise DimensionError(
+                'The lead dimension must must have a valid'
+                f'units attribute: e.g. {valid_lead_units}'
+            )
+    else:
+        raise DimensionError(
+            'The lead dimension must must have a'
+            f'units attribute. Valid options are: {valid_lead_units}'
+        )
+    return True

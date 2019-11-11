@@ -10,6 +10,7 @@ from .checks import (
     is_xarray,
     match_initialized_dims,
     match_initialized_vars,
+    has_valid_lead_units,
 )
 from .exceptions import DimensionError
 from .prediction import (
@@ -102,6 +103,7 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
+        has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}

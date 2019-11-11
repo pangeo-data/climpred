@@ -252,7 +252,7 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     if isinstance(da, xr.Dataset):
         da = da[list(da.data_vars)[0]]
         print('convert xr.Dataset to xr.DataArray.')
-    dim = [dim] if isinstance(dim, 'str') else dim
+    dim = dim if isinstance(dim, list) else [dim]
     da = da.fillna(0.0)
     ps = power_spectrum(da, dim=dim, **kwargs)
     # take pos freqs

@@ -178,11 +178,15 @@ def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
     assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()
 
 
-# @pytest.mark.skip(reason='dask doesnt work yet on all stats funcs')
-# @pytest.mark.parametrize(
-#    'func', (dpp, varweighted_mean_period, decorrelation_time, autocorr)
-# )
-@pytest.mark.parametrize('func', (dpp, autocorr, varweighted_mean_period))
+@pytest.mark.parametrize(
+    'func',
+    (
+        dpp,
+        autocorr,
+        varweighted_mean_period,
+        pytest.param(decorrelation_time, marks=pytest.mark.xfail(reason='some bug')),
+    ),
+)
 def test_stats_functions_dask_single_chunk(control_3d_NA, func):
     """Test stats functions when single chunk not along dim."""
     step = -1  # single chunk
@@ -202,10 +206,17 @@ def test_stats_functions_dask_single_chunk(control_3d_NA, func):
                 assert_allclose(res, res_chunked.compute())
 
 
-# @pytest.mark.skip(reason='dask doesnt work yet on all stats funcs')
-# @pytest.mark.parametrize('func',
-#    [dpp, autocorr, varweighted_mean_period, decorrelation_time])
-@pytest.mark.parametrize('func', [dpp, autocorr, varweighted_mean_period])
+@pytest.mark.parametrize(
+    'func',
+    [
+        dpp,
+        autocorr,
+        varweighted_mean_period,
+        pytest.param(
+            decorrelation_time, marks=pytest.mark.xfail(reason='some chunking bug')
+        ),
+    ],
+)
 def test_stats_functions_dask_many_chunks(control_3d_NA, func):
     """Check whether selected stats functions be chunked in multiple chunks and
      computed along other dim."""
@@ -234,3 +245,12 @@ def test_varweighted_mean_period_dim(control_3d_NA):
         # all but one dim
         di = [di for di in control_3d_NA.dims if di != d]
         varweighted_mean_period(control_3d_NA, dim=di)
+
+
+@pytest.mark.xfail(reason='p value not aligned in the two functions.')
+def test_corr_autocorr(control_3d_NA):
+    res1 = corr(control_3d_NA, control_3d_NA, lag=1, return_p=True)
+    res2 = autocorr(control_3d_NA, return_p=True)
+    for i in [0, 1]:
+        print(res1[i] - res2[i])
+        assert_allclose(res1[i], res2[i])

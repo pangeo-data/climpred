@@ -270,3 +270,10 @@ def test_compute_hindcast_dask_climpred_dims(hind_3d, fosi_3d, metric):
         # check for chunks
         assert dask.is_dask_collection(res_chunked)
         assert res_chunked.chunks is not None
+
+
+def test_compute_hindcast_CESM_3D_keep_coords(hind_3d, fosi_3d):
+    """Test that no coords are lost in compute_hindcast with the CESM sample data."""
+    s = compute_hindcast(hind_3d, fosi_3d)
+    for c in hind_3d.drop('init').coords:
+        assert c in s.coords

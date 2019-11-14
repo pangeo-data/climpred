@@ -7,7 +7,6 @@ climpred v1.1.1 (2019-##-##)
 
 Features
 --------
-- Added tests for chunking with `dask` (:pr:`258`) `Aaron Spring`_.
 - Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period`. Keeps coords. (:pr:`258`) `Aaron Spring`_.
 - Add `dim='time'` in `stats.dpp` (:pr:`258`) `Aaron Spring`_.
 - Apply arbitrary ``xarray`` methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
@@ -15,11 +14,14 @@ Features
 
 Bug Fixes
 ---------
+- Add `skill` from `compute_hindcast` keeps coords of `hindcast` (:pr:`258`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
 - Add ``tqdm`` progress bar to ``bootstrap_compute`` (:pr:`244`) `Aaron Spring`_.
 - Remove inplace behavior for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
+- Added tests for chunking with `dask` (:pr:`258`) `Aaron Spring`_.
+
 
 Documentation
 -------------

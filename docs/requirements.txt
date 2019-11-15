@@ -10,3 +10,4 @@ xarray
 jupyterlab
 netcdf4
 tqdm
+toolz

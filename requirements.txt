@@ -5,3 +5,4 @@ xskillscore>=0.0.5
 eofs
 matplotlib
 tqdm
+xrft

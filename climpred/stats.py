@@ -1,13 +1,16 @@
 """Objects dealing with timeseries and ensemble statistics."""
+import warnings
+
 import numpy as np
 import numpy.polynomial.polynomial as poly
-import xarray as xr
-
 import scipy.stats as ss
-from scipy.signal import periodogram
+import xarray as xr
+from xrft import power_spectrum
+
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .checks import has_dims, is_xarray
+from .utils import copy_coords_from_to
 
 
 # ----------------------------------#
@@ -130,6 +133,7 @@ def rm_poly(ds, order, dim='time'):
     Returns:
         xarray object with polynomial fit removed.
     """
+    # TODO: adapt for dask
     has_dims(ds, dim, 'dataset')
 
     # handle both datasets and dataarray
@@ -225,38 +229,51 @@ def rm_trend(da, dim='time'):
     return rm_poly(da, 1, dim=dim)
 
 
-# TODO: coords lon, lat get lost for curvilinear ds
 @is_xarray(0)
-def varweighted_mean_period(ds, time_dim='time'):
-    """Calculate the variance weighted mean period of time series.
+def varweighted_mean_period(da, dim='time', **kwargs):
+    """Calculate the variance weighted mean period of time series based on
+    xrft.power_spectrum.
 
     .. math::
         P_{x} = \\frac{\\sum_k V(f_k,x)}{\\sum_k f_k  \\cdot V(f_k,x)}
 
     Args:
-        ds (xarray object): Time series.
-        time_dim (optional str): Name of time dimension.
+        da (xarray object): input data including dim.
+        dim (optional str): Name of time dimension.
+        for **kwargs see xrft.power_spectrum
 
     Reference:
       * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
         Decadal Predictability in a CGCM." Journal of Climate 23, no. 23
         (August 27, 2010): 6292-6311. https://doi.org/10/bwq92h.
 
+    See also:
+    https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
-
-    def _create_dataset(ds, f, Pxx, time_dim):
-        """
-        Organize results of periodogram into clean dataset.
-        """
-        dimlist = [i for i in ds.dims if i not in [time_dim]]
-        PSD = xr.DataArray(Pxx, dims=['freq'] + dimlist)
-        PSD.coords['freq'] = f
-        return PSD
-
-    f, Pxx = periodogram(ds, axis=0, scaling='spectrum')
-    PSD = _create_dataset(ds, f, Pxx, time_dim)
-    T = PSD.sum('freq') / ((PSD * PSD.freq).sum('freq'))
-    return T
+    # set nans to 0
+    if isinstance(da, xr.Dataset):
+        raise ValueError('require xr.Dataset')
+    da = da.fillna(0.0)
+    # dim should be list
+    if isinstance(dim, str):
+        dim = [dim]
+    assert isinstance(dim, list)
+    ps = power_spectrum(da, dim=dim, **kwargs)
+    # take pos
+    for d in dim:
+        ps = ps.where(ps[f'freq_{d}'] > 0)
+    # weighted average
+    vwmp = ps
+    for d in dim:
+        vwmp = vwmp.sum(f'freq_{d}') / ((vwmp * vwmp[f'freq_{d}']).sum(f'freq_{d}'))
+    for d in dim:
+        del vwmp[f'freq_{d}_spacing']
+    # try to copy coords
+    try:
+        vwmp = copy_coords_from_to(da.drop(dim), vwmp)
+    except ValueError:
+        warnings.warn("Couldn't keep coords.")
+    return vwmp
 
 
 @is_xarray(0)
@@ -319,7 +336,8 @@ def decorrelation_time(da, r=20, dim='time'):
           p.373
 
     """
-    one = da.mean(dim) / da.mean(dim)
+    one = xr.ones_like(da.isel({dim: 0}))
+    one = one.where(da.isel({dim: 0}).notnull())
     return one + 2 * xr.concat(
         [autocorr(da, dim=dim, lag=i) ** i for i in range(1, r)], 'it'
     ).sum('it')
@@ -329,8 +347,7 @@ def decorrelation_time(da, r=20, dim='time'):
 # Diagnostic Potential Predictability (DPP)
 # Functions related to DPP from Boer et al.
 # --------------------------------------------#
-# TODO: coords lon, lat get lost for curvilinear ds
-def dpp(ds, m=10, chunk=True):
+def dpp(ds, dim='time', m=10, chunk=True):
     """Calculates the Diagnostic Potential Predictability (dpp)
 
     .. math::
@@ -344,6 +361,7 @@ def dpp(ds, m=10, chunk=True):
 
     Args:
         ds (xr.DataArray): control simulation with time dimension as years.
+        dim (str): dimension to apply DPP on. Default: time.
         m (optional int): separation time scale in years between predictable
                           low-freq component and high-freq noise.
         chunk (optional boolean): Whether chunking is applied. Default: True.
@@ -366,7 +384,7 @@ def dpp(ds, m=10, chunk=True):
 
     """
 
-    def _chunking(ds, number_chunks=False, chunk_length=False):
+    def _chunking(ds, dim='time', number_chunks=False, chunk_length=False):
         """
         Separate data into chunks and reshapes chunks in a c dimension.
 
@@ -375,6 +393,7 @@ def dpp(ds, m=10, chunk=True):
 
         Args:
             ds (xr.DataArray): control simulation with time dimension as years.
+            dim (str): dimension to apply chunking to. Default: time
             chunk_length (int): see dpp(m)
             number_chunks (int): number of chunks in the return data.
 
@@ -383,37 +402,37 @@ def dpp(ds, m=10, chunk=True):
 
         """
         if number_chunks and not chunk_length:
-            chunk_length = np.floor(ds['time'].size / number_chunks)
-            cmin = int(ds['time'].min())
+            chunk_length = np.floor(ds[dim].size / number_chunks)
+            cmin = int(ds[dim].min())
         elif not number_chunks and chunk_length:
-            cmin = int(ds['time'].min())
-            number_chunks = int(np.floor(ds['time'].size / chunk_length))
+            cmin = int(ds[dim].min())
+            number_chunks = int(np.floor(ds[dim].size / chunk_length))
         else:
             raise KeyError('set number_chunks or chunk_length to True')
-        c = ds.sel(time=slice(cmin, cmin + chunk_length - 1))
+        c = ds.sel({dim: slice(cmin, cmin + chunk_length - 1)})
         c = c.expand_dims('c')
         c['c'] = [0]
         for i in range(1, number_chunks):
             c2 = ds.sel(
-                time=slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)
+                {dim: slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)}
             )
             c2 = c2.expand_dims('c')
             c2['c'] = [i]
-            c2['time'] = c['time']
+            c2[dim] = c[dim]
             c = xr.concat([c, c2], 'c')
         return c
 
     if not chunk:  # Resplandy 2015, Seferian 2018
-        s2v = ds.rolling(time=m).mean().var('time')
-        s2 = ds.var('time')
+        s2v = ds.rolling({dim: m}).mean().var(dim)
+        s2 = ds.var(dim)
 
     if chunk:  # Boer 2004 ppvf
         # first chunk
-        chunked_means = _chunking(ds, chunk_length=m).mean('time')
+        chunked_means = _chunking(ds, dim=dim, chunk_length=m).mean(dim)
         # sub means in chunks
-        chunked_deviations = _chunking(ds, chunk_length=m) - chunked_means
+        chunked_deviations = _chunking(ds, dim=dim, chunk_length=m) - chunked_means
         s2v = chunked_means.var('c')
-        s2e = chunked_deviations.var(['time', 'c'])
+        s2e = chunked_deviations.var([dim, 'c'])
         s2 = s2v + s2e
     dpp = (s2v - s2 / (m)) / s2
     return dpp

@@ -3,16 +3,22 @@ import warnings
 import numpy as np
 import xarray as xr
 from scipy.stats import norm
+
 from xskillscore import (
     brier_score,
     crps_ensemble,
     crps_gaussian,
     crps_quadrature,
+    mad,
     mae,
+    mape,
     mse,
     pearson_r,
     pearson_r_p_value,
     rmse,
+    smape,
+    spearman_r,
+    spearman_r_p_value,
     threshold_brier_score,
 )
 
@@ -48,7 +54,7 @@ def _get_norm_factor(comparison):
 
 def _pearson_r(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Calculate the Anomaly Correlation Coefficient (ACC).
+    Calculate Person's Anomaly Correlation Coefficient (ACC).
 
     .. math::
         ACC = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
@@ -69,7 +75,8 @@ def _pearson_r(forecast, reference, dim='svd', **metric_kwargs):
 
 def _pearson_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Calculate the probability associated with the ACC not being random.
+    Calculate the probability associated with Person's Anomaly Correlation
+    Coefficient not being random.
     """
     # p-value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -77,6 +84,40 @@ def _pearson_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
         pval = pearson_r_p_value(forecast, reference, dim=dim)
+    return pval
+
+
+def _spearman_r(forecast, reference, dim='svd', **metric_kwargs):
+    """
+    Calculate the Anomaly Correlation Coefficient (ACC).
+
+    .. math::
+        ACC = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
+
+    .. note::
+        Use metric ``spearman_r_p_value`` to get the corresponding pvalue.
+
+    Range:
+        * perfect: 1
+        * min: -1
+
+    See also:
+        * xskillscore.spearman_r
+        * xskillscore.spearman_r_p_value
+    """
+    return spearman_r(forecast, reference, dim=dim)
+
+
+def _spearman_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
+    """
+    Calculate the probability associated with the ACC not being random.
+    """
+    # p-value returns a runtime error when working with NaNs, such as on a climate
+    # model grid. We can avoid this annoying output by specifically suppressing
+    # warning here.
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        pval = spearman_r_p_value(forecast, reference, dim=dim)
     return pval
 
 
@@ -132,6 +173,60 @@ def _mae(forecast, reference, dim='svd', **metric_kwargs):
         * xskillscore.mae
     """
     return mae(forecast, reference, dim=dim)
+
+
+def _mad(forecast, reference, dim='svd', **metric_kwargs):
+    """
+    Calculate the Median Absolute Deviation (MAD).
+
+    .. math::
+        MAD = median(|f - o|)
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: ∞
+
+    See also:
+        * xskillscore.mad
+    """
+    return mad(forecast, reference, dim=dim)
+
+
+def _mape(forecast, reference, dim='svd', **metric_kwargs):
+    """
+    Calculate the Mean Absolute Percentage Error (MAPE).
+
+    .. math::
+        MAPE = MAPE = 1/n \sum \frac{|f-o|}{|o|}
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: ∞
+
+    See also:
+        * xskillscore.mape
+    """
+    return mape(forecast, reference, dim=dim)
+
+
+def _smape(forecast, reference, dim='svd', **metric_kwargs):
+    """
+    Calculate the symmetric Mean Absolute Percentage Error (sMAPE).
+
+    .. math::
+        sMAPE = 1/n \sum \frac{|f-o|}{|f|+|o|}
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: ∞
+
+    See also:
+        * xskillscore.smape
+    """
+    return smape(forecast, reference, dim=dim)
 
 
 def _brier_score(forecast, reference, **metric_kwargs):

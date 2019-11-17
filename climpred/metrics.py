@@ -3,9 +3,23 @@ import warnings
 import numpy as np
 import xarray as xr
 from scipy.stats import norm
-from xskillscore import (brier_score, crps_ensemble, crps_gaussian, crps_quadrature,
-                         mad, mae, mape, mse, pearson_r, pearson_r_p_value, rmse, smape,
-                         spearman_r, spearman_r_p_value, threshold_brier_score)
+from xskillscore import (
+    brier_score,
+    crps_ensemble,
+    crps_gaussian,
+    crps_quadrature,
+    mad,
+    mae,
+    mape,
+    mse,
+    pearson_r,
+    pearson_r_p_value,
+    rmse,
+    smape,
+    spearman_r,
+    spearman_r_p_value,
+    threshold_brier_score,
+)
 
 from .constants import CLIMPRED_DIMS
 
@@ -74,10 +88,10 @@ def _pearson_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
 
 def _spearman_r(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Calculate the Anomaly Correlation Coefficient (ACC).
+    Calculate Spearman's Anomaly Correlation Coefficient (SACC).
 
     .. math::
-        ACC = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
+        SACC = ACC(ranked(f),ranked(o))
 
     .. note::
         Use metric ``spearman_r_p_value`` to get the corresponding pvalue.

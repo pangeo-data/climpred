@@ -7,6 +7,7 @@ climpred v1.1.1 (2019-##-##)
 
 Features
 --------
+- New deterministic metrics: `spearman_r`, `spearman_r_p_value`, `mad`, `mape`, `smape`. (:pr:`264`) `Aaron Spring`_.
 - Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period`. Keeps coords. (:pr:`258`) `Aaron Spring`_.
 - Add `dim='time'` in `stats.dpp` (:pr:`258`) `Aaron Spring`_.
 - Apply arbitrary ``xarray`` methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
@@ -15,6 +16,7 @@ Features
 Bug Fixes
 ---------
 - Add `skill` from `compute_hindcast` keeps coords of `hindcast` (:pr:`258`) `Aaron Spring`_.
+- metric `uacc` does not crash when `ppp` negative. (:pr:`264`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------

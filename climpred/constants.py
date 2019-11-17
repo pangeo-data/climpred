@@ -31,6 +31,7 @@ METRIC_ALIASES = {
     'acc': 'pearson_r',
     'pval': 'pearson_r_p_value',
     'pvalue': 'pearson_r_p_value',
+    'sacc': 'spearman_r',
     'c_b': 'conditional_bias',
     'unconditional_bias': 'bias',
     'u_b': 'bias',

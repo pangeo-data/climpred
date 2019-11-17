@@ -3,24 +3,9 @@ import warnings
 import numpy as np
 import xarray as xr
 from scipy.stats import norm
-
-from xskillscore import (
-    brier_score,
-    crps_ensemble,
-    crps_gaussian,
-    crps_quadrature,
-    mad,
-    mae,
-    mape,
-    mse,
-    pearson_r,
-    pearson_r_p_value,
-    rmse,
-    smape,
-    spearman_r,
-    spearman_r_p_value,
-    threshold_brier_score,
-)
+from xskillscore import (brier_score, crps_ensemble, crps_gaussian, crps_quadrature,
+                         mad, mae, mape, mse, pearson_r, pearson_r_p_value, rmse, smape,
+                         spearman_r, spearman_r_p_value, threshold_brier_score)
 
 from .constants import CLIMPRED_DIMS
 
@@ -727,4 +712,7 @@ def _uacc(forecast, reference, dim='svd', **metric_kwargs):
           Forecast Skill. Climate Dynamics, June 9, 2018.
           https://doi.org/10/gd7hfq.
     """
-    return _ppp(forecast, reference, dim=dim, **metric_kwargs) ** 0.5
+    ppp_res = _ppp(forecast, reference, dim=dim, **metric_kwargs)
+    # ensure no sqrt of neg values
+    uacc_res = (ppp_res.where(ppp_res > 0)) ** 0.5
+    return uacc_res

@@ -233,6 +233,12 @@ def compute_hindcast(
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
 
     forecast, reference = comparison(hind, reference, stack_dims=stack_dims)
+    # adapt weights for stack_dims
+    if 'weights' in metric_kwargs:
+        weights = metric_kwargs['weights']
+        # TODO:
+        new_weights = weights
+        metric_kwargs.update({'weights': new_weights})
 
     # in case you want to compute skill over member dim
     if (

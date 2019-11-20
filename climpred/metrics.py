@@ -61,6 +61,13 @@ def _pearson_r(forecast, reference, dim='svd', **metric_kwargs):
     .. note::
         Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
 
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+        metric_kwargs: weights, skipna, see xskillscore.pearson_r
+
     Range:
         * perfect: 1
         * min: -1
@@ -69,21 +76,27 @@ def _pearson_r(forecast, reference, dim='svd', **metric_kwargs):
         * xskillscore.pearson_r
         * xskillscore.pearson_r_p_value
     """
-    return pearson_r(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
+# TODO: all metrics: docs
 def _pearson_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the probability associated with Person's Anomaly Correlation
     Coefficient not being random.
     """
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
     # p-value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        pval = pearson_r_p_value(forecast, reference, dim=dim)
-    return pval
+        return pearson_r_p_value(
+            forecast, reference, dim=dim, weights=weights, skipna=skipna
+        )
 
 
 def _spearman_r(forecast, reference, dim='svd', **metric_kwargs):
@@ -104,20 +117,25 @@ def _spearman_r(forecast, reference, dim='svd', **metric_kwargs):
         * xskillscore.spearman_r
         * xskillscore.spearman_r_p_value
     """
-    return spearman_r(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return spearman_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
 def _spearman_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
     """
     Calculate the probability associated with the ACC not being random.
     """
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
     # p-value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        pval = spearman_r_p_value(forecast, reference, dim=dim)
-    return pval
+        return spearman_r_p_value(
+            forecast, reference, dim=dim, weights=weights, skipna=skipna
+        )
 
 
 def _mse(forecast, reference, dim='svd', **metric_kwargs):
@@ -135,7 +153,9 @@ def _mse(forecast, reference, dim='svd', **metric_kwargs):
     See also:
         * xskillscore.mse
     """
-    return mse(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return mse(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
 def _rmse(forecast, reference, dim='svd', **metric_kwargs):
@@ -153,7 +173,9 @@ def _rmse(forecast, reference, dim='svd', **metric_kwargs):
     See also:
         * xskillscore.rmse
     """
-    return rmse(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return rmse(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
 def _mae(forecast, reference, dim='svd', **metric_kwargs):
@@ -171,7 +193,9 @@ def _mae(forecast, reference, dim='svd', **metric_kwargs):
     See also:
         * xskillscore.mae
     """
-    return mae(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return mae(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
 def _mad(forecast, reference, dim='svd', **metric_kwargs):
@@ -189,7 +213,8 @@ def _mad(forecast, reference, dim='svd', **metric_kwargs):
     See also:
         * xskillscore.mad
     """
-    return mad(forecast, reference, dim=dim)
+    skipna = metric_kwargs.get('skipna', False)
+    return mad(forecast, reference, dim=dim, skipna=skipna)
 
 
 def _mape(forecast, reference, dim='svd', **metric_kwargs):
@@ -207,7 +232,9 @@ def _mape(forecast, reference, dim='svd', **metric_kwargs):
     See also:
         * xskillscore.mape
     """
-    return mape(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return mape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
 def _smape(forecast, reference, dim='svd', **metric_kwargs):
@@ -225,7 +252,9 @@ def _smape(forecast, reference, dim='svd', **metric_kwargs):
     See also:
         * xskillscore.smape
     """
-    return smape(forecast, reference, dim=dim)
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return smape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
 def _brier_score(forecast, reference, **metric_kwargs):
@@ -326,7 +355,8 @@ def _crps(forecast, reference, **metric_kwargs):
         * xskillscore.crps_ensemble
     """
     # switch positions because xskillscore.crps_ensemble(obs, forecasts)
-    return crps_ensemble(reference, forecast)
+    weights = metric_kwargs.get('weights', None)
+    return crps_ensemble(reference, forecast, weights=weights)
 
 
 def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
@@ -426,7 +456,7 @@ def _crpss(forecast, reference, **metric_kwargs):
         else:
             tol = 1e-6
         ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
-    forecast_skill = _crps(forecast, reference)
+    forecast_skill = _crps(forecast, reference, **metric_kwargs)
     skill_score = 1 - forecast_skill / ref_skill.mean('member')
     return skill_score
 
@@ -460,8 +490,11 @@ def _crpss_es(forecast, reference, **metric_kwargs):
 
     mu = reference.mean(rdim)
     forecast, ref2 = xr.broadcast(forecast, reference)
-    sig_r = _mse(forecast, ref2, dim='member').mean(dim2)
-    sig_h = _mse(forecast.mean(dim2), ref2.mean(dim2), 'member')
+    mse_kwargs = metric_kwargs.copy()
+    if 'dim' in mse_kwargs:
+        del mse_kwargs['dim']
+    sig_r = _mse(forecast, ref2, dim='member', **mse_kwargs).mean(dim2)
+    sig_h = _mse(forecast.mean(dim2), ref2.mean(dim2), dim='member', **mse_kwargs)
     crps_h = _crps_gaussian(forecast, mu, sig_h)
     if 'member' in crps_h.dims:
         crps_h = crps_h.mean('member')
@@ -504,9 +537,11 @@ def _msss_murphy(forecast, reference, dim='svd', **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    acc = _pearson_r(forecast, reference, dim=dim)
-    conditional_bias = _conditional_bias(forecast, reference, dim=dim)
-    uncond_bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
+    acc = _pearson_r(forecast, reference, dim=dim, **metric_kwargs)
+    conditional_bias = _conditional_bias(forecast, reference, dim=dim, **metric_kwargs)
+    uncond_bias = _bias(forecast, reference, dim=dim, **metric_kwargs) / reference.std(
+        dim
+    )
     skill = acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
     return skill
 
@@ -519,8 +554,10 @@ def _conditional_bias(forecast, reference, dim='svd', **metric_kwargs):
     References:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    acc = _pearson_r(forecast, reference, dim=dim)
-    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim) ** -1
+    acc = _pearson_r(forecast, reference, dim=dim, **metric_kwargs)
+    conditional_bias = (
+        acc - _std_ratio(forecast, reference, dim=dim, **metric_kwargs) ** -1
+    )
     return conditional_bias
 
 
@@ -544,8 +581,8 @@ def _bias_slope(forecast, reference, dim='svd', **metric_kwargs):
     References:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    std_ratio = _std_ratio(forecast, reference, dim=dim)
-    acc = _pearson_r(forecast, reference, dim=dim)
+    std_ratio = _std_ratio(forecast, reference, dim=dim, **metric_kwargs)
+    acc = _pearson_r(forecast, reference, dim=dim, **metric_kwargs)
     b_s = std_ratio * acc
     return b_s
 
@@ -580,7 +617,7 @@ def _ppp(forecast, reference, dim='svd', **metric_kwargs):
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    mse_skill = _mse(forecast, reference, dim=dim)
+    mse_skill = _mse(forecast, reference, dim=dim, **metric_kwargs)
     var = reference.var(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -623,7 +660,7 @@ def _nrmse(forecast, reference, dim='svd', **metric_kwargs):
         (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
 
     """
-    rmse_skill = _rmse(forecast, reference, dim=dim)
+    rmse_skill = _rmse(forecast, reference, dim=dim, **metric_kwargs)
     std = reference.std(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -659,7 +696,7 @@ def _nmse(forecast, reference, dim='svd', **metric_kwargs):
           North Atlantic Multidecadal Variability.” Climate Dynamics 13,
           no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
     """
-    mse_skill = _mse(forecast, reference, dim=dim)
+    mse_skill = _mse(forecast, reference, dim=dim, **metric_kwargs)
     var = reference.var(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -696,7 +733,7 @@ def _nmae(forecast, reference, dim='svd', **metric_kwargs):
           7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
 
     """
-    mae_skill = _mae(forecast, reference, dim=dim)
+    mae_skill = _mae(forecast, reference, dim=dim, **metric_kwargs)
     std = reference.std(dim).mean()
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']

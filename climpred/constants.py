@@ -29,10 +29,10 @@ DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 METRIC_ALIASES = {
     'pr': 'pearson_r',
     'acc': 'pearson_r',
-    'pval': 'pearson_r_p_value',
+    'p_pval': 'pearson_r_p_value',
     'pvalue': 'pearson_r_p_value',
     'sacc': 'spearman_r',
-    'c_b': 'conditional_bias',
+    's_pval' 'spearman_r_p_value' 'c_b': 'conditional_bias',
     'unconditional_bias': 'bias',
     'u_b': 'bias',
     'nev': 'nmse',

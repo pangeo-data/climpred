@@ -40,7 +40,7 @@ Spearman Anomaly Correlation Coefficient (SACC)
 
 ``keyword: 'spearman_r', 'sacc'``
 
-A measure how well the relationship between two variables can be described using a monotonic function.
+A measure of how well the relationship between two variables can be described using a monotonic function.
 
 .. autofunction:: _spearman_r
 

@@ -5,10 +5,14 @@ Changelog History
 climpred v1.1.1 (2019-##-##)
 ============================
 
+Depreciated
+-----------
+- Abbreviation `pval` depreciated. Use `p_pval` for `pearson_r_p_value` instead. (:pr:`264`) `Aaron Spring`_.
+
+
 Features
 --------
 - `metric_kwargs` are passed to `xs.metric`. (:pr:`264`) `Aaron Spring`_.
-- `pval` depreciated. Use `p_pval` for `pearson_r_p_value` instead. (:pr:`264`) `Aaron Spring`_.
 - New deterministic metrics: `spearman_r`, `spearman_r_p_value`, `mad`, `mape`, `smape`. (:pr:`264`) `Aaron Spring`_.
 - Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period`. Keeps coords. (:pr:`258`) `Aaron Spring`_.
 - Add `dim='time'` in `stats.dpp` (:pr:`258`) `Aaron Spring`_.

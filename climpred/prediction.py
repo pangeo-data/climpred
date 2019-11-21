@@ -7,6 +7,7 @@ import pandas as pd
 from .checks import is_in_list, is_xarray
 from .comparisons import _e2c
 from .constants import (
+    CLIMPRED_DIMS,
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
@@ -18,6 +19,7 @@ from .constants import (
 )
 from .utils import (
     assign_attrs,
+    copy_coords_from_to,
     get_comparison_function,
     get_metric_function,
     intersect,
@@ -287,6 +289,9 @@ def compute_hindcast(
     # rename back to init
     if 'time' in skill.dims:  # when dim was 'member'
         skill = skill.rename({'time': 'init'})
+    # keep coords from hind
+    drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
+    skill = copy_coords_from_to(hind.drop(drop_dims), skill)
     # attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(

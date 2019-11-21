@@ -31,3 +31,4 @@ dependencies:
     - importlib_metadata
     - pre-commit
     - asv
+    - xrft

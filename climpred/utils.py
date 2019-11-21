@@ -20,103 +20,6 @@ from .constants import (
 )
 
 
-def get_metric_function(metric, list_):
-    """
-    This allows the user to submit a string representing the desired function
-    to anything that takes a metric.
-
-    Currently compatable with functions:
-    * compute_persistence()
-    * compute_perfect_model()
-    * compute_hindcast()
-
-    Args:
-        metric (str): name of metric.
-
-    Returns:
-        metric (function): function object of the metric.
-
-    Raises:
-        KeyError: if metric not implemented.
-    """
-    # catches issues with wrappers, etc. that actually submit the
-    # proper underscore function
-    if isinstance(metric, types.FunctionType):
-        return metric
-    else:
-        # equivalent of: `if metric in METRIC_ALIASES;
-        # METRIC_ALIASES[metric]; else metric`
-        metric = METRIC_ALIASES.get(metric, metric)
-        is_in_list(metric, list_, 'metric')
-        return getattr(metrics, '_' + metric)
-
-
-def get_comparison_function(comparison, list_):
-    """
-    Converts a string comparison entry from the user into an actual
-     function for the package to interpret.
-
-    PERFECT MODEL:
-    m2m: Compare all members to all other members.
-    m2c: Compare all members to the control.
-    m2e: Compare all members to the ensemble mean.
-    e2c: Compare the ensemble mean to the control.
-
-    HINDCAST:
-    e2r: Compare the ensemble mean to the reference.
-    m2r: Compare each ensemble member to the reference.
-
-    Args:
-        comparison (str): name of comparison.
-
-    Returns:
-        comparison (function): comparison function.
-
-    """
-    if isinstance(comparison, types.FunctionType):
-        return comparison
-    else:
-        is_in_list(comparison, list_, 'comparison')
-        return getattr(comparisons, '_' + comparison)
-
-
-def intersect(lst1, lst2):
-    """
-    Custom intersection, since `set.intersection()` changes type of list.
-    """
-    lst3 = [value for value in lst1 if value in lst2]
-    return np.array(lst3)
-
-
-def reduce_time_series(forecast, reference, nlags):
-    """Reduces forecast and reference to common time frame for prediction and lag.
-
-    Args:
-        forecast (`xarray` object): prediction ensemble with inits.
-        reference (`xarray` object): reference being compared to (for skill,
-                                     persistence, etc.)
-        nlags (int): number of lags being computed
-    Returns:
-       forecast (`xarray` object): prediction ensemble reduced to
-       reference (`xarray` object):
-    """
-
-    imin = max(forecast.time[0], reference.time[0])
-    offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], nlags)
-    #    offset_args_dict={forecast['lead'].attrs['units']: nlags }
-    ref_dates = pd.to_datetime(
-        reference.time.dt.strftime('%Y%m%d 00:00')
-    ) - pd.DateOffset(**offset_args_dict)
-
-    imax = min(forecast.time[-1], ref_dates[-1])
-
-    imax = xr.DataArray(imax).rename('time')
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    reference = reference.where(reference.time >= imin, drop=True)
-    return forecast, reference
-
-
 def assign_attrs(
     skill, ds, function_name, metadata_dict=None, metric=None, comparison=None
 ):
@@ -184,6 +87,82 @@ def assign_attrs(
     return skill
 
 
+def copy_coords_from_to(xro_from, xro_to):
+    """Copy coords from one xr object to another."""
+    if isinstance(xro_from, xr.DataArray) and isinstance(xro_to, xr.DataArray):
+        for c in xro_from.coords:
+            xro_to[c] = xro_from[c]
+        return xro_to
+    elif isinstance(xro_from, xr.Dataset) and isinstance(xro_to, xr.Dataset):
+        xro_to = xro_to.assign_coords(**xro_from.coords)
+    else:
+        raise ValueError(
+            f'xro_from and xro_to must be both either xr.DataArray or',
+            f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
+        )
+    return xro_to
+
+
+def get_metric_function(metric, list_):
+    """
+    This allows the user to submit a string representing the desired function
+    to anything that takes a metric.
+
+    Currently compatable with functions:
+    * compute_persistence()
+    * compute_perfect_model()
+    * compute_hindcast()
+
+    Args:
+        metric (str): name of metric.
+
+    Returns:
+        metric (function): function object of the metric.
+
+    Raises:
+        KeyError: if metric not implemented.
+    """
+    # catches issues with wrappers, etc. that actually submit the
+    # proper underscore function
+    if isinstance(metric, types.FunctionType):
+        return metric
+    else:
+        # equivalent of: `if metric in METRIC_ALIASES;
+        # METRIC_ALIASES[metric]; else metric`
+        metric = METRIC_ALIASES.get(metric, metric)
+        is_in_list(metric, list_, 'metric')
+        return getattr(metrics, '_' + metric)
+
+
+def get_comparison_function(comparison, list_):
+    """
+    Converts a string comparison entry from the user into an actual
+     function for the package to interpret.
+
+    PERFECT MODEL:
+    m2m: Compare all members to all other members.
+    m2c: Compare all members to the control.
+    m2e: Compare all members to the ensemble mean.
+    e2c: Compare the ensemble mean to the control.
+
+    HINDCAST:
+    e2r: Compare the ensemble mean to the reference.
+    m2r: Compare each ensemble member to the reference.
+
+    Args:
+        comparison (str): name of comparison.
+
+    Returns:
+        comparison (function): comparison function.
+
+    """
+    if isinstance(comparison, types.FunctionType):
+        return comparison
+    else:
+        is_in_list(comparison, list_, 'comparison')
+        return getattr(comparisons, '_' + comparison)
+
+      
 def get_lead_pdoffset_args(units, lead):
 
     lead_units_list = ['years', 'months', 'weeks', 'days']
@@ -199,3 +178,40 @@ def get_lead_pdoffset_args(units, lead):
         print(units, ' is not a valid choice')
 
     return offset_args_dict
+
+
+def intersect(lst1, lst2):
+    """
+    Custom intersection, since `set.intersection()` changes type of list.
+    """
+    lst3 = [value for value in lst1 if value in lst2]
+    return np.array(lst3)
+
+
+def reduce_time_series(forecast, reference, nlags):
+    """Reduces forecast and reference to common time frame for prediction and lag.
+
+    Args:
+        forecast (`xarray` object): prediction ensemble with inits.
+        reference (`xarray` object): reference being compared to (for skill,
+                                     persistence, etc.)
+        nlags (int): number of lags being computed
+    Returns:
+       forecast (`xarray` object): prediction ensemble reduced to
+       reference (`xarray` object):
+    """
+
+    imin = max(forecast.time[0], reference.time[0])
+    offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], nlags)
+    #    offset_args_dict={forecast['lead'].attrs['units']: nlags }
+    ref_dates = pd.to_datetime(
+        reference.time.dt.strftime('%Y%m%d 00:00')
+    ) - pd.DateOffset(**offset_args_dict)
+
+    imax = min(forecast.time[-1], ref_dates[-1])
+
+    imax = xr.DataArray(imax).rename('time')
+    forecast = forecast.where(forecast.time <= imax, drop=True)
+    forecast = forecast.where(forecast.time >= imin, drop=True)
+    reference = reference.where(reference.time >= imin, drop=True)
+    return forecast, reference

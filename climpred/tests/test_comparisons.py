@@ -155,9 +155,8 @@ def test_m2m(PM_da_ds1d):
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_all(PM_da_ds1d, comparison, stack_dims):
     ds = PM_da_ds1d
-    dim_to_apply_metric_to = 'init'
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
-    forecast, reference = comparison(ds, dim_to_apply_metric_to, stack_dims=stack_dims)
+    forecast, reference = comparison(ds, stack_dims=stack_dims)
     if stack_dims is True:
         # same dimensions for deterministic metrics
         forecast.dims == reference.dims

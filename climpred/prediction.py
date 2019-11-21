@@ -103,7 +103,7 @@ def compute_perfect_model(
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
     # stack_dims = True when metric probabilistic
-    forecast, reference = comparison(ds, dim_to_apply_metric_to, stack_dims=stack_dims)
+    forecast, reference = comparison(ds, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
     if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):

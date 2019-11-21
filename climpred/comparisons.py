@@ -31,39 +31,18 @@ def _drop_members(ds, rmd_member=None):
     return ds.sel(member=member_list)
 
 
-def _stack_to_supervector(ds, new_dim='svd', stacked_dims=('init', 'member')):
-    """
-    Stack stacked_dims (default init and member) dimensions
-     into one supervector dimension to perform metric over.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        new_dim (str): name of new supervector dimension. Default: 'svd'
-        stacked_dims (set): dimensions to be stacked.
-
-    Returns:
-        ds (xarray object): xr.Dataset/xr.DataArray with stacked new_dim
-                            dimension.
-    """
-    return ds.stack({new_dim: stacked_dims})
-
-
 # --------------------------------------------#
 # PERFECT-MODEL COMPARISONS
 # based on supervector approach
 # --------------------------------------------#
-def _m2m(ds, supervector_dim='svd', stack_dims=True):
+def _m2m(ds, stack_dims=True):
     """
     Create two supervectors to compare all members to all others in turn.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        supervector_dim (str): name of new supervector dimension.
-                               Default: 'svd'
-        stack_dims (bool): if True, forecast and reference have member dim and both
-                      get stacked to new supervector_dim
+        stack_dims (bool): if True, forecast and reference have member dim
                       if False, only forecast has member dim
                       (needed for probabilistic metrics)
 
@@ -97,7 +76,7 @@ def _m2m(ds, supervector_dim='svd', stack_dims=True):
     return forecast, reference
 
 
-def _m2e(ds, supervector_dim='svd', stack_dims=True):
+def _m2e(ds, stack_dims=True):
     # stack_dims
     """
     Create two supervectors to compare all members to ensemble mean while
@@ -106,8 +85,6 @@ def _m2e(ds, supervector_dim='svd', stack_dims=True):
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        supervector_dim (str): name of new supervector dimension.
-                               Default: 'svd'
         stack_dims (bool): needed for probabilistic metrics.
                       therefore useless in m2e comparison,
                       but expected by internal API.
@@ -130,19 +107,16 @@ def _m2e(ds, supervector_dim='svd', stack_dims=True):
     return forecast, reference
 
 
-def _m2c(ds, supervector_dim='svd', control_member=None, stack_dims=True):
+def _m2c(ds, control_member=None, stack_dims=True):
     """
     Create two supervectors to compare all members to control.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        supervector_dim (str): name of new supervector dimension.
-                               Default: 'svd'
         control_member: list of the one integer member serving as
                         reference. Default 0
-        stack_dims (bool): if True, forecast and reference have member dim and both
-                      get stacked to new supervector_dim
+        stack_dims (bool): if True, forecast and reference have member dim
                       if False, only forecast has member dim
                       (needed for probabilistic metrics)
 
@@ -159,15 +133,13 @@ def _m2c(ds, supervector_dim='svd', control_member=None, stack_dims=True):
     return forecast, reference
 
 
-def _e2c(ds, supervector_dim='svd', control_member=None, stack_dims=True):
+def _e2c(ds, control_member=None, stack_dims=True):
     """
     Create two supervectors to compare ensemble mean to control.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        supervector_dim (str): name of new supervector dimension.
-                               Default: 'svd'
         control_member: list of the one integer member serving as
                         reference. Default 0
         stack_dims (bool): needed for probabilistic metrics.
@@ -222,10 +194,9 @@ def _m2r(ds, reference, stack_dims=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
-        stack_dims (bool): if True, forecast and reference have member dim and both
-                      get stacked to new supervector_dim
-                      if False, only forecast has member dim
-                      (needed for probabilistic metrics)
+        stack_dims (bool): if True, forecast and reference have member dim and
+                           both; if False, only forecast has member dim
+                           (needed for probabilistic metrics)
 
     Returns:
         xr.object: forecast, reference.

@@ -3,15 +3,13 @@ from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_PM_COMPARISONS,
     PROBABILISTIC_METRICS,
+    PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import get_comparison_function
 from xarray.testing import assert_allclose
-
-# Test apply_metric_to_member_dim
 
 
 @pytest.fixture
@@ -55,13 +53,13 @@ def observations_da():
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 def test_pm_comparison_stack_dims(pm_da_ds1d, comparison, stack_dims):
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
-    actual_f, _ = comparison(pm_da_ds1d, stack_dims=stack_dims)
+    actual_f, actual_r = comparison(pm_da_ds1d, stack_dims=stack_dims)
     if stack_dims:
-        assert 'svd' in actual_f.dims
-        assert 'member' not in actual_f.dims
+        assert 'member' in actual_f.dims
+        assert 'member' in actual_r.dims
     else:
         assert 'member' in actual_f.dims
-        assert 'svd' not in actual_f.dims
+        assert 'member' not in actual_r.dims
 
 
 # cannot work for e2c, m2e comparison because only 1:1 comparison
@@ -168,6 +166,7 @@ def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison, metric):
     # check whether only dim got reduced from coords
     assert set(pm_da_ds1d.dims) - set(actual.dims) == set(dim)
     # check whether all nan
+    print(actual.dims, actual.coords, actual)
     assert not actual.isnull().any()
 
 

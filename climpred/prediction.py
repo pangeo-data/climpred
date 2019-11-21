@@ -86,34 +86,29 @@ def compute_perfect_model(
                 f'Set automatically.'
             )
             dim = 'member'
-    elif set(dim) == set(['init', 'member']):
-        dim_to_apply_metric_to = 'svd'
-        stack_dims = True
     else:
-        if metric == 'pearson_r':
-            # it doesnt fail though; we could also raise ValueError here
+        # prevent comparison e2c and member in dim
+        if (comparison == 'e2c') and (
+            set(dim) == set(['init', 'member']) or dim == 'member'
+        ):
             warnings.warn(
-                'ACC doesnt work on dim other than'
-                '["init", "member"] in perfect-model framework.'
+                f'comparison `e2c` does not work on `member` in dims, found'
+                f'{dim}, automatically changed to dim=`init`.'
             )
+            dim = 'init'
         stack_dims = False
 
-    if not stack_dims:
-        dim_to_apply_metric_to = dim
+    dim_to_apply_metric_to = dim
 
     comparison = get_comparison_function(comparison, PM_COMPARISONS)
 
+    # stack_dims = True when metric probabilistic
     forecast, reference = comparison(ds, dim_to_apply_metric_to, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
     if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):
         # broadcast when deterministic dim=member
         forecast, reference = xr.broadcast(forecast, reference)
-        # m2m creates additional forecast_member when over dim member
-        if comparison.__name__ == '_m2m':
-            dim_to_apply_metric_to = 'forecast_member'
-        else:
-            dim_to_apply_metric_to = dim
 
     metric = get_metric_function(metric, PM_METRICS)
 
@@ -233,12 +228,6 @@ def compute_hindcast(
     comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
 
     forecast, reference = comparison(hind, reference, stack_dims=stack_dims)
-    # adapt weights for stack_dims
-    if 'weights' in metric_kwargs:
-        weights = metric_kwargs['weights']
-        # TODO:
-        new_weights = weights
-        metric_kwargs.update({'weights': new_weights})
 
     # in case you want to compute skill over member dim
     if (
@@ -268,6 +257,15 @@ def compute_hindcast(
         a['time'] = [int(t + i) for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
+        # adapt weights to shorter time
+        if 'weights' in metric_kwargs:
+            metric_kwargs.update(
+                {
+                    'weights': metric_kwargs['weights'].isel(
+                        time=slice(None, a.time.size)
+                    )
+                }
+            )
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)

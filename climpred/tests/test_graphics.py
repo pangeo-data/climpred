@@ -16,7 +16,7 @@ def test_mpi_pm_plot_bootstrapped_skill_over_leadyear():
     # sig = 95
     bootstrap = 5
     res = bootstrap_perfect_model(
-        PM_da_ds1d, PM_da_control1d, metric='pearson_r', bootstrap=bootstrap
-    )
+        PM_da_ds1d, PM_da_control1d, metric='pearson_r', dim='init', bootstrap=bootstrap
+    ).mean('member')
     res_ax = plot_bootstrapped_skill_over_leadyear(res, 95)
     assert res_ax is not None

@@ -253,7 +253,7 @@ def compute_hindcast(
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
         # take lead year i timeseries and convert to real time
-        a = forecast.sel(lead=i).drop('lead')
+        a = forecast.sel(lead=i).drop_vars('lead')
         a['time'] = [int(t + i) for t in a.time.values]
         # take real time reference of real time forecast years
         b = reference.sel(time=a.time.values)
@@ -281,7 +281,7 @@ def compute_hindcast(
         skill = skill.rename({'time': 'init'})
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
-    skill = copy_coords_from_to(hind.drop(drop_dims), skill)
+    skill = copy_coords_from_to(hind.drop_vars(drop_dims), skill)
     # attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(

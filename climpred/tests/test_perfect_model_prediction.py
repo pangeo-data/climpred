@@ -218,6 +218,7 @@ def test_compute_pm_dask_spatial(ds_3d_NA, control_3d_NA, comparison, metric):
                 control_3d_NA.chunk({dim: step}),
                 comparison=comparison,
                 metric=metric,
+                dim='init',
             )
             # check for chunks
             assert dask.is_dask_collection(res_chunked)
@@ -235,7 +236,7 @@ def test_compute_pm_dask_climpred_dims(ds_3d_NA, control_3d_NA, comparison, metr
         if dim in control_3d_NA.dims:
             control_3d_NA = control_3d_NA.chunk({dim: step})
         res_chunked = compute_perfect_model(
-            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric
+            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric, dim='init'
         )
         # check for chunks
         assert dask.is_dask_collection(res_chunked)

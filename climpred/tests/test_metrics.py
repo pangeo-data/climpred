@@ -25,16 +25,14 @@ def pm_da_control1d():
 @pytest.fixture
 def ds_3d_NA():
     """ds North Atlantic"""
-    ds = load_dataset(
-        'MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
+    ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
 @pytest.fixture
 def control_3d_NA():
     """control North Atlantic"""
-    ds = load_dataset(
-        'MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
+    ds = load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
@@ -75,18 +73,27 @@ def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, metric, compa
 def test_pm_metric_skipna(ds_3d_NA, control_3d_NA, metric):
     ds_3d_NA = ds_3d_NA.copy()
     # manipulating data
-    # problem here: i dont get a nice example, somehow this doesnt mask
-    ds_3d_NA.data[0, 0, 0, 80:100, 80:100] = np.nan
+    ds_3d_NA.values[1:3, 1:4, 1:4, 4:6, 4:6] = np.nan
 
     base = compute_perfect_model(
-        ds_3d_NA, control_3d_NA, metric=metric, skipna=False, dim='init', comparison='m2m',
-    )  # .mean('member')
+        ds_3d_NA,
+        control_3d_NA,
+        metric=metric,
+        skipna=False,
+        dim='init',
+        comparison='m2e',
+    ).mean('member')
     skipping = compute_perfect_model(
-        ds_3d_NA, control_3d_NA, metric=metric, skipna=True, dim='init', comparison='m2m'
-    )  # .mean('member')
-    print((base / skipping))  # .mean(['x', 'y']))
-    assert ((base / skipping) != 1.).any()
-    assert (xs.smape(base, skipping, ['x', 'y']) > 0.01).any()
+        ds_3d_NA,
+        control_3d_NA,
+        metric=metric,
+        skipna=True,
+        dim='init',
+        comparison='m2e',
+    ).mean('member')
+    assert ((base - skipping) != 0.0).any()
+    assert base.isel(lead=2, x=5, y=5).isnull()
+    assert not skipping.isel(lead=2, x=5, y=5).isnull()
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
@@ -187,11 +194,9 @@ def test_hindcast_metric_weights_x2r(
     base = compute_hindcast(
         initialized_da, reconstruction_da, dim=dim, metric=metric, comparison=comparison
     )
+    weights = xr.DataArray(np.arange(1, 1 + initialized_da[dim].size), dims=dim)
     weights = xr.DataArray(
-        np.arange(1, 1 + initialized_da[dim].size), dims=dim)
-    weights = xr.DataArray(
-        np.arange(1, 1 + initialized_da[dim].size
-                  * initialized_da['member'].size),
+        np.arange(1, 1 + initialized_da[dim].size * initialized_da['member'].size),
         dims='init',
     )
 

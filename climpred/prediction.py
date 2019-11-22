@@ -126,10 +126,6 @@ def compute_perfect_model(
     if comparison_name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
-        if dim == 'member' and 'member' in skill.dims:
-            skill = skill.mean('member')
-        if dim == 'init' and 'init' in skill.dims:
-            skill = skill.mean('init')
         # m2m stack_dims=False has one identical comparison
         skill = skill * (forecast.member.size / (forecast.member.size - 1))
     # Attach climpred compute information to skill

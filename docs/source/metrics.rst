@@ -28,7 +28,7 @@ Core Metrics
 Pearson Anomaly Correlation Coefficient (ACC)
 ---------------------------------------------
 
-``keyword: 'pearson_r','pr','acc'``
+``keyword: 'pearson_r','pr','pacc','acc'``
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [Jolliffe2011]_. ``climpred`` uses the Pearson correlation coefficient.
 
@@ -36,7 +36,7 @@ A measure of the linear association between the forecast and observations that i
 
 
 Spearman Anomaly Correlation Coefficient (SACC)
-----------------------------------------------
+-----------------------------------------------
 
 ``keyword: 'spearman_r', 'sacc'``
 

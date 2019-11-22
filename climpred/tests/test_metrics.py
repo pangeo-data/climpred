@@ -144,8 +144,7 @@ def test_hindcast_metric_skipna(initialized_da, reconstruction_da, metric):
     skipping = compute_hindcast(
         initialized_da, reconstruction_da, metric=metric, skipna=True, dim='init'
     )
-    print((base / skipping).mean(['nlat', 'nlon']))
-    not assert_allclose(base, skipping)
+    assert ((base / skipping) != 1).any()
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
@@ -168,7 +167,6 @@ def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, 
         metric=metric,
         weights=weights,
     )
-    print((base / weighted).mean(['nlon', 'nlat']))
     # test for difference
     assert ((base / weighted).mean(['nlon', 'nlat']) != 1).any()
 

@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 from climpred.comparisons import _drop_members, _e2c, _m2c, _m2e, _m2m
-from climpred.constants import PM_COMPARISONS
+from climpred.constants import PM_COMPARISONS, PROBABILISTIC_PM_COMPARISONS
 from climpred.tutorial import load_dataset
 from climpred.utils import get_comparison_function
 from xarray.testing import assert_equal
@@ -159,7 +159,8 @@ def test_all(PM_da_ds1d, comparison, stack_dims):
     forecast, reference = comparison(ds, stack_dims=stack_dims)
     if stack_dims is True:
         # same dimensions for deterministic metrics
-        forecast.dims == reference.dims
+        assert forecast.dims == reference.dims
     else:
-        # same but member dim for probabilistic
-        set(forecast.dims) - set(['member']) == set(reference.dims)
+        if comparison.__name__ in PROBABILISTIC_PM_COMPARISONS:
+            # same but member dim for probabilistic
+            assert set(forecast.dims) - set(['member']) == set(reference.dims)

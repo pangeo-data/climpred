@@ -25,14 +25,16 @@ def pm_da_control1d():
 @pytest.fixture
 def ds_3d_NA():
     """ds North Atlantic"""
-    ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
+    ds = load_dataset(
+        'MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
 @pytest.fixture
 def control_3d_NA():
     """control North Atlantic"""
-    ds = load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
+    ds = load_dataset(
+        'MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
@@ -73,27 +75,17 @@ def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, metric, compa
 def test_pm_metric_skipna(ds_3d_NA, control_3d_NA, metric):
     ds_3d_NA = ds_3d_NA.copy()
     # manipulating data
-    # problem here: i dont get a nice example
+    # problem here: i dont get a nice example, somehow this doesnt mask
     ds_3d_NA.data[0, 0, 0, 80:100, 80:100] = np.nan
 
     base = compute_perfect_model(
-        ds_3d_NA,
-        control_3d_NA,
-        metric=metric,
-        skipna=False,
-        dim='init',
-        comparison='m2m',
+        ds_3d_NA, control_3d_NA, metric=metric, skipna=False, dim='init', comparison='m2m',
     )  # .mean('member')
     skipping = compute_perfect_model(
-        ds_3d_NA,
-        control_3d_NA,
-        metric=metric,
-        skipna=True,
-        dim='init',
-        comparison='m2m',
+        ds_3d_NA, control_3d_NA, metric=metric, skipna=True, dim='init', comparison='m2m'
     )  # .mean('member')
     print((base / skipping))  # .mean(['x', 'y']))
-    assert ((base / skipping) != 1.0).any()
+    assert ((base / skipping) != 1.).any()
     assert (xs.smape(base, skipping, ['x', 'y']) > 0.01).any()
 
 
@@ -195,9 +187,11 @@ def test_hindcast_metric_weights_x2r(
     base = compute_hindcast(
         initialized_da, reconstruction_da, dim=dim, metric=metric, comparison=comparison
     )
-    weights = xr.DataArray(np.arange(1, 1 + initialized_da[dim].size), dims=dim)
     weights = xr.DataArray(
-        np.arange(1, 1 + initialized_da[dim].size * initialized_da['member'].size),
+        np.arange(1, 1 + initialized_da[dim].size), dims=dim)
+    weights = xr.DataArray(
+        np.arange(1, 1 + initialized_da[dim].size
+                  * initialized_da['member'].size),
         dims='init',
     )
 

@@ -73,15 +73,28 @@ def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, metric, compa
 def test_pm_metric_skipna(ds_3d_NA, control_3d_NA, metric):
     ds_3d_NA = ds_3d_NA.copy()
     # manipulating data
-    ds_3d_NA.isel(init=0, member=0, lead=0, x=2, y=2).values = np.nan
+    # problem here: i dont get a nice example
+    ds_3d_NA.data[0, 0, 0, 80:100, 80:100] = np.nan
+
     base = compute_perfect_model(
-        ds_3d_NA, control_3d_NA, metric=metric, skipna=False, dim='init'
-    )
+        ds_3d_NA,
+        control_3d_NA,
+        metric=metric,
+        skipna=False,
+        dim='init',
+        comparison='m2m',
+    )  # .mean('member')
     skipping = compute_perfect_model(
-        ds_3d_NA, control_3d_NA, metric=metric, skipna=True, dim='init'
-    )
-    print((base / skipping).mean(['x', 'y']))
-    not assert_allclose(base, skipping)
+        ds_3d_NA,
+        control_3d_NA,
+        metric=metric,
+        skipna=True,
+        dim='init',
+        comparison='m2m',
+    )  # .mean('member')
+    print((base / skipping))  # .mean(['x', 'y']))
+    assert ((base / skipping) != 1.0).any()
+    assert (xs.smape(base, skipping, ['x', 'y']) > 0.01).any()
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))

@@ -1,10 +1,8 @@
 import datetime
 
 import numpy as np
-import xarray as xr
-
-# KVP added
 import pandas as pd
+import xarray as xr
 
 from . import comparisons, metrics
 from .checks import is_in_list

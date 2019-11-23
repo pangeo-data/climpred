@@ -1,4 +1,5 @@
 numpy
+pandas
 xarray
 scipy
 xskillscore>=0.0.5

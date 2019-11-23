@@ -17,6 +17,7 @@ from .constants import (
     METRIC_ALIASES,
     PM_COMPARISONS,
     PROBABILISTIC_METRICS,
+    LEAD_UNITS_LIST,
 )
 
 
@@ -186,9 +187,7 @@ def assign_attrs(
 
 def get_lead_pdoffset_args(units, lead):
 
-    lead_units_list = ['years', 'months', 'weeks', 'days']
-
-    if units in lead_units_list:
+    if units in LEAD_UNITS_LIST:
         offset_args_dict = {units: lead}
     elif units == 'seasons':
         offset_args_dict = {'months': lead + 3}

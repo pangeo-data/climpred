@@ -93,3 +93,6 @@ CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']
 
 # Valid units for lead dimension
 VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
+
+# List of lead units that pd.offset knows how to deal with directly
+LEAD_UNITS_LIST = ['years', 'months', 'weeks', 'days']

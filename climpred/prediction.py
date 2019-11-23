@@ -250,7 +250,7 @@ def compute_hindcast(
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
 
-        # take lead  i timeseries and convert to real time based on temporal
+        # take lead i timeseries and convert to real time based on temporal
         # resolution of lead
         offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
         a = forecast.sel(lead=i).drop_vars('lead')
@@ -274,10 +274,6 @@ def compute_hindcast(
         # Had to rechunk to put time all in 1 chunk,
         # also testing mmember all in one chunk?
         # Runs really slow even though I am testing with a subsetted region
-
-        # Rechunk to single chunk over time to avoid error
-        a = a.chunk({'time': -1})
-        b = b.chunk({'time': -1})
 
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':

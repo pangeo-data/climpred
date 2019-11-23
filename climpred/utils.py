@@ -182,6 +182,21 @@ def copy_coords_from_to(xro_from, xro_to):
 
 
 def get_lead_pdoffset_args(units, lead):
+    """Determines the date increment to use when adding the lead time to
+       init time based on the units attribute.
+
+    Args:
+        units (str): units associated with the lead dimension. Must be
+                     years, seasons, months, weeks, pentads, days
+        lead (int): increment of lead being computed
+
+    Returns:
+       offset_args_dict (dict of str: int): dictionary specifying the
+                                           str for the temporal parameter to
+                                           add to the offset and int indicating the
+                                           amount ot add.
+
+    """
 
     if units in LEAD_UNITS_LIST:
         offset_args_dict = {units: lead}

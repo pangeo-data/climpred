@@ -3,6 +3,7 @@ from functools import wraps
 import xarray as xr
 
 from .exceptions import DatasetError, DimensionError, VariableError
+from .constants import VALID_LEAD_UNITS
 
 
 # https://stackoverflow.com/questions/10610824/
@@ -146,18 +147,17 @@ def match_initialized_vars(init, ref):
 
 
 def has_valid_lead_units(xobj):
-    valid_lead_units = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
 
     if hasattr(xobj['lead'], 'units'):
 
-        if not xobj['lead'].attrs['units'] in valid_lead_units:
+        if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
             raise DimensionError(
-                'The lead dimension must must have a valid'
-                f'units attribute: e.g. {valid_lead_units}'
+                'The lead dimension must must have a valid '
+                f'units attribute: e.g. {VALID_LEAD_UNITS}'
             )
     else:
         raise DimensionError(
-            'The lead dimension must must have a'
-            f'units attribute. Valid options are: {valid_lead_units}'
+            'The lead dimension must must have a '
+            f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
         )
     return True

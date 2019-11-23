@@ -150,7 +150,7 @@ def has_valid_lead_units(xobj):
 
     if hasattr(xobj['lead'], 'units'):
 
-        if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
+        if not getattr(xobj['lead'], 'units') in VALID_LEAD_UNITS:
             raise DimensionError(
                 'The lead dimension must must have a valid '
                 f'units attribute: e.g. {VALID_LEAD_UNITS}'

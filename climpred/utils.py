@@ -8,7 +8,7 @@ import pandas as pd
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import METRIC_ALIASES
+from .constants import METRIC_ALIASES, LEAD_UNITS_LIST
 
 
 def get_metric_class(metric, list_):
@@ -185,9 +185,7 @@ def copy_coords_from_to(xro_from, xro_to):
 
 def get_lead_pdoffset_args(units, lead):
 
-    lead_units_list = ['years', 'months', 'weeks', 'days']
-
-    if units in lead_units_list:
+    if units in LEAD_UNITS_LIST:
         offset_args_dict = {units: lead}
     elif units == 'seasons':
         offset_args_dict = {'months': lead + 3}

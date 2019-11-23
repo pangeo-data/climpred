@@ -93,8 +93,8 @@ def reduce_time_series(forecast, reference, nlags):
     """
 
     imin = max(forecast.time[0], reference.time[0])
-    offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], nlags)
-    #    offset_args_dict={forecast['lead'].attrs['units']: nlags }
+    offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), nlags)
+
     ref_dates = pd.to_datetime(
         reference.time.dt.strftime('%Y%m%d 00:00')
     ) - pd.DateOffset(**offset_args_dict)

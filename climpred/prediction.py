@@ -251,8 +251,8 @@ def compute_hindcast(
             forecast, reference = reduce_time_series(forecast, reference, i)
 
         # take lead  i timeseries and convert to real time based on temporal
-        # resolution of lead (lead_res)
-        offset_args_dict = get_lead_pdoffset_args(forecast['lead'].attrs['units'], i)
+        # resolution of lead
+        offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
         a = forecast.sel(lead=i).drop_vars('lead')
         a['time'] = pd.to_datetime(
             a['time'].dt.strftime('%Y%m%d 00:00')
@@ -369,7 +369,7 @@ def compute_persistence(
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
 
-        offset_args_dict = get_lead_pdoffset_args(hind['lead'].attrs['units'], lag)
+        offset_args_dict = get_lead_pdoffset_args(getattr(hind['lead'], 'units'), lag)
         target_dates = pd.to_datetime(
             inits.dt.strftime('%Y%m%d 00:00')
         ) + pd.DateOffset(**offset_args_dict)

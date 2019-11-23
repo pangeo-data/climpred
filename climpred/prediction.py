@@ -259,7 +259,7 @@ def compute_hindcast(
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
 
-        # take lead  i timeseries and convert to real time based on temporal
+        # take lead i timeseries and convert to real time based on temporal
         # resolution of lead
         offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
         a = forecast.sel(lead=i).drop('lead')
@@ -269,10 +269,6 @@ def compute_hindcast(
 
         # take real time reference of real time forecast dates
         b = reference.sel(time=a.time.values)
-
-        # Rechunk to single chunk over time to avoid error
-        a = a.chunk({'time': -1})
-        b = b.chunk({'time': -1})
 
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':

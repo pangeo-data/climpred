@@ -90,3 +90,6 @@ PROBABILISTIC_HINDCAST_COMPARISONS = ['m2r']
 
 CLIMPRED_ENSEMBLE_DIMS = ['init', 'member', 'lead']
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']
+
+# Valid units for lead dimension
+VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']

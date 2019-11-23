@@ -102,7 +102,7 @@ def reduce_time_series(forecast, reference, nlags):
        reference (`xarray` object):
     """
 
-    imin = max(forecast.time[0], reference.time[0])
+    imin = max(forecast.time.min(), reference.time.min())
     offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), nlags)
 
     ref_dates = pd.to_datetime(

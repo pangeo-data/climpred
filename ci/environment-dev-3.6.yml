@@ -17,6 +17,7 @@ dependencies:
   - tqdm
   # Numerics
   - numpy
+  - pandas
   - scipy
   - xarray
   # Package Management

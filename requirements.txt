@@ -1,6 +1,7 @@
 eofs
 matplotlib
 numpy
+pandas
 scipy
 tqdm
 xarray

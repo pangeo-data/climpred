@@ -1,6 +1,7 @@
 from functools import wraps
 
 import xarray as xr
+from pandas.core.indexes.datetimes import DatetimeIndex
 
 from .exceptions import DatasetError, DimensionError, VariableError
 from .constants import VALID_LEAD_UNITS
@@ -159,5 +160,19 @@ def has_valid_lead_units(xobj):
         raise DimensionError(
             'The lead dimension must must have a '
             f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
+        )
+    return True
+
+
+def is_time_index(xobj, kind):
+    """
+    Checks that xobj coming through is a DatetimeIndex or CFTimeIndex.
+    This checks that `esmtools` is converting the DataArray to an index,
+    i.e. through .to_index()
+    """
+    if not (isinstance(xobj, xr.CFTimeIndex) or isinstance(xobj, DatetimeIndex)):
+        raise ValueError(
+            f'Your {kind} object must be either an xr.CFTimeIndex or '
+            f'pd.DatetimeIndex.'
         )
     return True

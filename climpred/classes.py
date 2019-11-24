@@ -11,6 +11,7 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
     has_valid_lead_units,
+    is_time_index,
 )
 from .exceptions import DimensionError
 from .prediction import (
@@ -103,6 +104,9 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
+        # Check that init is datetime or cftime
+        is_time_index(xobj['init'].to_index(), 'xobj[init]')
+        # Check that there are valid units for lead dimenstion
         has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.

@@ -188,6 +188,7 @@ def compute_hindcast(
 
     """
     is_in_list(dim, ['member', 'init'], str)
+
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # get class metric(Metric)

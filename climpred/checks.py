@@ -167,8 +167,6 @@ def has_valid_lead_units(xobj):
 def is_time_index(xobj, kind):
     """
     Checks that xobj coming through is a DatetimeIndex or CFTimeIndex.
-    This checks that `esmtools` is converting the DataArray to an index,
-    i.e. through .to_index()
     """
     if not (isinstance(xobj, xr.CFTimeIndex) or isinstance(xobj, DatetimeIndex)):
         raise ValueError(

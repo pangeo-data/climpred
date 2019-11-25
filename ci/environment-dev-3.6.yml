@@ -22,9 +22,9 @@ dependencies:
   - cartopy
   - pip
   - tqdm
+  - xesmf
   - pip:
-    - xskillscore>=0.0.5
-    - xesmf
+    - xskillscore>=0.0.8
     - pytest-cov
     - coveralls
     - sphinxcontrib-napoleon

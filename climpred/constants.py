@@ -15,6 +15,11 @@ DETERMINISTIC_HINDCAST_METRICS = [
     'nmse',
     'ppp',
     'uacc',
+    'spearman_r',
+    'spearman_r_p_value',
+    'mape',
+    'smape',
+    'mad',
 ]
 
 # metrics to be used in compute_perfect_model
@@ -24,9 +29,11 @@ DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 METRIC_ALIASES = {
     'pr': 'pearson_r',
     'acc': 'pearson_r',
-    'pval': 'pearson_r_p_value',
+    'pacc': 'pearson_r',
+    'p_pval': 'pearson_r_p_value',
     'pvalue': 'pearson_r_p_value',
-    'c_b': 'conditional_bias',
+    'sacc': 'spearman_r',
+    's_pval' 'spearman_r_p_value' 'c_b': 'conditional_bias',
     'unconditional_bias': 'bias',
     'u_b': 'bias',
     'nev': 'nmse',
@@ -40,6 +47,7 @@ METRIC_ALIASES = {
 # needed to decide which skill is better in bootstrapping confidence levels
 POSITIVELY_ORIENTED_METRICS = [
     'pearson_r',
+    'spearman_r',
     'msss_murphy',
     'ppp',
     'msss',
@@ -53,6 +61,10 @@ POSITIVELY_ORIENTED_METRICS = [
 DIMENSIONLESS_METRICS = [
     'pearson_r',
     'pearson_r_p_value',
+    'spearman_r',
+    'spearman_r_p_value',
+    'mape',
+    'smape',
     'crpss',
     'msss_murphy',
     'std_ratio',

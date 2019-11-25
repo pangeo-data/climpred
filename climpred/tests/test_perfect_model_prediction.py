@@ -1,6 +1,7 @@
+import dask
 import pytest
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import DETERMINISTIC_PM_METRICS
+from climpred.constants import CLIMPRED_DIMS, DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
@@ -45,6 +46,20 @@ def pm_ds_ds1d():
 @pytest.fixture
 def pm_ds_control1d():
     ds = load_dataset('MPI-control-1D').isel(area=1, period=-1)
+    return ds
+
+
+@pytest.fixture
+def ds_3d_NA():
+    """ds North Atlantic"""
+    ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
+    return ds
+
+
+@pytest.fixture
+def control_3d_NA():
+    """control North Atlantic"""
+    ds = load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
     return ds
 
 
@@ -188,3 +203,40 @@ def test_compute_perfect_model_comparison_keyerrors(
             pm_da_ds1d, pm_da_control1d, comparison=comparison, metric='mse'
         )
     assert 'Specify comparison from' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+def test_compute_pm_dask_spatial(ds_3d_NA, control_3d_NA, comparison, metric):
+    """Chunking along spatial dims."""
+    # chunk over dims in both
+    for dim in ds_3d_NA.dims:
+        if dim in control_3d_NA.dims:
+            step = 5
+            res_chunked = compute_perfect_model(
+                ds_3d_NA.chunk({dim: step}),
+                control_3d_NA.chunk({dim: step}),
+                comparison=comparison,
+                metric=metric,
+            )
+            # check for chunks
+            assert dask.is_dask_collection(res_chunked)
+            assert res_chunked.chunks is not None
+
+
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+def test_compute_pm_dask_climpred_dims(ds_3d_NA, control_3d_NA, comparison, metric):
+    """Chunking along climpred dims if available."""
+    step = 5
+    for dim in CLIMPRED_DIMS:
+        if dim in ds_3d_NA.dims:
+            ds_3d_NA = ds_3d_NA.chunk({dim: step})
+        if dim in control_3d_NA.dims:
+            control_3d_NA = control_3d_NA.chunk({dim: step})
+        res_chunked = compute_perfect_model(
+            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric
+        )
+        # check for chunks
+        assert dask.is_dask_collection(res_chunked)
+        assert res_chunked.chunks is not None

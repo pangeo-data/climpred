@@ -2,8 +2,8 @@ import inspect
 
 import numpy as np
 import xarray as xr
+from tqdm.auto import tqdm
 
-from tqdm import tqdm
 from .checks import has_dims
 from .constants import POSITIVELY_ORIENTED_METRICS, PROBABILISTIC_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence

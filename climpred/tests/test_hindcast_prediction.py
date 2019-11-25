@@ -1,7 +1,12 @@
+import dask
 import numpy as np
 import pytest
 from climpred.bootstrap import bootstrap_hindcast
-from climpred.constants import DETERMINISTIC_HINDCAST_METRICS, HINDCAST_COMPARISONS
+from climpred.constants import (
+    CLIMPRED_DIMS,
+    DETERMINISTIC_HINDCAST_METRICS,
+    HINDCAST_COMPARISONS,
+)
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,
@@ -79,6 +84,22 @@ def uninitialized_da():
     da = load_dataset('CESM-LE')['SST']
     # add member coordinate
     da['member'] = np.arange(1, 1 + da.member.size)
+    da = da - da.mean('time')
+    return da
+
+
+@pytest.fixture
+def hind_3d():
+    da = load_dataset('CESM-DP-SST-3D')['SST'].isel(
+        nlon=slice(0, 10), nlat=slice(0, 12)
+    )
+    da = da - da.mean('init')
+    return da
+
+
+@pytest.fixture
+def fosi_3d():
+    da = load_dataset('FOSI-SST-3D')['SST'].isel(nlon=slice(0, 10), nlat=slice(0, 12))
     da = da - da.mean('time')
     return da
 
@@ -213,3 +234,46 @@ def test_compute_hindcast_comparison_keyerrors(
             initialized_ds, reconstruction_ds, comparison=comparison, metric='mse'
         )
     assert 'Specify comparison from' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+def test_compute_hindcast_dask_spatial(hind_3d, fosi_3d, metric):
+    """Chunking along spatial dims."""
+    # chunk over dims in both
+    for dim in hind_3d.dims:
+        if dim in fosi_3d.dims:
+            step = 5
+            res_chunked = compute_hindcast(
+                hind_3d.chunk({dim: step}),
+                fosi_3d.chunk({dim: step}),
+                comparison='e2r',
+                metric=metric,
+            )
+            # check for chunks
+            assert dask.is_dask_collection(res_chunked)
+            assert res_chunked.chunks is not None
+
+
+@pytest.mark.skip(reason='not yet implemented')
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+def test_compute_hindcast_dask_climpred_dims(hind_3d, fosi_3d, metric):
+    """Chunking along climpred dims if available."""
+    step = 5
+    for dim in CLIMPRED_DIMS:
+        if dim in hind_3d.dims:
+            hind_3d = hind_3d.chunk({dim: step})
+        if dim in fosi_3d.dims:
+            fosi_3d = fosi_3d.chunk({dim: step})
+        res_chunked = compute_hindcast(
+            hind_3d, fosi_3d, comparison='e2r', metric=metric
+        )
+        # check for chunks
+        assert dask.is_dask_collection(res_chunked)
+        assert res_chunked.chunks is not None
+
+
+def test_compute_hindcast_CESM_3D_keep_coords(hind_3d, fosi_3d):
+    """Test that no coords are lost in compute_hindcast with the CESM sample data."""
+    s = compute_hindcast(hind_3d, fosi_3d)
+    for c in hind_3d.drop('init').coords:
+        assert c in s.coords

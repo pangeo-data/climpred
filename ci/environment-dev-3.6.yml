@@ -13,7 +13,7 @@ dependencies:
   - esmpy
   - matplotlib
   - bottleneck
-  - netcdf4
+  - netcdf4=1.5.1.1
   - pytest
   - eofs
   - lxml

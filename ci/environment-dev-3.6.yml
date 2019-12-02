@@ -11,7 +11,7 @@ dependencies:
   # IDE
   - jupyterlab
   # Input/Output
-  - netcdf4
+  - netcdf4=1.5.1.1
   # Miscellaneous
   - lxml
   - tqdm

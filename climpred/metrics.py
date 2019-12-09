@@ -71,7 +71,7 @@ def _display_metric_metadata(self):
     summary += f'Minimum skill {self.min}\n'
     summary += f'Maximum skill {self.max}\n'
     summary += f'Perfect skill {self.perfect}\n'
-    summary += f'Proper score: {self.proper}\n'
+    summary += f'Strictly proper score: {self.proper}\n'
     # doc
     summary += f'Function: {self.function.__doc__}\n'
     return summary
@@ -82,11 +82,11 @@ class Metric:
 
     def __init__(
         self,
-        name=None,
+        name,
+        function,
+        is_positive,
+        is_probabilistic,
         longname=None,
-        function=None,
-        is_positive=False,
-        is_probabilistic=False,
         aliases=None,
         unit_power=1,
         min=None,
@@ -97,20 +97,19 @@ class Metric:
         """Metric initialization.
 
         Args:
-            name (str): name of metric. Defaults to None.
-            longname (str): Longname of metric. Defaults to None.
-            function (function): metric function. Defaults to None.
+            name (str): name of metric.
+            function (function): metric function.
             is_positive (bool): Is metric positively oriented? Higher metric
-             values means higher skill. Defaults to False.
+             values means higher skill.
             is_probabilistic (bool): Is metric probabilistic? `False` means
-             deterministic. Defaults to False.
-            aliases (list): Allowed aliases for this metric. Defaults to None.
+             deterministic.
             unit_power (float, int): Power of the input unit for unit of skill.
-             Defaults to 1.
-            min (float): Minimum skill for metric. Defaults to None.
-            max (float): Maxmimum skill for metric. Defaults to None.
-            perfect (float): Perfect skill for metric. Defaults to None.
-            proper (bool): Is proper skill score? Defaults to None.
+            longname (str, optional): Longname of metric. Defaults to None.
+            aliases (list, optional): Allowed aliases for this metric. Defaults to None.
+            min (float, optional): Minimum skill for metric. Defaults to None.
+            max (float, optional): Maxmimum skill for metric. Defaults to None.
+            perfect (float, optional): Perfect skill for metric. Defaults to None.
+            proper (bool, optional): Is strictly proper skill score? Defaults to None.
 
         Returns:
             Metric: metric class Metric.
@@ -168,6 +167,7 @@ _pearson_r = Metric(
     longname="Pearson's Anomaly correlation coefficient",
     function=_pearson_r,
     is_positive=True,
+    is_probabilistic=False,
     aliases=['pr', 'acc', 'pacc'],
     unit_power=0.0,
     min=-1.0,
@@ -213,6 +213,7 @@ _pearson_r_p_value = Metric(
     longname="Pearson's Anomaly correlation coefficient p-value",
     function=_pearson_r_p_value,
     is_positive=False,
+    is_probabilistic=False,
     aliases=['p_pval', 'pvalue', 'pacc'],
     unit_power=0.0,
     min=0.0,
@@ -256,6 +257,7 @@ _spearman_r = Metric(
     longname="Spearman's Anomaly correlation coefficient",
     function=_spearman_r,
     is_positive=True,
+    is_probabilistic=False,
     aliases=['sacc'],
     unit_power=0.0,
     min=-1.0,
@@ -299,6 +301,7 @@ _spearman_r_p_value = Metric(
     longname="Spearman's Anomaly correlation coefficient p-value",
     function=_spearman_r_p_value,
     is_positive=False,
+    is_probabilistic=False,
     aliases=['s_pval'],
     unit_power=0.0,
     min=0.0,
@@ -338,6 +341,8 @@ _mse = Metric(
     name='mse',
     longname='Mean Squared Error',
     function=_mse,
+    is_positive=False,
+    is_probabilistic=False,
     min=0.0,
     max=np.inf,
     perfect=0.0,
@@ -376,6 +381,9 @@ _rmse = Metric(
     name='rmse',
     longname='Root Mean Squared Error',
     function=_rmse,
+    is_positive=False,
+    is_probabilistic=False,
+    unit_power=1,
     min=0.0,
     max=np.inf,
     perfect=0.0,
@@ -416,6 +424,9 @@ _mae = Metric(
     min=0.0,
     max=np.inf,
     perfect=0.0,
+    is_positive=False,
+    is_probabilistic=False,
+    unit_power=1,
 )
 
 
@@ -452,6 +463,9 @@ _mad = Metric(
     min=0.0,
     max=np.inf,
     perfect=0.0,
+    is_positive=False,
+    is_probabilistic=False,
+    unit_power=1,
 )
 
 
@@ -490,6 +504,8 @@ _mape = Metric(
     max=np.inf,
     perfect=0.0,
     unit_power=0,
+    is_positive=False,
+    is_probabilistic=False,
 )
 
 
@@ -528,6 +544,8 @@ _smape = Metric(
     max=1.0,
     perfect=0.0,
     unit_power=0,
+    is_positive=False,
+    is_probabilistic=False,
 )
 
 
@@ -579,6 +597,7 @@ _brier_score = Metric(
     max=1.0,
     perfect=0.0,
     unit_power=0,
+    is_positive=False,
 )
 
 
@@ -633,6 +652,7 @@ _threshold_brier_score = Metric(
     max=1.0,
     perfect=0.0,
     unit_power=0,
+    is_positive=False,
 )
 
 
@@ -673,6 +693,7 @@ _crps = Metric(
     min=0.0,
     max=np.inf,
     perfect=0.0,
+    is_positive=False,
 )
 
 
@@ -897,6 +918,7 @@ _bias = Metric(
     max=np.inf,
     perfect=0.0,
     is_positive=None,
+    is_probabilistic=False,
 )
 
 
@@ -941,6 +963,7 @@ _msss_murphy = Metric(
     is_positive=True,
     perfect=1.0,
     unit_power=0,
+    is_probabilistic=False,
 )
 
 
@@ -975,6 +998,7 @@ _conditional_bias = Metric(
     perfect=0.0,
     unit_power=0,
     is_positive=None,
+    is_probabilistic=False,
 )
 
 
@@ -1005,6 +1029,7 @@ _std_ratio = Metric(
     perfect=1.0,
     unit_power=0,
     is_positive=None,
+    is_probabilistic=False,
 )
 
 
@@ -1037,6 +1062,7 @@ _bias_slope = Metric(
     perfect=1.0,
     unit_power=0,
     is_positive=None,
+    is_probabilistic=False,
 )
 
 
@@ -1095,6 +1121,7 @@ _ppp = Metric(
     max=1.0,
     perfect=1.0,
     unit_power=0,
+    is_probabilistic=False,
 )
 
 
@@ -1149,6 +1176,8 @@ _nrmse = Metric(
     max=1.0,
     perfect=0.0,
     unit_power=0,
+    is_positive=False,
+    is_probabilistic=False,
 )
 
 
@@ -1197,6 +1226,8 @@ _nmse = Metric(
     max=1.0,
     perfect=0.0,
     unit_power=0,
+    is_probabilistic=False,
+    is_positive=False,
 )
 
 
@@ -1245,6 +1276,8 @@ _nmae = Metric(
     max=1.0,
     perfect=0.0,
     unit_power=0,
+    is_positive=False,
+    is_probabilistic=False,
 )
 
 
@@ -1287,6 +1320,7 @@ _uacc = Metric(
     max=1.0,
     perfect=1.0,
     unit_power=0,
+    is_probabilistic=False,
 )
 
 

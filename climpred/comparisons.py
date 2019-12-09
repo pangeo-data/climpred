@@ -4,8 +4,6 @@ import xarray as xr
 from .checks import has_dims, has_min_len
 from .exceptions import DimensionError
 
-# TODO: reworker with Comparison class
-
 
 def _drop_members(ds, rmd_member=None):
     """
@@ -36,24 +34,17 @@ def _drop_members(ds, rmd_member=None):
 class Comparison:
     'Master class for all comparisons.'
 
-    def __init__(
-        self,
-        name=None,
-        longname=None,
-        function=None,
-        is_hindcast=True,
-        is_probabilistic=False,
-    ):
+    def __init__(self, name, function, is_hindcast, is_probabilistic, longname=None):
         """Comparison initialization.
 
         Args:
-            name (str): name of comparison. Defaults to None.
-            longname (str): Longname of comparison. Defaults to None.
-            function (function): comparison function. Defaults to None.
+            name (str): name of comparison.
+            function (function): comparison function.
             is_hindcast (bool): Can comparison be used in `compute_hindcast`?
-             Defaults to True.
+             `False` means `compute_perfect_model`
             is_probabilistic (bool): Is comparison probabilistic? `False` means
-             deterministic. Defaults to False.
+             deterministic.
+            longname (str, optional): Longname of comparison. Defaults to None.
 
         Returns:
             comparison: comparison class Comparison.

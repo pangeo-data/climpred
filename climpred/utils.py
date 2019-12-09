@@ -134,7 +134,9 @@ def assign_attrs(
     if metric.unit_power == 0:
         skill.attrs['units'] = 'None'
     if metric.unit_power >= 2 and 'units' in skill.attrs:
-        skill.attrs['units'] = f"({skill.attrs['units']})^{metric.unit_power}"
+        p = metric.unit_power
+        p = int(p) if int(p) == p else p
+        skill.attrs['units'] = f"({skill.attrs['units']})^{p}"
 
     # check for none attrs and remove
     del_list = []

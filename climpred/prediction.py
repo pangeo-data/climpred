@@ -319,6 +319,9 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
+    # get metric function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    # get class metric(Metric)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     if metric.is_probabilistic:
         raise ValueError(

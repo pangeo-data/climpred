@@ -66,7 +66,7 @@ my_mse = Metric(
     aliases=['mSe', '<<<SE'],
 )
 
-# @pytest.mark.skip(reason='not implemented yet')
+
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, comparison):
     actual = compute_perfect_model(

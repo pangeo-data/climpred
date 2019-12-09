@@ -12,6 +12,7 @@ Depreciated
 
 Features
 --------
+- re-written ``metrics`` and ``comparisons`` based on classes to allow user metrics and user comparisons. (:pr:`2xx`) `Aaron Spring`_.
 - `metric_kwargs` are passed to `xs.metric`. (:pr:`264`) `Aaron Spring`_.
 - New deterministic metrics: `spearman_r`, `spearman_r_p_value`, `mad`, `mape`, `smape`. (:pr:`264`) `Aaron Spring`_.
 - Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period`. Keeps coords. (:pr:`258`) `Aaron Spring`_.

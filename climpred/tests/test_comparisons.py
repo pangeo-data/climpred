@@ -3,8 +3,9 @@ import pytest
 import xarray as xr
 from xarray.testing import assert_equal
 
-from climpred.comparisons import _drop_members, _e2c, _m2c, _m2e, _m2m
+from climpred.comparisons import Comparison, _drop_members, _e2c, _m2c, _m2e, _m2m
 from climpred.constants import PM_COMPARISONS, PROBABILISTIC_PM_COMPARISONS
+from climpred.prediction import compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import get_comparison_class
 
@@ -149,3 +150,38 @@ def test_all(PM_da_ds1d, comparison, stack_dims):
         if comparison.name in PROBABILISTIC_PM_COMPARISONS:
             # same but member dim for probabilistic
             assert set(forecast.dims) - set(['member']) == set(reference.dims)
+
+
+def my_m2me_comparison(ds, stack_dims=True):
+    """Identical to m2e but median."""
+    reference_list = []
+    forecast_list = []
+    supervector_dim = 'member'
+    for m in ds.member.values:
+        forecast = _drop_members(ds, rmd_member=[m]).median('member')
+        reference = ds.sel(member=m).squeeze()
+        forecast_list.append(forecast)
+        reference_list.append(reference)
+    reference = xr.concat(reference_list, supervector_dim)
+    forecast = xr.concat(forecast_list, supervector_dim)
+    forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
+    reference[supervector_dim] = np.arange(reference[supervector_dim].size)
+    return forecast, reference
+
+
+my_m2me_comparison = Comparison(
+    name='m2me', function=my_m2me_comparison, is_probabilistic=False, is_hindcast=False
+)
+
+
+@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+def test_new_comparison_passed_to_compute(PM_da_ds1d, PM_da_control1d, metric):
+    actual = compute_perfect_model(
+        PM_da_ds1d, PM_da_control1d, comparison=my_m2me_comparison, metric=metric
+    )
+
+    expected = compute_perfect_model(
+        PM_da_ds1d, PM_da_control1d, comparison='m2e', metric='mse'
+    )
+
+    assert (actual - expected).mean() != 0

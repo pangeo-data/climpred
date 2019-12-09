@@ -28,7 +28,7 @@ Core Metrics
 Pearson Anomaly Correlation Coefficient (ACC)
 ---------------------------------------------
 
-``keyword: 'pearson_r','pr','pacc','acc'``
+``keyword: 'pearson_r', 'pr', 'pacc', 'acc'``
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [Jolliffe2011]_. ``climpred`` uses the Pearson correlation coefficient.
 
@@ -230,6 +230,37 @@ Threshold Brier Score
 ``keyword: 'threshold_brier_score', 'tbs'``
 
 .. autofunction:: _threshold_brier_score
+
+
+User-defined metrics
+####################
+
+You can also construct your own metrics via the :py:class:`climpred.metrics.Metric` class.
+
+.. autosummary:: Metric
+
+First, write your own metric function, similar to the existing ones with required arguments ``forecast``, ``reference``, ``dim=None``, and ``metric_kwargs``::
+
+  from climpred.metrics import Metric
+
+  def _my_msle(forecast, reference, dim=None, **metric_kwargs):
+      """Mean squared logarithmic error (MSLE).
+      https://peltarion.com/knowledge-center/documentation/modeling-view/build-an-ai-model/loss-functions/mean-squared-logarithmic-error."""
+      return ( (np.log(forecast + 1) + np.log(reference + 1) ) ** 2).mean(dim)
+
+Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
+
+  _my_msle = Metric(
+      name='my_msle',
+      function=_my_msle,
+      is_probabilistic=False,
+      is_positive=False,
+      unit_power=None,
+      )
+
+Finally, compute skill based on your own metric::
+
+  skill = compute_perfect_model(ds, control, metric='rmse', comparison=_my_msle)
 
 
 References

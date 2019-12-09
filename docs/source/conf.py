@@ -24,7 +24,7 @@ project = 'climpred'
 copyright = f'2019-{current_year}, climpred development team'
 author = 'climpred development team'
 
-# NOTE: Will change this when print version is implemented.
+# TODO: : Will change this when print version is implemented.
 version = '0.3'
 
 
@@ -93,3 +93,8 @@ intersphinx_mapping = {
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
 # nbsphinx_allow_errors = True
+
+
+# documentation of classes
+# https://stackoverflow.com/questions/5599254/how-to-use-sphinxs-autodoc-to-document-a-classs-init-self-method
+# autoclass_content = 'both'

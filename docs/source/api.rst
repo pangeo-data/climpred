@@ -133,6 +133,24 @@ Prediction
     compute_persistence
     compute_uninitialized
 
+Metrics
+~~~~~~~
+.. currentmodule:: climpred.metrics
+
+.. autosummary::
+    :toctree: api/
+
+    Metric
+
+Comparisons
+~~~~~~~~~~~
+.. currentmodule:: climpred.comparisons
+
+.. autosummary::
+    :toctree: api/
+
+    Comparison
+
 Statistics
 ~~~~~~~~~~
 .. currentmodule:: climpred.stats

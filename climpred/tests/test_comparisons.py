@@ -1,11 +1,12 @@
 import numpy as np
 import pytest
 import xarray as xr
+from xarray.testing import assert_equal
+
 from climpred.comparisons import _drop_members, _e2c, _m2c, _m2e, _m2m
 from climpred.constants import PM_COMPARISONS, PROBABILISTIC_PM_COMPARISONS
 from climpred.tutorial import load_dataset
-from climpred.utils import get_comparison_function
-from xarray.testing import assert_equal
+from climpred.utils import get_comparison_class
 
 
 @pytest.fixture
@@ -22,22 +23,6 @@ def PM_da_control1d():
     return da
 
 
-def m2e(ds, supervector_dim='svd'):
-    reference_list = []
-    forecast_list = []
-    for m in ds.member.values:
-        forecast = _drop_members(ds, rmd_member=[m]).mean('member')
-        reference = ds.sel(member=m).squeeze()
-        forecast, reference = xr.broadcast(forecast, reference)
-        forecast_list.append(forecast)
-        reference_list.append(reference)
-    # .rename({'init': supervector_dim})
-    reference = xr.concat(reference_list, 'init')
-    # .rename({'init': supervector_dim})
-    forecast = xr.concat(forecast_list, 'init')
-    return forecast, reference
-
-
 def test_e2c(PM_da_ds1d):
     """Test ensemble_mean-to-control (which can be any other one member) (e2c)
     comparison basic functionality.
@@ -45,7 +30,7 @@ def test_e2c(PM_da_ds1d):
     Clean comparison: Remove one control member from ensemble to use as reference.
     Take the remaining member mean as forecasts."""
     ds = PM_da_ds1d
-    aforecast, areference = _e2c(ds)
+    aforecast, areference = _e2c.function(ds)
 
     control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
@@ -73,7 +58,7 @@ def test_m2c(PM_da_ds1d):
     Clean comparison: Remove one control member from ensemble to use as reference.
     Take the remaining members as forecasts."""
     ds = PM_da_ds1d
-    aforecast, areference = _m2c(ds)
+    aforecast, areference = _m2c.function(ds)
 
     control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
@@ -98,7 +83,7 @@ def test_m2e(PM_da_ds1d):
     Clean comparison: Remove one member from ensemble to use as reference.
     Take the remaining members as forecasts."""
     ds = PM_da_ds1d
-    aforecast, areference = _m2e(ds)
+    aforecast, areference = _m2e.function(ds)
 
     reference_list = []
     forecast_list = []
@@ -130,7 +115,7 @@ def test_m2m(PM_da_ds1d):
     Clean comparison: Remove one member from ensemble to use as reference. Take the
     remaining members as forecasts."""
     ds = PM_da_ds1d
-    aforecast, areference = _m2m(ds)
+    aforecast, areference = _m2m.function(ds)
 
     reference_list = []
     forecast_list = []
@@ -155,12 +140,12 @@ def test_m2m(PM_da_ds1d):
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_all(PM_da_ds1d, comparison, stack_dims):
     ds = PM_da_ds1d
-    comparison = get_comparison_function(comparison, PM_COMPARISONS)
-    forecast, reference = comparison(ds, stack_dims=stack_dims)
+    comparison = get_comparison_class(comparison, PM_COMPARISONS)
+    forecast, reference = comparison.function(ds, stack_dims=stack_dims)
     if stack_dims is True:
         # same dimensions for deterministic metrics
         assert forecast.dims == reference.dims
     else:
-        if comparison.__name__ in PROBABILISTIC_PM_COMPARISONS:
+        if comparison.name in PROBABILISTIC_PM_COMPARISONS:
             # same but member dim for probabilistic
             assert set(forecast.dims) - set(['member']) == set(reference.dims)

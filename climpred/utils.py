@@ -1,5 +1,4 @@
 import datetime
-import types
 
 import numpy as np
 import xarray as xr
@@ -9,7 +8,7 @@ from .checks import is_in_list
 from .constants import METRIC_ALIASES
 
 
-def get_metric_function(metric, list_):
+def get_metric_class(metric, list_):
     """
     This allows the user to submit a string representing the desired metric
     to the corresponding metric class.
@@ -24,27 +23,26 @@ def get_metric_function(metric, list_):
         list_ (list): check whether metric in list
 
     Returns:
-        metric (class): class object of the metric.
+        metric (Metric): class object of the metric.
 
     """
     if isinstance(metric, metrics.Metric):
         return metric
     elif isinstance(metric, str):
         # check if metric allowed
-        # is_in_list(metric, list_, 'metric')
-        # TODO: get in
+        is_in_list(metric, list_, 'metric')
         metric = METRIC_ALIASES.get(metric, metric)
-        return getattr(metrics, metric)
+        return getattr(metrics, '_' + metric)
     else:
         raise ValueError(
             f'Please provide metric as str or Metric class, found {type(metric)}'
         )
 
 
-def get_comparison_function(comparison, list_):
+def get_comparison_class(comparison, list_):
     """
-    Converts a string comparison entry from the user into an actual
-     function for the package to interpret.
+    Converts a string comparison entry from the user into a Comparison class
+     for the package to interpret.
 
     PERFECT MODEL:
     m2m: Compare all members to all other members.
@@ -60,10 +58,10 @@ def get_comparison_function(comparison, list_):
         comparison (str): name of comparison.
 
     Returns:
-        comparison (function): comparison function.
+        comparison (Comparison): comparison class.
 
     """
-    if isinstance(comparison, types.FunctionType):
+    if isinstance(comparison, comparisons.Comparison):
         return comparison
     else:
         is_in_list(comparison, list_, 'comparison')
@@ -111,7 +109,7 @@ def assign_attrs(
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
         metric (class) : metric used in comparing the forecast and reference.
-        comparison (function): how to compare the forecast and reference.
+        comparison (class): how to compare the forecast and reference.
 
     Returns:
        skill (`xarray` object): prediction skill with additional attrs.
@@ -130,10 +128,9 @@ def assign_attrs(
         skill.attrs['number_of_members'] = ds.member.size
 
     skill.attrs['metric'] = metric.name
-    skill.attrs['comparison'] = comparison.__name__.lstrip('_')
+    skill.attrs['comparison'] = comparison.name
 
-    # adapt units
-    # TODO: adapt for any multi-dim units with new metric.attribute
+    # change unit power
     if metric.unit_power == 0:
         skill.attrs['units'] = 'None'
     if metric.unit_power >= 2 and 'units' in skill.attrs:

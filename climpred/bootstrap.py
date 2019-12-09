@@ -8,7 +8,7 @@ from .checks import has_dims
 from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
-from .utils import assign_attrs, get_comparison_function, get_metric_function
+from .utils import assign_attrs, get_comparison_class, get_metric_class
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
@@ -300,9 +300,9 @@ def bootstrap_compute(
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # get class Metric(metric)
-    metric = get_metric_function(metric, ALL_METRICS)
+    metric = get_metric_class(metric, ALL_METRICS)
     # get comparison function
-    comparison = get_comparison_function(comparison, ALL_COMPARISONS)
+    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
     # which dim should be resampled: member or init
     if dim == 'member' and 'member' in hind.dims:
@@ -434,8 +434,8 @@ def bootstrap_compute(
     if set(results.coords) != set(ci.coords):
         res_drop = [c for c in results.coords if c not in ci.coords]
         ci_drop = [c for c in ci.coords if c not in results.coords]
-        results = results.drop(res_drop)
-        ci = ci.drop(ci_drop)
+        results = results.drop_vars(res_drop)
+        ci = ci.drop_vars(ci_drop)
     results = xr.concat([results, ci], 'results')
     results['results'] = ['skill', 'p', 'low_ci', 'high_ci']
     # Attach climpred compute information to skill

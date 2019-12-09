@@ -4,6 +4,8 @@ import xarray as xr
 from .checks import has_dims, has_min_len
 from .exceptions import DimensionError
 
+# TODO: reworker with Comparison class
+
 
 def _drop_members(ds, rmd_member=None):
     """
@@ -29,6 +31,39 @@ def _drop_members(ds, rmd_member=None):
     else:
         raise DimensionError('select available members only')
     return ds.sel(member=member_list)
+
+
+class Comparison:
+    'Master class for all comparisons.'
+
+    def __init__(
+        self,
+        name=None,
+        longname=None,
+        function=None,
+        is_hindcast=True,
+        is_probabilistic=False,
+    ):
+        """Comparison initialization.
+
+        Args:
+            name (str): name of comparison. Defaults to None.
+            longname (str): Longname of comparison. Defaults to None.
+            function (function): comparison function. Defaults to None.
+            is_hindcast (bool): Can comparison be used in `compute_hindcast`?
+             Defaults to True.
+            is_probabilistic (bool): Is comparison probabilistic? `False` means
+             deterministic. Defaults to False.
+
+        Returns:
+            comparison: comparison class Comparison.
+
+        """
+        self.name = name
+        self.longname = longname
+        self.function = function
+        self.is_probabilistic = is_probabilistic
+        self.is_hindcast = is_hindcast
 
 
 # --------------------------------------------#
@@ -76,6 +111,15 @@ def _m2m(ds, stack_dims=True):
     return forecast, reference
 
 
+_m2m = Comparison(
+    name='m2m',
+    longname='Comparison of multiple forecasts vs. multiple verifications',
+    function=_m2m,
+    is_hindcast=False,
+    is_probabilistic=True,
+)
+
+
 def _m2e(ds, stack_dims=True):
     # stack_dims
     """
@@ -107,6 +151,15 @@ def _m2e(ds, stack_dims=True):
     return forecast, reference
 
 
+_m2e = Comparison(
+    name='m2e',
+    longname='Comparison of the ensemble mean forecast vs. multiple verifications',
+    function=_m2e,
+    is_hindcast=False,
+    is_probabilistic=False,
+)
+
+
 def _m2c(ds, control_member=None, stack_dims=True):
     """
     Create two supervectors to compare all members to control.
@@ -131,6 +184,15 @@ def _m2c(ds, control_member=None, stack_dims=True):
     if stack_dims:
         forecast, reference = xr.broadcast(forecast, reference)
     return forecast, reference
+
+
+_m2c = Comparison(
+    name='m2c',
+    longname='Comparison of control forecast vs. multiple verifications',
+    function=_m2c,
+    is_hindcast=False,
+    is_probabilistic=True,
+)
 
 
 def _e2c(ds, control_member=None, stack_dims=True):
@@ -160,6 +222,15 @@ def _e2c(ds, control_member=None, stack_dims=True):
     return forecast, reference
 
 
+_e2c = Comparison(
+    name='e2c',
+    longname='Comparison of the ensemble mean forecast vs. control as verification',
+    function=_e2c,
+    is_hindcast=False,
+    is_probabilistic=False,
+)
+
+
 # --------------------------------------------#
 # REFERENCE COMPARISONS
 # based on supervector approach
@@ -184,6 +255,15 @@ def _e2r(ds, reference, stack_dims=True):
     else:
         forecast = ds
     return forecast, reference
+
+
+_e2r = Comparison(
+    name='e2r',
+    longname='Comparison of the ensemble mean vs. reference verification',
+    function=_e2r,
+    is_hindcast=True,
+    is_probabilistic=False,
+)
 
 
 def _m2r(ds, reference, stack_dims=True):
@@ -211,3 +291,15 @@ def _m2r(ds, reference, stack_dims=True):
         reference = reference.isel(member=[0] * nMember)
         reference['member'] = forecast['member']
     return forecast, reference
+
+
+_m2r = Comparison(
+    name='m2r',
+    longname='Comparison of multiple forecasts vs. reference verification',
+    function=_m2r,
+    is_hindcast=True,
+    is_probabilistic=True,
+)
+
+
+__all_comparisons__ = [_m2m, _m2e, _m2c, _e2c, _e2r, _m2r]

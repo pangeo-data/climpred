@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import _m2c
 from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
@@ -8,8 +9,8 @@ from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
     copy_coords_from_to,
-    get_comparison_function,
-    get_metric_function,
+    get_comparison_class,
+    get_metric_class,
     intersect,
 )
 
@@ -28,31 +29,31 @@ def control_da_3d():
     return da
 
 
-def test_get_metric_function():
+def test_get_metric_class():
     """Test if passing in a string gets the right metric function."""
-    actual = get_metric_function('pearson_r', DETERMINISTIC_PM_METRICS)
-    expected = _pearson_r
+    actual = get_metric_class('pearson_r', DETERMINISTIC_PM_METRICS).name
+    expected = _pearson_r.name
     assert actual == expected
 
 
-def test_get_metric_function_fail():
+def test_get_metric_class_fail():
     """Test if passing something not in the dict raises the right error."""
     with pytest.raises(KeyError) as excinfo:
-        get_metric_function('not_metric', DETERMINISTIC_PM_METRICS)
+        get_metric_class('not_metric', DETERMINISTIC_PM_METRICS)
     assert 'Specify metric from' in str(excinfo.value)
 
 
-def test_get_comparison_function():
+def test_get_comparison_class():
     """Test if passing in a string gets the right comparison function."""
-    actual = get_comparison_function('m2c', PM_COMPARISONS)
-    expected = _m2c
+    actual = get_comparison_class('m2c', PM_COMPARISONS).name
+    expected = _m2c.name
     assert actual == expected
 
 
-def test_get_comparison_function_fail():
+def test_get_comparison_class_fail():
     """Test if passing something not in the dict raises the right error."""
     with pytest.raises(KeyError) as excinfo:
-        get_comparison_function('not_comparison', PM_COMPARISONS)
+        get_comparison_class('not_comparison', PM_COMPARISONS)
     assert 'Specify comparison from' in str(excinfo.value)
 
 

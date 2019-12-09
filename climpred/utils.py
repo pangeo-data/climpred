@@ -6,21 +6,13 @@ import xarray as xr
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import (
-    DETERMINISTIC_HINDCAST_METRICS,
-    DETERMINISTIC_PM_METRICS,
-    DIMENSIONLESS_METRICS,
-    HINDCAST_COMPARISONS,
-    METRIC_ALIASES,
-    PM_COMPARISONS,
-    PROBABILISTIC_METRICS,
-)
+from .constants import METRIC_ALIASES
 
 
 def get_metric_function(metric, list_):
     """
-    This allows the user to submit a string representing the desired function
-    to anything that takes a metric.
+    This allows the user to submit a string representing the desired metric
+    to the corresponding metric class.
 
     Currently compatable with functions:
     * compute_persistence()
@@ -29,23 +21,24 @@ def get_metric_function(metric, list_):
 
     Args:
         metric (str): name of metric.
+        list_ (list): check whether metric in list
 
     Returns:
-        metric (function): function object of the metric.
+        metric (class): class object of the metric.
 
-    Raises:
-        KeyError: if metric not implemented.
     """
-    # catches issues with wrappers, etc. that actually submit the
-    # proper underscore function
-    if isinstance(metric, types.FunctionType):
+    if isinstance(metric, metrics.Metric):
         return metric
-    else:
-        # equivalent of: `if metric in METRIC_ALIASES;
-        # METRIC_ALIASES[metric]; else metric`
+    elif isinstance(metric, str):
+        # check if metric allowed
+        # is_in_list(metric, list_, 'metric')
+        # TODO: get in
         metric = METRIC_ALIASES.get(metric, metric)
-        is_in_list(metric, list_, 'metric')
-        return getattr(metrics, '_' + metric)
+        return getattr(metrics, metric)
+    else:
+        raise ValueError(
+            f'Please provide metric as str or Metric class, found {type(metric)}'
+        )
 
 
 def get_comparison_function(comparison, list_):
@@ -117,8 +110,8 @@ def assign_attrs(
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
-        metric (str) : metric used in comparing the forecast and reference.
-        comparison (str): how to compare the forecast and reference.
+        metric (class) : metric used in comparing the forecast and reference.
+        comparison (function): how to compare the forecast and reference.
 
     Returns:
        skill (`xarray` object): prediction skill with additional attrs.
@@ -136,24 +129,15 @@ def assign_attrs(
     if 'member' in ds.coords:
         skill.attrs['number_of_members'] = ds.member.size
 
-    ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
-    ALL_METRICS = (
-        DETERMINISTIC_HINDCAST_METRICS
-        + DETERMINISTIC_PM_METRICS
-        + PROBABILISTIC_METRICS
-    )
-    comparison = get_comparison_function(comparison, ALL_COMPARISONS).__name__.lstrip(
-        '_'
-    )
-    metric = get_metric_function(metric, ALL_METRICS).__name__.lstrip('_')
-    skill.attrs['metric'] = metric
-    skill.attrs['comparison'] = comparison
+    skill.attrs['metric'] = metric.name
+    skill.attrs['comparison'] = comparison.__name__.lstrip('_')
 
     # adapt units
-    if metric in DIMENSIONLESS_METRICS:
+    # TODO: adapt for any multi-dim units with new metric.attribute
+    if metric.unit_power == 0:
         skill.attrs['units'] = 'None'
-    if metric == 'mse' and 'units' in skill.attrs:
-        skill.attrs['units'] = f"({skill.attrs['units']})^2"
+    if metric.unit_power >= 2 and 'units' in skill.attrs:
+        skill.attrs['units'] = f"({skill.attrs['units']})^{metric.unit_power}"
 
     # check for none attrs and remove
     del_list = []

@@ -1,31 +1,6 @@
-# metrics to be used in compute_hindcast
-DETERMINISTIC_HINDCAST_METRICS = [
-    'pearson_r',
-    'pearson_r_p_value',
-    'rmse',
-    'mse',
-    'mae',
-    'msss_murphy',
-    'conditional_bias',
-    'bias',
-    'std_ratio',
-    'bias_slope',
-    'nmae',
-    'nrmse',
-    'nmse',
-    'ppp',
-    'uacc',
-    'spearman_r',
-    'spearman_r_p_value',
-    'mape',
-    'smape',
-    'mad',
-]
+from .metrics import __all_metrics__ as all_metrics
 
-# metrics to be used in compute_perfect_model
-DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
-
-# to match a metric for multiple keywords
+# TODO: delete when all metrics as class Metric
 METRIC_ALIASES = {
     'pr': 'pearson_r',
     'acc': 'pearson_r',
@@ -43,53 +18,41 @@ METRIC_ALIASES = {
     'tbs': 'threshold_brier_score',
 }
 
+# to match a metric for (multiple) keywords
+METRIC_ALIASES = dict()
+for m in all_metrics:
+    if m.aliases is not None:
+        for a in m.aliases:
+            METRIC_ALIASES[a] = m.name
+
+
+DETERMINISTIC_METRICS = [m.name for m in all_metrics if not m.is_probabilistic]
+
+# TODO: remove hindcast_PM_metric thing
+# metrics to be used in compute_hindcast
+DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS
+# metrics to be used in compute_perfect_model
+DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
+
+
 # more positive skill is better than more negative
 # needed to decide which skill is better in bootstrapping confidence levels
-POSITIVELY_ORIENTED_METRICS = [
-    'pearson_r',
-    'spearman_r',
-    'msss_murphy',
-    'ppp',
-    'msss',
-    'crpss',
-    'uacc',
-    'msss',
-    'crpss_es',
-]
+POSITIVELY_ORIENTED_METRICS = [m.name for m in all_metrics if m.is_positive]
 
 # needed to set attrs['units'] to None
-DIMENSIONLESS_METRICS = [
-    'pearson_r',
-    'pearson_r_p_value',
-    'spearman_r',
-    'spearman_r_p_value',
-    'mape',
-    'smape',
-    'crpss',
-    'msss_murphy',
-    'std_ratio',
-    'bias_slope',
-    'conditional_bias',
-    'ppp',
-    'nrmse',
-    'nmse',
-    'nmae',
-    'uacc',
-    'threshold_brier_score',
-]
+DIMENSIONLESS_METRICS = [m.name for m in all_metrics if m.unit_power == 1]
 
 # to decide different logic in compute functions
-PROBABILISTIC_METRICS = [
-    'crpss_es',
-    'threshold_brier_score',
-    'crps',
-    'crpss',
-    'brier_score',
-]
+PROBABILISTIC_METRICS = [m.name for m in all_metrics if m.is_probabilistic]
 
 # combined allowed metrics for compute_hindcast and compute_perfect_model
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
+
+ALL_METRICS = (
+    DETERMINISTIC_HINDCAST_METRICS + DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
+)
+
 
 # which comparisons work with which set of metrics
 HINDCAST_COMPARISONS = ['e2r', 'm2r']
@@ -97,6 +60,9 @@ PM_COMPARISONS = ['m2c', 'e2c', 'm2m', 'm2e']
 
 PROBABILISTIC_PM_COMPARISONS = ['m2c', 'm2m']
 PROBABILISTIC_HINDCAST_COMPARISONS = ['m2r']
+
+ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
+
 
 # for general checks of climpred-required dimensions
 

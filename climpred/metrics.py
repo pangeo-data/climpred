@@ -21,7 +21,9 @@ from xskillscore import (
     threshold_brier_score,
 )
 
-from .constants import CLIMPRED_DIMS
+# from .constants import CLIMPRED_DIMS
+# TODO: I dont understand why I get an error when I import this, maybe cyclic imports?
+CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
 
 
 def _get_norm_factor(comparison):
@@ -49,6 +51,53 @@ def _get_norm_factor(comparison):
     else:
         raise KeyError('specify comparison to get normalization factor.')
     return fac
+
+
+def _display_metric_metadata(self):
+    summary = '----- Metric metadata -----\n'
+    summary += f'Name: {self.name}\n'
+    summary += f'Longname: {self.longname}\n'
+    summary += f'Alias: {self.aliases}\n'
+    # positively oriented
+    if self.is_positive:
+        summary += 'Orientation: positive\n'
+    else:
+        summary += 'Orientation: negative\n'
+    # probabilistic or deterministic
+    if self.is_probabilistic:
+        summary += 'Kind: probabilistic\n'
+    else:
+        summary += 'Kind: deterministic\n'
+    summary += f'Power of units: {self.unit_power}\n'
+    # doc
+    summary += f'Function: {self.function.__doc__}\n'
+    return summary
+
+
+class Metric:
+    'Master class for all metrics.'
+
+    def __init__(
+        self,
+        name=None,
+        longname=None,
+        function=None,
+        is_positive=True,
+        is_probabilistic=False,
+        aliases=None,
+        unit_power=1,
+    ):
+        self.name = name
+        self.longname = longname
+        self.function = function
+        self.is_positive = is_positive
+        self.is_probabilistic = is_probabilistic
+        self.aliases = aliases
+        self.unit_power = unit_power
+
+    def __repr__(self):
+        """Show metadata of metric class."""
+        return _display_metric_metadata(self)
 
 
 def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
@@ -81,7 +130,15 @@ def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
     return pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
-# TODO: all metrics: docs
+pearson_r = Metric(
+    name='pearson_r',
+    longname="Pearson's Anomaly correlation coefficient",
+    function=pearson_r,
+    is_positive=False,
+    aliases=['pr', 'acc', 'pacc'],
+)
+
+
 def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
     """
     Calculate the probability associated with Person's Anomaly Correlation
@@ -200,6 +257,9 @@ def _mse(forecast, reference, dim=None, **metric_kwargs):
     return mse(forecast, reference, dim=dim, weights=weights, skipna=skipna)
 
 
+mse = Metric(name='mse', longname='Mean Squared Error', function=mse)
+
+
 def _rmse(forecast, reference, dim=None, **metric_kwargs):
     """
     Calculate the Root Mean Sqaure Error (RMSE).
@@ -225,6 +285,9 @@ def _rmse(forecast, reference, dim=None, **metric_kwargs):
     weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
     return rmse(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+
+
+rmse = Metric(name='rmse', longname='Root Mean Squared Error', function=rmse)
 
 
 def _mae(forecast, reference, dim=None, **metric_kwargs):
@@ -903,3 +966,6 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
     # ensure no sqrt of neg values
     uacc_res = (ppp_res.where(ppp_res > 0)) ** 0.5
     return uacc_res
+
+
+__all_metrics__ = [pearson_r, mse, rmse]

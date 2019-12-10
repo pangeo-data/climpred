@@ -107,4 +107,7 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# VS Code
+.vscode/
+
 # End of https://www.gitignore.io/api/python

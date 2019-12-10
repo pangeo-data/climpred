@@ -169,7 +169,7 @@ def test_smooth_goddard(fosi_3d, dple_3d):
     dim = 'lead'
     assert actual_initialized[dim].size < initialized_before[dim].size
     for dim in ['nlon', 'nlat']:
-        assert actual_initialized[dim[1:]].size < initialized_before[dim].size
+        assert actual_initialized[dim].size < initialized_before[dim].size
 
 
 def test_smooth_coarsen(fosi_3d, dple_3d):

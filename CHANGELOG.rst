@@ -9,7 +9,6 @@ Depreciated
 -----------
 - Abbreviation `pval` depreciated. Use `p_pval` for `pearson_r_p_value` instead. (:pr:`264`) `Aaron Spring`_.
 
-
 Features
 --------
 - re-written ``metrics`` and ``comparisons`` based on classes to allow user metrics and user comparisons. (:pr:`2xx`) `Aaron Spring`_.
@@ -24,6 +23,7 @@ Bug Fixes
 ---------
 - Add `skill` from `compute_hindcast` keeps coords of `hindcast` (:pr:`258`) `Aaron Spring`_.
 - metric `uacc` does not crash when `ppp` negative. (:pr:`264`) `Aaron Spring`_.
+- Update `xskillscore` to version 0.0.9 to fix all-NaN issue with `pearson_r` and `pearson_r_p_value` when there's missing data. (:pr:`269`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
@@ -31,7 +31,7 @@ Internals/Minor Fixes
 - Add ``tqdm`` progress bar to ``bootstrap_compute`` (:pr:`244`) `Aaron Spring`_.
 - Remove inplace behavior for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
 - Added tests for chunking with `dask` (:pr:`258`) `Aaron Spring`_.
-
+- Fix test issues with esmpy 8.0 by forcing esmpy 7.1 (:pr:`269`) `Riley X. Brady`_..
 
 Documentation
 -------------

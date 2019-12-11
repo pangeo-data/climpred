@@ -3,32 +3,45 @@ channels:
   - conda-forge
 dependencies:
   - python=3.6
-  - numpy
-  - xarray
-  - jupyterlab
-  - dask
-  - numba
-  - scipy
-  - esmpy
-  - matplotlib
-  - bottleneck
-  - netcdf4
-  - pytest
-  - eofs
-  - lxml
+  # Documentation
+  - nbsphinx
   - sphinx_rtd_theme
   - sphinx
-  - nbsphinx
-  - cartopy
-  - pip
+  - sphinxcontrib-napoleon
+  # IDE
+  - jupyterlab
+  # Input/Output
+  - netcdf4
+  # Miscellaneous
+  - lxml
   - tqdm
+  # Numerics
+  - numpy
+  - scipy
+  - xarray
+  # Package Management
+  - asv
+  - black
+  - coveralls
+  - flake8
+  - importlib_metadata
+  - pre-commit
+  - pylint
+  - pytest
+  - pytest-cov
+  # Performance
+  - bottleneck
+  - numba
+  - dask
+  # Regridding
+  # Currently, xesmf breaks with esmpy v8.0.0. There is an issue with PIO and MPI.
+  # See e.g. https://github.com/conda-forge/esmpy-feedstock/issues/28
+  - esmpy<=7.1.0
   - xesmf
-  - pip:
-    - xskillscore>=0.0.8
-    - pytest-cov
-    - coveralls
-    - sphinxcontrib-napoleon
-    - importlib_metadata
-    - pre-commit
-    - asv
-    - xrft
+  # Statistics
+  - eofs
+  - xrft
+  - xskillscore>=0.0.9
+  # Visualization
+  - cartopy
+  - matplotlib

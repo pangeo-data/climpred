@@ -2,13 +2,12 @@ import numpy as np
 import pytest
 import xarray as xr
 import xskillscore as xs
-from xarray.testing import assert_allclose
-
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import PM_COMPARISONS
-from climpred.metrics import Metric
+from climpred.metrics import Metric, _pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
+from xarray.testing import assert_allclose
 
 
 @pytest.fixture
@@ -250,3 +249,9 @@ def test_hindcast_metric_weights_x2r(
     print((base / weighted).mean(['nlon', 'nlat']))
     # test for difference
     assert (xs.smape(base, weighted, ['nlat', 'nlon']) > 0.01).any()
+
+
+def test_Metric_display():
+    summary = _pearson_r.__repr__()
+    print(summary)
+    assert 'Kind: deterministic' in summary.split('\n')[5]

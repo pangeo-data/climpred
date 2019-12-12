@@ -1,6 +1,5 @@
 import numpy as np
 import pytest
-
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import _m2c
 from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
@@ -89,10 +88,12 @@ def test_da_assign_attrs():
 
 def test_ds_assign_attrs():
     """Test assigning attrs for datasets."""
-    metric = 'pearson_r'
+    metric = 'mse'
     comparison = 'm2e'
-    da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
-    control = load_dataset('MPI-control-1D').isel(area=1, period=-1)
+    v = 'tos'
+    da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)[v]
+    control = load_dataset('MPI-control-1D').isel(area=1, period=-1)[v]
+    da.attrs['units'] = 'C'
     actual = compute_perfect_model(
         da, control, metric=metric, comparison=comparison
     ).attrs
@@ -101,6 +102,7 @@ def test_ds_assign_attrs():
     if metric == 'pearson_r':
         assert actual['units'] == 'None'
     assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
+    assert actual['units'] == '(C)^2'
 
 
 def test_bootstrap_pm_assign_attrs():
@@ -168,11 +170,9 @@ def test_copy_coords_from_to_ds_chunk(control_ds_3d):
     assert (c_1time.time == xro.isel(time=2).time).all()
 
 
-def test_copy_coords_from_to_da_chunk(control_da_3d):
-    """Test whether coords are copied from one xr object to another."""
-    #
-    xro = control_da_3d.chunk({'time': 5})
+def test_copy_coords_from_to_da_different_xro(control_ds_3d):
+    xro = control_ds_3d.chunk({'time': 5})
     c_1time = xro.isel(time=4).drop_vars('time')
-    assert 'time' not in c_1time.coords
-    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
-    assert (c_1time.time == xro.isel(time=2).time).all()
+    with pytest.raises(ValueError) as excinfo:
+        copy_coords_from_to(xro.isel(time=2).tos, c_1time)
+    assert 'xro_from and xro_to must be both either' in str(excinfo.value)

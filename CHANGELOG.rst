@@ -37,6 +37,7 @@ Documentation
 - Add documentation for smoothing and compute over dimension (:pr:`244`) `Aaron Spring`_.
 - Update API to be more organized with individual function/class pages. (:pr:`243`) `Riley X. Brady`_.
 - Add page describing the ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects more clearly. (:pr:`243`) `Riley X. Brady`_.
+- Add page for publications and helpful links. (:pr:`270`) `Riley X. Brady`_.
 
 climpred v1.1.0 (2019-09-23)
 ============================

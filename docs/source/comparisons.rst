@@ -70,15 +70,15 @@ First, write your own comparison function, similar to the existing ones. If a co
 
 Then initialize this comparison function with :py:class:`climpred.comparisons.Comparison`::
 
-  _my_m2median_comparison = Comparison(
+  __my_m2median_comparison = Comparison(
       name='m2me',
       function=_my_m2median_comparison,
-      is_probabilistic=False,
-      is_hindcast=False)
+      probabilistic=False,
+      hindcast=False)
 
 Finally, compute skill based on your own comparison::
 
-  skill = compute_perfect_model(ds, control, metric='rmse', comparison=_my_m2median_comparison)
+  skill = compute_perfect_model(ds, control, metric='rmse', comparison=__my_m2median_comparison)
 
 
 References

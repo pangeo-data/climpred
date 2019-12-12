@@ -38,7 +38,7 @@ A measure of the linear association between the forecast and observations that i
 Spearman Anomaly Correlation Coefficient (SACC)
 -----------------------------------------------
 
-``keyword: 'spearman_r', 'sacc'``
+``keyword: 'spearman_r', 'sacc', 'sr'``
 
 A measure of how well the relationship between two variables can be described using a monotonic function.
 
@@ -239,7 +239,7 @@ You can also construct your own metrics via the :py:class:`climpred.metrics.Metr
 
 .. autosummary:: Metric
 
-First, write your own metric function, similar to the existing ones with required arguments ``forecast``, ``reference``, ``dim=None``, and ``metric_kwargs``::
+First, write your own metric function, similar to the existing ones with required arguments ``forecast``, ``reference``, ``dim=None``, and ``**metric_kwargs``::
 
   from climpred.metrics import Metric
 
@@ -253,9 +253,9 @@ Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
   _my_msle = Metric(
       name='my_msle',
       function=_my_msle,
-      is_probabilistic=False,
-      is_positive=False,
-      unit_power=None,
+      probabilistic=False,
+      positive=False,
+      unit_power=0,
       )
 
 Finally, compute skill based on your own metric::

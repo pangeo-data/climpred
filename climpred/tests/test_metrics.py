@@ -254,4 +254,4 @@ def test_hindcast_metric_weights_x2r(
 
 def test_Metric_display():
     summary = __pearson_r.__repr__()
-    assert 'Kind: deterministic' in summary.split('\n')[5]
+    assert 'Kind: deterministic' in summary.split('\n')[4]

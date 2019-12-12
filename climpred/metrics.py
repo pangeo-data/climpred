@@ -126,8 +126,8 @@ class Metric:
         self.unit_power = unit_power
         self.long_name = long_name
         self.aliases = aliases
-        self.min = min
-        self.max = max
+        self.minimum = minimum
+        self.maximum = maximum
         self.perfect = perfect
         self.proper = proper
 

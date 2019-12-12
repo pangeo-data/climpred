@@ -51,7 +51,7 @@ def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
                             than initialized forecast.
     """
     pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
-    if not metric.is_positive:
+    if not metric.positive:
         pv = 1 - pv
     return pv
 
@@ -336,7 +336,7 @@ def bootstrap_compute(
         # reset inits when probabilistic, otherwise tests fail
         if (
             shuffle_dim == 'init'
-            and metric.is_probabilistic
+            and metric.probabilistic
             and 'init' in init_skill.coords
         ):
             init_skill['init'] = inits
@@ -359,7 +359,7 @@ def bootstrap_compute(
         )
         # compute persistence skill
         # impossible for probabilistic
-        if not metric.is_probabilistic:
+        if not metric.probabilistic:
             pers.append(
                 compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
@@ -405,7 +405,7 @@ def bootstrap_compute(
         del init_skill['member']
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
-    if not metric.is_probabilistic:
+    if not metric.probabilistic:
         pers_skill = compute_persistence(
             hind, reference, metric=metric, **metric_kwargs
         )

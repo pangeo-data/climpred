@@ -4,7 +4,7 @@ import xarray as xr
 import xskillscore as xs
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import PM_COMPARISONS
-from climpred.metrics import Metric, _pearson_r
+from climpred.metrics import Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from xarray.testing import assert_allclose
@@ -58,10 +58,11 @@ def my_mse_function(forecast, reference, dim='svd', **metric_kwargs):
 
 my_mse = Metric(
     name='mse',
-    longname='MSE',
     function=my_mse_function,
-    is_positive=True,
-    is_probabilistic=False,
+    positive=True,
+    probabilistic=False,
+    unit_power=2,
+    long_name='MSE',
     aliases=['mSe', '<<<SE'],
 )
 
@@ -252,6 +253,5 @@ def test_hindcast_metric_weights_x2r(
 
 
 def test_Metric_display():
-    summary = _pearson_r.__repr__()
-    print(summary)
+    summary = __pearson_r.__repr__()
     assert 'Kind: deterministic' in summary.split('\n')[5]

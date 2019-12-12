@@ -4,7 +4,7 @@ import warnings
 import xarray as xr
 
 from .checks import is_in_list, is_xarray
-from .comparisons import _e2c
+from .comparisons import __e2c
 from .constants import (
     CLIMPRED_DIMS,
     DETERMINISTIC_HINDCAST_METRICS,
@@ -74,8 +74,8 @@ def compute_perfect_model(
     # without member dim which is needed for probabilistic
     # if not stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
-    if metric.is_probabilistic:
-        if not comparison.is_probabilistic:
+    if metric.probabilistic:
+        if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric {metric.name} cannot work with '
                 f'comparison {comparison.name}.'
@@ -105,7 +105,7 @@ def compute_perfect_model(
     forecast, reference = comparison.function(ds, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
-    if (forecast.dims != reference.dims) and (not metric.is_probabilistic):
+    if (forecast.dims != reference.dims) and (not metric.probabilistic):
         # broadcast when deterministic dim=member
         forecast, reference = xr.broadcast(forecast, reference)
 
@@ -197,7 +197,7 @@ def compute_hindcast(
     # without member dim which is needed for probabilistic
     # if not stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
-    if metric.is_probabilistic:
+    if metric.probabilistic:
         if comparison.name != 'm2r':
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison'
@@ -229,7 +229,7 @@ def compute_hindcast(
     if (
         (forecast.dims != reference.dims)
         and not stack_dims
-        and not metric.is_probabilistic
+        and not metric.probabilistic
     ):
         dim_to_apply_metric_to = 'member'
     else:
@@ -323,7 +323,7 @@ def compute_persistence(
     metric = METRIC_ALIASES.get(metric, metric)
     # get class metric(Metric)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
-    if metric.is_probabilistic:
+    if metric.probabilistic:
         raise ValueError(
             'probabilistic metric ', metric.name, 'cannot compute persistence forecast.'
         )
@@ -353,7 +353,7 @@ def compute_persistence(
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
         plag.append(
-            metric.function(ref, fct, dim='time', comparison=_e2c, **metric_kwargs)
+            metric.function(ref, fct, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values

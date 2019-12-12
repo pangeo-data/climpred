@@ -1,9 +1,9 @@
 import numpy as np
 import pytest
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.comparisons import _m2c
+from climpred.comparisons import __m2c
 from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
-from climpred.metrics import _pearson_r
+from climpred.metrics import __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
@@ -31,7 +31,7 @@ def control_da_3d():
 def test_get_metric_class():
     """Test if passing in a string gets the right metric function."""
     actual = get_metric_class('pearson_r', DETERMINISTIC_PM_METRICS).name
-    expected = _pearson_r.name
+    expected = __pearson_r.name
     assert actual == expected
 
 
@@ -45,7 +45,7 @@ def test_get_metric_class_fail():
 def test_get_comparison_class():
     """Test if passing in a string gets the right comparison function."""
     actual = get_comparison_class('m2c', PM_COMPARISONS).name
-    expected = _m2c.name
+    expected = __m2c.name
     assert actual == expected
 
 

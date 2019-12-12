@@ -32,7 +32,7 @@ def get_metric_class(metric, list_):
         # check if metric allowed
         is_in_list(metric, list_, 'metric')
         metric = METRIC_ALIASES.get(metric, metric)
-        return getattr(metrics, '_' + metric)
+        return getattr(metrics, '__' + metric)
     else:
         raise ValueError(
             f'Please provide metric as str or Metric class, found {type(metric)}'
@@ -65,7 +65,7 @@ def get_comparison_class(comparison, list_):
         return comparison
     else:
         is_in_list(comparison, list_, 'comparison')
-        return getattr(comparisons, '_' + comparison)
+        return getattr(comparisons, '__' + comparison)
 
 
 def intersect(lst1, lst2):

@@ -94,8 +94,3 @@ intersphinx_mapping = {
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
 # nbsphinx_allow_errors = True
-
-
-# documentation of classes
-# https://stackoverflow.com/questions/5599254/how-to-use-sphinxs-autodoc-to-document-a-classs-init-self-method
-# autoclass_content = 'both'

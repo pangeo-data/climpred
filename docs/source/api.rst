@@ -141,6 +141,7 @@ Metrics
     :toctree: api/
 
     Metric
+    _get_norm_factor
 
 Comparisons
 ~~~~~~~~~~~

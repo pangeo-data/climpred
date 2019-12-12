@@ -21,17 +21,25 @@ from xskillscore import (
     threshold_brier_score,
 )
 
+# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
 # from .constants import CLIMPRED_DIMS
-# TODO: I dont understand why I get an error when I import this, maybe cyclic imports?
 CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
 
 
 def _get_norm_factor(comparison):
-    """Get normalization factor for PPP, NMSE, NRMSE, MSSS.
+    """Get normalization factor with respect to the type of comparison used for
+     normalized distance-based metrics PPP, NMSE, NRMSE, MSSS, NMAE.
 
-    Used in compute_perfect_model. Comparison 'm2e' gets smaller rmse's than
-    'm2m' by design, see Seferian et al. 2018. 'm2m', 'm2c' ensemble variance
-    is divided by 2 to get control variance.
+    A distance-based metric is normalized by the standard deviation or variance
+     of a reference/control simulation. The goal of a normalized distance-based
+     metric is to get a constant and comparable value of typically 1 (or 0 for
+     metrics defined as 1 - ), when the metric saturizes and the predictability
+     horizon is reached.
+     To directly compare skill between different comparisons used, a factor is
+     added in the normalized metric formula, see Seferian et al. 2018.
+     Exemplarily, NRMSE gets smaller in comparison 'm2e' than 'm2m' by design
+     because the ensemble mean is always closer to individual ensemble members
+     than ensemble members to each other.
 
     Args:
         comparison (class): comparison class.
@@ -41,6 +49,20 @@ def _get_norm_factor(comparison):
 
     Raises:
         KeyError: if comparison is not matching.
+
+    Example:
+        >>> # check skill saturation value of roughly 1 for different comparisons
+        >>> metric='nrmse'
+        >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:
+                s = compute_perfect_model(ds, control, metric=metric,  comparison=c)
+                s.plot(label=' '.join([metric,c]))
+        >>> plt.legend()
+
+    Reference:
+        * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing
+         the Decadal Predictability of Land and Ocean Carbon Uptake.”
+         Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
+
 
     """
     if comparison.name in ['m2e', 'e2c', 'e2r']:
@@ -1082,9 +1104,10 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
         forecast (xarray object): forecast
         reference (xarray object): reference
         dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        comparison (str): name comparison needed for normalization factor
-                           (required to be added via **metric_kwargs)
+            Automatically set by compute_.
+        comparison (str): name comparison needed for normalization factor `fac`,
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
         metric_kwargs: (optional) weights, skipna, see xskillscore.mse
 
     Range:
@@ -1142,8 +1165,11 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **metric_kwargs)
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
+
 
     Range:
         * 0: perfect forecast
@@ -1198,8 +1224,11 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **metric_kwargs)
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+
 
     Range:
         * 0: perfect forecast: 0
@@ -1248,8 +1277,11 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor
-                           (required to be added via **metric_kwargs)
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.mae
+
 
     Range:
         * 0: perfect forecast: 0
@@ -1298,6 +1330,9 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
         * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
 
 

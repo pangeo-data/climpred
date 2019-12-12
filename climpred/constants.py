@@ -11,8 +11,7 @@ for m in all_metrics:
 
 DETERMINISTIC_METRICS = [m.name for m in all_metrics if not m.probabilistic]
 
-# TODO: remove hindcast_PM_metric thing
-# metrics to be used in compute_hindcast
+
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS
 # metrics to be used in compute_perfect_model
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()

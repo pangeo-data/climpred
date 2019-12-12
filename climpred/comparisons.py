@@ -129,7 +129,7 @@ __m2m = Comparison(
     function=_m2m,
     hindcast=False,
     probabilistic=True,
-    long_name='Comparison of multiple forecasts vs. multiple verifications',
+    long_name='Comparison of all forecasts vs. all other members as verification',
 )
 
 
@@ -168,13 +168,14 @@ __m2e = Comparison(
     function=_m2e,
     hindcast=False,
     probabilistic=False,
-    long_name='Comparison of multiple verifications vs. the ensemble mean forecast',
+    long_name='Comparison of all members as verification vs. the ensemble mean'
+    'forecast',
 )
 
 
 def _m2c(ds, control_member=None, stack_dims=True):
     """
-    Compare all other members to control member.
+    Compare all other members forecasts to control member verification.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -209,7 +210,7 @@ __m2c = Comparison(
 
 def _e2c(ds, control_member=None, stack_dims=True):
     """
-    Compare ensemble mean to control member.
+    Compare ensemble mean forecast to control member verification.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble

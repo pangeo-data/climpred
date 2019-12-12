@@ -80,6 +80,8 @@ Finally, compute skill based on your own comparison::
 
   skill = compute_perfect_model(ds, control, metric='rmse', comparison=__my_m2median_comparison)
 
+Once you come up with an useful comparison for your problem, consider contributing this comparison to `climpred`, so all users can benefit from your comparison, see :ref:`contributing`.
+
 
 References
 ##########

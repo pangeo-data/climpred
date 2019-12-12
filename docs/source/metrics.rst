@@ -262,6 +262,7 @@ Finally, compute skill based on your own metric::
 
   skill = compute_perfect_model(ds, control, metric='rmse', comparison=_my_msle)
 
+Once you come up with an useful metric for your problem, consider contributing this metric to `climpred`, so all users can benefit from your metric, see :ref:`contributing`.
 
 References
 ##########

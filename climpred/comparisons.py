@@ -31,13 +31,61 @@ def _drop_members(ds, rmd_member=None):
     return ds.sel(member=member_list)
 
 
+def _display_comparison_metadata(self):
+    summary = '----- Comparison metadata -----\n'
+    summary += f'Name: {self.name}\n'
+    # probabilistic or only deterministic
+    if not self.probabilistic:
+        summary += 'Kind: deterministic\n'
+    else:
+        summary += 'Kind: deterministic and probabilistic\n'
+    summary += f'long_name: {self.long_name}\n'
+    # doc
+    summary += f'Function: {self.function.__doc__}\n'
+    return summary
+
+
+class Comparison:
+    """Master class for all comparisons."""
+
+    def __init__(self, name, function, hindcast, probabilistic, long_name=None):
+        """Comparison initialization.
+
+        Args:
+            name (str): name of comparison.
+            function (function): comparison function.
+            hindcast (bool): Can comparison be used in `compute_hindcast`?
+             `False` means `compute_perfect_model`
+            probabilistic (bool): Can this comparison be used for probabilistic
+             metrics also? Probabilistic metrics require multiple forecasts.
+             `False` means that comparison is only deterministic.
+             `True` means that comparison can be used both deterministic and
+             probabilistic.
+            long_name (str, optional): longname of comparison. Defaults to None.
+
+        Returns:
+            comparison: comparison class Comparison.
+
+        """
+        self.name = name
+        self.function = function
+        self.hindcast = hindcast
+        self.probabilistic = probabilistic
+        self.long_name = long_name
+
+    def __repr__(self):
+        """Show metadata of comparison class."""
+        return _display_comparison_metadata(self)
+
+
 # --------------------------------------------#
 # PERFECT-MODEL COMPARISONS
-# based on supervector approach
 # --------------------------------------------#
+
+
 def _m2m(ds, stack_dims=True):
     """
-    Create two supervectors to compare all members to all others in turn.
+    Compare all members to all others in turn while leaving out the verification member.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -76,11 +124,19 @@ def _m2m(ds, stack_dims=True):
     return forecast, reference
 
 
+__m2m = Comparison(
+    name='m2m',
+    function=_m2m,
+    hindcast=False,
+    probabilistic=True,
+    long_name='Comparison of all forecasts vs. all other members as verification',
+)
+
+
 def _m2e(ds, stack_dims=True):
-    # stack_dims
     """
-    Create two supervectors to compare all members to ensemble mean while
-     leaving out the reference when creating the forecasts.
+    Compare all members to ensemble mean while leaving out the reference in
+     ensemble mean.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -107,9 +163,19 @@ def _m2e(ds, stack_dims=True):
     return forecast, reference
 
 
+__m2e = Comparison(
+    name='m2e',
+    function=_m2e,
+    hindcast=False,
+    probabilistic=False,
+    long_name='Comparison of all members as verification vs. the ensemble mean'
+    'forecast',
+)
+
+
 def _m2c(ds, control_member=None, stack_dims=True):
     """
-    Create two supervectors to compare all members to control.
+    Compare all other members forecasts to control member verification.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -133,9 +199,18 @@ def _m2c(ds, control_member=None, stack_dims=True):
     return forecast, reference
 
 
+__m2c = Comparison(
+    name='m2c',
+    function=_m2c,
+    hindcast=False,
+    probabilistic=True,
+    long_name='Comparison of multiple forecasts vs. control verification',
+)
+
+
 def _e2c(ds, control_member=None, stack_dims=True):
     """
-    Create two supervectors to compare ensemble mean to control.
+    Compare ensemble mean forecast to control member verification.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
@@ -160,9 +235,17 @@ def _e2c(ds, control_member=None, stack_dims=True):
     return forecast, reference
 
 
+__e2c = Comparison(
+    name='e2c',
+    function=_e2c,
+    hindcast=False,
+    probabilistic=False,
+    long_name='Comparison of the ensemble mean forecast vs. control as verification',
+)
+
+
 # --------------------------------------------#
-# REFERENCE COMPARISONS
-# based on supervector approach
+# HINDCAST COMPARISONS
 # --------------------------------------------#
 def _e2r(ds, reference, stack_dims=True):
     """
@@ -184,6 +267,15 @@ def _e2r(ds, reference, stack_dims=True):
     else:
         forecast = ds
     return forecast, reference
+
+
+__e2r = Comparison(
+    name='e2r',
+    function=_e2r,
+    hindcast=True,
+    probabilistic=False,
+    long_name='Comparison of the ensemble mean vs. reference verification',
+)
 
 
 def _m2r(ds, reference, stack_dims=True):
@@ -211,3 +303,15 @@ def _m2r(ds, reference, stack_dims=True):
         reference = reference.isel(member=[0] * nMember)
         reference['member'] = forecast['member']
     return forecast, reference
+
+
+__m2r = Comparison(
+    name='m2r',
+    function=_m2r,
+    hindcast=True,
+    probabilistic=True,
+    long_name='Comparison of multiple forecasts vs. reference verification',
+)
+
+
+__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2r, __m2r]

@@ -2,7 +2,9 @@ import numpy as np
 import pytest
 import xarray as xr
 import xskillscore as xs
+from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import PM_COMPARISONS
+from climpred.metrics import Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from xarray.testing import assert_allclose
@@ -50,16 +52,25 @@ def reconstruction_da():
     return da
 
 
-def my_mse(forecast, reference, dim='svd', **metric_kwargs):
+def my_mse_function(forecast, reference, dim='svd', **metric_kwargs):
     return ((forecast - reference) ** 2).mean(dim)
 
 
-@pytest.mark.skip(reason='not implemented yet')
+my_mse = Metric(
+    name='mse',
+    function=my_mse_function,
+    positive=True,
+    probabilistic=False,
+    unit_power=2,
+    long_name='MSE',
+    aliases=['mSe', '<<<SE'],
+)
+
+
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', [my_mse])
-def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, metric, comparison):
+def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, comparison):
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison=comparison, metric=metric
+        pm_da_ds1d, pm_da_control1d, comparison=comparison, metric=my_mse
     )
 
     expected = compute_perfect_model(
@@ -67,6 +78,34 @@ def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, metric, compa
     )
 
     assert_allclose(actual, expected)
+
+
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+def test_new_metric_passed_to_bootstrap_compute(
+    pm_da_ds1d, pm_da_control1d, comparison
+):
+    bootstrap = 3
+    dim = 'init'
+    np.random.seed(42)
+    actual = bootstrap_perfect_model(
+        pm_da_ds1d,
+        pm_da_control1d,
+        comparison=comparison,
+        metric=my_mse,
+        bootstrap=bootstrap,
+        dim=dim,
+    )
+
+    expected = bootstrap_perfect_model(
+        pm_da_ds1d,
+        pm_da_control1d,
+        comparison=comparison,
+        metric='mse',
+        bootstrap=bootstrap,
+        dim=dim,
+    )
+
+    assert_allclose(actual, expected, rtol=0.1, atol=1)
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
@@ -211,3 +250,8 @@ def test_hindcast_metric_weights_x2r(
     print((base / weighted).mean(['nlon', 'nlat']))
     # test for difference
     assert (xs.smape(base, weighted, ['nlat', 'nlon']) > 0.01).any()
+
+
+def test_Metric_display():
+    summary = __pearson_r.__repr__()
+    assert 'Kind: deterministic' in summary.split('\n')[4]

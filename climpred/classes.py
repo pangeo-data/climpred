@@ -5,8 +5,8 @@ from .bootstrap import (
     bootstrap_uninit_pm_ensemble_from_control,
 )
 from .checks import (
-    has_dims,
     has_dataset,
+    has_dims,
     is_xarray,
     match_initialized_dims,
     match_initialized_vars,
@@ -338,8 +338,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         control = input_dict['control']
         init = input_dict['init']
         init_vars, ctrl_vars = self._vars_to_drop(init=init)
-        ensemble = ensemble.drop(init_vars)
-        control = control.drop(ctrl_vars)
+        ensemble = ensemble.drop_vars(init_vars)
+        control = control.drop_vars(ctrl_vars)
         return func(ensemble, control, **kwargs)
 
     def _vars_to_drop(self, init=True):
@@ -614,8 +614,8 @@ class HindcastEnsemble(PredictionEnsemble):
         # Apply only to specific reference.
         if refname is not None:
             drop_init, drop_ref = self._vars_to_drop(refname, init=init)
-            ensemble = ensemble.drop(drop_init)
-            reference = reference[refname].drop(drop_ref)
+            ensemble = ensemble.drop_vars(drop_init)
+            reference = reference[refname].drop_vars(drop_ref)
             return func(ensemble, reference, **kwargs)
         else:
             # If only one reference, just apply to that one.

@@ -1,4 +1,6 @@
 import pytest
+from xarray.testing import assert_allclose
+
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
     PM_COMPARISONS,
@@ -8,8 +10,7 @@ from climpred.constants import (
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
-from climpred.utils import get_comparison_function
-from xarray.testing import assert_allclose
+from climpred.utils import get_comparison_class
 
 
 @pytest.fixture
@@ -52,8 +53,8 @@ def observations_da():
 @pytest.mark.parametrize('stack_dims', [True, False])
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 def test_pm_comparison_stack_dims(pm_da_ds1d, comparison, stack_dims):
-    comparison = get_comparison_function(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison(pm_da_ds1d, stack_dims=stack_dims)
+    comparison = get_comparison_class(comparison, PM_COMPARISONS)
+    actual_f, actual_r = comparison.function(pm_da_ds1d, stack_dims=stack_dims)
     if stack_dims:
         assert 'member' in actual_f.dims
         assert 'member' in actual_r.dims

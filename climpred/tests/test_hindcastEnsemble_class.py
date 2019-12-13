@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from climpred import HindcastEnsemble
 from climpred.tutorial import load_dataset
 

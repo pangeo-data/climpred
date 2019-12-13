@@ -15,6 +15,8 @@ import datetime
 import os
 import sys
 
+import climpred
+
 sys.path.insert(0, os.path.abspath('../..'))
 
 
@@ -24,8 +26,7 @@ project = 'climpred'
 copyright = f'2019-{current_year}, climpred development team'
 author = 'climpred development team'
 
-# NOTE: Will change this when print version is implemented.
-version = '0.3'
+version = climpred.__version__
 
 
 # -- General configuration ---------------------------------------------------

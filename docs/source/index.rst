@@ -94,10 +94,10 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
 **Help & Reference**
 
 * :doc:`api`
+* :doc:`changelog`
 * :doc:`helpful-links`
 * :doc:`publications`
 * :doc:`contributing`
-* :doc:`changelog`
 * :doc:`release_procedure`
 * :doc:`contributors`
 
@@ -107,9 +107,9 @@ You can also install the bleeding edge (pre-release versions) by cloning this re
     :caption: Help & Reference
 
     api
+    changelog
     helpful-links
     publications
     contributing
-    changelog
     release_procedure
     contributors

@@ -1,44 +1,105 @@
-=================
-Changelog History
-=================
+==========
+What's New
+==========
 
-climpred v1.1.1 (2019-##-##)
+climpred v1.2.0 (2019-12-14)
 ============================
 
 Depreciated
 -----------
-- Abbreviation `pval` depreciated. Use `p_pval` for `pearson_r_p_value` instead. (:pr:`264`) `Aaron Spring`_.
+- Abbreviation ``pval`` depreciated. Use ``p_pval`` for ``pearson_r_p_value`` instead. (:pr:`264`) `Aaron Spring`_.
 
-Features
---------
-- Re-wrote ``metrics`` and ``comparisons`` based on classes to allow user metrics and user comparisons. See https://climpred.readthedocs.io/en/stable/metrics.html##user-defined-metrics and https://climpred.readthedocs.io/en/stable/comparisons.html##user-defined-comparisons. (:pr:`268`) `Aaron Spring`_.
-- `metric_kwargs` are passed to `xs.metric`. (:pr:`264`) `Aaron Spring`_.
-- New deterministic metrics: `spearman_r`, `spearman_r_p_value`, `mad`, `mape`, `smape`. (:pr:`264`) `Aaron Spring`_.
-- Rewrote `varweighted_mean_period` based on `xrft`. Changed `time_dim` to `dim` in `stats.varweighted_mean_period`. Keeps coords. (:pr:`258`) `Aaron Spring`_.
-- Add `dim='time'` in `stats.dpp` (:pr:`258`) `Aaron Spring`_.
-- Apply arbitrary ``xarray`` methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
-- Add "getter" methods to ``HindcastEnsemble`` and ``PerfectModelEnsemble`` to retrieve ``xarray`` datasets from the objects (:pr:`243`) `Riley X. Brady`_.
+New Features
+------------
+
+- Users can now pass a custom ``metric`` or ``comparison`` to compute functions. (:pr:`268`) `Aaron Spring`_.
+
+    * See `user-defined-metrics <metrics.html#user-defined-metrics>`_ and `user-defined-comparisons <comparisons.html#user-defined-comparisons>`_.
+
+- New deterministic metrics (see `metrics <metrics.html>`_). (:pr:`264`) `Aaron Spring`_.
+
+    * Spearman ranked correlation (spearman_r_) 
+    * Spearman ranked correlation p-value (spearman_r_p_value_)
+    * Mean Absolute Deviation (mad_)
+    * Mean Absolute Percent Error (mape_)
+    * Symmetric Mean Absolute Percent Error (smape_)
+
+.. _spearman_r: metrics.html#spearman-anomaly-correlation-coefficient-sacc
+.. _spearman_r_p_value: metrics.html#spearman-anomaly-correlation-coefficient-sacc
+.. _mad: metrics.html#median-absolute-deviation-mad
+.. _mape: metrics.html#mean-absolute-percentage-error-mape
+.. _smape: metrics.html#symmetric-mean-absolute-percentage-error-smape
+
+- Users can now apply arbitrary ``xarray`` methods to :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`243`) `Riley X. Brady`_.
+
+    * See the `Prediction Ensemble objects demo page <prediction-ensemble-object.html>`_.
+
+- Add "getter" methods to :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble` to retrieve ``xarray`` datasets from the objects. (:pr:`243`) `Riley X. Brady`_.
+
+    .. code-block:: python
+
+        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
+        >>> ref = climpred.tutorial.load_dataset('ERSST')
+        >>> hindcast = climpred.HindcastEnsemble(hind)
+        >>> hindcast = hindcast.add_reference(ref, 'ERSST')
+        >>> print(hindcast)
+        <climpred.HindcastEnsemble>
+        Initialized Ensemble:
+            SST      (init, lead, member) float64 ...
+        ERSST:
+            SST      (time) float32 ...
+        Uninitialized:
+            None
+        >>> print(hindcast.get_initialized())
+        <xarray.Dataset>
+        Dimensions:  (init: 64, lead: 10, member: 10)
+        Coordinates:
+        * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+        * member   (member) int32 1 2 3 4 5 6 7 8 9 10
+        * init     (init) float32 1954.0 1955.0 1956.0 1957.0 ... 2015.0 2016.0 2017.0
+        Data variables:
+            SST      (init, lead, member) float64 ...
+        >>> print(hindcast.get_reference('ERSST'))
+        <xarray.Dataset>
+        Dimensions:  (time: 61)
+        Coordinates:
+        * time     (time) int64 1955 1956 1957 1958 1959 ... 2011 2012 2013 2014 2015
+        Data variables:
+            SST      (time) float32 ...
+
+- ``metric_kwargs`` can be passed to :py:class:`~climpred.metrics.Metric`. (:pr:`264`) `Aaron Spring`_.
+
+    * See ``metric_kwargs`` under `metrics <metrics.html>`_.
 
 Bug Fixes
 ---------
-- Add `skill` from `compute_hindcast` keeps coords of `hindcast` (:pr:`258`) `Aaron Spring`_.
-- metric `uacc` does not crash when `ppp` negative. (:pr:`264`) `Aaron Spring`_.
-- Update `xskillscore` to version 0.0.9 to fix all-NaN issue with `pearson_r` and `pearson_r_p_value` when there's missing data. (:pr:`269`) `Riley X. Brady`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.compute_metric` doesn't drop coordinates from the initialized hindcast ensemble anymore. (:pr:`258`) `Aaron Spring`_.
+- Metric ``uacc`` does not crash when ``ppp`` negative anymore. (:pr:`264`) `Aaron Spring`_.
+- Update ``xskillscore`` to version 0.0.9 to fix all-NaN issue with ``pearson_r`` and ``pearson_r_p_value`` when there's missing data. (:pr:`269`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
-- Comparisons `m2m`, `m2e` rewritten to not stack dims into supervector dim because this happens now in `xskillscore`. (:pr:`264`) `Aaron Spring`_.
-- Add ``tqdm`` progress bar to ``bootstrap_compute`` (:pr:`244`) `Aaron Spring`_.
-- Remove inplace behavior for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`243`) `Riley X. Brady`_.
-- Added tests for chunking with `dask` (:pr:`258`) `Aaron Spring`_.
-- Fix test issues with esmpy 8.0 by forcing esmpy 7.1 (:pr:`269`) `Riley X. Brady`_..
+- Rewrote :py:func:`~climpred.stats.varweighted_mean_period` based on ``xrft``. Changed ``time_dim`` to ``dim``. Function no longer drops coordinates. (:pr:`258`) `Aaron Spring`_
+- Add ``dim='time'`` in :py:func:`~climpred.stats.dpp`. (:pr:`258`) `Aaron Spring`_
+- Comparisons ``m2m``, ``m2e`` rewritten to not stack dims into supervector because this is now done in ``xskillscore``. (:pr:`264`) `Aaron Spring`_
+- Add ``tqdm`` progress bar to :py:func:`~climpred.bootstrap.bootstrap_compute`. (:pr:`244`) `Aaron Spring`_
+- Remove inplace behavior for :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`243`) `Riley X. Brady`_
+
+    * See `demo page on prediction ensemble objects <prediction-ensemble-object.html>`_
+
+- Added tests for chunking with ``dask``. (:pr:`258`) `Aaron Spring`_
+- Fix test issues with esmpy 8.0 by forcing esmpy 7.1 (:pr:`269`). `Riley X. Brady`_
+- Rewrote ``metrics`` and ``comparisons`` as classes to accomodate custom metrics and comparisons. (:pr:`268`) `Aaron Spring`_
+
+    * See `user-defined-metrics <metrics.html#user-defined-metrics>`_ and `user-defined-comparisons <comparisons.html#user-defined-comparisons>`_.
 
 Documentation
 -------------
-- Add documentation for smoothing and compute over dimension (:pr:`244`) `Aaron Spring`_.
-- Update API to be more organized with individual function/class pages. (:pr:`243`) `Riley X. Brady`_.
-- Add page describing the ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects more clearly. (:pr:`243`) `Riley X. Brady`_.
-- Add page for publications and helpful links. (:pr:`270`) `Riley X. Brady`_.
+- Add examples notebook for `temporal and spatial smoothing <examples/smoothing.html>`_. (:pr:`244`) `Aaron Spring`_
+- Add documentation for `computing a metric over a specified dimension <comparisons.html#compute-over-dimension>`_. (:pr:`244`) `Aaron Spring`_
+- Update `API <api.html>`_ to be more organized with individual function/class pages. (:pr:`243`) `Riley X. Brady`_.
+- Add `page <prediction-ensemble-object.html>`_ describing the :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble` objects more clearly. (:pr:`243`) `Riley X. Brady`_
+- Add page for `publications <publications.html>`_ and `helpful links <helpful-links.html>`_. (:pr:`270`) `Riley X. Brady`_.
 
 climpred v1.1.0 (2019-09-23)
 ============================

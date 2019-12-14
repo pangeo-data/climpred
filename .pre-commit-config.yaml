@@ -23,8 +23,3 @@ repos:
       hooks:
       - id: flake8
         args: ["--max-line-length=88", "--exclude=__init__.py", "--ignore=C901,W605,W503,F722"]
-
-  -   repo: https://github.com/asottile/blacken-docs
-      rev: v1.0.0
-      hooks:
-      - id: blacken-docs

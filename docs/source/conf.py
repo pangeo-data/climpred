@@ -83,12 +83,8 @@ html_theme_options = {'logo_only': False, 'style_nav_header_background': '#fcfcf
 
 intersphinx_mapping = {
     'python': ('https://docs.python.org/3/', None),
-    # 'xarray': ('https://http://xarray.pydata.org/en/stable/', None),
-    # 'pandas': ('https://pandas.pydata.org/pandas-docs/stable/', None),
-    # 'iris': ('http://scitools.org.uk/iris/docs/latest/', None),
+    'xarray': ('https://http://xarray.pydata.org/en/stable/', None),
     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-    # 'numba': ('https://numba.pydata.org/numba-doc/latest/', None),
-    # 'matplotlib': ('https://matplotlib.org/', None),
 }
 
 # Should only be uncommented when testing page development while notebooks

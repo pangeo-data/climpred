@@ -3,13 +3,13 @@ import pytest
 import xarray as xr
 
 from climpred.checks import (
-    is_xarray,
+    has_dataset,
     has_dims,
     has_min_len,
-    has_dataset,
+    is_in_list,
+    is_xarray,
     match_initialized_dims,
     match_initialized_vars,
-    is_in_list,
 )
 from climpred.exceptions import DatasetError, DimensionError, VariableError
 

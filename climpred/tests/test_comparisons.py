@@ -1,12 +1,13 @@
 import numpy as np
 import pytest
 import xarray as xr
+from xarray.testing import assert_equal
+
 from climpred.comparisons import Comparison, __e2c, __m2c, __m2e, __m2m, _drop_members
 from climpred.constants import PM_COMPARISONS, PROBABILISTIC_PM_COMPARISONS
 from climpred.prediction import compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import get_comparison_class
-from xarray.testing import assert_equal
 
 
 @pytest.fixture

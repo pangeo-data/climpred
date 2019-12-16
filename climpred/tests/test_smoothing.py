@@ -1,4 +1,5 @@
 import pytest
+
 from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,

@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v1.2.0 (2019-12-14)
+climpred v1.2.0 (2019-12-16)
 ============================
 
 Depreciated
@@ -18,7 +18,7 @@ New Features
 
 - New deterministic metrics (see `metrics <metrics.html>`_). (:pr:`264`) `Aaron Spring`_.
 
-    * Spearman ranked correlation (spearman_r_) 
+    * Spearman ranked correlation (spearman_r_)
     * Spearman ranked correlation p-value (spearman_r_p_value_)
     * Mean Absolute Deviation (mad_)
     * Mean Absolute Percent Error (mape_)

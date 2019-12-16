@@ -990,6 +990,7 @@ __msss_murphy = Metric(
     probabilistic=False,
     unit_power=0,
     long_name="Murphy's Mean Square Skill Score",
+    aliases=['msss'],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,

@@ -11,7 +11,7 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
     has_valid_lead_units,
-    is_time_index,
+    convert_time_index,
 )
 from .exceptions import DimensionError
 from .prediction import (
@@ -103,11 +103,13 @@ class PredictionEnsemble:
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
+        # Check that init and lead dimensioss exist
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
-        # Check that init is datetime or cftime
-        is_time_index(xobj['init'].to_index(), 'xobj[init]')
         # Check that there are valid units for lead dimenstion
         has_valid_lead_units(xobj)
+        # Check that init is int, cftime, or datetime; convert
+        # ints or cftime to datetime
+        xobj = convert_time_index(xobj, 'init', 'xobj[init]')
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}

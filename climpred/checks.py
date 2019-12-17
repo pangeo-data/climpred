@@ -1,7 +1,7 @@
 from functools import wraps
 
 import xarray as xr
-from pandas.core.indexes.datetimes import DatetimeIndex
+import pandas as pd
 
 from .exceptions import DatasetError, DimensionError, VariableError
 from .constants import VALID_LEAD_UNITS
@@ -116,6 +116,11 @@ def match_initialized_dims(init, ref, uninitialized=False):
     # since reference products won't have the initialization dimension,
     # temporarily rename to time.
     init = init.rename({'init': 'time'})
+
+    # Check that the reference time dimension is units of DateTimeIndex,
+    # convertm or raise exception
+    ref = convert_time_index(ref, 'time', 'ref[time]')
+
     init_dims = list(init.dims)
     if 'lead' in init_dims:
         init_dims.remove('lead')
@@ -168,13 +173,42 @@ def has_valid_lead_units(xobj):
     return True
 
 
-def is_time_index(xobj, kind):
+def convert_time_index(xobj, time_string, kind):
     """
-    Checks that xobj coming through is a DatetimeIndex or CFTimeIndex.
+    Checks that the time dimension coming through is a DatetimeIndex,
+    CFTimeIndex, Float64Index, or Int64Index
+    Raises exception and exits if none of these.
+    Converts CFTimeIndex, Float64Index, or Int64Index to DatetimeIndex.
+
     """
-    if not (isinstance(xobj, xr.CFTimeIndex) or isinstance(xobj, DatetimeIndex)):
-        raise ValueError(
-            f'Your {kind} object must be either an xr.CFTimeIndex or '
-            f'pd.DatetimeIndex.'
-        )
-    return True
+
+    time_index = xobj[time_string].to_index()
+
+    # If a DatetimeIndex, nothing to do, otherwise check for other
+    # options and convert or raise error
+    if not isinstance(time_index, pd.DatetimeIndex):
+
+        # If time_index is Float64Index or Int64Index, treat as
+        # annual data and convert to DateTimeIndex
+        if isinstance(time_index, pd.Float64Index) | isinstance(
+            time_index, pd.Int64Index
+        ):
+
+            startdate = str(int(time_index[0])) + '-01-01'
+            enddate = str(int(time_index[-1])) + '-01-01'
+            time_index = pd.date_range(start=startdate, end=enddate, freq='AS')
+            xobj[time_string] = time_index
+
+        # If time_index type is CFTimeIndex, convert to pd.DatetimeIndex
+        elif isinstance(time_index, xr.CFTimeIndex):
+            xobj = xr.decode_cf(xobj, decode_times=True)
+
+        # Raise error if time_index is not integer, CFTimeIndex, or pd.DattimeIndex
+        else:
+            raise ValueError(
+                f'Your {kind} object must be pd.Float64Index, '
+                'pd.Int64Index, xr.CFTimeIndex or '
+                'pd.DatetimeIndex.'
+            )
+
+    return xobj

@@ -1,8 +1,9 @@
-numpy
-xarray
-scipy
-xskillscore>=0.0.5
 eofs
 matplotlib
+numpy
+pandas
+scipy
 tqdm
+xarray
 xrft
+xskillscore>=0.0.9

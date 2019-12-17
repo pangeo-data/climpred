@@ -41,6 +41,48 @@ PerfectModelEnsemble
 .. autosummary:: _e2c
 
 
+User-defined comparisons
+########################
+
+You can also construct your own comparisons via the :py:class:`climpred.comparisons.Comparison` class.
+
+.. autosummary:: Comparison
+
+First, write your own comparison function, similar to the existing ones. If a comparison should also be used for probabilistic metrics, use ``stack_dims`` to return ``forecast`` with ``member`` dimension and ``reference`` without. For deterministic metric, return ``forecast`` and ``reference`` with identical dimensions::
+
+  from climpred.comparisons import Comparison, _drop_members
+
+  def _my_m2median_comparison(ds, stack_dims=True):
+      """Identical to m2e but median."""
+      reference_list = []
+      forecast_list = []
+      supervector_dim = 'member'
+      for m in ds.member.values:
+          forecast = _drop_members(ds, rmd_member=[m]).median('member')
+          reference = ds.sel(member=m).squeeze()
+          forecast_list.append(forecast)
+          reference_list.append(reference)
+      reference = xr.concat(reference_list, supervector_dim)
+      forecast = xr.concat(forecast_list, supervector_dim)
+      forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
+      reference[supervector_dim] = np.arange(reference[supervector_dim].size)
+      return forecast, reference
+
+Then initialize this comparison function with :py:class:`climpred.comparisons.Comparison`::
+
+  __my_m2median_comparison = Comparison(
+      name='m2me',
+      function=_my_m2median_comparison,
+      probabilistic=False,
+      hindcast=False)
+
+Finally, compute skill based on your own comparison::
+
+  skill = compute_perfect_model(ds, control, metric='rmse', comparison=__my_m2median_comparison)
+
+Once you come up with an useful comparison for your problem, consider contributing this comparison to `climpred`, so all users can benefit from your comparison, see :ref:`contributing`.
+
+
 References
 ##########
 

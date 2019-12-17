@@ -107,4 +107,10 @@ venv.bak/
 # mypy
 .mypy_cache/
 
+# asv
+asv_bench/.asv/
+
+# VS Code
+.vscode/
+
 # End of https://www.gitignore.io/api/python

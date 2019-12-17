@@ -11,3 +11,6 @@ flake8 climpred --max-line-length=88 --exclude=__init__.py --ignore=W605,W503,C9
 
 echo "[black]"
 black --check --line-length=88 -S climpred
+
+echo "[isort]"
+isort --recursive -w 88 --check-only climpred

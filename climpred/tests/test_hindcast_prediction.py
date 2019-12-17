@@ -1,6 +1,7 @@
 import dask
 import numpy as np
 import pytest
+
 from climpred.bootstrap import bootstrap_hindcast
 from climpred.constants import (
     CLIMPRED_DIMS,

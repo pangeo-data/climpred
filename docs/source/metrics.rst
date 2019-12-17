@@ -14,7 +14,7 @@ All high-level functions have an optional ``metric`` argument that can be called
 
 .. currentmodule:: climpred.metrics
 
-Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by :py:func:`climpred.prediction.compute_hindcast` or :py:func:`climpred.prediction.compute_perfect_model` to specify over which dimensions the ``metric`` is applied. See :ref:`comparisons`.
+Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by :py:func:`~climpred.prediction.compute_hindcast` or :py:func:`~climpred.prediction.compute_perfect_model` to specify over which dimensions the ``metric`` is applied. See :ref:`comparisons`.
 
 
 Deterministic

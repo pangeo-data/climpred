@@ -6,7 +6,6 @@ import numpy.polynomial.polynomial as poly
 import scipy.stats as ss
 import xarray as xr
 from xrft import power_spectrum
-
 from xskillscore import pearson_r, pearson_r_p_value
 
 from .checks import has_dims, is_xarray

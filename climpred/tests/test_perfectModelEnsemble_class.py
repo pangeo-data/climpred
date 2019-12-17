@@ -1,4 +1,5 @@
 import pytest
+
 from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
 

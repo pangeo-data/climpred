@@ -5,10 +5,12 @@ dependencies:
   - python=3.6
   # Documentation
   - nbsphinx
+  - nbstripout
   - sphinx_rtd_theme
   - sphinx
   - sphinxcontrib-napoleon
   # IDE
+  - ipywidgets
   - jupyterlab
   # Input/Output
   - netcdf4
@@ -25,6 +27,7 @@ dependencies:
   - coveralls
   - flake8
   - importlib_metadata
+  - isort
   - pre-commit
   - pylint
   - pytest

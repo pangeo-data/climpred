@@ -10,7 +10,7 @@ High-Level Classes
 .. currentmodule:: climpred.classes
 
 
-A primary feature of ``climpred`` is our prediction ensemble objects, ``HindcastEnsemble`` and ``PerfectModelEnsemble``. Users can append their initialized ensemble to these classes, as well as an arbitrary number of references (assimilations, reconstructions, observations), control runs, and uninitialized ensembles.
+A primary feature of ``climpred`` is our prediction ensemble objects, :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble`. Users can append their initialized ensemble to these classes, as well as an arbitrary number of references (assimilations, reconstructions, observations), control runs, and uninitialized ensembles.
 
 HindcastEnsemble
 ~~~~~~~~~~~~~~~~
@@ -104,7 +104,7 @@ Generate Data
 Direct Function Calls
 ---------------------
 
-A user can directly call functions in ``climpred``. This requires entering more arguments, e.g. the initialized ensemble ``xr.Dataset``/``xr.DataArray`` directly as well as a reference product or control run. Our objects ``HindcastEnsemble`` and ``PerfectModelEnsemble`` wrap most of these functions, making the analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will likely depricate the ability to call them directly.
+A user can directly call functions in ``climpred``. This requires entering more arguments, e.g. the initialized ensemble :py:class:`~xarray.core.dataset.Dataset`/:py:class:`xarray.core.dataarray.DataArray` directly as well as a reference product or control run. Our objects :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will likely depricate the ability to call them directly.
 
 Bootstrap
 ~~~~~~~~~

@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import __m2c
 from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS

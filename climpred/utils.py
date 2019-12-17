@@ -1,18 +1,26 @@
 import datetime
+import types
 
 import numpy as np
-import pandas as pd
 import xarray as xr
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import METRIC_ALIASES, LEAD_UNITS_LIST
+from .constants import (
+    DETERMINISTIC_HINDCAST_METRICS,
+    DETERMINISTIC_PM_METRICS,
+    DIMENSIONLESS_METRICS,
+    HINDCAST_COMPARISONS,
+    METRIC_ALIASES,
+    PM_COMPARISONS,
+    PROBABILISTIC_METRICS,
+)
 
 
-def get_metric_class(metric, list_):
+def get_metric_function(metric, list_):
     """
-    This allows the user to submit a string representing the desired metric
-    to the corresponding metric class.
+    This allows the user to submit a string representing the desired function
+    to anything that takes a metric.
 
     Currently compatable with functions:
     * compute_persistence()
@@ -21,29 +29,29 @@ def get_metric_class(metric, list_):
 
     Args:
         metric (str): name of metric.
-        list_ (list): check whether metric in list
 
     Returns:
-        metric (Metric): class object of the metric.
+        metric (function): function object of the metric.
 
+    Raises:
+        KeyError: if metric not implemented.
     """
-    if isinstance(metric, metrics.Metric):
+    # catches issues with wrappers, etc. that actually submit the
+    # proper underscore function
+    if isinstance(metric, types.FunctionType):
         return metric
-    elif isinstance(metric, str):
-        # check if metric allowed
-        is_in_list(metric, list_, 'metric')
-        metric = METRIC_ALIASES.get(metric, metric)
-        return getattr(metrics, '__' + metric)
     else:
-        raise ValueError(
-            f'Please provide metric as str or Metric class, found {type(metric)}'
-        )
+        # equivalent of: `if metric in METRIC_ALIASES;
+        # METRIC_ALIASES[metric]; else metric`
+        metric = METRIC_ALIASES.get(metric, metric)
+        is_in_list(metric, list_, 'metric')
+        return getattr(metrics, '_' + metric)
 
 
-def get_comparison_class(comparison, list_):
+def get_comparison_function(comparison, list_):
     """
-    Converts a string comparison entry from the user into a Comparison class
-     for the package to interpret.
+    Converts a string comparison entry from the user into an actual
+     function for the package to interpret.
 
     PERFECT MODEL:
     m2m: Compare all members to all other members.
@@ -59,14 +67,14 @@ def get_comparison_class(comparison, list_):
         comparison (str): name of comparison.
 
     Returns:
-        comparison (Comparison): comparison class.
+        comparison (function): comparison function.
 
     """
-    if isinstance(comparison, comparisons.Comparison):
+    if isinstance(comparison, types.FunctionType):
         return comparison
     else:
         is_in_list(comparison, list_, 'comparison')
-        return getattr(comparisons, '__' + comparison)
+        return getattr(comparisons, '_' + comparison)
 
 
 def intersect(lst1, lst2):
@@ -85,20 +93,13 @@ def reduce_time_series(forecast, reference, nlags):
         reference (`xarray` object): reference being compared to (for skill,
                                      persistence, etc.)
         nlags (int): number of lags being computed
+
     Returns:
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
-
     imin = max(forecast.time.min(), reference.time.min())
-    offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), nlags)
-
-    ref_dates = pd.to_datetime(
-        reference.time.dt.strftime('%Y%m%d 00:00')
-    ) - pd.DateOffset(**offset_args_dict)
-
-    imax = min(forecast.time[-1], ref_dates[-1])
-
+    imax = min(forecast.time.max(), reference.time.max() - nlags)
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)
@@ -116,8 +117,8 @@ def assign_attrs(
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
-        metric (class) : metric used in comparing the forecast and reference.
-        comparison (class): how to compare the forecast and reference.
+        metric (str) : metric used in comparing the forecast and reference.
+        comparison (str): how to compare the forecast and reference.
 
     Returns:
        skill (`xarray` object): prediction skill with additional attrs.
@@ -135,16 +136,24 @@ def assign_attrs(
     if 'member' in ds.coords:
         skill.attrs['number_of_members'] = ds.member.size
 
-    skill.attrs['metric'] = metric.name
-    skill.attrs['comparison'] = comparison.name
+    ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
+    ALL_METRICS = (
+        DETERMINISTIC_HINDCAST_METRICS
+        + DETERMINISTIC_PM_METRICS
+        + PROBABILISTIC_METRICS
+    )
+    comparison = get_comparison_function(comparison, ALL_COMPARISONS).__name__.lstrip(
+        '_'
+    )
+    metric = get_metric_function(metric, ALL_METRICS).__name__.lstrip('_')
+    skill.attrs['metric'] = metric
+    skill.attrs['comparison'] = comparison
 
-    # change unit power
-    if metric.unit_power == 0:
+    # adapt units
+    if metric in DIMENSIONLESS_METRICS:
         skill.attrs['units'] = 'None'
-    if metric.unit_power >= 2 and 'units' in skill.attrs:
-        p = metric.unit_power
-        p = int(p) if int(p) == p else p
-        skill.attrs['units'] = f"({skill.attrs['units']})^{p}"
+    if metric == 'mse' and 'units' in skill.attrs:
+        skill.attrs['units'] = f"({skill.attrs['units']})^2"
 
     # check for none attrs and remove
     del_list = []
@@ -179,33 +188,3 @@ def copy_coords_from_to(xro_from, xro_to):
             f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
         )
     return xro_to
-
-
-def get_lead_pdoffset_args(units, lead):
-    """Determines the date increment to use when adding the lead time to
-       init time based on the units attribute.
-
-    Args:
-        units (str): units associated with the lead dimension. Must be
-                     years, seasons, months, weeks, pentads, days
-        lead (int): increment of lead being computed
-
-    Returns:
-       offset_args_dict (dict of str: int): dictionary specifying the
-                                           str for the temporal parameter to
-                                           add to the offset and int indicating the
-                                           amount ot add.
-
-    """
-
-    if units in LEAD_UNITS_LIST:
-        offset_args_dict = {units: lead}
-    elif units == 'seasons':
-        offset_args_dict = {'months': lead + 3}
-    elif units == 'pentads':
-        offset_args_dict = {'days': lead + 5}
-    else:
-        offset_args_dict = {units: lead}
-        print(units, ' is not a valid choice')
-
-    return offset_args_dict

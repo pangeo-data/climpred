@@ -5,10 +5,10 @@ import xarray as xr
 from tqdm.auto import tqdm
 
 from .checks import has_dims
-from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
+from .constants import POSITIVELY_ORIENTED_METRICS, PROBABILISTIC_METRICS
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
-from .utils import assign_attrs, get_comparison_class, get_metric_class
+from .utils import assign_attrs
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
@@ -44,14 +44,14 @@ def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
     Args:
         simple_fct (xarray object): persistence or uninit skill.
         init (xarray object): hindcast skill.
-        metric (Metric): metric class Metric
+        metric (str): name of metric
 
     Returns:
         pv (xarray object): probability that simple forecast performs better
                             than initialized forecast.
     """
     pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
-    if not metric.positive:
+    if metric not in POSITIVELY_ORIENTED_METRICS:
         pv = 1 - pv
     return pv
 
@@ -297,13 +297,6 @@ def bootstrap_compute(
     uninit = []
     pers = []
 
-    # get metric function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    # get class Metric(metric)
-    metric = get_metric_class(metric, ALL_METRICS)
-    # get comparison function
-    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
-
     # which dim should be resampled: member or init
     if dim == 'member' and 'member' in hind.dims:
         members = hind.member.values
@@ -336,7 +329,7 @@ def bootstrap_compute(
         # reset inits when probabilistic, otherwise tests fail
         if (
             shuffle_dim == 'init'
-            and metric.probabilistic
+            and metric in PROBABILISTIC_METRICS
             and 'init' in init_skill.coords
         ):
             init_skill['init'] = inits
@@ -359,7 +352,7 @@ def bootstrap_compute(
         )
         # compute persistence skill
         # impossible for probabilistic
-        if not metric.probabilistic:
+        if metric not in PROBABILISTIC_METRICS:
             pers.append(
                 compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
@@ -405,7 +398,7 @@ def bootstrap_compute(
         del init_skill['member']
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
-    if not metric.probabilistic:
+    if metric not in PROBABILISTIC_METRICS:
         pers_skill = compute_persistence(
             hind, reference, metric=metric, **metric_kwargs
         )
@@ -434,8 +427,8 @@ def bootstrap_compute(
     if set(results.coords) != set(ci.coords):
         res_drop = [c for c in results.coords if c not in ci.coords]
         ci_drop = [c for c in ci.coords if c not in results.coords]
-        results = results.drop_vars(res_drop)
-        ci = ci.drop_vars(ci_drop)
+        results = results.drop(res_drop)
+        ci = ci.drop(ci_drop)
     results = xr.concat([results, ci], 'results')
     results['results'] = ['skill', 'p', 'low_ci', 'high_ci']
     # Attach climpred compute information to skill

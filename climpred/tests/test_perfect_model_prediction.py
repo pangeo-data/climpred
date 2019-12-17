@@ -1,6 +1,5 @@
 import dask
 import pytest
-
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import CLIMPRED_DIMS, DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
@@ -73,15 +72,14 @@ def test_pvalue_from_bootstrapping(pm_da_ds1d, pm_da_control1d, metric):
             pm_da_ds1d,
             pm_da_control1d,
             metric=metric,
-            bootstrap=5,
+            bootstrap=20,
             comparison='e2c',
             sig=sig,
-            dim='init',
         )
         .sel(kind='uninit', results='p')
         .isel(lead=0)
     )
-    assert actual.values < 2 * (1 - sig / 100)
+    assert actual < 2 * (1 - sig / 100)
 
 
 @pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
@@ -220,7 +218,6 @@ def test_compute_pm_dask_spatial(ds_3d_NA, control_3d_NA, comparison, metric):
                 control_3d_NA.chunk({dim: step}),
                 comparison=comparison,
                 metric=metric,
-                dim='init',
             )
             # check for chunks
             assert dask.is_dask_collection(res_chunked)
@@ -238,7 +235,7 @@ def test_compute_pm_dask_climpred_dims(ds_3d_NA, control_3d_NA, comparison, metr
         if dim in control_3d_NA.dims:
             control_3d_NA = control_3d_NA.chunk({dim: step})
         res_chunked = compute_perfect_model(
-            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric, dim='init'
+            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric
         )
         # check for chunks
         assert dask.is_dask_collection(res_chunked)

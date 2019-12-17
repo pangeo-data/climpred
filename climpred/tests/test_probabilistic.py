@@ -1,12 +1,11 @@
 import pytest
-
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
-    METRIC_ALIASES,
-    PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
+    PM_COMPARISONS,
+    METRIC_ALIASES,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
@@ -323,7 +322,7 @@ def test_compute_hindcast_probabilistic_metric_e2r_fails(
             metric=metric,
             dim='member',
         )
-    assert f'Probabilistic metric `{metric}` requires comparison `m2r`' in str(
+    assert f'Probabilistic metric `{metric}` requires comparison `m2r`.' in str(
         excinfo.value
     )
 

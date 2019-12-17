@@ -10,6 +10,7 @@ dependencies:
   - sphinx
   - sphinxcontrib-napoleon
   # IDE
+  - ipywidgets
   - jupyterlab
   # Input/Output
   - netcdf4

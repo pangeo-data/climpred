@@ -165,6 +165,22 @@ def assign_attrs(
     return skill
 
 
+def copy_coords_from_to(xro_from, xro_to):
+    """Copy coords from one xr object to another."""
+    if isinstance(xro_from, xr.DataArray) and isinstance(xro_to, xr.DataArray):
+        for c in xro_from.coords:
+            xro_to[c] = xro_from[c]
+        return xro_to
+    elif isinstance(xro_from, xr.Dataset) and isinstance(xro_to, xr.Dataset):
+        xro_to = xro_to.assign_coords(**xro_from.coords)
+    else:
+        raise ValueError(
+            f'xro_from and xro_to must be both either xr.DataArray or',
+            f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
+        )
+    return xro_to
+
+
 def get_lead_pdoffset_args(units, lead):
     """Determines the date increment to use when adding the lead time to
        init time based on the units attribute.

@@ -25,14 +25,24 @@ Deterministic metrics quantify the level to which the forecast predicts the obse
 Core Metrics
 ============
 
-Anomaly Correlation Coefficient (ACC)
--------------------------------------
+Pearson Anomaly Correlation Coefficient (ACC)
+---------------------------------------------
 
-``keyword: 'pearson_r','pr','acc'``
+``keyword: 'pearson_r', 'pr', 'pacc', 'acc'``
 
 A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [Jolliffe2011]_. ``climpred`` uses the Pearson correlation coefficient.
 
 .. autofunction:: _pearson_r
+
+
+Spearman Anomaly Correlation Coefficient (SACC)
+-----------------------------------------------
+
+``keyword: 'spearman_r', 'sacc', 'sr'``
+
+A measure of how well the relationship between two variables can be described using a monotonic function.
+
+.. autofunction:: _spearman_r
 
 
 Mean Squared Error (MSE)
@@ -42,8 +52,8 @@ Mean Squared Error (MSE)
 
 The average of the squared difference between forecasts and observations. This incorporates both the variance and bias of the estimator.
 
-
 .. autofunction:: _mse
+
 
 Root Mean Square Error (RMSE)
 -----------------------------
@@ -65,6 +75,15 @@ The average of the absolute differences between forecasts and observations [Joll
 
 .. autofunction:: _mae
 
+
+Median Absolute Deviation (MAD)
+-------------------------------
+
+``keyword: 'mad'``
+
+The median of the absolute differences between forecasts and observations.
+
+.. autofunction:: _mad
 
 
 Derived Metrics
@@ -103,6 +122,26 @@ Mean Square Skill Score (MSSS)
 ``keyword: 'msss','ppp'``
 
 .. autofunction:: _ppp
+
+
+Mean Absolute Percentage Error (MAPE)
+---------------------------------------
+
+``keyword: 'mape'``
+
+The mean of the absolute differences between forecasts and observations normalized by observations.
+
+.. autofunction:: _mape
+
+
+Symmetric Mean Absolute Percentage Error (sMAPE)
+------------------------------------------------
+
+``keyword: 'smape'``
+
+The mean of the absolute differences between forecasts and observations normalized by their sum.
+
+.. autofunction:: _smape
 
 
 Unbiased ACC
@@ -192,6 +231,38 @@ Threshold Brier Score
 
 .. autofunction:: _threshold_brier_score
 
+
+User-defined metrics
+####################
+
+You can also construct your own metrics via the :py:class:`climpred.metrics.Metric` class.
+
+.. autosummary:: Metric
+
+First, write your own metric function, similar to the existing ones with required arguments ``forecast``, ``reference``, ``dim=None``, and ``**metric_kwargs``::
+
+  from climpred.metrics import Metric
+
+  def _my_msle(forecast, reference, dim=None, **metric_kwargs):
+      """Mean squared logarithmic error (MSLE).
+      https://peltarion.com/knowledge-center/documentation/modeling-view/build-an-ai-model/loss-functions/mean-squared-logarithmic-error."""
+      return ( (np.log(forecast + 1) + np.log(reference + 1) ) ** 2).mean(dim)
+
+Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
+
+  _my_msle = Metric(
+      name='my_msle',
+      function=_my_msle,
+      probabilistic=False,
+      positive=False,
+      unit_power=0,
+      )
+
+Finally, compute skill based on your own metric::
+
+  skill = compute_perfect_model(ds, control, metric='rmse', comparison=_my_msle)
+
+Once you come up with an useful metric for your problem, consider contributing this metric to `climpred`, so all users can benefit from your metric, see :ref:`contributing`.
 
 References
 ##########

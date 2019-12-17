@@ -7,7 +7,7 @@ climpred v1.2.1 (2019-12-##)
 
 Bug Fixes
 ---------
-- ``climpred`` now requires ``xarray`` version 0.14.1 so that the ``drop_vars()`` keyword used in our package does not throw an error. (:pr:`###`) `Riley X. Brady`_
+- ``climpred`` now requires ``xarray`` version 0.14.1 so that the ``drop_vars()`` keyword used in our package does not throw an error. (:pr:`276`) `Riley X. Brady`_
 
 climpred v1.2.0 (2019-12-17)
 ============================

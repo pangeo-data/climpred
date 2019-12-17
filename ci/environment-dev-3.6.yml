@@ -28,6 +28,7 @@ dependencies:
   - importlib_metadata
   - pre-commit
   - pylint
+  - bottleneck
   - pytest
   - pytest-cov
   # Performance

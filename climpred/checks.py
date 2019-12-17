@@ -4,6 +4,7 @@ import xarray as xr
 from pandas.core.indexes.datetimes import DatetimeIndex
 
 from .exceptions import DatasetError, DimensionError, VariableError
+from .constants import VALID_LEAD_UNITS
 
 # the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
 # from .constants import VALID_LEAD_UNITS

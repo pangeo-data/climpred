@@ -261,6 +261,7 @@ def compute_hindcast(
 
         # take real time reference of real time forecast dates
         b = reference.sel(time=a.time.values)
+
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
             metric_kwargs.update(
@@ -275,7 +276,7 @@ def compute_hindcast(
         # Had to rechunk to put time all in 1 chunk,
         # also testing mmember all in one chunk?
         # Runs really slow even though I am testing with a subsetted region
-
+        
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)

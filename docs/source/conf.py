@@ -63,7 +63,7 @@ pygments_style = 'sphinx'
 source_suffix = '.rst'
 master_doc = 'index'
 
-nbsphinx_timeout = 60
+nbsphinx_timeout = 180  # 3 minute timeout 
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

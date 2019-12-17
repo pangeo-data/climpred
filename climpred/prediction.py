@@ -5,7 +5,7 @@ import xarray as xr
 import pandas as pd
 
 from .checks import is_in_list, is_xarray
-from .comparisons import _e2c
+from .comparisons import __e2c
 from .constants import (
     CLIMPRED_DIMS,
     DETERMINISTIC_HINDCAST_METRICS,
@@ -14,14 +14,12 @@ from .constants import (
     METRIC_ALIASES,
     PM_COMPARISONS,
     PM_METRICS,
-    PROBABILISTIC_METRICS,
-    PROBABILISTIC_PM_COMPARISONS,
 )
 from .utils import (
     assign_attrs,
     copy_coords_from_to,
-    get_comparison_function,
-    get_metric_function,
+    get_comparison_class,
+    get_metric_class,
     intersect,
     reduce_time_series,
     get_lead_pdoffset_args,
@@ -51,10 +49,10 @@ def compute_perfect_model(
         ds (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
         control (xarray object): control with dimension ``time``.
         metric (str): `metric` name, see
-         :py:func:`climpred.utils.get_metric_function` and (see :ref:`Metrics`).
+         :py:func:`climpred.utils.get_metric_class` and (see :ref:`Metrics`).
         comparison (str): `comparison` name defines what to take as forecast
             and verification (see
-            :py:func:`climpred.utils.get_comparison_function` and :ref:`Comparisons`).
+            :py:func:`climpred.utils.get_comparison_class` and :ref:`Comparisons`).
         dim (str or list): dimension to apply metric over. default: ['member', 'init']
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric.
@@ -70,56 +68,50 @@ def compute_perfect_model(
     is_in_list(dim, ['member', 'init', ['init', 'member']], '')
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+    # get class metric(Metric)
+    metric = get_metric_class(metric, PM_METRICS)
+    # get class comparison(Comparison)
+    comparison = get_comparison_class(comparison, PM_COMPARISONS)
     # if stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
     # if not stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
-    if metric in PROBABILISTIC_METRICS:
-        if comparison not in PROBABILISTIC_PM_COMPARISONS:
+    if metric.probabilistic:
+        if not comparison.probabilistic:
             raise ValueError(
-                f'Probabilistic metric {metric} cannot work with '
-                f'comparison {comparison}.'
+                f'Probabilistic metric {metric.name} cannot work with '
+                f'comparison {comparison.name}.'
             )
         stack_dims = False
         if dim != 'member':
             warnings.warn(
-                f'Probabilistic metric {metric} requires to be '
+                f'Probabilistic metric {metric.name} requires to be '
                 f'computed over dimension `dim="member"`. '
                 f'Set automatically.'
             )
             dim = 'member'
-    elif set(dim) == set(['init', 'member']):
-        dim_to_apply_metric_to = 'svd'
-        stack_dims = True
     else:
-        if metric == 'pearson_r':
-            # it doesnt fail though; we could also raise ValueError here
+        # prevent comparison e2c and member in dim
+        if (comparison.name == 'e2c') and (
+            set(dim) == set(['init', 'member']) or dim == 'member'
+        ):
             warnings.warn(
-                'ACC doesnt work on dim other than'
-                '["init", "member"] in perfect-model framework.'
+                f'comparison `e2c` does not work on `member` in dims, found '
+                f'{dim}, automatically changed to dim=`init`.'
             )
+            dim = 'init'
         stack_dims = False
+    dim_to_apply_metric_to = dim
 
-    if not stack_dims:
-        dim_to_apply_metric_to = dim
-
-    comparison = get_comparison_function(comparison, PM_COMPARISONS)
-
-    forecast, reference = comparison(ds, dim_to_apply_metric_to, stack_dims=stack_dims)
+    # stack_dims = True when metric probabilistic
+    forecast, reference = comparison.function(ds, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
-    if (forecast.dims != reference.dims) and (metric not in PROBABILISTIC_METRICS):
+    if (forecast.dims != reference.dims) and (not metric.probabilistic):
         # broadcast when deterministic dim=member
         forecast, reference = xr.broadcast(forecast, reference)
-        # m2m creates additional forecast_member when over dim member
-        if comparison.__name__ == '_m2m':
-            dim_to_apply_metric_to = 'forecast_member'
-        else:
-            dim_to_apply_metric_to = dim
 
-    metric = get_metric_function(metric, PM_METRICS)
-
-    skill = metric(
+    skill = metric.function(
         forecast,
         reference,
         dim=dim_to_apply_metric_to,
@@ -128,15 +120,10 @@ def compute_perfect_model(
     )
 
     # correction for distance based metrics in m2m comparison
-    comparison_name = comparison.__name__[1:]
     # fix for m2m TODO
-    if comparison_name == 'm2m':
+    if comparison.name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
-        if dim == 'member' and 'member' in skill.dims:
-            skill = skill.mean('member')
-        if dim == 'init' and 'init' in skill.dims:
-            skill = skill.mean('init')
         # m2m stack_dims=False has one identical comparison
         skill = skill * (forecast.member.size / (forecast.member.size - 1))
     # Attach climpred compute information to skill
@@ -176,7 +163,7 @@ def compute_hindcast(
         metric (str):
             Metric used in comparing the decadal prediction ensemble with the
             reference
-            (see :py:func:`climpred.utils.get_metric_function` and :ref:`Metrics`).
+            (see :py:func:`climpred.utils.get_metric_class` and :ref:`Metrics`).
         comparison (str):
             How to compare the decadal prediction ensemble to the reference:
 
@@ -204,20 +191,25 @@ def compute_hindcast(
 
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+    # get class metric(Metric)
+    metric = get_metric_class(metric, HINDCAST_METRICS)
+    # get class comparison(Comparison)
+    comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
 
     # if stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
     # if not stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
-    if metric in PROBABILISTIC_METRICS:
-        if comparison != 'm2r':
+    if metric.probabilistic:
+        if comparison.name != 'm2r':
             raise ValueError(
-                f'Probabilistic metric `{metric}` requires comparison `m2r`.'
+                f'Probabilistic metric `{metric.name}` requires comparison'
+                f' `m2r`, found {comparison.name}.'
             )
         stack_dims = False
         if dim != 'member':
             warnings.warn(
-                f'Probabilistic metric {metric} requires to be '
+                f'Probabilistic metric {metric.name} requires to be '
                 f'computed over dimension `dim="member"`. '
                 f'Set automatically.'
             )
@@ -228,26 +220,23 @@ def compute_hindcast(
         stack_dims = False
     else:
         raise ValueError(
-            f'Please use a probabilistic metric [now {metric}] ',
-            f'and the comparison `m2r` [now {comparison}] or ',
+            f'Please use a probabilistic metric [now {metric.name}] ',
+            f'and the comparison `m2r` [now {comparison.name}] or ',
             f'specify dim from ["init", "member"], now: {dim}.',
         )
     nlags = max(hind.lead.values)
-    comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
 
-    forecast, reference = comparison(hind, reference, stack_dims=stack_dims)
+    forecast, reference = comparison.function(hind, reference, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
     if (
         (forecast.dims != reference.dims)
         and not stack_dims
-        and metric in DETERMINISTIC_HINDCAST_METRICS
+        and not metric.probabilistic
     ):
         dim_to_apply_metric_to = 'member'
     else:
         dim_to_apply_metric_to = 'time'
-
-    metric = get_metric_function(metric, HINDCAST_METRICS)
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
@@ -265,7 +254,7 @@ def compute_hindcast(
         # take lead i timeseries and convert to real time based on temporal
         # resolution of lead
         offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
-        a = forecast.sel(lead=i).drop('lead')
+        a = forecast.sel(lead=i).drop_vars('lead')
         a['time'] = pd.to_datetime(
             a['time'].dt.strftime('%Y%m%d 00:00')
         ) + pd.DateOffset(**offset_args_dict)
@@ -273,11 +262,26 @@ def compute_hindcast(
         # take real time reference of real time forecast dates
         b = reference.sel(time=a.time.values)
 
+        # adapt weights to shorter time
+        if 'weights' in metric_kwargs:
+            metric_kwargs.update(
+                {
+                    'weights': metric_kwargs['weights'].isel(
+                        time=slice(None, a.time.size)
+                    )
+                }
+            )
+        # broadcast dims when apply over member
+
+        # Had to rechunk to put time all in 1 chunk,
+        # also testing mmember all in one chunk?
+        # Runs really slow even though I am testing with a subsetted region
+        
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
         plag.append(
-            metric(
+            metric.function(
                 a, b, dim=dim_to_apply_metric_to, comparison=comparison, **metric_kwargs
             )
         )
@@ -288,7 +292,7 @@ def compute_hindcast(
         skill = skill.rename({'time': 'init'})
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
-    skill = copy_coords_from_to(hind.drop(drop_dims), skill)
+    skill = copy_coords_from_to(hind.drop_vars(drop_dims), skill)
     # attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -332,11 +336,14 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
-    if metric in PROBABILISTIC_METRICS:
+    # get metric function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    # get class metric(Metric)
+    metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
+    if metric.probabilistic:
         raise ValueError(
-            'probabilistic metric ', metric, 'cannot compute persistence forecast.'
+            'probabilistic metric ', metric.name, 'cannot compute persistence forecast.'
         )
-    metric = get_metric_function(metric, DETERMINISTIC_HINDCAST_METRICS)
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
     if [0] in hind.lead.values:
@@ -368,9 +375,15 @@ def compute_persistence(
         ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
-        plag.append(metric(ref, fct, dim='time', comparison=_e2c, **metric_kwargs))
+        plag.append(
+            metric.function(ref, fct, dim='time', comparison=__e2c, **metric_kwargs)
+        )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
+    # keep coords from hind
+    drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
+    pers = copy_coords_from_to(hind.drop_vars(drop_dims), pers)
+    # TODO: add climpred metadata
     return pers
 
 
@@ -409,14 +422,14 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
-    comparison = get_comparison_function(comparison, HINDCAST_COMPARISONS)
-    metric = get_metric_function(metric, DETERMINISTIC_HINDCAST_METRICS)
-    forecast, reference = comparison(uninit, reference)
+    comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
+    metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
+    forecast, reference = comparison.function(uninit, reference)
     # Find common times between two for proper comparison.
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)
     reference = reference.sel(time=common_time)
-    uninit_skill = metric(
+    uninit_skill = metric.function(
         forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
     )
     # Attach climpred compute information to skill

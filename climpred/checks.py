@@ -6,6 +6,10 @@ from pandas.core.indexes.datetimes import DatetimeIndex
 from .exceptions import DatasetError, DimensionError, VariableError
 from .constants import VALID_LEAD_UNITS
 
+# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
+# from .constants import VALID_LEAD_UNITS
+VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
+
 
 # https://stackoverflow.com/questions/10610824/
 # python-shortcut-for-writing-decorators-which-accept-arguments

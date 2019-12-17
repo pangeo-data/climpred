@@ -1,13 +1,8 @@
 from functools import wraps
 
 import xarray as xr
-from pandas.core.indexes.datetimes import DatetimeIndex
 
 from .exceptions import DatasetError, DimensionError, VariableError
-
-# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
-# from .constants import VALID_LEAD_UNITS
-VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
 
 
 # https://stackoverflow.com/questions/10610824/
@@ -146,34 +141,5 @@ def match_initialized_vars(init, ref):
             'Please provide a Dataset/DataArray with at least '
             'one matching variable to the initialized prediction ensemble; '
             f'got {init_vars} for init and {ref_vars} for ref.'
-        )
-    return True
-
-
-def has_valid_lead_units(xobj):
-
-    if hasattr(xobj['lead'], 'units'):
-
-        if not getattr(xobj['lead'], 'units') in VALID_LEAD_UNITS:
-            raise DimensionError(
-                'The lead dimension must must have a valid '
-                f'units attribute: e.g. {VALID_LEAD_UNITS}'
-            )
-    else:
-        raise DimensionError(
-            'The lead dimension must must have a '
-            f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
-        )
-    return True
-
-
-def is_time_index(xobj, kind):
-    """
-    Checks that xobj coming through is a DatetimeIndex or CFTimeIndex.
-    """
-    if not (isinstance(xobj, xr.CFTimeIndex) or isinstance(xobj, DatetimeIndex)):
-        raise ValueError(
-            f'Your {kind} object must be either an xr.CFTimeIndex or '
-            f'pd.DatetimeIndex.'
         )
     return True

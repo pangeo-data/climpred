@@ -6,7 +6,6 @@ nbsphinx
 bottleneck
 matplotlib
 numpy
-pandas
 xarray
 jupyterlab
 netcdf4

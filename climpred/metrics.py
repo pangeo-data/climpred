@@ -8,41 +8,26 @@ from xskillscore import (
     crps_ensemble,
     crps_gaussian,
     crps_quadrature,
-    mad,
     mae,
-    mape,
     mse,
     pearson_r,
     pearson_r_p_value,
     rmse,
-    smape,
-    spearman_r,
-    spearman_r_p_value,
     threshold_brier_score,
 )
 
-# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
-# from .constants import CLIMPRED_DIMS
-CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
+from .constants import CLIMPRED_DIMS
 
 
 def _get_norm_factor(comparison):
-    """Get normalization factor with respect to the type of comparison used for
-     normalized distance-based metrics PPP, NMSE, NRMSE, MSSS, NMAE.
+    """Get normalization factor for PPP, NMSE, NRMSE, MSSS.
 
-    A distance-based metric is normalized by the standard deviation or variance
-     of a reference/control simulation. The goal of a normalized distance-based
-     metric is to get a constant and comparable value of typically 1 (or 0 for
-     metrics defined as 1 - ), when the metric saturizes and the predictability
-     horizon is reached.
-     To directly compare skill between different comparisons used, a factor is
-     added in the normalized metric formula, see Seferian et al. 2018.
-     Exemplarily, NRMSE gets smaller in comparison 'm2e' than 'm2m' by design
-     because the ensemble mean is always closer to individual ensemble members
-     than ensemble members to each other.
+    Used in compute_perfect_model. Comparison 'm2e' gets smaller rmse's than
+    'm2m' by design, see Seferian et al. 2018. 'm2m', 'm2c' ensemble variance
+    is divided by 2 to get control variance.
 
     Args:
-        comparison (class): comparison class.
+        comparison (function): comparison function.
 
     Returns:
         fac (int): normalization factor.
@@ -50,130 +35,26 @@ def _get_norm_factor(comparison):
     Raises:
         KeyError: if comparison is not matching.
 
-    Example:
-        >>> # check skill saturation value of roughly 1 for different comparisons
-        >>> metric='nrmse'
-        >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:
-                s = compute_perfect_model(ds, control, metric=metric,  comparison=c)
-                s.plot(label=' '.join([metric,c]))
-        >>> plt.legend()
-
-    Reference:
-        * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing
-         the Decadal Predictability of Land and Ocean Carbon Uptake.”
-         Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
-
-
     """
-    if comparison.name in ['m2e', 'e2c', 'e2r']:
+    comparison_name = comparison.__name__
+    if comparison_name in ['_m2e', '_e2c', '_e2r']:
         fac = 1
-    elif comparison.name in ['m2c', 'm2m', 'm2r']:
+    elif comparison_name in ['_m2c', '_m2m', '_m2r']:
         fac = 2
     else:
         raise KeyError('specify comparison to get normalization factor.')
     return fac
 
 
-def _display_metric_metadata(self):
-    summary = '----- Metric metadata -----\n'
-    summary += f'Name: {self.name}\n'
-    summary += f'Alias: {self.aliases}\n'
-    # positively oriented
-    if self.positive:
-        summary += 'Orientation: positive\n'
-    else:
-        summary += 'Orientation: negative\n'
-    # probabilistic or deterministic
-    if self.probabilistic:
-        summary += 'Kind: probabilistic\n'
-    else:
-        summary += 'Kind: deterministic\n'
-    summary += f'Power to units: {self.unit_power}\n'
-    summary += f'long_name: {self.long_name}\n'
-    summary += f'Minimum skill: {self.minimum}\n'
-    summary += f'Maximum skill: {self.maximum}\n'
-    summary += f'Perfect skill: {self.perfect}\n'
-    summary += f'Strictly proper score: {self.proper}\n'
-    # doc
-    summary += f'Function: {self.function.__doc__}\n'
-    return summary
-
-
-class Metric:
-    """Master class for all metrics."""
-
-    def __init__(
-        self,
-        name,
-        function,
-        positive,
-        probabilistic,
-        unit_power,
-        long_name=None,
-        aliases=None,
-        minimum=None,
-        maximum=None,
-        perfect=None,
-        proper=None,
-    ):
-        """Metric initialization.
-
-        Args:
-            name (str): name of metric.
-            function (function): metric function.
-            positive (bool): Is metric positively oriented? Higher metric
-             values means higher skill.
-            probabilistic (bool): Is metric probabilistic? `False` means
-             deterministic.
-            unit_power (float, int): Power of the unit of skill based on unit
-             of input, e.g. input unit [m]: skill unit [(m)**unit_power]
-            long_name (str, optional): long_name of metric. Defaults to None.
-            aliases (list of str, optional): Allowed aliases for this metric.
-             Defaults to None.
-            min (float, optional): Minimum skill for metric. Defaults to None.
-            max (float, optional): Maxmimum skill for metric. Defaults to None.
-            perfect (float, optional): Perfect skill for metric. Defaults to None.
-            proper (bool, optional): Is strictly proper skill score?
-             According to Gneitning & Raftery (2012).
-             See https://en.wikipedia.org/wiki/Scoring_rule. Defaults to None.
-
-        Returns:
-            Metric: metric class Metric.
-
-        """
-        self.name = name
-        self.function = function
-        self.positive = positive
-        self.probabilistic = probabilistic
-        self.unit_power = unit_power
-        self.long_name = long_name
-        self.aliases = aliases
-        self.minimum = minimum
-        self.maximum = maximum
-        self.perfect = perfect
-        self.proper = proper
-
-    def __repr__(self):
-        """Show metadata of metric class."""
-        return _display_metric_metadata(self)
-
-
-def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
+def _pearson_r(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Pearson's Anomaly Correlation Coefficient (ACC).
+    Calculate the Anomaly Correlation Coefficient (ACC).
 
     .. math::
         ACC = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
 
     .. note::
         Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r
 
     Range:
         * perfect: 1
@@ -183,173 +64,28 @@ def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
         * xskillscore.pearson_r
         * xskillscore.pearson_r_p_value
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+    return pearson_r(forecast, reference, dim=dim)
 
 
-__pearson_r = Metric(
-    name='pearson_r',
-    function=_pearson_r,
-    positive=True,
-    probabilistic=False,
-    unit_power=0.0,
-    long_name="Pearson's Anomaly correlation coefficient",
-    aliases=['pr', 'acc', 'pacc'],
-    minimum=-1.0,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
+def _pearson_r_p_value(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Probability associated with Pearson's Anomaly Correlation
-    Coefficient not being random.
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r_p_value
-
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
-
-    See also:
-        * xskillscore.pearson_r_p_value
+    Calculate the probability associated with the ACC not being random.
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
     # p-value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return pearson_r_p_value(
-            forecast, reference, dim=dim, weights=weights, skipna=skipna
-        )
+        pval = pearson_r_p_value(forecast, reference, dim=dim)
+    return pval
 
 
-__pearson_r_p_value = Metric(
-    name='pearson_r_p_value',
-    function=_pearson_r_p_value,
-    positive=False,
-    probabilistic=False,
-    unit_power=0.0,
-    long_name="Pearson's Anomaly correlation coefficient p-value",
-    aliases=['p_pval', 'pvalue', 'pacc'],
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _spearman_r(forecast, reference, dim=None, **metric_kwargs):
+def _mse(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Spearman's Anomaly Correlation Coefficient (SACC).
-
-    .. math::
-        SACC = ACC(ranked(f),ranked(o))
-
-    .. note::
-        Use metric ``spearman_r_p_value`` to get the corresponding pvalue.
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.spearman_r
-
-    Range:
-        * perfect: 1
-        * min: -1
-
-    See also:
-        * xskillscore.spearman_r
-        * xskillscore.spearman_r_p_value
-    """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return spearman_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-
-
-__spearman_r = Metric(
-    name='spearman_r',
-    function=_spearman_r,
-    positive=True,
-    probabilistic=False,
-    unit_power=0.0,
-    long_name="Spearman's Anomaly correlation coefficient",
-    aliases=['sacc', 'sr'],
-    minimum=-1.0,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-def _spearman_r_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Probability associated with Spearman's Anomaly Correlation
-    Coefficient not being random.
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.spearman_r_p_value
-
-    Range:
-        * perfect: 0
-        * max: 1
-
-    See also:
-        * xskillscore.spearman_r_p_value
-    """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    # p-value returns a runtime error when working with NaNs, such as on a climate
-    # model grid. We can avoid this annoying output by specifically suppressing
-    # warning here.
-    with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
-        return spearman_r_p_value(
-            forecast, reference, dim=dim, weights=weights, skipna=skipna
-        )
-
-
-__spearman_r_p_value = Metric(
-    name='spearman_r_p_value',
-    function=_spearman_r_p_value,
-    positive=False,
-    probabilistic=False,
-    unit_power=0.0,
-    long_name="Spearman's Anomaly correlation coefficient p-value",
-    aliases=['s_pval'],
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _mse(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Mean Sqaure Error (MSE).
+    Calculate the Mean Sqaure Error (MSE).
 
     .. math::
         MSE = \\overline{(f - o)^{2}}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mse
 
     Range:
         * perfect: 0
@@ -359,37 +95,15 @@ def _mse(forecast, reference, dim=None, **metric_kwargs):
     See also:
         * xskillscore.mse
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mse(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+    return mse(forecast, reference, dim=dim)
 
 
-__mse = Metric(
-    name='mse',
-    function=_mse,
-    positive=False,
-    probabilistic=False,
-    unit_power=2,
-    long_name='Mean Squared Error',
-    minimum=0.0,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _rmse(forecast, reference, dim=None, **metric_kwargs):
+def _rmse(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Root Mean Sqaure Error (RMSE).
+    Calculate the Root Mean Sqaure Error (RMSE).
 
     .. math::
         RMSE = \\sqrt{\\overline{(f - o)^{2}}}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
 
     Range:
         * perfect: 0
@@ -399,37 +113,15 @@ def _rmse(forecast, reference, dim=None, **metric_kwargs):
     See also:
         * xskillscore.rmse
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return rmse(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+    return rmse(forecast, reference, dim=dim)
 
 
-__rmse = Metric(
-    name='rmse',
-    function=_rmse,
-    positive=False,
-    probabilistic=False,
-    unit_power=1,
-    long_name='Root Mean Squared Error',
-    minimum=0.0,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _mae(forecast, reference, dim=None, **metric_kwargs):
+def _mae(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Mean Absolute Error (MAE).
+    Calculate the Mean Absolute Error (MAE).
 
     .. math::
-        MAE = \\overline{|f - o|}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mae
+        MSE = \\overline{(f - o)^{2}}
 
     Range:
         * perfect: 0
@@ -439,152 +131,18 @@ def _mae(forecast, reference, dim=None, **metric_kwargs):
     See also:
         * xskillscore.mae
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mae(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-
-
-__mae = Metric(
-    name='mae',
-    function=_mae,
-    positive=False,
-    probabilistic=False,
-    unit_power=1,
-    long_name='Mean Absolute Error',
-    minimum=0.0,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _mad(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Median Absolute Deviation (MAD).
-
-    .. math::
-        MAD = median(|f - o|)
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mad
-
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: ∞
-
-    See also:
-        * xskillscore.mad
-    """
-    skipna = metric_kwargs.get('skipna', False)
-    return mad(forecast, reference, dim=dim, skipna=skipna)
-
-
-__mad = Metric(
-    name='mad',
-    function=_mad,
-    positive=False,
-    probabilistic=False,
-    unit_power=1,
-    long_name='Median Absolute Deviation',
-    minimum=0.0,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _mape(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Mean Absolute Percentage Error (MAPE).
-
-    .. math::
-        MAPE = MAPE = 1/n \sum \frac{|f-o|}{|o|}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mape
-
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: ∞
-
-    See also:
-        * xskillscore.mape
-    """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-
-
-__mape = Metric(
-    name='mape',
-    function=_mape,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Mean Absolute Percentage Error',
-    minimum=0.0,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _smape(forecast, reference, dim=None, **metric_kwargs):
-    """
-    symmetric Mean Absolute Percentage Error (sMAPE).
-
-    .. math::
-        sMAPE = 1/n \sum \frac{|f-o|}{|f|+|o|}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.smape
-
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
-
-    See also:
-        * xskillscore.smape
-    """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return smape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-
-
-__smape = Metric(
-    name='smape',
-    function=_smape,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='symmetric Mean Absolute Percentage Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
+    return mae(forecast, reference, dim=dim)
 
 
 def _brier_score(forecast, reference, **metric_kwargs):
-    """Brier score for forecasts on binary reference.
+    """Calculate Brier score for forecasts on binary reference.
 
     ..math:
         BS(f, o) = (f - o)^2
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
+        * forecast (xr.object)
+        * reference (xr.object)
         * func (function): function to be applied to reference and forecasts
                            and then mean('member') to get forecasts and
                            reference in interval [0,1].
@@ -614,23 +172,9 @@ def _brier_score(forecast, reference, **metric_kwargs):
     return brier_score(func(reference), func(forecast).mean('member'))
 
 
-__brier_score = Metric(
-    name='brier_score',
-    function=_brier_score,
-    positive=False,
-    probabilistic=True,
-    unit_power=0,
-    long_name='Brier Score',
-    aliases=['brier', 'bs'],
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
 def _threshold_brier_score(forecast, reference, **metric_kwargs):
     """
-    Brier scores of an ensemble for exceeding given thresholds.
+    Calculate the Brier scores of an ensemble for exceeding given thresholds.
     Provide threshold via metric_kwargs.
 
     .. math::
@@ -642,8 +186,8 @@ def _threshold_brier_score(forecast, reference, **metric_kwargs):
         * max: 1
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
+        * forecast (xr.object)
+        * reference (xr.object)
         * threshold (int, float, xr.object): Threshold to check exceedance,
             see properscoring.threshold_brier_score
             (required to be added via **metric_kwargs)
@@ -669,28 +213,9 @@ def _threshold_brier_score(forecast, reference, **metric_kwargs):
     return threshold_brier_score(reference, forecast, threshold)
 
 
-__threshold_brier_score = Metric(
-    name='threshold_brier_score',
-    function=_threshold_brier_score,
-    positive=False,
-    probabilistic=True,
-    unit_power=0,
-    long_name='Threshold Brier Score',
-    aliases=['tbs'],
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
 def _crps(forecast, reference, **metric_kwargs):
     """
     Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
-
-    Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
-        * metric_kwargs (optional dict): weights, see properscoring.crps_ensemble
 
     Range:
         * perfect: 0
@@ -707,31 +232,11 @@ def _crps(forecast, reference, **metric_kwargs):
         * xskillscore.crps_ensemble
     """
     # switch positions because xskillscore.crps_ensemble(obs, forecasts)
-    weights = metric_kwargs.get('weights', None)
-    return crps_ensemble(reference, forecast, weights=weights)
-
-
-__crps = Metric(
-    name='crps',
-    function=_crps,
-    positive=False,
-    probabilistic=True,
-    unit_power=1.0,
-    long_name='Continuous Ranked Probability Score',
-    aliases=['tbs'],
-    minimum=0.0,
-    maximum=np.inf,
-    perfect=0.0,
-)
+    return crps_ensemble(reference, forecast)
 
 
 def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
     """CRPS assuming a gaussian distribution. Helper function for CRPSS.
-
-    Args:
-        * forecast (xr.object): forecast with `member` dim
-        * mu (xr.object): mean reference
-        * sig (xr.object): standard deviation reference
 
     See also:
         * properscoring.crps_gaussian
@@ -744,10 +249,6 @@ def _crps_quadrature(
     forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, **metric_kwargs
 ):
     """CRPS assuming distribution cdf_or_dist. Helper function for CRPSS.
-
-    Args:
-        * forecast (xr.object): forecast with `member` dim
-        * see properscoring.crps_quadrature
 
     See also:
         * properscoring.crps_quadrature
@@ -768,8 +269,8 @@ def _crpss(forecast, reference, **metric_kwargs):
         CRPSS = 1 - \\frac{CRPS_{init}}{CRPS_{clim}}
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
+        * forecast (xr.object):
+        * reference (xr.object):
         * gaussian (bool): Assuming gaussian distribution for baseline skill.
                            Default: True (optional)
         * cdf_or_dist (scipy.stats): distribution to assume if not gaussian.
@@ -794,8 +295,8 @@ def _crpss(forecast, reference, **metric_kwargs):
     Example:
         >>> compute_perfect_model(ds, control, metric='crpss')
         >>> compute_perfect_model(ds, control, metric='crpss', gaussian=False,
-                                  cdf_or_dist=scipy.stats.norm, xminimum=-10,
-                                  xmaximum=10, tol=1e-6)
+                                  cdf_or_dist=scipy.stats.norm, xmin=-10,
+                                  xmax=10, tol=1e-6)
 
     See also:
         * properscoring.crps_ensemble
@@ -831,33 +332,15 @@ def _crpss(forecast, reference, **metric_kwargs):
         else:
             tol = 1e-6
         ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
-    forecast_skill = __crps.function(forecast, reference, **metric_kwargs)
+    forecast_skill = _crps(forecast, reference)
     skill_score = 1 - forecast_skill / ref_skill.mean('member')
     return skill_score
-
-
-__crpss = Metric(
-    name='crpss',
-    function=_crpss,
-    positive=True,
-    probabilistic=True,
-    unit_power=0,
-    long_name='Continuous Ranked Probability Skill Score',
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=1.0,
-)
 
 
 def _crpss_es(forecast, reference, **metric_kwargs):
     """CRPSS Ensemble Spread.
 
     .. math:: CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o}))
-
-    Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
-        * metric_kwargs (optional): weights, skipna used for mse
 
     References:
         * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
@@ -883,13 +366,8 @@ def _crpss_es(forecast, reference, **metric_kwargs):
 
     mu = reference.mean(rdim)
     forecast, ref2 = xr.broadcast(forecast, reference)
-    mse_kwargs = metric_kwargs.copy()
-    if 'dim' in mse_kwargs:
-        del mse_kwargs['dim']
-    sig_r = __mse.function(forecast, ref2, dim='member', **mse_kwargs).mean(dim2)
-    sig_h = __mse.function(
-        forecast.mean(dim2), ref2.mean(dim2), dim='member', **mse_kwargs
-    )
+    sig_r = _mse(forecast, ref2, dim='member').mean(dim2)
+    sig_h = _mse(forecast.mean(dim2), ref2.mean(dim2), 'member')
     crps_h = _crps_gaussian(forecast, mu, sig_h)
     if 'member' in crps_h.dims:
         crps_h = crps_h.mean('member')
@@ -899,30 +377,11 @@ def _crpss_es(forecast, reference, **metric_kwargs):
     return 1 - crps_h / crps_r
 
 
-__crpss_es = Metric(
-    name='crpss_es',
-    function=_crpss_es,
-    positive=True,
-    probabilistic=True,
-    unit_power=0,
-    long_name='CRPSS Ensemble Spread',
-    minimum=-np.inf,
-    maximum=0.0,
-    perfect=0.0,
-)
-
-
-def _bias(forecast, reference, dim=None, **metric_kwargs):
-    """Unconditional bias.
+def _bias(forecast, reference, dim='svd', **metric_kwargs):
+    """Calculate unconditional bias.
 
     .. math::
         bias = f - o
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
 
     Range:
         * pos: positive bias
@@ -937,33 +396,12 @@ def _bias(forecast, reference, dim=None, **metric_kwargs):
     return bias
 
 
-__bias = Metric(
-    name='bias',
-    function=_bias,
-    positive=False,
-    probabilistic=False,
-    unit_power=1,
-    long_name='Unconditional bias',
-    aliases=['u_b', 'unconditional_bias'],
-    minimum=-np.inf,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
-    """Murphy's Mean Square Skill Score (MSSS).
+def _msss_murphy(forecast, reference, dim='svd', **metric_kwargs):
+    """Calculate Murphy's Mean Square Skill Score (MSSS).
 
     .. math::
         MSSS_{Murphy} = r_{fo}^2 - [\\text{conditional bias}]^2 -\
          [\\frac{\\text{(unconditional) bias}}{\\sigma_o}]^2
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -972,75 +410,30 @@ def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
-    conditional_bias = __conditional_bias.function(
-        forecast, reference, dim=dim, **metric_kwargs
-    )
-    uncond_bias = __bias.function(
-        forecast, reference, dim=dim, **metric_kwargs
-    ) / reference.std(dim)
+    acc = _pearson_r(forecast, reference, dim=dim)
+    conditional_bias = _conditional_bias(forecast, reference, dim=dim)
+    uncond_bias = _bias(forecast, reference, dim=dim) / reference.std(dim)
     skill = acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
     return skill
 
 
-__msss_murphy = Metric(
-    name='msss_murphy',
-    function=_msss_murphy,
-    positive=True,
-    probabilistic=False,
-    unit_power=0,
-    long_name="Murphy's Mean Square Skill Score",
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-def _conditional_bias(forecast, reference, dim=None, **metric_kwargs):
-    """Conditional bias between forecast and reference.
+def _conditional_bias(forecast, reference, dim='svd', **metric_kwargs):
+    """Calculate the conditional bias between forecast and reference.
 
     .. math:: \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
-    conditional_bias = (
-        acc - __std_ratio.function(forecast, reference, dim=dim, **metric_kwargs) ** -1
-    )
+    acc = _pearson_r(forecast, reference, dim=dim)
+    conditional_bias = acc - _std_ratio(forecast, reference, dim=dim) ** -1
     return conditional_bias
 
 
-__conditional_bias = Metric(
-    name='conditional_bias',
-    function=_conditional_bias,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Conditional bias',
-    aliases=['c_b', 'cond_bias'],
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _std_ratio(forecast, reference, dim=None, **metric_kwargs):
-    """Ratio of standard deviations of reference over forecast.
+def _std_ratio(forecast, reference, dim='svd', **metric_kwargs):
+    """Calculate the ratio of standard deviations of reference over forecast.
 
     .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -1049,66 +442,31 @@ def _std_ratio(forecast, reference, dim=None, **metric_kwargs):
     return ratio
 
 
-__std_ratio = Metric(
-    name='std_ratio',
-    function=_std_ratio,
-    positive=None,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Ratio of standard deviations',
-    minimum=-np.inf,
-    maximum=np.inf,
-    perfect=1.0,
-)
-
-
-def _bias_slope(forecast, reference, dim=None, **metric_kwargs):
-    """Bias slope between reference and forecast standard deviations.
+def _bias_slope(forecast, reference, dim='svd', **metric_kwargs):
+    """Calculate bias slope between reference and forecast standard deviations.
 
     .. math:: \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    std_ratio = __std_ratio.function(forecast, reference, dim=dim, **metric_kwargs)
-    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
+    std_ratio = _std_ratio(forecast, reference, dim=dim)
+    acc = _pearson_r(forecast, reference, dim=dim)
     b_s = std_ratio * acc
     return b_s
 
 
-__bias_slope = Metric(
-    name='bias_slope',
-    function=_bias_slope,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Bias slope',
-    minimum=-np.inf,
-    maximum=np.inf,
-    perfect=1.0,
-)
-
-
-def _ppp(forecast, reference, dim=None, **metric_kwargs):
+def _ppp(forecast, reference, dim='svd', **metric_kwargs):
     """Prognostic Potential Predictability (PPP) metric.
 
     .. math:: PPP = 1 - \\frac{MSE}{ \\sigma^2_{ref} \\cdot fac}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-            Automatically set by compute_.
-        comparison (str): name comparison needed for normalization factor `fac`,
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+        * forecast (xr.object)
+        * reference (xr.object)
+        * dim (str): dimension to apply metric to
+        * comparison (str): name comparison needed for normalization factor
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 1: perfect forecast
@@ -1128,7 +486,7 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    mse_skill = __mse.function(forecast, reference, dim=dim, **metric_kwargs)
+    mse_skill = _mse(forecast, reference, dim=dim)
     var = reference.var(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -1141,21 +499,7 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
     return ppp_skill
 
 
-__ppp = Metric(
-    name='ppp',
-    function=_ppp,
-    positive=True,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Prognostic Potential Predictability',
-    aliases=['ppp'],
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-def _nrmse(forecast, reference, dim=None, **metric_kwargs):
+def _nrmse(forecast, reference, dim='svd', **metric_kwargs):
     """Normalized Root Mean Square Error (NRMSE) metric.
 
     .. math:: NRMSE = \\frac{RMSE}{\\sigma_{o} \\cdot \\sqrt{fac} }
@@ -1165,11 +509,8 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
-
+        * comparison (str): name comparison needed for normalization factor
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 0: perfect forecast
@@ -1188,7 +529,7 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
         (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
 
     """
-    rmse_skill = __rmse.function(forecast, reference, dim=dim, **metric_kwargs)
+    rmse_skill = _rmse(forecast, reference, dim=dim)
     std = reference.std(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -1201,22 +542,9 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
     return nrmse_skill
 
 
-__nrmse = Metric(
-    name='nrmse',
-    function=_nrmse,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Normalized Root Mean Squared Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _nmse(forecast, reference, dim=None, **metric_kwargs):
+def _nmse(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Normalized MSE (NMSE) also known as Normalized Ensemble Variance (NEV).
+    Calculate Normalized MSE (NMSE) = Normalized Ensemble Variance (NEV).
 
     .. math:: NMSE = NEV = \\frac{MSE}{\\sigma^2_{o} \\cdot fac}
 
@@ -1224,11 +552,8 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
-
+        * comparison (str): name comparison needed for normalization factor
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 0: perfect forecast: 0
@@ -1240,7 +565,7 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
           North Atlantic Multidecadal Variability.” Climate Dynamics 13,
           no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
     """
-    mse_skill = __mse.function(forecast, reference, dim=dim, **metric_kwargs)
+    mse_skill = _mse(forecast, reference, dim=dim)
     var = reference.var(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -1253,21 +578,7 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
     return nmse_skill
 
 
-__nmse = Metric(
-    name='nmse',
-    function=_nmse,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Normalized Mean Squared Error',
-    aliases=['nev'],
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _nmae(forecast, reference, dim=None, **metric_kwargs):
+def _nmae(forecast, reference, dim='svd', **metric_kwargs):
     """
     Normalized Ensemble Mean Absolute Error metric.
 
@@ -1277,11 +588,8 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
         * forecast (xr.object)
         * reference (xr.object)
         * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mae
-
+        * comparison (str): name comparison needed for normalization factor
+                           (required to be added via **metric_kwargs)
 
     Range:
         * 0: perfect forecast: 0
@@ -1294,7 +602,7 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
           7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
 
     """
-    mae_skill = __mae.function(forecast, reference, dim=dim, **metric_kwargs)
+    mae_skill = _mae(forecast, reference, dim=dim)
     std = reference.std(dim).mean()
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
@@ -1307,34 +615,11 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
     return nmae_skill
 
 
-__nmae = Metric(
-    name='nmae',
-    function=_nmae,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Normalized Mean Absolute Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _uacc(forecast, reference, dim=None, **metric_kwargs):
+def _uacc(forecast, reference, dim='svd', **metric_kwargs):
     """
-    Bushuk's unbiased ACC (uACC).
+    Calculate Bushuk's unbiased ACC (uACC).
 
     .. math:: uACC = \\sqrt{PPP} = \\sqrt{MSSS}
-
-    Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
-
 
     Range:
         * 1: perfect
@@ -1347,48 +632,4 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
           Forecast Skill. Climate Dynamics, June 9, 2018.
           https://doi.org/10/gd7hfq.
     """
-    ppp_res = __ppp.function(forecast, reference, dim=dim, **metric_kwargs)
-    # ensure no sqrt of neg values
-    uacc_res = (ppp_res.where(ppp_res > 0)) ** 0.5
-    return uacc_res
-
-
-__uacc = Metric(
-    name='uacc',
-    function=_uacc,
-    positive=True,
-    probabilistic=False,
-    unit_power=0,
-    long_name="Bushuk's unbiased ACC",
-    minimum=0.0,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-__ALL_METRICS__ = [
-    __pearson_r,
-    __spearman_r,
-    __pearson_r_p_value,
-    __spearman_r_p_value,
-    __mse,
-    __mae,
-    __rmse,
-    __mad,
-    __mape,
-    __smape,
-    __msss_murphy,
-    __bias_slope,
-    __conditional_bias,
-    __bias,
-    __brier_score,
-    __threshold_brier_score,
-    __crps,
-    __crpss,
-    __crpss_es,
-    __ppp,
-    __nmse,
-    __nrmse,
-    __nmae,
-    __uacc,
-]
+    return _ppp(forecast, reference, dim=dim, **metric_kwargs) ** 0.5

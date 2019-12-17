@@ -2,9 +2,6 @@ import dask
 import numpy as np
 import pytest
 import xarray as xr
-from scipy.signal import correlate
-from xarray.testing import assert_allclose
-
 from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
 from climpred.exceptions import DimensionError
 from climpred.stats import (
@@ -16,6 +13,8 @@ from climpred.stats import (
     varweighted_mean_period,
 )
 from climpred.tutorial import load_dataset
+from scipy.signal import correlate
+from xarray.testing import assert_allclose
 
 
 @pytest.fixture
@@ -154,7 +153,7 @@ def test_bootstrap_dpp_sig50_similar_dpp(control_3d_NA):
     ds = control_3d_NA
     bootstrap = 5
     sig = 50
-    actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig).drop_vars('quantile')
+    actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig).drop('quantile')
     expected = dpp(ds)
     xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
 
@@ -163,9 +162,9 @@ def test_bootstrap_vwmp_sig50_similar_vwmp(control_3d_NA):
     ds = control_3d_NA
     bootstrap = 5
     sig = 50
-    actual = varweighted_mean_period_threshold(
-        ds, bootstrap=bootstrap, sig=sig
-    ).drop_vars('quantile')
+    actual = varweighted_mean_period_threshold(ds, bootstrap=bootstrap, sig=sig).drop(
+        'quantile'
+    )
     expected = varweighted_mean_period(ds)
     xr.testing.assert_allclose(actual, expected, atol=2, rtol=0.5)
 

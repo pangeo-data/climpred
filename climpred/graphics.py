@@ -2,7 +2,6 @@ from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
-
 from .constants import PROBABILISTIC_METRICS
 
 
@@ -106,9 +105,8 @@ def plot_bootstrapped_skill_over_leadyear(
     """
     pers_sig = sig
 
-    if 'metric' in bootstrapped.attrs:
-        if bootstrapped.attrs['metric'] in PROBABILISTIC_METRICS:
-            plot_persistence = False
+    if bootstrapped.attrs['metric'] in PROBABILISTIC_METRICS:
+        plot_persistence = False
 
     init_skill = bootstrapped.sel(kind='init', results='skill')
     init_ci = bootstrapped.sel(kind='init', results=['low_ci', 'high_ci']).rename(

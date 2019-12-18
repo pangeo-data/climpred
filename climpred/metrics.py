@@ -1,6 +1,7 @@
 import warnings
 
 import numpy as np
+import scipy
 import xarray as xr
 from scipy.stats import norm
 from xskillscore import (
@@ -237,6 +238,86 @@ def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
 __pearson_r_p_value = Metric(
     name='pearson_r_p_value',
     function=_pearson_r_p_value,
+    positive=False,
+    probabilistic=False,
+    unit_power=0.0,
+    long_name="Pearson's Anomaly correlation coefficient p-value",
+    aliases=['p_pval', 'pvalue', 'pacc'],
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
+    """[summary]
+
+    Arguments:
+        forecast {[type]} -- [description]
+        reference {[type]} -- [description]
+
+    Keyword Arguments:
+        dim {[type]} -- [description] (default: {None})
+
+    # TODO:
+    # * Implement weights and skipna
+    # * Switch ACF dependency to esmtools
+    # * Create effective sample size metric?
+    # * Create t-statistic metric?
+    # * Testing that effective p == p with the same sample size N.
+    """
+
+    def _compute_autocorr(v, dim, n):
+        """
+        Return normal and shifted time series
+        with equal dimensions so as not to
+        throw an error.
+        """
+        shifted = v.isel({dim: slice(1, n)})
+        normal = v.isel({dim: slice(0, n - 1)})
+        # see explanation in autocorr for this
+        if dim not in list(v.coords):
+            normal[dim] = np.arange(1, n)
+        shifted[dim] = normal[dim]
+        return pearson_r(shifted, normal, dim)
+
+    def _calculate_p(t, n):
+        """Calculates the p-value.
+
+        Args:
+            t (ndarray): t-test statistic.
+            n (ndarray): number of samples.
+
+        Returns:
+            p (ndarray): p-value.
+        """
+        return scipy.stats.t.sf(np.abs(t), n - 2) * 2
+
+    n = forecast[dim].size
+    # find autocorrelation
+    fa, ra = forecast - forecast.mean(dim), reference - reference.mean(dim)
+    fauto = _compute_autocorr(fa, dim, n)
+    rauto = _compute_autocorr(ra, dim, n)
+    # compute effective sample size
+    n_eff = n * (1 - fauto * rauto) / (1 + fauto * rauto)
+    n_eff = np.floor(n_eff)
+    # constrain n_eff to be at the maximum the total number of samples
+    n_eff = n_eff.where(n_eff <= n, n)
+    # compute t-statistic
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    r = pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+    t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
+    # compute effective p-value
+    p = xr.apply_ufunc(
+        _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
+    )
+    return p
+
+
+__pearson_r_eff_p_value = Metric(
+    name='pearson_r_eff_p_value',
+    function=_pearson_r_eff_p_value,
     positive=False,
     probabilistic=False,
     unit_power=0.0,
@@ -1371,6 +1452,7 @@ __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
     __pearson_r_p_value,
+    __pearson_r_eff_p_value,
     __spearman_r_p_value,
     __mse,
     __mae,

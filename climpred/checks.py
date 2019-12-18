@@ -3,14 +3,12 @@ from functools import wraps
 import xarray as xr
 import pandas as pd
 
-# from pandas.core.indexes.datetimes import DatetimeIndex
-
+import warnings
 from .exceptions import DatasetError, DimensionError, VariableError
 
 # from .constants import VALID_LEAD_UNITS
 
 # the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
-# from .constants import VALID_LEAD_UNITS
 VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
 
 
@@ -159,13 +157,27 @@ def match_initialized_vars(init, ref):
 
 
 def has_valid_lead_units(xobj):
+    """
+    Checks that the object has valid units for the lead dimension
 
+    """
     if hasattr(xobj['lead'], 'units'):
 
+        units = getattr(xobj['lead'], 'units')
+
+        # Check if letter s is appended to lead units string and add it if needed
+        if not units.endswith('s'):
+            units += 's'
+            xobj['lead'].attrs['units'] = units
+            warnings.warn(
+                f'The letter "s" was appended to the lead units; now {units}.'
+            )
+
+        # Raise Error if lead units is not valid
         if not getattr(xobj['lead'], 'units') in VALID_LEAD_UNITS:
             raise DimensionError(
                 'The lead dimension must must have a valid '
-                f'units attribute: e.g. {VALID_LEAD_UNITS}'
+                f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
             )
     else:
         raise DimensionError(
@@ -195,6 +207,11 @@ def convert_time_index(xobj, time_string, kind):
         if isinstance(time_index, pd.Float64Index) | isinstance(
             time_index, pd.Int64Index
         ):
+
+            warnings.warn(
+                'Assuming annual resolution due to numeric inits. '
+                'Change init to a datetime if it is another resolution.'
+            )
 
             startdate = str(int(time_index[0])) + '-01-01'
             enddate = str(int(time_index[-1])) + '-01-01'

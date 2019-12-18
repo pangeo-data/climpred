@@ -3,6 +3,7 @@ import warnings
 
 import xarray as xr
 import pandas as pd
+import dask
 
 from .checks import is_in_list, is_xarray
 from .comparisons import __e2c
@@ -271,12 +272,13 @@ def compute_hindcast(
                     )
                 }
             )
-        # broadcast dims when apply over member
 
-        # Had to rechunk to put time all in 1 chunk,
-        # also testing mmember all in one chunk?
-        # Runs really slow even though I am testing with a subsetted region
-        
+        # If dask, then chunk in time
+        if dask.is_dask_collection(a):
+            a = a.chunk({'time': -1})
+        if dask.is_dask_collection(b):
+            b = b.chunk({'time': -1})
+
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)

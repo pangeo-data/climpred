@@ -1,5 +1,6 @@
 import xarray as xr
 
+from .utils import convert_time_index
 from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control,
@@ -11,7 +12,6 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
     has_valid_lead_units,
-    convert_time_index,
 )
 from .exceptions import DimensionError
 from .prediction import (
@@ -104,11 +104,11 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
+        # Check that there are valid units for lead dimenstion
+        has_valid_lead_units(xobj)
         # Check that init is int, cftime, or datetime; convert
         # ints or cftime to datetime
         xobj = convert_time_index(xobj, 'init', 'xobj[init]')
-        # Check that there are valid units for lead dimenstion
-        has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}

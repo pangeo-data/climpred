@@ -6,6 +6,7 @@ import pandas as pd
 import dask
 
 from .checks import is_in_list, is_xarray
+from .utils import convert_time_index
 from .comparisons import __e2c
 from .constants import (
     CLIMPRED_DIMS,
@@ -67,6 +68,7 @@ def compute_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     is_in_list(dim, ['member', 'init', ['init', 'member']], '')
+
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # get class metric(Metric)
@@ -189,6 +191,11 @@ def compute_hindcast(
 
     """
     is_in_list(dim, ['member', 'init'], str)
+
+    # Check that init is int, cftime, or datetime; convert
+    # ints or cftime to datetime
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
 
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -338,6 +345,12 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
+
+    # Check that init is int, cftime, or datetime; convert
+    # ints or cftime to datetime
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
+
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # get class metric(Metric)
@@ -424,6 +437,12 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
+
+    # Check that init is int, cftime, or datetime; convert
+    # ints or cftime to datetime
+    uninit = convert_time_index(uninit, 'time', 'uninit[time]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
+
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, reference = comparison.function(uninit, reference)

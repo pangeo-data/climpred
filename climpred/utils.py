@@ -90,14 +90,14 @@ def reduce_time_series(forecast, reference, nlags):
        reference (`xarray` object):
     """
 
-    imin = max(forecast.time.min(), reference.time.min())
     offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), nlags)
 
     ref_dates = pd.to_datetime(
         reference.time.dt.strftime('%Y%m%d 00:00')
     ) - pd.DateOffset(**offset_args_dict)
 
-    imax = min(forecast.time[-1], ref_dates[-1])
+    imin = max(forecast.time.min(), reference.time.min())
+    imax = min(forecast.time.max(), ref_dates.max())
 
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
@@ -205,7 +205,6 @@ def get_lead_pdoffset_args(units, lead):
     elif units == 'pentads':
         offset_args_dict = {'days': lead + 5}
     else:
-        offset_args_dict = {units: lead}
-        print(units, ' is not a valid choice')
+        raise ValueError(f'{units} is not a valid choice')
 
     return offset_args_dict

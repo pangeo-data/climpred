@@ -43,6 +43,7 @@ a minor version adds functionality, and a patch covers bug fixes.
 
  - Update version
  - Get sha256 from pypi.org for `climpred <https://pypi.org/project/climpred/#files>`_
+ - Check that ``requirements.txt`` from the main ``climpred`` repo is accounted for in ``meta.yaml`` from the feedstock.
  - Fill in the rest of information as described `here <https://github.com/conda-forge/climpred-feedstock#updating-climpred-feedstock>`_
 
  * Commit and submit a PR

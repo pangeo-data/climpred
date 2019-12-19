@@ -204,9 +204,7 @@ __pearson_r = Metric(
 
 
 def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Probability associated with Pearson's Anomaly Correlation
-    Coefficient not being random.
+    """Probability that forecast and reference are linearly uncorrelated.
 
     Args:
         forecast (xarray object): forecast
@@ -249,29 +247,46 @@ __pearson_r_p_value = Metric(
 )
 
 
-def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """[summary]
+def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
+    """Effective sample size for temporally correlated data.
 
-    Arguments:
-        forecast {[type]} -- [description]
-        reference {[type]} -- [description]
+    The effective sample size extracts the number of independent samples
+    between two time series being correlated. This is derived by assessing
+    the magnitude of lag-1 autocorrelation in each of the time series being
+    correlated. A higher autocorrelation induces a lower effective sample
+    size which can then be used alongside the t-statistic to compute the
+    p-value.
 
-    Keyword Arguments:
-        dim {[type]} -- [description] (default: {None})
+    .. math::
+        ESS = N\left( \frac{1 - r_{1}r_{2}}{1 + r_{1}r_{2}} \right)
 
-    # TODO:
-    # * Implement weights and skipna
-    # * Switch ACF dependency to esmtools
-    # * Create effective sample size metric?
-    # * Create t-statistic metric?
-    # * Testing that effective p == p with the same sample size N.
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r_p_value
+
+    Range:
+        * min: 1
+
+    References:
+        * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
+        freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
 
-    def _compute_autocorr(v, dim, n):
-        """
-        Return normal and shifted time series
-        with equal dimensions so as not to
-        throw an error.
+    def _autocorr(v, dim, n):
+        """Return autocorrelation over the given lag.
+
+        Args:
+            v (xarray obj): DataArray or Dataset to compute autocorrelation with.
+            dim (str): Dimension to compute autocorrelation over.
+            n (int): Number of lags to compute autocorrelation for.
+
+        Returns:
+            Temporal autocorrelation at given lag.
+
+        NOTE: Will switch to ``esmtools`` dependency once stats are moved over to there.
         """
         shifted = v.isel({dim: slice(1, n)})
         normal = v.isel({dim: slice(0, n - 1)})
@@ -281,6 +296,58 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         shifted[dim] = normal[dim]
         return pearson_r(shifted, normal, dim)
 
+    N = forecast[dim].size
+
+    # compute lag-1 autocorrelation.
+    fa, ra = forecast - forecast.mean(dim), reference - reference.mean(dim)
+    # TODO: Switch this over to ``esmtools`` dependency once stats are moved over there.
+    fauto = _autocorr(fa, dim, N)
+    rauto = _autocorr(ra, dim, N)
+
+    # compute effective sample size.
+    n_eff = N * (1 - fauto * rauto) / (1 + fauto * rauto)
+    n_eff = np.floor(n_eff)  # forces to integer
+
+    # constrain n_eff to be at the maximum the total number of samples.
+    n_eff = n_eff.where(n_eff <= N, N)
+    return n_eff
+
+
+__effective_sample_size = Metric(
+    name='effective_sample_size',
+    function=_effective_sample_size,
+    positive=True,
+    probabilistic=False,
+    unit_power=0.0,
+    long_name='Effective sample size for temporally correlated data',
+    aliases=['n_eff', 'eff_n'],
+    minimum=0.0,
+    maximum=np.inf,
+)
+
+
+def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
+    """Probability that forecast and reference are linearly uncorrelated, accounting
+    for autocorrelation.
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute function.
+        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r_p_value
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: 1
+
+    # TODO:
+    # * Implement weights and skipna
+    # * Testing that effective p == p with the same sample size N.
+    # * Test that apply over dim returns same value as with xskillscore
+    """
+
     def _calculate_p(t, n):
         """Calculates the p-value.
 
@@ -289,25 +356,19 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
             n (ndarray): number of samples.
 
         Returns:
-            p (ndarray): p-value.
+            p (ndarray): Two-tailed p-value.
         """
         return scipy.stats.t.sf(np.abs(t), n - 2) * 2
 
-    n = forecast[dim].size
-    # find autocorrelation
-    fa, ra = forecast - forecast.mean(dim), reference - reference.mean(dim)
-    fauto = _compute_autocorr(fa, dim, n)
-    rauto = _compute_autocorr(ra, dim, n)
     # compute effective sample size
-    n_eff = n * (1 - fauto * rauto) / (1 + fauto * rauto)
-    n_eff = np.floor(n_eff)
-    # constrain n_eff to be at the maximum the total number of samples
-    n_eff = n_eff.where(n_eff <= n, n)
+    n_eff = _effective_sample_size(forecast, reference, dim)
+
     # compute t-statistic
     weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
     r = pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
     t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
+
     # compute effective p-value
     p = xr.apply_ufunc(
         _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
@@ -321,8 +382,11 @@ __pearson_r_eff_p_value = Metric(
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name="Pearson's Anomaly correlation coefficient p-value",
-    aliases=['p_pval', 'pvalue', 'pacc'],
+    long_name=(
+        "Pearson's Anomaly correlation coefficient "
+        'p-value using the effective sample size'
+    ),
+    aliases=['p_pval_eff', 'pvalue_eff', 'pacc_eff'],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -1452,6 +1516,7 @@ __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
     __pearson_r_p_value,
+    __effective_sample_size,
     __pearson_r_eff_p_value,
     __spearman_r_p_value,
     __mse,

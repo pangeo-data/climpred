@@ -17,6 +17,7 @@ from climpred.utils import get_comparison_class
 def pm_da_ds1d():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
+    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -30,6 +31,7 @@ def pm_da_control1d():
 @pytest.fixture
 def initialized_da():
     da = load_dataset('CESM-DP-SST')['SST']
+    da['lead'].attrs = {'units': 'years'}
     da = da - da.mean('init')
     return da
 
@@ -37,6 +39,7 @@ def initialized_da():
 @pytest.fixture
 def uninitialized_da():
     da = load_dataset('CESM-LE')['SST']
+    da['lead'].attrs = {'units': 'years'}
     # add member coordinate
     da['member'] = range(1, 1 + da.member.size)
     da = da - da.mean('time')

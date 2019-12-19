@@ -16,6 +16,7 @@ from climpred.tutorial import load_dataset
 def pm_da_ds1d():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
+    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -30,6 +31,7 @@ def pm_da_control1d():
 def initialized_da():
     da = load_dataset('CESM-DP-SST')['SST']
     da = da - da.mean('init')
+    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -38,6 +40,7 @@ def uninitialized_da():
     da = load_dataset('CESM-LE')['SST']
     # add member coordinate
     da['member'] = range(1, 1 + da.member.size)
+    da['lead'].attrs = {'units': 'years'}
     da = da - da.mean('time')
     return da
 
@@ -293,6 +296,7 @@ def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
     )
 
 
+# Fails becaues also have warning about integer init
 @pytest.mark.parametrize('dim', ['init', ['init', 'member']])
 @pytest.mark.parametrize('metric', ['crps'])
 def test_compute_pm_probabilistic_metric_not_dim_member_warn(
@@ -328,6 +332,7 @@ def test_compute_hindcast_probabilistic_metric_e2r_fails(
     )
 
 
+# Fails becaues also have warning about integer init
 @pytest.mark.parametrize('dim', ['init'])
 @pytest.mark.parametrize('metric', ['crps'])
 def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(

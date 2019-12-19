@@ -7,6 +7,7 @@ from climpred.tutorial import load_dataset
 def pm_da_ds1d():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
+    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -20,6 +21,7 @@ def pm_da_control1d():
 @pytest.fixture
 def pm_ds_ds1d():
     ds = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
+    ds['lead'].attrs = {'units': 'years'}
     return ds
 
 
@@ -37,7 +39,7 @@ def test_perfectModelEnsemble_init(pm_ds_ds1d):
 
 
 def test_perfectModelEnsemble_init_da(pm_da_ds1d):
-    """Test tos ee if perfect model ensemble can be initialized with da"""
+    """Test to see if perfect model ensemble can be initialized with da"""
     pm = PerfectModelEnsemble(pm_da_ds1d)
     assert pm
 

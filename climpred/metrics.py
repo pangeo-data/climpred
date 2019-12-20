@@ -160,11 +160,10 @@ class Metric:
 
 
 def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Pearson's Anomaly Correlation Coefficient (ACC).
+    """Pearson product-moment correlation coefficient
 
     .. math::
-        ACC = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
+        corr = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
 
     .. note::
         Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
@@ -179,6 +178,7 @@ def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
     Range:
         * perfect: 1
         * min: -1
+        * max: 1
 
     See also:
         * xskillscore.pearson_r
@@ -195,7 +195,7 @@ __pearson_r = Metric(
     positive=True,
     probabilistic=False,
     unit_power=0.0,
-    long_name="Pearson's Anomaly correlation coefficient",
+    long_name='Pearson product-moment correlation coefficient',
     aliases=['pr', 'acc', 'pacc'],
     minimum=-1.0,
     maximum=1.0,
@@ -204,7 +204,7 @@ __pearson_r = Metric(
 
 
 def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """Probability that forecast and reference are linearly uncorrelated.
+    """Probability that forecast and reference are linearly uncorrelated
 
     Args:
         forecast (xarray object): forecast
@@ -239,8 +239,8 @@ __pearson_r_p_value = Metric(
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name="Pearson's Anomaly correlation coefficient p-value",
-    aliases=['p_pval', 'pvalue', 'pacc'],
+    long_name='Pearson product-moment correlation coefficient p-value',
+    aliases=['p_pval', 'pvalue', 'pval'],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -248,17 +248,17 @@ __pearson_r_p_value = Metric(
 
 
 def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
-    """Effective sample size for temporally correlated data.
+    """Effective sample size for temporally correlated data
 
     The effective sample size extracts the number of independent samples
     between two time series being correlated. This is derived by assessing
     the magnitude of lag-1 autocorrelation in each of the time series being
     correlated. A higher autocorrelation induces a lower effective sample
-    size which can then be used alongside the t-statistic to compute the
-    p-value.
+    size which raises the correlation coefficient required to achieve statistical
+    significance.
 
     .. math::
-        ESS = N\left( \frac{1 - r_{1}r_{2}}{1 + r_{1}r_{2}} \right)
+        ESS = N\\left( \\frac{1 - \\rho_{1}\\rho_{2}}{1 + \\rho_{1}\\rho_{2}} \\right)
 
     Args:
         forecast (xarray object): forecast
@@ -269,6 +269,7 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
 
     Range:
         * min: 1
+        * max: np.inf
 
     References:
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
@@ -328,7 +329,7 @@ __effective_sample_size = Metric(
 
 def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are linearly uncorrelated, accounting
-    for autocorrelation.
+    for autocorrelation
 
     Args:
         forecast (xarray object): forecast
@@ -344,8 +345,7 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
 
     # TODO:
     # * Implement weights and skipna
-    # * Testing that effective p == p with the same sample size N.
-    # * Test that apply over dim returns same value as with xskillscore
+    # * Does this make sense to implement with spearman?
     """
 
     def _calculate_p(t, n):
@@ -386,7 +386,7 @@ __pearson_r_eff_p_value = Metric(
         "Pearson's Anomaly correlation coefficient "
         'p-value using the effective sample size'
     ),
-    aliases=['p_pval_eff', 'pvalue_eff', 'pacc_eff'],
+    aliases=['p_pval_eff', 'pvalue_eff', 'pval_eff'],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -394,11 +394,10 @@ __pearson_r_eff_p_value = Metric(
 
 
 def _spearman_r(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Spearman's Anomaly Correlation Coefficient (SACC).
+    """Spearman's rank correlation coefficient
 
     .. math::
-        SACC = ACC(ranked(f),ranked(o))
+        SACC = ACC(ranked(f), ranked(o))
 
     .. note::
         Use metric ``spearman_r_p_value`` to get the corresponding pvalue.
@@ -429,7 +428,7 @@ __spearman_r = Metric(
     positive=True,
     probabilistic=False,
     unit_power=0.0,
-    long_name="Spearman's Anomaly correlation coefficient",
+    long_name="Spearman's rank correlation coefficient",
     aliases=['sacc', 'sr'],
     minimum=-1.0,
     maximum=1.0,
@@ -438,9 +437,7 @@ __spearman_r = Metric(
 
 
 def _spearman_r_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Probability associated with Spearman's Anomaly Correlation
-    Coefficient not being random.
+    """Probability that forecast and reference are monotonically uncorrelated
 
     Args:
         forecast (xarray object): forecast
@@ -452,6 +449,7 @@ def _spearman_r_p_value(forecast, reference, dim=None, **metric_kwargs):
     Range:
         * perfect: 0
         * max: 1
+        * min: 0
 
     See also:
         * xskillscore.spearman_r_p_value
@@ -474,8 +472,8 @@ __spearman_r_p_value = Metric(
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name="Spearman's Anomaly correlation coefficient p-value",
-    aliases=['s_pval'],
+    long_name="Spearman's rank correlation coefficient p-value",
+    aliases=['s_pval', 'spvalue', 'spval'],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,

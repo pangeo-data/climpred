@@ -25,6 +25,7 @@ dependencies:
   - asv
   - black
   - coveralls
+  - doc8
   - flake8
   - importlib_metadata
   - isort

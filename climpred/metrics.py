@@ -9,9 +9,9 @@ from xskillscore import (
     crps_ensemble,
     crps_gaussian,
     crps_quadrature,
-    mad,
     mae,
     mape,
+    median_absolute_error,
     mse,
     pearson_r,
     pearson_r_p_value,
@@ -28,19 +28,22 @@ CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
 
 
 def _get_norm_factor(comparison):
-    """Get normalization factor with respect to the type of comparison used for
-     normalized distance-based metrics PPP, NMSE, NRMSE, MSSS, NMAE.
+    """Get normalization factor for normalizing distance metrics.
 
-    A distance-based metric is normalized by the standard deviation or variance
-     of a reference/control simulation. The goal of a normalized distance-based
-     metric is to get a constant and comparable value of typically 1 (or 0 for
-     metrics defined as 1 - ), when the metric saturizes and the predictability
-     horizon is reached.
-     To directly compare skill between different comparisons used, a factor is
-     added in the normalized metric formula, see Seferian et al. 2018.
-     Exemplarily, NRMSE gets smaller in comparison 'm2e' than 'm2m' by design
-     because the ensemble mean is always closer to individual ensemble members
-     than ensemble members to each other.
+    A distance metric is normalized by the standard deviation or variance
+    of a reference/control simulation. The goal of a normalized distance
+    metric is to get a constant and comparable value of typically 1 (or 0 for
+    metrics defined as 1 - metric), when the metric saturates and the predictability
+    horizon is reached.
+
+    To directly compare skill between different comparisons used, a factor is
+    added in the normalized metric formula, see Seferian et al. 2018.
+    For example, NRMSE gets smaller in comparison ``m2e`` than ``m2m`` by design,
+    because the ensemble mean is always closer to individual ensemble members
+    than ensemble members to each other.
+
+     .. note::
+         This is used for PPP, NMSE, NRMSE, MSSS, NMAE.
 
     Args:
         comparison (class): comparison class.
@@ -159,6 +162,9 @@ class Metric:
         return _display_metric_metadata(self)
 
 
+#####################
+# CORRELATION METRICS
+#####################
 def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
     """Pearson product-moment correlation coefficient
 
@@ -344,8 +350,16 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         * max: 1
 
     # TODO:
-    # * Implement weights and skipna
+    # * Implement weights and skipna / check if these work as expected
     # * Does this make sense to implement with spearman?
+    # * PPP vs MSSS. Aren't we missing the ensemble normalization from the Pohlmann
+    # paper?
+    # * Add back in "MSE" in the docs metrics for equations, etc.
+    # * Go back through MurCSS/bias slope, etc. to clarify those in docs.
+    # * CRPSS, CRPSSES
+    # * Change ``metric_kwargs**`` to what's expected for that function?
+    # * Get $$ working for math in rst. Not just .. math:: directive.
+    # * Double check keywords
     """
 
     def _calculate_p(t, n):
@@ -480,9 +494,11 @@ __spearman_r_p_value = Metric(
 )
 
 
+##################
+# DISTANCE METRICS
+##################
 def _mse(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Mean Sqaure Error (MSE).
+    """Mean Sqaure Error (MSE)
 
     .. math::
         MSE = \\overline{(f - o)^{2}}
@@ -521,8 +537,7 @@ __mse = Metric(
 
 
 def _rmse(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Root Mean Sqaure Error (RMSE).
+    """Root Mean Sqaure Error (RMSE)
 
     .. math::
         RMSE = \\sqrt{\\overline{(f - o)^{2}}}
@@ -561,8 +576,7 @@ __rmse = Metric(
 
 
 def _mae(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Mean Absolute Error (MAE).
+    """Mean Absolute Error (MAE)
 
     .. math::
         MAE = \\overline{|f - o|}
@@ -600,19 +614,18 @@ __mae = Metric(
 )
 
 
-def _mad(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Median Absolute Deviation (MAD).
+def _median_absolute_error(forecast, reference, dim=None, **metric_kwargs):
+    """Median Absolute Error
 
     .. math::
-        MAD = median(|f - o|)
+        median(|f - o|)
 
     Args:
         forecast (xarray object): forecast
         reference (xarray object): reference
         dim (str): dimension(s) to perform metric over.
                    Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mad
+        metric_kwargs: (optional) weights, skipna, see xskillscore.median_absolute_error
 
     Range:
         * perfect: 0
@@ -620,19 +633,19 @@ def _mad(forecast, reference, dim=None, **metric_kwargs):
         * max: ∞
 
     See also:
-        * xskillscore.mad
+        * xskillscore.median_absolute_error
     """
     skipna = metric_kwargs.get('skipna', False)
-    return mad(forecast, reference, dim=dim, skipna=skipna)
+    return median_absolute_error(forecast, reference, dim=dim, skipna=skipna)
 
 
-__mad = Metric(
-    name='mad',
-    function=_mad,
+__median_absolute_error = Metric(
+    name='median_absolute_error',
+    function=_median_absolute_error,
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name='Median Absolute Deviation',
+    long_name='Median Absolute Error',
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -640,11 +653,10 @@ __mad = Metric(
 
 
 def _mape(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Mean Absolute Percentage Error (MAPE).
+    """Mean Absolute Percentage Error (MAPE)
 
     .. math::
-        MAPE = MAPE = 1/n \sum \frac{|f-o|}{|o|}
+        MAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|o|}
 
     Args:
         forecast (xarray object): forecast
@@ -656,7 +668,7 @@ def _mape(forecast, reference, dim=None, **metric_kwargs):
     Range:
         * perfect: 0
         * min: 0
-        * max: ∞
+        * max: 1
 
     See also:
         * xskillscore.mape
@@ -674,17 +686,16 @@ __mape = Metric(
     unit_power=0,
     long_name='Mean Absolute Percentage Error',
     minimum=0.0,
-    maximum=np.inf,
+    maximum=1.0,
     perfect=0.0,
 )
 
 
 def _smape(forecast, reference, dim=None, **metric_kwargs):
-    """
-    symmetric Mean Absolute Percentage Error (sMAPE).
+    """Symmetric Mean Absolute Percentage Error (sMAPE)
 
     .. math::
-        sMAPE = 1/n \sum \frac{|f-o|}{|f|+|o|}
+        sMAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|f|+|o|}
 
     Args:
         forecast (xarray object): forecast
@@ -719,23 +730,501 @@ __smape = Metric(
 )
 
 
-def _brier_score(forecast, reference, **metric_kwargs):
-    """Brier score for forecasts on binary reference.
+#############################
+# NORMALIZED DISTANCE METRICS
+#############################
+def _nmse(forecast, reference, dim=None, **metric_kwargs):
+    """Normalized MSE (NMSE), also known as Normalized Ensemble Variance (NEV).
 
-    ..math:
-        BS(f, o) = (f - o)^2
+    .. math::
+        NMSE = NEV = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac}
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
+        * forecast (xr.object)
+        * reference (xr.object)
+        * dim (str): dimension to apply metric to
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+
+
+    Range:
+        * 0: perfect forecast: 0
+        * 0 - 1: better than climatology forecast
+        * > 1: worse than climatology forecast
+
+    References:
+        * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+          North Atlantic Multidecadal Variability.” Climate Dynamics 13,
+          no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+    """
+    mse_skill = __mse.function(forecast, reference, dim=dim, **metric_kwargs)
+    var = reference.var(dim)
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
+    else:
+        raise ValueError(
+            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+        )
+    fac = _get_norm_factor(comparison)
+    nmse_skill = mse_skill / var / fac
+    return nmse_skill
+
+
+__nmse = Metric(
+    name='nmse',
+    function=_nmse,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Normalized Mean Squared Error',
+    aliases=['nev'],
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _nmae(forecast, reference, dim=None, **metric_kwargs):
+    """Normalized Mean Absolute Error (NMAE).
+
+    .. math::
+        NMAE = \\frac{MAE}{\\sigma_{o} \\cdot fac}
+
+    Args:
+        * forecast (xr.object)
+        * reference (xr.object)
+        * dim (str): dimension to apply metric to
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.mae
+
+
+    Range:
+        * 0: perfect forecast: 0
+        * 0 - 1: better than climatology forecast
+        * > 1: worse than climatology forecast
+
+    References:
+        * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+          North Atlantic Multidecadal Variability.” Climate Dynamics 13, no.
+          7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+
+    """
+    mae_skill = __mae.function(forecast, reference, dim=dim, **metric_kwargs)
+    std = reference.std(dim).mean()
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
+    else:
+        raise ValueError(
+            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+        )
+    fac = _get_norm_factor(comparison)
+    nmae_skill = mae_skill / std / fac
+    return nmae_skill
+
+
+__nmae = Metric(
+    name='nmae',
+    function=_nmae,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Normalized Mean Absolute Error',
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _nrmse(forecast, reference, dim=None, **metric_kwargs):
+    """Normalized Root Mean Square Error (NRMSE).
+
+    .. math::
+
+        NRMSE = \\frac{\\sqrt{\\overline{(f - o)^{2}}}}{\\sigma_{o}\\cdot\\sqrt{fac}}
+              = \\sqrt{ \\frac{\\overline{(f - o)^{2}}}{ \\sigma^2_{o}\\cdot fac}}
+
+    Args:
+        * forecast (xr.object)
+        * reference (xr.object)
+        * dim (str): dimension to apply metric to
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
+
+
+    Range:
+        * 0: perfect forecast
+        * 0 - 1: better than climatology forecast
+        * > 1: worse than climatology forecast
+
+    References:
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+        Prediction: Potential versus Operational Seasonal Forecast Skill.”
+        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+      * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
+        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
+        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
+        Journal of the Royal Meteorological Society 142, no. 695
+        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
+
+    """
+    rmse_skill = __rmse.function(forecast, reference, dim=dim, **metric_kwargs)
+    std = reference.std(dim)
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
+    else:
+        raise ValueError(
+            'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
+        )
+    fac = _get_norm_factor(comparison)
+    nrmse_skill = rmse_skill / std / np.sqrt(fac)
+    return nrmse_skill
+
+
+__nrmse = Metric(
+    name='nrmse',
+    function=_nrmse,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Normalized Root Mean Squared Error',
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _ppp(forecast, reference, dim=None, **metric_kwargs):
+    """Prognostic Potential Predictability (PPP).
+
+    .. math::
+        PPP = 1 - \\frac{MSE}{\\sigma^2_{ref} \\cdot fac} =
+              1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}
+
+    .. note::
+        This is the same as the Mean Squared Skill Score.
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+            Automatically set by compute_.
+        comparison (str): name comparison needed for normalization factor `fac`,
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+
+    Range:
+        * 1: perfect forecast
+        * positive: better than climatology forecast
+        * negative: worse than climatology forecast
+
+    References:
+      * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
+        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
+        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
+      * Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
+        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
+        4463–72. https://doi.org/10/d2qf62.
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
+        Prediction: Potential versus Operational Seasonal Forecast Skill.
+        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
+    """
+    mse_skill = __mse.function(forecast, reference, dim=dim, **metric_kwargs)
+    var = reference.var(dim)
+    if 'comparison' in metric_kwargs:
+        comparison = metric_kwargs['comparison']
+    else:
+        raise ValueError(
+            'Comparison needed to normalize PPP. Not found in', metric_kwargs
+        )
+    fac = _get_norm_factor(comparison)
+    ppp_skill = 1 - mse_skill / var / fac
+    return ppp_skill
+
+
+__ppp = Metric(
+    name='ppp',
+    function=_ppp,
+    positive=True,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Prognostic Potential Predictability',
+    aliases=['ppp'],
+    minimum=-np.inf,
+    maximum=1.0,
+    perfect=1.0,
+)
+
+
+def _uacc(forecast, reference, dim=None, **metric_kwargs):
+    """Bushuk's unbiased Anomaly Correlation Coefficient (uACC).
+
+    .. math::
+        uACC = \\sqrt{PPP} = \\sqrt{MSSS}
+             = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}}
+
+    Args:
+        * forecast (xr.object)
+        * reference (xr.object)
+        * dim (str): dimension to apply metric to
+        * comparison (str): name comparison needed for normalization factor `fac`, see
+            :py:func:`climpred.metrics._get_norm_factor`
+            (internally required to be added via **metric_kwargs)
+        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+
+    Range:
+        * 1: perfect
+        * 0 - 1: better than climatology
+
+    References:
+        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
+          Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
+          Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
+          Forecast Skill." Climate Dynamics, June 9, 2018.
+          https://doi.org/10/gd7hfq.
+    """
+    ppp_res = __ppp.function(forecast, reference, dim=dim, **metric_kwargs)
+    # ensure no sqrt of neg values
+    uacc_res = (ppp_res.where(ppp_res > 0)) ** 0.5
+    return uacc_res
+
+
+__uacc = Metric(
+    name='uacc',
+    function=_uacc,
+    positive=True,
+    probabilistic=False,
+    unit_power=0,
+    long_name="Bushuk's unbiased ACC",
+    minimum=0.0,
+    maximum=1.0,
+    perfect=1.0,
+)
+
+
+##############################
+# MURPHY DECOMPOSITION METRICS
+##############################
+def _std_ratio(forecast, reference, dim=None, **metric_kwargs):
+    """Ratio of standard deviations of reference over forecast.
+
+    .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+
+    References:
+        * https://www-miklip.dkrz.de/about/murcss/
+    """
+    ratio = reference.std(dim) / forecast.std(dim)
+    return ratio
+
+
+__std_ratio = Metric(
+    name='std_ratio',
+    function=_std_ratio,
+    positive=None,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Ratio of standard deviations',
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=1.0,
+)
+
+
+def _unconditional_bias(forecast, reference, dim=None, **metric_kwargs):
+    """Unconditional bias.
+
+    .. math::
+        bias = f - o
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+
+    Range:
+        * pos: positive bias
+        * neg: negative bias
+        * perfect: 0
+
+    References:
+        * https://www.cawcr.gov.au/projects/verification/
+        * https://www-miklip.dkrz.de/about/murcss/
+    """
+    bias = (forecast - reference).mean(dim)
+    return bias
+
+
+__unconditional_bias = Metric(
+    name='unconditional_bias',
+    function=_unconditional_bias,
+    positive=False,
+    probabilistic=False,
+    unit_power=1,
+    long_name='Unconditional bias',
+    aliases=['u_b', 'bias'],
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=0.0,
+)
+
+
+def _conditional_bias(forecast, reference, dim=None, **metric_kwargs):
+    """Conditional bias between forecast and reference.
+
+    .. math::
+        \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+
+    References:
+        * https://www-miklip.dkrz.de/about/murcss/
+    """
+    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
+    conditional_bias = (
+        acc - __std_ratio.function(forecast, reference, dim=dim, **metric_kwargs) ** -1
+    )
+    return conditional_bias
+
+
+__conditional_bias = Metric(
+    name='conditional_bias',
+    function=_conditional_bias,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Conditional bias',
+    aliases=['c_b', 'cond_bias'],
+    minimum=-np.inf,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _bias_slope(forecast, reference, dim=None, **metric_kwargs):
+    """Bias slope between reference and forecast standard deviations.
+
+    .. math::
+        \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+
+    References:
+        * https://www-miklip.dkrz.de/about/murcss/
+    """
+    std_ratio = __std_ratio.function(forecast, reference, dim=dim, **metric_kwargs)
+    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
+    b_s = std_ratio * acc
+    return b_s
+
+
+__bias_slope = Metric(
+    name='bias_slope',
+    function=_bias_slope,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Bias slope',
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=1.0,
+)
+
+
+def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
+    """Murphy's Mean Square Skill Score (MSSS).
+
+    .. math::
+        MSSS_{Murphy} = r_{fo}^2 - [\\text{conditional bias}]^2 -\
+         [\\frac{\\text{(unconditional) bias}}{\\sigma_o}]^2
+
+    Args:
+        forecast (xarray object): forecast
+        reference (xarray object): reference
+        dim (str): dimension(s) to perform metric over.
+                   Automatically set by compute_.
+        metric_kwargs: (optional) weights, skipna
+
+    References:
+        * https://www-miklip.dkrz.de/about/murcss/
+        * Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
+          Their Relationships to the Correlation Coefficient.” Monthly Weather
+          Review 116, no. 12 (December 1, 1988): 2417–24.
+          https://doi.org/10/fc7mxd.
+    """
+    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
+    conditional_bias = __conditional_bias.function(
+        forecast, reference, dim=dim, **metric_kwargs
+    )
+    uncond_bias = __unconditional_bias.function(
+        forecast, reference, dim=dim, **metric_kwargs
+    ) / reference.std(dim)
+    skill = acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
+    return skill
+
+
+__msss_murphy = Metric(
+    name='msss_murphy',
+    function=_msss_murphy,
+    positive=True,
+    probabilistic=False,
+    unit_power=0,
+    long_name="Murphy's Mean Square Skill Score",
+    minimum=-np.inf,
+    maximum=1.0,
+    perfect=1.0,
+)
+
+
+#######################
+# PROBABILISTIC METRICS
+#######################
+def _brier_score(forecast, reference, **metric_kwargs):
+    """Brier Score.
+
+    .. math::
+        BS(f, o) = (f_1 - o)^2,
+
+    where $f_1$ is the forecast probability of $o=1$.
+
+    .. note::
+        The Brier Score requires that the reference is binary, i.e., can be described as
+        one (a "hit") or zero (a "miss").
+
+    Args:
+        * forecast (xr.object): forecast with ``member`` dim
+        * reference (xr.object): references without ``member`` dim
         * func (function): function to be applied to reference and forecasts
-                           and then mean('member') to get forecasts and
+                           and then ``mean('member')`` to get forecasts and
                            reference in interval [0,1].
                            (required to be added via **metric_kwargs)
 
     Reference:
-        * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
-        PROBABILITY.” Monthly Weather Review 78, no. 1 (1950).
+        * Brier, Glenn W. Verification of forecasts expressed in terms of
+        probability.” Monthly Weather Review 78, no. 1 (1950).
         https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
 
     Example:
@@ -827,8 +1316,19 @@ __threshold_brier_score = Metric(
 
 
 def _crps(forecast, reference, **metric_kwargs):
-    """
-    Continuous Ranked Probability Score (CRPS) is the probabilistic MSE.
+    """Continuous Ranked Probability Score (CRPS).
+
+    .. math::
+        CRPS(F, o) = \\int_{f} (F(f) - H(f - o))^{2} dz,
+
+    where F() is the cumulative distribution function (CDF) of the forecast;
+    H() is the Heaviside step function where the value is 1 if the argument is positive
+    or zero and is 0 otherwise.
+
+    .. note::
+        The CRPS is expressed in the same unit as the observed variable. It generalizes
+        the Mean Absolute Error (MAE), and reduces to the MAE if the forecast is
+        determinstic.
 
     Args:
         * forecast (xr.object): forecast with `member` dim
@@ -844,13 +1344,14 @@ def _crps(forecast, reference, **metric_kwargs):
         * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
           Continuous Probability Distributions.” Management Science 22, no. 10
           (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
+        * https://www.lokad.com/continuous-ranked-probability-score
 
     See also:
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
     """
-    # switch positions because xskillscore.crps_ensemble(obs, forecasts)
     weights = metric_kwargs.get('weights', None)
+    # switch positions because xskillscore.crps_ensemble(obs, forecasts)
     return crps_ensemble(reference, forecast, weights=weights)
 
 
@@ -861,7 +1362,6 @@ __crps = Metric(
     probabilistic=True,
     unit_power=1.0,
     long_name='Continuous Ranked Probability Score',
-    aliases=['tbs'],
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -900,7 +1400,7 @@ def _crps_quadrature(
 
 
 def _crpss(forecast, reference, **metric_kwargs):
-    """Continuous Ranked Probability Skill Score
+    """Continuous Ranked Probability Skill Score.
 
     .. note::
         When assuming a gaussian distribution of forecasts, use default gaussian=True.
@@ -993,9 +1493,10 @@ __crpss = Metric(
 
 
 def _crpss_es(forecast, reference, **metric_kwargs):
-    """CRPSS Ensemble Spread.
+    """Continuous Ranked Probability Skill Score Ensemble Spread.
 
-    .. math:: CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o}))
+    .. math::
+        CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o}))
 
     Args:
         * forecast (xr.object): forecast with `member` dim
@@ -1055,461 +1556,6 @@ __crpss_es = Metric(
 )
 
 
-def _bias(forecast, reference, dim=None, **metric_kwargs):
-    """Unconditional bias.
-
-    .. math::
-        bias = f - o
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-
-    Range:
-        * pos: positive bias
-        * neg: negative bias
-        * perfect: 0
-
-    References:
-        * https://www.cawcr.gov.au/projects/verification/
-        * https://www-miklip.dkrz.de/about/murcss/
-    """
-    bias = (forecast - reference).mean(dim)
-    return bias
-
-
-__bias = Metric(
-    name='bias',
-    function=_bias,
-    positive=False,
-    probabilistic=False,
-    unit_power=1,
-    long_name='Unconditional bias',
-    aliases=['u_b', 'unconditional_bias'],
-    minimum=-np.inf,
-    maximum=np.inf,
-    perfect=0.0,
-)
-
-
-def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
-    """Murphy's Mean Square Skill Score (MSSS).
-
-    .. math::
-        MSSS_{Murphy} = r_{fo}^2 - [\\text{conditional bias}]^2 -\
-         [\\frac{\\text{(unconditional) bias}}{\\sigma_o}]^2
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna
-
-    References:
-        * https://www-miklip.dkrz.de/about/murcss/
-        * Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-          Their Relationships to the Correlation Coefficient.” Monthly Weather
-          Review 116, no. 12 (December 1, 1988): 2417–24.
-          https://doi.org/10/fc7mxd.
-    """
-    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
-    conditional_bias = __conditional_bias.function(
-        forecast, reference, dim=dim, **metric_kwargs
-    )
-    uncond_bias = __bias.function(
-        forecast, reference, dim=dim, **metric_kwargs
-    ) / reference.std(dim)
-    skill = acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
-    return skill
-
-
-__msss_murphy = Metric(
-    name='msss_murphy',
-    function=_msss_murphy,
-    positive=True,
-    probabilistic=False,
-    unit_power=0,
-    long_name="Murphy's Mean Square Skill Score",
-    aliases=['msss'],
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-def _conditional_bias(forecast, reference, dim=None, **metric_kwargs):
-    """Conditional bias between forecast and reference.
-
-    .. math:: \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-
-    References:
-        * https://www-miklip.dkrz.de/about/murcss/
-    """
-    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
-    conditional_bias = (
-        acc - __std_ratio.function(forecast, reference, dim=dim, **metric_kwargs) ** -1
-    )
-    return conditional_bias
-
-
-__conditional_bias = Metric(
-    name='conditional_bias',
-    function=_conditional_bias,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Conditional bias',
-    aliases=['c_b', 'cond_bias'],
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _std_ratio(forecast, reference, dim=None, **metric_kwargs):
-    """Ratio of standard deviations of reference over forecast.
-
-    .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-
-    References:
-        * https://www-miklip.dkrz.de/about/murcss/
-    """
-    ratio = reference.std(dim) / forecast.std(dim)
-    return ratio
-
-
-__std_ratio = Metric(
-    name='std_ratio',
-    function=_std_ratio,
-    positive=None,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Ratio of standard deviations',
-    minimum=-np.inf,
-    maximum=np.inf,
-    perfect=1.0,
-)
-
-
-def _bias_slope(forecast, reference, dim=None, **metric_kwargs):
-    """Bias slope between reference and forecast standard deviations.
-
-    .. math:: \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-
-    References:
-        * https://www-miklip.dkrz.de/about/murcss/
-    """
-    std_ratio = __std_ratio.function(forecast, reference, dim=dim, **metric_kwargs)
-    acc = __pearson_r.function(forecast, reference, dim=dim, **metric_kwargs)
-    b_s = std_ratio * acc
-    return b_s
-
-
-__bias_slope = Metric(
-    name='bias_slope',
-    function=_bias_slope,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Bias slope',
-    minimum=-np.inf,
-    maximum=np.inf,
-    perfect=1.0,
-)
-
-
-def _ppp(forecast, reference, dim=None, **metric_kwargs):
-    """Prognostic Potential Predictability (PPP) metric.
-
-    .. math:: PPP = 1 - \\frac{MSE}{ \\sigma^2_{ref} \\cdot fac}
-
-    Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-            Automatically set by compute_.
-        comparison (str): name comparison needed for normalization factor `fac`,
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mse
-
-    Range:
-        * 1: perfect forecast
-        * positive: better than climatology forecast
-        * negative: worse than climatology forecast
-
-    References:
-      * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-      * Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-        Prediction: Potential versus Operational Seasonal Forecast Skill.
-        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-    """
-    mse_skill = __mse.function(forecast, reference, dim=dim, **metric_kwargs)
-    var = reference.var(dim)
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
-    else:
-        raise ValueError(
-            'Comparison needed to normalize PPP. Not found in', metric_kwargs
-        )
-    fac = _get_norm_factor(comparison)
-    ppp_skill = 1 - mse_skill / var / fac
-    return ppp_skill
-
-
-__ppp = Metric(
-    name='ppp',
-    function=_ppp,
-    positive=True,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Prognostic Potential Predictability',
-    aliases=['ppp'],
-    minimum=-np.inf,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
-def _nrmse(forecast, reference, dim=None, **metric_kwargs):
-    """Normalized Root Mean Square Error (NRMSE) metric.
-
-    .. math:: NRMSE = \\frac{RMSE}{\\sigma_{o} \\cdot \\sqrt{fac} }
-                    = \\sqrt{ \\frac{MSE}{ \\sigma^2_{o} \\cdot fac} }
-
-    Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
-
-
-    Range:
-        * 0: perfect forecast
-        * 0 - 1: better than climatology forecast
-        * > 1: worse than climatology forecast
-
-    References:
-      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-        Prediction: Potential versus Operational Seasonal Forecast Skill.”
-        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-      * Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
-        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-        Journal of the Royal Meteorological Society 142, no. 695
-        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-
-    """
-    rmse_skill = __rmse.function(forecast, reference, dim=dim, **metric_kwargs)
-    std = reference.std(dim)
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
-    else:
-        raise ValueError(
-            'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
-        )
-    fac = _get_norm_factor(comparison)
-    nrmse_skill = rmse_skill / std / np.sqrt(fac)
-    return nrmse_skill
-
-
-__nrmse = Metric(
-    name='nrmse',
-    function=_nrmse,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Normalized Root Mean Squared Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _nmse(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Normalized MSE (NMSE) also known as Normalized Ensemble Variance (NEV).
-
-    .. math:: NMSE = NEV = \\frac{MSE}{\\sigma^2_{o} \\cdot fac}
-
-    Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
-
-
-    Range:
-        * 0: perfect forecast: 0
-        * 0 - 1: better than climatology forecast
-        * > 1: worse than climatology forecast
-
-    References:
-        * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-          North Atlantic Multidecadal Variability.” Climate Dynamics 13,
-          no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-    """
-    mse_skill = __mse.function(forecast, reference, dim=dim, **metric_kwargs)
-    var = reference.var(dim)
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
-    else:
-        raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
-        )
-    fac = _get_norm_factor(comparison)
-    nmse_skill = mse_skill / var / fac
-    return nmse_skill
-
-
-__nmse = Metric(
-    name='nmse',
-    function=_nmse,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Normalized Mean Squared Error',
-    aliases=['nev'],
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _nmae(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Normalized Ensemble Mean Absolute Error metric.
-
-    .. math:: NMAE = \\frac{MAE}{\\sigma_{o} \\cdot fac}
-
-    Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mae
-
-
-    Range:
-        * 0: perfect forecast: 0
-        * 0 - 1: better than climatology forecast
-        * > 1: worse than climatology forecast
-
-    References:
-        * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-          North Atlantic Multidecadal Variability.” Climate Dynamics 13, no.
-          7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-
-    """
-    mae_skill = __mae.function(forecast, reference, dim=dim, **metric_kwargs)
-    std = reference.std(dim).mean()
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
-    else:
-        raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
-        )
-    fac = _get_norm_factor(comparison)
-    nmae_skill = mae_skill / std / fac
-    return nmae_skill
-
-
-__nmae = Metric(
-    name='nmae',
-    function=_nmae,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Normalized Mean Absolute Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _uacc(forecast, reference, dim=None, **metric_kwargs):
-    """
-    Bushuk's unbiased ACC (uACC).
-
-    .. math:: uACC = \\sqrt{PPP} = \\sqrt{MSSS}
-
-    Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
-
-
-    Range:
-        * 1: perfect
-        * 0 - 1: better than climatology
-
-    References:
-        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
-          Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
-          Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
-          Forecast Skill. Climate Dynamics, June 9, 2018.
-          https://doi.org/10/gd7hfq.
-    """
-    ppp_res = __ppp.function(forecast, reference, dim=dim, **metric_kwargs)
-    # ensure no sqrt of neg values
-    uacc_res = (ppp_res.where(ppp_res > 0)) ** 0.5
-    return uacc_res
-
-
-__uacc = Metric(
-    name='uacc',
-    function=_uacc,
-    positive=True,
-    probabilistic=False,
-    unit_power=0,
-    long_name="Bushuk's unbiased ACC",
-    minimum=0.0,
-    maximum=1.0,
-    perfect=1.0,
-)
-
-
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -1520,13 +1566,13 @@ __ALL_METRICS__ = [
     __mse,
     __mae,
     __rmse,
-    __mad,
+    __median_absolute_error,
     __mape,
     __smape,
     __msss_murphy,
     __bias_slope,
     __conditional_bias,
-    __bias,
+    __unconditional_bias,
     __brier_score,
     __threshold_brier_score,
     __crps,

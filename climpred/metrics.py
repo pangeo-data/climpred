@@ -78,6 +78,20 @@ def _get_norm_factor(comparison):
     return fac
 
 
+def _preprocess_dims(dim):
+    """Convert input argument ``dim`` into a list of dimensions.
+
+    Args:
+        dim (str or list): The dimension(s) to apply the function along.
+
+    Returns:
+        dim (list): List of dimensions to apply function over.
+    """
+    if isinstance(dim, str):
+        dim = [dim]
+    return dim
+
+
 def _display_metric_metadata(self):
     summary = '----- Metric metadata -----\n'
     summary += f'Name: {self.name}\n'
@@ -254,7 +268,7 @@ __pearson_r_p_value = Metric(
 
 
 def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
-    """Effective sample size for temporally correlated data
+    """Effective sample size for temporally correlated data.
 
     The effective sample size extracts the number of independent samples
     between two time series being correlated. This is derived by assessing
@@ -303,13 +317,22 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
         shifted[dim] = normal[dim]
         return pearson_r(shifted, normal, dim)
 
-    N = forecast[dim].size
+    # Preprocess same way as in ``xskillscore``
+    dim = _preprocess_dims(dim)
+    if len(dim) > 1:
+        new_dim = '_'.join(dim)
+        forecast = forecast.stack(**{new_dim: dim})
+        reference = reference.stack(**{new_dim: dim})
+    else:
+        new_dim = dim[0]
+
+    N = forecast[new_dim].size
 
     # compute lag-1 autocorrelation.
-    fa, ra = forecast - forecast.mean(dim), reference - reference.mean(dim)
+    fa, ra = forecast - forecast.mean(new_dim), reference - reference.mean(new_dim)
     # TODO: Switch this over to ``esmtools`` dependency once stats are moved over there.
-    fauto = _autocorr(fa, dim, N)
-    rauto = _autocorr(ra, dim, N)
+    fauto = _autocorr(fa, new_dim, N)
+    rauto = _autocorr(ra, new_dim, N)
 
     # compute effective sample size.
     n_eff = N * (1 - fauto * rauto) / (1 + fauto * rauto)
@@ -360,6 +383,8 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     # * Change ``metric_kwargs**`` to what's expected for that function?
     # * Get $$ working for math in rst. Not just .. math:: directive.
     # * Double check keywords
+    # * Threshold brier score math, etc. from properscoring
+    # * Open issue that dim='member' doesn't work for hindcast.
     """
 
     def _calculate_p(t, n):
@@ -737,7 +762,8 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
     """Normalized MSE (NMSE), also known as Normalized Ensemble Variance (NEV).
 
     .. math::
-        NMSE = NEV = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac}
+        NMSE = NEV = \\frac{MSE}{\\sigma^2_{o}\\cdot fac}
+             = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac}
 
     Args:
         * forecast (xr.object)
@@ -791,6 +817,7 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
 
     .. math::
         NMAE = \\frac{MAE}{\\sigma_{o} \\cdot fac}
+             = \\frac{\\overline{|f - o|}}{\\sigma_{o} \\cdot fac}
 
     Args:
         * forecast (xr.object)
@@ -844,7 +871,8 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
 
     .. math::
 
-        NRMSE = \\frac{\\sqrt{\\overline{(f - o)^{2}}}}{\\sigma_{o}\\cdot\\sqrt{fac}}
+        NRMSE = \\frac{RMSE}{\\sigma_{o}\\cdot\\sqrt{fac}}
+              = \\sqrt{\\frac{MSE}{\\sigma^{2}_{o}\\cdot fac}}
               = \\sqrt{ \\frac{\\overline{(f - o)^{2}}}{ \\sigma^2_{o}\\cdot fac}}
 
     Args:
@@ -1261,9 +1289,7 @@ __brier_score = Metric(
 
 
 def _threshold_brier_score(forecast, reference, **metric_kwargs):
-    """
-    Brier scores of an ensemble for exceeding given thresholds.
-    Provide threshold via metric_kwargs.
+    """Brier score of an ensemble for exceeding given thresholds.
 
     .. math::
         CRPS(F, x) = \int_z BS(F(z), H(z - x)) dz

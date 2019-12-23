@@ -56,18 +56,16 @@ def _get_norm_factor(comparison):
 
     Example:
         >>> # check skill saturation value of roughly 1 for different comparisons
-        >>> metric='nrmse'
+        >>> metric = 'nrmse'
         >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:
-                s = compute_perfect_model(ds, control, metric=metric,  comparison=c)
+                s = compute_perfect_model(ds, control, metric=metric, comparison=c)
                 s.plot(label=' '.join([metric,c]))
         >>> plt.legend()
 
     Reference:
         * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing
-         the Decadal Predictability of Land and Ocean Carbon Uptake.”
-         Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
-
-
+          the Decadal Predictability of Land and Ocean Carbon Uptake.”
+          Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
     """
     if comparison.name in ['m2e', 'e2c', 'e2r']:
         fac = 1
@@ -180,13 +178,14 @@ class Metric:
 # CORRELATION METRICS
 #####################
 def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
-    """Pearson product-moment correlation coefficient
+    """Pearson product-moment correlation coefficient.
 
     .. math::
         corr = \\frac{cov(f, o)}{\\sigma_{f}\\cdot\\sigma_{o}}
 
     .. note::
-        Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
+        Use metric ``pearson_r_p_value`` or ``pearson_r_eff_p_value`` to get the
+        corresponding p value.
 
     Args:
         forecast (xarray object): Forecast.
@@ -198,14 +197,22 @@ def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 1
-        * min: -1
-        * max: 1
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | -1.0      |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | positive  |
+        +-----------------+-----------+
 
     See also:
         * xskillscore.pearson_r
         * xskillscore.pearson_r_p_value
+        * climpred.pearson_r_p_value
+        * climpred.pearson_r_eff_p_value
     """
     weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
@@ -227,7 +234,11 @@ __pearson_r = Metric(
 
 
 def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """Probability that forecast and reference are linearly uncorrelated
+    """Probability that forecast and reference are linearly uncorrelated.
+
+    .. note::
+
+        The p value reported here results from a two-tailed test.
 
     Args:
         forecast (xarray object): Forecast.
@@ -239,17 +250,26 @@ def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     See also:
+        * xskillscore.pearson_r
         * xskillscore.pearson_r_p_value
+        * climpred.pearson_r
+        * climpred.pearson_r_eff_p_value
     """
     weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
-    # p-value returns a runtime error when working with NaNs, such as on a climate
+    # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
@@ -265,7 +285,7 @@ __pearson_r_p_value = Metric(
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name='Pearson product-moment correlation coefficient p-value',
+    long_name='Pearson product-moment correlation coefficient p value',
     aliases=['p_pval', 'pvalue', 'pval'],
     minimum=0.0,
     maximum=1.0,
@@ -278,13 +298,16 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
 
     The effective sample size extracts the number of independent samples
     between two time series being correlated. This is derived by assessing
-    the magnitude of lag-1 autocorrelation in each of the time series being
-    correlated. A higher autocorrelation induces a lower effective sample
-    size which raises the correlation coefficient required to achieve statistical
-    significance.
+    the magnitude of the lag-1 autocorrelation coefficient in each of the time series
+    being correlated. A higher autocorrelation induces a lower effective sample
+    size which raises the correlation coefficient for a given p value.
 
     .. math::
-        ESS = N\\left( \\frac{1 - \\rho_{1}\\rho_{2}}{1 + \\rho_{1}\\rho_{2}} \\right)
+        N_{eff} = N\\left( \\frac{1 -
+                   \\rho_{f}\\rho_{o}}{1 + \\rho_{f}\\rho_{o}} \\right),
+
+    where :math:`\\rho_{f}` and :math:`\\rho_{o}` are the lag-1 autocorrelation
+    coefficients for the forecast and observations.
 
     Args:
         forecast (xarray object): Forecast.
@@ -292,13 +315,20 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
         dim (str): Dimension(s) to perform metric over. Automatically set by compute
                    function.
 
-    Range:
-        * min: 1
-        * max: np.inf
+    Details:
+        +-----------------+-----------------+
+        | **minimum**     | 0.0             |
+        +-----------------+-----------------+
+        | **maximum**     | ∞               |
+        +-----------------+-----------------+
+        | **perfect**     | N/A             |
+        +-----------------+-----------------+
+        | **orientation** | positive        |
+        +-----------------+-----------------+
 
     References:
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
-        freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
+          freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
 
     def _autocorr(v, dim, n):
@@ -367,6 +397,26 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are linearly uncorrelated, accounting
     for autocorrelation.
 
+    The effective p value is computed by replacing the sample size :math:`N` in the
+    t-statistic with the effective sample size, :math:`N_{eff}`. The same Pearson
+    product-moment correlation coefficient :math:`r` is used as when computing the
+    standard p value.
+
+    .. math::
+
+        t = r\\sqrt{ \\frac{N_{eff} - 2}{1 - r^{2}} },
+
+    where :math:`N_{eff}` is computed via the autocorrelation in the forecast and
+    observations.
+
+    .. math::
+
+        N_{eff} = N\\left( \\frac{1 -
+                   \\rho_{f}\\rho_{o}}{1 + \\rho_{f}\\rho_{o}} \\right),
+
+    where :math:`\\rho_{f}` and :math:`\\rho_{o}` are the lag-1 autocorrelation
+    coefficients for the forecast and observations.
+
     Args:
         forecast (xarray object): Forecast.
         reference (xarray object): Reference.
@@ -377,38 +427,48 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
-    # TODO:
-    # * PPP vs MSSS. Aren't we missing the ensemble normalization from the Pohlmann
-    # paper?
+    See Also:
+        * climpred.effective_sample_size
+        * climpred.spearman_r_eff_p_value
 
-    # * Go back through MurCSS/bias slope, etc. to clarify those in docs.
-    # * CRPSS, CRPSSES
+    References:
+        * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
+          freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
 
-    # * Get $$ working for math in rst. Not just .. math:: directive.
-    # * Double check keywords
+    TODO:
+    * PPP vs MSSS. Aren't we missing the ensemble normalization from the Pohlmann paper?
+    * All of the ones that claim "better/worse" than climatology should actually be a
+      forecast of climatology right? Not just std/var? (Bushuk mentions using control
+      variance in 2.6 of their paper. When is it appropriate to do this?)
+    * Can't uACC be negative?
 
-    # * Threshold brier score math, etc. from properscoring
+    * Go back through MurCSS/bias slope, etc. to clarify those in docs.
+    * CRPSS, CRPSSES
+    * Threshold brier score math, etc. from properscoring
 
-    # * Open issue that dim='member' doesn't work for hindcast.
-    # * Open issue to include lat/lon etc. for dim on arguments.
-    # * Open issue about weights not working.
-
+    * Open issue about weights not working.
     """
 
     def _calculate_p(t, n):
-        """Calculates the p-value.
+        """Calculates the p value.
 
         Args:
             t (ndarray): t-test statistic.
             n (ndarray): number of samples.
 
         Returns:
-            p (ndarray): Two-tailed p-value.
+            p (ndarray): Two-tailed p value.
         """
         return scipy.stats.t.sf(np.abs(t), n - 2) * 2
 
@@ -422,7 +482,7 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     r = pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
     t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
 
-    # compute effective p-value
+    # compute effective p value
     p = xr.apply_ufunc(
         _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
     )
@@ -437,7 +497,7 @@ __pearson_r_eff_p_value = Metric(
     unit_power=0.0,
     long_name=(
         "Pearson's Anomaly correlation coefficient "
-        'p-value using the effective sample size'
+        'p value using the effective sample size'
     ),
     aliases=['p_pval_eff', 'pvalue_eff', 'pval_eff'],
     minimum=0.0,
@@ -449,11 +509,17 @@ __pearson_r_eff_p_value = Metric(
 def _spearman_r(forecast, reference, dim=None, **metric_kwargs):
     """Spearman's rank correlation coefficient.
 
+    This correlation coefficient is nonparametric and assesses how well the relationship
+    between the forecast and observations can be described using a monotonic function.
+    It is computed by first ranking the forecasts and observations, and then correlating
+    those ranks using the ``pearson_r`` correlation.
+
     .. math::
-        SACC = ACC(ranked(f), ranked(o))
+        corr = \\mathrm{pearsonr}(ranked(f), ranked(o))
 
     .. note::
-        Use metric ``spearman_r_p_value`` to get the corresponding pvalue.
+        Use metric ``spearman_r_p_value`` or ``spearman_r_eff_p_value`` to get the
+        corresponding p value.
 
     Args:
         forecast (xarray object): Forecast.
@@ -465,13 +531,22 @@ def _spearman_r(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 1
-        * min: -1
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | -1.0      |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | positive  |
+        +-----------------+-----------+
 
     See also:
         * xskillscore.spearman_r
         * xskillscore.spearman_r_p_value
+        * climpred.spearman_r_p_value
+        * climpred.spearman_r_eff_p_value
     """
     weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
@@ -495,6 +570,10 @@ __spearman_r = Metric(
 def _spearman_r_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are monotonically uncorrelated.
 
+    .. note::
+
+        The p value reported here results from a two-tailed test.
+
     Args:
         forecast (xarray object): Forecast.
         reference (xarray object): Reference.
@@ -505,17 +584,26 @@ def _spearman_r_p_value(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * max: 1
-        * min: 0
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     See also:
+        * xskillscore.spearman_r
         * xskillscore.spearman_r_p_value
+        * climpred.spearman_r
+        * climpred.spearman_r_eff_p_value
     """
     weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
-    # p-value returns a runtime error when working with NaNs, such as on a climate
+    # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
@@ -531,7 +619,7 @@ __spearman_r_p_value = Metric(
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name="Spearman's rank correlation coefficient p-value",
+    long_name="Spearman's rank correlation coefficient p value",
     aliases=['s_pval', 'spvalue', 'spval'],
     minimum=0.0,
     maximum=1.0,
@@ -543,6 +631,26 @@ def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are monotonically uncorrelated,
     accounting for autocorrelation.
 
+    The effective p value is computed by replacing the sample size :math:`N` in the
+    t-statistic with the effective sample size, :math:`N_{eff}`. The same Spearman's
+    rank correlation coefficient :math:`r` is used as when computing the standard p
+    value.
+
+    .. math::
+
+        t = r\\sqrt{ \\frac{N_{eff} - 2}{1 - r^{2}} },
+
+    where :math:`N_{eff}` is computed via the autocorrelation in the forecast and
+    observations.
+
+    .. math::
+
+        N_{eff} = N\\left( \\frac{1 -
+                   \\rho_{f}\\rho_{o}}{1 + \\rho_{f}\\rho_{o}} \\right),
+
+    where :math:`\\rho_{f}` and :math:`\\rho_{o}` are the lag-1 autocorrelation
+    coefficients for the forecast and observations.
+
     Args:
         forecast (xarray object): Forecast.
         reference (xarray object): Reference.
@@ -553,21 +661,35 @@ def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+    See Also:
+        * climpred.effective_sample_size
+        * climpred.pearson_r_eff_p_value
+
+    References:
+        * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
+          freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
 
     def _calculate_p(t, n):
-        """Calculates the p-value.
+        """Calculates the p value.
 
         Args:
             t (ndarray): t-test statistic.
             n (ndarray): number of samples.
 
         Returns:
-            p (ndarray): Two-tailed p-value.
+            p (ndarray): Two-tailed p value.
         """
         return scipy.stats.t.sf(np.abs(t), n - 2) * 2
 
@@ -581,7 +703,7 @@ def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     r = spearman_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
     t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
 
-    # compute effective p-value
+    # compute effective p value
     p = xr.apply_ufunc(
         _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
     )
@@ -596,7 +718,7 @@ __spearman_r_eff_p_value = Metric(
     unit_power=0.0,
     long_name=(
         "Spearman's Rank correlation coefficient "
-        'p-value using the effective sample size'
+        'p value using the effective sample size'
     ),
     aliases=['s_pval_eff', 'spvalue_eff', 'spval_eff'],
     minimum=0.0,
@@ -609,7 +731,7 @@ __spearman_r_eff_p_value = Metric(
 # DISTANCE METRICS
 ##################
 def _mse(forecast, reference, dim=None, **metric_kwargs):
-    """Mean Sqaure Error (MSE)
+    """Mean Sqaure Error (MSE).
 
     .. math::
         MSE = \\overline{(f - o)^{2}}
@@ -624,10 +746,16 @@ def _mse(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: ∞
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     See also:
         * xskillscore.mse
@@ -651,7 +779,7 @@ __mse = Metric(
 
 
 def _rmse(forecast, reference, dim=None, **metric_kwargs):
-    """Root Mean Sqaure Error (RMSE)
+    """Root Mean Sqaure Error (RMSE).
 
     .. math::
         RMSE = \\sqrt{\\overline{(f - o)^{2}}}
@@ -666,10 +794,16 @@ def _rmse(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: ∞
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     See also:
         * xskillscore.rmse
@@ -693,7 +827,7 @@ __rmse = Metric(
 
 
 def _mae(forecast, reference, dim=None, **metric_kwargs):
-    """Mean Absolute Error (MAE)
+    """Mean Absolute Error (MAE).
 
     .. math::
         MAE = \\overline{|f - o|}
@@ -708,10 +842,16 @@ def _mae(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: ∞
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     See also:
         * xskillscore.mae
@@ -735,7 +875,7 @@ __mae = Metric(
 
 
 def _median_absolute_error(forecast, reference, dim=None, **metric_kwargs):
-    """Median Absolute Error
+    """Median Absolute Error.
 
     .. math::
         median(|f - o|)
@@ -748,10 +888,16 @@ def _median_absolute_error(forecast, reference, dim=None, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: ∞
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     See also:
         * xskillscore.median_absolute_error
@@ -773,90 +919,6 @@ __median_absolute_error = Metric(
 )
 
 
-def _mape(forecast, reference, dim=None, **metric_kwargs):
-    """Mean Absolute Percentage Error (MAPE)
-
-    .. math::
-        MAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|o|}
-
-    Args:
-        forecast (xarray object): Forecast.
-        reference (xarray object): Reference.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
-
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
-
-    See also:
-        * xskillscore.mape
-    """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-
-
-__mape = Metric(
-    name='mape',
-    function=_mape,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='Mean Absolute Percentage Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
-def _smape(forecast, reference, dim=None, **metric_kwargs):
-    """Symmetric Mean Absolute Percentage Error (sMAPE)
-
-    .. math::
-        sMAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|f|+|o|}
-
-    Args:
-        forecast (xarray object): Forecast.
-        reference (xarray object): Reference.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
-
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
-
-    See also:
-        * xskillscore.smape
-    """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return smape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-
-
-__smape = Metric(
-    name='smape',
-    function=_smape,
-    positive=False,
-    probabilistic=False,
-    unit_power=0,
-    long_name='symmetric Mean Absolute Percentage Error',
-    minimum=0.0,
-    maximum=1.0,
-    perfect=0.0,
-)
-
-
 #############################
 # NORMALIZED DISTANCE METRICS
 #############################
@@ -865,7 +927,12 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
 
     .. math::
         NMSE = NEV = \\frac{MSE}{\\sigma^2_{o}\\cdot fac}
-             = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac}
+             = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac},
+
+    where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
+    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    members (``m2c``, ``m2m``, ``m2r``). See
+    :py:func:`~climpred.metrics._get_norm_factor`.
 
     Args:
         forecast (xarray object): Forecast.
@@ -880,10 +947,20 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
 
-    Range:
-        * 0: perfect forecast: 0
-        * 0 - 1: better than climatology forecast
-        * > 1: worse than climatology forecast
+    Details:
+        +----------------------------+-----------+
+        | **minimum**                | 0.0       |
+        +----------------------------+-----------+
+        | **maximum**                | ∞         |
+        +----------------------------+-----------+
+        | **perfect**                | 0.0       |
+        +----------------------------+-----------+
+        | **orientation**            | negative  |
+        +----------------------------+-----------+
+        | **better than climatology**| 0.0 - 1.0 |
+        +----------------------------+-----------+
+        | **worse than climatology** | > 1.0     |
+        +----------------------------+-----------+
 
     References:
         * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
@@ -908,11 +985,11 @@ __nmse = Metric(
     function=_nmse,
     positive=False,
     probabilistic=False,
-    unit_power=0,
+    unit_power=0.0,
     long_name='Normalized Mean Squared Error',
     aliases=['nev'],
     minimum=0.0,
-    maximum=1.0,
+    maximum=np.inf,
     perfect=0.0,
 )
 
@@ -922,7 +999,12 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
 
     .. math::
         NMAE = \\frac{MAE}{\\sigma_{o} \\cdot fac}
-             = \\frac{\\overline{|f - o|}}{\\sigma_{o} \\cdot fac}
+             = \\frac{\\overline{|f - o|}}{\\sigma_{o} \\cdot fac},
+
+    where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
+    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    members (``m2c``, ``m2m``, ``m2r``). See
+    :py:func:`~climpred.metrics._get_norm_factor`.
 
     Args:
         forecast (xarray object): Forecast.
@@ -937,10 +1019,20 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
 
-    Range:
-        * 0: perfect forecast: 0
-        * 0 - 1: better than climatology forecast
-        * > 1: worse than climatology forecast
+    Details:
+        +----------------------------+-----------+
+        | **minimum**                | 0.0       |
+        +----------------------------+-----------+
+        | **maximum**                | ∞         |
+        +----------------------------+-----------+
+        | **perfect**                | 0.0       |
+        +----------------------------+-----------+
+        | **orientation**            | negative  |
+        +----------------------------+-----------+
+        | **better than climatology**| 0.0 - 1.0 |
+        +----------------------------+-----------+
+        | **worse than climatology** | > 1.0     |
+        +----------------------------+-----------+
 
     References:
         * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
@@ -969,7 +1061,7 @@ __nmae = Metric(
     unit_power=0,
     long_name='Normalized Mean Absolute Error',
     minimum=0.0,
-    maximum=1.0,
+    maximum=np.inf,
     perfect=0.0,
 )
 
@@ -981,7 +1073,12 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
 
         NRMSE = \\frac{RMSE}{\\sigma_{o}\\cdot\\sqrt{fac}}
               = \\sqrt{\\frac{MSE}{\\sigma^{2}_{o}\\cdot fac}}
-              = \\sqrt{ \\frac{\\overline{(f - o)^{2}}}{ \\sigma^2_{o}\\cdot fac}}
+              = \\sqrt{ \\frac{\\overline{(f - o)^{2}}}{ \\sigma^2_{o}\\cdot fac}},
+
+    where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
+    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    members (``m2c``, ``m2m``, ``m2r``). See
+    :py:func:`~climpred.metrics._get_norm_factor`.
 
     Args:
         forecast (xarray object): Forecast.
@@ -996,10 +1093,20 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
 
-    Range:
-        * 0: perfect forecast
-        * 0 - 1: better than climatology forecast
-        * > 1: worse than climatology forecast
+    Details:
+        +----------------------------+-----------+
+        | **minimum**                | 0.0       |
+        +----------------------------+-----------+
+        | **maximum**                | ∞         |
+        +----------------------------+-----------+
+        | **perfect**                | 0.0       |
+        +----------------------------+-----------+
+        | **orientation**            | negative  |
+        +----------------------------+-----------+
+        | **better than climatology**| 0.0 - 1.0 |
+        +----------------------------+-----------+
+        | **worse than climatology** | > 1.0     |
+        +----------------------------+-----------+
 
     References:
       * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
@@ -1034,7 +1141,7 @@ __nrmse = Metric(
     unit_power=0,
     long_name='Normalized Root Mean Squared Error',
     minimum=0.0,
-    maximum=1.0,
+    maximum=np.inf,
     perfect=0.0,
 )
 
@@ -1044,7 +1151,12 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
 
     .. math::
         PPP = 1 - \\frac{MSE}{\\sigma^2_{ref} \\cdot fac} =
-              1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}
+              1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac},
+
+    where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
+    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    members (``m2c``, ``m2m``, ``m2r``). See
+    :py:func:`~climpred.metrics._get_norm_factor`.
 
     .. note::
         This is the same as the Mean Squared Skill Score.
@@ -1062,10 +1174,22 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
 
-    Range:
-        * 1: perfect forecast
-        * positive: better than climatology forecast
-        * negative: worse than climatology forecast
+    Details:
+        +----------------------------+-----------+
+        | **minimum**                | -∞        |
+        +----------------------------+-----------+
+        | **maximum**                | 1.0       |
+        +----------------------------+-----------+
+        | **perfect**                | 1.0       |
+        +----------------------------+-----------+
+        | **orientation**            | positive  |
+        +----------------------------+-----------+
+        | **better than climatology**| > 0.0     |
+        +----------------------------+-----------+
+        | **equal to climatology**   | 0.0       |
+        +----------------------------+-----------+
+        | **worse than climatology** | < 0.0     |
+        +----------------------------+-----------+
 
     References:
       * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
@@ -1107,12 +1231,113 @@ __ppp = Metric(
 )
 
 
+def _mape(forecast, reference, dim=None, **metric_kwargs):
+    """Mean Absolute Percentage Error (MAPE).
+
+    .. math::
+        MAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|o|}
+
+    Args:
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+    See also:
+        * xskillscore.mape
+    """
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return mape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+
+
+__mape = Metric(
+    name='mape',
+    function=_mape,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Mean Absolute Percentage Error',
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _smape(forecast, reference, dim=None, **metric_kwargs):
+    """Symmetric Mean Absolute Percentage Error (sMAPE).
+
+    .. math::
+        sMAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|f|+|o|}
+
+    Args:
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+    See also:
+        * xskillscore.smape
+    """
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+    return smape(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+
+
+__smape = Metric(
+    name='smape',
+    function=_smape,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name='symmetric Mean Absolute Percentage Error',
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
 def _uacc(forecast, reference, dim=None, **metric_kwargs):
     """Bushuk's unbiased Anomaly Correlation Coefficient (uACC).
 
     .. math::
         uACC = \\sqrt{PPP} = \\sqrt{MSSS}
-             = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}}
+             = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}},
+
+    where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
+    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    members (``m2c``, ``m2m``, ``m2r``). See
+    :py:func:`~climpred.metrics._get_norm_factor`.
 
     Args:
         forecast (xarray object): Forecast.
@@ -1127,9 +1352,20 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
 
-    Range:
-        * 1: perfect
-        * 0 - 1: better than climatology
+    Details:
+        +----------------------------+-----------+
+        | **minimum**                | 0.0       |
+        +----------------------------+-----------+
+        | **maximum**                | 1.0       |
+        +----------------------------+-----------+
+        | **perfect**                | 1.0       |
+        +----------------------------+-----------+
+        | **orientation**            | positive  |
+        +----------------------------+-----------+
+        | **better than climatology**| > 0.0     |
+        +----------------------------+-----------+
+        | **equal to climatology**   | 0.0       |
+        +----------------------------+-----------+
 
     References:
         * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
@@ -1357,7 +1593,7 @@ def _brier_score(forecast, reference, **metric_kwargs):
     .. math::
         BS(f, o) = (f_1 - o)^2,
 
-    where $f_1$ is the forecast probability of $o=1$.
+    where :math:`f_1` is the forecast probability of :math:`o=1`.
 
     .. note::
         The Brier Score requires that the reference is binary, i.e., can be described as
@@ -1748,4 +1984,5 @@ __ALL_METRICS__ = [
     __nrmse,
     __nmae,
     __uacc,
+    __std_ratio,
 ]

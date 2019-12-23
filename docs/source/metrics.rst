@@ -1,5 +1,17 @@
 .. currentmodule:: climpred.metrics
 
+.. ipython:: python
+   :suppress:
+
+    from climpred.metrics import __ALL_METRICS__ as all_metrics
+    metric_aliases = {}
+    for m in all_metrics:
+        if m.aliases is not None:
+            metric_list = [m.name] + m.aliases
+        else:
+            metric_list = [m.name]
+        metric_aliases[m.name] = metric_list
+
 #######
 Metrics
 #######
@@ -16,39 +28,60 @@ determine which metric is used in computing predictability.
     predictability.
 
 Internally, all metric functions require ``forecast`` and ``reference`` as inputs.
-The dimension ``dim`` is set by :py:func:`~climpred.prediction.compute_hindcast` or
+The dimension ``dim`` is set internally by
+:py:func:`~climpred.prediction.compute_hindcast` or
 :py:func:`~climpred.prediction.compute_perfect_model` to specify over which dimensions
-the ``metric`` is applied. See :ref:`comparisons`.
+the ``metric`` is applied. See :ref:`comparisons` for more on the ``dim`` argument.
 
 *************
 Deterministic
 *************
 
-Deterministic metrics quantify the level to which the forecast predicts the
-observations. These metrics are just a special case of probabilistic metrics where a
-value of 100% is assigned to the forecasted value [Jolliffe2011]_.
+Deterministic metrics assess the forecast as a definite prediction of the future, rather
+than in terms of probabilities. Another way to look at deterministic metrics is that
+they are a special case of probabilistic metrics where a value of one is assigned to
+one category and zero to all others [Jolliffe2011]_.
 
 Correlation Metrics
 ===================
 
+The below metrics rely fundamentally on correlations in their computation. The most
+common correlation-based metric in forecasting is the Anomaly Correlation Coefficient,
+or ACC. The ACC isn't a special type of correlation, but rather the correlation of
+forecasted anomalies (rather than raw values). ``climpred`` offers the linear
+`Pearson Product-Moment Correlation <#pearson-product-moment-correlation-coefficient>`_
+and `Spearman's Rank Correlation <#spearman-s-rank-correlation-coefficient>`_.
+
+Note that the p value associated with these correlations is computed via a separate
+metric. Use ``pearson_r_p_value`` or ``spearman_r_p_value`` to compute p values assuming
+that all samples in the correlated time series are independent. Use
+``pearson_r_eff_p_value`` or ``spearman_r_eff_p_value`` to account for autocorrelation
+in the time series by calculating the ``effective_sample_size``.
+
 Pearson Product-Moment Correlation Coefficient
 ----------------------------------------------
 
-``keyword: 'pearson_r', 'pr', 'pacc', 'acc'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['pearson_r']}")
 
 A measure of the linear association between the forecast and observations that is
 independent of the mean and variance of the individual distributions [Jolliffe2011]_.
-This is also known as the anomaly correlation coefficient (ACC) when comparing
+This is also known as the Anomaly Correlation Coefficient (ACC) when comparing
 anomalies.
 
 .. autofunction:: _pearson_r
 
-Pearson Correlation p-value
+Pearson Correlation p value
 ---------------------------
 
-``keyword: 'pearson_r_p_value', 'p_pval', 'pvalue', 'pval'``
+.. ipython:: python
 
-p-value associated with the Pearson product-moment correlation coefficient
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['pearson_r_p_value']}")
+
+Two-tailed p value associated with the Pearson product-moment correlation coefficient
 (``pearson_r``), assuming that all samples are independent (use
 ``pearson_r_eff_p_value`` to account for autocorrelation in the forecast and
 observations).
@@ -58,20 +91,26 @@ observations).
 Effective Sample Size
 ---------------------
 
-``keyword: 'effective_sample_size', 'eff_n', 'n_eff'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['effective_sample_size']}")
 
 Number of independent samples when autocorrelation in the forecast and observations are
-taken into account. This is used in computing the effective p-value
-(``pearson_r_eff_p_value``) for correlations.
+taken into account. This is used in computing the effective p value
+(``pearson_r_eff_p_value`` or ``spearman_r_eff_p_value``) for correlations.
 
 .. autofunction:: _effective_sample_size
 
-Pearson Correlation Effective p-value
+Pearson Correlation Effective p value
 -------------------------------------
 
-``keyword: 'pearson_r_eff_p_value', 'p_pval_eff', 'pvalue_eff', 'pval_eff'``
+.. ipython:: python
 
-p-value associated with the Pearson product-moment correlation coefficient
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['pearson_r_eff_p_value']}")
+
+p value associated with the Pearson product-moment correlation coefficient
 (``pearson_r``) when autocorrelation is taken into account via the effective sample
 size (``effective_sample_size``).
 
@@ -81,7 +120,10 @@ size (``effective_sample_size``).
 Spearman's Rank Correlation Coefficient
 ---------------------------------------
 
-``keyword: 'spearman_r', 'sacc', 'sr'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spearman_r']}")
 
 A measure of how well the relationship between two variables can be described using a
 monotonic function. This is also known as the anomaly correlation coefficient (ACC)
@@ -90,24 +132,30 @@ when comparing anomalies.
 .. autofunction:: _spearman_r
 
 
-Spearman's Rank Correlation Coefficient p-value
+Spearman's Rank Correlation Coefficient p value
 -----------------------------------------------
 
-``keyword: 'spearman_r_p_value', 's_pval', 'spvalue', 'spval'``
+.. ipython:: python
 
-p-value associated with the Spearman's product-moment correlation coefficient
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spearman_r_p_value']}")
+
+p value associated with the Spearman's product-moment correlation coefficient
 (``spearman_r``), assuming that all samples are independent (use
 ``spearman_r_eff_p_value`` to account for autocorrelation in the forecast and
 observations).
 
 .. autofunction:: _spearman_r_p_value
 
-Spearman's Rank Correlation Effective p-value
+Spearman's Rank Correlation Effective p value
 ---------------------------------------------
 
-``keyword: 'spearman_r_eff_p_value', 's_pval_eff', 'spvalue_eff', 'spval_eff'``
+.. ipython:: python
 
-p-value associated with the Spearman's Rank Correlation Coefficient (``spearman_r``)
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spearman_r_eff_p_value']}")
+
+p value associated with the Spearman's Rank Correlation Coefficient (``spearman_r``)
 when autocorrelation is taken into account via the effective sample size
 (``effective_sample_size``).
 
@@ -116,13 +164,22 @@ when autocorrelation is taken into account via the effective sample size
 Distance Metrics
 ================
 
+This class of metrics simply measures the distance (or difference) between forecasted
+values and observed values.
+
 Mean Squared Error (MSE)
 ------------------------
 
-``keyword: 'mse'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mse']}")
 
 The average of the squared difference between forecasts and observations. This
-incorporates both the variance and bias of the estimator.
+incorporates both the variance and bias of the estimator. Because the error is squared,
+it is more sensitive to large forecast errors than ``mae``, and thus a more conservative
+metric. For example, a single error of 2°C counts the same as two 1°C errors when using
+``mae``. On the other hand, the 2°C error counts double for ``mse`` [Jolliffe2011]_.
 
 .. autofunction:: _mse
 
@@ -130,12 +187,13 @@ incorporates both the variance and bias of the estimator.
 Root Mean Square Error (RMSE)
 -----------------------------
 
-``keyword: 'rmse'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['rmse']}")
 
 The square root of the average of the squared differences between forecasts and
-observations [Jolliffe2011]_. It puts a greater influence on large errors than small
-errors, which makes this a good choice if large errors are undesirable or one wants to
-be a more conservative forecaster.
+observations.
 
 .. autofunction:: _rmse
 
@@ -143,11 +201,14 @@ be a more conservative forecaster.
 Mean Absolute Error (MAE)
 -------------------------
 
-``keyword: 'mae'``
+.. ipython:: python
 
-The average of the absolute differences between forecasts and observations
-[Jolliffe2011]_. A more robust measure of forecast accuracy than root mean square error
-or mean square error which is sensitive to large outlier forecast errors [EOS]_.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mae']}")
+
+The average of the absolute differences between forecasts and observations. A more
+robust measure of forecast accuracy than ``mse`` which is sensitive to large outlier
+forecast errors [EOS]_; [Jolliffe2011]_.
 
 .. autofunction:: _mae
 
@@ -155,9 +216,13 @@ or mean square error which is sensitive to large outlier forecast errors [EOS]_.
 Median Absolute Error
 ---------------------
 
-``keyword: 'median_absolute_error'``
+.. ipython:: python
 
-The median of the absolute differences between forecasts and observations.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['median_absolute_error']}")
+
+The median of the absolute differences between forecasts and observations. Applying
+the median function to absolute error makes it more robust to outliers.
 
 .. autofunction:: _median_absolute_error
 
@@ -172,7 +237,10 @@ ensemble members. (see :py:func:`~climpred.metrics._get_norm_factor`).
 Normalized Mean Square Error (NMSE)
 -----------------------------------
 
-``keyword: 'nmse', 'nev'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['nmse']}")
 
 Mean Square Error (``mse``) normalized by the variance of the observations.
 
@@ -182,9 +250,13 @@ Mean Square Error (``mse``) normalized by the variance of the observations.
 Normalized Mean Absolute Error (NMAE)
 -------------------------------------
 
-``keyword: 'nmae'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['nmae']}")
 
 Mean Absolute Error (``mae``) normalized by the standard deviation of the observations.
+
 
 .. autofunction:: _nmae
 
@@ -192,7 +264,10 @@ Mean Absolute Error (``mae``) normalized by the standard deviation of the observ
 Normalized Root Mean Square Error (NRMSE)
 -----------------------------------------
 
-``keyword: 'nrmse'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['nrmse']}")
 
 Root Mean Square Error (``rmse``) normalized by the standard deviation of the
 observations.
@@ -203,7 +278,10 @@ observations.
 Mean Square Skill Score (MSSS)
 ------------------------------
 
-``keyword: 'msss', 'ppp'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['ppp']}")
 
 One minus the ratio of the squared error of the forecasts to the variance of the
 observations.
@@ -214,7 +292,10 @@ observations.
 Mean Absolute Percentage Error (MAPE)
 -------------------------------------
 
-``keyword: 'mape'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mape']}")
 
 Mean absolute error (``mae``) expressed as a percentage error relative to the
 observations.
@@ -224,7 +305,10 @@ observations.
 Symmetric Mean Absolute Percentage Error (sMAPE)
 ------------------------------------------------
 
-``keyword: 'smape'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['smape']}")
 
 Similar to the Mean Absolute Percentage Error (``mape``), but sums the forecast and
 observation mean in the denominator.
@@ -235,7 +319,10 @@ observation mean in the denominator.
 Unbiased Anomaly Correlation Coefficient (uACC)
 -----------------------------------------------
 
-``keyword: 'uacc'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['uacc']}")
 
 This is typically used in perfect model studies. Because the perfect model Anomaly
 Correlation Coefficient (ACC) is strongly state dependent, a standard ACC (e.g. one
@@ -256,21 +343,30 @@ Various decomposition metrics from [Murphy1988]_ which relates the ``MSSS`` to t
 Standard Ratio
 --------------
 
-``keyword: 'std_ratio'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['std_ratio']}")
 
 .. autofunction:: _std_ratio
 
 Conditional Bias
 ----------------
 
-``keyword: 'conditional_bias', c_b'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['conditional_bias']}")
 
 .. autofunction:: _conditional_bias
 
 Unconditional Bias
 ------------------
 
-``keyword: 'unconditional_bias', 'bias', 'u_b'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['unconditional_bias']}")
 
 Simple bias of the forecast minus the observations.
 
@@ -279,14 +375,20 @@ Simple bias of the forecast minus the observations.
 Bias Slope
 ----------
 
-``keyword: 'bias_slope'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['bias_slope']}")
 
 .. autofunction:: _bias_slope
 
 Murphy's Mean Square Skill Score
 --------------------------------
 
-``keyword: 'msss_murphy'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['msss_murphy']}")
 
 .. autofunction:: _msss_murphy
 
@@ -300,7 +402,10 @@ calculations.
 Continuous Ranked Probability Score (CRPS)
 ==========================================
 
-``keyword: 'crps'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['crps']}")
 
 The CRPS can also be considered as the probabilistic Mean Absolute Error (``mae``). It
 compares the empirical distribution of an ensemble forecast to a scalar observation.
@@ -311,21 +416,30 @@ Smaller scores indicate better skill.
 Continuous Ranked Probability Skill Score (CRPSS)
 =================================================
 
-``keyword: 'crpss'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['crpss']}")
 
 .. autofunction:: _crpss
 
 Continuous Ranked Probability Skill Score Ensemble Spread
 =========================================================
 
-``keyword: 'crpss_es'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['crpss_es']}")
 
 .. autofunction:: _crpss_es
 
 Brier Score
 ===========
 
-``keyword: 'brier_score', 'brier', 'bs'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['brier_score']}")
 
 The Mean Square Error (``mse``) of probabilistic two-category forecasts where the
 observations are either 0 (no occurrence) or 1 (occurrence) and forecast probability
@@ -338,7 +452,10 @@ incorrect. [NOAA Glossary of Forecast Verification Metrics]_
 Threshold Brier Score
 =====================
 
-``keyword: 'threshold_brier_score', 'tbs'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['threshold_brier_score']}")
 
 .. autofunction:: _threshold_brier_score
 

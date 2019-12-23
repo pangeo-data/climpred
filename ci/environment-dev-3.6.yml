@@ -33,6 +33,7 @@ dependencies:
   - pylint
   - pytest
   - pytest-cov
+  - pytest-sugar
   # Performance
   - bottleneck
   - numba
@@ -49,3 +50,6 @@ dependencies:
   # Visualization
   - cartopy
   - matplotlib
+  - pip
+  - pip:
+      - pytest-tldr

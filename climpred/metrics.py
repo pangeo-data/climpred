@@ -189,11 +189,14 @@ def _pearson_r(forecast, reference, dim=None, **metric_kwargs):
         Use metric ``pearson_r_p_value`` to get the corresponding pvalue.
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 1
@@ -227,11 +230,14 @@ def _pearson_r_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are linearly uncorrelated
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r_p_value
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -281,11 +287,10 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
         ESS = N\\left( \\frac{1 - \\rho_{1}\\rho_{2}}{1 + \\rho_{1}\\rho_{2}} \\right)
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r_p_value
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
 
     Range:
         * min: 1
@@ -326,6 +331,8 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
     else:
         new_dim = dim[0]
 
+    # Need to implement ``skipna`` here. This doesn't check NaNs. Might be worth
+    # having a ``np_metrics.py`` similar to ``xskillscore``.
     N = forecast[new_dim].size
 
     # compute lag-1 autocorrelation.
@@ -358,14 +365,17 @@ __effective_sample_size = Metric(
 
 def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are linearly uncorrelated, accounting
-    for autocorrelation
+    for autocorrelation.
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute function.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.pearson_r_p_value
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -373,18 +383,21 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         * max: 1
 
     # TODO:
-    # * Implement weights and skipna / check if these work as expected
-    # * Does this make sense to implement with spearman?
     # * PPP vs MSSS. Aren't we missing the ensemble normalization from the Pohlmann
     # paper?
-    # * Add back in "MSE" in the docs metrics for equations, etc.
+
     # * Go back through MurCSS/bias slope, etc. to clarify those in docs.
     # * CRPSS, CRPSSES
-    # * Change ``metric_kwargs**`` to what's expected for that function?
+
     # * Get $$ working for math in rst. Not just .. math:: directive.
     # * Double check keywords
+
     # * Threshold brier score math, etc. from properscoring
+
     # * Open issue that dim='member' doesn't work for hindcast.
+    # * Open issue to include lat/lon etc. for dim on arguments.
+    # * Open issue about weights not working.
+
     """
 
     def _calculate_p(t, n):
@@ -399,12 +412,13 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         """
         return scipy.stats.t.sf(np.abs(t), n - 2) * 2
 
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+
     # compute effective sample size
     n_eff = _effective_sample_size(forecast, reference, dim)
 
     # compute t-statistic
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
     r = pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
     t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
 
@@ -433,7 +447,7 @@ __pearson_r_eff_p_value = Metric(
 
 
 def _spearman_r(forecast, reference, dim=None, **metric_kwargs):
-    """Spearman's rank correlation coefficient
+    """Spearman's rank correlation coefficient.
 
     .. math::
         SACC = ACC(ranked(f), ranked(o))
@@ -442,11 +456,14 @@ def _spearman_r(forecast, reference, dim=None, **metric_kwargs):
         Use metric ``spearman_r_p_value`` to get the corresponding pvalue.
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.spearman_r
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 1
@@ -476,14 +493,17 @@ __spearman_r = Metric(
 
 
 def _spearman_r_p_value(forecast, reference, dim=None, **metric_kwargs):
-    """Probability that forecast and reference are monotonically uncorrelated
+    """Probability that forecast and reference are monotonically uncorrelated.
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.spearman_r_p_value
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -519,6 +539,72 @@ __spearman_r_p_value = Metric(
 )
 
 
+def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
+    """Probability that forecast and reference are monotonically uncorrelated,
+    accounting for autocorrelation.
+
+    Args:
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+
+    Range:
+        * perfect: 0
+        * min: 0
+        * max: 1
+    """
+
+    def _calculate_p(t, n):
+        """Calculates the p-value.
+
+        Args:
+            t (ndarray): t-test statistic.
+            n (ndarray): number of samples.
+
+        Returns:
+            p (ndarray): Two-tailed p-value.
+        """
+        return scipy.stats.t.sf(np.abs(t), n - 2) * 2
+
+    weights = metric_kwargs.get('weights', None)
+    skipna = metric_kwargs.get('skipna', False)
+
+    # compute effective sample size
+    n_eff = _effective_sample_size(forecast, reference, dim)
+
+    # compute t-statistic
+    r = spearman_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
+    t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
+
+    # compute effective p-value
+    p = xr.apply_ufunc(
+        _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
+    )
+    return p
+
+
+__spearman_r_eff_p_value = Metric(
+    name='spearman_r_eff_p_value',
+    function=_spearman_r_eff_p_value,
+    positive=False,
+    probabilistic=False,
+    unit_power=0.0,
+    long_name=(
+        "Spearman's Rank correlation coefficient "
+        'p-value using the effective sample size'
+    ),
+    aliases=['s_pval_eff', 'spvalue_eff', 'spval_eff'],
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
 ##################
 # DISTANCE METRICS
 ##################
@@ -529,11 +615,14 @@ def _mse(forecast, reference, dim=None, **metric_kwargs):
         MSE = \\overline{(f - o)^{2}}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -568,11 +657,14 @@ def _rmse(forecast, reference, dim=None, **metric_kwargs):
         RMSE = \\sqrt{\\overline{(f - o)^{2}}}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -607,11 +699,14 @@ def _mae(forecast, reference, dim=None, **metric_kwargs):
         MAE = \\overline{|f - o|}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mae
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -646,11 +741,12 @@ def _median_absolute_error(forecast, reference, dim=None, **metric_kwargs):
         median(|f - o|)
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.median_absolute_error
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -684,11 +780,14 @@ def _mape(forecast, reference, dim=None, **metric_kwargs):
         MAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|o|}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mape
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -723,11 +822,14 @@ def _smape(forecast, reference, dim=None, **metric_kwargs):
         sMAPE = \\frac{1}{n} \\sum \\frac{|f-o|}{|f|+|o|}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna, see xskillscore.smape
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Range:
         * perfect: 0
@@ -766,14 +868,17 @@ def _nmse(forecast, reference, dim=None, **metric_kwargs):
              = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac}
 
     Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
-
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+        comparison (str): Name comparison needed for normalization factor `fac`, see
+            :py:func:`~climpred.metrics._get_norm_factor`
+            (Handled internally by the compute functions)
 
     Range:
         * 0: perfect forecast: 0
@@ -820,14 +925,17 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
              = \\frac{\\overline{|f - o|}}{\\sigma_{o} \\cdot fac}
 
     Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mae
-
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+        comparison (str): Name comparison needed for normalization factor `fac`, see
+            :py:func:`~climpred.metrics._get_norm_factor`
+            (Handled internally by the compute functions)
 
     Range:
         * 0: perfect forecast: 0
@@ -876,14 +984,17 @@ def _nrmse(forecast, reference, dim=None, **metric_kwargs):
               = \\sqrt{ \\frac{\\overline{(f - o)^{2}}}{ \\sigma^2_{o}\\cdot fac}}
 
     Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.rmse
-
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+        comparison (str): Name comparison needed for normalization factor `fac`, see
+            :py:func:`~climpred.metrics._get_norm_factor`
+            (Handled internally by the compute functions)
 
     Range:
         * 0: perfect forecast
@@ -939,14 +1050,17 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
         This is the same as the Mean Squared Skill Score.
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-            Automatically set by compute_.
-        comparison (str): name comparison needed for normalization factor `fac`,
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+        comparison (str): Name comparison needed for normalization factor `fac`, see
+            :py:func:`~climpred.metrics._get_norm_factor`
+            (Handled internally by the compute functions)
 
     Range:
         * 1: perfect forecast
@@ -1001,13 +1115,17 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
              = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}}
 
     Args:
-        * forecast (xr.object)
-        * reference (xr.object)
-        * dim (str): dimension to apply metric to
-        * comparison (str): name comparison needed for normalization factor `fac`, see
-            :py:func:`climpred.metrics._get_norm_factor`
-            (internally required to be added via **metric_kwargs)
-        * metric_kwargs: (optional) weights, skipna, see xskillscore.mse
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
+        comparison (str): Name comparison needed for normalization factor `fac`, see
+            :py:func:`~climpred.metrics._get_norm_factor`
+            (Handled internally by the compute functions)
 
     Range:
         * 1: perfect
@@ -1048,10 +1166,10 @@ def _std_ratio(forecast, reference, dim=None, **metric_kwargs):
     .. math:: \\text{std ratio} = \\frac{\\sigma_o}{\\sigma_f}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   functions.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -1080,10 +1198,10 @@ def _unconditional_bias(forecast, reference, dim=None, **metric_kwargs):
         bias = f - o
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   functions.
 
     Range:
         * pos: positive bias
@@ -1119,10 +1237,10 @@ def _conditional_bias(forecast, reference, dim=None, **metric_kwargs):
         \\text{conditional bias} = r_{fo} - \\frac{\\sigma_f}{\\sigma_o}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   functions.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -1155,10 +1273,10 @@ def _bias_slope(forecast, reference, dim=None, **metric_kwargs):
         \\text{bias slope}= r_{fo} \\cdot \\text{std ratio}
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   functions.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -1190,11 +1308,14 @@ def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
          [\\frac{\\text{(unconditional) bias}}{\\sigma_o}]^2
 
     Args:
-        forecast (xarray object): forecast
-        reference (xarray object): reference
-        dim (str): dimension(s) to perform metric over.
-                   Automatically set by compute_.
-        metric_kwargs: (optional) weights, skipna
+        forecast (xarray object): Forecast.
+        reference (xarray object): Reference.
+        dim (str): Dimension(s) to perform metric over. Automatically set by compute
+                   function.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
@@ -1243,12 +1364,11 @@ def _brier_score(forecast, reference, **metric_kwargs):
         one (a "hit") or zero (a "miss").
 
     Args:
-        * forecast (xr.object): forecast with ``member`` dim
-        * reference (xr.object): references without ``member`` dim
-        * func (function): function to be applied to reference and forecasts
-                           and then ``mean('member')`` to get forecasts and
-                           reference in interval [0,1].
-                           (required to be added via **metric_kwargs)
+        forecast (xr.object): Forecast with ``member`` dim.
+        reference (xr.object): References without ``member`` dim.
+        func (function): Function to be applied to reference and forecasts
+                         and then ``mean('member')`` to get forecasts and
+                         reference in interval [0,1].
 
     Reference:
         * Brier, Glenn W. Verification of forecasts expressed in terms of
@@ -1300,11 +1420,10 @@ def _threshold_brier_score(forecast, reference, **metric_kwargs):
         * max: 1
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
-        * threshold (int, float, xr.object): Threshold to check exceedance,
-            see properscoring.threshold_brier_score
-            (required to be added via **metric_kwargs)
+        * forecast (xr.object): Forecast with `member` dim.
+        * reference (xr.object): References without `member` dim.
+        * threshold (int, float, xr.object): Threshold to check exceedance, see
+                                             properscoring.threshold_brier_score.
 
     References:
         * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
@@ -1357,9 +1476,11 @@ def _crps(forecast, reference, **metric_kwargs):
         determinstic.
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
-        * metric_kwargs (optional dict): weights, see properscoring.crps_ensemble
+        forecast (xr.object): Forecast with `member` dim.
+        reference (xr.object): References without `member` dim.
+        metric_kwargs (xr.object): If provided, the CRPS is calculated exactly with the
+        assigned probability weights to each forecast. Weights should be positive, but
+        do not need to be normalized. By default, each forecast is weighted equally.
 
     Range:
         * perfect: 0
@@ -1398,9 +1519,9 @@ def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
     """CRPS assuming a gaussian distribution. Helper function for CRPSS.
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * mu (xr.object): mean reference
-        * sig (xr.object): standard deviation reference
+        forecast (xr.object): Forecast with `member` dim.
+        mu (xr.object): The mean of the reference.
+        sig (xr.object): The standard deviation reference.
 
     See also:
         * properscoring.crps_gaussian
@@ -1415,8 +1536,15 @@ def _crps_quadrature(
     """CRPS assuming distribution cdf_or_dist. Helper function for CRPSS.
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * see properscoring.crps_quadrature
+        forecast (xr.object): Forecast with `member` dim.
+        cdf_or_dist (callable or scipy.stats.distribution): Function which returns the
+        cumulative density of the forecast distribution at value x.
+        xmin (float): Lower bounds for integration.
+        xmax (float): Upper bounds for integration.
+        tol (float, optional): The desired accuracy of the CRPS. Larger values will
+                               speed up integration. If ``tol`` is set to ``None``,
+                               bounds errors or integration tolerance errors will be
+                               ignored.
 
     See also:
         * properscoring.crps_quadrature
@@ -1437,14 +1565,21 @@ def _crpss(forecast, reference, **metric_kwargs):
         CRPSS = 1 - \\frac{CRPS_{init}}{CRPS_{clim}}
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
-        * gaussian (bool): Assuming gaussian distribution for baseline skill.
-                           Default: True (optional)
-        * cdf_or_dist (scipy.stats): distribution to assume if not gaussian.
-                                     default: scipy.stats.norm
-        * xmin, xmax, tol: only relevant if not gaussian
-                           (see xskillscore.crps_quadrature)
+        forecast (xr.object): Forecast with `member` dim.
+        reference (xr.object): References without `member` dim.
+        gaussian (bool, optional): If ``True``, assum Gaussian distribution for baseline
+                                   skill. Defaults to ``True``.
+        cdf_or_dist (scipy.stats): Function which returns the cumulative density of the
+                                   forecast at value x. This can also be an object with
+                                   a callable ``cdf()`` method such as a
+                                   ``scipy.stats.distribution`` object. Defaults to
+                                   ``scipy.stats.norm``.
+        xmin (float): Lower bounds for integration. Only use if not assuming Gaussian.
+        xmax (float) Upper bounds for integration. Only use if not assuming Gaussian.
+        tol (float, optional): The desired accuracy of the CRPS. Larger values will
+                               speed up integration. If ``tol`` is set to ``None``,
+                               bounds errors or integration tolerance errors will be
+                               ignored. Only use if not assuming Gaussian.
 
     Range:
         * perfect: 1
@@ -1525,9 +1660,12 @@ def _crpss_es(forecast, reference, **metric_kwargs):
         CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o}))
 
     Args:
-        * forecast (xr.object): forecast with `member` dim
-        * reference (xr.object): references without `member` dim
-        * metric_kwargs (optional): weights, skipna used for mse
+        forecast (xr.object): Forecast with ``member`` dim.
+        reference (xr.object): References without ``member`` dim.
+        weights (xarray object, optional): Weights to apply over dimension. Defaults to
+                                           ``None``.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     References:
         * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
@@ -1589,6 +1727,7 @@ __ALL_METRICS__ = [
     __effective_sample_size,
     __pearson_r_eff_p_value,
     __spearman_r_p_value,
+    __spearman_r_eff_p_value,
     __mse,
     __mae,
     __rmse,

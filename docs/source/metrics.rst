@@ -102,6 +102,17 @@ observations).
 
 .. autofunction:: _spearman_r_p_value
 
+Spearman's Rank Correlation Effective p-value
+---------------------------------------------
+
+``keyword: 'spearman_r_eff_p_value', 's_pval_eff', 'spvalue_eff', 'spval_eff'``
+
+p-value associated with the Spearman's Rank Correlation Coefficient (``spearman_r``)
+when autocorrelation is taken into account via the effective sample size
+(``effective_sample_size``).
+
+.. autofunction:: _spearman_r_eff_p_value
+
 Distance Metrics
 ================
 

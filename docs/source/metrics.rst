@@ -45,12 +45,13 @@ one category and zero to all others [Jolliffe2011]_.
 Correlation Metrics
 ===================
 
-The below metrics rely fundamentally on correlations in their computation. The most
-common correlation-based metric in forecasting is the Anomaly Correlation Coefficient,
-or ACC. The ACC isn't a special type of correlation, but rather the correlation of
-forecasted anomalies (rather than raw values). ``climpred`` offers the linear
-`Pearson Product-Moment Correlation <#pearson-product-moment-correlation-coefficient>`_
-and `Spearman's Rank Correlation <#spearman-s-rank-correlation-coefficient>`_.
+The below metrics rely fundamentally on correlations in their computation. In the
+literature, correlation metrics are typically referred to as the Anomaly Correlation
+Coefficient (ACC). This implies that anomalies in the forecast and observations
+are being correlated. Typically, this is computed using the linear
+`Pearson Product-Moment Correlation <#pearson-product-moment-correlation-coefficient>`_.
+However, ``climpred`` also offers the
+`Spearman's Rank Correlation <#spearman-s-rank-correlation-coefficient>`_.
 
 Note that the p value associated with these correlations is computed via a separate
 metric. Use ``pearson_r_p_value`` or ``spearman_r_p_value`` to compute p values assuming
@@ -66,11 +67,6 @@ Pearson Product-Moment Correlation Coefficient
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['pearson_r']}")
 
-A measure of the linear association between the forecast and observations that is
-independent of the mean and variance of the individual distributions [Jolliffe2011]_.
-This is also known as the Anomaly Correlation Coefficient (ACC) when comparing
-anomalies.
-
 .. autofunction:: _pearson_r
 
 Pearson Correlation p value
@@ -80,11 +76,6 @@ Pearson Correlation p value
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['pearson_r_p_value']}")
-
-Two-tailed p value associated with the Pearson product-moment correlation coefficient
-(``pearson_r``), assuming that all samples are independent (use
-``pearson_r_eff_p_value`` to account for autocorrelation in the forecast and
-observations).
 
 .. autofunction:: _pearson_r_p_value
 
@@ -96,10 +87,6 @@ Effective Sample Size
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['effective_sample_size']}")
 
-Number of independent samples when autocorrelation in the forecast and observations are
-taken into account. This is used in computing the effective p value
-(``pearson_r_eff_p_value`` or ``spearman_r_eff_p_value``) for correlations.
-
 .. autofunction:: _effective_sample_size
 
 Pearson Correlation Effective p value
@@ -109,10 +96,6 @@ Pearson Correlation Effective p value
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['pearson_r_eff_p_value']}")
-
-p value associated with the Pearson product-moment correlation coefficient
-(``pearson_r``) when autocorrelation is taken into account via the effective sample
-size (``effective_sample_size``).
 
 .. autofunction:: _pearson_r_eff_p_value
 
@@ -125,10 +108,6 @@ Spearman's Rank Correlation Coefficient
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['spearman_r']}")
 
-A measure of how well the relationship between two variables can be described using a
-monotonic function. This is also known as the anomaly correlation coefficient (ACC)
-when comparing anomalies.
-
 .. autofunction:: _spearman_r
 
 
@@ -140,11 +119,6 @@ Spearman's Rank Correlation Coefficient p value
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['spearman_r_p_value']}")
 
-p value associated with the Spearman's product-moment correlation coefficient
-(``spearman_r``), assuming that all samples are independent (use
-``spearman_r_eff_p_value`` to account for autocorrelation in the forecast and
-observations).
-
 .. autofunction:: _spearman_r_p_value
 
 Spearman's Rank Correlation Effective p value
@@ -154,10 +128,6 @@ Spearman's Rank Correlation Effective p value
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['spearman_r_eff_p_value']}")
-
-p value associated with the Spearman's Rank Correlation Coefficient (``spearman_r``)
-when autocorrelation is taken into account via the effective sample size
-(``effective_sample_size``).
 
 .. autofunction:: _spearman_r_eff_p_value
 
@@ -175,12 +145,6 @@ Mean Squared Error (MSE)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['mse']}")
 
-The average of the squared difference between forecasts and observations. This
-incorporates both the variance and bias of the estimator. Because the error is squared,
-it is more sensitive to large forecast errors than ``mae``, and thus a more conservative
-metric. For example, a single error of 2°C counts the same as two 1°C errors when using
-``mae``. On the other hand, the 2°C error counts double for ``mse`` [Jolliffe2011]_.
-
 .. autofunction:: _mse
 
 
@@ -191,9 +155,6 @@ Root Mean Square Error (RMSE)
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['rmse']}")
-
-The square root of the average of the squared differences between forecasts and
-observations.
 
 .. autofunction:: _rmse
 
@@ -206,10 +167,6 @@ Mean Absolute Error (MAE)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['mae']}")
 
-The average of the absolute differences between forecasts and observations. A more
-robust measure of forecast accuracy than ``mse`` which is sensitive to large outlier
-forecast errors [EOS]_; [Jolliffe2011]_.
-
 .. autofunction:: _mae
 
 
@@ -221,9 +178,6 @@ Median Absolute Error
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['median_absolute_error']}")
 
-The median of the absolute differences between forecasts and observations. Applying
-the median function to absolute error makes it more robust to outliers.
-
 .. autofunction:: _median_absolute_error
 
 Normalized Distance Metrics
@@ -232,7 +186,7 @@ Normalized Distance Metrics
 Distance metrics like ``mse`` can be normalized to 1. The normalization factor
 depends on the comparison type choosen. For example, the distance between an ensemble
 member and the ensemble mean is half the distance of an ensemble member with other
-ensemble members. (see :py:func:`~climpred.metrics._get_norm_factor`).
+ensemble members. See :py:func:`~climpred.metrics._get_norm_factor`.
 
 Normalized Mean Square Error (NMSE)
 -----------------------------------
@@ -241,8 +195,6 @@ Normalized Mean Square Error (NMSE)
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['nmse']}")
-
-Mean Square Error (``mse``) normalized by the variance of the observations.
 
 .. autofunction:: _nmse
 
@@ -255,9 +207,6 @@ Normalized Mean Absolute Error (NMAE)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['nmae']}")
 
-Mean Absolute Error (``mae``) normalized by the standard deviation of the observations.
-
-
 .. autofunction:: _nmae
 
 
@@ -268,9 +217,6 @@ Normalized Root Mean Square Error (NRMSE)
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['nrmse']}")
-
-Root Mean Square Error (``rmse``) normalized by the standard deviation of the
-observations.
 
 .. autofunction:: _nrmse
 
@@ -283,9 +229,6 @@ Mean Square Skill Score (MSSS)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['ppp']}")
 
-One minus the ratio of the squared error of the forecasts to the variance of the
-observations.
-
 .. autofunction:: _ppp
 
 
@@ -297,9 +240,6 @@ Mean Absolute Percentage Error (MAPE)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['mape']}")
 
-Mean absolute error (``mae``) expressed as a percentage error relative to the
-observations.
-
 .. autofunction:: _mape
 
 Symmetric Mean Absolute Percentage Error (sMAPE)
@@ -309,9 +249,6 @@ Symmetric Mean Absolute Percentage Error (sMAPE)
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['smape']}")
-
-Similar to the Mean Absolute Percentage Error (``mape``), but sums the forecast and
-observation mean in the denominator.
 
 .. autofunction:: _smape
 
@@ -324,21 +261,15 @@ Unbiased Anomaly Correlation Coefficient (uACC)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['uacc']}")
 
-This is typically used in perfect model studies. Because the perfect model Anomaly
-Correlation Coefficient (ACC) is strongly state dependent, a standard ACC (e.g. one
-computed using ``pearson_r``) will be highly sensitive to the set of start dates chosen
-for the perfect model study. The Mean Square Skill Score (``MSSS``) can be related
-directly to the ACC as ``MSSS = ACC^(2)`` (see [Murphy1988]_ and [Bushuk2019]_), so the
-unbiased ACC can be derived as ``uACC = sqrt(MSSS)``.
-
 .. autofunction:: _uacc
 
 
 Murphy Decomposition Metrics
 ============================
 
-Various decomposition metrics from [Murphy1988]_ which relates the ``MSSS`` to the
-``ACC`` and unconditional bias.
+Metrics derived in [Murphy1988]_ which decompose the ``MSSS`` into a correlation term,
+a conditional bias term, and an unconditional bias term. See
+https://www-miklip.dkrz.de/about/murcss/ for a walk through of the decomposition.
 
 Standard Ratio
 --------------
@@ -397,7 +328,8 @@ Probabilistic
 *************
 
 Probabilistic metrics include the spread of the ensemble simulations in their
-calculations.
+calculations and assign a probability value between 0 and 1 to their forecasts
+[Jolliffe2011]_.
 
 Continuous Ranked Probability Score (CRPS)
 ==========================================
@@ -406,10 +338,6 @@ Continuous Ranked Probability Score (CRPS)
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['crps']}")
-
-The CRPS can also be considered as the probabilistic Mean Absolute Error (``mae``). It
-compares the empirical distribution of an ensemble forecast to a scalar observation.
-Smaller scores indicate better skill.
 
 .. autofunction:: _crps
 

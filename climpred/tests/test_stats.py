@@ -5,7 +5,7 @@ import xarray as xr
 from scipy.signal import correlate
 from xarray.testing import assert_allclose
 
-from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
+from climpred.bootstrap import dpp_threshold
 from climpred.exceptions import DimensionError
 from climpred.stats import (
     autocorr,
@@ -148,26 +148,6 @@ def test_corr(control_3d_NA):
     actual = corr(ds, ds, lag=lag)
     expected = correlate(ds[:-lag], ds[lag:])
     np.allclose(actual, expected)
-
-
-def test_bootstrap_dpp_sig50_similar_dpp(control_3d_NA):
-    ds = control_3d_NA
-    bootstrap = 5
-    sig = 50
-    actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig).drop_vars('quantile')
-    expected = dpp(ds)
-    xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
-
-
-def test_bootstrap_vwmp_sig50_similar_vwmp(control_3d_NA):
-    ds = control_3d_NA
-    bootstrap = 5
-    sig = 50
-    actual = varweighted_mean_period_threshold(
-        ds, bootstrap=bootstrap, sig=sig
-    ).drop_vars('quantile')
-    expected = varweighted_mean_period(ds)
-    xr.testing.assert_allclose(actual, expected, atol=2, rtol=0.5)
 
 
 def test_bootstrap_func_multiple_sig_levels(control_3d_NA):

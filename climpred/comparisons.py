@@ -1,8 +1,19 @@
+import dask
 import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
 from .exceptions import DimensionError
+
+# import error
+# from .utils import _transpose_and_rechunk_to
+
+
+def _transpose_and_rechunk_to(a, ds):
+    """Make one xr.object chunk-same to other.
+    First transpose a to ds.dims then apply ds chunking to a."""
+    # TODO:  add to m2e comparisons
+    return a.transpose(*ds.dims).chunk(ds.chunks)
 
 
 def _drop_members(ds, rmd_member=None):
@@ -160,6 +171,9 @@ def _m2e(ds, stack_dims=True):
     forecast = xr.concat(forecast_list, supervector_dim)
     forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
     reference[supervector_dim] = np.arange(reference[supervector_dim].size)
+    if dask.is_dask_collection(forecast):
+        forecast = _transpose_and_rechunk_to(forecast, ds)
+        reference = _transpose_and_rechunk_to(reference, ds)
     return forecast, reference
 
 

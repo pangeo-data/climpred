@@ -60,12 +60,6 @@ it (in a hindcast setup) [Meehl2013]_.
 the real world, i.e. observations. It must be compared to some "standard of reference"
 to truly be considered skill, such as climatology of persistence [Murphy1988]_.
 
-*Proper Scoring Rule*: A skill score that is defined so that forecasters are rewarded
-with the best expected scores if their forecasts correspond with their judgements
-(rather than e.g. the climatological average). Since forecaster's judements contain
-an element of uncertainty, this concept only applies to probabilstic forecasts
-[Jolliffe2011]_.
-
 *Skill Score*: The most generic skill score can be defined as the following
 [Murphy1988]_:
 
@@ -79,10 +73,6 @@ represents the improvement in accuracy of the forecasts over the reference forec
 relative to the total possible improvement in accuracy. They are typically designed to
 take a value of 1 for a perfect forecast and 0 for equivelant to the reference
 forecast [Jolliffe2011]_.
-
-*Strictly Proper Scoring Rule*: A skill score where the best scores are obtained if and
-only if the forecasts correspond with the forecaster's judgement [Jolliffe2011]_.
-An example is the Brier score.
 
 Forecasting
 ###########

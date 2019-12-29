@@ -4,9 +4,6 @@ climpred: analysis of ensemble forecast models for climate prediction
 .. image:: https://travis-ci.org/bradyrx/climpred.svg?branch=master
     :target: https://travis-ci.org/bradyrx/climpred
 
-.. image:: https://api.codacy.com/project/badge/Grade/a532752e9e814c6e895694463f307cd9
-    :target: https://www.codacy.com/app/bradyrx/climpred?utm_source=github.com&utm_medium=referral&utm_content=bradyrx/climpred&utm_campaign=Badge_Grade
-
 .. image:: https://img.shields.io/pypi/v/climpred.svg
    :target: https://pypi.python.org/pypi/climpred/
 
@@ -31,7 +28,13 @@ climpred: analysis of ensemble forecast models for climate prediction
 Version 1 Release
 =================
 
-**We currently only support annual forecasts**, but our focus is to support sub-annual (*e.g.*, seasonal, monthly, weekly, daily) in our next major release (v2.0.0). We provide a host of deterministic metrics_, as well as some probabilistic metrics, although the latter have not been tested rigorously. We support both perfect-model and hindcast prediction ensembles, and provide ``PerfectModelEnsemble`` and ``HindcastEnsemble`` classes to make analysis easier.
+**We currently only support annual forecasts**, but our focus is to support sub-annual
+(*e.g.*, seasonal, monthly, weekly, daily) in our next major release (v2.0.0). We
+provide a host of deterministic metrics_, as well as some probabilistic metrics,
+although the latter have not been tested rigorously. We support both perfect-model and
+hindcast prediction ensembles, and provide
+:py:class:`~climpred.classes.PerfectModelEnsemble` and
+:py:class:`~climpred.classes.HindcastEnsemble` classes to make analysis easier.
 
 See `quick start <quick-start.html>`_ and our `examples <examples.html>`_ to get started.
 
@@ -50,7 +53,8 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
 
     conda install -c conda-forge climpred
 
-You can also install the bleeding edge (pre-release versions) by cloning this repository and running ``pip install . --upgrade`` in the main directory
+You can also install the bleeding edge (pre-release versions) by cloning this
+repository and running ``pip install . --upgrade`` in the main directory
 
 **Getting Started**
 

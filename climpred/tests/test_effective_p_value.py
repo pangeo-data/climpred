@@ -47,9 +47,9 @@ def test_eff_pearson_p_same_as_p_with_full_n(hindcast, obs):
 def test_eff_pearson_p_greater_or_equal_to_normal_p(hindcast, obs):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
-    normal_p = compute_hindcast(hindcast, obs, metric='pr')
+    normal_p = compute_hindcast(hindcast, obs, metric='pearson_r_p_value')
     eff_p = compute_hindcast(hindcast, obs, metric='pearson_r_eff_p_value')
-    assert eff_p >= normal_p
+    assert eff_p.values >= normal_p.values
 
 
 def test_eff_spearman_p_same_as_p_with_full_n(hindcast, obs):
@@ -68,6 +68,6 @@ def test_eff_spearman_p_same_as_p_with_full_n(hindcast, obs):
 def test_eff_spearman_p_greater_or_equal_to_normal_p(hindcast, obs):
     """Tests that the Spearman's effective p value (more conservative) is greater than
     or equal to the standard p value."""
-    normal_p = compute_hindcast(hindcast, obs, metric='sr')
+    normal_p = compute_hindcast(hindcast, obs, metric='spearman_r_p_value')
     eff_p = compute_hindcast(hindcast, obs, metric='spearman_r_eff_p_value')
-    assert eff_p >= normal_p
+    assert eff_p.values >= normal_p.values

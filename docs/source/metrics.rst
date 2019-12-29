@@ -369,12 +369,6 @@ Brier Score
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"\n\nKeywords: {metric_aliases['brier_score']}")
 
-The Mean Square Error (``mse``) of probabilistic two-category forecasts where the
-observations are either 0 (no occurrence) or 1 (occurrence) and forecast probability
-may be arbitrarily distributed between occurrence and non-occurrence. The Brier Score
-equals zero for perfect (single-valued) forecasts and one for forecasts that are always
-incorrect. [NOAA Glossary of Forecast Verification Metrics]_
-
 .. autofunction:: _brier_score
 
 Threshold Brier Score
@@ -428,12 +422,6 @@ this metric to `climpred`, so all users can benefit from your metric, see
 References
 **********
 
-.. [EOS] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
-
 .. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003.
 
 .. [Murphy1988] Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient. Monthly Weather Review, 116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
-
-.. [Bushuk2019] Bushuk, Mitchell, et al. "Regional Arctic sea–ice prediction: potential versus operational seasonal forecast skill." Climate Dynamics 52.5-6 (2019): 2721-2743. https://doi.org/10.1007/s00382-018-4288-y.
-
-.. [NOAA Glossary of Forecast Verification Metrics] https://www.nws.noaa.gov/oh/rfcdev/docs/Glossary_Forecast_Verification_Metrics.pdf

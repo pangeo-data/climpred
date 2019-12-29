@@ -109,7 +109,6 @@ def _display_metric_metadata(self):
     summary += f'Minimum skill: {self.minimum}\n'
     summary += f'Maximum skill: {self.maximum}\n'
     summary += f'Perfect skill: {self.perfect}\n'
-    summary += f'Strictly proper score: {self.proper}\n'
     # doc
     summary += f'Function: {self.function.__doc__}\n'
     return summary
@@ -130,7 +129,6 @@ class Metric:
         minimum=None,
         maximum=None,
         perfect=None,
-        proper=None,
     ):
         """Metric initialization.
 
@@ -149,9 +147,6 @@ class Metric:
             min (float, optional): Minimum skill for metric. Defaults to None.
             max (float, optional): Maxmimum skill for metric. Defaults to None.
             perfect (float, optional): Perfect skill for metric. Defaults to None.
-            proper (bool, optional): Is strictly proper skill score?
-             According to Gneitning & Raftery (2012).
-             See https://en.wikipedia.org/wiki/Scoring_rule. Defaults to None.
 
         Returns:
             Metric: metric class Metric.
@@ -167,7 +162,6 @@ class Metric:
         self.minimum = minimum
         self.maximum = maximum
         self.perfect = perfect
-        self.proper = proper
 
     def __repr__(self):
         """Show metadata of metric class."""
@@ -352,8 +346,6 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
 
         Returns:
             Temporal autocorrelation at given lag.
-
-        NOTE: Will switch to ``esmtools`` dependency once stats are moved over to there.
         """
         shifted = v.isel({dim: slice(1, n)})
         normal = v.isel({dim: slice(0, n - 1)})
@@ -456,22 +448,6 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     References:
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
-
-    TODO:
-    * PPP vs MSSS. Aren't we missing the ensemble normalization from the Pohlmann paper?
-    * All of the ones that claim "better/worse" than climatology should actually be a
-      forecast of climatology right? Not just std/var? (Bushuk mentions using control
-      variance in 2.6 of their paper. When is it appropriate to do this?)
-    * Can't uACC be negative?
-
-    * CRPSS, CRPSSES
-    * Threshold brier score math, etc. from properscoring
-    * Double check links at bottom of metrics.rst (do we still need some?).
-    * Check if "stricly proper" attribute is used anywhere and needed
-
-    * Open issue about weights not working.
-    * Open issue about renaming "reference" to "observations". "reference" is used
-      throughout MurCSS, Murphy, etc. as what I call the "baseline".
     """
 
     def _calculate_p(t, n):
@@ -1113,9 +1089,7 @@ def _nmae(forecast, reference, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
     """
     mae_skill = __mae.function(forecast, reference, dim=dim, **metric_kwargs)
-    # NOTE: Is this correct? Why take the mean here? This would take the mean over
-    # all spatial dims for instance.
-    std = reference.std(dim).mean()
+    std = reference.std(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
     else:
@@ -1323,7 +1297,7 @@ __ppp = Metric(
     probabilistic=False,
     unit_power=0,
     long_name='Prognostic Potential Predictability',
-    aliases=['ppp'],
+    aliases=['msss'],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -1776,6 +1750,12 @@ __msss_murphy = Metric(
 def _brier_score(forecast, reference, **metric_kwargs):
     """Brier Score.
 
+    The Mean Square Error (``mse``) of probabilistic two-category forecasts where the
+    observations are either 0 (no occurrence) or 1 (occurrence) and forecast probability
+    may be arbitrarily distributed between occurrence and non-occurrence. The Brier
+    Score equals zero for perfect (single-valued) forecasts and one for forecasts that
+    are always incorrect.
+
     .. math::
         BS(f, o) = (f_1 - o)^2,
 
@@ -1792,18 +1772,31 @@ def _brier_score(forecast, reference, **metric_kwargs):
                          and then ``mean('member')`` to get forecasts and
                          reference in interval [0,1].
 
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
     Reference:
         * Brier, Glenn W. Verification of forecasts expressed in terms of
-        probability.” Monthly Weather Review 78, no. 1 (1950).
-        https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
-
-    Example:
-        >>> def pos(x): return x > 0
-        >>> compute_perfect_model(ds, control, metric='brier_score', func=pos)
+          probability.” Monthly Weather Review 78, no. 1 (1950).
+          https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
+        * https://www.nws.noaa.gov/oh/rfcdev/docs/
+          Glossary_Forecast_Verification_Metrics.pdf
 
     See also:
         * properscoring.brier_score
         * xskillscore.brier_score
+
+    Example:
+        >>> def pos(x): return x > 0
+        >>> compute_perfect_model(ds, control, metric='brier_score', func=pos)
     """
     if 'func' in metric_kwargs:
         func = metric_kwargs['func']
@@ -1834,31 +1827,43 @@ def _threshold_brier_score(forecast, reference, **metric_kwargs):
     """Brier score of an ensemble for exceeding given thresholds.
 
     .. math::
-        CRPS(F, x) = \int_z BS(F(z), H(z - x)) dz
+        CRPS = \int_f BS(F(f), H(f - o)) df,
 
-    Range:
-        * perfect: 0
-        * min: 0
-        * max: 1
+    where :math:`F(o) = \int_{f \leq o} p(f) df` is the cumulative distribution
+    function (CDF) of the forecast distribution :math:`F`, :math:`o` is a point estimate
+    of the true observation (observational error is neglected), :math:`BS` denotes the
+    Brier score and :math:`H(x)` denotes the Heaviside step function, which we define
+    here as equal to 1 for :math:`x \geq 0` and 0 otherwise.
 
     Args:
-        * forecast (xr.object): Forecast with `member` dim.
-        * reference (xr.object): References without `member` dim.
-        * threshold (int, float, xr.object): Threshold to check exceedance, see
-                                             properscoring.threshold_brier_score.
+        forecast (xr.object): Forecast with ``member`` dim.
+        reference (xr.object): References without ``member`` dim.
+        threshold (int, float, xr.object): Threshold to check exceedance, see
+            properscoring.threshold_brier_score.
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
 
     References:
-        * Brier, Glenn W. “VERIFICATION OF FORECASTS EXPRESSED IN TERMS OF
-        PROBABILITY.” Monthly Weather Review 78, no. 1 (1950).
-        https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
-
-    Example:
-        >>> compute_perfect_model(ds, control,
-                                  metric='threshold_brier_score', threshold=.5)
+        * Brier, Glenn W. Verification of forecasts expressed in terms of
+          probability.” Monthly Weather Review 78, no. 1 (1950).
+          https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
 
     See also:
         * properscoring.threshold_brier_score
         * xskillscore.threshold_brier_score
+
+    Example:
+        >>> compute_perfect_model(ds, control,
+                                  metric='threshold_brier_score', threshold=.5)
     """
     if 'threshold' not in metric_kwargs:
         raise ValueError('Please provide threshold.')
@@ -2079,11 +2084,11 @@ def _crpss(forecast, reference, **metric_kwargs):
 
     if gaussian:
         ref_skill = _crps_gaussian(forecast, mu, sig)
+    # TODO: Add tests for this section.
     else:
         if 'cdf_or_dist' in metric_kwargs:
             cdf_or_dist = metric_kwargs['cdf_or_dist']
         else:
-            # NOTE: Where is `norm` assigned??
             cdf_or_dist = norm
 
         if 'xmin' in metric_kwargs:
@@ -2122,7 +2127,7 @@ __crpss = Metric(
 def _crpss_es(forecast, reference, **metric_kwargs):
     """Continuous Ranked Probability Skill Score Ensemble Spread.
 
-    # NOTE: Unsure of what to put here.
+    # TODO: Unsure of what to put here.
 
     .. math::
         CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o)}
@@ -2134,6 +2139,8 @@ def _crpss_es(forecast, reference, **metric_kwargs):
                                            ``None``.
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
+
+    # TODO: What is the min, max, etc. here?
 
     References:
         * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,

@@ -1,5 +1,6 @@
 import datetime
 
+import dask
 import numpy as np
 import xarray as xr
 
@@ -171,3 +172,17 @@ def copy_coords_from_to(xro_from, xro_to):
             f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
         )
     return xro_to
+
+
+def _ensure_loaded(res):
+    """Compute no lazy results."""
+    if dask.is_dask_collection(res):
+        res = res.compute()
+    return res
+
+
+def _transpose_and_rechunk_to(a, ds):
+    """Make one xr.object chunk-same to other.
+    First transpose a to ds.dims then apply ds chunking to a."""
+    # TODO:  add to m2e comparisons
+    return a.transpose(*ds.dims).chunk(ds.chunks)

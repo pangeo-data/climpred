@@ -9,6 +9,14 @@ Bug Fixes
 ---------
 - ``climpred`` now requires ``xarray`` version 0.14.1 so that the ``drop_vars()`` keyword used in our package does not throw an error. (:pr:`276`) `Riley X. Brady`_
 
+New Features
+------------
+
+- speed-up in bootstrap functions: (:pr:`2xx`) `Aaron Spring`_.
+  - `xr.quantile` exchanged for `dask.map_blocks(np.percentile)`
+  - properly implemented handling for lazy results when chunked inputs
+  - user gets warned when chunking potentially (un)-necessary
+
 climpred v1.2.0 (2019-12-17)
 ============================
 

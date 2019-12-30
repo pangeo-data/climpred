@@ -43,7 +43,7 @@ def _get_norm_factor(comparison):
     than ensemble members to each other.
 
      .. note::
-         This is used for PPP, NMSE, NRMSE, MSSS, NMAE.
+         This is used for NMSE, NRMSE, MSSS, NMAE.
 
     Args:
         comparison (class): comparison class.
@@ -1206,15 +1206,12 @@ __nrmse = Metric(
 )
 
 
-def _ppp(forecast, reference, dim=None, **metric_kwargs):
-    """Prognostic Potential Predictability (PPP).
-
-    .. note::
-        This is the same as the Mean Squared Skill Score (MSSS).
+def _msss(forecast, reference, dim=None, **metric_kwargs):
+    """Mean Squared Skill Score (MSSS).
 
     .. math::
-        PPP = 1 - \\frac{MSE}{\\sigma^2_{ref} \\cdot fac} =
-              1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac},
+        MSSS = 1 - \\frac{MSE}{\\sigma^2_{ref} \\cdot fac} =
+               1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
     ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
@@ -1226,7 +1223,7 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
 
     .. note::
         ``climpred`` uses a single-valued internal reference forecast for the
-        PPP/MSSS, in the terminology of Murphy 1988. I.e., we use a single
+        MSSS, in the terminology of Murphy 1988. I.e., we use a single
         climatological variance of the reference *within* the experimental
         window for normalizing MSE.
 
@@ -1283,21 +1280,21 @@ def _ppp(forecast, reference, dim=None, **metric_kwargs):
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize PPP. Not found in', metric_kwargs
+            'Comparison needed to normalize MSSS. Not found in', metric_kwargs
         )
     fac = _get_norm_factor(comparison)
-    ppp_skill = 1 - mse_skill / var / fac
-    return ppp_skill
+    msss_skill = 1 - mse_skill / var / fac
+    return msss_skill
 
 
-__ppp = Metric(
-    name='ppp',
-    function=_ppp,
+__msss = Metric(
+    name='msss',
+    function=_msss,
     positive=True,
     probabilistic=False,
     unit_power=0,
-    long_name='Prognostic Potential Predictability',
-    aliases=['msss'],
+    long_name='Mean Squared Skill Score',
+    aliases=['ppp'],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -1417,13 +1414,17 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
     Bushuk et al. 2019), so the unbiased ACC can be derived as ``uACC = sqrt(MSSS)``.
 
     .. math::
-        uACC = \\sqrt{PPP} = \\sqrt{MSSS}
+        uACC = \\sqrt{MSSS}
              = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
     ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
     members (``m2c``, ``m2m``, ``m2r``). See
     :py:func:`~climpred.metrics._get_norm_factor`.
+
+    .. note::
+        Because of the square root involved, any negative ``MSSS`` values are
+        automatically converted to NaNs.
 
     Args:
         forecast (xarray object): Forecast.
@@ -1434,7 +1435,7 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
                                            ``None``.
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
-        comparison (str): Name comparison needed for normalization factor `fac`, see
+        comparison (str): Name comparison needed for normalization factor ``fac``, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
 
@@ -1463,9 +1464,9 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
           Relationships to the Correlation Coefficient. Monthly Weather Review,
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
     """
-    ppp_res = __ppp.function(forecast, reference, dim=dim, **metric_kwargs)
-    # ensure no sqrt of neg values
-    uacc_res = (ppp_res.where(ppp_res > 0)) ** 0.5
+    msss_res = __msss.function(forecast, reference, dim=dim, **metric_kwargs)
+    # Negative values are automatically turned into nans from xarray.
+    uacc_res = msss_res ** 0.5
     return uacc_res
 
 
@@ -2089,6 +2090,7 @@ def _crpss(forecast, reference, **metric_kwargs):
         if 'cdf_or_dist' in metric_kwargs:
             cdf_or_dist = metric_kwargs['cdf_or_dist']
         else:
+            # Imported at top. This is `scipy.stats.norm`
             cdf_or_dist = norm
 
         if 'xmin' in metric_kwargs:
@@ -2128,6 +2130,9 @@ def _crpss_es(forecast, reference, **metric_kwargs):
     """Continuous Ranked Probability Skill Score Ensemble Spread.
 
     # TODO: Unsure of what to put here.
+    crpss_es came up when thinking about whether ensemble variance smaller than the
+    MSE the ensemble is said to be under-dispersive (overconfident); an ensemble
+    variance larger than the MSE indicates an over-dispersive (underconfident) ensemble.
 
     .. math::
         CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o)}
@@ -2140,7 +2145,16 @@ def _crpss_es(forecast, reference, **metric_kwargs):
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
-    # TODO: What is the min, max, etc. here?
+    Details:
+        +----------------------------+-----------+
+        | **minimum**                | -∞        |
+        +----------------------------+-----------+
+        | **maximum**                | 0.0       |
+        +----------------------------+-----------+
+        | **perfect**                | 0.0       |
+        +----------------------------+-----------+
+        | **orientation**            | positive  |
+        +----------------------------+-----------+
 
     References:
         * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
@@ -2218,7 +2232,7 @@ __ALL_METRICS__ = [
     __crps,
     __crpss,
     __crpss_es,
-    __ppp,
+    __msss,
     __nmse,
     __nrmse,
     __nmae,

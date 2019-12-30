@@ -15,7 +15,7 @@ from climpred.prediction import (
 )
 from climpred.tutorial import load_dataset
 
-# uacc is sqrt(ppp), fails when ppp negative
+# uacc is sqrt(MSSS), fails when MSSS negative
 DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
 

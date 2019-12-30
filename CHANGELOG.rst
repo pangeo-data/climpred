@@ -47,6 +47,8 @@ Internals/Minor Fixes
 - Add testing for effective p values. (:pr:`283`) `Riley X. Brady`_
 - Add testing for whether metric aliases are repeated/overwrite each other.
   (:pr:`283`) `Riley X. Brady`_
+- ``ppp`` changed to ``msess``, but keywords allow for ``ppp`` and ``msss`` still.
+  (:pr:`283`) `Riley X. Brady`_
 
 Documentation
 -------------

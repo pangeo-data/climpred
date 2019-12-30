@@ -1,8 +1,8 @@
 import warnings
 
 import numpy as np
-import scipy
 import xarray as xr
+from scipy import special
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
@@ -21,6 +21,8 @@ from xskillscore import (
     spearman_r_p_value,
     threshold_brier_score,
 )
+
+from .np_metrics import _effective_sample_size as ess, _spearman_r_eff_p_value as srepv
 
 # the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
 # from .constants import CLIMPRED_DIMS
@@ -298,6 +300,9 @@ __pearson_r_p_value = Metric(
 def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
     """Effective sample size for temporally correlated data.
 
+    .. note::
+        Weights are not included here due to the dependence on temporal autocorrelation.
+
     The effective sample size extracts the number of independent samples
     between two time series being correlated. This is derived by assessing
     the magnitude of the lag-1 autocorrelation coefficient in each of the time series
@@ -319,6 +324,8 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
         reference (xarray object): Reference (e.g. observations, control run).
         dim (str): Dimension(s) to perform metric over. Automatically set by compute
                    function.
+        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
+                                 Defaults to ``False``.
 
     Details:
         +-----------------+-----------------+
@@ -335,27 +342,7 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-
-    def _autocorr(v, dim, n):
-        """Return autocorrelation over the given lag.
-
-        Args:
-            v (xarray obj): DataArray or Dataset to compute autocorrelation with.
-            dim (str): Dimension to compute autocorrelation over.
-            n (int): Number of lags to compute autocorrelation for.
-
-        Returns:
-            Temporal autocorrelation at given lag.
-        """
-        shifted = v.isel({dim: slice(1, n)})
-        normal = v.isel({dim: slice(0, n - 1)})
-        # see explanation in autocorr for this
-        if dim not in list(v.coords):
-            normal[dim] = np.arange(1, n)
-        shifted[dim] = normal[dim]
-        return pearson_r(shifted, normal, dim)
-
-    # Preprocess same way as in ``xskillscore``
+    skipna = metric_kwargs.get('skipna', False)
     dim = _preprocess_dims(dim)
     if len(dim) > 1:
         new_dim = '_'.join(dim)
@@ -364,23 +351,15 @@ def _effective_sample_size(forecast, reference, dim=None, **metric_kwargs):
     else:
         new_dim = dim[0]
 
-    # Need to implement ``skipna`` here. This doesn't check NaNs. Might be worth
-    # having a ``np_metrics.py`` similar to ``xskillscore``.
-    N = forecast[new_dim].size
-
-    # compute lag-1 autocorrelation.
-    fa, ra = forecast - forecast.mean(new_dim), reference - reference.mean(new_dim)
-    # TODO: Switch this over to ``esmtools`` dependency once stats are moved over there.
-    fauto = _autocorr(fa, new_dim, N)
-    rauto = _autocorr(ra, new_dim, N)
-
-    # compute effective sample size.
-    n_eff = N * (1 - fauto * rauto) / (1 + fauto * rauto)
-    n_eff = np.floor(n_eff)  # forces to integer
-
-    # constrain n_eff to be at the maximum the total number of samples.
-    n_eff = n_eff.where(n_eff <= N, N)
-    return n_eff
+    return xr.apply_ufunc(
+        ess,
+        forecast,
+        reference,
+        input_core_dims=[[new_dim], [new_dim]],
+        kwargs={'axis': -1, 'skipna': skipna},
+        dask='parallelized',
+        output_dtypes=[float],
+    )
 
 
 __effective_sample_size = Metric(
@@ -399,6 +378,9 @@ __effective_sample_size = Metric(
 def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are linearly uncorrelated, accounting
     for autocorrelation.
+
+    .. note::
+        Weights are not included here due to the dependence on temporal autocorrelation.
 
     The effective p value is computed by replacing the sample size :math:`N` in the
     t-statistic with the effective sample size, :math:`N_{eff}`. The same Pearson
@@ -425,8 +407,6 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         reference (xarray object): Reference (e.g. observations, control run).
         dim (str): Dimension(s) to perform metric over. Automatically set by compute
                    function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
@@ -449,34 +429,20 @@ def _pearson_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-
-    def _calculate_p(t, n):
-        """Calculates the p value.
-
-        Args:
-            t (ndarray): t-test statistic.
-            n (ndarray): number of samples.
-
-        Returns:
-            p (ndarray): Two-tailed p value.
-        """
-        return scipy.stats.t.sf(np.abs(t), n - 2) * 2
-
-    weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
 
-    # compute effective sample size
-    n_eff = _effective_sample_size(forecast, reference, dim)
-
     # compute t-statistic
-    r = pearson_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-    t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
-
-    # compute effective p value
-    p = xr.apply_ufunc(
-        _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
-    )
-    return p
+    r = pearson_r(forecast, reference, dim=dim, skipna=skipna)
+    dof = _effective_sample_size(forecast, reference, dim, skipna=skipna) - 2
+    t_squared = r ** 2 * (dof / ((1.0 - r) * (1.0 + r)))
+    _x = dof / (dof + t_squared)
+    _x = _x.where(_x < 1.0, 1.0)
+    _a = 0.5 * dof
+    _b = 0.5
+    res = special.betainc(_a, _b, _x)
+    # reset masked values to nan
+    res = res.where(r.notnull(), np.nan)
+    return res
 
 
 __pearson_r_eff_p_value = Metric(
@@ -626,6 +592,9 @@ def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
     """Probability that forecast and reference are monotonically uncorrelated,
     accounting for autocorrelation.
 
+    .. note::
+        Weights are not included here due to the dependence on temporal autocorrelation.
+
     The effective p value is computed by replacing the sample size :math:`N` in the
     t-statistic with the effective sample size, :math:`N_{eff}`. The same Spearman's
     rank correlation coefficient :math:`r` is used as when computing the standard p
@@ -651,8 +620,6 @@ def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         reference (xarray object): Reference (e.g. observations, control run).
         dim (str): Dimension(s) to perform metric over. Automatically set by compute
                    function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
@@ -675,34 +642,24 @@ def _spearman_r_eff_p_value(forecast, reference, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-
-    def _calculate_p(t, n):
-        """Calculates the p value.
-
-        Args:
-            t (ndarray): t-test statistic.
-            n (ndarray): number of samples.
-
-        Returns:
-            p (ndarray): Two-tailed p value.
-        """
-        return scipy.stats.t.sf(np.abs(t), n - 2) * 2
-
-    weights = metric_kwargs.get('weights', None)
     skipna = metric_kwargs.get('skipna', False)
+    dim = _preprocess_dims(dim)
+    if len(dim) > 1:
+        new_dim = '_'.join(dim)
+        forecast = forecast.stack(**{new_dim: dim})
+        reference = reference.stack(**{new_dim: dim})
+    else:
+        new_dim = dim[0]
 
-    # compute effective sample size
-    n_eff = _effective_sample_size(forecast, reference, dim)
-
-    # compute t-statistic
-    r = spearman_r(forecast, reference, dim=dim, weights=weights, skipna=skipna)
-    t = r * np.sqrt((n_eff - 2) / (1 - r ** 2))
-
-    # compute effective p value
-    p = xr.apply_ufunc(
-        _calculate_p, t, n_eff, dask='parallelized', output_dtypes=[float]
+    return xr.apply_ufunc(
+        srepv,
+        forecast,
+        reference,
+        input_core_dims=[[new_dim], [new_dim]],
+        kwargs={'axis': -1, 'skipna': skipna},
+        dask='parallelized',
+        output_dtypes=[float],
     )
-    return p
 
 
 __spearman_r_eff_p_value = Metric(
@@ -1206,11 +1163,11 @@ __nrmse = Metric(
 )
 
 
-def _msss(forecast, reference, dim=None, **metric_kwargs):
-    """Mean Squared Skill Score (MSSS).
+def _msess(forecast, reference, dim=None, **metric_kwargs):
+    """Mean Squared Error Skill Score (MSESS).
 
     .. math::
-        MSSS = 1 - \\frac{MSE}{\\sigma^2_{ref} \\cdot fac} =
+        MSESS = 1 - \\frac{MSE}{\\sigma^2_{ref} \\cdot fac} =
                1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
@@ -1283,18 +1240,18 @@ def _msss(forecast, reference, dim=None, **metric_kwargs):
             'Comparison needed to normalize MSSS. Not found in', metric_kwargs
         )
     fac = _get_norm_factor(comparison)
-    msss_skill = 1 - mse_skill / var / fac
-    return msss_skill
+    msess_skill = 1 - mse_skill / var / fac
+    return msess_skill
 
 
-__msss = Metric(
-    name='msss',
-    function=_msss,
+__msess = Metric(
+    name='msess',
+    function=_msess,
     positive=True,
     probabilistic=False,
     unit_power=0,
-    long_name='Mean Squared Skill Score',
-    aliases=['ppp'],
+    long_name='Mean Squared Error Skill Score',
+    aliases=['ppp', 'msss'],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -1464,7 +1421,7 @@ def _uacc(forecast, reference, dim=None, **metric_kwargs):
           Relationships to the Correlation Coefficient. Monthly Weather Review,
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
     """
-    msss_res = __msss.function(forecast, reference, dim=dim, **metric_kwargs)
+    msss_res = __msess.function(forecast, reference, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
     uacc_res = msss_res ** 0.5
     return uacc_res
@@ -1675,11 +1632,11 @@ __bias_slope = Metric(
 )
 
 
-def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
-    """Murphy's Mean Square Skill Score (MSSS).
+def _msess_murphy(forecast, reference, dim=None, **metric_kwargs):
+    """Murphy's Mean Square Error Skill Score (MSESS).
 
     .. math::
-        MSSS_{Murphy} = r_{fo}^2 - [\\text{conditional bias}]^2 -\
+        MSESS_{Murphy} = r_{fo}^2 - [\\text{conditional bias}]^2 -\
          [\\frac{\\text{(unconditional) bias}}{\\sigma_o}]^2,
 
     where :math:`r_{fo}^{2}` represents the Pearson product-moment correlation
@@ -1732,13 +1689,14 @@ def _msss_murphy(forecast, reference, dim=None, **metric_kwargs):
     return skill
 
 
-__msss_murphy = Metric(
-    name='msss_murphy',
-    function=_msss_murphy,
+__msess_murphy = Metric(
+    name='msess_murphy',
+    function=_msess_murphy,
     positive=True,
     probabilistic=False,
     unit_power=0,
-    long_name="Murphy's Mean Square Skill Score",
+    long_name="Murphy's Mean Square Error Skill Score",
+    aliases=['msss_murphy'],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -2129,10 +2087,9 @@ __crpss = Metric(
 def _crpss_es(forecast, reference, **metric_kwargs):
     """Continuous Ranked Probability Skill Score Ensemble Spread.
 
-    # TODO: Unsure of what to put here.
-    crpss_es came up when thinking about whether ensemble variance smaller than the
-    MSE the ensemble is said to be under-dispersive (overconfident); an ensemble
-    variance larger than the MSE indicates an over-dispersive (underconfident) ensemble.
+    If the ensemble variance is smaller than the observed ``mse``, the ensemble is
+    said to be under-dispersive (or overconfident). An ensemble with variance larger
+    than the observations indicates one that is over-dispersive (underconfident).
 
     .. math::
         CRPSS = 1 - \\frac{CRPS(\\sigma^2_f)}{CRPS(\\sigma^2_o)}
@@ -2154,6 +2111,10 @@ def _crpss_es(forecast, reference, **metric_kwargs):
         | **perfect**                | 0.0       |
         +----------------------------+-----------+
         | **orientation**            | positive  |
+        +----------------------------+-----------+
+        | **under-dispersive**       | > 0.0     |
+        +----------------------------+-----------+
+        | **over-dispersive**        | < 0.0     |
         +----------------------------+-----------+
 
     References:
@@ -2223,7 +2184,7 @@ __ALL_METRICS__ = [
     __median_absolute_error,
     __mape,
     __smape,
-    __msss_murphy,
+    __msess_murphy,
     __bias_slope,
     __conditional_bias,
     __unconditional_bias,
@@ -2232,7 +2193,7 @@ __ALL_METRICS__ = [
     __crps,
     __crpss,
     __crpss_es,
-    __msss,
+    __msess,
     __nmse,
     __nrmse,
     __nmae,

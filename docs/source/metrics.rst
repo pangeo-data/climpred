@@ -221,15 +221,15 @@ Normalized Root Mean Square Error (NRMSE)
 .. autofunction:: _nrmse
 
 
-Mean Square Skill Score (MSSS)
-------------------------------
+Mean Square Error Skill Score (MSESS)
+-------------------------------------
 
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['ppp']}")
+    print(f"\n\nKeywords: {metric_aliases['msess']}")
 
-.. autofunction:: _ppp
+.. autofunction:: _msess
 
 
 Mean Absolute Percentage Error (MAPE)
@@ -267,7 +267,7 @@ Unbiased Anomaly Correlation Coefficient (uACC)
 Murphy Decomposition Metrics
 ============================
 
-Metrics derived in [Murphy1988]_ which decompose the ``MSSS`` into a correlation term,
+Metrics derived in [Murphy1988]_ which decompose the ``MSESS`` into a correlation term,
 a conditional bias term, and an unconditional bias term. See
 https://www-miklip.dkrz.de/about/murcss/ for a walk through of the decomposition.
 
@@ -313,15 +313,15 @@ Bias Slope
 
 .. autofunction:: _bias_slope
 
-Murphy's Mean Square Skill Score
---------------------------------
+Murphy's Mean Square Error Skill Score
+--------------------------------------
 
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['msss_murphy']}")
+    print(f"\n\nKeywords: {metric_aliases['msess_murphy']}")
 
-.. autofunction:: _msss_murphy
+.. autofunction:: _msess_murphy
 
 *************
 Probabilistic

@@ -219,6 +219,7 @@ def convert_time_index(xobj, time_string, kind):
     Converts CFTimeIndex, Float64Index, or Int64Index to DatetimeIndex.
 
     """
+
     time_index = xobj[time_string].to_index()
 
     # If a DatetimeIndex, nothing to do, otherwise check for other
@@ -235,6 +236,7 @@ def convert_time_index(xobj, time_string, kind):
                 'Assuming annual resolution due to numeric inits. '
                 'Change init to a datetime if it is another resolution.'
             )
+
             startdate = str(int(time_index[0])) + '-01-01'
             enddate = str(int(time_index[-1])) + '-01-01'
             time_index = pd.date_range(start=startdate, end=enddate, freq='AS')

@@ -18,7 +18,6 @@ PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 def pm_da_ds1d():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
-    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -26,7 +25,6 @@ def pm_da_ds1d():
 def pm_da_ds1d_lead0():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
-    da['lead'].attrs = {'units': 'years'}
     # Convert to lead zero for testing
     da['lead'] -= 1
     da['init'] += 1
@@ -43,7 +41,6 @@ def pm_da_control1d():
 @pytest.fixture
 def pm_ds_ds1d():
     ds = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
-    ds['lead'].attrs = {'units': 'years'}
     return ds
 
 
@@ -57,7 +54,6 @@ def pm_ds_control1d():
 def ds_3d_NA():
     """ds North Atlantic"""
     ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
-    ds['lead'].attrs = {'units': 'years'}
     return ds
 
 

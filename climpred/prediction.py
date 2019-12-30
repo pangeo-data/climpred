@@ -263,7 +263,6 @@ def compute_hindcast(
         # resolution of lead
         offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
         a = forecast.sel(lead=i).drop_vars('lead')
-
         a['time'] = pd.to_datetime(
             a['time'].dt.strftime('%Y%m%d 00:00')
         ) + pd.DateOffset(**offset_args_dict)
@@ -438,6 +437,11 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
+
+    # Check that init is int, cftime, or datetime; convert
+    # ints or cftime to datetime
+    uninit = convert_time_index(uninit, 'time', 'uninit[time]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
 
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)

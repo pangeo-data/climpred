@@ -22,7 +22,6 @@ DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 def initialized_ds():
     da = load_dataset('CESM-DP-SST')
     da = da - da.mean('init')
-    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -30,7 +29,6 @@ def initialized_ds():
 def initialized_ds_lead0():
     da = load_dataset('CESM-DP-SST')
     da = da - da.mean('init')
-    da['lead'].attrs = {'units': 'years'}
     # Change to a lead-0 framework
     da['init'] += 1
     da['lead'] -= 1
@@ -40,7 +38,6 @@ def initialized_ds_lead0():
 @pytest.fixture
 def initialized_da():
     da = load_dataset('CESM-DP-SST')['SST']
-    da['lead'].attrs = {'units': 'years'}
     da = da - da.mean('init')
     return da
 
@@ -79,7 +76,6 @@ def uninitialized_ds():
     # add member coordinate
     da['member'] = np.arange(1, 1 + da.member.size)
     da = da - da.mean('time')
-    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -98,7 +94,6 @@ def hind_3d():
         nlon=slice(0, 10), nlat=slice(0, 12)
     )
     da = da - da.mean('init')
-    da['lead'].attrs = {'units': 'years'}
     return da
 
 
@@ -184,9 +179,6 @@ def test_uninitialized(uninitialized_da, reconstruction_da):
     """
     Checks that compute uninitialized works without breaking.
     """
-
-    print(uninitialized_da)
-
     res = (
         compute_uninitialized(
             uninitialized_da, reconstruction_da, metric='rmse', comparison='e2r'

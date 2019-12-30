@@ -71,7 +71,6 @@ def test_da_assign_attrs():
     metric = 'pearson_r'
     comparison = 'm2e'
     da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
-    da['lead'].attrs = {'units': 'years'}
     control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
     actual = compute_perfect_model(
         da, control, metric=metric, comparison=comparison
@@ -93,7 +92,6 @@ def test_ds_assign_attrs():
     comparison = 'm2e'
     v = 'tos'
     da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)[v]
-    da['lead'].attrs = {'units': 'years'}
     control = load_dataset('MPI-control-1D').isel(area=1, period=-1)[v]
     da.attrs['units'] = 'C'
     actual = compute_perfect_model(
@@ -133,7 +131,6 @@ def test_hindcast_assign_attrs():
     metric = 'pearson_r'
     comparison = 'e2r'
     da = load_dataset('CESM-DP-SST')
-    da['lead'].attrs = {'units': 'years'}
     control = load_dataset('ERSST')
     actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
     assert actual['metric'] == metric

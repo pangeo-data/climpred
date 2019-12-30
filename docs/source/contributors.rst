@@ -10,5 +10,6 @@ Core Developers
 Contributors
 ============
 * Andrew Huang (`github <https://github.com/ahuang11/>`_)
+* Kathy Pegion (`github <https://github.com/kpegion/>`_)
 
 For a list of all the contributions, see the github `contribution graph <https://github.com/bradyrx/climpred/graphs/contributors>`_.

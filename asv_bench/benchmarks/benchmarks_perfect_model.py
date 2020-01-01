@@ -2,17 +2,28 @@
 # See "Writing benchmarks" in the asv docs for more information.
 
 
-import xarray as xr
+import dask
 import numpy as np
-from . import randn, parameterized
+import xarray as xr
 
-from climpred.prediction import compute_perfect_model
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import PM_COMPARISONS, PM_METRICS
+from climpred.prediction import compute_perfect_model
 
-# faster
-PM_METRICS = ['rmse', 'pearson_r', 'crpss']
-# PM_COMPARISONS = ['m2e', 'e2c']
+from . import parameterized, randn, requires_dask
+
+# faster than
+# from climpred.constants import PM_COMPARISONS, PM_METRICS as METRICS
+METRICS = ['rmse', 'pearson_r', 'crpss']
+PM_COMPARISONS = ['m2m', 'm2c']
+
+bootstrap = 4
+
+
+def _ensure_loaded(res):
+    """Compute no lazy results."""
+    if dask.is_dask_collection(res):
+        res = res.compute()
+    return res
 
 
 class Generate:
@@ -25,13 +36,13 @@ class Generate:
 
     def make_ds(self):
 
-        # ds
+        # ds and control mimick smaller MPI perfect-model experiment
         self.ds = xr.Dataset()
         self.nmember = 3
         self.ninit = 4
         self.nlead = 3
-        self.nx = 90  # 4 deg
-        self.ny = 45  # 4 deg
+        self.nx = 64
+        self.ny = 64
         self.control_start = 3000
         self.control_end = 3300
         self.ntime = 300
@@ -95,29 +106,55 @@ class Compute(Generate):
     def setup(self, *args, **kwargs):
         self.make_ds()
 
-    @parameterized(['metric', 'comparison'], (PM_METRICS, PM_COMPARISONS))
+    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_compute_perfect_model(self, metric, comparison):
         """Take time for compute_perfect_model."""
-        compute_perfect_model(
-            self.ds, self.control, metric=metric, comparison=comparison
+        _ensure_loaded(
+            compute_perfect_model(
+                self.ds, self.control, metric=metric, comparison=comparison
+            )
         )
 
-    @parameterized(['metric', 'comparison'], (['pearson_r', 'crpss'], PM_COMPARISONS))
+    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_compute_perfect_model(self, metric, comparison):
         """Take memory peak for compute_perfect_model for all comparisons."""
-        compute_perfect_model(
-            self.ds, self.control, metric=metric, comparison=comparison
+        _ensure_loaded(
+            compute_perfect_model(
+                self.ds, self.control, metric=metric, comparison=comparison
+            )
         )
 
-    def time_bootstrap_perfect_model(self):
+    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
+    def time_bootstrap_perfect_model(self, metric, comparison):
         """Take time for bootstrap_perfect_model for one metric."""
-        bootstrap_perfect_model(
-            self.ds, self.control, metric='mae', comparison='e2c', bootstrap=5
+        _ensure_loaded(
+            bootstrap_perfect_model(
+                self.ds,
+                self.control,
+                metric=metric,
+                comparison=comparison,
+                bootstrap=bootstrap,
+            )
         )
 
-    @parameterized(['metric', 'comparison'], (['pearson_r', 'crpss'], PM_COMPARISONS))
+    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_bootstrap_perfect_model(self, metric, comparison):
         """Take memory peak for bootstrap_perfect_model."""
-        bootstrap_perfect_model(
-            self.ds, self.control, metric=metric, comparison=comparison, bootstrap=5
+        _ensure_loaded(
+            bootstrap_perfect_model(
+                self.ds,
+                self.control,
+                metric=metric,
+                comparison=comparison,
+                bootstrap=bootstrap,
+            )
         )
+
+
+class ComputeDask(Compute):
+    def setup(self, *args, **kwargs):
+        requires_dask()
+        super().setup(**kwargs)
+        # chunk along a spatial dimension to enable embarrasingly parallel computation
+        self.ds = self.ds.chunk({'lon': self.nx // bootstrap})
+        self.control = self.control.chunk({'lon': self.nx // bootstrap})

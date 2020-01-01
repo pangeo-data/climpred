@@ -80,7 +80,7 @@
       "numpy": [""],
       "xarray": [""],
       "dask": [""],
-      "xskillscore": [""],
+      "xskillscore": ["0.0.9"],
     },
 
     // Combinations of libraries/python versions can be excluded/included

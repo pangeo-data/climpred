@@ -80,11 +80,12 @@ def _percentile(arr, axis=0, q=95):
 def my_quantile(ds, dim='bootstrap', q=0.95):
     # concat_dim is always first, therefore axis=0 implementation works
     # ds = ds.transpose(dim, ...)
+    axis = ds.get_axis_num(dim)
     if not isinstance(q, list):
         q = [q]
     quantile = []
     for qi in q:
-        quantile.append(ds.reduce(_percentile, q=qi * 100, dim=dim))
+        quantile.append(ds.reduce(_percentile, q=qi * 100, axis=axis))
     quantile = xr.concat(quantile, 'quantile')
     quantile['quantile'] = q
     return quantile.squeeze()

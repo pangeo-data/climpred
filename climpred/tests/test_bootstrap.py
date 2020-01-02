@@ -64,14 +64,18 @@ def control3d():
 @pytest.mark.parametrize('chunk', [True, False])
 def test_dask_percentile_implemented_faster_xr_quantile(control3d, chunk):
     chunk_dim, dim = 'x', 'time'
+    # chunk_dim, dim = 'time', 'x' # fails, why?
+    # chunk_dim, dim = dims
+    print(f'chunk_dim={chunk_dim}, dim={dim}')
     if chunk:
         chunks = {chunk_dim: 24}
         control3d = control3d.chunk(chunks).persist()
     start_time = time.time()
     actual = my_quantile(control3d, q=0.95, dim=dim)
     elapsed_time_my_quantile = time.time() - start_time
+
     start_time = time.time()
-    expected = control3d.load().quantile(q=0.95, dim=dim)
+    expected = control3d.compute().quantile(q=0.95, dim=dim)
     elapsed_time_xr_quantile = time.time() - start_time
     if chunk:
         assert dask.is_dask_collection(actual)
@@ -82,13 +86,16 @@ def test_dask_percentile_implemented_faster_xr_quantile(control3d, chunk):
     else:
         assert not dask.is_dask_collection(actual)
         assert not dask.is_dask_collection(expected)
-    assert_allclose(actual, expected, rtol=1e-2, atol=1e-2)
+    assert actual.shape == expected.shape
+    assert_allclose(actual, expected)
+    actual.plot()
+    expected.plot()
     print(
         elapsed_time_my_quantile,
         elapsed_time_xr_quantile,
         'my_quantile is',
         elapsed_time_xr_quantile / elapsed_time_my_quantile,
-        'x faster than xr.quantile',
+        'times faster than xr.quantile',
     )
     assert elapsed_time_xr_quantile > elapsed_time_my_quantile
 

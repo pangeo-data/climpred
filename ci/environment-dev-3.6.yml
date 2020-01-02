@@ -12,6 +12,7 @@ dependencies:
   # IDE
   - ipywidgets
   - jupyterlab
+  - nb_conda_kernels
   # Input/Output
   - netcdf4
   # Miscellaneous

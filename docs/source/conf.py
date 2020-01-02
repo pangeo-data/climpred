@@ -93,4 +93,4 @@ intersphinx_mapping = {
 
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
-# nbsphinx_allow_errors = True
+nbsphinx_allow_errors = True

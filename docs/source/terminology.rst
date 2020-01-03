@@ -34,7 +34,7 @@ Predictability vs. Prediction skill
 
 *(Potential) Predictability*: This characterizes the "ability to be predicted" rather than the current "capability to predict." One estimates this by computing a metric (like the anomaly correlation coefficient (ACC)) between the prediction ensemble and a member (or collection of members) selected as the verification member(s) (in a perfect-model setup) or the reconstruction that initialized it (in a hindcast setup) [Meehl2013]_ [Pegion2017]_.
 
-*(Prediction) Skill*: This characterizes the current ability of the ensemble forecasting system to predict the real world. This is derived by computing a metric  between the prediction ensemble and observations, reanalysis, or analysis of the real world [Meehl2013]_ [Pegion2017].
+*(Prediction) Skill*: This characterizes the current ability of the ensemble forecasting system to predict the real world. This is derived by computing a metric  between the prediction ensemble and observations, reanalysis, or analysis of the real world [Meehl2013]_ [Pegion2017]_.
 
 Forecasting
 ###########

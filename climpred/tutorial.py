@@ -41,7 +41,7 @@ true_file_names = [
     'FOSI.SST.global',
     'FOSI.SSS.global',
     'FOSI.SST.eastern_pacific',
-    'rmmint1979-Present.nc',
+    'rmmint1979-Present',
 ]
 file_descriptions = [
     'area averages for the MPI control run of SST/SSS.',

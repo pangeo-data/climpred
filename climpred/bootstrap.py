@@ -116,7 +116,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     return ds_ci.compute()
 
 
-def _pvalue_from_distributions(simple_fct, init, metric='pearson_r'):
+def _pvalue_from_distributions(simple_fct, init, metric=None):
     """Get probability that skill of a simple forecast (e.g., persistence or
     uninitlaized skill) is larger than initialized skill.
 
@@ -181,7 +181,11 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
-    return _transpose_and_rechunk_to(uninit_hind, hind)
+    return (
+        _transpose_and_rechunk_to(uninit_hind, hind)
+        if dask.is_dask_collection(uninit_hind)
+        else uninit_hind
+    )
 
 
 def bootstrap_uninit_pm_ensemble_from_control(ds, control):

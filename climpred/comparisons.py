@@ -12,7 +12,6 @@ from .exceptions import DimensionError
 def _transpose_and_rechunk_to(a, ds):
     """Make one xr.object chunk-same to other.
     First transpose a to ds.dims then apply ds chunking to a."""
-    # TODO:  add to m2e comparisons
     return a.transpose(*ds.dims).chunk(ds.chunks)
 
 

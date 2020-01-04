@@ -112,10 +112,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     # TODO: re-implement xr.quantile once fast
     # now use dask
     ds = ds.chunk({'lead': 2}).persist()
-    ds_ci_low = my_quantile(ds, q=ci_low, dim='bootstrap')
-    ds_ci_high = my_quantile(ds, q=ci_high, dim='bootstrap')
-    ds_ci = xr.concat([ds_ci_low, ds_ci_high], 'quantile')
-    ds_ci['quantile'] = [ci_low, ci_high]
+    ds_ci = my_quantile(ds, q=[ci_low, ci_high], dim='bootstrap')
     return ds_ci.compute()
 
 

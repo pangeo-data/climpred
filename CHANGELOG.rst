@@ -8,6 +8,12 @@ climpred v1.2.1 (2019-12-##)
 Bug Fixes
 ---------
 - ``climpred`` now requires ``xarray`` version 0.14.1 so that the ``drop_vars()`` keyword used in our package does not throw an error. (:pr:`276`) `Riley X. Brady`_
+- fixed `m2m` comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
+
+Internals/Minor Fixes
+---------------------
+- stacking dims is handled by ``comparisons``, no need for internal keyword ``stack_dims``. Therefore ``comparison`` now takes ``metric`` as argument instead of ``stack_dims`` (:pr:`290`) `Aaron Spring`_.
+- ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
 
 climpred v1.2.0 (2019-12-17)
 ============================

@@ -83,16 +83,15 @@ class Comparison:
 # --------------------------------------------#
 
 
-def _m2m(ds, stack_dims=True):
+def _m2m(ds, metric=None):
     """
     Compare all members to all others in turn while leaving out the verification member.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        stack_dims (bool): if True, forecast and reference have member dim
-                      if False, only forecast has member dim
-                      (needed for probabilistic metrics)
+        metric (Metric): if deterministic, forecast and reference have member dim
+                      if probabilistic, only forecast has member dim
 
     Returns:
         xr.object: forecast, reference.
@@ -105,17 +104,15 @@ def _m2m(ds, stack_dims=True):
         # TODO: refactor add_incremental_coords_to_dim
         forecast['member'] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m).squeeze()
-        if stack_dims:
+        if not metric.probabilistic:
             forecast, reference = xr.broadcast(forecast, reference)
         reference_list.append(reference)
         forecast_list.append(forecast)
     forecast_member_dim = 'forecast_member'
     reference = xr.concat(reference_list, forecast_member_dim)
     forecast = xr.concat(forecast_list, forecast_member_dim)
-    reference[forecast_member_dim] = np.arange(
-        reference[forecast_member_dim].size)
-    forecast[forecast_member_dim] = np.arange(
-        forecast[forecast_member_dim].size)
+    reference[forecast_member_dim] = np.arange(reference[forecast_member_dim].size)
+    forecast[forecast_member_dim] = np.arange(forecast[forecast_member_dim].size)
     return forecast, reference
 
 
@@ -128,7 +125,7 @@ __m2m = Comparison(
 )
 
 
-def _m2e(ds, stack_dims=True):
+def _m2e(ds, metric=None):
     """
     Compare all members to ensemble mean while leaving out the reference in
      ensemble mean.
@@ -136,7 +133,7 @@ def _m2e(ds, stack_dims=True):
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        stack_dims (bool): needed for probabilistic metrics.
+        metric (Metric): needed for probabilistic metrics.
                       therefore useless in m2e comparison,
                       but expected by internal API.
 
@@ -153,10 +150,8 @@ def _m2e(ds, stack_dims=True):
         reference_list.append(reference)
     reference = xr.concat(reference_list, forecast_member_dim)
     forecast = xr.concat(forecast_list, forecast_member_dim)
-    forecast[forecast_member_dim] = np.arange(
-        forecast[forecast_member_dim].size)
-    reference[forecast_member_dim] = np.arange(
-        reference[forecast_member_dim].size)
+    forecast[forecast_member_dim] = np.arange(forecast[forecast_member_dim].size)
+    reference[forecast_member_dim] = np.arange(reference[forecast_member_dim].size)
     return forecast, reference
 
 
@@ -170,7 +165,7 @@ __m2e = Comparison(
 )
 
 
-def _m2c(ds, control_member=None, stack_dims=True):
+def _m2c(ds, control_member=None, metric=None):
     """
     Compare all other members forecasts to control member verification.
 
@@ -179,9 +174,8 @@ def _m2c(ds, control_member=None, stack_dims=True):
                             dimension.
         control_member: list of the one integer member serving as
                         reference. Default 0
-        stack_dims (bool): if True, forecast and reference have member dim
-                      if False, only forecast has member dim
-                      (needed for probabilistic metrics)
+        metric (Metric): if deterministic, forecast and reference both have member dim
+                      if probabilistic, only forecast has member dim
 
     Returns:
         xr.object: forecast, reference.
@@ -191,7 +185,7 @@ def _m2c(ds, control_member=None, stack_dims=True):
     reference = ds.isel(member=control_member).squeeze()
     # drop the member being reference
     forecast = _drop_members(ds, rmd_member=ds.member.values[control_member])
-    if stack_dims:
+    if not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
     return forecast, reference
 
@@ -205,7 +199,7 @@ __m2c = Comparison(
 )
 
 
-def _e2c(ds, control_member=None, stack_dims=True):
+def _e2c(ds, control_member=None, metric=None):
     """
     Compare ensemble mean forecast to control member verification.
 
@@ -214,7 +208,7 @@ def _e2c(ds, control_member=None, stack_dims=True):
                             dimension.
         control_member: list of the one integer member serving as
                         reference. Default 0
-        stack_dims (bool): needed for probabilistic metrics.
+        metric (Metric): needed for probabilistic metrics.
                       therefore useless in e2c comparison,
                       but expected by internal API.
 
@@ -244,7 +238,7 @@ __e2c = Comparison(
 # --------------------------------------------#
 # HINDCAST COMPARISONS
 # --------------------------------------------#
-def _e2r(ds, reference, stack_dims=True):
+def _e2r(ds, reference, metric=None):
     """
     Compare the ensemble mean forecast to a reference in HindcastEnsemble.
 
@@ -252,7 +246,7 @@ def _e2r(ds, reference, stack_dims=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
-        stack_dims (bool): needed for probabilistic metrics.
+        metric (Metric): needed for probabilistic metrics.
                       therefore useless in e2r comparison,
                       but expected by internal API.
 
@@ -275,7 +269,7 @@ __e2r = Comparison(
 )
 
 
-def _m2r(ds, reference, stack_dims=True):
+def _m2r(ds, reference, metric=None):
     """
     Compares each member individually to a reference in HindcastEnsemble.
 
@@ -283,9 +277,8 @@ def _m2r(ds, reference, stack_dims=True):
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
-        stack_dims (bool): if True, forecast and reference have member dim and
-                           both; if False, only forecast has member dim
-                           (needed for probabilistic metrics)
+        metric (Metric): if deterministic, forecast and reference both have member dim;
+                         if probabilistic, only forecast has member dim
 
     Returns:
         xr.object: forecast, reference.
@@ -294,7 +287,7 @@ def _m2r(ds, reference, stack_dims=True):
     has_dims(ds, 'member', 'decadal prediction ensemble')
     has_min_len(ds['member'], 1, 'decadal prediction ensemble member')
     forecast = ds
-    if stack_dims:
+    if not metric.probabilistic:
         reference = reference.expand_dims('member')
         nMember = forecast.member.size
         reference = reference.isel(member=[0] * nMember)

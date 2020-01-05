@@ -70,12 +70,8 @@ def compute_perfect_model(
     metric = get_metric_class(metric, PM_METRICS)
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    # if not stack_dims, comparisons return forecast with member dim and reference
-    # without member dim which is needed for probabilistic
-    # if stack_dims, comparisons return forecast and reference with member dim
-    # which is needed for deterministic
+
     if metric.probabilistic:
-        stack_dims = False
         if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric {metric.name} cannot work with '
@@ -90,7 +86,6 @@ def compute_perfect_model(
             dim = 'member'
     else:  # deterministic metric
         # prevent comparison e2c and member in dim
-        stack_dims = True
         if (comparison.name == 'e2c') and (
             set(dim) == set(['init', 'member']) or dim == 'member'
         ):
@@ -100,18 +95,18 @@ def compute_perfect_model(
             )
             dim = 'init'
 
-    forecast, reference = comparison.function(ds, stack_dims=stack_dims)
+    forecast, reference = comparison.function(ds, metric=metric)
 
     # in case you want to compute deterministic skill over member dim
-    if (forecast.dims != reference.dims) and (not metric.probabilistic) and not metric.probabilistic:
+    if (
+        (forecast.dims != reference.dims)
+        and (not metric.probabilistic)
+        and not metric.probabilistic
+    ):
         forecast, reference = xr.broadcast(forecast, reference)
 
     skill = metric.function(
-        forecast,
-        reference,
-        dim=dim,
-        comparison=comparison,
-        **metric_kwargs,
+        forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
     )
     if comparison.name == 'm2m':
         if 'forecast_member' in skill.dims:
@@ -191,7 +186,6 @@ def compute_hindcast(
     # if stack_dims, comparisons return forecast and reference with member dim
     # which is needed for deterministic
     if metric.probabilistic:
-        stack_dims = False
         if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison'
@@ -204,12 +198,10 @@ def compute_hindcast(
                 f'Set automatically.'
             )
             dim = 'member'
-    elif dim == 'init':
-        stack_dims = True
-        # for later thinking in real time
-        dim_to_apply_metric_to = 'time'
-    elif dim == 'member':
-        stack_dims = True
+    elif dim in ['init', 'member']:
+        if dim == 'init':
+            # for later thinking in real time
+            dim_to_apply_metric_to = 'time'
     else:
         raise ValueError(
             f'Please use a probabilistic metric [now {metric.name}] ',
@@ -218,8 +210,7 @@ def compute_hindcast(
         )
     nlags = max(hind.lead.values)
 
-    forecast, reference = comparison.function(
-        hind, reference, stack_dims=stack_dims)
+    forecast, reference = comparison.function(hind, reference, metric=metric)
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
@@ -247,7 +238,11 @@ def compute_hindcast(
                 }
             )
         # broadcast dims when deterministic metric and apply over member
-        if (a.dims != b.dims) and (dim_to_apply_metric_to == 'member') and not metric.probabilistic:
+        if (
+            (a.dims != b.dims)
+            and (dim_to_apply_metric_to == 'member')
+            and not metric.probabilistic
+        ):
             a, b = xr.broadcast(a, b)
         plag.append(
             metric.function(
@@ -340,8 +335,7 @@ def compute_persistence(
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
         plag.append(
-            metric.function(ref, fct, dim='time',
-                            comparison=__e2c, **metric_kwargs)
+            metric.function(ref, fct, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
@@ -389,7 +383,7 @@ def compute_uninitialized(
     """
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
-    forecast, reference = comparison.function(uninit, reference)
+    forecast, reference = comparison.function(uninit, reference, metric=metric)
     # Find common times between two for proper comparison.
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)

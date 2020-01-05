@@ -65,11 +65,11 @@ You can also construct your own comparisons via the :py:class:`~climpred.compari
 
 .. autosummary:: Comparison
 
-First, write your own comparison function, similar to the existing ones. If a comparison should also be used for probabilistic metrics, use ``stack_dims`` to return ``forecast`` with ``member`` dimension and ``reference`` without. For deterministic metric, return ``forecast`` and ``reference`` with identical dimensions::
+First, write your own comparison function, similar to the existing ones. If a comparison should also be used for probabilistic metrics, make that ``metric.probabilistic`` returns ``forecast`` with ``member`` dimension and ``reference`` without. For deterministic metric, return ``forecast`` and ``reference`` with identical dimensions but without an identical comparison::
 
   from climpred.comparisons import Comparison, _drop_members
 
-  def _my_m2median_comparison(ds, stack_dims=True):
+  def _my_m2median_comparison(ds, metric=None):
       """Identical to m2e but median."""
       reference_list = []
       forecast_list = []

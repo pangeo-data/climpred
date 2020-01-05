@@ -4,13 +4,14 @@ from xarray.testing import assert_allclose
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
     PM_COMPARISONS,
+    PM_METRICS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
-from climpred.utils import get_comparison_class
+from climpred.utils import get_comparison_class, get_metric_class
 
 
 @pytest.fixture
@@ -50,12 +51,13 @@ def observations_da():
     return da
 
 
-@pytest.mark.parametrize('stack_dims', [True, False])
+@pytest.mark.parametrize('metric', ['crps', 'mse'])
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
-def test_pm_comparison_stack_dims(pm_da_ds1d, comparison, stack_dims):
+def test_pm_comparison_stack_dims_when_deterministic(pm_da_ds1d, comparison, metric):
+    metric = get_metric_class(metric, PM_METRICS)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison.function(pm_da_ds1d, stack_dims=stack_dims)
-    if stack_dims:
+    actual_f, actual_r = comparison.function(pm_da_ds1d, metric=metric)
+    if not metric.probabilistic:
         assert 'member' in actual_f.dims
         assert 'member' in actual_r.dims
     else:
@@ -90,11 +92,9 @@ def test_compute_hindcast_dim_over_member(initialized_da, observations_da, compa
     assert not actual.mean('init').isnull().any()
 
 
-def test_compute_perfect_model_stack_dims_True_and_False_quite_close(
-    pm_da_ds1d, pm_da_control1d
-):
-    """Test whether dim=['init','member'] for stack_dims=False and
-    dim='member' for stack_dims=True give similar results."""
+def test_compute_perfect_model_different_dims_quite_close(pm_da_ds1d, pm_da_control1d):
+    """Test whether dim=['init','member'] and
+    dim='member' results."""
     stack_dims_true = compute_perfect_model(
         pm_da_ds1d,
         pm_da_control1d,

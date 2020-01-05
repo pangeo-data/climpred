@@ -526,11 +526,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 * init_ci: confidence levels of init_skill.
                 * uninit_ci: confidence levels of uninit_skill.
                 * pers_ci: confidence levels of pers_skill.
-                * p_uninit_over_init: p-value of the hypothesis that the
+                * p_uninit_over_init: p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * p_pers_over_init: p-value of the hypothesis that the
+                * p_pers_over_init: p value of the hypothesis that the
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.

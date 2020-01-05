@@ -354,7 +354,7 @@ def bootstrap_compute(
         results: (xr.Dataset): bootstrapped results
             * init_ci (xr.Dataset): confidence levels of init_skill
             * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p-value of the hypothesis
+            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
                                                that the difference of
                                                skill between the
                                                initialized and uninitialized
@@ -364,7 +364,7 @@ def bootstrap_compute(
                                                replacement.
                                                Defaults to None.
             * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p-value of the hypothesis
+            * p_pers_over_init (xr.Dataset): p value of the hypothesis
                                              that the difference of
                                              skill between the
                                              initialized and persistence
@@ -596,7 +596,7 @@ def bootstrap_hindcast(
         results: (xr.Dataset): bootstrapped results
             * init_ci (xr.Dataset): confidence levels of init_skill
             * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p-value of the hypothesis
+            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
                                                that the difference of
                                                skill between the
                                                initialized and uninitialized
@@ -606,7 +606,7 @@ def bootstrap_hindcast(
                                                replacement.
                                                Defaults to None.
             * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p-value of the hypothesis
+            * p_pers_over_init (xr.Dataset): p value of the hypothesis
                                              that the difference of
                                              skill between the
                                              initialized and persistence
@@ -677,7 +677,7 @@ def bootstrap_perfect_model(
         results: (xr.Dataset): bootstrapped results
             * init_ci (xr.Dataset): confidence levels of init_skill
             * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p-value of the hypothesis
+            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
                                                that the difference of
                                                skill between the
                                                initialized and uninitialized
@@ -687,7 +687,7 @@ def bootstrap_perfect_model(
                                                replacement.
                                                Defaults to None.
             * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p-value of the hypothesis
+            * p_pers_over_init (xr.Dataset): p value of the hypothesis
                                              that the difference of
                                              skill between the
                                              initialized and persistence

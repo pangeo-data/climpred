@@ -1,8 +1,23 @@
-*******
-Metrics
-*******
+.. currentmodule:: climpred.metrics
 
-All high-level functions have an optional ``metric`` argument that can be called to determine which metric is used in computing predictability (potential predictability or prediction skill).
+.. ipython:: python
+   :suppress:
+
+    from climpred.metrics import __ALL_METRICS__ as all_metrics
+    metric_aliases = {}
+    for m in all_metrics:
+        if m.aliases is not None:
+            metric_list = [m.name] + m.aliases
+        else:
+            metric_list = [m.name]
+        metric_aliases[m.name] = metric_list
+
+#######
+Metrics
+#######
+
+All high-level functions have an optional ``metric`` argument that can be called to
+determine which metric is used in computing predictability.
 
 .. note::
 
@@ -12,45 +27,123 @@ All high-level functions have an optional ``metric`` argument that can be called
     change the resulting score from referencing skill to referencing potential
     predictability.
 
-.. currentmodule:: climpred.metrics
+Internally, all metric functions require ``forecast`` and ``reference`` as inputs.
+The dimension ``dim`` is set internally by
+:py:func:`~climpred.prediction.compute_hindcast` or
+:py:func:`~climpred.prediction.compute_perfect_model` to specify over which dimensions
+the ``metric`` is applied. See :ref:`comparisons` for more on the ``dim`` argument.
 
-Internally, all metric functions require ``forecast`` and ``reference`` as inputs. The dimension ``dim`` is set by :py:func:`~climpred.prediction.compute_hindcast` or :py:func:`~climpred.prediction.compute_perfect_model` to specify over which dimensions the ``metric`` is applied. See :ref:`comparisons`.
-
-
+*************
 Deterministic
-#############
+*************
 
-Deterministic metrics quantify the level to which the forecast predicts the observations. These metrics are just a special case of probabilistic metrics where a value of 100% is assigned to the forecasted value [Jolliffe2011]_.
+Deterministic metrics assess the forecast as a definite prediction of the future, rather
+than in terms of probabilities. Another way to look at deterministic metrics is that
+they are a special case of probabilistic metrics where a value of one is assigned to
+one category and zero to all others [Jolliffe2011]_.
 
-Core Metrics
-============
+Correlation Metrics
+===================
 
-Pearson Anomaly Correlation Coefficient (ACC)
----------------------------------------------
+The below metrics rely fundamentally on correlations in their computation. In the
+literature, correlation metrics are typically referred to as the Anomaly Correlation
+Coefficient (ACC). This implies that anomalies in the forecast and observations
+are being correlated. Typically, this is computed using the linear
+`Pearson Product-Moment Correlation <#pearson-product-moment-correlation-coefficient>`_.
+However, ``climpred`` also offers the
+`Spearman's Rank Correlation <#spearman-s-rank-correlation-coefficient>`_.
 
-``keyword: 'pearson_r', 'pr', 'pacc', 'acc'``
+Note that the p value associated with these correlations is computed via a separate
+metric. Use ``pearson_r_p_value`` or ``spearman_r_p_value`` to compute p values assuming
+that all samples in the correlated time series are independent. Use
+``pearson_r_eff_p_value`` or ``spearman_r_eff_p_value`` to account for autocorrelation
+in the time series by calculating the ``effective_sample_size``.
 
-A measure of the linear association between the forecast and observations that is independent of the mean and variance of the individual distributions [Jolliffe2011]_. ``climpred`` uses the Pearson correlation coefficient.
+Pearson Product-Moment Correlation Coefficient
+----------------------------------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['pearson_r']}")
 
 .. autofunction:: _pearson_r
 
+Pearson Correlation p value
+---------------------------
 
-Spearman Anomaly Correlation Coefficient (SACC)
------------------------------------------------
+.. ipython:: python
 
-``keyword: 'spearman_r', 'sacc', 'sr'``
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['pearson_r_p_value']}")
 
-A measure of how well the relationship between two variables can be described using a monotonic function.
+.. autofunction:: _pearson_r_p_value
+
+Effective Sample Size
+---------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['effective_sample_size']}")
+
+.. autofunction:: _effective_sample_size
+
+Pearson Correlation Effective p value
+-------------------------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['pearson_r_eff_p_value']}")
+
+.. autofunction:: _pearson_r_eff_p_value
+
+
+Spearman's Rank Correlation Coefficient
+---------------------------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spearman_r']}")
 
 .. autofunction:: _spearman_r
 
 
+Spearman's Rank Correlation Coefficient p value
+-----------------------------------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spearman_r_p_value']}")
+
+.. autofunction:: _spearman_r_p_value
+
+Spearman's Rank Correlation Effective p value
+---------------------------------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spearman_r_eff_p_value']}")
+
+.. autofunction:: _spearman_r_eff_p_value
+
+Distance Metrics
+================
+
+This class of metrics simply measures the distance (or difference) between forecasted
+values and observed values.
+
 Mean Squared Error (MSE)
 ------------------------
 
-``keyword: 'mse'``
+.. ipython:: python
 
-The average of the squared difference between forecasts and observations. This incorporates both the variance and bias of the estimator.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mse']}")
 
 .. autofunction:: _mse
 
@@ -58,10 +151,10 @@ The average of the squared difference between forecasts and observations. This i
 Root Mean Square Error (RMSE)
 -----------------------------
 
-``keyword: 'rmse'``
+.. ipython:: python
 
-The square root of the average of the squared differences between forecasts and observations [Jolliffe2011]_.
-It puts a greater influence on large errors than small errors, which makes this a good choice if large errors are undesirable or one wants to be a more conservative forecaster.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['rmse']}")
 
 .. autofunction:: _rmse
 
@@ -69,33 +162,39 @@ It puts a greater influence on large errors than small errors, which makes this 
 Mean Absolute Error (MAE)
 -------------------------
 
-``keyword: 'mae'``
+.. ipython:: python
 
-The average of the absolute differences between forecasts and observations [Jolliffe2011]_. A more robust measure of forecast accuracy than root mean square error or mean square error which is sensitive to large outlier forecast errors [EOS]_.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mae']}")
 
 .. autofunction:: _mae
 
 
-Median Absolute Deviation (MAD)
--------------------------------
+Median Absolute Error
+---------------------
 
-``keyword: 'mad'``
+.. ipython:: python
 
-The median of the absolute differences between forecasts and observations.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['median_absolute_error']}")
 
-.. autofunction:: _mad
+.. autofunction:: _median_absolute_error
 
+Normalized Distance Metrics
+===========================
 
-Derived Metrics
-===============
-
-Distance-based metrics like ``mse`` can be normalized to 1. The normalization factor depends on the comparison type choosen, eg. the distance between an ensemble member and the ensemble mean is half the distance of an ensemble member with other ensemble members. (see :py:func:`climpred.metrics._get_norm_factor`).
-
+Distance metrics like ``mse`` can be normalized to 1. The normalization factor
+depends on the comparison type choosen. For example, the distance between an ensemble
+member and the ensemble mean is half the distance of an ensemble member with other
+ensemble members. See :py:func:`~climpred.metrics._get_norm_factor`.
 
 Normalized Mean Square Error (NMSE)
 -----------------------------------
 
-``keyword: 'nmse','nev'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['nmse']}")
 
 .. autofunction:: _nmse
 
@@ -103,7 +202,10 @@ Normalized Mean Square Error (NMSE)
 Normalized Mean Absolute Error (NMAE)
 -------------------------------------
 
-``keyword: 'nmae'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['nmae']}")
 
 .. autofunction:: _nmae
 
@@ -111,135 +213,185 @@ Normalized Mean Absolute Error (NMAE)
 Normalized Root Mean Square Error (NRMSE)
 -----------------------------------------
 
-``keyword: 'nrmse'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['nrmse']}")
 
 .. autofunction:: _nrmse
 
 
-Mean Square Skill Score (MSSS)
-------------------------------
+Mean Square Error Skill Score (MSESS)
+-------------------------------------
 
-``keyword: 'msss','ppp'``
+.. ipython:: python
 
-.. autofunction:: _ppp
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['msess']}")
+
+.. autofunction:: _msess
 
 
 Mean Absolute Percentage Error (MAPE)
----------------------------------------
+-------------------------------------
 
-``keyword: 'mape'``
+.. ipython:: python
 
-The mean of the absolute differences between forecasts and observations normalized by observations.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mape']}")
 
 .. autofunction:: _mape
-
 
 Symmetric Mean Absolute Percentage Error (sMAPE)
 ------------------------------------------------
 
-``keyword: 'smape'``
+.. ipython:: python
 
-The mean of the absolute differences between forecasts and observations normalized by their sum.
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['smape']}")
 
 .. autofunction:: _smape
 
 
-Unbiased ACC
-------------
+Unbiased Anomaly Correlation Coefficient (uACC)
+-----------------------------------------------
 
-``keyword: 'uacc'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['uacc']}")
 
 .. autofunction:: _uacc
 
 
-Murphy decomposition metrics
+Murphy Decomposition Metrics
 ============================
 
-[Murphy1988]_ relates the MSSS with ACC and unconditional bias.
+Metrics derived in [Murphy1988]_ which decompose the ``MSESS`` into a correlation term,
+a conditional bias term, and an unconditional bias term. See
+https://www-miklip.dkrz.de/about/murcss/ for a walk through of the decomposition.
 
 Standard Ratio
 --------------
 
-``keyword: 'std_ratio'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['std_ratio']}")
 
 .. autofunction:: _std_ratio
-
-Unconditional Bias
-------------------
-
-``keyword: 'bias', 'unconditional_bias', 'u_b'``
-
-.. autofunction:: _bias
-
-Bias Slope
-----------
-
-``keyword: 'bias_slope'``
-
-.. autofunction:: _bias_slope
 
 Conditional Bias
 ----------------
 
-``keyword: 'conditional_bias', c_b'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['conditional_bias']}")
 
 .. autofunction:: _conditional_bias
 
-Murphy's Mean Square Skill Score
---------------------------------
+Unconditional Bias
+------------------
 
-``keyword: 'msss_murphy'``
+.. ipython:: python
 
-.. autofunction:: _msss_murphy
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['unconditional_bias']}")
 
+Simple bias of the forecast minus the observations.
 
+.. autofunction:: _unconditional_bias
+
+Bias Slope
+----------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['bias_slope']}")
+
+.. autofunction:: _bias_slope
+
+Murphy's Mean Square Error Skill Score
+--------------------------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['msess_murphy']}")
+
+.. autofunction:: _msess_murphy
+
+*************
 Probabilistic
-#############
+*************
 
-Continuous Ranked Probability Score
------------------------------------
+Probabilistic metrics include the spread of the ensemble simulations in their
+calculations and assign a probability value between 0 and 1 to their forecasts
+[Jolliffe2011]_.
 
-``keyword: 'crps'``
+Continuous Ranked Probability Score (CRPS)
+==========================================
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['crps']}")
 
 .. autofunction:: _crps
 
-Continuous Ranked Probability Skill Score
------------------------------------------
+Continuous Ranked Probability Skill Score (CRPSS)
+=================================================
 
-``keyword: 'crpss'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['crpss']}")
 
 .. autofunction:: _crpss
 
 Continuous Ranked Probability Skill Score Ensemble Spread
----------------------------------------------------------
+=========================================================
 
-``keyword: 'crpss_es'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['crpss_es']}")
 
 .. autofunction:: _crpss_es
 
 Brier Score
------------
+===========
 
-``keyword: 'brier_score', 'brier', 'bs'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['brier_score']}")
 
 .. autofunction:: _brier_score
 
 Threshold Brier Score
----------------------
+=====================
 
-``keyword: 'threshold_brier_score', 'tbs'``
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['threshold_brier_score']}")
 
 .. autofunction:: _threshold_brier_score
 
-
+********************
 User-defined metrics
-####################
+********************
 
-You can also construct your own metrics via the :py:class:`climpred.metrics.Metric` class.
+You can also construct your own metrics via the :py:class:`climpred.metrics.Metric`
+class.
 
 .. autosummary:: Metric
 
-First, write your own metric function, similar to the existing ones with required arguments ``forecast``, ``reference``, ``dim=None``, and ``**metric_kwargs``::
+First, write your own metric function, similar to the existing ones with required
+arguments ``forecast``, ``reference``, ``dim=None``, and ``**metric_kwargs``::
 
   from climpred.metrics import Metric
 
@@ -262,12 +414,13 @@ Finally, compute skill based on your own metric::
 
   skill = compute_perfect_model(ds, control, metric=_my_msle)
 
-Once you come up with an useful metric for your problem, consider contributing this metric to `climpred`, so all users can benefit from your metric, see :ref:`contributing`.
+Once you come up with an useful metric for your problem, consider contributing
+this metric to `climpred`, so all users can benefit from your metric, see
+:ref:`contributing`.
 
+**********
 References
-##########
-
-.. [EOS] https://eos.org/opinions/climate-and-other-models-may-be-more-accurate-than-reported
+**********
 
 .. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003.
 

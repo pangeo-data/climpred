@@ -70,17 +70,17 @@ def compute_perfect_model(
     metric = get_metric_class(metric, PM_METRICS)
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    # if stack_dims, comparisons return forecast with member dim and reference
+    # if not stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
-    # if not stack_dims, comparisons return forecast and reference with member dim
-    # which is neeeded for deterministic
+    # if stack_dims, comparisons return forecast and reference with member dim
+    # which is needed for deterministic
     if metric.probabilistic:
+        stack_dims = False
         if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric {metric.name} cannot work with '
                 f'comparison {comparison.name}.'
             )
-        stack_dims = False
         if dim != 'member':
             warnings.warn(
                 f'Probabilistic metric {metric.name} requires to be '
@@ -88,8 +88,9 @@ def compute_perfect_model(
                 f'Set automatically.'
             )
             dim = 'member'
-    else:
+    else:  # deterministic metric
         # prevent comparison e2c and member in dim
+        stack_dims = True
         if (comparison.name == 'e2c') and (
             set(dim) == set(['init', 'member']) or dim == 'member'
         ):
@@ -98,32 +99,23 @@ def compute_perfect_model(
                 f'{dim}, automatically changed to dim=`init`.'
             )
             dim = 'init'
-        stack_dims = False
-    dim_to_apply_metric_to = dim
 
-    # stack_dims = True when metric probabilistic
     forecast, reference = comparison.function(ds, stack_dims=stack_dims)
 
-    # in case you want to compute skill over member dim
-    if (forecast.dims != reference.dims) and (not metric.probabilistic):
-        # broadcast when deterministic dim=member
+    # in case you want to compute deterministic skill over member dim
+    if (forecast.dims != reference.dims) and (not metric.probabilistic) and not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
 
     skill = metric.function(
         forecast,
         reference,
-        dim=dim_to_apply_metric_to,
+        dim=dim,
         comparison=comparison,
         **metric_kwargs,
     )
-
-    # correction for distance based metrics in m2m comparison
-    # fix for m2m TODO
     if comparison.name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
-        # m2m stack_dims=False has one identical comparison
-        skill = skill * (forecast.member.size / (forecast.member.size - 1))
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -132,6 +124,7 @@ def compute_perfect_model(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            dim=dim,
             metadata_dict=metric_kwargs,
         )
     return skill
@@ -223,7 +216,8 @@ def compute_hindcast(
         )
     nlags = max(hind.lead.values)
 
-    forecast, reference = comparison.function(hind, reference, stack_dims=stack_dims)
+    forecast, reference = comparison.function(
+        hind, reference, stack_dims=stack_dims)
 
     # in case you want to compute skill over member dim
     if (
@@ -260,8 +254,8 @@ def compute_hindcast(
                     )
                 }
             )
-        # broadcast dims when apply over member
-        if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
+        # broadcast dims when deterministic metric and apply over member
+        if (a.dims != b.dims) and (dim_to_apply_metric_to == 'member') and not metric.probabilistic:
             a, b = xr.broadcast(a, b)
         plag.append(
             metric.function(
@@ -284,6 +278,7 @@ def compute_hindcast(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            dim=dim,
             metadata_dict=metric_kwargs,
         )
     return skill
@@ -353,7 +348,8 @@ def compute_persistence(
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
         plag.append(
-            metric.function(ref, fct, dim='time', comparison=__e2c, **metric_kwargs)
+            metric.function(ref, fct, dim='time',
+                            comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values

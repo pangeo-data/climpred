@@ -118,6 +118,7 @@ def test_m2m(PM_da_ds1d):
     forecast_list = []
     for m in ds.member.values:
         forecast = _drop_members(ds, rmd_member=[m])
+        forecast['member'] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m).squeeze()
         forecast, reference = xr.broadcast(forecast, reference)
         reference_list.append(reference)
@@ -139,6 +140,8 @@ def test_all(PM_da_ds1d, comparison, stack_dims):
     ds = PM_da_ds1d
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
     forecast, reference = comparison.function(ds, stack_dims=stack_dims)
+    assert not forecast.isnull().any()
+    assert not reference.isnull().any()
     if stack_dims is True:
         # same dimensions for deterministic metrics
         assert forecast.dims == reference.dims

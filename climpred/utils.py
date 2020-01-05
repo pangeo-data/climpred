@@ -99,7 +99,7 @@ def reduce_time_series(forecast, reference, nlags):
 
 
 def assign_attrs(
-    skill, ds, function_name, metadata_dict=None, metric=None, comparison=None
+    skill, ds, function_name, metadata_dict=None, metric=None, comparison=None, dim=None
 ):
     """Write information about prediction skill into attrs.
 
@@ -129,6 +129,7 @@ def assign_attrs(
 
     skill.attrs['metric'] = metric.name
     skill.attrs['comparison'] = comparison.name
+    skill.attrs['dim'] = dim
 
     # change unit power
     if metric.unit_power == 0:

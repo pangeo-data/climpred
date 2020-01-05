@@ -100,27 +100,22 @@ def _m2m(ds, stack_dims=True):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        if stack_dims:
-            forecast = _drop_members(ds, rmd_member=[m])
-        else:
-            # TODO: when not stack_dims, m2m create a member vs forecast_member
-            # matrix with the diagonal empty if there would be the following line:
-            # forecast = _drop_members(ds, rmd_member=[m])
-            # if the verification member is not left out (as now), there is one
-            # identical comparison, which inflates the skill. To partly fix
-            # this there is a m2m correction applied in the end of
-            # compute_perfect_model.
-            forecast = ds
+        forecast = _drop_members(ds, rmd_member=[m])
+        # set incrementing members to avoid nans from broadcasting
+        # TODO: refactor add_incremental_coords_to_dim
+        forecast['member'] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m).squeeze()
         if stack_dims:
             forecast, reference = xr.broadcast(forecast, reference)
         reference_list.append(reference)
         forecast_list.append(forecast)
-    supervector_dim = 'forecast_member'
-    reference = xr.concat(reference_list, supervector_dim)
-    forecast = xr.concat(forecast_list, supervector_dim)
-    reference[supervector_dim] = np.arange(reference[supervector_dim].size)
-    forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
+    forecast_member_dim = 'forecast_member'
+    reference = xr.concat(reference_list, forecast_member_dim)
+    forecast = xr.concat(forecast_list, forecast_member_dim)
+    reference[forecast_member_dim] = np.arange(
+        reference[forecast_member_dim].size)
+    forecast[forecast_member_dim] = np.arange(
+        forecast[forecast_member_dim].size)
     return forecast, reference
 
 
@@ -150,16 +145,18 @@ def _m2e(ds, stack_dims=True):
     """
     reference_list = []
     forecast_list = []
-    supervector_dim = 'member'
+    forecast_member_dim = 'member'
     for m in ds.member.values:
         forecast = _drop_members(ds, rmd_member=[m]).mean('member')
         reference = ds.sel(member=m).squeeze()
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list, supervector_dim)
-    forecast = xr.concat(forecast_list, supervector_dim)
-    forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
-    reference[supervector_dim] = np.arange(reference[supervector_dim].size)
+    reference = xr.concat(reference_list, forecast_member_dim)
+    forecast = xr.concat(forecast_list, forecast_member_dim)
+    forecast[forecast_member_dim] = np.arange(
+        forecast[forecast_member_dim].size)
+    reference[forecast_member_dim] = np.arange(
+        reference[forecast_member_dim].size)
     return forecast, reference
 
 
@@ -218,7 +215,7 @@ def _e2c(ds, control_member=None, stack_dims=True):
         control_member: list of the one integer member serving as
                         reference. Default 0
         stack_dims (bool): needed for probabilistic metrics.
-                      therefore useless in m2e comparison,
+                      therefore useless in e2c comparison,
                       but expected by internal API.
 
     Returns:
@@ -256,7 +253,7 @@ def _e2r(ds, reference, stack_dims=True):
                             dimension.
         reference (xarray object): reference xr.Dataset/xr.DataArray.
         stack_dims (bool): needed for probabilistic metrics.
-                      therefore useless in m2e comparison,
+                      therefore useless in e2r comparison,
                       but expected by internal API.
 
     Returns:

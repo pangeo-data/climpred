@@ -185,18 +185,18 @@ def compute_hindcast(
     metric = get_metric_class(metric, HINDCAST_METRICS)
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
-
+    dim_to_apply_metric_to = dim
     # if not stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
     # if stack_dims, comparisons return forecast and reference with member dim
-    # which is neeeded for deterministic
+    # which is needed for deterministic
     if metric.probabilistic:
-        if comparison.name != 'm2r':
+        stack_dims = False
+        if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison'
-                f' `m2r`, found {comparison.name}.'
+                f' e.g. `m2r`, found `{comparison.name}`.'
             )
-        stack_dims = False
         if dim != 'member':
             warnings.warn(
                 f'Probabilistic metric {metric.name} requires to be '
@@ -206,28 +206,20 @@ def compute_hindcast(
             dim = 'member'
     elif dim == 'init':
         stack_dims = True
+        # for later thinking in real time
+        dim_to_apply_metric_to = 'time'
     elif dim == 'member':
-        stack_dims = False
+        stack_dims = True
     else:
         raise ValueError(
             f'Please use a probabilistic metric [now {metric.name}] ',
-            f'and the comparison `m2r` [now {comparison.name}] or ',
+            f'and a probabilistic omparison, e.g. `m2r` [now {comparison.name}] or ',
             f'specify dim from ["init", "member"], now: {dim}.',
         )
     nlags = max(hind.lead.values)
 
     forecast, reference = comparison.function(
         hind, reference, stack_dims=stack_dims)
-
-    # in case you want to compute deterministic skill over member dim
-    if (
-        (forecast.dims != reference.dims)
-        and not stack_dims
-        and not metric.probabilistic
-    ):
-        dim_to_apply_metric_to = 'member'
-    else:
-        dim_to_apply_metric_to = 'time'
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})

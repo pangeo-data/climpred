@@ -25,7 +25,8 @@ def control_ds_3d():
 @pytest.fixture
 def control_da_3d():
     """North Atlantic xr.DataArray."""
-    da = load_dataset('MPI-control-3D').sel(x=slice(120, 130), y=slice(50, 60))['tos']
+    da = load_dataset('MPI-control-3D').sel(x=slice(120, 130),
+                                            y=slice(50, 60))['tos']
     return da
 
 
@@ -92,11 +93,12 @@ def test_ds_assign_attrs():
     metric = 'mse'
     comparison = 'm2e'
     v = 'tos'
+    dim = ['init', 'member']
     da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)[v]
     control = load_dataset('MPI-control-1D').isel(area=1, period=-1)[v]
     da.attrs['units'] = 'C'
     actual = compute_perfect_model(
-        da, control, metric=metric, comparison=comparison
+        da, control, metric=metric, comparison=comparison, dim=dim
     ).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
@@ -104,6 +106,7 @@ def test_ds_assign_attrs():
         assert actual['units'] == 'None'
     assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
     assert actual['units'] == '(C)^2'
+    assert actual['dim'] == dim
 
 
 def test_bootstrap_pm_assign_attrs():
@@ -121,7 +124,8 @@ def test_bootstrap_pm_assign_attrs():
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     assert actual['bootstrap_iterations'] == bootstrap
-    assert str(round((1 - sig / 100) / 2, 3)) in actual['confidence_interval_levels']
+    assert str(round((1 - sig / 100) / 2, 3)
+               ) in actual['confidence_interval_levels']
     if metric == 'pearson_r':
         assert actual['units'] == 'None'
     assert 'bootstrap' in actual['skill_calculated_by_function']
@@ -133,7 +137,8 @@ def test_hindcast_assign_attrs():
     comparison = 'e2r'
     da = load_dataset('CESM-DP-SST')
     control = load_dataset('ERSST')
-    actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
+    actual = compute_hindcast(
+        da, control, metric=metric, comparison=comparison).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':

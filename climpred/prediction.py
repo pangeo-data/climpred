@@ -186,9 +186,9 @@ def compute_hindcast(
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
 
-    # if stack_dims, comparisons return forecast with member dim and reference
+    # if not stack_dims, comparisons return forecast with member dim and reference
     # without member dim which is needed for probabilistic
-    # if not stack_dims, comparisons return forecast and reference with member dim
+    # if stack_dims, comparisons return forecast and reference with member dim
     # which is neeeded for deterministic
     if metric.probabilistic:
         if comparison.name != 'm2r':
@@ -219,7 +219,7 @@ def compute_hindcast(
     forecast, reference = comparison.function(
         hind, reference, stack_dims=stack_dims)
 
-    # in case you want to compute skill over member dim
+    # in case you want to compute deterministic skill over member dim
     if (
         (forecast.dims != reference.dims)
         and not stack_dims

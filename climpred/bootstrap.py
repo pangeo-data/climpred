@@ -457,6 +457,7 @@ def bootstrap_compute(
         hind,
         metric=metric,
         comparison=comparison,
+        dim=dim,
         function_name=inspect.stack()[0][3],  # take function.__name__
         metadata_dict=metadata_dict,
     )

@@ -6,7 +6,7 @@ from climpred.constants import CLIMPRED_DIMS, DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
-# uacc is sqrt(ppp), fails when ppp negative
+# uacc is sqrt(MSSS), fails when MSSS negative
 DETERMINISTIC_PM_METRICS_LUACC = DETERMINISTIC_PM_METRICS.copy()
 DETERMINISTIC_PM_METRICS_LUACC.remove('uacc')
 

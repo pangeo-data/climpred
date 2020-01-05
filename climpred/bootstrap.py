@@ -2,6 +2,7 @@ import inspect
 
 import numpy as np
 import xarray as xr
+
 from tqdm.auto import tqdm
 
 from .checks import has_dims
@@ -91,8 +92,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(
-            1, 1 + len(random_members))
+        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -131,8 +131,7 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length)
-             for start in startlist), 'member'
+            (isel_years(control, start, length) for start in startlist), 'member'
         )
 
     return xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
@@ -175,8 +174,7 @@ def _bootstrap_func(
         smp_ds = ds.sel({resample_dim: smp_resample_dim})
         smp_ds[resample_dim] = resample_dim_values
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
-    sig_level = xr.concat(bootstraped_results,
-                          'bootstrap').quantile(psig, 'bootstrap')
+    sig_level = xr.concat(bootstraped_results, 'bootstrap').quantile(psig, 'bootstrap')
     return sig_level
 
 
@@ -339,9 +337,9 @@ def bootstrap_compute(
         )
         # reset inits when probabilistic, otherwise tests fail
         if (
-            shuffle_dim == 'init' and
-            metric.probabilistic and
-            'init' in init_skill.coords
+            (shuffle_dim == 'init')
+            and metric.probabilistic
+            and ('init' in init_skill.coords)
         ):
             init_skill['init'] = inits
         init.append(init_skill)
@@ -365,8 +363,7 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                compute_persistence(smp_hind, reference,
-                                    metric=metric, **metric_kwargs)
+                compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -396,8 +393,7 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(
-        uninit, init, metric=metric)
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric)
 
     # calc mean skill without any resampling

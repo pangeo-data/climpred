@@ -4,6 +4,7 @@ from . import (
     bootstrap,
     comparisons,
     constants,
+    create_climpred_data,
     exceptions,
     graphics,
     metrics,

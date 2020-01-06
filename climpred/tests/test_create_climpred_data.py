@@ -17,7 +17,7 @@ try:
     for node in ['mlogin', 'mistralpp']:
         if node in host:
             on_mistral = True
-except:
+except KeyError:
     pass
 
 # check for intake_esm to be installed

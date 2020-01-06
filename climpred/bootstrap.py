@@ -345,6 +345,8 @@ def bootstrap_compute(
         if hist is None:  # PM path, use reference = control
             hist = reference
         uninit_hind = resample_uninit(hind, hist)
+        # Append lead time units from initialized forecast.
+        uninit_hind['lead'].attrs['units'] = hind['lead'].attrs['units']
         # compute uninit skill
         uninit.append(
             compute(

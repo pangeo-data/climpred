@@ -114,6 +114,7 @@ def test_bootstrap_pm_assign_attrs():
     bootstrap = 3
     sig = 95
     da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
+    da['lead'].attrs['units'] = 'years'
     control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
     actual = bootstrap_perfect_model(
         da, control, metric=metric, comparison=comparison, bootstrap=bootstrap, sig=sig

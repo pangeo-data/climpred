@@ -194,7 +194,6 @@ def test_uninitialized(uninitialized_da, reconstruction_da):
     assert not res
 
 
-@pytest.mark.skip(reason='bootstrap drops attrs.')
 def test_bootstrap_hindcast_da1d_not_nan(
     initialized_da, uninitialized_da, reconstruction_da
 ):

@@ -1,8 +1,12 @@
+import warnings
 from functools import wraps
 
 import xarray as xr
 
 from .exceptions import DatasetError, DimensionError, VariableError
+
+# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
+VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
 
 
 # https://stackoverflow.com/questions/10610824/
@@ -141,5 +145,35 @@ def match_initialized_vars(init, ref):
             'Please provide a Dataset/DataArray with at least '
             'one matching variable to the initialized prediction ensemble; '
             f'got {init_vars} for init and {ref_vars} for ref.'
+        )
+    return True
+
+
+def has_valid_lead_units(xobj):
+    """
+    Checks that the object has valid units for the lead dimension.
+    """
+    if hasattr(xobj['lead'], 'units'):
+
+        units = getattr(xobj['lead'], 'units')
+
+        # Check if letter s is appended to lead units string and add it if needed
+        if not units.endswith('s'):
+            units += 's'
+            xobj['lead'].attrs['units'] = units
+            warnings.warn(
+                f'The letter "s" was appended to the lead units; now {units}.'
+            )
+
+        # Raise Error if lead units is not valid
+        if not getattr(xobj['lead'], 'units') in VALID_LEAD_UNITS:
+            raise DimensionError(
+                'The lead dimension must must have a valid '
+                f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
+            )
+    else:
+        raise DimensionError(
+            'The lead dimension must must have a '
+            f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
         )
     return True

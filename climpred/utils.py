@@ -138,7 +138,7 @@ def get_lead_cftime_shift_args(units, lead):
     elif units == 'seasons':
         offset_args_tuple = (lead + 3, 'MS')
     elif units == 'pentads':
-        offset_args_tuple = (lead + 5, 'D')
+        offset_args_tuple = (lead * 5, 'D')
     else:
         raise ValueError(f'{units} is not a valid choice')
     return offset_args_tuple

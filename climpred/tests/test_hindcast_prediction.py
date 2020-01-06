@@ -282,3 +282,23 @@ def test_compute_hindcast_CESM_3D_keep_coords(hind_3d, fosi_3d):
     s = compute_hindcast(hind_3d, fosi_3d)
     for c in hind_3d.drop('init').coords:
         assert c in s.coords
+
+
+def test_bootstrap_hindcast_keeps_lead_units(
+    initialized_da, uninitialized_da, observations_da
+):
+    """Test that lead units is kept in compute."""
+    sig = 95
+    units = 'years'
+    initialized_da['lead'].attrs['units'] = units
+    actual = bootstrap_hindcast(
+        initialized_da,
+        uninitialized_da,
+        observations_da,
+        metric='mse',
+        bootstrap=2,
+        comparison='e2r',
+        sig=sig,
+        dim='init',
+    )
+    assert actual.lead.attrs['units'] == units

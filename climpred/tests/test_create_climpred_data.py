@@ -22,6 +22,7 @@ for node in ['mlogin', 'mistralpp']:
 try:
     import intake
     import intake_esm
+
     print(intake_esm.__version__)
     intake_esm_loaded = True
 except ImportError:
@@ -34,13 +35,11 @@ def preprocess_1var(ds, v='global_primary_production'):
 
 @pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
 @pytest.mark.parametrize(
-    'inits,members', [([1961, 1962, 1963], [3, 4, 5]),
-                      (range(1970, 1972), range(1, 3))]
+    'inits,members', [([1961, 1962, 1963], [3, 4, 5]), (range(1970, 1972), range(1, 3))]
 )
 def test_load_hindcast(inits, members):
     """Test that"""
-    actual = load_hindcast(inits=inits, members=members,
-                           preprocess=preprocess_1var)
+    actual = load_hindcast(inits=inits, members=members, preprocess=preprocess_1var)
     assert isinstance(actual, xr.Dataset)
     assert (actual['init'].values == inits).all()
     assert (actual['member'].values == members).all()
@@ -67,14 +66,12 @@ def test_climpred_pre_with_intake_esm():
 
     def preprocess(ds):
         # extract tiny spatial and temporal subset
-        ds = ds.isel(lon=[50, 51, 52], lat=[50, 51, 52],
-                     time=np.arange(12 * 2))
+        ds = ds.isel(lon=[50, 51, 52], lat=[50, 51, 52], time=np.arange(12 * 2))
         # make time dim identical
         ds = climpred_preprocess_internal(ds)
         return ds
 
-    dset_dict = cat.to_dataset_dict(
-        cdf_kwargs=cdf_kwargs, preprocess=preprocess)
+    dset_dict = cat.to_dataset_dict(cdf_kwargs=cdf_kwargs, preprocess=preprocess)
     # get first dict value
     ds = dset_dict[list(dset_dict.keys())[0]]
     assert isinstance(ds, xr.Dataset)

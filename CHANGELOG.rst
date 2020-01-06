@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v1.2.1 (2019-12-##)
+climpred v1.2.1 (2020-01-##)
 ============================
 
 Depreciated
@@ -30,6 +30,9 @@ New Features
     * ``['spvalue', 'spval']`` for ``spearman_r_p_value``
     * ``['s_pval_eff', 'spvalue_eff', 'spval_eff']`` for ``spearman_r_eff_p_value``
     * ``'nev'`` for ``nmse``
+
+- demo and wrapper to setup your own raw model output compliant to `climpred` (:pr:`296`) `Aaron Spring`_.
+- demo using `intake-esm` with `climpred` (:pr:`296`) `Aaron Spring`_.
 
 Bug Fixes
 ---------

@@ -121,7 +121,6 @@ def compute_perfect_model(
     )
 
     # correction for distance based metrics in m2m comparison
-    # TODO: fix for m2m
     if comparison.name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')

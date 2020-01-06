@@ -25,8 +25,8 @@ climpred: analysis of ensemble forecast models for climate prediction
     :alt: license
     :target: ../../LICENSE.txt
 
-Version 2 Release
-=================
+Version 1.3.0 Release
+=====================
 
 **We now support sub-annual (*e.g.*, seasonal, monthly, weekly, daily) forecasts**.
 We provide a host of deterministic and probabilistic metrics_. We support both

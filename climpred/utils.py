@@ -12,11 +12,22 @@ from .constants import METRIC_ALIASES
 
 
 def convert_time_index(xobj, time_string, kind):
-    """Checks that the time dimension coming through is a DatetimeIndex, CFTimeIndex,
-    Float64Index, or Int64Index. Converts to a DatetimeIndex if possible.
+    """Converts incoming time index to a standard xr.CFTimeIndex.
 
+    Args:
+        xobj (xarray object): Dataset or DataArray with a time dimension to convert.
+        time_string (str): Name of time dimension.
+        kind (str): Kind of object for error message.
 
-    Raises exception and exits if none of these.
+    Returns:
+        Dataset or DataArray with converted time dimension. If incoming time index is
+        ``xr.CFTimeIndex``, returns the same index. If ``pd.DatetimeIndex``, converts to
+        ``cftime.ProlepticGregorian``. If ``pd.Int64Index`` or ``pd.Float64Index``,
+        assumes annual resolution and returns year-start ``cftime.ProlepticGregorian``.
+
+    Raises:
+        ValueError: If ``time_index`` is not an ``xr.CFTimeIndex``, ``pd.Int64Index``,
+            ``pd.Float64Index``, or ``pd.DatetimeIndex``.
     """
     xobj = xobj.copy()  # Ensures that main object index is not overwritten.
     time_index = xobj[time_string].to_index()
@@ -28,7 +39,7 @@ def convert_time_index(xobj, time_string, kind):
             time_strings = [str(t) for t in time_index]
             split_dates = [d.split(' ')[0].split('-') for d in time_strings]
 
-        # If FloatIndex or IntIndex, assume annual and convert accordingly.
+        # If Float64Index or Int64Index, assume annual and convert accordingly.
         elif isinstance(time_index, pd.Float64Index) | isinstance(
             time_index, pd.Int64Index
         ):
@@ -173,7 +184,6 @@ def reduce_time_series(forecast, reference, nlags):
     offset_args_tuple = get_lead_cftime_shift_args(
         getattr(forecast['lead'], 'units'), nlags
     )
-    # TODO: Clean this up
     shift_n = offset_args_tuple[0] * -1
     shift_str = offset_args_tuple[1]
     ref_dates = time_index.shift(shift_n, shift_str)

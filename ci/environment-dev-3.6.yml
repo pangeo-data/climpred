@@ -13,7 +13,7 @@ dependencies:
   - ipywidgets
   - jupyterlab
   # Input/Output
-  - netcdf4=1.5.1.1
+  - netcdf4
   # Miscellaneous
   - lxml
   - tqdm
@@ -21,7 +21,7 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - xarray>=0.14.1
+  - xarray>=0.14.1  # Allows .drop_vars()
   # Package Management
   - asv
   - black

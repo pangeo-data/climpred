@@ -22,7 +22,7 @@ Monthly and Seasonal
 Decadal
 ===================
 .. toctree::
-
+   :maxdepth: 1
 
    examples/decadal/perfect-model-predictability-demo.ipynb
    examples/decadal/tropical-pacific-ssts.ipynb

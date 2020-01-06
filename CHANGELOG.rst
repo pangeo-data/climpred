@@ -2,6 +2,38 @@
 What's New
 ==========
 
+climpred v2.0.0 (2020-01-##)
+============================
+
+New Features
+------------
+- Add support for ``days``, ``pentads``, ``weeks``, ``months``, ``seasons`` for lead
+  time resolution. ``climpred`` now requires a ``lead`` attribute "units" to decipher
+  what resolution the predictions are at. (:pr:`294`) `Kathy Pegion`_ and
+  `Riley X. Brady`_.
+
+.. code-block:: python
+
+        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
+        >>> hind.lead.attrs['units'] = 'years'
+
+Documentation
+-------------
+- New example pages for subseasonal-to-seasonal prediction using ``climpred``.
+  (:pr:`294`) `Kathy Pegion`_
+
+    * Calculate the skill of the MJO index as a function of lead time
+      (`link <examples/subseasonal/daily-subx-example.html>`__).
+
+    * Calculate the skill of the MJO index as a function of lead time for weekly data
+      (`link <examples/subseasonal/weekly-subx-example.html>`__).
+
+    * Calculate ENSO skill as a function of initial month vs. lead time
+      (`link <examples/monseas/monthly-enso-subx-example.html>`__).
+
+    * Calculate Seasonal ENSO skill
+      (`link <examples/monseas/seasonal-enso-subx-example.html>`__).
+
 climpred v1.2.1 (2020-01-07)
 ============================
 
@@ -349,5 +381,6 @@ climpred v0.1 (2018-12-20)
 Collaboration between Riley Brady and Aaron Spring begins.
 
 .. _`Riley X. Brady`: https://github.com/bradyrx
-.. _`Aaron Spring`: https://github.com/aaronspring
 .. _`Andrew Huang`: https://github.com/ahuang11
+.. _`Aaron Spring`: https://github.com/aaronspring
+.. _`Kathy Pegion`: https://github.com/kpegion

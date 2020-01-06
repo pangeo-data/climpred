@@ -21,6 +21,7 @@ from .utils import (
     convert_time_index,
     copy_coords_from_to,
     get_comparison_class,
+    get_lead_cftime_shift_args,
     get_lead_pdoffset_args,
     get_metric_class,
     intersect,
@@ -373,10 +374,21 @@ def compute_persistence(
             # room for lead from current forecast
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
-        offset_args_dict = get_lead_pdoffset_args(getattr(hind['lead'], 'units'), lag)
-        target_dates = pd.to_datetime(
-            inits.dt.strftime('%Y%m%d 00:00')
-        ) + pd.DateOffset(**offset_args_dict)
+
+        # TODO: Replace this with some function.
+        time_index = hind['time'].to_index()
+        if isinstance(time_index, pd.DatetimeIndex):
+            offset_args_dict = get_lead_pdoffset_args(
+                getattr(hind['lead'], 'units'), lag
+            )
+            target_dates = pd.to_datetime(
+                inits.dt.strftime('%Y%m%d 00:00')
+            ) + pd.DateOffset(**offset_args_dict)
+        elif isinstance(time_index, xr.CFTimeIndex):
+            offset_args_tuple = get_lead_cftime_shift_args(
+                getattr(hind['lead'], 'units'), lag
+            )
+            target_dates = time_index.shift(*offset_args_tuple)
 
         ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)

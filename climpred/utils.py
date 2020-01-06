@@ -36,7 +36,8 @@ def convert_time_index(xobj, time_string, kind):
                 'Change init to a datetime if it is another resolution.'
             )
             # Set to first of year for annual case.
-            dates = [str(t) + '-01-01' for t in time_index]
+            # TODO: What about decimal time? E.g. someone has 1955.5 or something?
+            dates = [str(int(t)) + '-01-01' for t in time_index]
             try:
                 time_index = pd.to_datetime(dates)
             # In the case that we have some model time, like 0001, or 3015.
@@ -44,8 +45,10 @@ def convert_time_index(xobj, time_string, kind):
                 # Breaks down into (y, m, d) triplet.
                 split_dates = [d.split('-') for d in dates]
                 # Converts into CFTime, which doesn't care about out-of-bounds dates.
+                # Use a specific calendar here so `.shift()` can be used.
                 cftime_dates = [
-                    cftime.datetime(int(y), int(m), int(d)) for (y, m, d) in split_dates
+                    cftime.DatetimeNoLeap(int(y), int(m), int(d))
+                    for (y, m, d) in split_dates
                 ]
                 time_index = xr.CFTimeIndex(cftime_dates)
             xobj[time_string] = time_index
@@ -129,11 +132,12 @@ def get_lead_pdoffset_args(units, lead):
        init time based on the units attribute.
 
     Args:
-        units (str): units associated with the lead dimension. Must be
-            years, seasons, months, weeks, pentads, days
-        lead (int): increment of lead being computed
+        units (str): Units associated with the lead dimension. Must be
+            years, seasons, months, weeks, pentads, days.
+        lead (int): Increment of lead being computed.
+
     Returns:
-       offset_args_dict (dict of str: int): dictionary specifying the str for the
+       offset_args_dict (dict of str: int): Dictionary specifying the str for the
            temporal parameter to add to the offset and int indicating the amount to add.
     """
     if units in LEAD_UNITS_LIST:
@@ -146,6 +150,35 @@ def get_lead_pdoffset_args(units, lead):
         raise ValueError(f'{units} is not a valid choice')
 
     return offset_args_dict
+
+
+def get_lead_cftime_shift_args(units, lead):
+    """Determines the date increment to use when adding the lead time to init time based
+    on the units attribute.
+
+    Args:
+        units (str): Units associated with the lead dimension. Must be
+            years, seasons, months, weeks, pentads, days.
+        lead (int): increment of lead being computed.
+
+    Returns:
+       offset_args_tuple (tuple): Tuple containing (value, str) for ``CFTime.shift()``.
+    """
+    if units == 'years':
+        offset_args_tuple = (lead, 'YS')
+    elif units == 'months':
+        offset_args_tuple = (lead, 'MS')
+    elif units == 'weeks':
+        offset_args_tuple = (int(lead * 7), 'D')
+    elif units == 'days':
+        offset_args_tuple = (lead, 'D')
+    elif units == 'seasons':
+        offset_args_tuple = (lead + 3, 'MS')
+    elif units == 'pentads':
+        offset_args_tuple = (lead + 5, 'D')
+    else:
+        raise ValueError(f'{units} is not a valid choice')
+    return offset_args_tuple
 
 
 def intersect(lst1, lst2):
@@ -169,11 +202,20 @@ def reduce_time_series(forecast, reference, nlags):
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
-    offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), nlags)
+    time_index = reference['time'].to_index()
 
-    ref_dates = pd.to_datetime(
-        reference.time.dt.strftime('%Y%m%d 00:00')
-    ) - pd.DateOffset(**offset_args_dict)
+    if isinstance(time_index, pd.DatetimeIndex):
+        offset_args_dict = get_lead_pdoffset_args(
+            getattr(forecast['lead'], 'units'), nlags
+        )
+        ref_dates = pd.to_datetime(
+            reference.time.dt.strftime('%Y%m%d 00:00')
+        ) - pd.DateOffset(**offset_args_dict)
+    elif isinstance(time_index, xr.CFTimeIndex):
+        offset_args_tuple = get_lead_cftime_shift_args(
+            getattr(forecast['lead'], 'units'), nlags
+        )
+        ref_dates = time_index.shift(*offset_args_tuple)
 
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), ref_dates.max())

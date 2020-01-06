@@ -12,17 +12,18 @@ from climpred.create_climpred_data import (
 )
 
 on_mistral = False
-host = os.environ['HOSTNAME']
-for node in ['mlogin', 'mistralpp']:
-    if node in host:
-        on_mistral = True
-
+try:
+    host = os.environ['HOSTNAME']
+    for node in ['mlogin', 'mistralpp']:
+        if node in host:
+            on_mistral = True
+except:
+    pass
 
 # check for intake_esm to be installed
 try:
     import intake
     import intake_esm
-
     print(intake_esm.__version__)
     intake_esm_loaded = True
 except ImportError:

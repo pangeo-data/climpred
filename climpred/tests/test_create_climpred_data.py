@@ -24,6 +24,7 @@ except KeyError:
 try:
     import intake
     import intake_esm
+
     print(intake_esm.__version__)
     intake_esm_loaded = True
 except ImportError:

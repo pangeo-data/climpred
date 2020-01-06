@@ -392,6 +392,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
         return self._construct_direct(datasets)
@@ -686,6 +689,9 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
 
         # For some reason, I could only get the non-inplace method to work
         # by updating the nested dictionaries separately.
@@ -707,6 +713,9 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj, uninitialized=True)
         match_initialized_vars(self._datasets['initialized'], xobj)
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets)

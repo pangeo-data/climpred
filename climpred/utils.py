@@ -1,9 +1,11 @@
 import datetime
 import warnings
 
+import cftime
 import numpy as np
 import pandas as pd
 import xarray as xr
+from pandas.errors import OutOfBoundsDatetime
 
 from . import comparisons, metrics
 from .checks import is_in_list
@@ -33,10 +35,19 @@ def convert_time_index(xobj, time_string, kind):
                 'Assuming annual resolution due to numeric inits. '
                 'Change init to a datetime if it is another resolution.'
             )
-
-            startdate = str(int(time_index[0])) + '-01-01'
-            enddate = str(int(time_index[-1])) + '-01-01'
-            time_index = pd.date_range(start=startdate, end=enddate, freq='AS')
+            # Set to first of year for annual case.
+            dates = [str(t) + '-01-01' for t in time_index]
+            try:
+                time_index = pd.to_datetime(dates)
+            # In the case that we have some model time, like 0001, or 3015.
+            except OutOfBoundsDatetime:
+                # Breaks down into (y, m, d) triplet.
+                split_dates = [d.split('-') for d in dates]
+                # Converts into CFTime, which doesn't care about out-of-bounds dates.
+                cftime_dates = [
+                    cftime.datetime(int(y), int(m), int(d)) for (y, m, d) in split_dates
+                ]
+                time_index = xr.CFTimeIndex(cftime_dates)
             xobj[time_string] = time_index
 
         # If time_index type is CFTimeIndex, convert to pd.DatetimeIndex
@@ -158,12 +169,12 @@ def reduce_time_series(forecast, reference, nlags):
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
-    # TODO: Added by Kathy but unused here. Mistake?
-    # offset_args_dict = get_lead_pdoffset_args(
-    #     getattr(forecast["lead"], "units"), nlags
-    # ) - pd.DateOffset(**offset_args_dict)
+    offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), nlags)
 
-    ref_dates = pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00'))
+    ref_dates = pd.to_datetime(
+        reference.time.dt.strftime('%Y%m%d 00:00')
+    ) - pd.DateOffset(**offset_args_dict)
+
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), ref_dates.max())
     imax = xr.DataArray(imax).rename('time')

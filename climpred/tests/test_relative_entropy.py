@@ -17,11 +17,13 @@ def PM_da_ds3d():
     member = np.arange(5)
     init = [3004, 3009, 3015, 3023]
     data = np.random.rand(len(lead), len(member), len(init), len(lats), len(lons))
-    return xr.DataArray(
+    da = xr.DataArray(
         data,
         coords=[lead, member, init, lats, lons],
         dims=['lead', 'member', 'init', 'lat', 'lon'],
     )
+    da['lead'].attrs['units'] = 'years'
+    return da
 
 
 @pytest.fixture

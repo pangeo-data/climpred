@@ -2,7 +2,6 @@ import inspect
 import warnings
 
 import dask
-import pandas as pd
 import xarray as xr
 
 from .checks import is_in_list, is_xarray
@@ -22,7 +21,6 @@ from .utils import (
     copy_coords_from_to,
     get_comparison_class,
     get_lead_cftime_shift_args,
-    get_lead_pdoffset_args,
     get_metric_class,
     intersect,
     reduce_time_series,
@@ -258,11 +256,11 @@ def compute_hindcast(
             forecast, reference = reduce_time_series(forecast, reference, i)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
-        offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
+        offset_args_tuple = get_lead_cftime_shift_args(
+            getattr(forecast['lead'], 'units'), i
+        )
         a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = pd.to_datetime(
-            a['time'].dt.strftime('%Y%m%d 00:00')
-        ) + pd.DateOffset(**offset_args_dict)
+        a['time'] = a['time'].to_index().shift(*offset_args_tuple)
         # Take real time reference of real time forecast dates.
         b = reference.sel(time=a.time.values)
 
@@ -357,7 +355,13 @@ def compute_persistence(
     if [0] in hind.lead.values:
         hind = hind.copy()
         hind['lead'] += 1
-        hind['init'] -= 1
+        offset_args_tuple = get_lead_cftime_shift_args(
+            getattr(hind['lead'], 'units'), 1
+        )
+        # TODO: Clean this up
+        shift_n = offset_args_tuple[0] * -1
+        shift_str = offset_args_tuple[1]
+        hind['init'] = hind['init'].to_index().shift(shift_n, shift_str)
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
@@ -374,21 +378,10 @@ def compute_persistence(
             # room for lead from current forecast
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
-
-        # TODO: Replace this with some function.
-        time_index = hind['time'].to_index()
-        if isinstance(time_index, pd.DatetimeIndex):
-            offset_args_dict = get_lead_pdoffset_args(
-                getattr(hind['lead'], 'units'), lag
-            )
-            target_dates = pd.to_datetime(
-                inits.dt.strftime('%Y%m%d 00:00')
-            ) + pd.DateOffset(**offset_args_dict)
-        elif isinstance(time_index, xr.CFTimeIndex):
-            offset_args_tuple = get_lead_cftime_shift_args(
-                getattr(hind['lead'], 'units'), lag
-            )
-            target_dates = time_index.shift(*offset_args_tuple)
+        offset_args_tuple = get_lead_cftime_shift_args(
+            getattr(hind['lead'], 'units'), lag
+        )
+        target_dates = inits.to_index().shift(*offset_args_tuple)
 
         ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)

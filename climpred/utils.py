@@ -5,7 +5,6 @@ import cftime
 import numpy as np
 import pandas as pd
 import xarray as xr
-from pandas.errors import OutOfBoundsDatetime
 
 from . import comparisons, metrics
 from .checks import is_in_list
@@ -21,16 +20,24 @@ def convert_time_index(xobj, time_string, kind):
     """
     time_index = xobj[time_string].to_index()
 
-    # If a DatetimeIndex, nothing to do, otherwise check for other
-    # options and convert or raise error
-    if not isinstance(time_index, pd.DatetimeIndex):
+    if not isinstance(time_index, xr.CFTimeIndex):
+        # If time_index type is pd.DatetimeIndex, convert to xr.CFTimeIndex.
+        if isinstance(time_index, pd.DatetimeIndex):
+            # TODO: Consolidate with below case.
+            time_strings = [str(t) for t in time_index]
+            split_dates = [d.split(' ')[0].split('-') for d in time_strings]
+            cftime_dates = [
+                cftime.DatetimeNoLeap(int(y), int(m), int(d))
+                for (y, m, d) in split_dates
+            ]
+            time_index = xr.CFTimeIndex(cftime_dates)
+            xobj[time_string] = time_index
 
         # If time_index is Float64Index or Int64Index, treat as
-        # annual data and convert to DateTimeIndex
-        if isinstance(time_index, pd.Float64Index) | isinstance(
+        # annual data and convert to CFTimeIndex.
+        elif isinstance(time_index, pd.Float64Index) | isinstance(
             time_index, pd.Int64Index
         ):
-
             warnings.warn(
                 'Assuming annual resolution due to numeric inits. '
                 'Change init to a datetime if it is another resolution.'
@@ -38,24 +45,15 @@ def convert_time_index(xobj, time_string, kind):
             # Set to first of year for annual case.
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
             dates = [str(int(t)) + '-01-01' for t in time_index]
-            try:
-                time_index = pd.to_datetime(dates)
-            # In the case that we have some model time, like 0001, or 3015.
-            except OutOfBoundsDatetime:
-                # Breaks down into (y, m, d) triplet.
-                split_dates = [d.split('-') for d in dates]
-                # Converts into CFTime, which doesn't care about out-of-bounds dates.
-                # Use a specific calendar here so `.shift()` can be used.
-                cftime_dates = [
-                    cftime.DatetimeNoLeap(int(y), int(m), int(d))
-                    for (y, m, d) in split_dates
-                ]
-                time_index = xr.CFTimeIndex(cftime_dates)
+            split_dates = [d.split('-') for d in dates]
+            # Converts into CFTime, which doesn't care about out-of-bounds dates.
+            # Use a specific calendar here so `.shift()` can be used.
+            cftime_dates = [
+                cftime.DatetimeNoLeap(int(y), int(m), int(d))
+                for (y, m, d) in split_dates
+            ]
+            time_index = xr.CFTimeIndex(cftime_dates)
             xobj[time_string] = time_index
-
-        # If time_index type is CFTimeIndex, convert to pd.DatetimeIndex
-        elif isinstance(time_index, xr.CFTimeIndex):
-            xobj = xr.decode_cf(xobj, decode_times=True)
 
         # Raise error if time_index is not integer, CFTimeIndex, or pd.DattimeIndex
         else:
@@ -204,19 +202,13 @@ def reduce_time_series(forecast, reference, nlags):
        reference (`xarray` object):
     """
     time_index = reference['time'].to_index()
-
-    if isinstance(time_index, pd.DatetimeIndex):
-        offset_args_dict = get_lead_pdoffset_args(
-            getattr(forecast['lead'], 'units'), nlags
-        )
-        ref_dates = pd.to_datetime(
-            reference.time.dt.strftime('%Y%m%d 00:00')
-        ) - pd.DateOffset(**offset_args_dict)
-    elif isinstance(time_index, xr.CFTimeIndex):
-        offset_args_tuple = get_lead_cftime_shift_args(
-            getattr(forecast['lead'], 'units'), nlags
-        )
-        ref_dates = time_index.shift(*offset_args_tuple)
+    offset_args_tuple = get_lead_cftime_shift_args(
+        getattr(forecast['lead'], 'units'), nlags
+    )
+    # TODO: Clean this up
+    shift_n = offset_args_tuple[0] * -1
+    shift_str = offset_args_tuple[1]
+    ref_dates = time_index.shift(shift_n, shift_str)
 
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), ref_dates.max())

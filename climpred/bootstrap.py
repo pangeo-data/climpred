@@ -451,9 +451,14 @@ def bootstrap_compute(
         hind,
         metric=metric,
         comparison=comparison,
+        dim=dim,
         function_name=inspect.stack()[0][3],  # take function.__name__
         metadata_dict=metadata_dict,
     )
+    # Ensure that the lead units get carried along for the calculation. The attribute
+    # tends to get dropped along the way due to ``xarray`` functionality.
+    if 'units' in hind['lead'].attrs and 'units' not in results['lead'].attrs:
+        results['lead'].attrs['units'] = hind['lead'].attrs['units']
     return results
 
 

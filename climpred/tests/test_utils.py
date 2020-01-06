@@ -132,6 +132,7 @@ def test_hindcast_assign_attrs():
     metric = 'pearson_r'
     comparison = 'e2r'
     da = load_dataset('CESM-DP-SST')
+    da['lead'].attrs['units'] = 'years'
     control = load_dataset('ERSST')
     actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
     assert actual['metric'] == metric

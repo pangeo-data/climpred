@@ -15,6 +15,7 @@ from climpred.tutorial import load_dataset
 def pm_da_ds1d():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
+    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -29,6 +30,7 @@ def pm_da_control1d():
 def ds_3d_NA():
     """ds North Atlantic"""
     ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
+    ds['lead'].attrs['units'] = 'years'
     return ds
 
 
@@ -43,6 +45,7 @@ def control_3d_NA():
 def initialized_da():
     da = load_dataset('CESM-DP-SST-3D')['SST']
     da = da - da.mean('init')
+    da['lead'].attrs['units'] = 'years'
     return da
 
 

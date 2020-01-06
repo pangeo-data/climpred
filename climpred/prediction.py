@@ -1,6 +1,8 @@
 import inspect
 import warnings
 
+import dask
+import pandas as pd
 import xarray as xr
 
 from .checks import is_in_list, is_xarray
@@ -16,8 +18,10 @@ from .constants import (
 )
 from .utils import (
     assign_attrs,
+    convert_time_index,
     copy_coords_from_to,
     get_comparison_class,
+    get_lead_pdoffset_args,
     get_metric_class,
     intersect,
     reduce_time_series,
@@ -186,6 +190,11 @@ def compute_hindcast(
 
     """
     is_in_list(dim, ['member', 'init'], str)
+
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
+
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # get class metric(Metric)
@@ -246,11 +255,16 @@ def compute_hindcast(
     for i in forecast.lead.values:
         if max_dof:
             forecast, reference = reduce_time_series(forecast, reference, i)
-        # take lead year i timeseries and convert to real time
+        # take lead year i timeseries and convert to real time based on temporal
+        # resolution of lead.
+        offset_args_dict = get_lead_pdoffset_args(getattr(forecast['lead'], 'units'), i)
         a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = [int(t + i) for t in a.time.values]
-        # take real time reference of real time forecast years
+        a['time'] = pd.to_datetime(
+            a['time'].dt.strftime('%Y%m%d 00:00')
+        ) + pd.DateOffset(**offset_args_dict)
+        # Take real time reference of real time forecast dates.
         b = reference.sel(time=a.time.values)
+
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
             metric_kwargs.update(
@@ -260,6 +274,12 @@ def compute_hindcast(
                     )
                 }
             )
+        # If dask, then chunk in time.
+        if dask.is_dask_collection(a):
+            a = a.chunk({'time': -1})
+        if dask.is_dask_collection(b):
+            b = b.chunk({'time': -1})
+
         # broadcast dims when apply over member
         if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
             a, b = xr.broadcast(a, b)
@@ -319,6 +339,10 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
+
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     # get class metric(Metric)
@@ -349,7 +373,12 @@ def compute_persistence(
             # room for lead from current forecast
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
-        ref = reference.sel(time=inits + lag)
+        offset_args_dict = get_lead_pdoffset_args(getattr(hind['lead'], 'units'), lag)
+        target_dates = pd.to_datetime(
+            inits.dt.strftime('%Y%m%d 00:00')
+        ) + pd.DateOffset(**offset_args_dict)
+
+        ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)
         ref['time'] = fct['time']
         plag.append(
@@ -399,6 +428,10 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    uninit = convert_time_index(uninit, 'time', 'uninit[time]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
+
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, reference = comparison.function(uninit, reference)

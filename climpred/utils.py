@@ -1,11 +1,57 @@
 import datetime
+import warnings
 
 import numpy as np
+import pandas as pd
 import xarray as xr
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import METRIC_ALIASES
+from .constants import LEAD_UNITS_LIST, METRIC_ALIASES
+
+
+def convert_time_index(xobj, time_string, kind):
+    """Checks that the time dimension coming through is a DatetimeIndex, CFTimeIndex,
+    Float64Index, or Int64Index. Converts to a DatetimeIndex if possible.
+
+
+    Raises exception and exits if none of these.
+    """
+    time_index = xobj[time_string].to_index()
+
+    # If a DatetimeIndex, nothing to do, otherwise check for other
+    # options and convert or raise error
+    if not isinstance(time_index, pd.DatetimeIndex):
+
+        # If time_index is Float64Index or Int64Index, treat as
+        # annual data and convert to DateTimeIndex
+        if isinstance(time_index, pd.Float64Index) | isinstance(
+            time_index, pd.Int64Index
+        ):
+
+            warnings.warn(
+                'Assuming annual resolution due to numeric inits. '
+                'Change init to a datetime if it is another resolution.'
+            )
+
+            startdate = str(int(time_index[0])) + '-01-01'
+            enddate = str(int(time_index[-1])) + '-01-01'
+            time_index = pd.date_range(start=startdate, end=enddate, freq='AS')
+            xobj[time_string] = time_index
+
+        # If time_index type is CFTimeIndex, convert to pd.DatetimeIndex
+        elif isinstance(time_index, xr.CFTimeIndex):
+            xobj = xr.decode_cf(xobj, decode_times=True)
+
+        # Raise error if time_index is not integer, CFTimeIndex, or pd.DattimeIndex
+        else:
+            raise ValueError(
+                f'Your {kind} object must be pd.Float64Index, '
+                'pd.Int64Index, xr.CFTimeIndex or '
+                'pd.DatetimeIndex.'
+            )
+
+    return xobj
 
 
 def get_metric_class(metric, list_):
@@ -24,7 +70,6 @@ def get_metric_class(metric, list_):
 
     Returns:
         metric (Metric): class object of the metric.
-
     """
     if isinstance(metric, metrics.Metric):
         return metric
@@ -68,6 +113,30 @@ def get_comparison_class(comparison, list_):
         return getattr(comparisons, '__' + comparison)
 
 
+def get_lead_pdoffset_args(units, lead):
+    """Determines the date increment to use when adding the lead time to
+       init time based on the units attribute.
+
+    Args:
+        units (str): units associated with the lead dimension. Must be
+            years, seasons, months, weeks, pentads, days
+        lead (int): increment of lead being computed
+    Returns:
+       offset_args_dict (dict of str: int): dictionary specifying the str for the
+           temporal parameter to add to the offset and int indicating the amount to add.
+    """
+    if units in LEAD_UNITS_LIST:
+        offset_args_dict = {units: lead}
+    elif units == 'seasons':
+        offset_args_dict = {'months': lead + 3}
+    elif units == 'pentads':
+        offset_args_dict = {'days': lead + 5}
+    else:
+        raise ValueError(f'{units} is not a valid choice')
+
+    return offset_args_dict
+
+
 def intersect(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.
@@ -89,8 +158,14 @@ def reduce_time_series(forecast, reference, nlags):
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
+    # TODO: Added by Kathy but unused here. Mistake?
+    # offset_args_dict = get_lead_pdoffset_args(
+    #     getattr(forecast["lead"], "units"), nlags
+    # ) - pd.DateOffset(**offset_args_dict)
+
+    ref_dates = pd.to_datetime(reference.time.dt.strftime('%Y%m%d 00:00'))
     imin = max(forecast.time.min(), reference.time.min())
-    imax = min(forecast.time.max(), reference.time.max() - nlags)
+    imax = min(forecast.time.max(), ref_dates.max())
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)

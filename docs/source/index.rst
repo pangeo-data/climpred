@@ -25,16 +25,14 @@ climpred: analysis of ensemble forecast models for climate prediction
     :alt: license
     :target: ../../LICENSE.txt
 
-Version 1 Release
+Version 2 Release
 =================
 
-**We currently only support annual forecasts**, but our focus is to support sub-annual
-(*e.g.*, seasonal, monthly, weekly, daily) in our next major release (v2.0.0). We
-provide a host of deterministic metrics_, as well as some probabilistic metrics,
-although the latter have not been tested rigorously. We support both perfect-model and
-hindcast prediction ensembles, and provide
-:py:class:`~climpred.classes.PerfectModelEnsemble` and
-:py:class:`~climpred.classes.HindcastEnsemble` classes to make analysis easier.
+**We now support sub-annual (*e.g.*, seasonal, monthly, weekly, daily) forecasts**.
+We provide a host of deterministic and probabilistic metrics_. We support both
+perfect-model and hindcast-based prediction ensembles, and provide
+:py:class:``~climpred.classes.PerfectModelEnsemble`` and
+:py:class:``~climpred.classes.HindcastEnsemble`` classes to make analysis easier.
 
 See `quick start <quick-start.html>`_ and our `examples <examples.html>`_ to get started.
 

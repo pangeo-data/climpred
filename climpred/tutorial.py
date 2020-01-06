@@ -23,6 +23,7 @@ aliases = [
     'FOSI-SST',
     'FOSI-SSS',
     'FOSI-SST-3D',
+    'RMM-INTERANN-OBS',
 ]
 true_file_names = [
     'PM_MPI-ESM-LR_control',
@@ -40,6 +41,7 @@ true_file_names = [
     'FOSI.SST.global',
     'FOSI.SSS.global',
     'FOSI.SST.eastern_pacific',
+    'rmmint1979-Present',
 ]
 file_descriptions = [
     'area averages for the MPI control run of SST/SSS.',
@@ -57,6 +59,7 @@ file_descriptions = [
     'reconstruction of global mean SSTs.',
     'reconstruction of global mean SSS.',
     'reconstruction of eastern Pacific SSTs',
+    'observed RMM with interannual variablity included',
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))

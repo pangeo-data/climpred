@@ -164,12 +164,13 @@ def get_lead_cftime_shift_args(units, lead):
     Returns:
        offset_args_tuple (tuple): Tuple containing (value, str) for ``CFTime.shift()``.
     """
+    lead = int(lead)
     if units == 'years':
         offset_args_tuple = (lead, 'YS')
     elif units == 'months':
         offset_args_tuple = (lead, 'MS')
     elif units == 'weeks':
-        offset_args_tuple = (int(lead * 7), 'D')
+        offset_args_tuple = (lead * 7, 'D')
     elif units == 'days':
         offset_args_tuple = (lead, 'D')
     elif units == 'seasons':

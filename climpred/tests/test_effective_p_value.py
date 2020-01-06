@@ -14,6 +14,7 @@ PMC.remove('m2m')
 def hindcast():
     da = load_dataset('CESM-DP-SST')
     da = da['SST']
+    da['lead'].attrs['units'] = 'years'
     return da
 
 

@@ -5,9 +5,6 @@ An xarray wrapper for analysis of ensemble forecast models for climate predictio
 .. image:: https://travis-ci.org/bradyrx/climpred.svg?branch=master
     :target: https://travis-ci.org/bradyrx/climpred
 
-.. image:: https://api.codacy.com/project/badge/Grade/a532752e9e814c6e895694463f307cd9
-    :target: https://www.codacy.com/app/bradyrx/climpred?utm_source=github.com&utm_medium=referral&utm_content=bradyrx/climpred&utm_campaign=Badge_Grade
-
 .. image:: https://img.shields.io/pypi/v/climpred.svg
    :target: https://pypi.python.org/pypi/climpred/
 
@@ -40,9 +37,10 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
 
 .. code-block:: bash
 
-    conda install -c conda-forge climpred 
+    conda install -c conda-forge climpred
 
-You can also install the bleeding edge (pre-release versions) by cloning this repository and running ``pip install . --upgrade`` in the main directory.
+You can also install the bleeding edge (pre-release versions) by cloning this
+repository and running ``pip install . --upgrade`` in the main directory.
 
 Documentation
 =============

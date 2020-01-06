@@ -7,11 +7,6 @@
 # -- Path setup --------------------------------------------------------------
 
 import datetime
-
-# If extensions (or modules to document with autodoc) are in another directory,
-# add these directories to sys.path here. If the directory is relative to the
-# documentation root, use os.path.abspath to make it absolute, like shown here.
-#
 import os
 import sys
 
@@ -44,6 +39,8 @@ extensions = [
     'sphinx.ext.imgmath',
     'sphinx.ext.autosectionlabel',
     'sphinx.ext.viewcode',
+    'IPython.sphinxext.ipython_directive',
+    'IPython.sphinxext.ipython_console_highlighting',
 ]
 
 extlinks = {
@@ -63,7 +60,7 @@ pygments_style = 'sphinx'
 source_suffix = '.rst'
 master_doc = 'index'
 
-nbsphinx_timeout = 180  # 3 minute timeout 
+nbsphinx_timeout = 180  # 3 minute timeout
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -79,13 +76,12 @@ html_theme_options = {'logo_only': False, 'style_nav_header_background': '#fcfcf
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
 
-# Example configuration for intersphinx: refer to the Python standard library.
-
-intersphinx_mapping = {
-    'python': ('https://docs.python.org/3/', None),
-    'xarray': ('https://http://xarray.pydata.org/en/stable/', None),
-    'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-}
+# Currently makes build time quite slow and doesn't add anythiing significant to docs.
+# intersphinx_mapping = {
+#     'python': ('https://docs.python.org/3/', None),
+#     'xarray': ('https://http://xarray.pydata.org/en/stable/', None),
+#     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
+# }
 
 # Should only be uncommented when testing page development while notebooks
 # are breaking.

@@ -25,6 +25,7 @@ dependencies:
   - asv
   - black
   - coveralls
+  - doc8
   - flake8
   - importlib_metadata
   - isort
@@ -32,6 +33,7 @@ dependencies:
   - pylint
   - pytest
   - pytest-cov
+  - pytest-sugar
   # Performance
   - bottleneck
   - numba
@@ -44,7 +46,10 @@ dependencies:
   # Statistics
   - eofs
   - xrft
-  - xskillscore>=0.0.9
+  - xskillscore>=0.0.10
   # Visualization
   - cartopy
   - matplotlib
+  - pip
+  - pip:
+      - pytest-tldr

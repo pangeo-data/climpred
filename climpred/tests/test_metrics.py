@@ -6,7 +6,7 @@ from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import PM_COMPARISONS
-from climpred.metrics import Metric, __pearson_r
+from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 
@@ -256,3 +256,16 @@ def test_hindcast_metric_weights_x2r(
 def test_Metric_display():
     summary = __pearson_r.__repr__()
     assert 'Kind: deterministic' in summary.split('\n')[4]
+
+
+def test_no_repeating_metric_aliases():
+    """Tests that there are no repeating aliases for metrics, which would overwrite
+    the earlier instantiated metric."""
+    METRICS = []
+    for m in all_metrics:
+        if m.aliases is not None:
+            for a in m.aliases:
+                METRICS.append(a)
+    duplicates = set([x for x in METRICS if METRICS.count(x) > 1])
+    print(f'Duplicate metrics: {duplicates}')
+    assert len(duplicates) == 0

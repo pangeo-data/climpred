@@ -307,7 +307,7 @@ def autocorr(ds, lag=1, dim='time', return_p=False):
     if return_p:
         # NOTE: This assumes 2-tailed. Need to update eff_pearsonr
         # to utilize xskillscore's metrics but then compute own effective
-        # p-value with option for one-tailed.
+        # p value with option for one-tailed.
         p = pearson_r_p_value(normal, shifted, dim)
         return r, p
     else:

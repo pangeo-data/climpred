@@ -78,7 +78,7 @@ def plot_bootstrapped_skill_over_leadyear(
         uninit_ci (xr.Dataset): confidence levels of uninit_skill
         sig (int): Significance level for uninitialized and
                    initialized skill.
-        p_uninit_over_init (xr.Dataset): p-value of the hypothesis that the
+        p_uninit_over_init (xr.Dataset): p value of the hypothesis that the
                                          difference of skill between the
                                          initialized and uninitialized
                                          simulations is smaller or equal to
@@ -87,7 +87,7 @@ def plot_bootstrapped_skill_over_leadyear(
         pers_skill (xr.Dataset): skill of persistence
         pers_ci (xr.Dataset): confidence levels of pers_skill
         pers_sig (int): Significance level for persistence forecast.
-        p_pers_over_init (xr.Dataset): p-value of the hypothesis that the
+        p_pers_over_init (xr.Dataset): p value of the hypothesis that the
                                        difference of skill between the
                                        initialized and persistence simulations
                                        is smaller or equal to zero based on
@@ -152,7 +152,7 @@ def plot_bootstrapped_skill_over_leadyear(
     )
     # uninit
     if p_uninit_over_init is not None:
-        # add p-values
+        # add p values
         for t in init_skill.lead.values:
             ax.text(
                 init_skill.lead.sel(lead=t),

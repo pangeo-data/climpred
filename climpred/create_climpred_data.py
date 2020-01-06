@@ -109,6 +109,8 @@ def climpred_preprocess_post(ds):
         if 'time' in ds.dims and 'lead' not in ds.dims:
             ds = ds.rename({'time': 'lead'})
             renamed = True
+        elif 'lead' in ds.dims:
+            renamed = True
         if not renamed:
             raise ValueError(
                 f"Couldn't find a variable to rename to `{cdim}`, found {ds.dims}.")

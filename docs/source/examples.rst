@@ -8,3 +8,4 @@ Examples
     examples/tropical-pacific-ssts.ipynb
     examples/diagnose-potential-predictability.ipynb
     examples/smoothing.ipynb
+    examples/setup_your_own_data.ipynb

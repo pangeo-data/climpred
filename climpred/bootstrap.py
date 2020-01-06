@@ -2,7 +2,6 @@ import inspect
 
 import numpy as np
 import xarray as xr
-
 from tqdm.auto import tqdm
 
 from .checks import has_dims
@@ -457,6 +456,8 @@ def bootstrap_compute(
         function_name=inspect.stack()[0][3],  # take function.__name__
         metadata_dict=metadata_dict,
     )
+    if 'units' in hind.lead.attrs and 'units' not in results.lead.attrs:
+        results.lead.attrs['units'] = hind.lead.attrs['units']
     return results
 
 

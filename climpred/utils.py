@@ -8,7 +8,7 @@ import xarray as xr
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import LEAD_UNITS_LIST, METRIC_ALIASES
+from .constants import METRIC_ALIASES
 
 
 def convert_time_index(xobj, time_string, kind):
@@ -21,20 +21,13 @@ def convert_time_index(xobj, time_string, kind):
     time_index = xobj[time_string].to_index()
 
     if not isinstance(time_index, xr.CFTimeIndex):
-        # If time_index type is pd.DatetimeIndex, convert to xr.CFTimeIndex.
+
         if isinstance(time_index, pd.DatetimeIndex):
-            # TODO: Consolidate with below case.
+            # Extract year, month, day strings from datetime.
             time_strings = [str(t) for t in time_index]
             split_dates = [d.split(' ')[0].split('-') for d in time_strings]
-            cftime_dates = [
-                cftime.DatetimeNoLeap(int(y), int(m), int(d))
-                for (y, m, d) in split_dates
-            ]
-            time_index = xr.CFTimeIndex(cftime_dates)
-            xobj[time_string] = time_index
 
-        # If time_index is Float64Index or Int64Index, treat as
-        # annual data and convert to CFTimeIndex.
+        # If FloatIndex or IntIndex, assume annual and convert accordingly.
         elif isinstance(time_index, pd.Float64Index) | isinstance(
             time_index, pd.Int64Index
         ):
@@ -42,26 +35,22 @@ def convert_time_index(xobj, time_string, kind):
                 'Assuming annual resolution due to numeric inits. '
                 'Change init to a datetime if it is another resolution.'
             )
-            # Set to first of year for annual case.
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
             dates = [str(int(t)) + '-01-01' for t in time_index]
             split_dates = [d.split('-') for d in dates]
-            # Converts into CFTime, which doesn't care about out-of-bounds dates.
-            # Use a specific calendar here so `.shift()` can be used.
-            cftime_dates = [
-                cftime.DatetimeNoLeap(int(y), int(m), int(d))
-                for (y, m, d) in split_dates
-            ]
-            time_index = xr.CFTimeIndex(cftime_dates)
-            xobj[time_string] = time_index
 
-        # Raise error if time_index is not integer, CFTimeIndex, or pd.DattimeIndex
         else:
             raise ValueError(
                 f'Your {kind} object must be pd.Float64Index, '
                 'pd.Int64Index, xr.CFTimeIndex or '
                 'pd.DatetimeIndex.'
             )
+        # TODO: Account for differing calendars. Currently assuming `NoLeap`.
+        cftime_dates = [
+            cftime.DatetimeNoLeap(int(y), int(m), int(d)) for (y, m, d) in split_dates
+        ]
+        time_index = xr.CFTimeIndex(cftime_dates)
+        xobj[time_string] = time_index
 
     return xobj
 
@@ -123,31 +112,6 @@ def get_comparison_class(comparison, list_):
     else:
         is_in_list(comparison, list_, 'comparison')
         return getattr(comparisons, '__' + comparison)
-
-
-def get_lead_pdoffset_args(units, lead):
-    """Determines the date increment to use when adding the lead time to
-       init time based on the units attribute.
-
-    Args:
-        units (str): Units associated with the lead dimension. Must be
-            years, seasons, months, weeks, pentads, days.
-        lead (int): Increment of lead being computed.
-
-    Returns:
-       offset_args_dict (dict of str: int): Dictionary specifying the str for the
-           temporal parameter to add to the offset and int indicating the amount to add.
-    """
-    if units in LEAD_UNITS_LIST:
-        offset_args_dict = {units: lead}
-    elif units == 'seasons':
-        offset_args_dict = {'months': lead + 3}
-    elif units == 'pentads':
-        offset_args_dict = {'days': lead + 5}
-    else:
-        raise ValueError(f'{units} is not a valid choice')
-
-    return offset_args_dict
 
 
 def get_lead_cftime_shift_args(units, lead):

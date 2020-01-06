@@ -95,6 +95,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
+    uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return uninit_hind
 
 
@@ -345,8 +346,6 @@ def bootstrap_compute(
         if hist is None:  # PM path, use reference = control
             hist = reference
         uninit_hind = resample_uninit(hind, hist)
-        # Append lead time units from initialized forecast.
-        uninit_hind['lead'].attrs['units'] = hind['lead'].attrs['units']
         # compute uninit skill
         uninit.append(
             compute(

@@ -121,7 +121,7 @@ def compute_perfect_model(
     )
 
     # correction for distance based metrics in m2m comparison
-    # fix for m2m TODO
+    # TODO: fix for m2m
     if comparison.name == 'm2m':
         if 'forecast_member' in skill.dims:
             skill = skill.mean('forecast_member')
@@ -358,7 +358,7 @@ def compute_persistence(
         offset_args_tuple = get_lead_cftime_shift_args(
             getattr(hind['lead'], 'units'), 1
         )
-        # TODO: Clean this up
+        # Switch to backwards shift for lead zero.
         shift_n = offset_args_tuple[0] * -1
         shift_str = offset_args_tuple[1]
         hind['init'] = hind['init'].to_index().shift(shift_n, shift_str)

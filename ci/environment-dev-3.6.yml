@@ -13,12 +13,13 @@ dependencies:
   - ipywidgets
   - jupyterlab
   # Input/Output
-  - netcdf4
+  - netcdf4=1.5.1.1
   # Miscellaneous
   - lxml
   - tqdm
   # Numerics
   - numpy
+  - pandas
   - scipy
   - xarray>=0.14.1
   # Package Management

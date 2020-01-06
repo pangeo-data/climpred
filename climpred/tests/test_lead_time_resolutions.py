@@ -5,8 +5,6 @@ import xarray as xr
 
 from climpred.prediction import compute_hindcast, compute_perfect_model
 
-#  VALID_LEAD_UNITS = ['seasons']
-
 
 @pytest.fixture()
 def daily_initialized():
@@ -29,7 +27,7 @@ def daily_reference():
 @pytest.fixture()
 def monthly_initialized():
     init = pd.date_range('1990-01', '1996-01', freq='MS')
-    lead = np.arange(5)
+    lead = np.arange(20)
     member = np.arange(5)
     return xr.DataArray(
         np.random.rand(len(init), len(lead), len(member)),
@@ -98,6 +96,31 @@ def test_monthly_resolution_perfect_model(monthly_initialized, monthly_reference
     """Tests that monthly resolution perfect model predictions work."""
     monthly_initialized.lead.attrs['units'] = 'months'
     assert compute_perfect_model(monthly_initialized, monthly_reference).all()
+
+
+def test_seasonal_resolution_hindcast(monthly_initialized, monthly_reference):
+    """Tests that seasonal resolution hindcast predictions work."""
+    seasonal_hindcast = (
+        monthly_initialized.rolling(lead=3, center=True).mean().dropna(dim='lead')
+    )
+    seasonal_hindcast = seasonal_hindcast.isel(init=slice(0, None, 3))
+    seasonal_reference = (
+        monthly_reference.rolling(time=3, center=True).mean().dropna(dim='time')
+    )
+    seasonal_hindcast.lead.attrs['units'] = 'seasons'
+    assert compute_hindcast(seasonal_hindcast, seasonal_reference).all()
+
+
+def test_seasonal_resolution_perfect_model(monthly_initialized, monthly_reference):
+    """Tests that seasonal resolution perfect model predictions work."""
+    seasonal_pm = (
+        monthly_initialized.rolling(lead=3, center=True).mean().dropna(dim='lead')
+    )
+    seasonal_pm = seasonal_pm.isel(init=slice(0, None, 3))
+    seasonal_reference = (
+        monthly_reference.rolling(time=3, center=True).mean().dropna(dim='time')
+    )
+    assert compute_perfect_model(seasonal_pm, seasonal_reference).all()
 
 
 def test_yearly_resolution_hindcast(monthly_initialized, monthly_reference):

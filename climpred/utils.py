@@ -18,6 +18,7 @@ def convert_time_index(xobj, time_string, kind):
 
     Raises exception and exits if none of these.
     """
+    xobj = xobj.copy()  # Ensures that main object index is not overwritten.
     time_index = xobj[time_string].to_index()
 
     if not isinstance(time_index, xr.CFTimeIndex):
@@ -45,9 +46,10 @@ def convert_time_index(xobj, time_string, kind):
                 'pd.Int64Index, xr.CFTimeIndex or '
                 'pd.DatetimeIndex.'
             )
-        # TODO: Account for differing calendars. Currently assuming `NoLeap`.
+        # TODO: Account for differing calendars. Currently assuming `Gregorian`.
         cftime_dates = [
-            cftime.DatetimeNoLeap(int(y), int(m), int(d)) for (y, m, d) in split_dates
+            cftime.DatetimeProlepticGregorian(int(y), int(m), int(d))
+            for (y, m, d) in split_dates
         ]
         time_index = xr.CFTimeIndex(cftime_dates)
         xobj[time_string] = time_index
@@ -128,15 +130,17 @@ def get_lead_cftime_shift_args(units, lead):
     """
     lead = int(lead)
     if units == 'years':
+        # Currently assumes yearly aligns with year start.
         offset_args_tuple = (lead, 'YS')
     elif units == 'months':
+        # Currently assume monthly aligns with month start.
         offset_args_tuple = (lead, 'MS')
     elif units == 'weeks':
         offset_args_tuple = (lead * 7, 'D')
     elif units == 'days':
         offset_args_tuple = (lead, 'D')
     elif units == 'seasons':
-        offset_args_tuple = (lead + 3, 'MS')
+        offset_args_tuple = (lead * 3, 'MS')
     elif units == 'pentads':
         offset_args_tuple = (lead * 5, 'D')
     else:

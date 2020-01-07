@@ -2,26 +2,58 @@
 Comparisons
 ***********
 
-Forecast skill is always evaluated against a reference for verification. In ESM-based predictions, it is common to compare the ensemble mean forecast against the reference.
+Forecast skill is always evaluated against a reference for verification. In ESM-based predictions,
+it is common to compare the ensemble mean forecast against the reference.
 
-In hindcast ensembles :py:func:`~climpred.prediction.compute_hindcast`, this ensemble mean forecast (``comparison='e2r'``) is expected to perform better than individual ensemble members (``comparison='m2r'``) as the chaotic component of forecasts is expected to be suppressed by this averaging, while the memory of the system sustains. [Boer2016]_
-:py:class:`~climpred.classes.HindcastEnsemble` skill is computed by default as the ensemble mean forecast against the reference (``comparison='e2r'``).
+In hindcast ensembles :py:func:`~climpred.prediction.compute_hindcast`, this ensemble mean forecast
+(``comparison='e2r'``) is expected to perform better than individual ensemble members
+(``comparison='m2r'``) as the chaotic component of forecasts is expected to be suppressed by this
+averaging, while the memory of the system sustains. [Boer2016]_
 
-In perfect-model frameworks :py:func:`~climpred.prediction.compute_perfect_model`, there are even more ways of comparisons. [Seferian2018]_ shows comparison of the ensemble members against the control run (``comparison='m2c'``) and ensemble members against all other ensemble members (``comparison='m2m'``). Furthermore, using the ensemble mean forecast can be also verified against one control member (``comparison='e2c'``) or all members (``comparison='m2e'``) as done in [Griffies1997]_.
-Perfect-model framework comparison defaults to the ensemble mean forecast verified against each member in turns (``comparison='m2e'``).
+:py:class:`~climpred.classes.HindcastEnsemble` skill is computed by default as the ensemble mean
+forecast against the reference (``comparison='e2r'``).
 
-These different comparisons demand for a normalization factor to arrive at a normalized skill of 1, when skill saturation is reached (ref: metrics).
+In perfect-model frameworks :py:func:`~climpred.prediction.compute_perfect_model`, there are even
+more ways of comparisons. [Seferian2018]_ shows comparison of the ensemble members against the
+control run (``comparison='m2c'``) and ensemble members against all other ensemble members
+(``comparison='m2m'``). Furthermore, using the ensemble mean forecast can be also verified against
+one control member (``comparison='e2c'``) or all members (``comparison='m2e'``) as done in
+[Griffies1997]_.
 
-While HindcastEnsemble skill is computed over all initializations ``init`` of the hindcast, the resulting skill is a mean forecast skill over all initializations.
-PerfectModelEnsemble skill is computed over a supervector comprised of all initializations and members, which allows the computation of the ACC-based skill [Bushuk2018]_, but also returns a mean forecast skill over all initializations.
-The supervector approach shown in [Bushuk2018]_ and just calculating a distance-based metric like ``rmse`` over the member dimension as in [Griffies1997]_ yield very similar results.
+Perfect-model framework comparison defaults to the ensemble mean forecast verified against each
+member in turns (``comparison='m2e'``).
+
+These different comparisons demand for a normalization factor to arrive at a normalized skill of 1,
+when skill saturation is reached (ref: metrics).
+
+While HindcastEnsemble skill is computed over all initializations ``init`` of the hindcast, the
+resulting skill is a mean forecast skill over all initializations.
+
+PerfectModelEnsemble skill is computed over a supervector comprised of all initializations and
+members, which allows the computation of the ACC-based skill [Bushuk2018]_, but also returns a
+mean forecast skill over all initializations.
+
+The supervector approach shown in [Bushuk2018]_ and just calculating a distance-based metric like
+``rmse`` over the member dimension as in [Griffies1997]_ yield very similar results.
 
 
 Compute over dimension
 ######################
 
-The optional argument ``dim`` defines over which dimension a metric is computed. We can apply a metric over ``dim`` from [``'init'``, ``'member'``, ``['member', 'init']``] in :py:func:`~climpred.prediction.compute_perfect_model` and [``'init'``, ``'member'``] in :py:func:`~climpred.prediction.compute_hindcast`. The resulting skill is then reduced by this ``dim``. Therefore, applying a metric over ``dim='member'`` creates a skill for all initializations individually. This can show the initial conditions dependence of skill. Likewise when computing skill over ``'init'``, we get skill for each member. This ``dim`` argument is different from the ``comparison`` argument which just specifies how ``forecast`` and ``reference`` are defined.
-However, this above logic applies to deterministic metrics. Probabilistic metrics need to be applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``] in :py:func:`~climpred.prediction.compute_perfect_model` and ``'m2r'`` comparison in :py:func:`~climpred.prediction.compute_hindcast`. Using a probabilistic metric automatically switches internally to using ``dim='member'``.
+The optional argument ``dim`` defines over which dimension a metric is computed. We can apply a
+metric over ``dim`` from [``'init'``, ``'member'``, ``['member', 'init']``] in
+:py:func:`~climpred.prediction.compute_perfect_model` and [``'init'``, ``'member'``]
+in :py:func:`~climpred.prediction.compute_hindcast`. The resulting skill is then reduced by this
+``dim``. Therefore, applying a metric over ``dim='member'`` creates a skill for all initializations
+individually. This can show the initial conditions dependence of skill. Likewise when computing
+skill over ``'init'``, we get skill for each member. This ``dim`` argument is different from the
+``comparison`` argument which just specifies how ``forecast`` and ``reference`` are defined.
+
+However, this above logic applies to deterministic metrics. Probabilistic metrics need to be
+applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``] in
+:py:func:`~climpred.prediction.compute_perfect_model` and ``'m2r'`` comparison in
+:py:func:`~climpred.prediction.compute_hindcast`. Using a probabilistic metric automatically
+switches internally to using ``dim='member'``.
 
 HindcastEnsemble
 ################
@@ -61,11 +93,15 @@ PerfectModelEnsemble
 User-defined comparisons
 ########################
 
-You can also construct your own comparisons via the :py:class:`~climpred.comparisons.Comparison` class.
+You can also construct your own comparisons via the :py:class:`~climpred.comparisons.Comparison`
+class.
 
 .. autosummary:: Comparison
 
-First, write your own comparison function, similar to the existing ones. If a comparison should also be used for probabilistic metrics, use ``stack_dims`` to return ``forecast`` with ``member`` dimension and ``reference`` without. For deterministic metric, return ``forecast`` and ``reference`` with identical dimensions::
+First, write your own comparison function, similar to the existing ones. If a comparison should
+also be used for probabilistic metrics, use ``stack_dims`` to return ``forecast`` with ``member``
+dimension and ``reference`` without. For deterministic metric, return ``forecast`` and ``reference``
+with identical dimensions::
 
   from climpred.comparisons import Comparison, _drop_members
 

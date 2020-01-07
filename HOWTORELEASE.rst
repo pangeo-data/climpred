@@ -31,6 +31,9 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
     $ git push -f origin stable
     $ git checkout master
 
+#. Go to https://readthedocs.org and add the new version to "Active Versions"
+   under the version tab. Force-build "stable" if it isn't already building.
+
 #. Update climpred conda-forge feedstock
 
  * Fork `climpred-feedstock repository <https://github.com/conda-forge/climpred-feedstock>`_

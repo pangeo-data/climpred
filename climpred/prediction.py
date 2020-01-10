@@ -255,11 +255,9 @@ def compute_hindcast(
             forecast, reference = reduce_time_series(forecast, reference, i)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
-        offset_args_tuple = get_lead_cftime_shift_args(
-            getattr(forecast['lead'], 'units'), i
-        )
+        n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
         a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = a['time'].to_index().shift(*offset_args_tuple)
+        a['time'] = a['time'].to_index().shift(n, freq)
         # Take real time reference of real time forecast dates.
         b = reference.sel(time=a.time.values)
 
@@ -354,13 +352,9 @@ def compute_persistence(
     if [0] in hind.lead.values:
         hind = hind.copy()
         hind['lead'] += 1
-        offset_args_tuple = get_lead_cftime_shift_args(
-            getattr(hind['lead'], 'units'), 1
-        )
-        # Switch to backwards shift for lead zero.
-        shift_n = offset_args_tuple[0] * -1
-        shift_str = offset_args_tuple[1]
-        hind['init'] = hind['init'].to_index().shift(shift_n, shift_str)
+        n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
+        # Shift backwards shift for lead zero.
+        hind['init'] = hind['init'].to_index().shift(-1 * n, freq)
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
@@ -377,10 +371,8 @@ def compute_persistence(
             # room for lead from current forecast
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
-        offset_args_tuple = get_lead_cftime_shift_args(
-            getattr(hind['lead'], 'units'), lag
-        )
-        target_dates = inits.to_index().shift(*offset_args_tuple)
+        n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
+        target_dates = inits.to_index().shift(n, freq)
 
         ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)

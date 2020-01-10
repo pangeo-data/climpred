@@ -18,7 +18,6 @@ PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 def pm_da_ds1d():
     da = load_dataset('MPI-PM-DP-1D')
     da = da['tos'].isel(area=1, period=-1)
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -28,7 +27,6 @@ def pm_da_ds1d_lead0():
     da = da['tos'].isel(area=1, period=-1)
     # Convert to lead zero for testing
     da['lead'] -= 1
-    da['lead'].attrs['units'] = 'years'
     da['init'] += 1
     return da
 
@@ -43,7 +41,6 @@ def pm_da_control1d():
 @pytest.fixture
 def pm_ds_ds1d():
     ds = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
-    ds['lead'].attrs['units'] = 'years'
     return ds
 
 
@@ -57,7 +54,6 @@ def pm_ds_control1d():
 def ds_3d_NA():
     """ds North Atlantic"""
     ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
-    ds['lead'].attrs['units'] = 'years'
     return ds
 
 
@@ -253,7 +249,7 @@ def test_bootstrap_perfect_model_keeps_lead_units(pm_da_ds1d, pm_da_control1d):
     """Test that lead units is kept in compute."""
     sig = 95
     units = 'years'
-    pm_da_ds1d['lead'].attrs['units'] = units
+    pm_da_ds1d.lead.attrs['units'] = 'years'
     actual = bootstrap_perfect_model(
         pm_da_ds1d,
         pm_da_control1d,

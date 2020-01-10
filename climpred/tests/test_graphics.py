@@ -9,7 +9,6 @@ def test_mpi_pm_plot_bootstrapped_skill_over_leadyear():
     """
     da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
     PM_da_ds1d = da['tos']
-    PM_da_ds1d['lead'].attrs['units'] = 'years'
 
     da = load_dataset('MPI-control-1D').isel(area=1, period=-1)
     PM_da_control1d = da['tos']

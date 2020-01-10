@@ -22,7 +22,6 @@ def PM_da_ds3d():
         coords=[lead, member, init, lats, lons],
         dims=['lead', 'member', 'init', 'lat', 'lon'],
     )
-    da['lead'].attrs['units'] = 'years'
     return da
 
 

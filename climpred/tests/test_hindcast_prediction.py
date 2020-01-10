@@ -23,7 +23,6 @@ DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 def initialized_ds():
     da = load_dataset('CESM-DP-SST')
     da = da - da.mean('init')
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -34,7 +33,6 @@ def initialized_ds_lead0():
     # Change to a lead-0 framework
     da['init'] += 1
     da['lead'] -= 1
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -42,7 +40,6 @@ def initialized_ds_lead0():
 def initialized_da():
     da = load_dataset('CESM-DP-SST')['SST']
     da = da - da.mean('init')
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -98,7 +95,6 @@ def hind_3d():
         nlon=slice(0, 10), nlat=slice(0, 12)
     )
     da = da - da.mean('init')
-    da['lead'].attrs['units'] = 'years'
     return da
 
 

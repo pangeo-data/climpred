@@ -8,7 +8,14 @@ from .checks import has_dims
 from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
-from .utils import assign_attrs, get_comparison_class, get_metric_class
+from .utils import (
+    assign_attrs,
+    convert_time_index,
+    get_comparison_class,
+    get_lead_cftime_shift_args,
+    get_metric_class,
+    shift_cftime_singular,
+)
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
@@ -73,11 +80,13 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     """
     # find range for bootstrapping
     has_dims(hist, 'member', 'historical ensemble')
+    has_dims(hind, 'member', 'initialized hindcast ensemble')
 
-    first_init = max(hist.time.min().values, hind['init'].min().values)
-    last_init = min(
-        hist.time.max().values - hind['lead'].size, hind['init'].max().values
-    )
+    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
+
+    first_init = max(hist.time.min(), hind['init'].min())
+    hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
+    last_init = min(hist_last, hind['init'].max())
     hind = hind.sel(init=slice(first_init, last_init))
 
     uninit_hind = []
@@ -86,7 +95,11 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         # take random uninitialized members from hist at init forcing
         # (Goddard allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
-            time=slice(init + 1, init + hind['lead'].size), member=random_members
+            time=slice(
+                shift_cftime_singular(init, 1, freq),
+                shift_cftime_singular(init, n, freq),
+            ),
+            member=random_members,
         ).rename({'time': 'lead'})
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
@@ -529,6 +542,10 @@ def bootstrap_hindcast(
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_hindcast
     """
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    hist = convert_time_index(hist, 'time', 'uninitialized[time]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
     return bootstrap_compute(
         hind,
         reference,

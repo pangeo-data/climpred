@@ -104,11 +104,11 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
-        # Check that there are valid units for lead dimension.
-        has_valid_lead_units(xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'init', 'xobj[init]')
+        # Check that there are valid units for lead dimension.
+        has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}

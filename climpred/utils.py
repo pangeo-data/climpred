@@ -5,6 +5,7 @@ import cftime
 import numpy as np
 import pandas as pd
 import xarray as xr
+from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
@@ -50,6 +51,10 @@ def convert_time_index(xobj, time_string, kind):
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
             dates = [str(int(t)) + '-01-01' for t in time_index]
             split_dates = [d.split('-') for d in dates]
+            if 'lead' in xobj.dims:
+                # Probably the only case we can assume lead units, since `lead` does not
+                # give us any information on this.
+                xobj['lead'].attrs['units'] = 'years'
 
         else:
             raise ValueError(
@@ -137,26 +142,26 @@ def get_lead_cftime_shift_args(units, lead):
         lead (int): increment of lead being computed.
 
     Returns:
-       offset_args_tuple (tuple): Tuple containing (value, str) for ``CFTime.shift()``.
+       n (int): Number of units to shift. ``value`` for ``CFTime.shift(value, str)``.
+       freq (str): Pandas frequency alias. ``str`` for ``CFTime.shift(value, str)``.
     """
     lead = int(lead)
-    if units == 'years':
-        # Currently assumes yearly aligns with year start.
-        offset_args_tuple = (lead, 'YS')
-    elif units == 'months':
-        # Currently assume monthly aligns with month start.
-        offset_args_tuple = (lead, 'MS')
-    elif units == 'weeks':
-        offset_args_tuple = (lead * 7, 'D')
-    elif units == 'days':
-        offset_args_tuple = (lead, 'D')
-    elif units == 'seasons':
-        offset_args_tuple = (lead * 3, 'MS')
-    elif units == 'pentads':
-        offset_args_tuple = (lead * 5, 'D')
-    else:
-        raise ValueError(f'{units} is not a valid choice')
-    return offset_args_tuple
+
+    d = {
+        'years': (lead, 'YS'),  # Currently assumes yearly aligns with year start.
+        'seasons': (lead * 3, 'MS'),
+        'months': (lead, 'MS'),  # Currently assumes monthly aligns with month start.
+        'weeks': (lead * 7, 'D'),
+        'pentads': (lead * 5, 'D'),
+        'days': (lead, 'D'),
+    }
+
+    try:
+        n, freq = d[units]
+    except KeyError:
+        print(f'{units} is not a valid choice.')
+        print(f'Accepted `units` values include: {d.keys()}')
+    return n, freq
 
 
 def intersect(lst1, lst2):
@@ -181,12 +186,8 @@ def reduce_time_series(forecast, reference, nlags):
        reference (`xarray` object):
     """
     time_index = reference['time'].to_index()
-    offset_args_tuple = get_lead_cftime_shift_args(
-        getattr(forecast['lead'], 'units'), nlags
-    )
-    shift_n = offset_args_tuple[0] * -1
-    shift_str = offset_args_tuple[1]
-    ref_dates = time_index.shift(shift_n, shift_str)
+    n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
+    ref_dates = time_index.shift(-1 * n, freq)
 
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), ref_dates.max())
@@ -195,6 +196,28 @@ def reduce_time_series(forecast, reference, nlags):
     forecast = forecast.where(forecast.time >= imin, drop=True)
     reference = reference.where(reference.time >= imin, drop=True)
     return forecast, reference
+
+
+def shift_cftime_singular(cftime, n, freq):
+    """Shifts a singular ``cftime`` by the desired frequency.
+
+    This directly pulls the ``shift`` method from ``CFTimeIndex`` in ``xarray``. This
+    is useful if you need to shift a singular ``cftime`` by some offset, but are not
+    working with a full ``CFTimeIndex``.
+
+    Args:
+        cftime (``cftime``): ``cftime`` object to shift.
+        n (int): Number of steps to shift by.
+        freq (str): Frequency string, per ``pandas`` convention.
+
+    See:
+    https://github.com/pydata/xarray/blob/master/xarray/coding/cftimeindex.py#L376.
+    """
+    if not isinstance(n, int):
+        raise TypeError(f"'n' must be an int, got {n}.")
+    if not isinstance(freq, str):
+        raise TypeError(f"'freq' must be a str, got {freq}.")
+    return cftime + n * to_offset(freq)
 
 
 def assign_attrs(

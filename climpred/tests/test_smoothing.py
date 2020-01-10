@@ -28,7 +28,6 @@ def pm_da_control3d():
 def pm_da_ds3d():
     da = load_dataset('MPI-PM-DP-3D')
     da = da['tos']
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -41,7 +40,6 @@ def fosi_3d():
 @pytest.fixture
 def dple_3d():
     ds = load_dataset('CESM-DP-SST-3D')
-    ds['lead'].attrs['units'] = 'years'
     return ds
 
 

@@ -233,7 +233,7 @@ def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
 
 
 @is_xarray(0)
-def _reset_temporal_axis(ds_smoothed, smooth_kws={'time': 4}, dim=None):
+def _reset_temporal_axis(ds_smoothed, smooth_kws=None, dim=None):
     """Reduce and reset temporal axis. See temporal_smoothing(). Might be
     used after calculation of skill to maintain readable labels for skill
     computation.
@@ -241,11 +241,14 @@ def _reset_temporal_axis(ds_smoothed, smooth_kws={'time': 4}, dim=None):
     Args:
         ds_smoothed (xarray object): Smoothed dataset.
         smooth_kws (dict): Keywords smoothing is performed over.
+            Default is {'time': 4.
         dim (str): Dimension smoothing is performed over ('time' or 'lead').
 
     Returns:
         Smoothed Dataset with updated labels for smoothed temporal dimension.
     """
+    if smooth_kws is None:
+        smooth_kws = {'time': 4}
     if not ('time' in smooth_kws or 'lead' in smooth_kws):
         raise ValueError('smooth_kws doesnt contain a time dimension.', smooth_kws)
     smooth = list(smooth_kws.values())[0]

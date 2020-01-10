@@ -1,3 +1,4 @@
+import cftime
 import numpy as np
 import pandas as pd
 import pytest
@@ -16,6 +17,7 @@ from climpred.utils import (
     get_comparison_class,
     get_metric_class,
     intersect,
+    shift_cftime_singular,
 )
 
 
@@ -118,7 +120,6 @@ def test_bootstrap_pm_assign_attrs():
     bootstrap = 3
     sig = 95
     da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
-    da['lead'].attrs['units'] = 'years'
     control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
     actual = bootstrap_perfect_model(
         da, control, metric=metric, comparison=comparison, bootstrap=bootstrap, sig=sig
@@ -137,7 +138,6 @@ def test_hindcast_assign_attrs():
     metric = 'pearson_r'
     comparison = 'e2r'
     da = load_dataset('CESM-DP-SST')
-    da['lead'].attrs['units'] = 'years'
     control = load_dataset('ERSST')
     actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
     assert actual['metric'] == metric
@@ -217,6 +217,27 @@ def test_float64_converted_to_cftime():
     assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
 
 
+def test_numeric_index_auto_appends_lead_attrs():
+    """Tests that for numeric inits, lead units are automatically set to 'years'"""
+    lead = np.arange(3)
+    int_inits = np.arange(1990, 2000)
+    float_inits = int_inits * 1.0
+    int_da = xr.DataArray(
+        np.random.rand(len(int_inits), len(lead)),
+        dims=['init', 'lead'],
+        coords=[int_inits, lead],
+    )
+    float_da = xr.DataArray(
+        np.random.rand(len(float_inits), len(lead)),
+        dims=['init', 'lead'],
+        coords=[float_inits, lead],
+    )
+    new_int_da = convert_time_index(int_da, 'init', '')
+    new_float_da = convert_time_index(float_da, 'init', '')
+    assert new_int_da.lead.attrs['units'] == 'years'
+    assert new_float_da.lead.attrs['units'] == 'years'
+
+
 def test_convert_time_index_does_not_overwrite():
     """Tests that `convert_time_index` does not overwrite the original index."""
     inits = np.arange(1990, 2000)
@@ -233,3 +254,12 @@ def test_irregular_initialization_dates():
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
     new_inits = convert_time_index(da, 'init', '')
     assert (new_inits['init'].to_index().year == inits).all()
+
+
+def test_shift_cftime_singular():
+    """Tests that a singular ``cftime`` is shifted the appropriate amount."""
+    cftime_initial = cftime.DatetimeNoLeap(1990, 1, 1)
+    cftime_expected = cftime.DatetimeNoLeap(1990, 3, 1)
+    # Shift forward two months at month start.
+    cftime_from_func = shift_cftime_singular(cftime_initial, 2, 'MS')
+    assert cftime_expected == cftime_from_func

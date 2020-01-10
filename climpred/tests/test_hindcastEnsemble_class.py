@@ -8,7 +8,6 @@ from climpred.tutorial import load_dataset
 @pytest.fixture
 def initialized_ds():
     da = load_dataset('CESM-DP-SST')
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -17,7 +16,6 @@ def initialized_da():
     da = load_dataset('CESM-DP-SST')['SST']
     da = da.sel(init=slice(1955, 2015))
     da = da - da.mean('init')
-    da['lead'].attrs['units'] = 'years'
     return da
 
 
@@ -30,7 +28,6 @@ def fosi_3d():
 @pytest.fixture
 def dple_3d():
     ds = load_dataset('CESM-DP-SST-3D')
-    ds['lead'].attrs['units'] = 'years'
     return ds
 
 

@@ -24,6 +24,7 @@ from .utils import (
     get_metric_class,
     intersect,
     reduce_time_series,
+    shift_cftime_index,
 )
 
 
@@ -257,7 +258,7 @@ def compute_hindcast(
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
         a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = a['time'].to_index().shift(n, freq)
+        a['time'] = shift_cftime_index(a, 'time', n, freq)
         # Take real time reference of real time forecast dates.
         b = reference.sel(time=a.time.values)
 
@@ -354,7 +355,7 @@ def compute_persistence(
         hind['lead'] += 1
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
         # Shift backwards shift for lead zero.
-        hind['init'] = hind['init'].to_index().shift(-1 * n, freq)
+        hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to reference time.
     hind = hind.rename({'init': 'time'})
@@ -372,7 +373,7 @@ def compute_persistence(
             a, _ = reduce_time_series(hind, reference, lag)
             inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
-        target_dates = inits.to_index().shift(n, freq)
+        target_dates = shift_cftime_index(a, 'time', n, freq)
 
         ref = reference.sel(time=target_dates)
         fct = reference.sel(time=inits)

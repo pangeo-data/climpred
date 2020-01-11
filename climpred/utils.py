@@ -185,9 +185,8 @@ def reduce_time_series(forecast, reference, nlags):
        forecast (`xarray` object): prediction ensemble reduced to
        reference (`xarray` object):
     """
-    time_index = reference['time'].to_index()
     n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    ref_dates = time_index.shift(-1 * n, freq)
+    ref_dates = shift_cftime_index(reference, 'time', -1 * n, freq)
 
     imin = max(forecast.time.min(), reference.time.min())
     imax = min(forecast.time.max(), ref_dates.max())
@@ -196,6 +195,29 @@ def reduce_time_series(forecast, reference, nlags):
     forecast = forecast.where(forecast.time >= imin, drop=True)
     reference = reference.where(reference.time >= imin, drop=True)
     return forecast, reference
+
+
+def shift_cftime_index(xobj, time_string, n, freq):
+    """Shifts a ``CFTimeIndex`` over a specified number of time steps at a given
+    temporal frequency.
+
+    This leverages the handy ``.shift()`` method from ``xarray.CFTimeIndex``. It's a
+    simple call, but is used throughout ``climpred`` so it is documented here clearly
+    for convenience.
+
+    Args:
+        xobj (xarray object): Dataset or DataArray with the ``CFTimeIndex`` to shift.
+        time_string (str): Name of time dimension to be shifted.
+        n (int): Number of units to shift.
+            Returned from :py:func:`get_lead_cftime_shift_args`.
+        freq (str): Pandas frequency alias.
+            Returned from :py:func:`get_lead_cftime_shift_args`.
+
+    Returns:
+        ``CFTimeIndex`` shifted by ``n`` steps at time frequency ``freq``.
+    """
+    time_index = xobj[time_string].to_index()
+    return time_index.shift(n, freq)
 
 
 def shift_cftime_singular(cftime, n, freq):

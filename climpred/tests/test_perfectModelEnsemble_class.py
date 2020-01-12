@@ -38,7 +38,7 @@ def test_perfectModelEnsemble_init(pm_ds_ds1d):
 
 
 def test_perfectModelEnsemble_init_da(pm_da_ds1d):
-    """Test tos ee if perfect model ensemble can be initialized with da"""
+    """Test to see if perfect model ensemble can be initialized with da"""
     pm = PerfectModelEnsemble(pm_da_ds1d)
     assert pm
 

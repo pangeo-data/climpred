@@ -1,5 +1,9 @@
+import cftime
 import numpy as np
+import pandas as pd
 import pytest
+import xarray as xr
+from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import __m2c
@@ -8,10 +12,13 @@ from climpred.metrics import __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
+    convert_time_index,
     copy_coords_from_to,
     get_comparison_class,
     get_metric_class,
     intersect,
+    shift_cftime_index,
+    shift_cftime_singular,
 )
 
 
@@ -182,3 +189,92 @@ def test_copy_coords_from_to_da_different_xro(control_ds_3d):
     with pytest.raises(ValueError) as excinfo:
         copy_coords_from_to(xro.isel(time=2).tos, c_1time)
     assert 'xro_from and xro_to must be both either' in str(excinfo.value)
+
+
+def test_cftime_index_unchanged():
+    """Tests that a CFTime index going through convert time is unchanged."""
+    inits = xr.cftime_range('1990', '2000', freq='Y', calendar='noleap')
+    da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
+    new_inits = convert_time_index(da, 'init', '')
+    assert_allclose(new_inits.init, da.init)
+
+
+def test_pandas_datetime_converted_to_cftime():
+    """Tests that a pd.DatetimeIndex is converted to xr.CFTimeIndex."""
+    inits = pd.date_range('1990', '2000', freq='YS')
+    da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
+    new_inits = convert_time_index(da, 'init', '')
+    assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
+
+
+def test_int64_converted_to_cftime():
+    """Tests the xr.Int64Index is converted to xr.CFTimeIndex."""
+    inits = np.arange(1990, 2000)
+    da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
+    new_inits = convert_time_index(da, 'init', '')
+    assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
+
+
+def test_float64_converted_to_cftime():
+    """Tests the xr.Float64Index is converted to xr.CFTimeIndex."""
+    inits = np.arange(1990, 2000) * 1.0
+    da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
+    new_inits = convert_time_index(da, 'init', '')
+    assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
+
+
+def test_numeric_index_auto_appends_lead_attrs():
+    """Tests that for numeric inits, lead units are automatically set to 'years'"""
+    lead = np.arange(3)
+    int_inits = np.arange(1990, 2000)
+    float_inits = int_inits * 1.0
+    int_da = xr.DataArray(
+        np.random.rand(len(int_inits), len(lead)),
+        dims=['init', 'lead'],
+        coords=[int_inits, lead],
+    )
+    float_da = xr.DataArray(
+        np.random.rand(len(float_inits), len(lead)),
+        dims=['init', 'lead'],
+        coords=[float_inits, lead],
+    )
+    new_int_da = convert_time_index(int_da, 'init', '')
+    new_float_da = convert_time_index(float_da, 'init', '')
+    assert new_int_da.lead.attrs['units'] == 'years'
+    assert new_float_da.lead.attrs['units'] == 'years'
+
+
+def test_convert_time_index_does_not_overwrite():
+    """Tests that `convert_time_index` does not overwrite the original index."""
+    inits = np.arange(1990, 2000)
+    da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
+    new_inits = convert_time_index(da, 'init', '')
+    assert isinstance(da.init.to_index(), pd.Int64Index)
+    assert isinstance(new_inits.init.to_index(), xr.CFTimeIndex)
+
+
+def test_irregular_initialization_dates():
+    """Tests that irregularly spaced initializations convert properly."""
+    inits = np.arange(1990, 2010)
+    inits = np.delete(inits, [3, 5, 8, 12, 15])
+    da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
+    new_inits = convert_time_index(da, 'init', '')
+    assert (new_inits['init'].to_index().year == inits).all()
+
+
+def test_shift_cftime_singular():
+    """Tests that a singular ``cftime`` is shifted the appropriate amount."""
+    cftime_initial = cftime.DatetimeNoLeap(1990, 1, 1)
+    cftime_expected = cftime.DatetimeNoLeap(1990, 3, 1)
+    # Shift forward two months at month start.
+    cftime_from_func = shift_cftime_singular(cftime_initial, 2, 'MS')
+    assert cftime_expected == cftime_from_func
+
+
+def test_shift_cftime_index():
+    """Tests that ``CFTimeIndex`` is shifted by the appropriate amount."""
+    idx = xr.cftime_range('1990', '2000', freq='YS')
+    da = xr.DataArray(np.random.rand(len(idx)), dims='time', coords=[idx])
+    expected = idx.shift(3, 'YS')
+    res = shift_cftime_index(da, 'time', 3, 'YS')
+    assert (expected == res).all()

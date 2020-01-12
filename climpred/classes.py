@@ -7,6 +7,7 @@ from .bootstrap import (
 from .checks import (
     has_dataset,
     has_dims,
+    has_valid_lead_units,
     is_xarray,
     match_initialized_dims,
     match_initialized_vars,
@@ -24,6 +25,7 @@ from .smoothing import (
     spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
+from .utils import convert_time_index
 
 
 # ----------
@@ -102,6 +104,12 @@ class PredictionEnsemble:
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'init', 'xobj[init]')
+        # Put this after `convert_time_index` since it assigns 'years' attribute if the
+        # `init` dimension is a `float` or `int`.
+        has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}
@@ -385,6 +393,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
         return self._construct_direct(datasets)
@@ -679,6 +690,9 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
 
         # For some reason, I could only get the non-inplace method to work
         # by updating the nested dictionaries separately.
@@ -700,6 +714,9 @@ class HindcastEnsemble(PredictionEnsemble):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj, uninitialized=True)
         match_initialized_vars(self._datasets['initialized'], xobj)
+        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # datetime.
+        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets)

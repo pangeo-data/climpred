@@ -20,8 +20,9 @@ dependencies:
   - tqdm
   # Numerics
   - numpy
+  - pandas
   - scipy
-  - xarray>=0.14.1
+  - xarray>=0.14.1  # Allows .drop_vars()
   # Package Management
   - asv
   - black
@@ -47,10 +48,11 @@ dependencies:
   # Statistics
   - eofs
   - xrft
-  - xskillscore>=0.0.10
+  - xskillscore>=0.0.12
   # Visualization
   - cartopy
   - matplotlib
+  - nc-time-axis
   - pip
   - pip:
       - pytest-tldr

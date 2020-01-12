@@ -34,4 +34,4 @@ repos:
       rev: 0.8.1rc2
       hooks:
       -   id: doc8
-          args: ["--max-line-length", "88"]
+          args: ["--max-line-length", "100", "--ignore-path", "docs/build/", "--allow-long-titles"]

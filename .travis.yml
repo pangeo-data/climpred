@@ -35,7 +35,7 @@ script:
   - coverage run --source climpred -m py.test
   - coverage report
   - pushd docs
-  - nbstripout source/*.ipynb source/examples/*.ipynb
+  - nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/subseasonal/*.ipynb
   - make html
   - popd
   - ./ci/run-linter.sh

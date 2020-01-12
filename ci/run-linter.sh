@@ -7,10 +7,14 @@ echo "Code Styling with (black, flake8, isort)"
 source activate climpred-dev
 
 echo "[flake8]"
-flake8 climpred --max-line-length=88 --exclude=__init__.py --ignore=W605,W503,C901
+flake8 climpred --exclude=__init__.py
 
 echo "[black]"
-black --check --line-length=88 -S climpred
+black --check -S climpred
 
 echo "[isort]"
-isort --recursive -w 88 --check-only climpred
+isort --recursive --check-only climpred
+
+echo "[doc8]"
+doc8 docs/source --ignore-path docs/source/setting-up-data.rst
+doc8 *.rst

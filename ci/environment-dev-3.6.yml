@@ -47,7 +47,7 @@ dependencies:
   # Statistics
   - eofs
   - xrft
-  - xskillscore>=0.0.10
+  - xskillscore>=0.0.12
   # Visualization
   - cartopy
   - matplotlib

@@ -34,6 +34,12 @@ Documentation
     * Calculate Seasonal ENSO skill
       (`link <examples/monseas/seasonal-enso-subx-example.html>`__).
 
+Internals/Minor Fixes
+---------------------
+- Updates to ``xskillscore`` v0.0.12 to get a 30-50% speedup in compute functions that
+  rely on metrics from there. (:pr:`309`) `Riley X. Brady`_.
+
+
 climpred v1.2.1 (2020-01-07)
 ============================
 

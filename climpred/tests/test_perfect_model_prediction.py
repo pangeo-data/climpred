@@ -243,3 +243,20 @@ def test_compute_pm_dask_climpred_dims(ds_3d_NA, control_3d_NA, comparison, metr
         # check for chunks
         assert dask.is_dask_collection(res_chunked)
         assert res_chunked.chunks is not None
+
+
+def test_bootstrap_perfect_model_keeps_lead_units(pm_da_ds1d, pm_da_control1d):
+    """Test that lead units is kept in compute."""
+    sig = 95
+    units = 'years'
+    pm_da_ds1d.lead.attrs['units'] = 'years'
+    actual = bootstrap_perfect_model(
+        pm_da_ds1d,
+        pm_da_control1d,
+        metric='mse',
+        bootstrap=2,
+        comparison='e2c',
+        sig=sig,
+        dim='init',
+    )
+    assert actual.lead.attrs['units'] == units

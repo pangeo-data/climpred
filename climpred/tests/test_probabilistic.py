@@ -343,4 +343,6 @@ def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
         f'computed over dimension `dim="member"`. '
         f'Set automatically.'
     )
-    assert record[0].message.args[0] == expected
+    # Set this to the third message since the first two are about converting the integer
+    # time to annual `cftime`.
+    assert record[2].message.args[0] == expected

@@ -1,6 +1,7 @@
 eofs
 matplotlib
 numpy
+pandas
 scipy
 tqdm
 xarray>=0.14.1

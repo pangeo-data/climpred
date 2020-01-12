@@ -17,6 +17,7 @@ from climpred.utils import (
     get_comparison_class,
     get_metric_class,
     intersect,
+    shift_cftime_index,
     shift_cftime_singular,
 )
 
@@ -263,3 +264,12 @@ def test_shift_cftime_singular():
     # Shift forward two months at month start.
     cftime_from_func = shift_cftime_singular(cftime_initial, 2, 'MS')
     assert cftime_expected == cftime_from_func
+
+
+def test_shift_cftime_index():
+    """Tests that ``CFTimeIndex`` is shifted by the appropriate amount."""
+    idx = xr.cftime_range('1990', '2000', freq='YS')
+    da = xr.DataArray(np.random.rand(len(idx)), dims='time', coords=[idx])
+    expected = idx.shift(3, 'YS')
+    res = shift_cftime_index(da, 'time', 3, 'YS')
+    assert (expected == res).all()

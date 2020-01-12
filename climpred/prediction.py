@@ -4,7 +4,7 @@ import warnings
 import dask
 import xarray as xr
 
-from .checks import is_in_list, is_xarray
+from .checks import has_valid_lead_units, is_in_list, is_xarray
 from .comparisons import __e2c
 from .constants import (
     CLIMPRED_DIMS,
@@ -189,10 +189,12 @@ def compute_hindcast(
 
     """
     is_in_list(dim, ['member', 'init'], str)
-
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     reference = convert_time_index(reference, 'time', 'reference[time]')
+    # Put this after `convert_time_index` since it assigns 'years' attribute if the
+    # `init` dimension is a `float` or `int`.
+    has_valid_lead_units(hind)
 
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -339,6 +341,9 @@ def compute_persistence(
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     reference = convert_time_index(reference, 'time', 'reference[time]')
+    # Put this after `convert_time_index` since it assigns 'years' attribute if the
+    # `init` dimension is a `float` or `int`.
+    has_valid_lead_units(hind)
 
     # get metric function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)

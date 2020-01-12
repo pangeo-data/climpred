@@ -153,6 +153,10 @@ def has_valid_lead_units(xobj):
     """
     Checks that the object has valid units for the lead dimension.
     """
+    LEAD_UNIT_ERROR = (
+        'The lead dimension must must have a valid '
+        f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
+    )
     # Use `hasattr` here, as it doesn't throw an error if `xobj` doesn't have a
     # coordinate for lead.
     if hasattr(xobj['lead'], 'units'):
@@ -169,13 +173,7 @@ def has_valid_lead_units(xobj):
 
         # Raise Error if lead units is not valid
         if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
-            raise DimensionError(
-                'The lead dimension must must have a valid '
-                f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
-            )
+            raise AttributeError(LEAD_UNIT_ERROR)
     else:
-        raise DimensionError(
-            'The lead dimension must must have a '
-            f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
-        )
+        raise AttributeError(LEAD_UNIT_ERROR)
     return True

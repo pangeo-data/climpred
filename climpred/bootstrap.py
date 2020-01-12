@@ -4,7 +4,7 @@ import numpy as np
 import xarray as xr
 from tqdm.auto import tqdm
 
-from .checks import has_dims
+from .checks import has_dims, has_valid_lead_units
 from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
@@ -78,15 +78,19 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    # find range for bootstrapping
     has_dims(hist, 'member', 'historical ensemble')
     has_dims(hind, 'member', 'initialized hindcast ensemble')
+    # Put this after `convert_time_index` since it assigns 'years' attribute if the
+    # `init` dimension is a `float` or `int`.
+    has_valid_lead_units(hind)
+
+    # find range for bootstrapping
+    first_init = max(hist.time.min(), hind['init'].min())
 
     n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
-
-    first_init = max(hist.time.min(), hind['init'].min())
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
+
     hind = hind.sel(init=slice(first_init, last_init))
 
     uninit_hind = []
@@ -546,6 +550,10 @@ def bootstrap_hindcast(
     hind = convert_time_index(hind, 'init', 'hind[init]')
     hist = convert_time_index(hist, 'time', 'uninitialized[time]')
     reference = convert_time_index(reference, 'time', 'reference[time]')
+    # Put this after `convert_time_index` since it assigns 'years' attribute if the
+    # `init` dimension is a `float` or `int`.
+    has_valid_lead_units(hind)
+
     return bootstrap_compute(
         hind,
         reference,

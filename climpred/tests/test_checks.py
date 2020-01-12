@@ -254,14 +254,14 @@ def test_valid_lead_units(da_lead_time, lead_units):
 
 def test_valid_lead_units_no_units(da_lead_time):
     """Test that valid lead units check breaks if there are no units."""
-    with pytest.raises(DimensionError):
+    with pytest.raises(AttributeError):
         has_valid_lead_units(da_lead_time)
 
 
 def test_valid_lead_units_invalid_units(da_lead_time):
     """Test that valid lead units check breaks if invalid units provided."""
     da_lead_time['lead'].attrs['units'] = 'dummy'
-    with pytest.raises(DimensionError):
+    with pytest.raises(AttributeError):
         has_valid_lead_units(da_lead_time)
 
 

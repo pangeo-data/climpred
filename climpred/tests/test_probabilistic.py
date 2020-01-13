@@ -323,9 +323,7 @@ def test_compute_hindcast_probabilistic_metric_e2r_fails(
             metric=metric,
             dim='member',
         )
-    assert f'Probabilistic metric `{metric}` requires' in str(
-        excinfo.value
-    )
+    assert f'Probabilistic metric `{metric}` requires' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('dim', ['init'])

@@ -34,10 +34,17 @@ Documentation
     * Calculate Seasonal ENSO skill
       (`link <examples/monseas/seasonal-enso-subx-example.html>`__).
 
+Bug Fixes
+---------
+- fixed `m2m` comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
+
 Internals/Minor Fixes
 ---------------------
 - Updates to ``xskillscore`` v0.0.12 to get a 30-50% speedup in compute functions that
   rely on metrics from there. (:pr:`309`) `Riley X. Brady`_.
+- stacking dims is handled by ``comparisons``, no need for internal keyword ``stack_dims``.
+  Therefore ``comparison`` now takes ``metric`` as argument instead of ``stack_dims`` (:pr:`290`) `Aaron Spring`_.
+- ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
 
 
 climpred v1.2.1 (2020-01-07)
@@ -69,15 +76,9 @@ New Features
     * ``['s_pval_eff', 'spvalue_eff', 'spval_eff']`` for ``spearman_r_eff_p_value``
     * ``'nev'`` for ``nmse``
 
-Bug Fixes
----------
-- fixed `m2m` comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
-- stacking dims is handled by ``comparisons``, no need for internal keyword ``stack_dims``.
-  Therefore ``comparison`` now takes ``metric`` as argument instead of ``stack_dims`` (:pr:`290`) `Aaron Spring`_.
-- ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
 - ``climpred`` now requires ``xarray`` version 0.14.1 so that the ``drop_vars()``
   keyword used in our package does not throw an error. (:pr:`276`) `Riley X. Brady`_
 - Update to ``xskillscore`` version 0.0.10 to fix errors in weighted metrics with

@@ -2,7 +2,6 @@ import inspect
 
 import numpy as np
 import xarray as xr
-
 from tqdm.auto import tqdm
 
 from .checks import has_dims, has_valid_lead_units

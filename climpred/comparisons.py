@@ -4,14 +4,17 @@ import xarray as xr
 from .checks import has_dims, has_min_len
 from .exceptions import DimensionError
 
+# from .constants import M2M_MEMBER_DIM
+M2M_MEMBER_DIM = 'forecast_member'
 
-def _drop_members(ds, rmd_member=None):
+
+def _drop_members(ds, removed_member=None):
     """
     Drop members by name selection .sel(member=) from ds.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member dimension
-        rmd_ensemble (list): list of members to be dropped. Default: [0]
+        removed_member (list): list of members to be dropped. Default: [0]
 
     Returns:
         ds (xarray object): xr.Dataset/xr.DataArray with less members.
@@ -20,11 +23,11 @@ def _drop_members(ds, rmd_member=None):
         DimensionError: if list items are not all in ds.member
 
     """
-    if rmd_member is None:
-        rmd_member = [0]
-    if all(m in ds.member.values for m in rmd_member):
+    if removed_member is None:
+        removed_member = [0]
+    if all(m in ds.member.values for m in removed_member):
         member_list = list(ds.member.values)
-        for ens in rmd_member:
+        for ens in removed_member:
             member_list.remove(ens)
     else:
         raise DimensionError('select available members only')
@@ -99,20 +102,19 @@ def _m2m(ds, metric=None):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, rmd_member=[m])
+        forecast = _drop_members(ds, removed_member=[m])
         # set incrementing members to avoid nans from broadcasting
-        # TODO: refactor add_incremental_coords_to_dim
         forecast['member'] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m).squeeze()
+        # Tiles the singular "reference" member to compare directly to all other members
         if not metric.probabilistic:
             forecast, reference = xr.broadcast(forecast, reference)
         reference_list.append(reference)
         forecast_list.append(forecast)
-    forecast_member_dim = 'forecast_member'
-    reference = xr.concat(reference_list, forecast_member_dim)
-    forecast = xr.concat(forecast_list, forecast_member_dim)
-    reference[forecast_member_dim] = np.arange(reference[forecast_member_dim].size)
-    forecast[forecast_member_dim] = np.arange(forecast[forecast_member_dim].size)
+    reference = xr.concat(reference_list, M2M_MEMBER_DIM)
+    forecast = xr.concat(forecast_list, M2M_MEMBER_DIM)
+    reference[M2M_MEMBER_DIM] = np.arange(reference[M2M_MEMBER_DIM].size)
+    forecast[M2M_MEMBER_DIM] = np.arange(forecast[M2M_MEMBER_DIM].size)
     return forecast, reference
 
 
@@ -142,16 +144,16 @@ def _m2e(ds, metric=None):
     """
     reference_list = []
     forecast_list = []
-    forecast_member_dim = 'member'
+    FORECAST_MEMBER_DIM = 'member'
     for m in ds.member.values:
-        forecast = _drop_members(ds, rmd_member=[m]).mean('member')
+        forecast = _drop_members(ds, removed_member=[m]).mean('member')
         reference = ds.sel(member=m).squeeze()
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list, forecast_member_dim)
-    forecast = xr.concat(forecast_list, forecast_member_dim)
-    forecast[forecast_member_dim] = np.arange(forecast[forecast_member_dim].size)
-    reference[forecast_member_dim] = np.arange(reference[forecast_member_dim].size)
+    reference = xr.concat(reference_list, FORECAST_MEMBER_DIM)
+    forecast = xr.concat(forecast_list, FORECAST_MEMBER_DIM)
+    forecast[FORECAST_MEMBER_DIM] = np.arange(forecast[FORECAST_MEMBER_DIM].size)
+    reference[FORECAST_MEMBER_DIM] = np.arange(reference[FORECAST_MEMBER_DIM].size)
     return forecast, reference
 
 
@@ -184,7 +186,7 @@ def _m2c(ds, control_member=None, metric=None):
         control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
     # drop the member being reference
-    forecast = _drop_members(ds, rmd_member=ds.member.values[control_member])
+    forecast = _drop_members(ds, removed_member=ds.member.values[control_member])
     if not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
     return forecast, reference
@@ -221,7 +223,7 @@ def _e2c(ds, control_member=None, metric=None):
     reference = ds.isel(member=control_member).squeeze()
     if 'member' in reference.coords:
         del reference['member']
-    ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
+    ds = _drop_members(ds, removed_member=[ds.member.values[control_member]])
     forecast = ds.mean('member')
     return forecast, reference
 

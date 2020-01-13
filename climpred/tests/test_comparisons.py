@@ -39,7 +39,7 @@ def test_e2c(PM_da_ds1d):
     if 'member' in reference.coords:
         del reference['member']
     # drop the member being reference
-    ds = _drop_members(ds, rmd_member=[ds.member.values[control_member]])
+    ds = _drop_members(ds, removed_member=[ds.member.values[control_member]])
     forecast = ds.mean('member')
 
     eforecast, ereference = forecast, reference
@@ -63,7 +63,7 @@ def test_m2c(PM_da_ds1d):
     control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
     # drop the member being reference
-    ds_dropped = _drop_members(ds, rmd_member=ds.member.values[control_member])
+    ds_dropped = _drop_members(ds, removed_member=ds.member.values[control_member])
     forecast, reference = xr.broadcast(ds_dropped, reference)
 
     eforecast, ereference = forecast, reference
@@ -86,7 +86,7 @@ def test_m2e(PM_da_ds1d):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, rmd_member=[m]).mean('member')
+        forecast = _drop_members(ds, removed_member=[m]).mean('member')
         reference = ds.sel(member=m).squeeze()
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
@@ -116,7 +116,7 @@ def test_m2m(PM_da_ds1d):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, rmd_member=[m])
+        forecast = _drop_members(ds, removed_member=[m])
         forecast['member'] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m).squeeze()
         forecast, reference = xr.broadcast(forecast, reference)
@@ -157,7 +157,7 @@ def my_m2me_comparison(ds, metric=None):
     forecast_list = []
     supervector_dim = 'member'
     for m in ds.member.values:
-        forecast = _drop_members(ds, rmd_member=[m]).median('member')
+        forecast = _drop_members(ds, removed_member=[m]).median('member')
         reference = ds.sel(member=m).squeeze()
         forecast_list.append(forecast)
         reference_list.append(reference)
@@ -169,14 +169,14 @@ def my_m2me_comparison(ds, metric=None):
 
 
 my_m2me_comparison = Comparison(
-    name='m2me', function=my_m2me_comparison, probabilistic=False, hindcast=False
+    name='m2me', function=my_m2me_comparison, probabilistic=False, hindcast=False,
 )
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
 def test_new_comparison_passed_to_compute(PM_da_ds1d, PM_da_control1d, metric):
     actual = compute_perfect_model(
-        PM_da_ds1d, PM_da_control1d, comparison=my_m2me_comparison, metric=metric
+        PM_da_ds1d, PM_da_control1d, comparison=my_m2me_comparison, metric=metric,
     )
 
     expected = compute_perfect_model(

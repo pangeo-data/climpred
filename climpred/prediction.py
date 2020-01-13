@@ -27,6 +27,8 @@ from .utils import (
     shift_cftime_index,
 )
 
+# from .constants import M2M_MEMBER_DIM
+M2M_MEMBER_DIM = 'forecast_member'
 
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
@@ -102,19 +104,14 @@ def compute_perfect_model(
     forecast, reference = comparison.function(ds, metric=metric)
 
     # in case you want to compute deterministic skill over member dim
-    if (
-        (forecast.dims != reference.dims)
-        and (not metric.probabilistic)
-        and not metric.probabilistic
-    ):
+    if (forecast.dims != reference.dims) and not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
 
     skill = metric.function(
         forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
     )
     if comparison.name == 'm2m':
-        if 'forecast_member' in skill.dims:
-            skill = skill.mean('forecast_member')
+        skill = skill.mean(M2M_MEMBER_DIM)
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -191,11 +188,7 @@ def compute_hindcast(
     metric = get_metric_class(metric, HINDCAST_METRICS)
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
-    dim_to_apply_metric_to = dim
-    # if not stack_dims, comparisons return forecast with member dim and reference
-    # without member dim which is needed for probabilistic
-    # if stack_dims, comparisons return forecast and reference with member dim
-    # which is needed for deterministic
+
     if metric.probabilistic:
         if not comparison.probabilistic:
             raise ValueError(
@@ -209,29 +202,23 @@ def compute_hindcast(
                 f'Set automatically.'
             )
             dim = 'member'
-    elif dim in ['init', 'member']:
+    else:
         if dim == 'init':
             # for later thinking in real time
-            dim_to_apply_metric_to = 'time'
-    else:
-        raise ValueError(
-            f'Please use a probabilistic metric [now {metric.name}] ',
-            f'and a probabilistic omparison, e.g. `m2r` [now {comparison.name}] or ',
-            f'specify dim from ["init", "member"], now: {dim}.',
-        )
+            dim = 'time'
     nlags = max(hind.lead.values)
 
     forecast, reference = comparison.function(hind, reference, metric=metric)
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
-    
+
     # If dask, then chunk in time.
-    if dask.is_dask_collection(a):
-        a = a.chunk({'time': -1})
-    if dask.is_dask_collection(b):
-        b = b.chunk({'time': -1})
-    
+    if dask.is_dask_collection(forecast):
+        forecast = forecast.chunk({'time': -1})
+    if dask.is_dask_collection(reference):
+        reference = reference.chunk({'time': -1})
+
     # take only inits for which we have references at all leahind
     if not max_dof:
         forecast, reference = reduce_time_series(forecast, reference, nlags)
@@ -258,18 +245,12 @@ def compute_hindcast(
                     )
                 }
             )
-        
+
         # broadcast dims when deterministic metric and apply over member
-        if (
-            (a.dims != b.dims)
-            and (dim_to_apply_metric_to == 'member')
-            and not metric.probabilistic
-        ):
+        if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
             a, b = xr.broadcast(a, b)
         plag.append(
-            metric.function(
-                a, b, dim=dim_to_apply_metric_to, comparison=comparison, **metric_kwargs
-            )
+            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
         )
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
@@ -336,7 +317,9 @@ def compute_persistence(
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     if metric.probabilistic:
         raise ValueError(
-            'probabilistic metric ', metric.name, 'cannot compute persistence forecast.'
+            'probabilistic metric ',
+            metric.name,
+            'cannot compute persistence forecast.',
         )
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.

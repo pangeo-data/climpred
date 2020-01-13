@@ -42,8 +42,9 @@ Internals/Minor Fixes
 ---------------------
 - Updates to ``xskillscore`` v0.0.12 to get a 30-50% speedup in compute functions that
   rely on metrics from there. (:pr:`309`) `Riley X. Brady`_.
-- stacking dims is handled by ``comparisons``, no need for internal keyword ``stack_dims``.
-  Therefore ``comparison`` now takes ``metric`` as argument instead of ``stack_dims`` (:pr:`290`) `Aaron Spring`_.
+- stacking dims is handled by ``comparisons``, no need for internal keyword
+  ``stack_dims``. Therefore ``comparison`` now takes ``metric`` as argument instead.
+  (:pr:`290`) `Aaron Spring`_.
 - ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
 
 

@@ -149,9 +149,11 @@ def get_lead_cftime_shift_args(units, lead):
     lead = int(lead)
 
     d = {
-        'years': (lead, 'YS'),  # Currently assumes yearly aligns with year start.
+        # Currently assumes yearly aligns with year start.
+        'years': (lead, 'YS'),
         'seasons': (lead * 3, 'MS'),
-        'months': (lead, 'MS'),  # Currently assumes monthly aligns with month start.
+        # Currently assumes monthly aligns with month start.
+        'months': (lead, 'MS'),
         'weeks': (lead * 7, 'D'),
         'pentads': (lead * 5, 'D'),
         'days': (lead, 'D'),
@@ -326,7 +328,7 @@ def copy_coords_from_to(xro_from, xro_to):
     return xro_to
 
 
-def _ensure_loaded(res):
+def _load_into_memory(res):
     """Compute no lazy results."""
     if dask.is_dask_collection(res):
         res = res.compute()

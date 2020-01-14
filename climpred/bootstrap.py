@@ -1,89 +1,69 @@
 import inspect
-import multiprocessing
-import warnings
 
 import dask
 import numpy as np
 import xarray as xr
 
-from .checks import has_dims, has_valid_lead_units
+from .checks import (
+    has_dims,
+    has_valid_lead_units,
+    warn_if_chunking_would_increase_performance,
+)
 from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
-    _ensure_loaded,
+    _load_into_memory,
     _transpose_and_rechunk_to,
     assign_attrs,
     convert_time_index,
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
-    shift_cftime_singular
+    shift_cftime_singular,
 )
 
-ncpu = multiprocessing.cpu_count()
 
+def _resample(hind, shuffle_dim, to_be_shuffled):
+    """Resample with replacement in dimension `shuffle_dim` from values of
+    `to_be_shuffled`
 
-def chunking_parallel_performance_increase_likely(ds, dim):
-    """Check whether chunking might make sense.
+    Args:
+        hind (xr.object): input xr.objext to be shuffled.
+        shuffle_dim (str): dimension to shuffle along.
+        to_be_shuffled (list, xr.DataArray.values, np.ndarray): values to shuffle from.
 
-    Criteria for potential performance increase:
-    - input xr.oject needs to be chunked realistically.
-    - input xr.object needs to sufficiently large so dask overhead doesn't
-     overcompensate parallel computation speedup.
-    - there should be several CPU available for the computation, like on a
-     cluster or multi-core computer
+    Returns:
+        xr.object: shuffled along `shuffle_dim`.
+
     """
-    crit_size = 10000000
-    if not dask.is_dask_collection(ds):
-        if ds.size > crit_size and ncpu >= 4:
-            warnings.warn(
-                f'Consider chunking input ds along other dimensions than '
-                f'{dim} for parallelized performance increase.'
-            )
-    else:
-        if ds.size < crit_size:
-            warnings.warn(
-                'Chunking might not bring parallelized performance increase, '
-                f'because input size quite small, found ds.size = {ds.size} <'
-                f' {crit_size}.'
-            )
-        if ncpu < 4:
-            warnings.warn(
-                f'Chunking might not bring parallelized performance increase, '
-                f'because only few CPUs available, found {ncpu} CPUs.'
-            )
-        # if ds.chunks.count() much larger than nworkers, warn smaller chunks
-
-
-def resample(hind, shuffle_dim, to_be_shuffled):
-    """Resample hind in dimension `shuffle_dim` from values `to_be_shuffled`"""
     smp = np.random.choice(to_be_shuffled, len(to_be_shuffled))
     smp_hind = hind.sel({shuffle_dim: smp})
-    # ignore for resample init on ds in compute
+    # ignore because then inits should keep their labels
     if shuffle_dim != 'init':
         smp_hind[shuffle_dim] = np.arange(1, 1 + smp_hind[shuffle_dim].size)
     return smp_hind
 
 
-def _dask_percentile(arr, axis=0, q=95):
-    if len(arr.chunks[axis]) > 1:
-        msg = 'Input array cannot be chunked along the percentile ' 'dimension.'
-        raise ValueError(msg)
-    return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
+def my_quantile(ds, axis=0, q=0.95, dim='bootstrap'):
+    """Faster but same results xr.quantile that also allowes lazy `ds`."""
+    # dim='bootstrap' doesnt lead anywhere
+    # concat_dim is always first, therefore axis=0 implementation works in compute
 
+    def _dask_percentile(arr, axis=0, q=95):
+        """Daskified np.percentile."""
+        if len(arr.chunks[axis]) > 1:
+            msg = 'Input array cannot be chunked along the percentile ' 'dimension.'
+            raise ValueError(msg)
+        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
 
-def _percentile(arr, axis=0, q=95):
-    if dask.is_dask_collection(arr):
-        return _dask_percentile(arr, axis=axis, q=q)
-    else:
-        return np.percentile(arr, axis=axis, q=q)
+    def _percentile(arr, axis=0, q=95):
+        """percentile function for chunked and non-chunked `arr`."""
+        if dask.is_dask_collection(arr):
+            return _dask_percentile(arr, axis=axis, q=q)
+        else:
+            return np.percentile(arr, axis=axis, q=q)
 
-
-def my_quantile(ds, dim='bootstrap', q=0.95):
-    # concat_dim is always first, therefore axis=0 implementation works
-    # ds = ds.transpose(dim, ...)
-    axis = ds.get_axis_num(dim)
     if not isinstance(q, list):
         q = [q]
     quantile = []
@@ -108,15 +88,8 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    # ds_ci = ds.quantile(q=[ci_low, ci_high], dim=dim)
-    # return ds_ci
-    # xr.quantile is slow, use percentile from dask
-    # https://stackoverflow.com/questions/54938180/get-95-percentile-of-the-variables-for-son-djf-mam-over-multiple-years-data
     # TODO: re-implement xr.quantile once fast
-    # now use dask
-    ds = ds.chunk({'lead': 2}).persist()
-    ds_ci = my_quantile(ds, q=[ci_low, ci_high], dim='bootstrap')
-    return ds_ci.compute()
+    return my_quantile(ds, q=[ci_low, ci_high], dim='bootstrap')
 
 
 def _pvalue_from_distributions(simple_fct, init, metric=None):
@@ -194,7 +167,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
-    uninit_hind.lead.attrs['units'] = hind.lead.attrs['units
+    uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return (
         _transpose_and_rechunk_to(uninit_hind, hind)
         if dask.is_dask_collection(uninit_hind)
@@ -234,7 +207,7 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist), 'member'
+            (isel_years(control, start, length) for start in startlist), 'member',
         )
 
     uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
@@ -273,7 +246,7 @@ def _bootstrap_func(
     """
     if not callable(func):
         raise ValueError(f'Please provide func as a function, found {type(func)}')
-    chunking_parallel_performance_increase_likely(ds, resample_dim)
+    warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
     else:
@@ -282,13 +255,12 @@ def _bootstrap_func(
     bootstraped_results = []
     resample_dim_values = ds[resample_dim].values
     for _ in range(bootstrap):
-        smp_ds = resample(ds, resample_dim, resample_dim_values)
+        smp_ds = _resample(ds, resample_dim, resample_dim_values)
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
     sig_level = xr.concat(bootstraped_results, 'bootstrap')
     # make sure only parallelized upto here
-    sig_level = _ensure_loaded(sig_level)
+    sig_level = _load_into_memory(sig_level)
     # TODO: reimplement xr.quantile once fast
-    # sig_level = sig_level.quantile(psig, 'bootstrap')
     sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
     return sig_level
 
@@ -319,7 +291,7 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
     )
 
 
@@ -399,6 +371,7 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
+    warn_if_chunking_would_increase_performance(hind)
     if pers_sig is None:
         pers_sig = sig
 
@@ -435,7 +408,7 @@ def bootstrap_compute(
 
     # resample with replacement
     for _ in range(bootstrap):
-        smp_hind = resample(hind, shuffle_dim, to_be_shuffled)
+        smp_hind = _resample(hind, shuffle_dim, to_be_shuffled)
         # compute init skill
         init_skill = compute(
             smp_hind,
@@ -477,17 +450,17 @@ def bootstrap_compute(
                 compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
-    init = _ensure_loaded(init)
+    init = _load_into_memory(init)
     # remove useless member = 0 coords after m2c
     if 'member' in init.coords and init.member.size == 1:
         if init.member.size == 1:
             del init['member']
     uninit = xr.concat(uninit, dim='bootstrap')
-    uninit = _ensure_loaded(uninit)
+    uninit = _load_into_memory(uninit)
     # when persistence is not computed set flag
     if pers != []:
         pers = xr.concat(pers, dim='bootstrap')
-        pers = _ensure_loaded(pers)
+        pers = _load_into_memory(pers)
         pers_output = True
     else:
         pers_output = False
@@ -512,9 +485,9 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, reference, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
+        hind, reference, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
-    init_skill = _ensure_loaded(init_skill)
+    init_skill = _load_into_memory(init_skill)
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
     # remove useless member = 0 coords after m2c
@@ -526,7 +499,7 @@ def bootstrap_compute(
         pers_skill = compute_persistence(
             hind, reference, metric=metric, **metric_kwargs
         )
-        pers_skill = _ensure_loaded(pers_skill)
+        pers_skill = _load_into_memory(pers_skill)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat

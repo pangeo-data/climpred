@@ -35,8 +35,7 @@ class Generate:
     repeat = (2, 5, 20)
 
     def make_ds(self):
-
-        # ds and control mimick smaller MPI perfect-model experiment
+        """ds and control mimik smaller MPI perfect-model experiment"""
         self.ds = xr.Dataset()
         self.nmember = 3
         self.ninit = 4
@@ -55,9 +54,7 @@ class Generate:
         times = np.arange(self.control_start, self.control_end)
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
-        inits = list(
-            np.random.randint(self.control_start, self.control_end + 1, self.ninit)
-        )
+        inits = np.random.choice(self.control_start, self.control_end + 1, self.ninit)
 
         lons = xr.DataArray(
             np.linspace(0, 360, self.nx),

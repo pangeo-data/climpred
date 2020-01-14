@@ -1,6 +1,8 @@
+import multiprocessing
 import warnings
 from functools import wraps
 
+import dask
 import xarray as xr
 
 from .exceptions import DatasetError, DimensionError, VariableError
@@ -177,3 +179,58 @@ def has_valid_lead_units(xobj):
     else:
         raise AttributeError(LEAD_UNIT_ERROR)
     return True
+
+
+NCPU = multiprocessing.cpu_count()
+
+
+def get_chunksize(da):
+    """Sum of the total number of chunks in a chunked xr.DataArray."""
+    # return np.prod([c[0] for c in da.chunks])
+    n = 1
+    if not dask.is_dask_collection(da) or not isinstance(da, xr.DataArray):
+        raise ValueError(f'Please provide chunked xr.DataArray, found {type(da)}')
+    for i, c in enumerate(da.chunks):
+        n *= da.shape[i] // c[0]
+    return n
+
+
+def warn_if_chunking_would_increase_performance(ds):
+    """Warn when chunking might make sense.
+
+    Criteria for potential performance increase:
+    - input xr.oject needs to be chunked realistically.
+    - input xr.object needs to sufficiently large so dask overhead doesn't
+     overcompensate parallel computation speedup.
+    - there should be several CPU available for the computation, like on a
+     cluster or multi-core computer
+    """
+    crit_size_in_MB = 100  # rough heuristic
+    nbytes_in_MB = ds.nbytes / (1024 ** 2)
+    if not dask.is_dask_collection(ds):
+        if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
+            warnings.warn(
+                f'Consider chunking input `ds` along other dimensions than '
+                f'needed by algorithm, e.g. spatial dimensions, for parallelized '
+                'performance increase.'
+            )
+    else:
+        if nbytes_in_MB < crit_size_in_MB:
+            warnings.warn(
+                'Chunking might not bring parallelized performance increase, '
+                f'because input size quite small, found ds.nbytes = {nbytes_in_MB} <'
+                f' {crit_size_in_MB}.'
+            )
+        if NCPU < 4:
+            warnings.warn(
+                f'Chunking might not bring parallelized performance increase, '
+                f'because only few CPUs available, found {NCPU} CPUs.'
+            )
+        number_of_chunks = get_chunksize(ds)
+        if number_of_chunks > NCPU:
+            # much larger than nworkers, warn smaller chunks
+            warnings.warn(
+                f'Chunking might not bring parallelized performance increase, '
+                f'because of much more chunks than CPUs, found {number_of_chunks} '
+                f'chunks and {NCPU} CPUs.'
+            )

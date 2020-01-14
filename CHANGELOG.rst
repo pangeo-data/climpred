@@ -2,6 +2,21 @@
 What's New
 ==========
 
+climpred v2.0.1 (2020-01-##)
+============================
+
+New Features
+------------
+
+- speed-up in bootstrap functions: (:pr:`285`) `Aaron Spring`_.
+
+    *  ``xr.quantile`` exchanged for ``dask.map_blocks(np.percentile)``
+
+    *  properly implemented handling for lazy results when chunked inputs
+
+    *  user gets warned when chunking potentially (un)-necessary
+
+
 climpred v2.0.0 (2020-01-##)
 ============================
 
@@ -96,13 +111,6 @@ Documentation
 - Update `terminology page <terminology.html>`_ with more information on metrics
   terminology. (:pr:`283`) `Riley X. Brady`_
 
-New Features
-------------
-
-- speed-up in bootstrap functions: (:pr:`2xx`) `Aaron Spring`_.
-  - `xr.quantile` exchanged for `dask.map_blocks(np.percentile)`
-  - properly implemented handling for lazy results when chunked inputs
-  - user gets warned when chunking potentially (un)-necessary
 
 climpred v1.2.0 (2019-12-17)
 ============================

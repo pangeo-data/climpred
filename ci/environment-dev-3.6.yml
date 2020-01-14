@@ -12,7 +12,7 @@ dependencies:
   # IDE
   - ipywidgets
   - jupyterlab
-  - nb_conda_kernels
+  - nb_conda_kernels # switch conda envs in jupyter
   # Input/Output
   - netcdf4
   # Miscellaneous

@@ -3,6 +3,7 @@ import pytest
 import xarray as xr
 
 from climpred.checks import (
+    get_chunksize,
     has_dataset,
     has_dims,
     has_min_len,
@@ -47,7 +48,9 @@ def da_lead_time():
     lead = np.arange(5)
     init = np.arange(5)
     return xr.DataArray(
-        np.random.rand(len(lead), len(init)), dims=['init', 'lead'], coords=[init, lead]
+        np.random.rand(len(lead), len(init)),
+        dims=['init', 'lead'],
+        coords=[init, lead],
     )
 
 
@@ -273,3 +276,17 @@ def test_nonplural_lead_units_works(da_lead_time, lead_units):
         has_valid_lead_units(da_lead_time)
     expected = f'The letter "s" was appended to the lead units; now {lead_units}.'
     assert record[0].message.args[0] == expected
+
+
+@pytest.mark.parametrize('chunks', ({'x': 1}, {'y': 1}))
+def test_get_chunksize(da1, chunks):
+    chunked_da = da1.chunk(chunks)
+    actual = get_chunksize(chunked_da)
+    expected = 1
+    print(chunked_da)
+    for key, values in chunks.items():
+        print('chunking in dim', key)
+        expected *= chunked_da[key].size // values
+        print(key, values, expected)
+    print('actual:', actual, 'expected', expected)
+    assert actual == expected

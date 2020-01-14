@@ -80,6 +80,7 @@
       "numpy": [""],
       "xarray": [""],
       "dask": [""],
+      "cftime": [""],
     },
 
     // Combinations of libraries/python versions can be excluded/included

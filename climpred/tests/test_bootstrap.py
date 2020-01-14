@@ -111,14 +111,14 @@ def test_bootstrap_PM_no_lazy_results(ds3d, control3d, chunk, comparison):
         ds3d = ds3d.compute()
         control3d = control3d.compute()
     s = bootstrap_perfect_model(
-        ds3d, control3d, bootstrap=bootstrap, comparison=comparison, metric='mse'
+        ds3d, control3d, bootstrap=bootstrap, comparison=comparison, metric='mse',
     )
-    assert not dask.is_dask_collection(s)
+    assert dask.is_dask_collection(s) == chunk
 
 
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('chunk', [True, False])
-def test_bootstrap_hindcast_no_lazy_results(
+def test_bootstrap_hindcast_lazy(
     initialized_da, uninitialized_da, observations_da, chunk, comparison
 ):
     bootstrap = 2
@@ -138,4 +138,4 @@ def test_bootstrap_hindcast_no_lazy_results(
         comparison=comparison,
         metric='mse',
     )
-    assert not dask.is_dask_collection(s)
+    assert dask.is_dask_collection(s) == chunk

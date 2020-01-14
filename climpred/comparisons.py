@@ -144,16 +144,16 @@ def _m2e(ds, metric=None):
     """
     reference_list = []
     forecast_list = []
-    FORECAST_MEMBER_DIM = 'member'
+    M2E_COMPARISON_DIM = 'member'
     for m in ds.member.values:
         forecast = _drop_members(ds, removed_member=[m]).mean('member')
         reference = ds.sel(member=m).squeeze()
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list, FORECAST_MEMBER_DIM)
-    forecast = xr.concat(forecast_list, FORECAST_MEMBER_DIM)
-    forecast[FORECAST_MEMBER_DIM] = np.arange(forecast[FORECAST_MEMBER_DIM].size)
-    reference[FORECAST_MEMBER_DIM] = np.arange(reference[FORECAST_MEMBER_DIM].size)
+    reference = xr.concat(reference_list, M2E_COMPARISON_DIM)
+    forecast = xr.concat(forecast_list, M2E_COMPARISON_DIM)
+    forecast[M2E_COMPARISON_DIM] = np.arange(forecast[M2E_COMPARISON_DIM].size)
+    reference[M2E_COMPARISON_DIM] = np.arange(reference[M2E_COMPARISON_DIM].size)
     return forecast, reference
 
 

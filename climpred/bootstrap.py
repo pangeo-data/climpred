@@ -214,7 +214,8 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
 
 
 def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
-    """Calc the variance-weighted mean period significance levels from re-sampled dataset.
+    """Calc the variance-weighted mean period significance levels from re-sampled
+    dataset.
 
     See also:
         * climpred.bootstrap._bootstrap_func
@@ -353,9 +354,9 @@ def bootstrap_compute(
         )
         # reset inits when probabilistic, otherwise tests fail
         if (
-            shuffle_dim == 'init'
+            (shuffle_dim == 'init')
             and metric.probabilistic
-            and 'init' in init_skill.coords
+            and ('init' in init_skill.coords)
         ):
             init_skill['init'] = inits
         init.append(init_skill)

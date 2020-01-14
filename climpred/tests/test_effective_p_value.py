@@ -4,11 +4,6 @@ from climpred.constants import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 
-# TODO: Implement this into testing once `m2m` bug is addressed by AS regarding
-# averaging skill metrics.
-PMC = PM_COMPARISONS.copy()
-PMC.remove('m2m')
-
 
 @pytest.fixture
 def hindcast():
@@ -47,7 +42,7 @@ def test_eff_sample_size_smaller_than_n_hindcast(hindcast, reconstruction, compa
     assert (eff_N <= N).all()
 
 
-@pytest.mark.parametrize('comparison', PMC)
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_eff_sample_size_smaller_than_n_perfect_model(
     perfect_model, perfect_model_control, comparison
 ):
@@ -58,7 +53,7 @@ def test_eff_sample_size_smaller_than_n_perfect_model(
     else:
         N = perfect_model.stack(stack_dims=['init', 'member']).count('stack_dims')
     eff_N = compute_perfect_model(
-        perfect_model, perfect_model_control, metric='eff_n', comparison=comparison
+        perfect_model, perfect_model_control, metric='eff_n', comparison=comparison,
     )
     assert (eff_N <= N).all()
 
@@ -86,7 +81,7 @@ def test_eff_pearson_p_greater_or_equal_to_normal_p_hindcast(
     assert (normal_p <= eff_p).all()
 
 
-@pytest.mark.parametrize('comparison', PMC)
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_eff_pearson_p_greater_or_equal_to_normal_p_pm(
     perfect_model, perfect_model_control, comparison
 ):
@@ -130,7 +125,7 @@ def test_eff_spearman_p_greater_or_equal_to_normal_p_hindcast(
     assert (normal_p <= eff_p).all()
 
 
-@pytest.mark.parametrize('comparison', PMC)
+@pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_eff_spearman_p_greater_or_equal_to_normal_p_pm(
     perfect_model, perfect_model_control, comparison
 ):

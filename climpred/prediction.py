@@ -27,6 +27,8 @@ from .utils import (
     shift_cftime_index,
 )
 
+# from .constants import M2M_MEMBER_DIM
+M2M_MEMBER_DIM = 'forecast_member'
 
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS
@@ -74,17 +76,13 @@ def compute_perfect_model(
     metric = get_metric_class(metric, PM_METRICS)
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    # if stack_dims, comparisons return forecast with member dim and reference
-    # without member dim which is needed for probabilistic
-    # if not stack_dims, comparisons return forecast and reference with member dim
-    # which is neeeded for deterministic
+
     if metric.probabilistic:
         if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric {metric.name} cannot work with '
                 f'comparison {comparison.name}.'
             )
-        stack_dims = False
         if dim != 'member':
             warnings.warn(
                 f'Probabilistic metric {metric.name} requires to be '
@@ -92,7 +90,7 @@ def compute_perfect_model(
                 f'Set automatically.'
             )
             dim = 'member'
-    else:
+    else:  # deterministic metric
         # prevent comparison e2c and member in dim
         if (comparison.name == 'e2c') and (
             set(dim) == set(['init', 'member']) or dim == 'member'
@@ -102,31 +100,18 @@ def compute_perfect_model(
                 f'{dim}, automatically changed to dim=`init`.'
             )
             dim = 'init'
-        stack_dims = False
-    dim_to_apply_metric_to = dim
 
-    # stack_dims = True when metric probabilistic
-    forecast, reference = comparison.function(ds, stack_dims=stack_dims)
+    forecast, reference = comparison.function(ds, metric=metric)
 
-    # in case you want to compute skill over member dim
-    if (forecast.dims != reference.dims) and (not metric.probabilistic):
-        # broadcast when deterministic dim=member
+    # in case you want to compute deterministic skill over member dim
+    if (forecast.dims != reference.dims) and not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
 
     skill = metric.function(
-        forecast,
-        reference,
-        dim=dim_to_apply_metric_to,
-        comparison=comparison,
-        **metric_kwargs,
+        forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
     )
-
-    # correction for distance based metrics in m2m comparison
     if comparison.name == 'm2m':
-        if 'forecast_member' in skill.dims:
-            skill = skill.mean('forecast_member')
-        # m2m stack_dims=False has one identical comparison
-        skill = skill * (forecast.member.size / (forecast.member.size - 1))
+        skill = skill.mean(M2M_MEMBER_DIM)
     # Attach climpred compute information to skill
     if add_attrs:
         skill = assign_attrs(
@@ -135,6 +120,7 @@ def compute_perfect_model(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            dim=dim,
             metadata_dict=metric_kwargs,
         )
     return skill
@@ -203,17 +189,12 @@ def compute_hindcast(
     # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
 
-    # if stack_dims, comparisons return forecast with member dim and reference
-    # without member dim which is needed for probabilistic
-    # if not stack_dims, comparisons return forecast and reference with member dim
-    # which is neeeded for deterministic
     if metric.probabilistic:
-        if comparison.name != 'm2r':
+        if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison'
-                f' `m2r`, found {comparison.name}.'
+                f' e.g. `m2r`, found `{comparison.name}`.'
             )
-        stack_dims = False
         if dim != 'member':
             warnings.warn(
                 f'Probabilistic metric {metric.name} requires to be '
@@ -221,32 +202,23 @@ def compute_hindcast(
                 f'Set automatically.'
             )
             dim = 'member'
-    elif dim == 'init':
-        stack_dims = True
-    elif dim == 'member':
-        stack_dims = False
     else:
-        raise ValueError(
-            f'Please use a probabilistic metric [now {metric.name}] ',
-            f'and the comparison `m2r` [now {comparison.name}] or ',
-            f'specify dim from ["init", "member"], now: {dim}.',
-        )
+        if dim == 'init':
+            # for later thinking in real time
+            dim = 'time'
     nlags = max(hind.lead.values)
 
-    forecast, reference = comparison.function(hind, reference, stack_dims=stack_dims)
-
-    # in case you want to compute skill over member dim
-    if (
-        (forecast.dims != reference.dims)
-        and not stack_dims
-        and not metric.probabilistic
-    ):
-        dim_to_apply_metric_to = 'member'
-    else:
-        dim_to_apply_metric_to = 'time'
+    forecast, reference = comparison.function(hind, reference, metric=metric)
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
+
+    # If dask, then chunk in time.
+    if dask.is_dask_collection(forecast):
+        forecast = forecast.chunk({'time': -1})
+    if dask.is_dask_collection(reference):
+        reference = reference.chunk({'time': -1})
+
     # take only inits for which we have references at all leahind
     if not max_dof:
         forecast, reference = reduce_time_series(forecast, reference, nlags)
@@ -273,19 +245,12 @@ def compute_hindcast(
                     )
                 }
             )
-        # If dask, then chunk in time.
-        if dask.is_dask_collection(a):
-            a = a.chunk({'time': -1})
-        if dask.is_dask_collection(b):
-            b = b.chunk({'time': -1})
 
-        # broadcast dims when apply over member
-        if (a.dims != b.dims) and dim_to_apply_metric_to == 'member':
+        # broadcast dims when deterministic metric and apply over member
+        if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
             a, b = xr.broadcast(a, b)
         plag.append(
-            metric.function(
-                a, b, dim=dim_to_apply_metric_to, comparison=comparison, **metric_kwargs
-            )
+            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
         )
     skill = xr.concat(plag, 'lead')
     skill['lead'] = forecast.lead.values
@@ -303,6 +268,7 @@ def compute_hindcast(
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
+            dim=dim,
             metadata_dict=metric_kwargs,
         )
     return skill
@@ -351,7 +317,9 @@ def compute_persistence(
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     if metric.probabilistic:
         raise ValueError(
-            'probabilistic metric ', metric.name, 'cannot compute persistence forecast.'
+            'probabilistic metric ',
+            metric.name,
+            'cannot compute persistence forecast.',
         )
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
@@ -436,7 +404,7 @@ def compute_uninitialized(
 
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
-    forecast, reference = comparison.function(uninit, reference)
+    forecast, reference = comparison.function(uninit, reference, metric=metric)
     # Find common times between two for proper comparison.
     common_time = intersect(forecast['time'].values, reference['time'].values)
     forecast = forecast.sel(time=common_time)

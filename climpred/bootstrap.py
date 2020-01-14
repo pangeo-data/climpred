@@ -13,7 +13,6 @@ from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
-    _load_into_memory,
     _transpose_and_rechunk_to,
     assign_attrs,
     convert_time_index,
@@ -258,8 +257,6 @@ def _bootstrap_func(
         smp_ds = _resample(ds, resample_dim, resample_dim_values)
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
     sig_level = xr.concat(bootstraped_results, 'bootstrap')
-    # make sure only parallelized upto here
-    sig_level = _load_into_memory(sig_level)
     # TODO: reimplement xr.quantile once fast
     sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
     return sig_level
@@ -450,17 +447,14 @@ def bootstrap_compute(
                 compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
-    # init = _load_into_memory(init)
     # remove useless member = 0 coords after m2c
     if 'member' in init.coords and init.member.size == 1:
         if init.member.size == 1:
             del init['member']
     uninit = xr.concat(uninit, dim='bootstrap')
-    # uninit = _load_into_memory(uninit)
     # when persistence is not computed set flag
     if pers != []:
         pers = xr.concat(pers, dim='bootstrap')
-        # pers = _load_into_memory(pers)
         pers_output = True
     else:
         pers_output = False
@@ -487,7 +481,6 @@ def bootstrap_compute(
     init_skill = compute(
         hind, reference, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
-    # init_skill = _load_into_memory(init_skill)
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
     # remove useless member = 0 coords after m2c
@@ -499,7 +492,6 @@ def bootstrap_compute(
         pers_skill = compute_persistence(
             hind, reference, metric=metric, **metric_kwargs
         )
-        # pers_skill = _load_into_memory(pers_skill)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat

@@ -35,8 +35,9 @@ class Generate:
     repeat = (2, 5, 20)
 
     def make_ds(self):
-        """ds and control mimik smaller MPI perfect-model experiment"""
+        """ds and control mimik MPI perfect-model experiment"""
         self.ds = xr.Dataset()
+        self.control = xr.Dataset()
         self.nmember = 3
         self.ninit = 4
         self.nlead = 3
@@ -47,9 +48,6 @@ class Generate:
         self.ntime = 300
 
         frac_nan = 0.0
-
-        # control
-        self.control = xr.Dataset()
 
         times = np.arange(self.control_start, self.control_end)
         leads = np.arange(1, 1 + self.nlead)

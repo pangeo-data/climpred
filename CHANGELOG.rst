@@ -16,6 +16,7 @@ New Features
 
     *  user gets warned when chunking potentially (un)-necessary
 
+- ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
 
 climpred v2.0.0 (2020-01-##)
 ============================

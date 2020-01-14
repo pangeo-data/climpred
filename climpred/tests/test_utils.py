@@ -99,11 +99,12 @@ def test_ds_assign_attrs():
     metric = 'mse'
     comparison = 'm2e'
     v = 'tos'
+    dim = ['init', 'member']
     da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)[v]
     control = load_dataset('MPI-control-1D').isel(area=1, period=-1)[v]
     da.attrs['units'] = 'C'
     actual = compute_perfect_model(
-        da, control, metric=metric, comparison=comparison
+        da, control, metric=metric, comparison=comparison, dim=dim
     ).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
@@ -111,6 +112,7 @@ def test_ds_assign_attrs():
         assert actual['units'] == 'None'
     assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
     assert actual['units'] == '(C)^2'
+    assert actual['dim'] == dim
 
 
 def test_bootstrap_pm_assign_attrs():

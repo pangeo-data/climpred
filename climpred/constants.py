@@ -43,6 +43,9 @@ PROBABILISTIC_COMPARISONS = (
     PROBABILISTIC_HINDCAST_COMPARISONS + PROBABILISTIC_PM_COMPARISONS
 )
 
+# name for additional dimension in m2m comparison
+FORECAST_MEMBER_DIM = 'forecast_member'
+
 # for general checks of climpred-required dimensions
 CLIMPRED_ENSEMBLE_DIMS = ['init', 'member', 'lead']
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']

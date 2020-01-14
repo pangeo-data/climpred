@@ -54,8 +54,9 @@ class Generate:
         times = np.arange(self.control_start, self.control_end)
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
-        inits = list(
-            np.random.randint(self.control_start, self.control_end + 1, self.ninit)
+        inits = (
+            np.random.choice(self.control_end - self.control_start, self.ninit)
+            + self.control_start
         )
 
         lons = xr.DataArray(

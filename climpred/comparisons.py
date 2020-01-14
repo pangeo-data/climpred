@@ -5,20 +5,19 @@ import xarray as xr
 from .checks import has_dims, has_min_len
 from .exceptions import DimensionError
 
-
 # import error
 # from .utils import _transpose_and_rechunk_to
 
 
-def _transpose_and_rechunk_to(a, ds):
-    """Make one xr.object chunk-same to other.
+def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
+    """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
+    This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
-    return a.transpose(*ds.dims).chunk(ds.chunks)
+    return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(ori_chunk_ds.chunks)
 
 
 # from .constants import M2M_MEMBER_DIM
 M2M_MEMBER_DIM = 'forecast_member'
-
 
 
 def _drop_members(ds, removed_member=None):

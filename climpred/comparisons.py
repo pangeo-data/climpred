@@ -87,14 +87,14 @@ class Comparison:
 
 
 def _m2m(ds, metric=None):
-    """
-    Compare all members to all others in turn while leaving out the verification member.
+    """Compare all members to all others in turn while leaving out the verification
+    ``member``.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        metric (Metric): if deterministic, forecast and reference have member dim
-                      if probabilistic, only forecast has member dim
+        ds (xarray object): xr.Dataset/xr.DataArray with ``member`` dimension.
+        metric (Metric):
+            If deterministic, forecast and reference have ``member`` dim.
+            If probabilistic, only forecast has ``member`` dim.
 
     Returns:
         xr.object: forecast, reference.
@@ -240,26 +240,25 @@ __e2c = Comparison(
 # --------------------------------------------#
 # HINDCAST COMPARISONS
 # --------------------------------------------#
-def _e2r(ds, reference, metric=None):
-    """
-    Compare the ensemble mean forecast to a reference in HindcastEnsemble.
+def _e2r(hind, obs, metric=None):
+    """Compare the ensemble mean forecast to observations for a ``HindcastEnsemble``
+    setup.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        reference (xarray object): reference xr.Dataset/xr.DataArray.
+        hind (xarray object): Hindcast with optional ``member`` dimension.
+        obs (xarray object): Observations to verify against.
         metric (Metric): needed for probabilistic metrics.
                       therefore useless in e2r comparison,
                       but expected by internal API.
 
     Returns:
-        xr.object: forecast, reference.
+        xr.object: forecast, obs.
     """
-    if 'member' in ds.dims:
-        forecast = ds.mean('member')
+    if 'member' in hind.dims:
+        forecast = hind.mean('member')
     else:
-        forecast = ds
-    return forecast, reference
+        forecast = hind
+    return forecast, obs
 
 
 __e2r = Comparison(
@@ -267,34 +266,34 @@ __e2r = Comparison(
     function=_e2r,
     hindcast=True,
     probabilistic=False,
-    long_name='Comparison of the ensemble mean vs. reference verification',
+    long_name='Verify the ensemble mean against observations',
 )
 
 
-def _m2r(ds, reference, metric=None):
-    """
-    Compares each member individually to a reference in HindcastEnsemble.
+def _m2r(hind, obs, metric=None):
+    """Compares each ensemble member individually to observations for a
+    ``HindcastEnsemble`` setup.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        reference (xarray object): reference xr.Dataset/xr.DataArray.
-        metric (Metric): if deterministic, forecast and reference both have member dim;
-                         if probabilistic, only forecast has member dim
+        hind (xarray object): Hindcast with ``member`` dimension.
+        obs (xarray object): Observations to verify against.
+        metric (Metric):
+            If deterministic, forecast and obs both have ``member`` dim;
+            If probabilistic, only forecast has ``member`` dim.
 
     Returns:
-        xr.object: forecast, reference.
+        xr.object: forecast, obs.
     """
     # check that this contains more than one member
-    has_dims(ds, 'member', 'decadal prediction ensemble')
-    has_min_len(ds['member'], 1, 'decadal prediction ensemble member')
-    forecast = ds
+    has_dims(hind, 'member', 'decadal prediction ensemble')
+    has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
+    forecast = hind
     if not metric.probabilistic:
-        reference = reference.expand_dims('member')
+        obs = obs.expand_dims('member')
         nMember = forecast.member.size
-        reference = reference.isel(member=[0] * nMember)
-        reference['member'] = forecast['member']
-    return forecast, reference
+        obs = obs.isel(member=[0] * nMember)
+        obs['member'] = forecast['member']
+    return forecast, obs
 
 
 __m2r = Comparison(
@@ -302,7 +301,7 @@ __m2r = Comparison(
     function=_m2r,
     hindcast=True,
     probabilistic=True,
-    long_name='Comparison of multiple forecasts vs. reference verification',
+    long_name='Verify each individual forecast member against observations.',
 )
 
 

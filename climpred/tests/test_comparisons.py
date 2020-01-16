@@ -139,16 +139,16 @@ def test_all(PM_da_ds1d, comparison, metric):
     metric = get_metric_class(metric, PM_METRICS)
     ds = PM_da_ds1d
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    forecast, reference = comparison.function(ds, metric=metric)
+    forecast, obs = comparison.function(ds, metric=metric)
     assert not forecast.isnull().any()
-    assert not reference.isnull().any()
+    assert not obs.isnull().any()
     if not metric.probabilistic:
         # same dimensions for deterministic metrics
-        assert forecast.dims == reference.dims
+        assert forecast.dims == obs.dims
     else:
         if comparison.name in PROBABILISTIC_PM_COMPARISONS:
             # same but member dim for probabilistic
-            assert set(forecast.dims) - set(['member']) == set(reference.dims)
+            assert set(forecast.dims) - set(['member']) == set(obs.dims)
 
 
 def my_m2me_comparison(ds, metric=None):

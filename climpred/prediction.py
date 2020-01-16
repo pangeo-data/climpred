@@ -129,7 +129,7 @@ def compute_perfect_model(
 @is_xarray([0, 1])
 def compute_hindcast(
     hind,
-    reference,
+    obs,
     metric='pearson_r',
     comparison='e2r',
     dim='init',
@@ -137,30 +137,28 @@ def compute_hindcast(
     add_attrs=True,
     **metric_kwargs,
 ):
-    """Compute a predictability skill score against a reference
+    """Verify hindcast predictions against observations.
 
     Args:
-        hind (xarray object):
+        hind (xarray object): Hindcast ensemble.
             Expected to follow package conventions:
             * ``init`` : dim of initialization dates
             * ``lead`` : dim of lead time from those initializations
             Additional dims can be member, lat, lon, depth, ...
-        reference (xarray object):
-            reference output/data over same time period.
-        metric (str):
-            Metric used in comparing the decadal prediction ensemble with the
-            reference
-            (see :py:func:`climpred.utils.get_metric_class` and :ref:`Metrics`).
+        obs (xarray object): Observations with some temporal overlap with the hindcast.
+        metric (str): Metric used in comparing the decadal prediction ensemble with the
+            observations. (see :py:func:`~climpred.utils.get_metric_class` and
+            :ref:`Metrics`).
         comparison (str):
-            How to compare the decadal prediction ensemble to the reference:
+            How to compare the decadal prediction ensemble to the observations:
 
-                * e2r : ensemble mean to reference (Default)
-                * m2r : each member to the reference
+                * e2r : ensemble mean to observations (Default)
+                * m2r : each member to the observations
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
         max_dof (bool):
-            If True, maximize the degrees of freedom by slicing `hind` and `reference`
-            to a common time frame at each lead.
+            If True, maximize the degrees of freedom by slicing ``hind`` and
+            ``obs`` to a common time frame at each lead.
 
             If False (default), then slice to a common time frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
@@ -177,7 +175,7 @@ def compute_hindcast(
     is_in_list(dim, ['member', 'init'], str)
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
-    reference = convert_time_index(reference, 'time', 'reference[time]')
+    obs = convert_time_index(obs, 'time', 'obs[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
@@ -208,7 +206,7 @@ def compute_hindcast(
             dim = 'time'
     nlags = max(hind.lead.values)
 
-    forecast, reference = comparison.function(hind, reference, metric=metric)
+    forecast, obs = comparison.function(hind, obs, metric=metric)
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
@@ -216,25 +214,25 @@ def compute_hindcast(
     # If dask, then chunk in time.
     if dask.is_dask_collection(forecast):
         forecast = forecast.chunk({'time': -1})
-    if dask.is_dask_collection(reference):
-        reference = reference.chunk({'time': -1})
+    if dask.is_dask_collection(obs):
+        obs = obs.chunk({'time': -1})
 
-    # take only inits for which we have references at all leahind
+    # take only inits for which we have observations at all leads
     if not max_dof:
-        forecast, reference = reduce_time_series(forecast, reference, nlags)
+        forecast, obs = reduce_time_series(forecast, obs, nlags)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
         if max_dof:
-            forecast, reference = reduce_time_series(forecast, reference, i)
+            forecast, obs = reduce_time_series(forecast, obs, i)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
         a = forecast.sel(lead=i).drop_vars('lead')
         a['time'] = shift_cftime_index(a, 'time', n, freq)
-        # Take real time reference of real time forecast dates.
-        b = reference.sel(time=a.time.values)
+        # Take real time observations of real time forecast dates.
+        b = obs.sel(time=a.time.values)
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
@@ -275,18 +273,16 @@ def compute_hindcast(
 
 
 @is_xarray([0, 1])
-def compute_persistence(
-    hind, reference, metric='pearson_r', max_dof=False, **metric_kwargs
-):
+def compute_persistence(hind, obs, metric='pearson_r', max_dof=False, **metric_kwargs):
     """Computes the skill of a persistence forecast from a simulation.
 
     Args:
         hind (xarray object): The initialized ensemble.
-        reference (xarray object): The reference time series.
-        metric (str): Metric name to apply at each lag for the persistence
-                      computation. Default: 'pearson_r'
+        obs (xarray object): Observations.
+        metric (str): Metric name to apply at each lag for the persistence computation.
+            Default: 'pearson_r'
         max_dof (bool):
-            If True, maximize the degrees of freedom by slicing `hind` and `reference`
+            If True, maximize the degrees of freedom by slicing ``hind`` and ``obs``
             to a common time frame at each lead.
 
             If False (default), then slice to a common time frame prior to computing
@@ -306,7 +302,7 @@ def compute_persistence(
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
-    reference = convert_time_index(reference, 'time', 'reference[time]')
+    obs = convert_time_index(obs, 'time', 'obs[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
@@ -330,12 +326,12 @@ def compute_persistence(
         # Shift backwards shift for lead zero.
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     nlags = max(hind.lead.values)
-    # temporarily change `init` to `time` for comparison to reference time.
+    # temporarily change `init` to `time` for comparison to observations time.
     hind = hind.rename({'init': 'time'})
     if not max_dof:
         # slices down to inits in common with hindcast, plus gives enough room
         # for maximum lead time forecast.
-        a, _ = reduce_time_series(hind, reference, nlags)
+        a, _ = reduce_time_series(hind, obs, nlags)
         inits = a['time']
 
     plag = []
@@ -343,16 +339,16 @@ def compute_persistence(
         if max_dof:
             # slices down to inits in common with hindcast, but only gives enough
             # room for lead from current forecast
-            a, _ = reduce_time_series(hind, reference, lag)
+            a, _ = reduce_time_series(hind, obs, lag)
             inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
         target_dates = shift_cftime_index(a, 'time', n, freq)
 
-        ref = reference.sel(time=target_dates)
-        fct = reference.sel(time=inits)
-        ref['time'] = fct['time']
+        o = obs.sel(time=target_dates)
+        f = obs.sel(time=inits)
+        o['time'] = f['time']
         plag.append(
-            metric.function(ref, fct, dim='time', comparison=__e2c, **metric_kwargs)
+            metric.function(o, f, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
@@ -366,30 +362,29 @@ def compute_persistence(
 @is_xarray([0, 1])
 def compute_uninitialized(
     uninit,
-    reference,
+    obs,
     metric='pearson_r',
     comparison='e2r',
     dim='time',
     add_attrs=True,
     **metric_kwargs,
 ):
-    """Compute a predictability score between an uninitialized ensemble and a reference.
+    """Verify an uninitialized ensemble against observations.
 
     .. note::
         Based on Decadal Prediction protocol, this should only be computed for the
         first lag and then projected out to any further lags being analyzed.
 
     Args:
-        uninit (xarray object):
+        uninit (xarray object): Uninitialized ensemble.
+        obs (xarray object): Observations with some temporal overlap with the
             uninitialized ensemble.
-        reference (xarray object):
-            reference output/data over same time period.
         metric (str):
-            Metric used in comparing the uninitialized ensemble with the reference.
+            Metric used in comparing the uninitialized ensemble with the observations.
         comparison (str):
-            How to compare the uninitialized ensemble to the reference:
-                * e2r : ensemble mean to reference (Default)
-                * m2r : each member to the reference
+            How to compare the uninitialized ensemble to the observations:
+                * e2r : ensemble mean to observations (Default)
+                * m2r : each member to the observations
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
@@ -400,17 +395,17 @@ def compute_uninitialized(
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     uninit = convert_time_index(uninit, 'time', 'uninit[time]')
-    reference = convert_time_index(reference, 'time', 'reference[time]')
+    obs = convert_time_index(obs, 'time', 'obs[time]')
 
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
-    forecast, reference = comparison.function(uninit, reference, metric=metric)
+    forecast, obs = comparison.function(uninit, obs, metric=metric)
     # Find common times between two for proper comparison.
-    common_time = intersect(forecast['time'].values, reference['time'].values)
+    common_time = intersect(forecast['time'].values, obs['time'].values)
     forecast = forecast.sel(time=common_time)
-    reference = reference.sel(time=common_time)
+    obs = obs.sel(time=common_time)
     uninit_skill = metric.function(
-        forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
+        forecast, obs, dim=dim, comparison=comparison, **metric_kwargs
     )
     # Attach climpred compute information to skill
     if add_attrs:

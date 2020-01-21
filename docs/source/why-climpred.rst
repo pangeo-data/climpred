@@ -12,7 +12,7 @@ difficult to work with. A typical output file could contain the dimensions
 headache of bookkeeping for you. We offer
 :py:class:`~climpred.classes.HindcastEnsemble` and
 :py:class:`~climpred.classes.PerfectModelEnsemble`
-objects that carry references (e.g., control runs,
+objects that carry products to verify against (e.g., control runs,
 reconstructions, uninitialized ensembles) along with your decadal prediction output.
 
 
@@ -21,4 +21,4 @@ lag-correlating for you, properly aligning the multiple time dimensions between
 the hindcast and  verification datasets. We offer a suite of vectorized deterministic
 and probabilistic metrics that can be applied to time series and grids. It's as easy
 as adding your decadal prediction output to an object and running compute:
-``HindcastEnsemble.compute_metric(metric='rmse')``.
+``HindcastEnsemble.verify(metric='rmse')``.

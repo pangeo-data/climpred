@@ -234,7 +234,7 @@ def test_compute_hindcast_da1d_not_nan_crpss_quadratic(initialized_da, observati
         compute_hindcast(
             initialized_da,
             observations_da,
-            comparison='m2r',
+            comparison='m2o',
             metric='crpss',
             gaussian=False,
             dim='member',
@@ -250,7 +250,7 @@ def test_hindcast_crpss_orientation(initialized_da, observations_da):
     Checks that CRPSS hindcast as skill score > 0.
     """
     actual = compute_hindcast(
-        initialized_da, observations_da, comparison='m2r', metric='crpss', dim='member'
+        initialized_da, observations_da, comparison='m2o', metric='crpss', dim='member'
     )
     if 'init' in actual.coords:
         actual = actual.mean('init')
@@ -311,7 +311,7 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
 
 
 @pytest.mark.parametrize('metric', ['crps'])
-def test_compute_hindcast_probabilistic_metric_e2r_fails(
+def test_compute_hindcast_probabilistic_metric_e2o_fails(
     initialized_da, observations_da, metric
 ):
     metric = METRIC_ALIASES.get(metric, metric)
@@ -319,7 +319,7 @@ def test_compute_hindcast_probabilistic_metric_e2r_fails(
         compute_hindcast(
             initialized_da,
             observations_da,
-            comparison='e2r',
+            comparison='e2o',
             metric=metric,
             dim='member',
         )
@@ -334,7 +334,7 @@ def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
     metric = METRIC_ALIASES.get(metric, metric)
     with pytest.warns(UserWarning) as record:
         compute_hindcast(
-            initialized_da, observations_da, comparison='m2r', metric=metric, dim=dim
+            initialized_da, observations_da, comparison='m2o', metric=metric, dim=dim
         )
     expected = (
         f'Probabilistic metric {metric} requires to be '

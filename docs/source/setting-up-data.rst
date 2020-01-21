@@ -17,14 +17,13 @@ dimension must be specified in as an attribute.  Valid options are
 be passed through ``climpred`` without issue: these could be things like ``lat``,
 ``lon``, ``depth``, etc.
 
-**Control runs, references, and observational products** are expected to contain the
-``time`` dimension at the minimum. For best use of ``climpred``, their ``time``
-dimension should cover the full length of ``init`` from the accompanying prediction
-ensemble, if possible. The ``time`` dimension must be of type ``int``,
-``pd.DatetimeIndex`` or ``xr.cftimeIndex``. ``time`` dimension of type int is assumed
-to be annual data.  A user warning is issued when this assumption is made. These
-products can also include additional dimensions, such as ``lat``, ``lon``, ``depth``,
-etc.
+**Verification products** are expected to contain the ``time`` dimension at the minimum.
+For best use of ``climpred``, their ``time`` dimension should cover the full length of
+``init`` from the accompanying prediction ensemble, if possible. The ``time`` dimension
+must be of type ``int``, ``pd.DatetimeIndex`` or ``xr.cftimeIndex``. ``time`` dimension
+of type int is assumed to be annual data.  A user warning is issued when this assumption
+is made. These products can also include additional dimensions, such as ``lat``,
+``lon``, ``depth``, etc.
 
 See the below table for a summary of dimensions used in ``climpred``, and data types
 that ``climpred`` supports for them.

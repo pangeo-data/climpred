@@ -9,8 +9,8 @@ how we use them in ``climpred``.
 Simulation Design
 #################
 
-*Hindcast Ensemble*: ``m`` ensemble members are initialized from a reference
-simulation (generally a reconstruction from reanalysis) or an analysis
+*Hindcast Ensemble*: ``m`` ensemble members are initialized from a simulation
+(generally a reconstruction from reanalysis) or an analysis
 (representing the current state of the atmosphere, land, and ocean by assimilation of
 obsevations) at ``n`` initialization dates and integrated for ``l`` lead years
 [Boer2016]_ (:py:class:`~climpred.classes.HindcastEnsemble`).

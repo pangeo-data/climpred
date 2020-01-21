@@ -31,8 +31,8 @@ Version 2.0.0 Release
 **We now support sub-annual (e.g., seasonal, monthly, weekly, daily) forecasts**.
 We provide a host of deterministic and probabilistic metrics_. We support both
 perfect-model and hindcast-based prediction ensembles, and provide
-:py:class:``~climpred.classes.PerfectModelEnsemble`` and
-:py:class:``~climpred.classes.HindcastEnsemble`` classes to make analysis easier.
+:py:class:`~climpred.classes.PerfectModelEnsemble` and
+:py:class:`~climpred.classes.HindcastEnsemble` classes to make analysis easier.
 
 See `quick start <quick-start.html>`_ and our `examples <examples.html>`_ to get started.
 

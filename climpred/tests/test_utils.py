@@ -139,7 +139,7 @@ def test_bootstrap_pm_assign_attrs():
 def test_hindcast_assign_attrs():
     """Test assigning attrs for compute_hindcast."""
     metric = 'pearson_r'
-    comparison = 'e2r'
+    comparison = 'e2o'
     da = load_dataset('CESM-DP-SST')
     control = load_dataset('ERSST')
     actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs

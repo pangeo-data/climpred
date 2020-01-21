@@ -8,6 +8,7 @@ from .checks import has_valid_lead_units, is_in_list, is_xarray
 from .comparisons import __e2c
 from .constants import (
     CLIMPRED_DIMS,
+    COMPARISON_ALIASES,
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
@@ -70,8 +71,10 @@ def compute_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     is_in_list(dim, ['member', 'init', ['init', 'member']], '')
-    # get metric function name, not the alias
+    # get metric and comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
     # get class metric(Metric)
     metric = get_metric_class(metric, PM_METRICS)
     # get class comparison(Comparison)
@@ -131,7 +134,7 @@ def compute_hindcast(
     hind,
     obs,
     metric='pearson_r',
-    comparison='e2r',
+    comparison='e2o',
     dim='init',
     max_dof=False,
     add_attrs=True,
@@ -152,7 +155,7 @@ def compute_hindcast(
         comparison (str):
             How to compare the decadal prediction ensemble to the observations:
 
-                * e2r : ensemble mean to observations (Default)
+                * e2o : ensemble mean to observations (Default)
                 * m2r : each member to the observations
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
@@ -180,8 +183,10 @@ def compute_hindcast(
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
-    # get metric function name, not the alias
+    # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
     # get class metric(Metric)
     metric = get_metric_class(metric, HINDCAST_METRICS)
     # get class comparison(Comparison)
@@ -307,8 +312,9 @@ def compute_persistence(hind, obs, metric='pearson_r', max_dof=False, **metric_k
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
-    # get metric function name, not the alias
+    # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+
     # get class metric(Metric)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     if metric.probabilistic:
@@ -364,7 +370,7 @@ def compute_uninitialized(
     uninit,
     obs,
     metric='pearson_r',
-    comparison='e2r',
+    comparison='e2o',
     dim='time',
     add_attrs=True,
     **metric_kwargs,
@@ -383,7 +389,7 @@ def compute_uninitialized(
             Metric used in comparing the uninitialized ensemble with the observations.
         comparison (str):
             How to compare the uninitialized ensemble to the observations:
-                * e2r : ensemble mean to observations (Default)
+                * e2o : ensemble mean to observations (Default)
                 * m2r : each member to the observations
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
@@ -396,6 +402,10 @@ def compute_uninitialized(
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     uninit = convert_time_index(uninit, 'time', 'uninit[time]')
     obs = convert_time_index(obs, 'time', 'obs[time]')
+
+    # get metric/comparison function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
 
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)

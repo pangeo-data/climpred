@@ -5,7 +5,7 @@ import xarray as xr
 from tqdm.auto import tqdm
 
 from .checks import has_dims, has_valid_lead_units
-from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
+from .constants import ALL_COMPARISONS, ALL_METRICS, COMPARISON_ALIASES, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
@@ -316,8 +316,10 @@ def bootstrap_compute(
     uninit = []
     pers = []
 
-    # get metric function name, not the alias
+    # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
     # get class Metric(metric)
     metric = get_metric_class(metric, ALL_METRICS)
     # get comparison function
@@ -484,7 +486,7 @@ def bootstrap_hindcast(
     hist,
     obs,
     metric='pearson_r',
-    comparison='e2r',
+    comparison='e2o',
     dim='init',
     sig=95,
     bootstrap=500,
@@ -499,7 +501,7 @@ def bootstrap_hindcast(
         obs (xr.Dataset): Observations.
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
-        comparison (str): `comparison`. Defaults to 'e2r'.
+        comparison (str): `comparison`. Defaults to 'e2o'.
         dim (str): dimension to apply metric over. default: 'init'
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.

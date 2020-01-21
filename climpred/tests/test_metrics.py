@@ -200,7 +200,7 @@ def test_hindcast_metric_skipna(initialized_da, reconstruction_da, metric):
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ['e2r'])
+@pytest.mark.parametrize('comparison', ['e2o'])
 def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, metric):
     # distribute weights on initializations
     dim = 'init'
@@ -225,7 +225,7 @@ def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, 
 
 @pytest.mark.skip(reason='comparisons dont work here')
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ['e2r', 'm2r'])
+@pytest.mark.parametrize('comparison', ['e2o', 'm2r'])
 def test_hindcast_metric_weights_x2r(
     initialized_da, reconstruction_da, comparison, metric
 ):

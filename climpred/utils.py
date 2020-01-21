@@ -9,7 +9,7 @@ from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import METRIC_ALIASES
+from .constants import COMPARISON_ALIASES, METRIC_ALIASES
 
 
 def convert_time_index(xobj, time_string, kind):
@@ -117,7 +117,7 @@ def get_comparison_class(comparison, list_):
 
     Hindcast:
 
-        * e2r: Compare the ensemble mean to the observations.
+        * e2o: Compare the ensemble mean to the observations.
         * m2r: Compare each ensemble member to the observations.
 
     Args:
@@ -129,6 +129,11 @@ def get_comparison_class(comparison, list_):
     """
     if isinstance(comparison, comparisons.Comparison):
         return comparison
+    elif isinstance(comparison, str):
+        # check if comparison allowed
+        is_in_list(comparison, list_, 'comparison')
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+        return getattr(comparisons, '__' + comparison)
     else:
         is_in_list(comparison, list_, 'comparison')
         return getattr(comparisons, '__' + comparison)

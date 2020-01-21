@@ -143,10 +143,10 @@ def test_compute_hindcast_lead0_lead1(
     framework.
     """
     res1 = compute_hindcast(
-        initialized_ds, reconstruction_ds, metric='rmse', comparison='e2r'
+        initialized_ds, reconstruction_ds, metric='rmse', comparison='e2o'
     )
     res2 = compute_hindcast(
-        initialized_ds_lead0, reconstruction_ds, metric='rmse', comparison='e2r'
+        initialized_ds_lead0, reconstruction_ds, metric='rmse', comparison='e2o'
     )
     assert (res1.SST.values == res2.SST.values).all()
 
@@ -182,7 +182,7 @@ def test_uninitialized(uninitialized_da, reconstruction_da):
     """
     res = (
         compute_uninitialized(
-            uninitialized_da, reconstruction_da, metric='rmse', comparison='e2r'
+            uninitialized_da, reconstruction_da, metric='rmse', comparison='e2o'
         )
         .isnull()
         .any()
@@ -201,7 +201,7 @@ def test_bootstrap_hindcast_da1d_not_nan(
         uninitialized_da,
         reconstruction_da,
         metric='rmse',
-        comparison='e2r',
+        comparison='e2o',
         sig=50,
         bootstrap=2,
     )
@@ -218,7 +218,7 @@ def test_compute_hindcast_metric_keyerrors(initialized_ds, reconstruction_ds, me
     """
     with pytest.raises(KeyError) as excinfo:
         compute_hindcast(
-            initialized_ds, reconstruction_ds, comparison='e2r', metric=metric
+            initialized_ds, reconstruction_ds, comparison='e2o', metric=metric
         )
     assert 'Specify metric from' in str(excinfo.value)
 
@@ -247,7 +247,7 @@ def test_compute_hindcast_dask_spatial(hind_3d, fosi_3d, metric):
             res_chunked = compute_hindcast(
                 hind_3d.chunk({dim: step}),
                 fosi_3d.chunk({dim: step}),
-                comparison='e2r',
+                comparison='e2o',
                 metric=metric,
             )
             # check for chunks
@@ -266,7 +266,7 @@ def test_compute_hindcast_dask_climpred_dims(hind_3d, fosi_3d, metric):
         if dim in fosi_3d.dims:
             fosi_3d = fosi_3d.chunk({dim: step})
         res_chunked = compute_hindcast(
-            hind_3d, fosi_3d, comparison='e2r', metric=metric
+            hind_3d, fosi_3d, comparison='e2o', metric=metric
         )
         # check for chunks
         assert dask.is_dask_collection(res_chunked)
@@ -293,7 +293,7 @@ def test_bootstrap_hindcast_keeps_lead_units(
         observations_da,
         metric='mse',
         bootstrap=2,
-        comparison='e2r',
+        comparison='e2o',
         sig=sig,
         dim='init',
     )

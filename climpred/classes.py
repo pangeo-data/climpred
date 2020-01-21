@@ -784,7 +784,7 @@ class HindcastEnsemble(PredictionEnsemble):
     # ------------------
     # Analysis Functions
     # ------------------
-    def verify(self, name=None, metric='pearson_r', comparison='e2r', max_dof=False):
+    def verify(self, name=None, metric='pearson_r', comparison='e2o', max_dof=False):
         """Verifies the initialized ensemble against observations.
 
         This will automatically verify against all shared variables
@@ -794,7 +794,7 @@ class HindcastEnsemble(PredictionEnsemble):
             name (str): Short name of observations to compare to. If ``None``, compare
                 to all observations.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2r'): How to compare to the observations. ('e2r'
+            comparison (str, default 'e2o'): How to compare to the observations. ('e2o'
                 for ensemble mean to observations. 'm2r' for each individual member to
                 observations).
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom
@@ -823,7 +823,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def compute_metric(
-        self, name=None, metric='pearson_r', comparison='e2r', max_dof=False
+        self, name=None, metric='pearson_r', comparison='e2o', max_dof=False
     ):
         """Verifies the initialized ensemble against observations.
 
@@ -834,7 +834,7 @@ class HindcastEnsemble(PredictionEnsemble):
             name (str): Short name of observations to compare to. If ``None``, compare
                 to all observations.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2r'): How to compare to the observations. ('e2r'
+            comparison (str, default 'e2o'): How to compare to the observations. ('e2o'
                 for ensemble mean to observations. 'm2r' for each individual member to
                 observations).
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom
@@ -854,7 +854,7 @@ class HindcastEnsemble(PredictionEnsemble):
             name=name, metric=metric, comparison=comparison, max_dof=max_dof
         )
 
-    def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2r'):
+    def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
         """Verifies the uninitialized ensemble against observations.
 
         This will automatically verify against all shared variables
@@ -864,7 +864,7 @@ class HindcastEnsemble(PredictionEnsemble):
             name (str): Short name of observations to compare to. If ``None``, compare
                 to all observations.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2r'): How to compare to the observations. ('e2r'
+            comparison (str, default 'e2o'): How to compare to the observations. ('e2o'
                 for ensemble mean to observations. 'm2r' for each individual member to
                 observations).
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom

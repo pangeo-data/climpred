@@ -1,12 +1,18 @@
 from .comparisons import __ALL_COMPARISONS__ as all_comparisons
 from .metrics import __ALL_METRICS__ as all_metrics
 
-# To match a metric for (multiple) keywords.
+# To match a metric/comparison for (multiple) keywords.
 METRIC_ALIASES = dict()
 for m in all_metrics:
     if m.aliases is not None:
         for a in m.aliases:
             METRIC_ALIASES[a] = m.name
+
+COMPARISON_ALIASES = dict()
+for c in all_comparisons:
+    if c.aliases is not None:
+        for a in c.aliases:
+            COMPARISON_ALIASES[a] = c.name
 
 DETERMINISTIC_METRICS = [m.name for m in all_metrics if not m.probabilistic]
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS
@@ -26,7 +32,7 @@ ALL_METRICS = (
 )
 
 # Which comparisons work with which set of metrics.
-# ['e2r', 'm2r']
+# ['e2o', 'm2r']
 HINDCAST_COMPARISONS = [c.name for c in all_comparisons if c.hindcast]
 # ['m2c', 'e2c', 'm2m', 'm2e']
 PM_COMPARISONS = [c.name for c in all_comparisons if not c.hindcast]

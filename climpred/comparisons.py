@@ -51,20 +51,24 @@ def _display_comparison_metadata(self):
 class Comparison:
     """Master class for all comparisons."""
 
-    def __init__(self, name, function, hindcast, probabilistic, long_name=None):
+    def __init__(
+        self, name, function, hindcast, probabilistic, long_name=None, aliases=None
+    ):
         """Comparison initialization.
 
         Args:
             name (str): name of comparison.
             function (function): comparison function.
             hindcast (bool): Can comparison be used in `compute_hindcast`?
-             `False` means `compute_perfect_model`
+                `False` means `compute_perfect_model`
             probabilistic (bool): Can this comparison be used for probabilistic
-             metrics also? Probabilistic metrics require multiple forecasts.
-             `False` means that comparison is only deterministic.
-             `True` means that comparison can be used both deterministic and
-             probabilistic.
+                metrics also? Probabilistic metrics require multiple forecasts.
+                `False` means that comparison is only deterministic.
+                `True` means that comparison can be used both deterministic and
+                probabilistic.
             long_name (str, optional): longname of comparison. Defaults to None.
+            aliases (list of str, optional): Allowed aliases for this comparison.
+                Defaults to ``None``.
 
         Returns:
             comparison: comparison class Comparison.
@@ -75,6 +79,7 @@ class Comparison:
         self.hindcast = hindcast
         self.probabilistic = probabilistic
         self.long_name = long_name
+        self.aliases = aliases
 
     def __repr__(self):
         """Show metadata of comparison class."""
@@ -240,7 +245,7 @@ __e2c = Comparison(
 # --------------------------------------------#
 # HINDCAST COMPARISONS
 # --------------------------------------------#
-def _e2r(hind, obs, metric=None):
+def _e2o(hind, obs, metric=None):
     """Compare the ensemble mean forecast to observations for a ``HindcastEnsemble``
     setup.
 
@@ -248,7 +253,7 @@ def _e2r(hind, obs, metric=None):
         hind (xarray object): Hindcast with optional ``member`` dimension.
         obs (xarray object): Observations to verify against.
         metric (Metric): needed for probabilistic metrics.
-                      therefore useless in e2r comparison,
+                      therefore useless in ``e2o`` comparison,
                       but expected by internal API.
 
     Returns:
@@ -261,12 +266,13 @@ def _e2r(hind, obs, metric=None):
     return forecast, obs
 
 
-__e2r = Comparison(
-    name='e2r',
-    function=_e2r,
+__e2o = Comparison(
+    name='e2o',
+    function=_e2o,
     hindcast=True,
     probabilistic=False,
     long_name='Verify the ensemble mean against observations',
+    aliases=['e2r'],
 )
 
 
@@ -305,4 +311,4 @@ __m2r = Comparison(
 )
 
 
-__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2r, __m2r]
+__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2o, __m2r]

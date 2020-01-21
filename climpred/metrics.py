@@ -69,7 +69,7 @@ def _get_norm_factor(comparison):
           the Decadal Predictability of Land and Ocean Carbon Uptake.”
           Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
     """
-    if comparison.name in ['m2e', 'e2c', 'e2r']:
+    if comparison.name in ['m2e', 'e2c', 'e2o']:
         fac = 1
     elif comparison.name in ['m2c', 'm2m', 'm2r']:
         fac = 2
@@ -911,7 +911,7 @@ def _nmse(forecast, obs, dim=None, **metric_kwargs):
              = \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{o} \\cdot fac},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
-    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    ``e2c``, ``e2o``) and 2 when using comparisons involving individual ensemble
     members (``m2c``, ``m2m``, ``m2r``). See
     :py:func:`~climpred.metrics._get_norm_factor`.
 
@@ -996,7 +996,7 @@ def _nmae(forecast, obs, dim=None, **metric_kwargs):
              = \\frac{\\overline{|f - o|}}{\\sigma_{o} \\cdot fac},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
-    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    ``e2c``, ``e2o``) and 2 when using comparisons involving individual ensemble
     members (``m2c``, ``m2m``, ``m2r``). See
     :py:func:`~climpred.metrics._get_norm_factor`.
 
@@ -1082,7 +1082,7 @@ def _nrmse(forecast, obs, dim=None, **metric_kwargs):
               = \\sqrt{ \\frac{\\overline{(f - o)^{2}}}{ \\sigma^2_{o}\\cdot fac}},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
-    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    ``e2c``, ``e2o``) and 2 when using comparisons involving individual ensemble
     members (``m2c``, ``m2m``, ``m2r``). See
     :py:func:`~climpred.metrics._get_norm_factor`.
 
@@ -1169,7 +1169,7 @@ def _msess(forecast, obs, dim=None, **metric_kwargs):
                1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
-    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    ``e2c``, ``e2o``) and 2 when using comparisons involving individual ensemble
     members (``m2c``, ``m2m``, ``m2r``). See
     :py:func:`~climpred.metrics._get_norm_factor`.
 
@@ -1373,7 +1373,7 @@ def _uacc(forecast, obs, dim=None, **metric_kwargs):
              = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
-    ``e2c``, ``e2r``) and 2 when using comparisons involving individual ensemble
+    ``e2c``, ``e2o``) and 2 when using comparisons involving individual ensemble
     members (``m2c``, ``m2m``, ``m2r``). See
     :py:func:`~climpred.metrics._get_norm_factor`.
 

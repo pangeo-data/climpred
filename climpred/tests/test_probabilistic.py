@@ -311,7 +311,7 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
 
 
 @pytest.mark.parametrize('metric', ['crps'])
-def test_compute_hindcast_probabilistic_metric_e2r_fails(
+def test_compute_hindcast_probabilistic_metric_e2o_fails(
     initialized_da, observations_da, metric
 ):
     metric = METRIC_ALIASES.get(metric, metric)
@@ -319,7 +319,7 @@ def test_compute_hindcast_probabilistic_metric_e2r_fails(
         compute_hindcast(
             initialized_da,
             observations_da,
-            comparison='e2r',
+            comparison='e2o',
             metric=metric,
             dim='member',
         )

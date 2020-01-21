@@ -225,7 +225,7 @@ def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, 
 
 @pytest.mark.skip(reason='comparisons dont work here')
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ['e2o', 'm2r'])
+@pytest.mark.parametrize('comparison', ['e2o', 'm2o'])
 def test_hindcast_metric_weights_x2r(
     initialized_da, reconstruction_da, comparison, metric
 ):
@@ -260,7 +260,7 @@ def test_Metric_display():
 
 def test_no_repeating_metric_aliases():
     """Tests that there are no repeating aliases for metrics, which would overwrite
-    the earlier instantiated metric."""
+    the earlier defined metric."""
     METRICS = []
     for m in all_metrics:
         if m.aliases is not None:

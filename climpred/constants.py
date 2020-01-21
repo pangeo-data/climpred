@@ -32,7 +32,7 @@ ALL_METRICS = (
 )
 
 # Which comparisons work with which set of metrics.
-# ['e2o', 'm2r']
+# ['e2o', 'm2o']
 HINDCAST_COMPARISONS = [c.name for c in all_comparisons if c.hindcast]
 # ['m2c', 'e2c', 'm2m', 'm2e']
 PM_COMPARISONS = [c.name for c in all_comparisons if not c.hindcast]
@@ -41,7 +41,7 @@ ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
 PROBABILISTIC_PM_COMPARISONS = [
     c.name for c in all_comparisons if (not c.hindcast and c.probabilistic)
 ]
-# ['m2r']
+# ['m2o']
 PROBABILISTIC_HINDCAST_COMPARISONS = [
     c.name for c in all_comparisons if (c.hindcast and c.probabilistic)
 ]

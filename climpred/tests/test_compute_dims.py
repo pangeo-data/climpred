@@ -138,7 +138,7 @@ def test_bootstrap_hindcast_dim(initialized_da, uninitialized_da, observations_d
         observations_da,
         metric='rmse',
         dim='member',
-        comparison='m2r',
+        comparison='m2o',
         bootstrap=3,
     )
     assert 'init' in actual.dims

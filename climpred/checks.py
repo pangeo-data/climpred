@@ -106,21 +106,22 @@ def is_in_list(item, list_, kind):
     return True
 
 
-def match_initialized_dims(init, obs, uninitialized=False):
-    """Checks that the observations' dimensions match appropriate initialized
+def match_initialized_dims(init, verif, uninitialized=False):
+    """Checks that the verification data dimensions match appropriate initialized
     dimensions.
 
     If uninitialized, ignore ``member``. Otherwise, ignore ``lead`` and ``member``.
     """
-    # Since observations won't have the ``init``` dimension, temporarily rename to time.
+    # Since verification data won't have the ``init``` dimension, temporarily rename to
+    # time.
     init = init.rename({'init': 'time'})
     init_dims = list(init.dims)
     if 'lead' in init_dims:
         init_dims.remove('lead')
     if ('member' in init_dims) and not uninitialized:
         init_dims.remove('member')
-    if not (set(obs.dims) == set(init_dims)):
-        unmatch_dims = set(obs.dims) ^ set(init_dims)
+    if not (set(verif.dims) == set(init_dims)):
+        unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
             'Dimensions must match initialized prediction ensemble '
             f'dimensions; these dimensions do not match: {unmatch_dims}.'
@@ -128,25 +129,25 @@ def match_initialized_dims(init, obs, uninitialized=False):
     return True
 
 
-def match_initialized_vars(init, obs):
-    """Checks that a new observational (or control) dataset has at least one variable
+def match_initialized_vars(init, verif):
+    """Checks that a new verification dataset has at least one variable
     in common with the initialized dataset.
 
     This ensures that they can be compared pairwise.
 
     Args:
         init (xarray object): Initialized forecast ensemble.
-        obs (xarray object): Product to be added.
+        verif (xarray object): Product to be added.
     """
     init_vars = init.data_vars
-    obs_vars = obs.data_vars
+    verif_vars = verif.data_vars
     # https://stackoverflow.com/questions/10668282/
     # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
-    if set(init_vars).isdisjoint(obs_vars):
+    if set(init_vars).isdisjoint(verif_vars):
         raise VariableError(
             'Please provide a Dataset/DataArray with at least '
             'one matching variable to the initialized prediction ensemble; '
-            f'got {init_vars} for init and {obs_vars} for obs.'
+            f'got {init_vars} for init and {verif_vars} for verif.'
         )
     return True
 

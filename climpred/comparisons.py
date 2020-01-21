@@ -245,25 +245,25 @@ __e2c = Comparison(
 # --------------------------------------------#
 # HINDCAST COMPARISONS
 # --------------------------------------------#
-def _e2o(hind, obs, metric=None):
-    """Compare the ensemble mean forecast to observations for a ``HindcastEnsemble``
-    setup.
+def _e2o(hind, verif, metric=None):
+    """Compare the ensemble mean forecast to the verification data for a
+    ``HindcastEnsemble`` setup.
 
     Args:
         hind (xarray object): Hindcast with optional ``member`` dimension.
-        obs (xarray object): Observations to verify against.
+        verif (xarray object): Verification data.
         metric (Metric): needed for probabilistic metrics.
                       therefore useless in ``e2o`` comparison,
                       but expected by internal API.
 
     Returns:
-        xr.object: forecast, obs.
+        xr.object: forecast, verif.
     """
     if 'member' in hind.dims:
         forecast = hind.mean('member')
     else:
         forecast = hind
-    return forecast, obs
+    return forecast, verif
 
 
 __e2o = Comparison(
@@ -271,44 +271,45 @@ __e2o = Comparison(
     function=_e2o,
     hindcast=True,
     probabilistic=False,
-    long_name='Verify the ensemble mean against observations',
+    long_name='Verify the ensemble mean against the verification data',
     aliases=['e2r'],
 )
 
 
-def _m2r(hind, obs, metric=None):
-    """Compares each ensemble member individually to observations for a
+def _m2o(hind, verif, metric=None):
+    """Compares each ensemble member individually to the verification data for a
     ``HindcastEnsemble`` setup.
 
     Args:
         hind (xarray object): Hindcast with ``member`` dimension.
-        obs (xarray object): Observations to verify against.
+        verif (xarray object): Verification data.
         metric (Metric):
-            If deterministic, forecast and obs both have ``member`` dim;
+            If deterministic, forecast and verif both have ``member`` dim;
             If probabilistic, only forecast has ``member`` dim.
 
     Returns:
-        xr.object: forecast, obs.
+        xr.object: forecast, verif.
     """
     # check that this contains more than one member
     has_dims(hind, 'member', 'decadal prediction ensemble')
     has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
     forecast = hind
     if not metric.probabilistic:
-        obs = obs.expand_dims('member')
+        verif = verif.expand_dims('member')
         nMember = forecast.member.size
-        obs = obs.isel(member=[0] * nMember)
-        obs['member'] = forecast['member']
-    return forecast, obs
+        verif = verif.isel(member=[0] * nMember)
+        verif['member'] = forecast['member']
+    return forecast, verif
 
 
-__m2r = Comparison(
-    name='m2r',
-    function=_m2r,
+__m2o = Comparison(
+    name='m2o',
+    function=_m2o,
     hindcast=True,
     probabilistic=True,
-    long_name='Verify each individual forecast member against observations.',
+    long_name='Verify each individual forecast member against the verification data.',
+    aliases=['m2r'],
 )
 
 
-__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2o, __m2r]
+__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2o, __m2o]

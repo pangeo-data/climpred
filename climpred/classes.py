@@ -47,8 +47,8 @@ def _display_metadata(self):
     summary = header + '\nInitialized Ensemble:\n'
     summary += SPACE + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
     if isinstance(self, HindcastEnsemble):
-        # Prints out observations names and associated variables if they exist. If not,
-        # just write "None".
+        # Prints out verification data names and associated variables if they exist.
+        # If not, just write "None".
         if any(self._datasets['observations']):
             for key in self._datasets['observations']:
                 summary += f'{key}:\n'
@@ -62,7 +62,7 @@ def _display_metadata(self):
                         + '\n'
                     )
         else:
-            summary += 'Observationss:\n'
+            summary += 'Verification Data:\n'
             summary += SPACE + 'None\n'
     elif isinstance(self, PerfectModelEnsemble):
         summary += 'Control:\n'
@@ -336,7 +336,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
     # Helper Functions
     # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
-        """Helper function to loop through observations and apply an arbitrary climpred
+        """Helper function to loop through verification data and apply an arbitrary climpred
         function.
 
         Args:
@@ -497,7 +497,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         Returns:
             Dataset of persistence forecast results (if ``refname`` is declared),
-            or dictionary of Datasets with keys corresponding to observations
+            or dictionary of Datasets with keys corresponding to verification data
             name.
 
         Reference:
@@ -580,7 +580,7 @@ class HindcastEnsemble(PredictionEnsemble):
     product.
 
     `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
-    simulations/observations associated with the prediction ensemble for easy
+    verification data associated with the prediction ensemble for easy
     computation across multiple variables and products.
 
     This object is built on `xarray` and thus requires the input object to
@@ -599,10 +599,10 @@ class HindcastEnsemble(PredictionEnsemble):
             decadal prediction ensemble output.
 
         Attributes:
-          observations: Dictionary of various observations observations/simulations
-                     to associate with the decadal prediction ensemble.
+          observations: Dictionary of verification data to associate with the decadal
+              prediction ensemble.
           uninitialized: Dictionary of companion (or bootstrapped)
-                         uninitialized ensemble run.
+              uninitialized ensemble run.
         """
         super().__init__(xobj)
         self._datasets.update({'observations': {}})
@@ -611,15 +611,16 @@ class HindcastEnsemble(PredictionEnsemble):
     # Helper Functions
     # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
-        """Helper function to loop through observations and apply an arbitrary climpred
-        function.
+        """Helper function to loop through verification data and apply an arbitrary
+        climpred function.
 
         Args:
             func (function): climpred function to apply to object.
             input_dict (dict): dictionary with the following things:
                 * ensemble: initialized or uninitialized ensemble.
-                * observations: observations dictionary from HindcastEnsemble.
-                * name: name of observations to target.
+                * observations: Dictionary of verification data from
+                    ``HindcastEnsemble``.
+                * name: name of verification data to target.
                 * init: bool of whether or not it's the initialized ensemble.
         """
         ensemble = input_dict['ensemble']
@@ -683,12 +684,12 @@ class HindcastEnsemble(PredictionEnsemble):
     # ---------------
     @is_xarray(1)
     def add_observations(self, xobj, name):
-        """Add an observational product with which to verify the initialized ensemble.
+        """Add a verification data with which to verify the initialized ensemble.
 
         Args:
             xobj (xarray object): Dataset/DataArray to append to the
                 ``HindcastEnsemble`` object.
-            name (str): Short name for referencing these observations.
+            name (str): Short name for referencing the verification data.
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
@@ -712,7 +713,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Args:
             xobj (xarray object): Dataset/DataArray to append to the
                                   `HindcastEnsemble` object.
-            name (str): Short name for referencing these observations.
+            name (str): Short name for referencing the verification data.
         """
         warnings.warn(
             '`HindcastEnsemble.add_reference()` will be deprecated. '
@@ -723,7 +724,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
-        """Add a companion uninitialized ensemble for comparison to observations.
+        """Add a companion uninitialized ensemble for comparison to verification data.
 
         Args:
             xobj (xarray object): Dataset/DataArray of the uninitialzed
@@ -744,11 +745,11 @@ class HindcastEnsemble(PredictionEnsemble):
     # Getters & Setters
     # -----------------
     def get_observations(self, name=None):
-        """Returns xarray Datasets of the observations.
+        """Returns xarray Datasets of the observations/verification data.
 
         Args:
-            name (str, optional): Name of the observations to return. If ``None``,
-                return dictionary of all observations.
+            name (str, optional): Name of the observations/verification data to return.
+                If ``None``, return dictionary of all observations/verification data.
 
         Returns:
             Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
@@ -764,11 +765,11 @@ class HindcastEnsemble(PredictionEnsemble):
             return self._datasets['observations'][name]
 
     def get_reference(self, name=None):
-        """Returns xarray Datasets of the observations.
+        """Returns xarray Datasets of the observations/verification data.
 
         Args:
-            name (str, optional): Name of the observations to return. If ``None``,
-                return dictionary of all observations.
+            name (str, optional): Name of the observations/verification data to return.
+                If ``None``, return dictionary of all observations/verification data.
 
         Returns:
             Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
@@ -785,25 +786,26 @@ class HindcastEnsemble(PredictionEnsemble):
     # Analysis Functions
     # ------------------
     def verify(self, name=None, metric='pearson_r', comparison='e2o', max_dof=False):
-        """Verifies the initialized ensemble against observations.
+        """Verifies the initialized ensemble against observations/verification data.
 
         This will automatically verify against all shared variables
-        between the initialized ensemble and observations.
+        between the initialized ensemble and observations/verification data.
 
         Args:
-            name (str): Short name of observations to compare to. If ``None``, compare
-                to all observations.
+            name (str): Short name of observations/verification data to compare to.
+                If ``None``, compare to all observations/verification data.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the observations. ('e2o'
-                for ensemble mean to observations. 'm2r' for each individual member to
-                observations).
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o' for ensemble mean to
+                observations/verification data. 'm2o' for each individual member to
+                observations/verification data).
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom
                 for each lag calculation.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to observations short
-            name.
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
         """
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'
@@ -825,18 +827,19 @@ class HindcastEnsemble(PredictionEnsemble):
     def compute_metric(
         self, name=None, metric='pearson_r', comparison='e2o', max_dof=False
     ):
-        """Verifies the initialized ensemble against observations.
+        """Verifies the initialized ensemble against observations/verification data.
 
         This will automatically verify against all shared variables
-        between the initialized ensemble and observations.
+        between the initialized ensemble and observations/verification data.
 
         Args:
-            name (str): Short name of observations to compare to. If ``None``, compare
-                to all observations.
+            name (str): Short name of observations/verification data to compare to.
+                If ``None``, compare to all observations/verification data.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the observations. ('e2o'
-                for ensemble mean to observations. 'm2r' for each individual member to
-                observations).
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o'
+                for ensemble mean to observations/verification data.
+                'm2o' for each individual member to observations/verification data).
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom
                 for each lag calculation.
 
@@ -855,25 +858,26 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
-        """Verifies the uninitialized ensemble against observations.
+        """Verifies the uninitialized ensemble against observations/verification data.
 
         This will automatically verify against all shared variables
-        between the uninitialized ensemble and observations.
+        between the uninitialized ensemble and observations/verification data.
 
         Args:
-            name (str): Short name of observations to compare to. If ``None``, compare
-                to all observations.
+            name (str): Short name of observations/verification data to compare to.
+                If ``None``, compare to all observations/verification data.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the observations. ('e2o'
-                for ensemble mean to observations. 'm2r' for each individual member to
-                observations).
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o' for ensemble mean to
+                observations/verification data. 'm2o' for each individual member to
+                observations/verification data).
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom
                 for each lag calculation.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to observations short
-            name.
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
         """
         has_dataset(
             self._datasets['uninitialized'],
@@ -894,7 +898,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def compute_persistence(self, name=None, metric='pearson_r', max_dof=False):
-        """Verify against a persistence forecast of the observations.
+        """Verify against a persistence forecast of the observations/verification data.
 
         This simply applies some metric between the observational product and itself out
         to some lag (e.g., an ACF in the case of 'pearson_r').
@@ -907,16 +911,17 @@ class HindcastEnsemble(PredictionEnsemble):
             This will be implemented as an option in a future version of ``climpred``.
 
         Args:
-            name (str, default None): Short name of observations with which to compute
-                the persistence forecast. If ``None``, compute for all observations.
+            name (str, default None): Short name of observations/verification data
+                with which to compute the persistence forecast. If ``None``, compute
+                for all observations/verification data.
             metric (str, default 'pearson_r'): Metric to apply for verification.
             max_dof (bool, default False): If ``True``, maximize the degrees of freedom
                 for each lag calculation.
 
         Returns:
             Dataset of persistence forecast results (if ``name`` is not ``None``),
-            or dictionary of Datasets with keys corresponding to observations short
-            name.
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
 
         Reference:
             * Chapter 8 (Short-Term Climate Prediction) in

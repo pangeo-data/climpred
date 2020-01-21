@@ -13,7 +13,7 @@ High-Level Classes
 A primary feature of ``climpred`` is our prediction ensemble objects,
 :py:class:`~climpred.classes.HindcastEnsemble` and
 :py:class:`~climpred.classes.PerfectModelEnsemble`. Users can append their initialized
-ensemble to these classes, as well as an arbitrary number of references (assimilations,
+ensemble to these classes, as well as an arbitrary number of verification products (assimilations,
 reconstructions, observations), control runs, and uninitialized ensembles.
 
 HindcastEnsemble
@@ -21,7 +21,7 @@ HindcastEnsemble
 
 A ``HindcastEnsemble`` is a prediction ensemble that is initialized off of some form of
 observations (an assimilation, renanalysis, etc.). Thus, it is anticipated that forecasts are
-verified against observation-like references. Read more about the terminology
+verified against observation-like products. Read more about the terminology
 `here <terminology.html>`_.
 
 .. autosummary::
@@ -117,7 +117,7 @@ Direct Function Calls
 A user can directly call functions in ``climpred``. This requires entering more arguments, e.g.
 the initialized ensemble
 :py:class:`~xarray.core.dataset.Dataset`/:py:class:`xarray.core.dataarray.DataArray` directly as
-well as a reference product or control run. Our object
+well as a verification product. Our object
 :py:class:`~climpred.classes.HindcastEnsemble` and
 :py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the
 analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will

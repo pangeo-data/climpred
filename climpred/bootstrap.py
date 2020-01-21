@@ -228,7 +228,7 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
 
 def bootstrap_compute(
     hind,
-    obs,
+    verif,
     hist=None,
     metric='pearson_r',
     comparison='m2e',
@@ -244,7 +244,7 @@ def bootstrap_compute(
 
     Args:
         hind (xr.Dataset): prediction ensemble.
-        obs (xr.Dataset): Observations.
+        verif (xr.Dataset): Verification data.
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
@@ -347,7 +347,7 @@ def bootstrap_compute(
         # compute init skill
         init_skill = compute(
             smp_hind,
-            obs,
+            verif,
             metric=metric,
             comparison=comparison,
             add_attrs=False,
@@ -363,14 +363,14 @@ def bootstrap_compute(
             init_skill['init'] = inits
         init.append(init_skill)
         # generate uninitialized ensemble from hist
-        if hist is None:  # PM path, use obs = control
-            hist = obs
+        if hist is None:  # PM path, use verif = control
+            hist = verif
         uninit_hind = resample_uninit(hind, hist)
         # compute uninit skill
         uninit.append(
             compute(
                 uninit_hind,
-                obs,
+                verif,
                 metric=metric,
                 comparison=comparison,
                 dim=dim,
@@ -382,7 +382,7 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                compute_persistence(smp_hind, obs, metric=metric, **metric_kwargs)
+                compute_persistence(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -417,7 +417,7 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, obs, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
@@ -427,7 +427,7 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = compute_persistence(hind, obs, metric=metric, **metric_kwargs)
+        pers_skill = compute_persistence(hind, verif, metric=metric, **metric_kwargs)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -462,7 +462,7 @@ def bootstrap_compute(
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
         'bootstrap_iterations': bootstrap,
         'p': 'probability that initialized forecast performs \
-                          better than observations',
+                          better than verification data',
     }
     metadata_dict.update(metric_kwargs)
     results = assign_attrs(
@@ -484,7 +484,7 @@ def bootstrap_compute(
 def bootstrap_hindcast(
     hind,
     hist,
-    obs,
+    verif,
     metric='pearson_r',
     comparison='e2o',
     dim='init',
@@ -498,7 +498,7 @@ def bootstrap_hindcast(
 
     Args:
         hind (xr.Dataset): prediction ensemble.
-        obs (xr.Dataset): Observations.
+        verif (xr.Dataset): Verification data.
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'e2o'.
@@ -550,14 +550,14 @@ def bootstrap_hindcast(
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     hist = convert_time_index(hist, 'time', 'uninitialized[time]')
-    obs = convert_time_index(obs, 'time', 'obs[time]')
+    verif = convert_time_index(verif, 'time', 'verif[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
     return bootstrap_compute(
         hind,
-        obs,
+        verif,
         hist=hist,
         metric=metric,
         comparison=comparison,
@@ -587,7 +587,7 @@ def bootstrap_perfect_model(
 
     Args:
         hind (xr.Dataset): prediction ensemble.
-        obs (xr.Dataset): Observations.
+        verif (xr.Dataset): Verification data.
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.

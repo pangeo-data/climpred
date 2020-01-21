@@ -286,7 +286,7 @@ def smooth_goddard_2013(
     Args:
         ds(xr.object): input.
         smooth_kws(dict): length of smoothing of timesteps (applies to ``lead``
-                          in forecast and ``time`` in observations).
+                          in forecast and ``time`` in verification data).
                           Default: {'time': 4} (see Goddard et al. 2013).
         d_lon_lat_kws (dict): target grid for regridding.
                               Default: {'lon':5 , 'lat': 5}

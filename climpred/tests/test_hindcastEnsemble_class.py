@@ -147,7 +147,7 @@ def test_compute_metric(initialized_ds, reconstruction_ds, observations_ds):
     hindcast.compute_metric()  # compute over all observations
     hindcast.compute_metric('reconstruction')  # compute over single observation
     # test all keywords
-    hindcast.compute_metric(max_dof=True, metric='rmse', comparison='m2r')
+    hindcast.compute_metric(max_dof=True, metric='rmse', comparison='m2o')
 
 
 def test_compute_metric_single(initialized_ds, reconstruction_ds):
@@ -178,7 +178,7 @@ def test_verify(initialized_ds, reconstruction_ds, observations_ds):
     hindcast.verify()  # compute over all observations
     hindcast.verify('reconstruction')  # compute over single observation
     # test all keywords
-    hindcast.verify(max_dof=True, metric='rmse', comparison='m2r')
+    hindcast.verify(max_dof=True, metric='rmse', comparison='m2o')
 
 
 def test_verify_single(initialized_ds, reconstruction_ds):
@@ -203,7 +203,7 @@ def test_compute_uninitialized(
     hindcast.compute_uninitialized()
     # multiple observations, call one.
     hindcast.compute_uninitialized('reconstruction')
-    hindcast.compute_uninitialized(metric='rmse', comparison='m2r')
+    hindcast.compute_uninitialized(metric='rmse', comparison='m2o')
 
 
 def test_compute_persistence(initialized_ds, reconstruction_ds, observations_ds):

@@ -117,8 +117,8 @@ def get_comparison_class(comparison, list_):
 
     Hindcast:
 
-        * e2o: Compare the ensemble mean to the observations.
-        * m2r: Compare each ensemble member to the observations.
+        * e2o: Compare the ensemble mean to the verification data.
+        * m2o: Compare each ensemble member to the verification data.
 
     Args:
         comparison (str): name of comparison.
@@ -179,30 +179,30 @@ def intersect(lst1, lst2):
     return np.array(lst3)
 
 
-def reduce_time_series(forecast, obs, nlags):
-    """Reduces forecast and observations to common time frame for prediction
+def reduce_time_series(forecast, verif, nlags):
+    """Reduces forecast and verification data to common time frame for prediction
     and lag.
 
     Args:
         forecast (`xarray` object): Prediction ensemble with ``init`` dim.
-        obs (`xarray` object): Observations being compared to (for verification,
+        verif (`xarray` object): verification data being compared to (for verification,
             persistence, etc.)
         nlags (int): number of lags being computed
 
     Returns:
        forecast (`xarray` object): prediction ensemble reduced to
-       obs (`xarray` object):
+       verif (`xarray` object):
     """
     n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    obs_dates = shift_cftime_index(obs, 'time', -1 * n, freq)
+    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
 
-    imin = max(forecast.time.min(), obs.time.min())
-    imax = min(forecast.time.max(), obs_dates.max())
+    imin = max(forecast.time.min(), verif.time.min())
+    imax = min(forecast.time.max(), verif_dates.max())
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)
-    obs = obs.where(obs.time >= imin, drop=True)
-    return forecast, obs
+    verif = verif.where(verif.time >= imin, drop=True)
+    return forecast, verif
 
 
 def shift_cftime_index(xobj, time_string, n, freq):
@@ -266,8 +266,8 @@ def assign_attrs(
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
-        metric (class) : metric used in comparing the forecast and observations.
-        comparison (class): how to compare the forecast and observations.
+        metric (class) : metric used in comparing the forecast and verification data.
+        comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
 
     Returns:

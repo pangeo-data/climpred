@@ -106,11 +106,11 @@ def fosi_3d():
 
 
 @pytest.mark.skip(reason='less not properly implemented')
-def test_compute_hindcast_less_m2r(initialized_da, reconstruction_da):
-    """Test LESS m2r runs through."""
+def test_compute_hindcast_less_m2o(initialized_da, reconstruction_da):
+    """Test LESS m2o runs through."""
     actual = (
         compute_hindcast(
-            initialized_da, reconstruction_da, metric='less', comparison='m2r'
+            initialized_da, reconstruction_da, metric='less', comparison='m2o'
         )
         .isnull()
         .any()

@@ -37,10 +37,10 @@ Add and Retrieve Datasets
     :toctree: api/
 
     HindcastEnsemble.__init__
-    HindcastEnsemble.add_reference
+    HindcastEnsemble.add_observations
     HindcastEnsemble.add_uninitialized
     HindcastEnsemble.get_initialized
-    HindcastEnsemble.get_reference
+    HindcastEnsemble.get_observations
     HindcastEnsemble.get_uninitialized
 
 ------------------
@@ -50,7 +50,7 @@ Analysis Functions
 .. autosummary::
     :toctree: api/
 
-    HindcastEnsemble.compute_metric
+    HindcastEnsemble.verify
     HindcastEnsemble.compute_persistence
     HindcastEnsemble.compute_uninitialized
 

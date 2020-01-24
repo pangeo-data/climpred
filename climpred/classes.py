@@ -1,3 +1,5 @@
+import warnings
+
 import xarray as xr
 
 from .bootstrap import (
@@ -45,22 +47,22 @@ def _display_metadata(self):
     summary = header + '\nInitialized Ensemble:\n'
     summary += SPACE + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
     if isinstance(self, HindcastEnsemble):
-        # Prints out reference names and associated variables if they exist. If not,
-        # just write "None".
-        if any(self._datasets['reference']):
-            for key in self._datasets['reference']:
+        # Prints out verification data names and associated variables if they exist.
+        # If not, just write "None".
+        if any(self._datasets['observations']):
+            for key in self._datasets['observations']:
                 summary += f'{key}:\n'
-                num_ref = len(self._datasets['reference'][key].data_vars)
-                for i in range(1, num_ref + 1):
+                num_obs = len(self._datasets['observations'][key].data_vars)
+                for i in range(1, num_obs + 1):
                     summary += (
                         SPACE
-                        + str(self._datasets['reference'][key].data_vars)
+                        + str(self._datasets['observations'][key].data_vars)
                         .split('\n')[i]
                         .strip()
                         + '\n'
                     )
         else:
-            summary += 'References:\n'
+            summary += 'Verification Data:\n'
             summary += SPACE + 'None\n'
     elif isinstance(self, PerfectModelEnsemble):
         summary += 'Control:\n'
@@ -143,8 +145,9 @@ class PredictionEnsemble:
                 dim that's being called. E.g., ``.isel(lead=0)`` should only
                 be applied to the initialized dataset.
 
-                Ref: https://stackoverflow.com/questions/1528237/
-                how-to-handle-exceptions-in-a-list-comprehensions
+                Reference:
+                  * https://stackoverflow.com/questions/1528237/
+                    how-to-handle-exceptions-in-a-list-comprehensions
                 """
                 try:
                     return getattr(v, name)(*args, **kwargs)
@@ -168,12 +171,12 @@ class PredictionEnsemble:
                         {outer_k: _apply_func(outer_v, name, *args, **kwargs)}
                     )
                 else:
-                    # If a nested dictionary is encountered (i.e., a set of references)
-                    # apply to each individually.
+                    # If a nested dictionary is encountered (i.e., a set of
+                    # observations) apply to each individually.
                     #
-                    # Similar to the ``add_reference`` method, this only seems to avoid
-                    # inplace operations by copying the nested dictionary separately and
-                    # then updating the main dictionary.
+                    # Similar to the ``add_observations`` method, this only seems to
+                    # avoid inplace operations by copying the nested dictionary
+                    # separately and then updating the main dictionary.
                     temporary_dataset = self._datasets[outer_k].copy()
                     for inner_k, inner_v in temporary_dataset.items():
                         temporary_dataset.update(
@@ -284,7 +287,7 @@ class PredictionEnsemble:
         # TODO: Parallelize
         datasets = self._datasets.copy()
         datasets['initialized'] = smooth_fct(self._datasets['initialized'], smooth_kws)
-        # Apply if uninitialized, control, reference exist.
+        # Apply if uninitialized, control, observations exist.
         if self._datasets['uninitialized']:
             datasets['uninitialized'] = smooth_fct(
                 self._datasets['uninitialized'], smooth_kws
@@ -333,7 +336,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
     # Helper Functions
     # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
-        """Helper function to loop through references and apply an arbitrary climpred function.
+        """Helper function to loop through verification data and apply an arbitrary climpred
+        function.
 
         Args:
             func (function): climpred function to apply to object.
@@ -492,8 +496,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 Metric to apply to the persistence forecast.
 
         Returns:
-            Dataset of persistence forecast results (if refname is declared),
-            or dictionary of Datasets with keys corresponding to reference
+            Dataset of persistence forecast results (if ``refname`` is declared),
+            or dictionary of Datasets with keys corresponding to verification data
             name.
 
         Reference:
@@ -576,7 +580,7 @@ class HindcastEnsemble(PredictionEnsemble):
     product.
 
     `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
-    simulations/observations associated with the prediction ensemble for easy
+    verification data associated with the prediction ensemble for easy
     computation across multiple variables and products.
 
     This object is built on `xarray` and thus requires the input object to
@@ -595,116 +599,132 @@ class HindcastEnsemble(PredictionEnsemble):
             decadal prediction ensemble output.
 
         Attributes:
-          reference: Dictionary of various reference observations/simulations
-                     to associate with the decadal prediction ensemble.
+          observations: Dictionary of verification data to associate with the decadal
+              prediction ensemble.
           uninitialized: Dictionary of companion (or bootstrapped)
-                         uninitialized ensemble run.
+              uninitialized ensemble run.
         """
         super().__init__(xobj)
-        self._datasets.update({'reference': {}})
+        self._datasets.update({'observations': {}})
 
     # ----------------
     # Helper Functions
     # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
-        """Helper function to loop through references and apply an arbitrary climpred function.
+        """Helper function to loop through verification data and apply an arbitrary
+        climpred function.
 
         Args:
             func (function): climpred function to apply to object.
             input_dict (dict): dictionary with the following things:
                 * ensemble: initialized or uninitialized ensemble.
-                * reference: reference dictionary from HindcastEnsemble.
-                * refname: name of reference to target.
+                * observations: Dictionary of verification data from
+                    ``HindcastEnsemble``.
+                * name: name of verification data to target.
                 * init: bool of whether or not it's the initialized ensemble.
         """
         ensemble = input_dict['ensemble']
-        reference = input_dict['reference']
-        refname = input_dict['refname']
+        observations = input_dict['observations']
+        name = input_dict['name']
         init = input_dict['init']
 
-        # Apply only to specific reference.
-        if refname is not None:
-            drop_init, drop_ref = self._vars_to_drop(refname, init=init)
+        # Apply only to specific observations.
+        if name is not None:
+            drop_init, drop_obs = self._vars_to_drop(name, init=init)
             ensemble = ensemble.drop_vars(drop_init)
-            reference = reference[refname].drop_vars(drop_ref)
-            return func(ensemble, reference, **kwargs)
+            observations = observations[name].drop_vars(drop_obs)
+            return func(ensemble, observations, **kwargs)
         else:
-            # If only one reference, just apply to that one.
-            if len(reference) == 1:
-                refname = list(reference.keys())[0]
-                drop_init, drop_ref = self._vars_to_drop(refname, init=init)
-                return func(ensemble, reference[refname], **kwargs)
-            # Loop through references, apply function, and store in dictionary.
+            # If only one observational product, just apply to that one.
+            if len(observations) == 1:
+                name = list(observations.keys())[0]
+                drop_init, drop_obs = self._vars_to_drop(name, init=init)
+                return func(ensemble, observations[name], **kwargs)
+            # Loop through observations, apply function, and store in dictionary.
             # TODO: Parallelize this process.
             else:
                 result = {}
-                for refname in reference.keys():
-                    drop_init, drop_ref = self._vars_to_drop(refname, init=init)
-                    result[refname] = func(ensemble, reference[refname], **kwargs)
+                for name in observations.keys():
+                    drop_init, drop_obs = self._vars_to_drop(name, init=init)
+                    result[name] = func(ensemble, observations[name], **kwargs)
                 return result
 
-    def _vars_to_drop(self, ref, init=True):
+    def _vars_to_drop(self, name, init=True):
         """Returns list of variables to drop when comparing
-        initialized/uninitialized to a reference.
+        initialized/uninitialized to observations.
 
         This is useful if the two products being compared do not share the same
-        variables. I.e., if the reference has ['SST'] and the initialized has
+        variables. I.e., if the observations have ['SST'] and the initialized has
         ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
         from the initialized.
 
         Args:
-          ref (str):
-            Name of reference being compared to.
+          name (str): Short name of observations being compared to.
           init (bool, default True):
-            If `True`, check variables on the initialized.
-            If `False`, check variables on the uninitialized.
+            If ``True``, check variables on the initialized.
+            If ``False``, check variables on the uninitialized.
 
         Returns:
           Lists of variables to drop from the initialized/uninitialized
-          and reference Datasets.
+          and observational Datasets.
         """
         if init:
             init_vars = [var for var in self._datasets['initialized'].data_vars]
         else:
             init_vars = [var for var in self._datasets['uninitialized'].data_vars]
-        ref_vars = [var for var in self._datasets['reference'][ref].data_vars]
+        obs_vars = [var for var in self._datasets['observations'][name].data_vars]
         # Make lists of variables to drop that aren't in common
         # with one another.
-        init_vars_to_drop = list(set(init_vars) - set(ref_vars))
-        ref_vars_to_drop = list(set(ref_vars) - set(init_vars))
-        return init_vars_to_drop, ref_vars_to_drop
+        init_vars_to_drop = list(set(init_vars) - set(obs_vars))
+        obs_vars_to_drop = list(set(obs_vars) - set(init_vars))
+        return init_vars_to_drop, obs_vars_to_drop
 
     # ---------------
     # Object Builders
     # ---------------
     @is_xarray(1)
-    def add_reference(self, xobj, name):
-        """Add a reference product for comparison to the initialized ensemble.
+    def add_observations(self, xobj, name):
+        """Add a verification data with which to verify the initialized ensemble.
 
         Args:
-            xobj (xarray object): Dataset/DataArray being appended to the
-                                  `HindcastEnsemble` object.
-            name (str): Name of this object (e.g., "reconstruction")
+            xobj (xarray object): Dataset/DataArray to append to the
+                ``HindcastEnsemble`` object.
+            name (str): Short name for referencing the verification data.
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
         match_initialized_dims(self._datasets['initialized'], xobj)
         match_initialized_vars(self._datasets['initialized'], xobj)
-        # Check that init is int, cftime, or datetime; convert ints or cftime to
+        # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
-
         # For some reason, I could only get the non-inplace method to work
         # by updating the nested dictionaries separately.
-        datasets_ref = self._datasets['reference'].copy()
+        datasets_obs = self._datasets['observations'].copy()
         datasets = self._datasets.copy()
-        datasets_ref.update({name: xobj})
-        datasets.update({'reference': datasets_ref})
+        datasets_obs.update({name: xobj})
+        datasets.update({'observations': datasets_obs})
         return self._construct_direct(datasets)
 
     @is_xarray(1)
+    def add_reference(self, xobj, name):
+        """Add an observational product with which to verify the initialized ensemble.
+
+        Args:
+            xobj (xarray object): Dataset/DataArray to append to the
+                                  `HindcastEnsemble` object.
+            name (str): Short name for referencing the verification data.
+        """
+        warnings.warn(
+            '`HindcastEnsemble.add_reference()` will be deprecated. '
+            'Using `HindcastEnsemble.add_observations()` is encouraged.',
+            PendingDeprecationWarning,
+        )
+        return self.add_observations(xobj, name)
+
+    @is_xarray(1)
     def add_uninitialized(self, xobj):
-        """Add a companion uninitialized ensemble for comparison to references.
+        """Add a companion uninitialized ensemble for comparison to verification data.
 
         Args:
             xobj (xarray object): Dataset/DataArray of the uninitialzed
@@ -724,58 +744,76 @@ class HindcastEnsemble(PredictionEnsemble):
     # -----------------
     # Getters & Setters
     # -----------------
-    def get_reference(self, name=None):
-        """Returns the given reference(s).
+    def get_observations(self, name=None):
+        """Returns xarray Datasets of the observations/verification data.
 
         Args:
-            name (str): Name of the reference to return (optional)
+            name (str, optional): Name of the observations/verification data to return.
+                If ``None``, return dictionary of all observations/verification data.
 
         Returns:
-            Dictionary of xarray datasets (if name is ``None``) or single xarray
-            dataset.
+            Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
+            ``xarray`` Dataset.
         """
         if name is None:
-            if len(self._datasets['reference']) == 1:
-                key = list(self._datasets['reference'].keys())[0]
-                return self._datasets['reference'][key]
+            if len(self._datasets['observations']) == 1:
+                key = list(self._datasets['observations'].keys())[0]
+                return self._datasets['observations'][key]
             else:
-                return self._datasets['reference']
+                return self._datasets['observations']
         else:
-            return self._datasets['reference'][name]
+            return self._datasets['observations'][name]
+
+    def get_reference(self, name=None):
+        """Returns xarray Datasets of the observations/verification data.
+
+        Args:
+            name (str, optional): Name of the observations/verification data to return.
+                If ``None``, return dictionary of all observations/verification data.
+
+        Returns:
+            Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
+            ``xarray`` Dataset.
+        """
+        warnings.warn(
+            '`HindcastEnsemble.get_reference()` will be deprecated. '
+            'Using `HindcastEnsemble.get_observations()` is encouraged.',
+            PendingDeprecationWarning,
+        )
+        return self.get_observations(name=name)
 
     # ------------------
     # Analysis Functions
     # ------------------
-    def compute_metric(
-        self, refname=None, metric='pearson_r', comparison='e2r', max_dof=False
-    ):
-        """Compares the initialized ensemble to a given reference.
+    def verify(self, name=None, metric='pearson_r', comparison='e2o', max_dof=False):
+        """Verifies the initialized ensemble against observations/verification data.
 
-        This will automatically run the comparison against all shared variables
-        between the initialized ensemble and reference.
+        This will automatically verify against all shared variables
+        between the initialized ensemble and observations/verification data.
 
         Args:
-            refname (str):
-              Name of reference to compare to. If `None`, compare to all
-              references.
-            metric (str, default 'pearson_r'):
-              Metric to apply in the comparison.
-            comparison (str, default 'e2r'):
-              How to compare to the reference. ('e2r' for ensemble mean to
-              reference. 'm2r' for each individual member to reference)
-            max_dof (bool, default False):
-              If True, maximize the degrees of freedom for each lag calculation.
+            name (str): Short name of observations/verification data to compare to.
+                If ``None``, compare to all observations/verification data.
+            metric (str, default 'pearson_r'): Metric to apply for verification.
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o' for ensemble mean to
+                observations/verification data. 'm2o' for each individual member to
+                observations/verification data).
+            max_dof (bool, default False): If ``True``, maximize the degrees of freedom
+                for each lag calculation.
 
         Returns:
-            Dataset of comparison results (if comparing to one reference),
-            or dictionary of Datasets with keys corresponding to reference
-            name.
+            Dataset of comparison results (if comparing to one observational product),
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
         """
-        has_dataset(self._datasets['reference'], 'reference', 'compute a metric')
+        has_dataset(
+            self._datasets['observations'], 'observational', 'verify a forecast'
+        )
         input_dict = {
             'ensemble': self._datasets['initialized'],
-            'reference': self._datasets['reference'],
-            'refname': refname,
+            'observations': self._datasets['observations'],
+            'name': name,
             'init': True,
         }
         return self._apply_climpred_function(
@@ -786,26 +824,60 @@ class HindcastEnsemble(PredictionEnsemble):
             max_dof=max_dof,
         )
 
-    def compute_uninitialized(self, refname=None, metric='pearson_r', comparison='e2r'):
-        """Compares the uninitialized ensemble to a given reference.
+    def compute_metric(
+        self, name=None, metric='pearson_r', comparison='e2o', max_dof=False
+    ):
+        """Verifies the initialized ensemble against observations/verification data.
 
-        This will automatically run the comparison against all shared variables
-        between the initialized ensemble and reference.
+        This will automatically verify against all shared variables
+        between the initialized ensemble and observations/verification data.
 
         Args:
-            refname (str):
-              Name of reference to compare to. If `None`, compare to all
-              references.
-            metric (str, default 'pearson_r'):
-              Metric to apply in the comparison.
-            comparison (str, default 'e2r'):
-              How to compare to the reference. ('e2r' for ensemble mean to
-              reference. 'm2r' for each individual member to reference)
+            name (str): Short name of observations/verification data to compare to.
+                If ``None``, compare to all observations/verification data.
+            metric (str, default 'pearson_r'): Metric to apply for verification.
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o'
+                for ensemble mean to observations/verification data.
+                'm2o' for each individual member to observations/verification data).
+            max_dof (bool, default False): If ``True``, maximize the degrees of freedom
+                for each lag calculation.
 
         Returns:
-            Dataset of comparison results (if comparing to one reference),
-            or dictionary of Datasets with keys corresponding to reference
+            Dataset of comparison results (if comparing to one observational product),
+            or dictionary of Datasets with keys corresponding to observations short
             name.
+        """
+        warnings.warn(
+            '`HindcastEnsemble.compute_metric()` will be deprecated. '
+            'Using `HindcastEnsemble.verify()` is encouraged.',
+            PendingDeprecationWarning,
+        )
+        return self.verify(
+            name=name, metric=metric, comparison=comparison, max_dof=max_dof
+        )
+
+    def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
+        """Verifies the uninitialized ensemble against observations/verification data.
+
+        This will automatically verify against all shared variables
+        between the uninitialized ensemble and observations/verification data.
+
+        Args:
+            name (str): Short name of observations/verification data to compare to.
+                If ``None``, compare to all observations/verification data.
+            metric (str, default 'pearson_r'): Metric to apply for verification.
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o' for ensemble mean to
+                observations/verification data. 'm2o' for each individual member to
+                observations/verification data).
+            max_dof (bool, default False): If ``True``, maximize the degrees of freedom
+                for each lag calculation.
+
+        Returns:
+            Dataset of comparison results (if comparing to one observational product),
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
         """
         has_dataset(
             self._datasets['uninitialized'],
@@ -814,8 +886,8 @@ class HindcastEnsemble(PredictionEnsemble):
         )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
-            'reference': self._datasets['reference'],
-            'refname': refname,
+            'observations': self._datasets['observations'],
+            'name': name,
             'init': False,
         }
         return self._apply_climpred_function(
@@ -825,25 +897,31 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
         )
 
-    def compute_persistence(self, refname=None, metric='pearson_r', max_dof=False):
-        """Compute a simple persistence forecast for a reference.
+    def compute_persistence(self, name=None, metric='pearson_r', max_dof=False):
+        """Verify against a persistence forecast of the observations/verification data.
 
-        This simply applies some metric between the reference and itself out
-        to some lag (i.e., an ACF in the case of pearson r).
+        This simply applies some metric between the observational product and itself out
+        to some lag (e.g., an ACF in the case of 'pearson_r').
+
+        .. note::
+
+            The persistence forecast is computed starting from the initialization date
+            and moving forward one time step. Some protocols suggest that the "lead one"
+            persistence forecast is actually from the time step prior to initialization.
+            This will be implemented as an option in a future version of ``climpred``.
 
         Args:
-            refname (str, default None):
-              Name of reference to compute the persistence forecast for. If
-              `None`, compute for all references.
-            metric (str, default 'pearson_r'):
-              Metric to apply to the persistence forecast.
-            max_dof (bool, default False):
-              If True, maximize the degrees of freedom for each lag calculation.
+            name (str, default None): Short name of observations/verification data
+                with which to compute the persistence forecast. If ``None``, compute
+                for all observations/verification data.
+            metric (str, default 'pearson_r'): Metric to apply for verification.
+            max_dof (bool, default False): If ``True``, maximize the degrees of freedom
+                for each lag calculation.
 
         Returns:
-            Dataset of persistence forecast results (if refname is declared),
-            or dictionary of Datasets with keys corresponding to reference
-            name.
+            Dataset of persistence forecast results (if ``name`` is not ``None``),
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
 
         Reference:
             * Chapter 8 (Short-Term Climate Prediction) in
@@ -851,12 +929,14 @@ class HindcastEnsemble(PredictionEnsemble):
               prediction. Oxford University Press, 2007.
         """
         has_dataset(
-            self._datasets['reference'], 'reference', 'compute a persistence forecast'
+            self._datasets['observations'],
+            'observational',
+            'compute a persistence forecast',
         )
         input_dict = {
             'ensemble': self._datasets['initialized'],
-            'reference': self._datasets['reference'],
-            'refname': refname,
+            'observations': self._datasets['observations'],
+            'name': name,
             'init': True,
         }
         return self._apply_climpred_function(

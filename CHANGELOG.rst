@@ -18,7 +18,7 @@ New Features
 
 - ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
 
-climpred v2.0.0 (2020-01-##)
+climpred v2.0.0 (2020-01-22)
 ============================
 
 New Features
@@ -32,6 +32,20 @@ New Features
 
         >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
         >>> hind.lead.attrs['units'] = 'years'
+
+- ``HindcastEnsemble`` now has ``.add_observations()`` and ``.get_observations()``
+  methods. These are the same as ``.add_reference()`` and ``.get_reference()``, which
+  will be deprecated eventually. The name change clears up confusion, since "reference"
+  is the appropriate name for a reference forecast, e.g. persistence. (:pr:`310`)
+  `Riley X. Brady`_.
+
+- ``HindcastEnsemble`` now has ``.verify()`` function, which duplicates the
+  ``.compute_metric()`` function. We feel that ``.verify()`` is more clear and easy
+  to write, and follows the terminology of the field. (:pr:`310`) `Riley X. Brady`_.
+
+- ``e2o`` and ``m2o`` are now the preferred keywords for comparing hindcast ensemble
+  means and ensemble members to verification data, respectively. (:pr:`310`)
+  `Riley X. Brady`_.
 
 Documentation
 -------------
@@ -50,18 +64,26 @@ Documentation
     * Calculate Seasonal ENSO skill
       (`link <examples/monseas/seasonal-enso-subx-example.html>`__).
 
+- `Comparisons <comparisons.html>`__ page rewritten for more clarity. (:pr:`310`)
+  `Riley X. Brady`_.
+
 Bug Fixes
 ---------
-- fixed `m2m` comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
+- Fixed `m2m` broken comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
 - Updates to ``xskillscore`` v0.0.12 to get a 30-50% speedup in compute functions that
   rely on metrics from there. (:pr:`309`) `Riley X. Brady`_.
-- stacking dims is handled by ``comparisons``, no need for internal keyword
+- Stacking dims is handled by ``comparisons``, no need for internal keyword
   ``stack_dims``. Therefore ``comparison`` now takes ``metric`` as argument instead.
   (:pr:`290`) `Aaron Spring`_.
 - ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
+- "reference" changed to "verif" throughout hindcast compute functions. This is more
+  clear, since "reference" usually refers to a type of forecast, such as persistence.
+  (:pr:`310`) `Riley X. Brady`_.
+- ``Comparison`` objects can now have aliases. (:pr:`310`) `Riley X. Brady`_.
+
 
 
 climpred v1.2.1 (2020-01-07)

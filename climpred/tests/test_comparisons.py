@@ -3,7 +3,15 @@ import pytest
 import xarray as xr
 from xarray.testing import assert_equal
 
-from climpred.comparisons import Comparison, __e2c, __m2c, __m2e, __m2m, _drop_members
+from climpred.comparisons import (
+    __ALL_COMPARISONS__ as all_comparisons,
+    Comparison,
+    __e2c,
+    __m2c,
+    __m2e,
+    __m2m,
+    _drop_members,
+)
 from climpred.constants import PM_COMPARISONS, PM_METRICS, PROBABILISTIC_PM_COMPARISONS
 from climpred.metrics import __mse as metric
 from climpred.prediction import compute_perfect_model
@@ -139,16 +147,16 @@ def test_all(PM_da_ds1d, comparison, metric):
     metric = get_metric_class(metric, PM_METRICS)
     ds = PM_da_ds1d
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    forecast, reference = comparison.function(ds, metric=metric)
+    forecast, obs = comparison.function(ds, metric=metric)
     assert not forecast.isnull().any()
-    assert not reference.isnull().any()
+    assert not obs.isnull().any()
     if not metric.probabilistic:
         # same dimensions for deterministic metrics
-        assert forecast.dims == reference.dims
+        assert forecast.dims == obs.dims
     else:
         if comparison.name in PROBABILISTIC_PM_COMPARISONS:
             # same but member dim for probabilistic
-            assert set(forecast.dims) - set(['member']) == set(reference.dims)
+            assert set(forecast.dims) - set(['member']) == set(obs.dims)
 
 
 def my_m2me_comparison(ds, metric=None):
@@ -186,6 +194,19 @@ def test_new_comparison_passed_to_compute(PM_da_ds1d, PM_da_control1d, metric):
     assert (actual - expected).mean() != 0
 
 
-def test_Metric_display():
+def test_Comparison_display():
     summary = __m2m.__repr__()
     assert 'Kind: deterministic and probabilistic' in summary.split('\n')[2]
+
+
+def test_no_repeating_comparison_aliases():
+    """Tests that there are no repeating aliases for comparison, which would overwrite
+    the earlier defined comparison."""
+    COMPARISONS = []
+    for c in all_comparisons:
+        if c.aliases is not None:
+            for a in c.aliases:
+                COMPARISONS.append(a)
+    duplicates = set([x for x in COMPARISONS if COMPARISONS.count(x) > 1])
+    print(f'Duplicate comparisons: {duplicates}')
+    assert len(duplicates) == 0

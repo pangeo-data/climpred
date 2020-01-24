@@ -10,7 +10,7 @@ from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import METRIC_ALIASES
+from .constants import COMPARISON_ALIASES, METRIC_ALIASES
 
 
 def convert_time_index(xobj, time_string, kind):
@@ -109,15 +109,17 @@ def get_comparison_class(comparison, list_):
     Converts a string comparison entry from the user into a Comparison class
      for the package to interpret.
 
-    PERFECT MODEL:
-    m2m: Compare all members to all other members.
-    m2c: Compare all members to the control.
-    m2e: Compare all members to the ensemble mean.
-    e2c: Compare the ensemble mean to the control.
+    Perfect Model:
 
-    HINDCAST:
-    e2r: Compare the ensemble mean to the reference.
-    m2r: Compare each ensemble member to the reference.
+        * m2m: Compare all members to all other members.
+        * m2c: Compare all members to the control.
+        * m2e: Compare all members to the ensemble mean.
+        * e2c: Compare the ensemble mean to the control.
+
+    Hindcast:
+
+        * e2o: Compare the ensemble mean to the verification data.
+        * m2o: Compare each ensemble member to the verification data.
 
     Args:
         comparison (str): name of comparison.
@@ -128,6 +130,11 @@ def get_comparison_class(comparison, list_):
     """
     if isinstance(comparison, comparisons.Comparison):
         return comparison
+    elif isinstance(comparison, str):
+        # check if comparison allowed
+        is_in_list(comparison, list_, 'comparison')
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+        return getattr(comparisons, '__' + comparison)
     else:
         is_in_list(comparison, list_, 'comparison')
         return getattr(comparisons, '__' + comparison)
@@ -175,29 +182,30 @@ def intersect(lst1, lst2):
     return np.array(lst3)
 
 
-def reduce_time_series(forecast, reference, nlags):
-    """Reduces forecast and reference to common time frame for prediction and lag.
+def reduce_time_series(forecast, verif, nlags):
+    """Reduces forecast and verification data to common time frame for prediction
+    and lag.
 
     Args:
-        forecast (`xarray` object): prediction ensemble with inits.
-        reference (`xarray` object): reference being compared to (for skill,
-                                     persistence, etc.)
+        forecast (`xarray` object): Prediction ensemble with ``init`` dim.
+        verif (`xarray` object): verification data being compared to (for verification,
+            persistence, etc.)
         nlags (int): number of lags being computed
 
     Returns:
        forecast (`xarray` object): prediction ensemble reduced to
-       reference (`xarray` object):
+       verif (`xarray` object):
     """
     n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    ref_dates = shift_cftime_index(reference, 'time', -1 * n, freq)
+    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
 
-    imin = max(forecast.time.min(), reference.time.min())
-    imax = min(forecast.time.max(), ref_dates.max())
+    imin = max(forecast.time.min(), verif.time.min())
+    imax = min(forecast.time.max(), verif_dates.max())
     imax = xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)
-    reference = reference.where(reference.time >= imin, drop=True)
-    return forecast, reference
+    verif = verif.where(verif.time >= imin, drop=True)
+    return forecast, verif
 
 
 def shift_cftime_index(xobj, time_string, n, freq):
@@ -261,8 +269,8 @@ def assign_attrs(
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
-        metric (class) : metric used in comparing the forecast and reference.
-        comparison (class): how to compare the forecast and reference.
+        metric (class) : metric used in comparing the forecast and verification data.
+        comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
 
     Returns:

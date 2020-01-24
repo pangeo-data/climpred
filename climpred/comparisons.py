@@ -63,20 +63,24 @@ def _display_comparison_metadata(self):
 class Comparison:
     """Master class for all comparisons."""
 
-    def __init__(self, name, function, hindcast, probabilistic, long_name=None):
+    def __init__(
+        self, name, function, hindcast, probabilistic, long_name=None, aliases=None
+    ):
         """Comparison initialization.
 
         Args:
             name (str): name of comparison.
             function (function): comparison function.
             hindcast (bool): Can comparison be used in `compute_hindcast`?
-             `False` means `compute_perfect_model`
+                `False` means `compute_perfect_model`
             probabilistic (bool): Can this comparison be used for probabilistic
-             metrics also? Probabilistic metrics require multiple forecasts.
-             `False` means that comparison is only deterministic.
-             `True` means that comparison can be used both deterministic and
-             probabilistic.
+                metrics also? Probabilistic metrics require multiple forecasts.
+                `False` means that comparison is only deterministic.
+                `True` means that comparison can be used both deterministic and
+                probabilistic.
             long_name (str, optional): longname of comparison. Defaults to None.
+            aliases (list of str, optional): Allowed aliases for this comparison.
+                Defaults to ``None``.
 
         Returns:
             comparison: comparison class Comparison.
@@ -87,6 +91,7 @@ class Comparison:
         self.hindcast = hindcast
         self.probabilistic = probabilistic
         self.long_name = long_name
+        self.aliases = aliases
 
     def __repr__(self):
         """Show metadata of comparison class."""
@@ -99,14 +104,14 @@ class Comparison:
 
 
 def _m2m(ds, metric=None):
-    """
-    Compare all members to all others in turn while leaving out the verification member.
+    """Compare all members to all others in turn while leaving out the verification
+    ``member``.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        metric (Metric): if deterministic, forecast and reference have member dim
-                      if probabilistic, only forecast has member dim
+        ds (xarray object): xr.Dataset/xr.DataArray with ``member`` dimension.
+        metric (Metric):
+            If deterministic, forecast and reference have ``member`` dim.
+            If probabilistic, only forecast has ``member`` dim.
 
     Returns:
         xr.object: forecast, reference.
@@ -255,70 +260,71 @@ __e2c = Comparison(
 # --------------------------------------------#
 # HINDCAST COMPARISONS
 # --------------------------------------------#
-def _e2r(ds, reference, metric=None):
-    """
-    Compare the ensemble mean forecast to a reference in HindcastEnsemble.
+def _e2o(hind, verif, metric=None):
+    """Compare the ensemble mean forecast to the verification data for a
+    ``HindcastEnsemble`` setup.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        reference (xarray object): reference xr.Dataset/xr.DataArray.
+        hind (xarray object): Hindcast with optional ``member`` dimension.
+        verif (xarray object): Verification data.
         metric (Metric): needed for probabilistic metrics.
-                      therefore useless in e2r comparison,
+                      therefore useless in ``e2o`` comparison,
                       but expected by internal API.
 
     Returns:
-        xr.object: forecast, reference.
+        xr.object: forecast, verif.
     """
-    if 'member' in ds.dims:
-        forecast = ds.mean('member')
+    if 'member' in hind.dims:
+        forecast = hind.mean('member')
     else:
-        forecast = ds
-    return forecast, reference
+        forecast = hind
+    return forecast, verif
 
 
-__e2r = Comparison(
-    name='e2r',
-    function=_e2r,
+__e2o = Comparison(
+    name='e2o',
+    function=_e2o,
     hindcast=True,
     probabilistic=False,
-    long_name='Comparison of the ensemble mean vs. reference verification',
+    long_name='Verify the ensemble mean against the verification data',
+    aliases=['e2r'],
 )
 
 
-def _m2r(ds, reference, metric=None):
-    """
-    Compares each member individually to a reference in HindcastEnsemble.
+def _m2o(hind, verif, metric=None):
+    """Compares each ensemble member individually to the verification data for a
+    ``HindcastEnsemble`` setup.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        reference (xarray object): reference xr.Dataset/xr.DataArray.
-        metric (Metric): if deterministic, forecast and reference both have member dim;
-                         if probabilistic, only forecast has member dim
+        hind (xarray object): Hindcast with ``member`` dimension.
+        verif (xarray object): Verification data.
+        metric (Metric):
+            If deterministic, forecast and verif both have ``member`` dim;
+            If probabilistic, only forecast has ``member`` dim.
 
     Returns:
-        xr.object: forecast, reference.
+        xr.object: forecast, verif.
     """
     # check that this contains more than one member
-    has_dims(ds, 'member', 'decadal prediction ensemble')
-    has_min_len(ds['member'], 1, 'decadal prediction ensemble member')
-    forecast = ds
+    has_dims(hind, 'member', 'decadal prediction ensemble')
+    has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
+    forecast = hind
     if not metric.probabilistic:
-        reference = reference.expand_dims('member')
+        verif = verif.expand_dims('member')
         nMember = forecast.member.size
-        reference = reference.isel(member=[0] * nMember)
-        reference['member'] = forecast['member']
-    return forecast, reference
+        verif = verif.isel(member=[0] * nMember)
+        verif['member'] = forecast['member']
+    return forecast, verif
 
 
-__m2r = Comparison(
-    name='m2r',
-    function=_m2r,
+__m2o = Comparison(
+    name='m2o',
+    function=_m2o,
     hindcast=True,
     probabilistic=True,
-    long_name='Comparison of multiple forecasts vs. reference verification',
+    long_name='Verify each individual forecast member against the verification data.',
+    aliases=['m2r'],
 )
 
 
-__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2r, __m2r]
+__ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2o, __m2o]

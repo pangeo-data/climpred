@@ -76,7 +76,7 @@ def test_compute_perfect_model_dim_over_member(pm_da_ds1d, pm_da_control1d, comp
     assert not actual.isnull().any()
 
 
-# cannot work for e2r comparison because only 1:1 comparison
+# cannot work for e2o comparison because only 1:1 comparison
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 def test_compute_hindcast_dim_over_member(initialized_da, observations_da, comparison):
     """Test deterministic metric calc skill over member dim."""
@@ -138,7 +138,7 @@ def test_bootstrap_hindcast_dim(initialized_da, uninitialized_da, observations_d
         observations_da,
         metric='rmse',
         dim='member',
-        comparison='m2r',
+        comparison='m2o',
         bootstrap=3,
     )
     assert 'init' in actual.dims

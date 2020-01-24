@@ -43,9 +43,7 @@ def _arbitrary_three_xr_func_args_keys(ds, da=None, other_da=None, **kwargs):
 
 def test_is_xarray_ds(ds1):
     """Test if checking the first item in arg list is ds."""
-    ds, args, kwargs = _arbitrary_ds_da_func(
-        ds1, "arg1", "arg2", kwarg1="kwarg1"
-    )
+    ds, args, kwargs = _arbitrary_ds_da_func(ds1, "arg1", "arg2", kwarg1="kwarg1")
     assert (ds1 == ds).all()
     assert args == ("arg1", "arg2")
     assert kwargs == {"kwarg1": "kwarg1"}
@@ -61,9 +59,7 @@ def test_is_xarray_not_ds():
 
 def test_is_xarray_da(da1):
     """Test if checking the first item in arg list is da."""
-    da, args, kwargs = _arbitrary_ds_da_func(
-        da1, "arg1", "arg2", kwarg1="kwarg1"
-    )
+    da, args, kwargs = _arbitrary_ds_da_func(da1, "arg1", "arg2", kwarg1="kwarg1")
     assert (da1 == da).all()
     assert args == ("arg1", "arg2")
     assert kwargs == {"kwarg1": "kwarg1"}
@@ -178,17 +174,13 @@ def test_has_dataset_fail():
 
 def test_match_initialized_dims(da1, da2):
     """Test if check works if both da has the proper dims."""
-    assert match_initialized_dims(
-        da1.rename({"y": "init"}), da2.rename({"y": "time"})
-    )
+    assert match_initialized_dims(da1.rename({"y": "init"}), da2.rename({"y": "time"}))
 
 
 def test_match_initialized_dims_fail(da1, da2):
     """Test if check works if the da does not have the proper dims."""
     with pytest.raises(DimensionError) as e:
-        match_initialized_dims(
-            da1.rename({"y": "init"}), da2.rename({"y": "not_time"})
-        )
+        match_initialized_dims(da1.rename({"y": "init"}), da2.rename({"y": "not_time"}))
     assert "Dimensions must match initialized prediction" in str(e.value)
 
 
@@ -244,7 +236,5 @@ def test_nonplural_lead_units_works(da_lead, lead_units):
     da_lead["lead"].attrs["units"] = lead_units[:-1]
     with pytest.warns(UserWarning) as record:
         has_valid_lead_units(da_lead)
-    expected = (
-        f'The letter "s" was appended to the lead units; now {lead_units}.'
-    )
+    expected = f'The letter "s" was appended to the lead units; now {lead_units}.'
     assert record[0].message.args[0] == expected

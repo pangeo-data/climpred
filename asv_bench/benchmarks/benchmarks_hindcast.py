@@ -15,7 +15,7 @@ from . import parameterized, randn, requires_dask
 HINDCAST_COMPARISONS = ['m2r']  # e2r and probabilistic dont match
 METRICS = ['rmse', 'pearson_r', 'crpss']
 
-bootstrap = 4
+bootstrap = 8
 
 
 def _ensure_loaded(res):
@@ -161,6 +161,6 @@ class ComputeDask(Compute):
         requires_dask()
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.hind = self.hind.chunk({'lon': self.nx // bootstrap})
-        self.reference = self.reference.chunk({'lon': self.nx // bootstrap})
-        self.hist = self.hist.chunk({'lon': self.nx // bootstrap})
+        self.hind = self.hind['tos'].chunk({'lon': self.nx // bootstrap})
+        self.reference = self.reference['tos'].chunk({'lon': self.nx // bootstrap})
+        self.hist = self.hist['tos'].chunk({'lon': self.nx // bootstrap})

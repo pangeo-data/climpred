@@ -64,7 +64,7 @@ def control3d():
 @pytest.mark.parametrize('chunk', [True, False])
 def test_dask_percentile_implemented_faster_xr_quantile(control3d, chunk):
     chunk_dim, dim = 'x', 'time'
-    # chunk_dim, dim = 'time', 'x' # fails, why?
+    # chunk_dim, dim = "time", "x"  # fails, why?
     # chunk_dim, dim = dims
     print(f'chunk_dim={chunk_dim}, dim={dim}')
     if chunk:
@@ -88,8 +88,6 @@ def test_dask_percentile_implemented_faster_xr_quantile(control3d, chunk):
         assert not dask.is_dask_collection(expected)
     assert actual.shape == expected.shape
     assert_allclose(actual, expected)
-    actual.plot()
-    expected.plot()
     print(
         elapsed_time_my_quantile,
         elapsed_time_xr_quantile,

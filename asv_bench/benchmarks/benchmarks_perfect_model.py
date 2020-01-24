@@ -154,5 +154,5 @@ class ComputeDask(Compute):
         requires_dask()
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds.chunk({'lon': self.nx // bootstrap})
-        self.control = self.control.chunk({'lon': self.nx // bootstrap})
+        self.ds = self.ds['tos'].chunk({'lon': self.nx // bootstrap})
+        self.control = self.control['tos'].chunk({'lon': self.nx // bootstrap})

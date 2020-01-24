@@ -10,11 +10,7 @@ from .checks import (
     warn_if_chunking_would_increase_performance,
 )
 from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES
-from .prediction import (
-    compute_hindcast,
-    compute_perfect_model,
-    compute_persistence,
-)
+from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -43,12 +39,12 @@ def _resample(hind, shuffle_dim, to_be_shuffled):
     smp = np.random.choice(to_be_shuffled, len(to_be_shuffled))
     smp_hind = hind.sel({shuffle_dim: smp})
     # ignore because then inits should keep their labels
-    if shuffle_dim != "init":
+    if shuffle_dim != 'init':
         smp_hind[shuffle_dim] = np.arange(1, 1 + smp_hind[shuffle_dim].size)
     return smp_hind
 
 
-def my_quantile(ds, axis=0, q=0.95, dim="bootstrap"):
+def my_quantile(ds, q=0.95, dim='bootstrap'):
     """Faster but same results xr.quantile that also allowes lazy `ds`."""
     # dim='bootstrap' doesnt lead anywhere
     # concat_dim is always first, therefore axis=0 implementation works in compute
@@ -57,9 +53,7 @@ def my_quantile(ds, axis=0, q=0.95, dim="bootstrap"):
         """Daskified np.percentile."""
         if len(arr.chunks[axis]) > 1:
             arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(
-            np.percentile, arr, axis=axis, q=q, drop_axis=axis
-        )
+        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
 
     def _percentile(arr, axis=0, q=95):
         """percentile function for chunked and non-chunked `arr`."""
@@ -68,17 +62,19 @@ def my_quantile(ds, axis=0, q=0.95, dim="bootstrap"):
         else:
             return np.percentile(arr, axis=axis, q=q)
 
+    axis = ds.get_axis_num(dim)
+    assert axis == 0
     if not isinstance(q, list):
         q = [q]
     quantile = []
     for qi in q:
         quantile.append(ds.reduce(_percentile, q=qi * 100, axis=axis))
-    quantile = xr.concat(quantile, "quantile")
-    quantile["quantile"] = q
+    quantile = xr.concat(quantile, 'quantile')
+    quantile['quantile'] = q
     return quantile.squeeze()
 
 
-def _distribution_to_ci(ds, ci_low, ci_high, dim="bootstrap"):
+def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     """Get confidence intervals from bootstrapped distribution.
 
     Needed for bootstrapping confidence intervals and p_values of a metric.
@@ -93,7 +89,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="bootstrap"):
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
     # TODO: re-implement xr.quantile once fast
-    return my_quantile(ds, q=[ci_low, ci_high], dim="bootstrap")
+    return my_quantile(ds, q=[ci_low, ci_high], dim='bootstrap')
 
 
 def _pvalue_from_distributions(simple_fct, init, metric=None):
@@ -115,7 +111,7 @@ def _pvalue_from_distributions(simple_fct, init, metric=None):
         pv (xarray object): probability that simple forecast performs better
                             than initialized forecast.
     """
-    pv = ((simple_fct - init) > 0).sum("bootstrap") / init.bootstrap.size
+    pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
     if not metric.positive:
         pv = 1 - pv
     return pv
@@ -136,20 +132,18 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    has_dims(hist, "member", "historical ensemble")
-    has_dims(hind, "member", "initialized hindcast ensemble")
+    has_dims(hist, 'member', 'historical ensemble')
+    has_dims(hind, 'member', 'initialized hindcast ensemble')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
     # find range for bootstrapping
-    first_init = max(hist.time.min(), hind["init"].min())
+    first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(
-        hind.lead.attrs["units"], hind.lead.size
-    )
+    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
-    last_init = min(hist_last, hind["init"].max())
+    last_init = min(hist_last, hind['init'].max())
 
     hind = hind.sel(init=slice(first_init, last_init))
 
@@ -165,17 +159,15 @@ def bootstrap_uninitialized_ensemble(hind, hist):
                 shift_cftime_singular(init, n, freq),
             ),
             member=random_members,
-        ).rename({"time": "lead"})
-        uninit_at_one_init_year["lead"] = np.arange(
-            1, 1 + uninit_at_one_init_year["lead"].size
+        ).rename({'time': 'lead'})
+        uninit_at_one_init_year['lead'] = np.arange(
+            1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year["member"] = np.arange(
-            1, 1 + len(random_members)
-        )
+        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
-    uninit_hind = xr.concat(uninit_hind, "init")
-    uninit_hind["init"] = hind["init"].values
-    uninit_hind.lead.attrs["units"] = hind.lead.attrs["units"]
+    uninit_hind = xr.concat(uninit_hind, 'init')
+    uninit_hind['init'] = hind['init'].values
+    uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return (
         _transpose_and_rechunk_to(uninit_hind, hind)
         if dask.is_dask_collection(uninit_hind)
@@ -203,25 +195,22 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     nmember = ds.member.size
     length = ds.lead.size
     c_start = 0
-    c_end = control["time"].size
-    lead_time = ds["lead"]
+    c_end = control['time'].size
+    lead_time = ds['lead']
 
     def isel_years(control, year_s, length):
         new = control.isel(time=slice(year_s, year_s + length))
-        new = new.rename({"time": "lead"})
-        new["lead"] = lead_time
+        new = new.rename({'time': 'lead'})
+        new['lead'] = lead_time
         return new
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist),
-            "member",
+            (isel_years(control, start, length) for start in startlist), 'member',
         )
 
-    uninit = xr.concat(
-        (create_pseudo_members(control) for _ in range(nens)), "init"
-    )
+    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -257,9 +246,7 @@ def _bootstrap_func(
                    dimensions of ds and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(
-            f"Please provide func as a function, found {type(func)}"
-        )
+        raise ValueError(f'Please provide func as a function, found {type(func)}')
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -271,13 +258,13 @@ def _bootstrap_func(
     for _ in range(bootstrap):
         smp_ds = _resample(ds, resample_dim, resample_dim_values)
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
-    sig_level = xr.concat(bootstraped_results, "bootstrap")
+    sig_level = xr.concat(bootstraped_results, 'bootstrap')
     # TODO: reimplement xr.quantile once fast
-    sig_level = my_quantile(sig_level, dim="bootstrap", q=psig)
+    sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
     return sig_level
 
 
-def dpp_threshold(control, sig=95, bootstrap=500, dim="time", **dpp_kwargs):
+def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     """Calc DPP significance levels from re-sampled dataset.
 
     Reference:
@@ -295,9 +282,7 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim="time", **dpp_kwargs):
     )
 
 
-def varweighted_mean_period_threshold(
-    control, sig=95, bootstrap=500, time_dim="time"
-):
+def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
@@ -305,11 +290,7 @@ def varweighted_mean_period_threshold(
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period,
-        control,
-        time_dim,
-        sig=sig,
-        bootstrap=bootstrap,
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
     )
 
 
@@ -317,9 +298,9 @@ def bootstrap_compute(
     hind,
     reference,
     hist=None,
-    metric="pearson_r",
-    comparison="m2e",
-    dim="init",
+    metric='pearson_r',
+    comparison='m2e',
+    dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -412,21 +393,21 @@ def bootstrap_compute(
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
     # which dim should be resampled: member or init
-    if dim == "member" and "member" in hind.dims:
+    if dim == 'member' and 'member' in hind.dims:
         members = hind.member.values
         to_be_shuffled = members
-        shuffle_dim = "member"
-    elif "init" in dim and "init" in hind.dims:
+        shuffle_dim = 'member'
+    elif 'init' in dim and 'init' in hind.dims:
         # also allows ['init','member']
         inits = hind.init.values
         to_be_shuffled = inits
-        shuffle_dim = "init"
+        shuffle_dim = 'init'
     else:
-        raise ValueError("Shuffle either `member` or `init`; not", dim)
+        raise ValueError('Shuffle either `member` or `init`; not', dim)
 
     # resample with replacement
     for _ in range(bootstrap):
-        smp_hind = _resample(hind, shuffle_dim, to_be_shuffled).persist()
+        smp_hind = _resample(hind, shuffle_dim, to_be_shuffled)
         # compute init skill
         init_skill = compute(
             smp_hind,
@@ -439,11 +420,11 @@ def bootstrap_compute(
         )
         # reset inits when probabilistic, otherwise tests fail
         if (
-            shuffle_dim == "init"
+            shuffle_dim == 'init'
             and metric.probabilistic
-            and "init" in init_skill.coords
+            and 'init' in init_skill.coords
         ):
-            init_skill["init"] = inits
+            init_skill['init'] = inits
         init.append(init_skill)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use reference = control
@@ -465,19 +446,17 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                compute_persistence(
-                    smp_hind, reference, metric=metric, **metric_kwargs
-                )
+                compute_persistence(smp_hind, reference, metric=metric, **metric_kwargs)
             )
-    init = xr.concat(init, dim="bootstrap")
+    init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
-    if "member" in init.coords and init.member.size == 1:
+    if 'member' in init.coords and init.member.size == 1:
         if init.member.size == 1:
-            del init["member"]
-    uninit = xr.concat(uninit, dim="bootstrap")
+            del init['member']
+    uninit = xr.concat(uninit, dim='bootstrap')
     # when persistence is not computed set flag
     if pers != []:
-        pers = xr.concat(pers, dim="bootstrap")
+        pers = xr.concat(pers, dim='bootstrap')
         pers_output = True
     else:
         pers_output = False
@@ -497,27 +476,20 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(
-        uninit, init, metric=metric
-    )
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind,
-        reference,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        **metric_kwargs,
+        hind, reference, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
-    if "init" in init_skill:
-        init_skill = init_skill.mean("init")
+    if 'init' in init_skill:
+        init_skill = init_skill.mean('init')
     # remove useless member = 0 coords after m2c
-    if "member" in init_skill.coords and init_skill.member.size == 1:
-        del init_skill["member"]
+    if 'member' in init_skill.coords and init_skill.member.size == 1:
+        del init_skill['member']
     # uninit skill as mean resampled uninit skill
-    uninit_skill = uninit.mean("bootstrap")
+    uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
         pers_skill = compute_persistence(
             hind, reference, metric=metric, **metric_kwargs
@@ -529,34 +501,34 @@ def bootstrap_compute(
         init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)
 
     # wrap results together in one dataarray
-    skill = xr.concat([init_skill, uninit_skill, pers_skill], "kind")
-    skill["kind"] = ["init", "uninit", "pers"]
+    skill = xr.concat([init_skill, uninit_skill, pers_skill], 'kind')
+    skill['kind'] = ['init', 'uninit', 'pers']
 
     # probability that i beats init
-    p = xr.concat([p_uninit_over_init, p_pers_over_init], "kind")
-    p["kind"] = ["uninit", "pers"]
+    p = xr.concat([p_uninit_over_init, p_pers_over_init], 'kind')
+    p['kind'] = ['uninit', 'pers']
 
     # ci for each skill
-    ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind").rename(
-        {"quantile": "results"}
+    ci = xr.concat([init_ci, uninit_ci, pers_ci], 'kind').rename(
+        {'quantile': 'results'}
     )
-    ci["kind"] = ["init", "uninit", "pers"]
+    ci['kind'] = ['init', 'uninit', 'pers']
 
-    results = xr.concat([skill, p], "results")
-    results["results"] = ["skill", "p"]
+    results = xr.concat([skill, p], 'results')
+    results['results'] = ['skill', 'p']
     if set(results.coords) != set(ci.coords):
         res_drop = [c for c in results.coords if c not in ci.coords]
         ci_drop = [c for c in ci.coords if c not in results.coords]
         results = results.drop_vars(res_drop)
         ci = ci.drop_vars(ci_drop)
-    results = xr.concat([results, ci], "results")
-    results["results"] = ["skill", "p", "low_ci", "high_ci"]
+    results = xr.concat([results, ci], 'results')
+    results['results'] = ['skill', 'p', 'low_ci', 'high_ci']
     # Attach climpred compute information to skill
     metadata_dict = {
-        "confidence_interval_levels": f"{ci_high}-{ci_low}",
-        "bootstrap_iterations": bootstrap,
-        "p": "probability that initialized forecast performs \
-                          better than reference forecast",
+        'confidence_interval_levels': f'{ci_high}-{ci_low}',
+        'bootstrap_iterations': bootstrap,
+        'p': 'probability that initialized forecast performs \
+                          better than reference forecast',
     }
     metadata_dict.update(metric_kwargs)
     results = assign_attrs(
@@ -570,8 +542,8 @@ def bootstrap_compute(
     )
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
-    if "units" in hind["lead"].attrs and "units" not in results["lead"].attrs:
-        results["lead"].attrs["units"] = hind["lead"].attrs["units"]
+    if 'units' in hind['lead'].attrs and 'units' not in results['lead'].attrs:
+        results['lead'].attrs['units'] = hind['lead'].attrs['units']
     return results
 
 
@@ -579,9 +551,9 @@ def bootstrap_hindcast(
     hind,
     hist,
     reference,
-    metric="pearson_r",
-    comparison="e2r",
-    dim="init",
+    metric='pearson_r',
+    comparison='e2r',
+    dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -642,9 +614,9 @@ def bootstrap_hindcast(
         * climpred.prediction.compute_hindcast
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, "init", "hind[init]")
-    hist = convert_time_index(hist, "time", "uninitialized[time]")
-    reference = convert_time_index(reference, "time", "reference[time]")
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    hist = convert_time_index(hist, 'time', 'uninitialized[time]')
+    reference = convert_time_index(reference, 'time', 'reference[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
@@ -668,8 +640,8 @@ def bootstrap_hindcast(
 def bootstrap_perfect_model(
     ds,
     control,
-    metric="pearson_r",
-    comparison="m2e",
+    metric='pearson_r',
+    comparison='m2e',
     dim=None,
     sig=95,
     bootstrap=500,
@@ -732,7 +704,7 @@ def bootstrap_perfect_model(
     """
 
     if dim is None:
-        dim = ["init", "member"]
+        dim = ['init', 'member']
     return bootstrap_compute(
         ds,
         control,

@@ -9,7 +9,7 @@ from .checks import (
     has_valid_lead_units,
     warn_if_chunking_would_increase_performance,
 )
-from .constants import ALL_COMPARISONS, ALL_METRICS, METRIC_ALIASES, COMPARISON_ALIASES
+from .constants import ALL_COMPARISONS, ALL_METRICS, COMPARISON_ALIASES, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
@@ -62,8 +62,8 @@ def my_quantile(ds, q=0.95, dim='bootstrap'):
         else:
             return np.percentile(arr, axis=axis, q=q)
 
-    axis = ds.get_axis_num(dim)
-    assert axis == 0
+    # axis = ds.get_axis_num(dim)
+    axis = 0
     if not isinstance(q, list):
         q = [q]
     quantile = []
@@ -483,7 +483,7 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')

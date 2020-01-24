@@ -2,6 +2,14 @@
 What's New
 ==========
 
+climpred v2.0.1 (2020-01-xx)
+============================
+
+Internals/Minor Fixes
+---------------------
+- Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`xxx`) `Aaron Spring`_.
+
+
 climpred v2.0.0 (2020-01-22)
 ============================
 

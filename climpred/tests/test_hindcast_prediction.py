@@ -19,7 +19,7 @@ DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
 @pytest.mark.skip(reason='less not properly implemented')
 def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
-    """Test LESS m2o runs through."""
+    """Test LESS m2o runs through"""
     actual = (
         compute_hindcast(
             hind_da_initialized_1d,

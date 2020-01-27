@@ -21,6 +21,8 @@ def PM_da_initialized_1d(PM_ds_initialized_1d):
 
 @pytest.fixture
 def PM_da_initialized_1d_lead0(PM_da_initialized_1d):
+    """MPI Perfect-model-framework initialized timeseries xr.DataArray in lead-0
+    framework."""
     da = PM_da_initialized_1d
     # Convert to lead zero for testing
     da['lead'] -= 1

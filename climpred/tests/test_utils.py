@@ -22,20 +22,6 @@ from climpred.utils import (
 )
 
 
-@pytest.fixture
-def PM_ds_control_3d():
-    """North Atlantic xr.Dataset."""
-    ds = load_dataset('MPI-control-3D').sel(x=slice(120, 130), y=slice(50, 60))
-    return ds
-
-
-@pytest.fixture
-def PM_da_control_3d():
-    """North Atlantic xr.DataArray."""
-    da = load_dataset('MPI-control-3D').sel(x=slice(120, 130), y=slice(50, 60))['tos']
-    return da
-
-
 def test_get_metric_class():
     """Test if passing in a string gets the right metric function."""
     actual = get_metric_class('pearson_r', DETERMINISTIC_PM_METRICS).name

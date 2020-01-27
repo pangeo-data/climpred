@@ -1,4 +1,5 @@
 import pytest
+from scipy.stats import norm
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.constants import (
@@ -171,7 +172,6 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         assert not actualk
 
 
-@pytest.mark.skip(reason='takes quite long')
 def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
     PM_da_initialized_1d, PM_da_control_1d
 ):
@@ -180,12 +180,37 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
     """
     actual = (
         compute_perfect_model(
-            PM_da_initialized_1d,
+            PM_da_initialized_1d.isel(lead=[0]),
             PM_da_control_1d,
             comparison='m2c',
             metric='crpss',
             gaussian=False,
             dim='member',
+        )
+        .isnull()
+        .any()
+    )
+    assert not actual
+
+
+def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
+    PM_da_initialized_1d, PM_da_control_1d
+):
+    """
+    Checks that there are no NaNs on perfect model metrics of 1D time series.
+    """
+    actual = (
+        compute_perfect_model(
+            PM_da_initialized_1d.isel(lead=[0]),
+            PM_da_control_1d,
+            comparison='m2c',
+            metric='crpss',
+            gaussian=False,
+            dim='member',
+            tol=1e-6,
+            xmin=None,
+            xmax=None,
+            cdf_or_dist=norm,
         )
         .isnull()
         .any()

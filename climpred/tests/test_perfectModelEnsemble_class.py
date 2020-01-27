@@ -1,62 +1,55 @@
+import pytest
+
 from climpred import PerfectModelEnsemble
 
 
 def test_perfectModelEnsemble_init(PM_ds_initialized_1d):
-    """Test to see if perfect model ensemble can be initialized"""
+    """Test to see if perfect model ensemble can be initialized."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
-    print(PerfectModelEnsemble)
     assert pm
 
 
 def test_perfectModelEnsemble_init_da(PM_da_initialized_1d):
-    """Test to see if perfect model ensemble can be initialized with da"""
+    """Test to see if perfect model ensemble can be initialized with da."""
     pm = PerfectModelEnsemble(PM_da_initialized_1d)
     assert pm
 
 
-def test_add_control(perfectModelEnsemble_initialized_control):
-    """Test to see if control can be added to PerfectModelEnsemble"""
-    assert perfectModelEnsemble_initialized_control.get_control()
+@pytest.mark.parametrize(
+    'handle', ['get_uninitialized', 'get_control', 'get_initialized'],
+)
+def test_perfectModelEnsemble_initialized_control_handles_returns(
+    perfectModelEnsemble_initialized_control, handle
+):
+    """Test that perfect model ensemble object gets a return from `handle`."""
+    assert getattr(perfectModelEnsemble_initialized_control, handle)
 
 
-def test_generate_uninit(perfectModelEnsemble_initialized_control):
-    """Test to see if uninitialized ensemble can be bootstrapped"""
-    pm = perfectModelEnsemble_initialized_control
-    pm = pm.generate_uninitialized()
-    assert pm.get_uninitialized()
-
-
-def test_compute_metric(perfectModelEnsemble_initialized_control):
-    """Test that metric can be computed for perfect model ensemble"""
-    perfectModelEnsemble_initialized_control.compute_metric()
-
-
-def test_compute_uninitialized(perfectModelEnsemble_initialized_control):
-    """Test that compute uninitialized can be run for perfect model ensemble"""
-    pm = perfectModelEnsemble_initialized_control
-    pm = pm.generate_uninitialized()
-    pm.compute_uninitialized()
-
-
-def test_compute_persistence(perfectModelEnsemble_initialized_control):
-    """Test that compute persistence can be run for perfect model ensemble"""
-    perfectModelEnsemble_initialized_control.compute_persistence()
-
-
-def test_bootstrap(perfectModelEnsemble_initialized_control):
-    """Test that perfect model ensemble object can be bootstrapped"""
-    perfectModelEnsemble_initialized_control.bootstrap(bootstrap=2)
+@pytest.mark.parametrize(
+    'handle',
+    [
+        'compute_persistence',
+        'compute_uninitialized',
+        'bootstrap(bootstrap=2)',
+        'compute_metric',
+    ],
+)
+def test_perfectModelEnsemble_initialized_control_handles(
+    perfectModelEnsemble_initialized_control, handle
+):
+    """Test that perfect model ensemble object can use `handle`."""
+    getattr(perfectModelEnsemble_initialized_control, handle)
 
 
 def test_get_initialized(PM_ds_initialized_1d):
-    """Test whether get_initialized function works."""
+    """Test whether get_initialized function works.."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     init = pm.get_initialized()
     assert init == pm._datasets['initialized']
 
 
 def test_get_uninitialized(perfectModelEnsemble_initialized_control):
-    """Test whether get_uninitialized function works."""
+    """Test whether get_uninitialized function works.."""
     pm = perfectModelEnsemble_initialized_control
     pm = pm.generate_uninitialized()
     uninit = pm.get_uninitialized()
@@ -64,13 +57,13 @@ def test_get_uninitialized(perfectModelEnsemble_initialized_control):
 
 
 def test_get_control(perfectModelEnsemble_initialized_control):
-    """Test whether get_control function works."""
+    """Test whether get_control function works.."""
     ctrl = perfectModelEnsemble_initialized_control.get_control()
     assert ctrl == perfectModelEnsemble_initialized_control._datasets['control']
 
 
 def test_inplace(PM_ds_initialized_1d, PM_ds_control_1d):
-    """Tests that inplace operations do not work."""
+    """Tests that inplace operations do not work.."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     # Adding a control.
     pm.add_control(PM_ds_control_1d)

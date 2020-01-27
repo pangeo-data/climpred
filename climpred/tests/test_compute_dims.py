@@ -18,11 +18,11 @@ BOOTSTRAP = 3
 @pytest.mark.parametrize('metric', ['crps', 'mse'])
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 def test_pm_comparison_stack_dims_when_deterministic(
-    PM_da_ds_1d, comparison, metric
+    PM_da_initialized_1d, comparison, metric
 ):
     metric = get_metric_class(metric, PM_METRICS)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison.function(PM_da_ds_1d, metric=metric)
+    actual_f, actual_r = comparison.function(PM_da_initialized_1d, metric=metric)
     if not metric.probabilistic:
         assert 'member' in actual_f.dims
         assert 'member' in actual_r.dims
@@ -34,11 +34,11 @@ def test_pm_comparison_stack_dims_when_deterministic(
 # cannot work for e2c, m2e comparison because only 1:1 comparison
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 def test_compute_perfect_model_dim_over_member(
-    PM_da_ds_1d, PM_da_control_1d, comparison
+    PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     """Test deterministic metric calc skill over member dim."""
     actual = compute_perfect_model(
-        PM_da_ds_1d,
+        PM_da_initialized_1d,
         PM_da_control_1d,
         comparison=comparison,
         metric='rmse',
@@ -67,19 +67,19 @@ def test_compute_hindcast_dim_over_member(
 
 
 def test_compute_perfect_model_different_dims_quite_close(
-    PM_da_ds_1d, PM_da_control_1d
+    PM_da_initialized_1d, PM_da_control_1d
 ):
     """Test whether dim=['init','member'] and
     dim='member' results."""
     stack_dims_true = compute_perfect_model(
-        PM_da_ds_1d,
+        PM_da_initialized_1d,
         PM_da_control_1d,
         comparison='m2c',
         metric='rmse',
         dim=['init', 'member'],
     )
     stack_dims_false = compute_perfect_model(
-        PM_da_ds_1d,
+        PM_da_initialized_1d,
         PM_da_control_1d,
         comparison='m2c',
         metric='rmse',
@@ -89,11 +89,11 @@ def test_compute_perfect_model_different_dims_quite_close(
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
 
 
-def test_bootstrap_pm_dim(PM_da_ds_1d, PM_da_control_1d):
+def test_bootstrap_pm_dim(PM_da_initialized_1d, PM_da_control_1d):
     """Test whether bootstrap_hindcast calcs skill over member dim and
     returns init dim."""
     actual = bootstrap_perfect_model(
-        PM_da_ds_1d,
+        PM_da_initialized_1d,
         PM_da_control_1d,
         metric='rmse',
         dim='member',
@@ -136,12 +136,12 @@ def test_bootstrap_hindcast_dim(
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize('dim', ('init', 'member', ['init', 'member']))
 def test_compute_pm_dims(
-    PM_da_ds_1d, PM_da_control_1d, dim, comparison, metric
+    PM_da_initialized_1d, PM_da_control_1d, dim, comparison, metric
 ):
     """Test whether compute_pm calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
     actual = compute_perfect_model(
-        PM_da_ds_1d,
+        PM_da_initialized_1d,
         PM_da_control_1d,
         metric=metric,
         dim=dim,
@@ -153,7 +153,7 @@ def test_compute_pm_dims(
     elif isinstance(dim, str):
         dim = [dim]
     # check whether only dim got reduced from coords
-    assert set(PM_da_ds_1d.dims) - set(actual.dims) == set(dim)
+    assert set(PM_da_initialized_1d.dims) - set(actual.dims) == set(dim)
     # check whether all nan
     print(actual.dims, actual.coords, actual)
     assert not actual.isnull().any()

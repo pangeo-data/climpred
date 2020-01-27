@@ -4,17 +4,33 @@ import xarray as xr
 
 from climpred.tutorial import load_dataset
 
+# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D
+
 
 @pytest.fixture
-def PM_da_ds_1d():
+def PM_da_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.DataArray."""
     return load_dataset('MPI-PM-DP-1D')['tos'].isel(area=1, period=-1)
+
+
+@pytest.fixture
+def PM_da_initialized_3d():
+    """MPI Perfect-model-framework initialized maps xr.DataArray of subselected North
+    Atlantic."""
+    return load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
 
 
 @pytest.fixture
 def PM_da_control_1d():
     """To MPI Perfect-model-framework corresponding control timeseries xr.DataArray."""
     return load_dataset('MPI-control-1D')['tos'].isel(area=1, period=-1)
+
+
+@pytest.fixture
+def PM_da_control_3d():
+    """To MPI Perfect-model-framework corresponding control maps xr.DataArray of
+    subselected North Atlantic."""
+    return load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
 
 
 @pytest.fixture
@@ -47,8 +63,7 @@ def hind_da_initialized_3d():
     da = load_dataset('CESM-DP-SST-3D')['SST'].isel(
         nlon=slice(0, 10), nlat=slice(0, 12)
     )
-    da = da - da.mean('init')
-    return da
+    return da - da.mean('init')
 
 
 @pytest.fixture

@@ -8,52 +8,9 @@ from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import PM_COMPARISONS
 from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
-from climpred.tutorial import load_dataset
 
 
-@pytest.fixture
-def pm_da_ds1d():
-    da = load_dataset('MPI-PM-DP-1D')
-    da = da['tos'].isel(area=1, period=-1)
-    return da
-
-
-@pytest.fixture
-def pm_da_control1d():
-    da = load_dataset('MPI-control-1D')
-    da = da['tos'].isel(area=1, period=-1)
-    return da
-
-
-@pytest.fixture
-def ds_3d_NA():
-    """ds North Atlantic"""
-    ds = load_dataset('MPI-PM-DP-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
-    return ds
-
-
-@pytest.fixture
-def control_3d_NA():
-    """control North Atlantic"""
-    ds = load_dataset('MPI-control-3D')['tos'].sel(x=slice(120, 130), y=slice(50, 60))
-    return ds
-
-
-@pytest.fixture
-def initialized_da():
-    da = load_dataset('CESM-DP-SST-3D')['SST']
-    da = da - da.mean('init')
-    return da
-
-
-@pytest.fixture
-def reconstruction_da():
-    da = load_dataset('FOSI-SST-3D')['SST']
-    da = da - da.mean('time')
-    return da
-
-
-def my_mse_function(forecast, reference, dim='svd', **metric_kwargs):
+def my_mse_function(forecast, reference, dim=None, **metric_kwargs):
     return ((forecast - reference) ** 2).mean(dim)
 
 
@@ -69,13 +26,15 @@ my_mse = Metric(
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, comparison):
+def test_new_metric_passed_to_compute(
+    PM_da_initialized_1d, PM_da_control_1d, comparison
+):
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison=comparison, metric=my_mse
+        PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric=my_mse,
     )
 
     expected = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison=comparison, metric='mse'
+        PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric='mse',
     )
 
     assert_allclose(actual, expected)
@@ -83,14 +42,14 @@ def test_new_metric_passed_to_compute(pm_da_ds1d, pm_da_control1d, comparison):
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_new_metric_passed_to_bootstrap_compute(
-    pm_da_ds1d, pm_da_control1d, comparison
+    PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     bootstrap = 3
     dim = 'init'
     np.random.seed(42)
     actual = bootstrap_perfect_model(
-        pm_da_ds1d,
-        pm_da_control1d,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
         comparison=comparison,
         metric=my_mse,
         bootstrap=bootstrap,
@@ -98,8 +57,8 @@ def test_new_metric_passed_to_bootstrap_compute(
     )
 
     expected = bootstrap_perfect_model(
-        pm_da_ds1d,
-        pm_da_control1d,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
         comparison=comparison,
         metric='mse',
         bootstrap=bootstrap,
@@ -110,22 +69,22 @@ def test_new_metric_passed_to_bootstrap_compute(
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
-def test_pm_metric_skipna(ds_3d_NA, control_3d_NA, metric):
-    ds_3d_NA = ds_3d_NA.copy()
+def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
+    PM_da_initialized_3d = PM_da_initialized_3d.copy()
     # manipulating data
-    ds_3d_NA.values[1:3, 1:4, 1:4, 4:6, 4:6] = np.nan
+    PM_da_initialized_3d.values[1:3, 1:4, 1:4, 4:6, 4:6] = np.nan
 
     base = compute_perfect_model(
-        ds_3d_NA,
-        control_3d_NA,
+        PM_da_initialized_3d,
+        PM_da_control_3d,
         metric=metric,
         skipna=False,
         dim='init',
         comparison='m2e',
     ).mean('member')
     skipping = compute_perfect_model(
-        ds_3d_NA,
-        control_3d_NA,
+        PM_da_initialized_3d,
+        PM_da_control_3d,
         metric=metric,
         skipna=True,
         dim='init',
@@ -138,16 +97,20 @@ def test_pm_metric_skipna(ds_3d_NA, control_3d_NA, metric):
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ('e2c', 'm2c'))
-def test_pm_metric_weights(ds_3d_NA, control_3d_NA, comparison, metric):
+def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, metric):
     # distribute weights on initializations
     dim = 'init'
     base = compute_perfect_model(
-        ds_3d_NA, control_3d_NA, dim=dim, metric=metric, comparison=comparison
+        PM_da_initialized_3d,
+        PM_da_control_3d,
+        dim=dim,
+        metric=metric,
+        comparison=comparison,
     )
-    weights = xr.DataArray(np.arange(1, 1 + ds_3d_NA[dim].size), dims=dim)
+    weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
     weighted = compute_perfect_model(
-        ds_3d_NA,
-        control_3d_NA,
+        PM_da_initialized_3d,
+        PM_da_control_3d,
         dim=dim,
         comparison=comparison,
         metric=metric,
@@ -161,20 +124,29 @@ def test_pm_metric_weights(ds_3d_NA, control_3d_NA, comparison, metric):
 @pytest.mark.skip(reason='comparisons dont work here')
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ['m2e', 'm2m'])
-def test_pm_metric_weights_m2x(ds_3d_NA, control_3d_NA, comparison, metric):
+def test_pm_metric_weights_m2x(
+    PM_da_initialized_3d, PM_da_control_3d, comparison, metric
+):
     # distribute weights on initializations
     dim = 'init'
     base = compute_perfect_model(
-        ds_3d_NA, control_3d_NA, dim=dim, metric=metric, comparison=comparison
+        PM_da_initialized_3d,
+        PM_da_control_3d,
+        dim=dim,
+        metric=metric,
+        comparison=comparison,
     )
-    weights = xr.DataArray(np.arange(1, 1 + ds_3d_NA[dim].size), dims=dim)
+    weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
     weights = xr.DataArray(
-        np.arange(1, 1 + ds_3d_NA[dim].size * ds_3d_NA['member'].size), dims='init'
+        np.arange(
+            1, 1 + PM_da_initialized_3d[dim].size * PM_da_initialized_3d['member'].size,
+        ),
+        dims='init',
     )
 
     weighted = compute_perfect_model(
-        ds_3d_NA,
-        control_3d_NA,
+        PM_da_initialized_3d,
+        PM_da_control_3d,
         dim=dim,
         comparison=comparison,
         metric=metric,
@@ -186,34 +158,51 @@ def test_pm_metric_weights_m2x(ds_3d_NA, control_3d_NA, comparison, metric):
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
-def test_hindcast_metric_skipna(initialized_da, reconstruction_da, metric):
-    initialized_da = initialized_da.copy()
-    # manipulating data
-    initialized_da.isel(init=0, lead=0, nlat=2, nlon=2).values = np.nan
+def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, metric):
+    # manipulating data with nans
+    hind_da_initialized_3d[0, 2, 0, 2] = np.nan
     base = compute_hindcast(
-        initialized_da, reconstruction_da, metric=metric, skipna=False, dim='init'
+        hind_da_initialized_3d,
+        reconstruction_da_3d,
+        metric=metric,
+        skipna=False,
+        dim='init',
     )
     skipping = compute_hindcast(
-        initialized_da, reconstruction_da, metric=metric, skipna=True, dim='init'
+        hind_da_initialized_3d,
+        reconstruction_da_3d,
+        metric=metric,
+        skipna=True,
+        dim='init',
     )
-    assert ((base / skipping) != 1).any()
+
+    div = base / skipping
+    assert (div != 1).any()
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ['e2o'])
-def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, metric):
+def test_hindcast_metric_weights(
+    hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
+):
     # distribute weights on initializations
     dim = 'init'
     base = compute_hindcast(
-        initialized_da, reconstruction_da, dim=dim, metric=metric, comparison=comparison
+        hind_da_initialized_3d,
+        reconstruction_da_3d,
+        dim=dim,
+        metric=metric,
+        comparison=comparison,
     )
     weights = xr.DataArray(
-        np.arange(1, 1 + initialized_da[dim].size - initialized_da.lead.size),
+        np.arange(
+            1, 1 + hind_da_initialized_3d[dim].size - hind_da_initialized_3d.lead.size,
+        ),
         dims='time',
     )
     weighted = compute_hindcast(
-        initialized_da,
-        reconstruction_da,
+        hind_da_initialized_3d,
+        reconstruction_da_3d,
         dim=dim,
         comparison=comparison,
         metric=metric,
@@ -227,22 +216,30 @@ def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ['e2o', 'm2o'])
 def test_hindcast_metric_weights_x2r(
-    initialized_da, reconstruction_da, comparison, metric
+    hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
 ):
     # distribute weights on initializations
     dim = 'init'
     base = compute_hindcast(
-        initialized_da, reconstruction_da, dim=dim, metric=metric, comparison=comparison
+        hind_da_initialized_3d,
+        reconstruction_da_3d,
+        dim=dim,
+        metric=metric,
+        comparison=comparison,
     )
-    weights = xr.DataArray(np.arange(1, 1 + initialized_da[dim].size), dims=dim)
+    weights = xr.DataArray(np.arange(1, 1 + hind_da_initialized_3d[dim].size), dims=dim)
     weights = xr.DataArray(
-        np.arange(1, 1 + initialized_da[dim].size * initialized_da['member'].size),
+        np.arange(
+            1,
+            1
+            + hind_da_initialized_3d[dim].size * hind_da_initialized_3d['member'].size,
+        ),
         dims='init',
     )
 
     weighted = compute_hindcast(
-        initialized_da,
-        reconstruction_da,
+        hind_da_initialized_3d,
+        reconstruction_da_3d,
         dim=dim,
         comparison=comparison,
         metric=metric,

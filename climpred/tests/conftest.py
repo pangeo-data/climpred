@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
 
 # ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D
@@ -92,6 +93,14 @@ def PM_da_control_3d(PM_ds_control_3d):
     """To MPI Perfect-model-framework corresponding control maps xr.DataArray of
     subselected North Atlantic."""
     return PM_ds_control_3d['tos']
+
+
+@pytest.fixture
+def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control_1d):
+    """PerfectModelEnsemble initialized with `initialized` and `control` xr.Dataset."""
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d)
+    pm = pm.add_control(PM_ds_control_1d)
+    return pm
 
 
 @pytest.fixture

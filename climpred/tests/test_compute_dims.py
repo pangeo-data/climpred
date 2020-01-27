@@ -2,13 +2,12 @@ import pytest
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
-from climpred.constants import (
+from climpred.comparisons import (
     PM_COMPARISONS,
-    PM_METRICS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
 )
+from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import get_comparison_class, get_metric_class
@@ -70,7 +69,7 @@ def test_pm_comparison_stack_dims_when_deterministic(pm_da_ds1d, comparison, met
 def test_compute_perfect_model_dim_over_member(pm_da_ds1d, pm_da_control1d, comparison):
     """Test deterministic metric calc skill over member dim."""
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison=comparison, metric='rmse', dim='member'
+        pm_da_ds1d, pm_da_control1d, comparison=comparison, metric='rmse', dim='member',
     )
     assert 'init' in actual.dims
     assert not actual.isnull().any()
@@ -103,7 +102,7 @@ def test_compute_perfect_model_different_dims_quite_close(pm_da_ds1d, pm_da_cont
         dim=['init', 'member'],
     )
     stack_dims_false = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison='m2c', metric='rmse', dim='member'
+        pm_da_ds1d, pm_da_control1d, comparison='m2c', metric='rmse', dim='member',
     ).mean(['init'])
     # no more than 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
@@ -157,7 +156,7 @@ def test_compute_pm_dims(pm_da_ds1d, pm_da_control1d, dim, comparison, metric):
     """Test whether compute_pm calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, metric=metric, dim=dim, comparison=comparison
+        pm_da_ds1d, pm_da_control1d, metric=metric, dim=dim, comparison=comparison,
     )
     # change dim as automatically in compute functions for probabilistic
     if dim in ['init', ['init', 'member']] and metric in PROBABILISTIC_METRICS:
@@ -180,7 +179,7 @@ def test_compute_hindcast_dims(
     """Test whether compute_hindcast calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
     actual = compute_hindcast(
-        initialized_da, observations_da, metric=metric, dim=dim, comparison=comparison
+        initialized_da, observations_da, metric=metric, dim=dim, comparison=comparison,
     )
     # change dim as automatically in compute functions for probabilistic
     if dim == 'init' and metric in PROBABILISTIC_METRICS:

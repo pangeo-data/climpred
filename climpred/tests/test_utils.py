@@ -6,9 +6,8 @@ import xarray as xr
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.comparisons import __m2c
-from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
-from climpred.metrics import __pearson_r
+from climpred.comparisons import PM_COMPARISONS, __m2c
+from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
@@ -125,7 +124,7 @@ def test_bootstrap_pm_assign_attrs():
     da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
     control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
     actual = bootstrap_perfect_model(
-        da, control, metric=metric, comparison=comparison, bootstrap=bootstrap, sig=sig
+        da, control, metric=metric, comparison=comparison, bootstrap=bootstrap, sig=sig,
     ).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison

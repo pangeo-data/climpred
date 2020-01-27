@@ -2,10 +2,10 @@ import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
+from .constants import M2M_MEMBER_DIM
 from .exceptions import DimensionError
 
-# from .constants import M2M_MEMBER_DIM
-M2M_MEMBER_DIM = 'forecast_member'
+# M2M_MEMBER_DIM = 'forecast_member'
 
 
 def _drop_members(ds, removed_member=None):
@@ -52,7 +52,7 @@ class Comparison:
     """Master class for all comparisons."""
 
     def __init__(
-        self, name, function, hindcast, probabilistic, long_name=None, aliases=None
+        self, name, function, hindcast, probabilistic, long_name=None, aliases=None,
     ):
         """Comparison initialization.
 
@@ -313,3 +313,28 @@ __m2o = Comparison(
 
 
 __ALL_COMPARISONS__ = [__m2m, __m2e, __m2c, __e2c, __e2o, __m2o]
+
+COMPARISON_ALIASES = dict()
+for c in __ALL_COMPARISONS__:
+    if c.aliases is not None:
+        for a in c.aliases:
+            COMPARISON_ALIASES[a] = c.name
+
+# Which comparisons work with which set of metrics.
+# ['e2o', 'm2o']
+HINDCAST_COMPARISONS = [c.name for c in __ALL_COMPARISONS__ if c.hindcast]
+# ['m2c', 'e2c', 'm2m', 'm2e']
+PM_COMPARISONS = [c.name for c in __ALL_COMPARISONS__ if not c.hindcast]
+ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
+# ['m2c', 'm2m']
+PROBABILISTIC_PM_COMPARISONS = [
+    c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and c.probabilistic)
+]
+# ['m2o']
+PROBABILISTIC_HINDCAST_COMPARISONS = [
+    c.name for c in __ALL_COMPARISONS__ if (c.hindcast and c.probabilistic)
+]
+PROBABILISTIC_COMPARISONS = (
+    PROBABILISTIC_HINDCAST_COMPARISONS + PROBABILISTIC_PM_COMPARISONS
+)
+ALL_COMPARISONS = [c.name for c in __ALL_COMPARISONS__]

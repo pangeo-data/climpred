@@ -1,13 +1,12 @@
 import pytest
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
-from climpred.constants import (
-    METRIC_ALIASES,
+from climpred.comparisons import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
 )
+from climpred.metrics import METRIC_ALIASES, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 
@@ -250,7 +249,7 @@ def test_hindcast_crpss_orientation(initialized_da, observations_da):
     Checks that CRPSS hindcast as skill score > 0.
     """
     actual = compute_hindcast(
-        initialized_da, observations_da, comparison='m2o', metric='crpss', dim='member'
+        initialized_da, observations_da, comparison='m2o', metric='crpss', dim='member',
     )
     if 'init' in actual.coords:
         actual = actual.mean('init')
@@ -262,7 +261,7 @@ def test_pm_crpss_orientation(pm_da_ds1d, pm_da_control1d):
     Checks that CRPSS in PM as skill score > 0.
     """
     actual = compute_perfect_model(
-        pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss', dim='member'
+        pm_da_ds1d, pm_da_control1d, comparison='m2m', metric='crpss', dim='member',
     )
     if 'init' in actual.coords:
         actual = actual.mean('init')
@@ -300,7 +299,7 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
 ):
     with pytest.warns(UserWarning) as record:
         compute_perfect_model(
-            pm_da_ds1d, pm_da_control1d, comparison='m2c', metric=metric, dim=dim
+            pm_da_ds1d, pm_da_control1d, comparison='m2c', metric=metric, dim=dim,
         )
     expected = (
         f'Probabilistic metric {metric} requires to be '
@@ -334,7 +333,7 @@ def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
     metric = METRIC_ALIASES.get(metric, metric)
     with pytest.warns(UserWarning) as record:
         compute_hindcast(
-            initialized_da, observations_da, comparison='m2o', metric=metric, dim=dim
+            initialized_da, observations_da, comparison='m2o', metric=metric, dim=dim,
         )
     expected = (
         f'Probabilistic metric {metric} requires to be '

@@ -5,15 +5,12 @@ import dask
 import xarray as xr
 
 from .checks import has_valid_lead_units, is_in_list, is_xarray
-from .comparisons import __e2c
-from .constants import (
-    CLIMPRED_DIMS,
-    COMPARISON_ALIASES,
+from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
+from .constants import CLIMPRED_DIMS
+from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
-    HINDCAST_COMPARISONS,
     HINDCAST_METRICS,
     METRIC_ALIASES,
-    PM_COMPARISONS,
     PM_METRICS,
 )
 from .utils import (

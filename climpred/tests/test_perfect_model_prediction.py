@@ -2,7 +2,8 @@ import dask
 import pytest
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import CLIMPRED_DIMS, DETERMINISTIC_PM_METRICS
+from climpred.constants import CLIMPRED_DIMS
+from climpred.metrics import DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model, compute_persistence
 from climpred.tutorial import load_dataset
 
@@ -238,7 +239,7 @@ def test_compute_pm_dask_climpred_dims(ds_3d_NA, control_3d_NA, comparison, metr
         if dim in control_3d_NA.dims:
             control_3d_NA = control_3d_NA.chunk({dim: step})
         res_chunked = compute_perfect_model(
-            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric, dim='init'
+            ds_3d_NA, control_3d_NA, comparison=comparison, metric=metric, dim='init',
         )
         # check for chunks
         assert dask.is_dask_collection(res_chunked)

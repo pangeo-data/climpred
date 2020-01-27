@@ -22,11 +22,11 @@ from xskillscore import (
     threshold_brier_score,
 )
 
+# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
+from .constants import CLIMPRED_DIMS
 from .np_metrics import _effective_sample_size as ess, _spearman_r_eff_p_value as srepv
 
-# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
-# from .constants import CLIMPRED_DIMS
-CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
+# CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
 
 
 def _get_norm_factor(comparison):
@@ -2201,3 +2201,27 @@ __ALL_METRICS__ = [
     __uacc,
     __std_ratio,
 ]
+
+
+# To match a metric/comparison for (multiple) keywords.
+METRIC_ALIASES = dict()
+for m in __ALL_METRICS__:
+    if m.aliases is not None:
+        for a in m.aliases:
+            METRIC_ALIASES[a] = m.name
+
+
+DETERMINISTIC_METRICS = [m.name for m in __ALL_METRICS__ if not m.probabilistic]
+DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS
+# Metrics to be used in compute_perfect_model.
+DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
+# Used to set attrs['units'] to None.
+DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
+# More positive skill is better than more negative.
+POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
+PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
+
+# Combined allowed metrics for compute_hindcast and compute_perfect_model
+HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
+PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
+ALL_METRICS = [m.name for m in __ALL_METRICS__]

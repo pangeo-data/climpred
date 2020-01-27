@@ -12,12 +12,14 @@ from climpred.constants import (
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
 
-bootstrap = 3
+BOOTSTRAP = 3
 
 
 @pytest.mark.parametrize('metric', ['crps', 'mse'])
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
-def test_pm_comparison_stack_dims_when_deterministic(PM_da_ds_1d, comparison, metric):
+def test_pm_comparison_stack_dims_when_deterministic(
+    PM_da_ds_1d, comparison, metric
+):
     metric = get_metric_class(metric, PM_METRICS)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
     actual_f, actual_r = comparison.function(PM_da_ds_1d, metric=metric)
@@ -77,7 +79,11 @@ def test_compute_perfect_model_different_dims_quite_close(
         dim=['init', 'member'],
     )
     stack_dims_false = compute_perfect_model(
-        PM_da_ds_1d, PM_da_control_1d, comparison='m2c', metric='rmse', dim='member',
+        PM_da_ds_1d,
+        PM_da_control_1d,
+        comparison='m2c',
+        metric='rmse',
+        dim='member',
     ).mean(['init'])
     # no more than 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
@@ -92,7 +98,7 @@ def test_bootstrap_pm_dim(PM_da_ds_1d, PM_da_control_1d):
         metric='rmse',
         dim='member',
         comparison='m2c',
-        bootstrap=bootstrap,
+        bootstrap=BOOTSTRAP,
     )
     assert 'init' in actual.dims
     for kind in ['init', 'uninit']:
@@ -115,7 +121,7 @@ def test_bootstrap_hindcast_dim(
         metric='rmse',
         dim='member',
         comparison='m2o',
-        bootstrap=bootstrap,
+        bootstrap=BOOTSTRAP,
     )
     assert 'init' in actual.dims
     for kind in ['init', 'uninit']:
@@ -129,11 +135,17 @@ def test_bootstrap_hindcast_dim(
 @pytest.mark.parametrize('metric', ('rmse', 'crpss'))
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize('dim', ('init', 'member', ['init', 'member']))
-def test_compute_pm_dims(PM_da_ds_1d, PM_da_control_1d, dim, comparison, metric):
+def test_compute_pm_dims(
+    PM_da_ds_1d, PM_da_control_1d, dim, comparison, metric
+):
     """Test whether compute_pm calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
     actual = compute_perfect_model(
-        PM_da_ds_1d, PM_da_control_1d, metric=metric, dim=dim, comparison=comparison,
+        PM_da_ds_1d,
+        PM_da_control_1d,
+        metric=metric,
+        dim=dim,
+        comparison=comparison,
     )
     # change dim as automatically in compute functions for probabilistic
     if dim in ['init', ['init', 'member']] and metric in PROBABILISTIC_METRICS:

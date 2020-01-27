@@ -160,6 +160,8 @@ Preparing Pull Requests
    Check that your contribution is covered by tests and therefore increases the overall test coverage:
 
     $ coverage run --source climpred -m py.test
+    $ coverage report
+    $ coveralls
 
   Please stick to `xarray <http://xarray.pydata.org/en/stable/contributing.html>`_'s testing recommendations.
 

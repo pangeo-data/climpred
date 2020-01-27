@@ -3,15 +3,13 @@ from functools import wraps
 
 import xarray as xr
 
-# VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
 from .constants import VALID_LEAD_UNITS
 from .exceptions import DatasetError, DimensionError, VariableError
 
-# https://stackoverflow.com/questions/10610824/
-# python-shortcut-for-writing-decorators-which-accept-arguments
-
 
 def dec_args_kwargs(wrapper):
+    # https://stackoverflow.com/questions/10610824/
+    # python-shortcut-for-writing-decorators-which-accept-arguments
     return lambda *dec_args, **dec_kwargs: lambda func: wrapper(
         func, *dec_args, **dec_kwargs
     )

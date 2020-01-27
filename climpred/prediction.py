@@ -6,7 +6,7 @@ import xarray as xr
 
 from .checks import has_valid_lead_units, is_in_list, is_xarray
 from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
-from .constants import CLIMPRED_DIMS
+from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_METRICS,
@@ -25,8 +25,6 @@ from .utils import (
     shift_cftime_index,
 )
 
-# from .constants import M2M_MEMBER_DIM
-M2M_MEMBER_DIM = 'forecast_member'
 
 # --------------------------------------------#
 # COMPUTE PREDICTABILITY/FORECASTS

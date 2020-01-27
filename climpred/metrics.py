@@ -22,11 +22,8 @@ from xskillscore import (
     threshold_brier_score,
 )
 
-# the import of CLIMPRED_DIMS from constants fails. currently fixed manually.
 from .constants import CLIMPRED_DIMS
 from .np_metrics import _effective_sample_size as ess, _spearman_r_eff_p_value as srepv
-
-# CLIMPRED_DIMS = ['init', 'member', 'lead', 'time']
 
 
 def _get_norm_factor(comparison):

@@ -5,8 +5,6 @@ from .checks import has_dims, has_min_len
 from .constants import M2M_MEMBER_DIM
 from .exceptions import DimensionError
 
-# M2M_MEMBER_DIM = 'forecast_member'
-
 
 def _drop_members(ds, removed_member=None):
     """

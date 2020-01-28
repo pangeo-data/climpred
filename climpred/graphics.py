@@ -3,7 +3,7 @@ from collections import OrderedDict
 import matplotlib.pyplot as plt
 import numpy as np
 
-from .constants import PROBABILISTIC_METRICS
+from .metrics import PROBABILISTIC_METRICS
 
 
 def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
@@ -41,7 +41,7 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
             ls='--',
         )
         ax[i].plot(
-            rel_ent.lead, (m + std), c=colors[i], label='', linewidth=2.5, ls='--'
+            rel_ent.lead, (m + std), c=colors[i], label='', linewidth=2.5, ls='--',
         )
         if rel_ent_threshold is not None:
             ax[i].axhline(
@@ -191,9 +191,7 @@ def plot_bootstrapped_skill_over_leadyear(
                 fmt='--o',
                 capsize=capsize,
                 c=c_pers,
-                label=(' ').join(
-                    ['persistence with', str(pers_sig) + '%', 'confidence interval']
-                ),
+                label=f'persistence with {pers_sig}% confidence interval',
             )
         for t in pers_skill.lead.values:
             ax.text(

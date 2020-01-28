@@ -5,7 +5,7 @@ import xskillscore as xs
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import PM_COMPARISONS
+from climpred.comparisons import PM_COMPARISONS
 from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 

@@ -2,11 +2,9 @@ import dask
 import pytest
 
 from climpred.bootstrap import bootstrap_hindcast
-from climpred.constants import (
-    CLIMPRED_DIMS,
-    DETERMINISTIC_HINDCAST_METRICS,
-    HINDCAST_COMPARISONS,
-)
+from climpred.comparisons import HINDCAST_COMPARISONS
+from climpred.constants import CLIMPRED_DIMS
+from climpred.metrics import DETERMINISTIC_HINDCAST_METRICS
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,

@@ -6,9 +6,8 @@ import xarray as xr
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.comparisons import __m2c
-from climpred.constants import DETERMINISTIC_PM_METRICS, PM_COMPARISONS
-from climpred.metrics import __pearson_r
+from climpred.comparisons import PM_COMPARISONS, __m2c
+from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (

@@ -2,13 +2,12 @@ import pytest
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
-from climpred.constants import (
+from climpred.comparisons import (
     PM_COMPARISONS,
-    PM_METRICS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
 )
+from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
 

@@ -9,7 +9,8 @@ from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import COMPARISON_ALIASES, METRIC_ALIASES
+from .comparisons import COMPARISON_ALIASES
+from .metrics import METRIC_ALIASES
 
 
 def convert_time_index(xobj, time_string, kind):
@@ -155,9 +156,11 @@ def get_lead_cftime_shift_args(units, lead):
     lead = int(lead)
 
     d = {
-        'years': (lead, 'YS'),  # Currently assumes yearly aligns with year start.
+        # Currently assumes yearly aligns with year start.
+        'years': (lead, 'YS'),
         'seasons': (lead * 3, 'MS'),
-        'months': (lead, 'MS'),  # Currently assumes monthly aligns with month start.
+        # Currently assumes monthly aligns with month start.
+        'months': (lead, 'MS'),
         'weeks': (lead * 7, 'D'),
         'pentads': (lead * 5, 'D'),
         'days': (lead, 'D'),

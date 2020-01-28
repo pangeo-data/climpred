@@ -2,13 +2,12 @@ import pytest
 from scipy.stats import norm
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
-from climpred.constants import (
-    METRIC_ALIASES,
+from climpred.comparisons import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_METRICS,
     PROBABILISTIC_PM_COMPARISONS,
 )
+from climpred.metrics import METRIC_ALIASES, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 
 BOOTSTRAP = 3

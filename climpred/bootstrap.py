@@ -5,7 +5,8 @@ import xarray as xr
 from tqdm.auto import tqdm
 
 from .checks import has_dims, has_valid_lead_units
-from .constants import ALL_COMPARISONS, ALL_METRICS, COMPARISON_ALIASES, METRIC_ALIASES
+from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
+from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
@@ -148,7 +149,7 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist), 'member'
+            (isel_years(control, start, length) for start in startlist), 'member',
         )
 
     return xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
@@ -222,7 +223,7 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
     )
 
 
@@ -417,7 +418,7 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')

@@ -5,7 +5,7 @@ import xskillscore as xs
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import PM_COMPARISONS
+from climpred.comparisons import PM_COMPARISONS
 from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
@@ -169,7 +169,7 @@ def test_pm_metric_weights_m2x(ds_3d_NA, control_3d_NA, comparison, metric):
     )
     weights = xr.DataArray(np.arange(1, 1 + ds_3d_NA[dim].size), dims=dim)
     weights = xr.DataArray(
-        np.arange(1, 1 + ds_3d_NA[dim].size * ds_3d_NA['member'].size), dims='init'
+        np.arange(1, 1 + ds_3d_NA[dim].size * ds_3d_NA['member'].size), dims='init',
     )
 
     weighted = compute_perfect_model(
@@ -191,10 +191,10 @@ def test_hindcast_metric_skipna(initialized_da, reconstruction_da, metric):
     # manipulating data
     initialized_da.isel(init=0, lead=0, nlat=2, nlon=2).values = np.nan
     base = compute_hindcast(
-        initialized_da, reconstruction_da, metric=metric, skipna=False, dim='init'
+        initialized_da, reconstruction_da, metric=metric, skipna=False, dim='init',
     )
     skipping = compute_hindcast(
-        initialized_da, reconstruction_da, metric=metric, skipna=True, dim='init'
+        initialized_da, reconstruction_da, metric=metric, skipna=True, dim='init',
     )
     assert ((base / skipping) != 1).any()
 
@@ -205,7 +205,11 @@ def test_hindcast_metric_weights(initialized_da, reconstruction_da, comparison, 
     # distribute weights on initializations
     dim = 'init'
     base = compute_hindcast(
-        initialized_da, reconstruction_da, dim=dim, metric=metric, comparison=comparison
+        initialized_da,
+        reconstruction_da,
+        dim=dim,
+        metric=metric,
+        comparison=comparison,
     )
     weights = xr.DataArray(
         np.arange(1, 1 + initialized_da[dim].size - initialized_da.lead.size),
@@ -232,7 +236,11 @@ def test_hindcast_metric_weights_x2r(
     # distribute weights on initializations
     dim = 'init'
     base = compute_hindcast(
-        initialized_da, reconstruction_da, dim=dim, metric=metric, comparison=comparison
+        initialized_da,
+        reconstruction_da,
+        dim=dim,
+        metric=metric,
+        comparison=comparison,
     )
     weights = xr.DataArray(np.arange(1, 1 + initialized_da[dim].size), dims=dim)
     weights = xr.DataArray(

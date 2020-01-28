@@ -3,11 +3,9 @@ import numpy as np
 import pytest
 
 from climpred.bootstrap import bootstrap_hindcast
-from climpred.constants import (
-    CLIMPRED_DIMS,
-    DETERMINISTIC_HINDCAST_METRICS,
-    HINDCAST_COMPARISONS,
-)
+from climpred.comparisons import HINDCAST_COMPARISONS
+from climpred.constants import CLIMPRED_DIMS
+from climpred.metrics import DETERMINISTIC_HINDCAST_METRICS
 from climpred.prediction import (
     compute_hindcast,
     compute_persistence,
@@ -126,7 +124,7 @@ def test_compute_hindcast(initialized_ds, reconstruction_ds, metric, comparison)
     """
     res = (
         compute_hindcast(
-            initialized_ds, reconstruction_ds, metric=metric, comparison=comparison
+            initialized_ds, reconstruction_ds, metric=metric, comparison=comparison,
         )
         .isnull()
         .any()
@@ -146,7 +144,7 @@ def test_compute_hindcast_lead0_lead1(
         initialized_ds, reconstruction_ds, metric='rmse', comparison='e2o'
     )
     res2 = compute_hindcast(
-        initialized_ds_lead0, reconstruction_ds, metric='rmse', comparison='e2o'
+        initialized_ds_lead0, reconstruction_ds, metric='rmse', comparison='e2o',
     )
     assert (res1.SST.values == res2.SST.values).all()
 
@@ -182,7 +180,7 @@ def test_uninitialized(uninitialized_da, reconstruction_da):
     """
     res = (
         compute_uninitialized(
-            uninitialized_da, reconstruction_da, metric='rmse', comparison='e2o'
+            uninitialized_da, reconstruction_da, metric='rmse', comparison='e2o',
         )
         .isnull()
         .any()
@@ -232,7 +230,7 @@ def test_compute_hindcast_comparison_keyerrors(
     """
     with pytest.raises(KeyError) as excinfo:
         compute_hindcast(
-            initialized_ds, reconstruction_ds, comparison=comparison, metric='mse'
+            initialized_ds, reconstruction_ds, comparison=comparison, metric='mse',
         )
     assert 'Specify comparison from' in str(excinfo.value)
 

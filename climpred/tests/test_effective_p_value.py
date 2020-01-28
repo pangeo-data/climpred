@@ -1,6 +1,6 @@
 import pytest
 
-from climpred.constants import HINDCAST_COMPARISONS, PM_COMPARISONS
+from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 

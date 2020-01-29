@@ -16,3 +16,8 @@ def test_open_dataset_locally(filepath):
 def test_load_datasets_empty():
     actual = load_dataset()
     assert actual is None
+
+
+@pytest.mark.parametrize('cache', [False, True])
+def test_load_dataset_cache(cache):
+    load_dataset(cache=cache)

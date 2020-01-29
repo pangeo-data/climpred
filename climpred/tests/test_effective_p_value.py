@@ -2,78 +2,55 @@ import pytest
 
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.prediction import compute_hindcast, compute_perfect_model
-from climpred.tutorial import load_dataset
-
-
-@pytest.fixture
-def hindcast():
-    da = load_dataset('CESM-DP-SST')
-    da = da['SST']
-    return da
-
-
-@pytest.fixture
-def reconstruction():
-    da = load_dataset('FOSI-SST')
-    da = da['SST']
-    return da
-
-
-@pytest.fixture
-def perfect_model():
-    da = load_dataset('MPI-PM-DP-1D')
-    da = da.sel(area='global', period='ym')['tos']
-    return da
-
-
-@pytest.fixture
-def perfect_model_control():
-    da = load_dataset('MPI-control-1D')
-    da = da.sel(area='global', period='ym')['tos']
-    return da
 
 
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
-def test_eff_sample_size_smaller_than_n_hindcast(hindcast, reconstruction, comparison):
+def test_eff_sample_size_smaller_than_n_hind_da_initialized_1d(
+    hind_da_initialized_1d, reconstruction_da_1d, comparison
+):
     """Tests that effective sample size is less than or equal to the actual sample size
     of the data."""
-    N = hindcast.mean('member').count('init')
-    eff_N = compute_hindcast(hindcast, reconstruction, metric='eff_n', max_dof=True)
+    N = hind_da_initialized_1d.mean('member').count('init')
+    eff_N = compute_hindcast(
+        hind_da_initialized_1d, reconstruction_da_1d, metric='eff_n', max_dof=True,
+    )
     assert (eff_N <= N).all()
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-def test_eff_sample_size_smaller_than_n_perfect_model(
-    perfect_model, perfect_model_control, comparison
+def test_eff_sample_size_smaller_than_n_PM_da_initialized_1d(
+    PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     """Tests that effective sample size is less than or equal to the actual sample size
     of the data."""
     if comparison == 'e2c':
-        N = perfect_model.mean('member').count('init')
+        N = PM_da_initialized_1d.mean('member').count('init')
     else:
-        N = perfect_model.stack(stack_dims=['init', 'member']).count('stack_dims')
+        N = PM_da_initialized_1d.stack(stack_dims=['init', 'member']).count(
+            'stack_dims'
+        )
     eff_N = compute_perfect_model(
-        perfect_model, perfect_model_control, metric='eff_n', comparison=comparison,
+        PM_da_initialized_1d, PM_da_control_1d, metric='eff_n', comparison=comparison,
     )
     assert (eff_N <= N).all()
 
 
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
-def test_eff_pearson_p_greater_or_equal_to_normal_p_hindcast(
-    hindcast, reconstruction, comparison
+def test_eff_pearson_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
+    hind_da_initialized_1d, reconstruction_da_1d, comparison
 ):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
     normal_p = compute_hindcast(
-        hindcast,
-        reconstruction,
+        hind_da_initialized_1d,
+        reconstruction_da_1d,
         metric='pearson_r_p_value',
         max_dof=True,
         comparison=comparison,
     )
     eff_p = compute_hindcast(
-        hindcast,
-        reconstruction,
+        hind_da_initialized_1d,
+        reconstruction_da_1d,
         metric='pearson_r_eff_p_value',
         max_dof=True,
         comparison=comparison,
@@ -83,19 +60,19 @@ def test_eff_pearson_p_greater_or_equal_to_normal_p_hindcast(
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_eff_pearson_p_greater_or_equal_to_normal_p_pm(
-    perfect_model, perfect_model_control, comparison
+    PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
     normal_p = compute_perfect_model(
-        perfect_model,
-        perfect_model_control,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
         metric='pearson_r_p_value',
         comparison=comparison,
     )
     eff_p = compute_perfect_model(
-        perfect_model,
-        perfect_model_control,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
         metric='pearson_r_eff_p_value',
         comparison=comparison,
     )
@@ -103,21 +80,21 @@ def test_eff_pearson_p_greater_or_equal_to_normal_p_pm(
 
 
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
-def test_eff_spearman_p_greater_or_equal_to_normal_p_hindcast(
-    hindcast, reconstruction, comparison
+def test_eff_spearman_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
+    hind_da_initialized_1d, reconstruction_da_1d, comparison
 ):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
     normal_p = compute_hindcast(
-        hindcast,
-        reconstruction,
+        hind_da_initialized_1d,
+        reconstruction_da_1d,
         metric='spearman_r_p_value',
         max_dof=True,
         comparison=comparison,
     )
     eff_p = compute_hindcast(
-        hindcast,
-        reconstruction,
+        hind_da_initialized_1d,
+        reconstruction_da_1d,
         metric='spearman_r_eff_p_value',
         max_dof=True,
         comparison=comparison,
@@ -127,19 +104,19 @@ def test_eff_spearman_p_greater_or_equal_to_normal_p_hindcast(
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_eff_spearman_p_greater_or_equal_to_normal_p_pm(
-    perfect_model, perfect_model_control, comparison
+    PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
     normal_p = compute_perfect_model(
-        perfect_model,
-        perfect_model_control,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
         metric='spearman_r_p_value',
         comparison=comparison,
     )
     eff_p = compute_perfect_model(
-        perfect_model,
-        perfect_model_control,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
         metric='spearman_r_eff_p_value',
         comparison=comparison,
     )

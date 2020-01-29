@@ -16,31 +16,16 @@ from climpred.comparisons import (
 )
 from climpred.metrics import PM_METRICS, __mse as metric
 from climpred.prediction import compute_perfect_model
-from climpred.tutorial import load_dataset
 from climpred.utils import get_comparison_class, get_metric_class
 
 
-@pytest.fixture
-def PM_da_ds1d():
-    da = load_dataset('MPI-PM-DP-1D')
-    da = da['tos']
-    return da
-
-
-@pytest.fixture
-def PM_da_control1d():
-    da = load_dataset('MPI-control-1D')
-    da = da['tos']
-    return da
-
-
-def test_e2c(PM_da_ds1d):
+def test_e2c(PM_da_initialized_1d):
     """Test ensemble_mean-to-control (which can be any other one member) (e2c)
     comparison basic functionality.
 
     Clean comparison: Remove one control member from ensemble to use as reference.
     Take the remaining member mean as forecasts."""
-    ds = PM_da_ds1d
+    ds = PM_da_initialized_1d
     aforecast, areference = __e2c.function(ds, metric=metric)
 
     control_member = [0]
@@ -60,13 +45,13 @@ def test_e2c(PM_da_ds1d):
     assert_equal(ereference, areference)
 
 
-def test_m2c(PM_da_ds1d):
+def test_m2c(PM_da_initialized_1d):
     """Test many-to-control (which can be any other one member) (m2c) comparison basic
     functionality.
 
     Clean comparison: Remove one control member from ensemble to use as reference.
     Take the remaining members as forecasts."""
-    ds = PM_da_ds1d
+    ds = PM_da_initialized_1d
     aforecast, areference = __m2c.function(ds, metric=metric)
 
     control_member = [0]
@@ -84,12 +69,12 @@ def test_m2c(PM_da_ds1d):
     assert_equal(ereference, areference)
 
 
-def test_m2e(PM_da_ds1d):
+def test_m2e(PM_da_initialized_1d):
     """Test many-to-ensemble-mean (m2e) comparison basic functionality.
 
     Clean comparison: Remove one member from ensemble to use as reference.
     Take the remaining members as forecasts."""
-    ds = PM_da_ds1d
+    ds = PM_da_initialized_1d
     aforecast, areference = __m2e.function(ds, metric=metric)
 
     reference_list = []
@@ -114,12 +99,12 @@ def test_m2e(PM_da_ds1d):
     assert_equal(ereference, areference)
 
 
-def test_m2m(PM_da_ds1d):
+def test_m2m(PM_da_initialized_1d):
     """Test many-to-many (m2m) comparison basic functionality.
 
     Clean comparison: Remove one member from ensemble to use as reference. Take the
     remaining members as forecasts."""
-    ds = PM_da_ds1d
+    ds = PM_da_initialized_1d
     aforecast, areference = __m2m.function(ds, metric=metric)
 
     reference_list = []
@@ -144,9 +129,9 @@ def test_m2m(PM_da_ds1d):
 
 @pytest.mark.parametrize('metric', ['crps', 'mse'])
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-def test_all(PM_da_ds1d, comparison, metric):
+def test_all(PM_da_initialized_1d, comparison, metric):
     metric = get_metric_class(metric, PM_METRICS)
-    ds = PM_da_ds1d
+    ds = PM_da_initialized_1d
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
     forecast, obs = comparison.function(ds, metric=metric)
     assert not forecast.isnull().any()
@@ -183,13 +168,18 @@ my_m2me_comparison = Comparison(
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
-def test_new_comparison_passed_to_compute(PM_da_ds1d, PM_da_control1d, metric):
+def test_new_comparison_passed_to_compute(
+    PM_da_initialized_1d, PM_da_control_1d, metric
+):
     actual = compute_perfect_model(
-        PM_da_ds1d, PM_da_control1d, comparison=my_m2me_comparison, metric=metric,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
+        comparison=my_m2me_comparison,
+        metric=metric,
     )
 
     expected = compute_perfect_model(
-        PM_da_ds1d, PM_da_control1d, comparison='m2e', metric='mse'
+        PM_da_initialized_1d, PM_da_control_1d, comparison='m2e', metric='mse'
     )
 
     assert (actual - expected).mean() != 0

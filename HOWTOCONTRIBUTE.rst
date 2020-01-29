@@ -155,10 +155,15 @@ Preparing Pull Requests
 
    Now running tests is as simple as issuing this command::
 
+    $ pytest climpred
+
+   Check that your contribution is covered by tests and therefore increases the overall test coverage:
+
     $ coverage run --source climpred -m py.test
+    $ coverage report
+    $ coveralls
 
-
-   This command will run tests via the "pytest" tool against Python 3.6.
+  Please stick to `xarray <http://xarray.pydata.org/en/stable/contributing.html>`_'s testing recommendations.
 
 
 #. Create a new changelog entry in ``CHANGELOG.rst``:

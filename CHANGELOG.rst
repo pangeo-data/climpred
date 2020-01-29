@@ -8,6 +8,8 @@ climpred v2.0.1 (2020-01-xx)
 Internals/Minor Fixes
 ---------------------
 - Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
+- Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
+  order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
 
 
 climpred v2.0.0 (2020-01-22)

@@ -1,13 +1,15 @@
+import warnings
 from functools import wraps
 
 import xarray as xr
 
+from .constants import VALID_LEAD_UNITS
 from .exceptions import DatasetError, DimensionError, VariableError
 
 
-# https://stackoverflow.com/questions/10610824/
-# python-shortcut-for-writing-decorators-which-accept-arguments
 def dec_args_kwargs(wrapper):
+    # https://stackoverflow.com/questions/10610824/
+    # python-shortcut-for-writing-decorators-which-accept-arguments
     return lambda *dec_args, **dec_kwargs: lambda func: wrapper(
         func, *dec_args, **dec_kwargs
     )
@@ -102,21 +104,22 @@ def is_in_list(item, list_, kind):
     return True
 
 
-def match_initialized_dims(init, ref, uninitialized=False):
-    """Checks that the reference dimensions match appropriate initialized dimensions.
+def match_initialized_dims(init, verif, uninitialized=False):
+    """Checks that the verification data dimensions match appropriate initialized
+    dimensions.
 
-    If uninitialized, ignore 'member'. Otherwise, ignore 'lead' and 'member'.
+    If uninitialized, ignore ``member``. Otherwise, ignore ``lead`` and ``member``.
     """
-    # since reference products won't have the initialization dimension,
-    # temporarily rename to time.
+    # Since verification data won't have the ``init``` dimension, temporarily rename to
+    # time.
     init = init.rename({'init': 'time'})
     init_dims = list(init.dims)
     if 'lead' in init_dims:
         init_dims.remove('lead')
     if ('member' in init_dims) and not uninitialized:
         init_dims.remove('member')
-    if not (set(ref.dims) == set(init_dims)):
-        unmatch_dims = set(ref.dims) ^ set(init_dims)
+    if not (set(verif.dims) == set(init_dims)):
+        unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
             'Dimensions must match initialized prediction ensemble '
             f'dimensions; these dimensions do not match: {unmatch_dims}.'
@@ -124,22 +127,54 @@ def match_initialized_dims(init, ref, uninitialized=False):
     return True
 
 
-def match_initialized_vars(init, ref):
-    """
-    Checks that a new reference (or control) dataset has at least one variable
-    in common with the initialized dataset. This ensures that they can be
-    compared pairwise.
-    ref: new addition
-    init: dp.initialized
+def match_initialized_vars(init, verif):
+    """Checks that a new verification dataset has at least one variable
+    in common with the initialized dataset.
+
+    This ensures that they can be compared pairwise.
+
+    Args:
+        init (xarray object): Initialized forecast ensemble.
+        verif (xarray object): Product to be added.
     """
     init_vars = init.data_vars
-    ref_vars = ref.data_vars
+    verif_vars = verif.data_vars
     # https://stackoverflow.com/questions/10668282/
     # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
-    if set(init_vars).isdisjoint(ref_vars):
+    if set(init_vars).isdisjoint(verif_vars):
         raise VariableError(
             'Please provide a Dataset/DataArray with at least '
             'one matching variable to the initialized prediction ensemble; '
-            f'got {init_vars} for init and {ref_vars} for ref.'
+            f'got {init_vars} for init and {verif_vars} for verif.'
         )
+    return True
+
+
+def has_valid_lead_units(xobj):
+    """
+    Checks that the object has valid units for the lead dimension.
+    """
+    LEAD_UNIT_ERROR = (
+        'The lead dimension must must have a valid '
+        f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
+    )
+    # Use `hasattr` here, as it doesn't throw an error if `xobj` doesn't have a
+    # coordinate for lead.
+    if hasattr(xobj['lead'], 'units'):
+
+        units = xobj['lead'].attrs['units']
+
+        # Check if letter s is appended to lead units string and add it if needed
+        if not units.endswith('s'):
+            units += 's'
+            xobj['lead'].attrs['units'] = units
+            warnings.warn(
+                f'The letter "s" was appended to the lead units; now {units}.'
+            )
+
+        # Raise Error if lead units is not valid
+        if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
+            raise AttributeError(LEAD_UNIT_ERROR)
+    else:
+        raise AttributeError(LEAD_UNIT_ERROR)
     return True

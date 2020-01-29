@@ -10,12 +10,19 @@ High-Level Classes
 .. currentmodule:: climpred.classes
 
 
-A primary feature of ``climpred`` is our prediction ensemble objects, :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble`. Users can append their initialized ensemble to these classes, as well as an arbitrary number of references (assimilations, reconstructions, observations), control runs, and uninitialized ensembles.
+A primary feature of ``climpred`` is our prediction ensemble objects,
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble`. Users can append their initialized
+ensemble to these classes, as well as an arbitrary number of verification products (assimilations,
+reconstructions, observations), control runs, and uninitialized ensembles.
 
 HindcastEnsemble
 ~~~~~~~~~~~~~~~~
 
-A ``HindcastEnsemble`` is a prediction ensemble that is initialized off of some form of observations (an assimilation, renanalysis, etc.). Thus, it is anticipated that forecasts are verified against observation-like references. Read more about the terminology `here <terminology.html>`_.
+A ``HindcastEnsemble`` is a prediction ensemble that is initialized off of some form of
+observations (an assimilation, renanalysis, etc.). Thus, it is anticipated that forecasts are
+verified against observation-like products. Read more about the terminology
+`here <terminology.html>`_.
 
 .. autosummary::
     :toctree: api/
@@ -30,10 +37,10 @@ Add and Retrieve Datasets
     :toctree: api/
 
     HindcastEnsemble.__init__
-    HindcastEnsemble.add_reference
+    HindcastEnsemble.add_observations
     HindcastEnsemble.add_uninitialized
     HindcastEnsemble.get_initialized
-    HindcastEnsemble.get_reference
+    HindcastEnsemble.get_observations
     HindcastEnsemble.get_uninitialized
 
 ------------------
@@ -43,7 +50,7 @@ Analysis Functions
 .. autosummary::
     :toctree: api/
 
-    HindcastEnsemble.compute_metric
+    HindcastEnsemble.verify
     HindcastEnsemble.compute_persistence
     HindcastEnsemble.compute_uninitialized
 
@@ -59,7 +66,10 @@ Pre-Processing
 PerfectModelEnsemble
 ~~~~~~~~~~~~~~~~~~~~
 
-A ``PerfectModelEnsemble`` is a prediction ensemble that is initialized off of a control simulation for a number of randomly chosen initialization dates. Thus, forecasts cannot be verified against real-world observations. Instead, they are `compared <comparisons.html>`_ to one another and to the original control run. Read more about the terminology `here <terminology.html>`_.
+A ``PerfectModelEnsemble`` is a prediction ensemble that is initialized off of a control simulation
+for a number of randomly chosen initialization dates. Thus, forecasts cannot be verified against
+real-world observations. Instead, they are `compared <comparisons.html>`_ to one another and to the
+original control run. Read more about the terminology `here <terminology.html>`_.
 
 .. autosummary::
     :toctree: api/
@@ -104,7 +114,14 @@ Generate Data
 Direct Function Calls
 ---------------------
 
-A user can directly call functions in ``climpred``. This requires entering more arguments, e.g. the initialized ensemble :py:class:`~xarray.core.dataset.Dataset`/:py:class:`xarray.core.dataarray.DataArray` directly as well as a reference product or control run. Our objects :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will likely depricate the ability to call them directly.
+A user can directly call functions in ``climpred``. This requires entering more arguments, e.g.
+the initialized ensemble
+:py:class:`~xarray.core.dataset.Dataset`/:py:class:`xarray.core.dataarray.DataArray` directly as
+well as a verification product. Our object
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the
+analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will
+likely depricate the ability to call them directly.
 
 Bootstrap
 ~~~~~~~~~

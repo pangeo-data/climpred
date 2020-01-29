@@ -4,7 +4,7 @@ Contribution Guide
 
 Contributions are highly welcomed and appreciated.  Every little help counts,
 so do not hesitate! You can make a high impact on ``climpred`` just by using it and
-reporting `issues <https://github.com/bradyrx/climpred/issues>`_.
+reporting `issues <https://github.com/bradyrx/climpred/issues>`__.
 
 The following sections cover some general guidelines
 regarding development in ``climpred`` for maintainers and contributors.
@@ -25,7 +25,7 @@ Feature requests and feedback
 
 We are eager to hear about your requests for new features and any suggestions about the
 API, infrastructure, and so on. Feel free to submit these as
-`issues <https://github.com/bradyrx/climpred/issues/new>`_ with the label "feature request."
+`issues <https://github.com/bradyrx/climpred/issues/new>`__ with the label "feature request."
 
 Please make sure to explain in detail how the feature should work and keep the scope as
 narrow as possible. This will make it easier to implement in small PRs.
@@ -68,12 +68,16 @@ Write documentation
 
 * More complementary documentation.  Have you perhaps found something unclear?
 * Docstrings.  There can never be too many of them.
-* Example notebooks with different Earth System Models, lead times, etc. -- they're all very appreciated.
+* Example notebooks with different Earth System Models, lead times, etc. -- they're all very
+  appreciated.
 
 You can also edit documentation files directly in the GitHub web interface,
 without using a local copy.  This can be convenient for small fixes.
 
-Our documentation is written in reStructuredText. You can follow our conventions in already written documents. Some helpful guides are located `here <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`_ and `here <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`_.
+Our documentation is written in reStructuredText. You can follow our conventions in already written
+documents. Some helpful guides are located
+`here <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`__ and
+`here <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`__.
 
 .. note::
     Build the documentation locally with the following command:
@@ -86,10 +90,11 @@ Our documentation is written in reStructuredText. You can follow our conventions
 
     The built documentation should be available in the ``docs/build/``.
 
-If you need to add new functions to the API, run ``sphinx-autogen -o api api.rst`` from the ``docs/source`` directory and add the functions to ``api.rst``.
+If you need to add new functions to the API, run ``sphinx-autogen -o api api.rst`` from the
+``docs/source`` directory and add the functions to ``api.rst``.
 
  .. _`pull requests`:
-.. _pull-requests:
+ .. _pull-requests:
 
 Preparing Pull Requests
 -----------------------
@@ -130,8 +135,8 @@ Preparing Pull Requests
 
    Afterwards ``pre-commit`` will run whenever you commit.
 
-   https://pre-commit.com/ is a framework for managing and maintaining multi-language pre-commit hooks
-   to ensure code-style and code formatting is consistent.
+   https://pre-commit.com/ is a framework for managing and maintaining multi-language pre-commit
+   hooks to ensure code-style and code formatting is consistent.
 
     Now you have an environment called ``climpred-dev`` that you can work in.
     You’ll need to make sure to activate that environment next time you want
@@ -150,10 +155,15 @@ Preparing Pull Requests
 
    Now running tests is as simple as issuing this command::
 
+    $ pytest climpred
+
+   Check that your contribution is covered by tests and therefore increases the overall test coverage:
+
     $ coverage run --source climpred -m py.test
+    $ coverage report
+    $ coveralls
 
-
-   This command will run tests via the "pytest" tool against Python 3.6.
+  Please stick to `xarray <http://xarray.pydata.org/en/stable/contributing.html>`_'s testing recommendations.
 
 
 #. Create a new changelog entry in ``CHANGELOG.rst``:
@@ -162,12 +172,16 @@ Preparing Pull Requests
 
     <description> (``:pr:`#<pull request number>```) ```<author's names>`_``
 
-    where ``<description>`` is the description of the PR related to the change and ``<pull request number>`` is
-    the pull request number and ``<author's names>`` are your first and last names.
+    where ``<description>`` is the description of the PR related to the change and
+    ``<pull request number>`` is the pull request number and ``<author's names>`` are your first
+    and last names.
 
-   - Add yourself to list of authors at the end of ``CHANGELOG.rst`` file if not there yet, in alphabetical order.
+   - Add yourself to list of authors at the end of ``CHANGELOG.rst`` file if not there yet, in
+     alphabetical order.
 
- #. Add yourself to the `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>_` list via ``docs/source/contributors.rst``.
+ #. Add yourself to the
+    `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>_`
+    list via ``docs/source/contributors.rst``.
 
 #. Finally, submit a pull request through the GitHub website using this data::
 

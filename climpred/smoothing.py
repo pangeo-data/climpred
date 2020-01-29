@@ -228,20 +228,37 @@ def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
     ds_smoothed[dim] = ds.isel({dim: slice(None, -smooth + 1)})[dim]
     if rename_dim:
-        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_kws=smooth_kws)
+        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_kws=smooth_kws, dim=dim)
     return ds_smoothed
 
 
 @is_xarray(0)
-def _reset_temporal_axis(ds_smoothed, smooth_kws={'time': 4}):
+def _reset_temporal_axis(ds_smoothed, smooth_kws=None, dim=None):
     """Reduce and reset temporal axis. See temporal_smoothing(). Might be
     used after calculation of skill to maintain readable labels for skill
-    computation."""
+    computation.
+
+    Args:
+        ds_smoothed (xarray object): Smoothed dataset.
+        smooth_kws (dict): Keywords smoothing is performed over.
+            Default is {'time': 4.
+        dim (str): Dimension smoothing is performed over ('time' or 'lead').
+
+    Returns:
+        Smoothed Dataset with updated labels for smoothed temporal dimension.
+    """
+    if smooth_kws is None:
+        smooth_kws = {'time': 4}
     if not ('time' in smooth_kws or 'lead' in smooth_kws):
         raise ValueError('smooth_kws doesnt contain a time dimension.', smooth_kws)
     smooth = list(smooth_kws.values())[0]
     dim = list(smooth_kws.keys())[0]
-    new_time = [f'{t}-{t + smooth - 1}' for t in ds_smoothed[dim].values]
+    try:
+        # TODO: This assumes that smoothing is only done in years. Is this fair?
+        composite_values = ds_smoothed[dim].to_index().year
+    except AttributeError:
+        composite_values = ds_smoothed[dim].values
+    new_time = [f'{t}-{t + smooth - 1}' for t in composite_values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
 
@@ -268,8 +285,8 @@ def smooth_goddard_2013(
 
     Args:
         ds(xr.object): input.
-        smooth_kws(dict): length of smoothing of timesteps (applies to `lead`
-                          in forecast and `time` in reference).
+        smooth_kws(dict): length of smoothing of timesteps (applies to ``lead``
+                          in forecast and ``time`` in verification data).
                           Default: {'time': 4} (see Goddard et al. 2013).
         d_lon_lat_kws (dict): target grid for regridding.
                               Default: {'lon':5 , 'lat': 5}

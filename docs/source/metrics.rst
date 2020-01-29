@@ -22,12 +22,12 @@ determine which metric is used in computing predictability.
 .. note::
 
     We use the phrase 'observations' ``o`` here to refer to the 'truth' data to which
-    we compare the forecast ``f``. These metrics can also be applied in reference
+    we compare the forecast ``f``. These metrics can also be applied relative
     to a control simulation, reconstruction, observations, etc. This would just
-    change the resulting score from referencing skill to referencing potential
+    change the resulting score from quantifying skill to quantifying potential
     predictability.
 
-Internally, all metric functions require ``forecast`` and ``reference`` as inputs.
+Internally, all metric functions require ``forecast`` and ``observations`` as inputs.
 The dimension ``dim`` is set internally by
 :py:func:`~climpred.prediction.compute_hindcast` or
 :py:func:`~climpred.prediction.compute_perfect_model` to specify over which dimensions
@@ -391,14 +391,14 @@ class.
 .. autosummary:: Metric
 
 First, write your own metric function, similar to the existing ones with required
-arguments ``forecast``, ``reference``, ``dim=None``, and ``**metric_kwargs``::
+arguments ``forecast``, ``observations``, ``dim=None``, and ``**metric_kwargs``::
 
   from climpred.metrics import Metric
 
-  def _my_msle(forecast, reference, dim=None, **metric_kwargs):
+  def _my_msle(forecast, observations, dim=None, **metric_kwargs):
       """Mean squared logarithmic error (MSLE).
       https://peltarion.com/knowledge-center/documentation/modeling-view/build-an-ai-model/loss-functions/mean-squared-logarithmic-error."""
-      return ( (np.log(forecast + 1) + np.log(reference + 1) ) ** 2).mean(dim)
+      return ( (np.log(forecast + 1) + np.log(observations + 1) ) ** 2).mean(dim)
 
 Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
 

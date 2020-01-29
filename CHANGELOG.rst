@@ -2,7 +2,91 @@
 What's New
 ==========
 
-climpred v1.2.1 (2020-01-##)
+
+climpred v2.0.1 (2020-01-xx)
+============================
+
+Internals/Minor Fixes
+---------------------
+- Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
+- Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
+  order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
+  
+Documentation
+-------------
+- Demo and wrapper to setup your own raw model output compliant to ``climpred`` (:pr:`296`) `Aaron Spring`_.
+- Demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
+
+
+climpred v2.0.0 (2020-01-22)
+============================
+
+New Features
+------------
+- Add support for ``days``, ``pentads``, ``weeks``, ``months``, ``seasons`` for lead
+  time resolution. ``climpred`` now requires a ``lead`` attribute "units" to decipher
+  what resolution the predictions are at. (:pr:`294`) `Kathy Pegion`_ and
+  `Riley X. Brady`_.
+
+.. code-block:: python
+
+        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
+        >>> hind.lead.attrs['units'] = 'years'
+
+- ``HindcastEnsemble`` now has ``.add_observations()`` and ``.get_observations()``
+  methods. These are the same as ``.add_reference()`` and ``.get_reference()``, which
+  will be deprecated eventually. The name change clears up confusion, since "reference"
+  is the appropriate name for a reference forecast, e.g. persistence. (:pr:`310`)
+  `Riley X. Brady`_.
+
+- ``HindcastEnsemble`` now has ``.verify()`` function, which duplicates the
+  ``.compute_metric()`` function. We feel that ``.verify()`` is more clear and easy
+  to write, and follows the terminology of the field. (:pr:`310`) `Riley X. Brady`_.
+
+- ``e2o`` and ``m2o`` are now the preferred keywords for comparing hindcast ensemble
+  means and ensemble members to verification data, respectively. (:pr:`310`)
+  `Riley X. Brady`_.
+
+Documentation
+-------------
+- New example pages for subseasonal-to-seasonal prediction using ``climpred``.
+  (:pr:`294`) `Kathy Pegion`_
+
+    * Calculate the skill of the MJO index as a function of lead time
+      (`link <examples/subseasonal/daily-subx-example.html>`__).
+
+    * Calculate the skill of the MJO index as a function of lead time for weekly data
+      (`link <examples/subseasonal/weekly-subx-example.html>`__).
+
+    * Calculate ENSO skill as a function of initial month vs. lead time
+      (`link <examples/monseas/monthly-enso-subx-example.html>`__).
+
+    * Calculate Seasonal ENSO skill
+      (`link <examples/monseas/seasonal-enso-subx-example.html>`__).
+
+- `Comparisons <comparisons.html>`__ page rewritten for more clarity. (:pr:`310`)
+  `Riley X. Brady`_.
+
+Bug Fixes
+---------
+- Fixed `m2m` broken comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
+
+Internals/Minor Fixes
+---------------------
+- Updates to ``xskillscore`` v0.0.12 to get a 30-50% speedup in compute functions that
+  rely on metrics from there. (:pr:`309`) `Riley X. Brady`_.
+- Stacking dims is handled by ``comparisons``, no need for internal keyword
+  ``stack_dims``. Therefore ``comparison`` now takes ``metric`` as argument instead.
+  (:pr:`290`) `Aaron Spring`_.
+- ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
+- "reference" changed to "verif" throughout hindcast compute functions. This is more
+  clear, since "reference" usually refers to a type of forecast, such as persistence.
+  (:pr:`310`) `Riley X. Brady`_.
+- ``Comparison`` objects can now have aliases. (:pr:`310`) `Riley X. Brady`_.
+
+
+
+climpred v1.2.1 (2020-01-07)
 ============================
 
 Depreciated
@@ -31,18 +115,12 @@ New Features
     * ``['s_pval_eff', 'spvalue_eff', 'spval_eff']`` for ``spearman_r_eff_p_value``
     * ``'nev'`` for ``nmse``
 
-- demo and wrapper to setup your own raw model output compliant to `climpred` (:pr:`296`) `Aaron Spring`_.
-- demo using `intake-esm` with `climpred` (:pr:`296`) `Aaron Spring`_.
-
-Bug Fixes
----------
+Internals/Minor Fixes
+---------------------
 - ``climpred`` now requires ``xarray`` version 0.14.1 so that the ``drop_vars()``
   keyword used in our package does not throw an error. (:pr:`276`) `Riley X. Brady`_
 - Update to ``xskillscore`` version 0.0.10 to fix errors in weighted metrics with
   pairwise NaNs. (:pr:`283`) `Riley X. Brady`_
-
-Internals/Minor Fixes
----------------------
 - ``doc8`` added to ``pre-commit`` to have consistent formatting on ``.rst`` files.
   (:pr:`283`) `Riley X. Brady`_
 - Remove ``proper`` attribute on ``Metric`` class since it isn't used anywhere.
@@ -60,6 +138,7 @@ Documentation
   scores, etc. (:pr:`283`) `Riley X. Brady`_
 - Update `terminology page <terminology.html>`_ with more information on metrics
   terminology. (:pr:`283`) `Riley X. Brady`_
+
 
 climpred v1.2.0 (2019-12-17)
 ============================
@@ -352,5 +431,6 @@ climpred v0.1 (2018-12-20)
 Collaboration between Riley Brady and Aaron Spring begins.
 
 .. _`Riley X. Brady`: https://github.com/bradyrx
-.. _`Aaron Spring`: https://github.com/aaronspring
 .. _`Andrew Huang`: https://github.com/ahuang11
+.. _`Aaron Spring`: https://github.com/aaronspring
+.. _`Kathy Pegion`: https://github.com/kpegion

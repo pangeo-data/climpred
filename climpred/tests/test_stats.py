@@ -5,7 +5,7 @@ import xarray as xr
 from scipy.signal import correlate
 from xarray.testing import assert_allclose
 
-from climpred.bootstrap import dpp_threshold
+from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
 from climpred.exceptions import DimensionError
 from climpred.stats import (
     autocorr,

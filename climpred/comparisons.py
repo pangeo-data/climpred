@@ -6,17 +6,14 @@ from .checks import has_dims, has_min_len
 from .constants import M2M_MEMBER_DIM
 from .exceptions import DimensionError
 
+
 # from .utils import _transpose_and_rechunk_to
-
-
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
     return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(ori_chunk_ds.chunks)
 
-
-from .constants import M2M_MEMBER_DIM
 
 def _drop_members(ds, removed_member=None):
     """

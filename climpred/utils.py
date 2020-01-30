@@ -14,6 +14,89 @@ from .comparisons import COMPARISON_ALIASES
 from .metrics import METRIC_ALIASES
 
 
+def assign_attrs(
+    skill,
+    ds,
+    function_name,
+    metadata_dict=None,
+    metric=None,
+    comparison=None,
+    dim=None,
+):
+    """Write information about prediction skill into attrs.
+
+    Args:
+        skill (`xarray` object): prediction skill.
+        ds (`xarray` object): prediction ensemble with inits.
+        function_name (str): name of compute function
+        metadata_dict (dict): optional attrs
+        metric (class) : metric used in comparing the forecast and verification data.
+        comparison (class): how to compare the forecast and verification data.
+        dim (str): Dimension over which metric was applied.
+
+    Returns:
+       skill (`xarray` object): prediction skill with additional attrs.
+    """
+    # assign old attrs
+    skill.attrs = ds.attrs
+
+    # climpred info
+    skill.attrs[
+        'prediction_skill'
+    ] = f'calculated by climpred https://climpred.readthedocs.io/'
+    skill.attrs['skill_calculated_by_function'] = function_name
+    if 'init' in ds.coords:
+        skill.attrs['number_of_initializations'] = ds.init.size
+    if 'member' in ds.coords:
+        skill.attrs['number_of_members'] = ds.member.size
+
+    skill.attrs['metric'] = metric.name
+    skill.attrs['comparison'] = comparison.name
+    skill.attrs['dim'] = dim
+
+    # change unit power
+    if metric.unit_power == 0:
+        skill.attrs['units'] = 'None'
+    if metric.unit_power >= 2 and 'units' in skill.attrs:
+        p = metric.unit_power
+        p = int(p) if int(p) == p else p
+        skill.attrs['units'] = f"({skill.attrs['units']})^{p}"
+
+    # check for none attrs and remove
+    del_list = []
+    for key, value in metadata_dict.items():
+        if value is None and key != 'units':
+            del_list.append(key)
+    for entry in del_list:
+        del metadata_dict[entry]
+
+    # write optional information
+    if metadata_dict is None:
+        metadata_dict = dict()
+    skill.attrs.update(metadata_dict)
+
+    skill.attrs[
+        'created'
+    ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
+    return skill
+
+
+def copy_coords_from_to(xro_from, xro_to):
+    """Copy coords from one xr object to another."""
+    if isinstance(xro_from, xr.DataArray) and isinstance(xro_to, xr.DataArray):
+        for c in xro_from.coords:
+            xro_to[c] = xro_from[c]
+        return xro_to
+    elif isinstance(xro_from, xr.Dataset) and isinstance(xro_to, xr.Dataset):
+        xro_to = xro_to.assign_coords(**xro_from.coords)
+    else:
+        raise ValueError(
+            f'xro_from and xro_to must be both either xr.DataArray or',
+            f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
+        )
+    return xro_to
+
+
 def convert_time_index(xobj, time_string, kind):
     """Converts incoming time index to a standard xr.CFTimeIndex.
 
@@ -183,6 +266,13 @@ def intersect(lst1, lst2):
     return np.array(lst3)
 
 
+def _load_into_memory(res):
+    """Compute if res is lazy data."""
+    if dask.is_dask_collection(res):
+        res = res.compute()
+    return res
+
+
 def reduce_time_series(forecast, verif, nlags):
     """Reduces forecast and verification data to common time frame for prediction
     and lag.
@@ -252,96 +342,6 @@ def shift_cftime_singular(cftime, n, freq):
     if not isinstance(freq, str):
         raise TypeError(f"'freq' must be a str, got {freq}.")
     return cftime + n * to_offset(freq)
-
-
-def assign_attrs(
-    skill,
-    ds,
-    function_name,
-    metadata_dict=None,
-    metric=None,
-    comparison=None,
-    dim=None,
-):
-    """Write information about prediction skill into attrs.
-
-    Args:
-        skill (`xarray` object): prediction skill.
-        ds (`xarray` object): prediction ensemble with inits.
-        function_name (str): name of compute function
-        metadata_dict (dict): optional attrs
-        metric (class) : metric used in comparing the forecast and verification data.
-        comparison (class): how to compare the forecast and verification data.
-        dim (str): Dimension over which metric was applied.
-
-    Returns:
-       skill (`xarray` object): prediction skill with additional attrs.
-    """
-    # assign old attrs
-    skill.attrs = ds.attrs
-
-    # climpred info
-    skill.attrs[
-        'prediction_skill'
-    ] = f'calculated by climpred https://climpred.readthedocs.io/'
-    skill.attrs['skill_calculated_by_function'] = function_name
-    if 'init' in ds.coords:
-        skill.attrs['number_of_initializations'] = ds.init.size
-    if 'member' in ds.coords:
-        skill.attrs['number_of_members'] = ds.member.size
-
-    skill.attrs['metric'] = metric.name
-    skill.attrs['comparison'] = comparison.name
-    skill.attrs['dim'] = dim
-
-    # change unit power
-    if metric.unit_power == 0:
-        skill.attrs['units'] = 'None'
-    if metric.unit_power >= 2 and 'units' in skill.attrs:
-        p = metric.unit_power
-        p = int(p) if int(p) == p else p
-        skill.attrs['units'] = f"({skill.attrs['units']})^{p}"
-
-    # check for none attrs and remove
-    del_list = []
-    for key, value in metadata_dict.items():
-        if value is None and key != 'units':
-            del_list.append(key)
-    for entry in del_list:
-        del metadata_dict[entry]
-
-    # write optional information
-    if metadata_dict is None:
-        metadata_dict = dict()
-    skill.attrs.update(metadata_dict)
-
-    skill.attrs[
-        'created'
-    ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
-    return skill
-
-
-def copy_coords_from_to(xro_from, xro_to):
-    """Copy coords from one xr object to another."""
-    if isinstance(xro_from, xr.DataArray) and isinstance(xro_to, xr.DataArray):
-        for c in xro_from.coords:
-            xro_to[c] = xro_from[c]
-        return xro_to
-    elif isinstance(xro_from, xr.Dataset) and isinstance(xro_to, xr.Dataset):
-        xro_to = xro_to.assign_coords(**xro_from.coords)
-    else:
-        raise ValueError(
-            f'xro_from and xro_to must be both either xr.DataArray or',
-            f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
-        )
-    return xro_to
-
-
-def _load_into_memory(res):
-    """Compute no lazy results."""
-    if dask.is_dask_collection(res):
-        res = res.compute()
-    return res
 
 
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):

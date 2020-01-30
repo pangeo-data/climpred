@@ -10,7 +10,8 @@ from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .constants import COMPARISON_ALIASES, METRIC_ALIASES
+from .comparisons import COMPARISON_ALIASES
+from .metrics import METRIC_ALIASES
 
 
 def convert_time_index(xobj, time_string, kind):

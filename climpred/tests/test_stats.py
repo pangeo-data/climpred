@@ -15,37 +15,6 @@ from climpred.stats import (
     rm_trend,
     varweighted_mean_period,
 )
-from climpred.tutorial import load_dataset
-
-
-@pytest.fixture
-def two_dim_da():
-    da = xr.DataArray(
-        np.vstack(
-            [
-                np.arange(0, 5, 1.0),
-                np.arange(0, 10, 2.0),
-                np.arange(0, 40, 8.0),
-                np.arange(0, 20, 4.0),
-            ]
-        ),
-        dims=['row', 'col'],
-    )
-    return da
-
-
-@pytest.fixture
-def multi_dim_ds():
-    ds = xr.tutorial.open_dataset('air_temperature')
-    ds = ds.assign(**{'airx2': ds['air'] * 2})
-    return ds
-
-
-@pytest.fixture
-def control_3d_NA():
-    """North Atlantic"""
-    ds = load_dataset('MPI-control-3D')['tos'].isel(x=slice(110, 120), y=slice(50, 60))
-    return ds
 
 
 def test_rm_trend_missing_dim():
@@ -115,9 +84,9 @@ def test_rm_trend_3d_dataset_dim_order(multi_dim_ds):
 
 
 @pytest.mark.parametrize('chunk', (True, False))
-def test_dpp(control_3d_NA, chunk):
+def test_dpp(PM_da_control_3d, chunk):
     """Check for positive diagnostic potential predictability in NA SST."""
-    control = control_3d_NA
+    control = PM_da_control_3d
     res = dpp(control, chunk=chunk)
     assert res.mean() > 0
 
@@ -125,33 +94,53 @@ def test_dpp(control_3d_NA, chunk):
 @pytest.mark.parametrize(
     'func', (varweighted_mean_period, decorrelation_time, autocorr)
 )
-def test_potential_predictability_likely(control_3d_NA, func):
+def test_potential_predictability_likely(PM_da_control_3d, func):
     """Check for positive diagnostic potential predictability in NA SST."""
-    control = control_3d_NA
+    control = PM_da_control_3d
     print(control.dims)
     res = func(control)
     assert res.mean() > 0
 
 
-def test_autocorr(control_3d_NA):
+def test_autocorr(PM_da_control_3d):
     """Check autocorr results with scipy."""
-    ds = control_3d_NA.isel(x=5, y=5)
+    ds = PM_da_control_3d.isel(x=5, y=5)
     actual = autocorr(ds)
     expected = correlate(ds, ds)
     np.allclose(actual, expected)
 
 
-def test_corr(control_3d_NA):
+def test_corr(PM_da_control_3d):
     """Check autocorr results with scipy."""
-    ds = control_3d_NA.isel(x=5, y=5)
+    ds = PM_da_control_3d.isel(x=5, y=5)
     lag = 1
     actual = corr(ds, ds, lag=lag)
     expected = correlate(ds[:-lag], ds[lag:])
     np.allclose(actual, expected)
 
 
-def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
-    ds = control_3d_NA
+def test_bootstrap_dpp_sig50_similar_dpp(PM_da_control_3d):
+    ds = PM_da_control_3d
+    bootstrap = 5
+    sig = 50
+    actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig).drop_vars('quantile')
+    expected = dpp(ds)
+    xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
+
+
+def test_bootstrap_vwmp_sig50_similar_vwmp(PM_da_control_3d):
+    ds = PM_da_control_3d
+    bootstrap = 5
+    sig = 50
+    actual = varweighted_mean_period_threshold(
+        ds, bootstrap=bootstrap, sig=sig
+    ).drop_vars('quantile')
+    expected = varweighted_mean_period(ds)
+    xr.testing.assert_allclose(actual, expected, atol=2, rtol=0.5)
+
+
+def test_bootstrap_func_multiple_sig_levels(PM_da_control_3d):
+    ds = PM_da_control_3d
     bootstrap = 5
     sig = [5, 95]
     actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig)
@@ -168,15 +157,15 @@ def test_bootstrap_func_multiple_sig_levels(control_3d_NA):
         pytest.param(decorrelation_time, marks=pytest.mark.xfail(reason='some bug')),
     ),
 )
-def test_stats_functions_dask_single_chunk(control_3d_NA, func):
+def test_stats_functions_dask_single_chunk(PM_da_control_3d, func):
     """Test stats functions when single chunk not along dim."""
     step = -1  # single chunk
-    for chunk_dim in control_3d_NA.dims:
-        control_chunked = control_3d_NA.chunk({chunk_dim: step})
-        for dim in control_3d_NA.dims:
+    for chunk_dim in PM_da_control_3d.dims:
+        control_chunked = PM_da_control_3d.chunk({chunk_dim: step})
+        for dim in PM_da_control_3d.dims:
             if dim != chunk_dim:
                 res_chunked = func(control_chunked, dim=dim)
-                res = func(control_3d_NA, dim=dim)
+                res = func(PM_da_control_3d, dim=dim)
                 # check for chunks
                 assert dask.is_dask_collection(res_chunked)
                 assert res_chunked.chunks is not None
@@ -194,20 +183,20 @@ def test_stats_functions_dask_single_chunk(control_3d_NA, func):
         autocorr,
         varweighted_mean_period,
         pytest.param(
-            decorrelation_time, marks=pytest.mark.xfail(reason='some chunking bug')
+            decorrelation_time, marks=pytest.mark.xfail(reason='some chunking bug'),
         ),
     ],
 )
-def test_stats_functions_dask_many_chunks(control_3d_NA, func):
+def test_stats_functions_dask_many_chunks(PM_da_control_3d, func):
     """Check whether selected stats functions be chunked in multiple chunks and
      computed along other dim."""
     step = 1
-    for chunk_dim in control_3d_NA.dims:
-        control_chunked = control_3d_NA.chunk({chunk_dim: step})
-        for dim in control_3d_NA.dims:
+    for chunk_dim in PM_da_control_3d.dims:
+        control_chunked = PM_da_control_3d.chunk({chunk_dim: step})
+        for dim in PM_da_control_3d.dims:
             if dim != chunk_dim and dim in control_chunked.dims:
                 res_chunked = func(control_chunked, dim=dim)
-                res = func(control_3d_NA, dim=dim)
+                res = func(PM_da_control_3d, dim=dim)
                 # check for chunks
                 assert dask.is_dask_collection(res_chunked)
                 assert res_chunked.chunks is not None
@@ -218,20 +207,20 @@ def test_stats_functions_dask_many_chunks(control_3d_NA, func):
                 assert_allclose(res, res_chunked.compute())
 
 
-def test_varweighted_mean_period_dim(control_3d_NA):
+def test_varweighted_mean_period_dim(PM_da_control_3d):
     """Test varweighted_mean_period for different dims."""
-    for d in control_3d_NA.dims:
+    for d in PM_da_control_3d.dims:
         # single dim
-        varweighted_mean_period(control_3d_NA, dim=d)
+        varweighted_mean_period(PM_da_control_3d, dim=d)
         # all but one dim
-        di = [di for di in control_3d_NA.dims if di != d]
-        varweighted_mean_period(control_3d_NA, dim=di)
+        di = [di for di in PM_da_control_3d.dims if di != d]
+        varweighted_mean_period(PM_da_control_3d, dim=di)
 
 
 @pytest.mark.xfail(reason='p value not aligned in the two functions.')
-def test_corr_autocorr(control_3d_NA):
-    res1 = corr(control_3d_NA, control_3d_NA, lag=1, return_p=True)
-    res2 = autocorr(control_3d_NA, return_p=True)
+def test_corr_autocorr(PM_da_control_3d):
+    res1 = corr(PM_da_control_3d, PM_da_control_3d, lag=1, return_p=True)
+    res2 = autocorr(PM_da_control_3d, return_p=True)
     for i in [0, 1]:
         print(res1[i] - res2[i])
         assert_allclose(res1[i], res2[i])

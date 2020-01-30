@@ -4,12 +4,9 @@ import dask
 import numpy as np
 import xarray as xr
 
-from .checks import (
-    has_dims,
-    has_valid_lead_units,
-    warn_if_chunking_would_increase_performance,
-)
-from .constants import ALL_COMPARISONS, ALL_METRICS, COMPARISON_ALIASES, METRIC_ALIASES
+from .checks import has_dims, has_valid_lead_units, warn_if_chunking_would_increase_performance
+from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
+from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (

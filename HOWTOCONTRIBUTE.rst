@@ -168,10 +168,10 @@ Preparing Pull Requests
 #. Running the performance test suite
 
 Performance matters and it is worth considering whether your code has introduced
-performance regressions. *climpred* is starting to write a suite of benchmarking tests
+performance regressions. `climpred` is starting to write a suite of benchmarking tests
 using `asv <https://asv.readthedocs.io/en/stable/>`__
-to enable easy monitoring of the performance of critical *climpred* operations.
-These benchmarks are all found in the ``climpred/asv_bench`` directory.
+to enable easy monitoring of the performance of critical `climpred` operations.
+These benchmarks are all found in the ``asv_bench`` directory.
 
 If you need to run a benchmark, change your directory to ``asv_bench/`` and run::
 
@@ -187,7 +187,7 @@ RAM. Usually it is sufficient to paste only a subset of the results into the pul
 request to show that the committed changes do not cause unexpected performance
 regressions.  You can run specific benchmarks using the ``-b`` flag, which
 takes a regular expression.  For example, this will only run tests from a
-``climpred/asv_bench/benchmarks/benchmarks_perfect_model.py`` file::
+``asv_bench/benchmarks/benchmarks_perfect_model.py`` file::
 
     $ asv continuous -f 1.1 upstream/master HEAD -b ^benchmarks_perfect_model
 

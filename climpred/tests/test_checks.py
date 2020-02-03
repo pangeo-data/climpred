@@ -16,7 +16,6 @@ from climpred.constants import VALID_LEAD_UNITS
 from climpred.exceptions import DatasetError, DimensionError, VariableError
 
 
-
 @is_xarray(0)
 def _arbitrary_ds_da_func(ds_da, *args, **kwargs):
     """Function for testing if checking the first item in arg list is ds/da."""

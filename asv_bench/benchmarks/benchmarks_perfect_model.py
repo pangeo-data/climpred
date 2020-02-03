@@ -1,41 +1,29 @@
-# Write the benchmarking functions here.
-# See "Writing benchmarks" in the asv docs for more information.
-
-
-import dask
 import numpy as np
 import xarray as xr
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.prediction import compute_perfect_model
 
-from . import parameterized, randn, requires_dask
+from . import ensure_loaded, parameterized, randn, requires_dask
 
-# faster than
-# from climpred.constants import PM_COMPARISONS, PM_METRICS as METRICS
+# only take subselection of all possible metrics
 METRICS = ['rmse', 'pearson_r', 'crpss']
+# only take comparisons compatible with probabilistic metrics
 PM_COMPARISONS = ['m2m', 'm2c']
 
-bootstrap = 4
-
-
-def _ensure_loaded(res):
-    """Compute no lazy results."""
-    if dask.is_dask_collection(res):
-        res = res.compute()
-    return res
+BOOTSTRAP = 8
 
 
 class Generate:
     """
-    Generate random ds, control to be benckmarked.
-    """
+    Generate input data for benchmark."""
 
     timeout = 600
     repeat = (2, 5, 20)
 
-    def make_ds(self):
-        """ds and control mimik MPI perfect-model experiment"""
+    def make_initialized_control(self):
+        """Generates initialized ensembles and a control simulation, mimicking a
+        perfect-model experiment."""
         self.ds = xr.Dataset()
         self.control = xr.Dataset()
         self.nmember = 3
@@ -47,7 +35,7 @@ class Generate:
         self.control_end = 3300
         self.ntime = 300
 
-        frac_nan = 0.0
+        FRAC_NAN = 0.0
 
         times = np.arange(self.control_start, self.control_end)
         leads = np.arange(1, 1 + self.nlead)
@@ -58,19 +46,19 @@ class Generate:
         )
 
         lons = xr.DataArray(
-            np.linspace(0, 360, self.nx),
+            np.linspace(0.5, 359.5, self.nx),
             dims=('lon',),
             attrs={'units': 'degrees east', 'long_name': 'longitude'},
         )
         lats = xr.DataArray(
-            np.linspace(-90, 90, self.ny),
+            np.linspace(-89.5, 89.5, self.ny),
             dims=('lat',),
             attrs={'units': 'degrees north', 'long_name': 'latitude'},
         )
-        self.ds['tos'] = xr.DataArray(
+        self.ds['var'] = xr.DataArray(
             randn(
                 (self.nmember, self.ninit, self.nlead, self.nx, self.ny),
-                frac_nan=frac_nan,
+                frac_nan=FRAC_NAN,
             ),
             coords={
                 'member': members,
@@ -80,17 +68,17 @@ class Generate:
                 'lead': leads,
             },
             dims=('member', 'init', 'lead', 'lon', 'lat'),
-            name='tos',
+            name='var',
             encoding=None,
-            attrs={'units': 'foo units', 'description': 'a description'},
+            attrs={'units': 'var units', 'description': 'a description'},
         )
-        self.control['tos'] = xr.DataArray(
-            randn((self.ntime, self.nx, self.ny), frac_nan=frac_nan),
+        self.control['var'] = xr.DataArray(
+            randn((self.ntime, self.nx, self.ny), frac_nan=FRAC_NAN),
             coords={'lon': lons, 'lat': lats, 'time': times},
             dims=('time', 'lon', 'lat'),
-            name='tos',
+            name='var',
             encoding=None,
-            attrs={'units': 'foo units', 'description': 'a description'},
+            attrs={'units': 'var units', 'description': 'a description'},
         )
 
         self.ds.attrs = {'history': 'created for xarray benchmarking'}
@@ -98,16 +86,17 @@ class Generate:
 
 class Compute(Generate):
     """
-    A few examples that benchmark climpred compute_perfect_model.
+    Benchmark time and peak memory of `compute_perfect_model` and
+    `bootstrap_perfect_model`.
     """
 
     def setup(self, *args, **kwargs):
-        self.make_ds()
+        self.make_initialized_control()
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_compute_perfect_model(self, metric, comparison):
-        """Take time for compute_perfect_model."""
-        _ensure_loaded(
+        """Take time for `compute_perfect_model`."""
+        ensure_loaded(
             compute_perfect_model(
                 self.ds, self.control, metric=metric, comparison=comparison
             )
@@ -115,8 +104,8 @@ class Compute(Generate):
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_compute_perfect_model(self, metric, comparison):
-        """Take memory peak for compute_perfect_model for all comparisons."""
-        _ensure_loaded(
+        """Take memory peak for `compute_perfect_model`."""
+        ensure_loaded(
             compute_perfect_model(
                 self.ds, self.control, metric=metric, comparison=comparison
             )
@@ -124,35 +113,40 @@ class Compute(Generate):
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_bootstrap_perfect_model(self, metric, comparison):
-        """Take time for bootstrap_perfect_model for one metric."""
-        _ensure_loaded(
+        """Take time for `bootstrap_perfect_model`."""
+        ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                bootstrap=bootstrap,
+                bootstrap=BOOTSTRAP,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_bootstrap_perfect_model(self, metric, comparison):
-        """Take memory peak for bootstrap_perfect_model."""
-        _ensure_loaded(
+        """Take memory peak for `bootstrap_perfect_model`."""
+        ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                bootstrap=bootstrap,
+                bootstrap=BOOTSTRAP,
             )
         )
 
 
 class ComputeDask(Compute):
     def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_hindcast` and
+        `bootstrap_hindcast`. This executes the same tests as `Compute` but on chunked
+        data."""
         requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds['tos'].chunk({'lon': self.nx // bootstrap})
-        self.control = self.control['tos'].chunk({'lon': self.nx // bootstrap})
+        self.ds = self.ds['var'].chunk({'lon': self.nx // BOOTSTRAP})
+        self.control = self.control['var'].chunk({'lon': self.nx // BOOTSTRAP})

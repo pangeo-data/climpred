@@ -29,7 +29,7 @@ def _resample(hind, shuffle_dim, to_be_shuffled):
     `to_be_shuffled`
 
     Args:
-        hind (xr.object): input xr.objext to be shuffled.
+        hind (xr.object): input xr.object to be shuffled.
         shuffle_dim (str): dimension to shuffle along.
         to_be_shuffled (list, xr.DataArray.values, np.ndarray): values to shuffle from.
 
@@ -233,8 +233,8 @@ def _bootstrap_func(
     Args:
         func (function): function to be bootstrapped.
         ds (xr.object): first input argument of func. `chunk` ds on `dim` other
-        than `resample_dim` for potential performance increase when multiple
-        CPUs available.
+            than `resample_dim` for potential performance increase when multiple
+            CPUs available.
         resample_dim (str): dimension to resample from.
         sig (int,float,list): significance levels to return. Defaults to 95.
         bootstrap (int): number of resample iterations. Defaults to 500.

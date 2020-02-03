@@ -46,8 +46,8 @@ def _resample(hind, shuffle_dim, to_be_shuffled):
 
 
 def my_quantile(ds, q=0.95, dim='bootstrap'):
-    """Faster but same results xr.quantile that also allowes lazy `ds`."""
-    # dim='bootstrap' doesnt lead anywhere
+    """Compute quantile `q` faster than `xr.quantile` and allows lazy computation."""
+    # dim='bootstrap' doesnt lead anywhere, but want to keep xr.quantile API
     # concat_dim is always first, therefore axis=0 implementation works in compute
 
     def _dask_percentile(arr, axis=0, q=95):
@@ -407,8 +407,8 @@ def bootstrap_compute(
     else:
         raise ValueError('Shuffle either `member` or `init`; not', dim)
 
-    # resample with replacement
-    for _ in range(bootstrap):
+    for i in range(bootstrap):
+        # resample with replacement
         smp_hind = _resample(hind, shuffle_dim, to_be_shuffled)
         # compute init skill
         init_skill = compute(

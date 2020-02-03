@@ -69,7 +69,6 @@ class Generate:
             },
             dims=('member', 'init', 'lead', 'lon', 'lat'),
             name='var',
-            encoding=None,
             attrs={'units': 'var units', 'description': 'a description'},
         )
         self.control['var'] = xr.DataArray(
@@ -77,7 +76,6 @@ class Generate:
             coords={'lon': lons, 'lat': lats, 'time': times},
             dims=('time', 'lon', 'lat'),
             name='var',
-            encoding=None,
             attrs={'units': 'var units', 'description': 'a description'},
         )
 

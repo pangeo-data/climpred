@@ -67,7 +67,6 @@ class Generate:
             },
             dims=('member', 'init', 'lead', 'lon', 'lat'),
             name='var',
-            encoding=None,
             attrs={'units': 'var units', 'description': 'a description'},
         )
         self.observations['var'] = xr.DataArray(
@@ -75,7 +74,6 @@ class Generate:
             coords={'lon': lons, 'lat': lats, 'time': inits},
             dims=('time', 'lon', 'lat'),
             name='var',
-            encoding=None,
             attrs={'units': 'var units', 'description': 'a description'},
         )
 
@@ -91,7 +89,6 @@ class Generate:
             },
             dims=('time', 'lon', 'lat', 'member'),
             name='var',
-            encoding=None,
             attrs={'units': 'var units', 'description': 'a description'},
         )
 
@@ -141,6 +138,7 @@ class Compute(Generate):
                 metric=metric,
                 comparison=comparison,
                 bootstrap=BOOTSTRAP,
+                dim='member',
             )
         )
 
@@ -155,6 +153,7 @@ class Compute(Generate):
                 metric=metric,
                 comparison=comparison,
                 bootstrap=BOOTSTRAP,
+                dim='member',
             )
         )
 

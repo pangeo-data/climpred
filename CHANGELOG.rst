@@ -2,14 +2,28 @@
 What's New
 ==========
 
-climpred v2.0.1 (2020-01-xx)
+
+climpred v2.0.1 (2020-01-##)
 ============================
+
+New Features
+------------
+
+- speed-up in bootstrap functions: (:pr:`285`) `Aaron Spring`_.
+
+    *  ``xr.quantile`` exchanged for ``dask.map_blocks(np.percentile)``
+
+    *  properly implemented handling for lazy results when chunked inputs
+
+    *  user gets warned when chunking potentially (un)-necessary
+
 
 Internals/Minor Fixes
 ---------------------
 - Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
+- ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
 
 
 climpred v2.0.0 (2020-01-22)

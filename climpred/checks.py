@@ -23,10 +23,12 @@ def dec_args_kwargs(wrapper):
 # CHECKS
 # --------------------------------------#
 def get_chunksize(da):
-    """Sum of the total number of chunks in a chunked xr.DataArray."""
+    """Sum of the total number of chunks in a chunked xr.object."""
     n = 1
-    if not dask.is_dask_collection(da) or not isinstance(da, xr.DataArray):
-        raise ValueError(f'Please provide chunked xr.DataArray, found {type(da)}')
+    if not dask.is_dask_collection(da):
+        raise ValueError('Please provide a chunked xr.object')
+    if isinstance(da, xr.Dataset):
+        da = da.to_array()
     for i, c in enumerate(da.chunks):
         n *= da.shape[i] // c[0]
     return n

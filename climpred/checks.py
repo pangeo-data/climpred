@@ -219,8 +219,8 @@ def warn_if_chunking_would_increase_performance(ds):
         if nbytes_in_MB < crit_size_in_MB:
             warnings.warn(
                 'Chunking might not bring parallelized performance increase, '
-                f'because input size quite small, found ds.nbytes = {nbytes_in_MB} <'
-                f' {crit_size_in_MB}.'
+                f'because input size quite small, found {nbytes_in_MB} MB <'
+                f' {crit_size_in_MB} MB.'
             )
         if NCPU < 4:
             warnings.warn(

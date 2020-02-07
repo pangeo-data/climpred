@@ -14,13 +14,13 @@ Pre-Processing
 .. toctree::
    :maxdepth: 1
 
-   examples/setup_your_own_data.ipynb
+   examples/preprocessing/setup_your_own_data.ipynb
 
 Subseasonal
 ===========
 .. toctree::
    :maxdepth: 1
-   
+
    examples/subseasonal/daily-subx-example.ipynb
    examples/subseasonal/weekly-subx-example.ipynb
 

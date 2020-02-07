@@ -24,10 +24,12 @@ Internals/Minor Fixes
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
 - ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
-  
+
+
 Documentation
 -------------
-- Demo and wrapper to setup your own raw model output compliant to ``climpred`` (:pr:`296`) `Aaron Spring`_.
+- Demo and wrapper to setup your own raw model output compliant to ``climpred``
+  (:pr:`296`) `Aaron Spring`_.
 - Demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
 
 

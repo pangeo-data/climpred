@@ -4,8 +4,6 @@ import os as _os
 import numpy as np
 import xarray as xr
 
-from ..constants import CLIMPRED_ENSEMBLE_DIMS
-
 
 def get_path(
     dir_base_experiment='/work/bm1124/m300086/CMIP6/experiments',
@@ -20,16 +18,16 @@ def get_path(
 
     Args:
         dir_base_experiment (str): Path of experiments folder. Defaults to
-        "/work/bm1124/m300086/CMIP6/experiments".
+            "/work/bm1124/m300086/CMIP6/experiments".
         member (int): `member`. Defaults to 1.
         init (init): `init`. Defaults to 1960.
         model (str): submodel name. Defaults to "hamocc".
-        Allowed: ['echam6', 'jsbach', 'mpiom', 'hamocc'].
+            Allowed: ['echam6', 'jsbach', 'mpiom', 'hamocc'].
         output_stream (str): output_stream name. Defaults to "monitoring_ym".
-        Allowed: ['data_2d_mm', 'data_3d_ym', 'BOT_mm', ...]
+            Allowed: ['data_2d_mm', 'data_3d_ym', 'BOT_mm', ...]
         timestr (str): timestr likely including *. Defaults to "*1231".
         ending (str): ending indicating file format. Defaults to "nc".
-        Allowed: ['nc', 'grb'].
+            Allowed: ['nc', 'grb'].
 
     Returns:
         str: path of requested file(s)
@@ -117,25 +115,4 @@ def load_hindcast(
     ds = xr.concat(init_list, 'init').rename({'time': 'lead'})
     ds['member'] = members
     ds['init'] = inits
-    return ds
-
-
-def climpred_preprocess_post(ds):
-    """Rename existing dimension to CLIMPRED_ENSEMBLE_DIMS."""
-    for cdim in CLIMPRED_ENSEMBLE_DIMS:
-        renamed = False
-        if cdim not in ds.dims:
-            for c in ds.dims:
-                if cdim in c:
-                    ds = ds.rename({c: cdim})
-                    renamed = True
-        if 'time' in ds.dims and 'lead' not in ds.dims:
-            ds = ds.rename({'time': 'lead'})
-            renamed = True
-        elif 'lead' in ds.dims:
-            renamed = True
-        if not renamed:
-            raise ValueError(
-                f"Couldn't find a variable to rename to `{cdim}`, found {ds.dims}."
-            )
     return ds

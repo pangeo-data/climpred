@@ -7,6 +7,7 @@ import xarray as xr
 from climpred.constants import CLIMPRED_ENSEMBLE_DIMS
 from climpred.preprocessing.shared import (
     load_hindcast,
+    rename_SLM_to_climpred_dims,
     rename_to_climpred_dims,
     set_integer_axis,
 )
@@ -88,3 +89,20 @@ def test_climpred_pre_with_intake_esm():
     # check for requested dimsizes
     assert ds.member.size == 2
     assert ds.init.size == 2
+
+
+def test_rename_SLM(da_SLM):
+    """Check that dimensions in input are renamed."""
+    da_renamed = rename_SLM_to_climpred_dims(da_SLM)
+    for dim in CLIMPRED_ENSEMBLE_DIMS:
+        assert dim in da_renamed.dims
+    for dim in da_SLM.dims:
+        assert dim not in da_renamed.dims
+
+
+def test_rename_climpred_dims(da_dcpp):
+    da_renamed = rename_to_climpred_dims(da_dcpp)
+    for dim in CLIMPRED_ENSEMBLE_DIMS:
+        assert dim in da_renamed.dims
+    for dim in da_dcpp.dims:
+        assert dim not in da_renamed.dims

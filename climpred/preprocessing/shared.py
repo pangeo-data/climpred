@@ -1,56 +1,11 @@
-import glob as _glob
-import os as _os
-
 import numpy as np
 import xarray as xr
 
-from .constants import CLIMPRED_ENSEMBLE_DIMS
+from ..constants import CLIMPRED_ENSEMBLE_DIMS
+from .mpi import get_path
 
 
-def get_path(
-    dir_base_experiment='/work/bm1124/m300086/CMIP6/experiments',
-    member=1,
-    init=1960,
-    model='hamocc',
-    output_stream='monitoring_ym',
-    timestr='*1231',
-    ending='nc',
-):
-    """Get the path of a file of for MPI-ESM standard output file names and directory.
-
-    Args:
-        dir_base_experiment (str): Path of experiments folder. Defaults to
-        "/work/bm1124/m300086/CMIP6/experiments".
-        member (int): `member`. Defaults to 1.
-        init (init): `init`. Defaults to 1960.
-        model (str): submodel name. Defaults to "hamocc".
-        Allowed: ['echam6', 'jsbach', 'mpiom', 'hamocc'].
-        output_stream (str): output_stream name. Defaults to "monitoring_ym".
-        Allowed: ['data_2d_mm', 'data_3d_ym', 'BOT_mm', ...]
-        timestr (str): timestr likely including *. Defaults to "*1231".
-        ending (str): ending indicating file format. Defaults to "nc".
-        Allowed: ['nc', 'grb'].
-
-    Returns:
-        str: path of requested file(s)
-
-    """
-    # get experiment_id
-    dirs = _os.listdir(dir_base_experiment)
-    experiment_id = [
-        x for x in dirs if (f'{init}' in x and 'r' + str(member) + 'i' in x)
-    ]
-    assert len(experiment_id) == 1
-    experiment_id = experiment_id[0]
-    dir_outdata = f'{dir_base_experiment}/{experiment_id}/outdata/{model}'
-    path = f'{dir_outdata}/{experiment_id}_{model}_{output_stream}_{timestr}.{ending}'
-    if _os.path.exists(_glob.glob(path)[0]):
-        return path
-    else:
-        raise ValueError(f'Path not found or no access: {path}')
-
-
-def climpred_preprocess_internal(ds, lead_offset=1, time_dim='time'):
+def set_integer_axis(ds, lead_offset=1, time_dim='time'):
     """CMIP6 DCPP preprocessing before the aggreatations of intake-esm happen."""
     # set time_dim to integers starting at lead_offset
     ds[time_dim] = np.arange(lead_offset, lead_offset + ds[time_dim].size)
@@ -64,6 +19,7 @@ def load_hindcast(
     lead_offset=1,
     parallel=True,
     engine=None,
+    get_path=get_path,
     **get_path_kwargs,
 ):
     """Load multi-member, multi-initialization hindcast experiment into one
@@ -84,6 +40,8 @@ def load_hindcast(
             To load MPI-ESM grb files `conda install pynio`, pass `engine='pynio'` and
             rename dimension to `time` in `preprocess`.
 
+        get_path (callable): `get_path` function specific to modelling center output
+            format. Default: mpi/get_path
         **get_path_kwargs (dict): parameters passed to `**get_path`.
 
     Returns:
@@ -110,7 +68,7 @@ def load_hindcast(
                 compat='override',  # speed up
             ).squeeze()
             # set new integer time
-            member_ds = climpred_preprocess_internal(member_ds)
+            member_ds = set_integer_axis(member_ds)
             member_list.append(member_ds)
         member_ds = xr.concat(member_list, 'member')
         init_list.append(member_ds)
@@ -120,7 +78,16 @@ def load_hindcast(
     return ds
 
 
-def climpred_preprocess_post(ds):
+def rename_SLM_to_climpred_dims(ds):
+    """Rename ensemble dimensions common to SubX or CESM output."""
+    dim_dict = {'S': 'init', 'L': 'lead', 'M': 'member'}
+    for dim in dim_dict.keys():
+        if dim in ds.dims:
+            ds = ds.rename({dim: dim_dict[dim]})
+    return ds
+
+
+def rename_to_climpred_dims(ds):
     """Rename existing dimension to CLIMPRED_ENSEMBLE_DIMS."""
     for cdim in CLIMPRED_ENSEMBLE_DIMS:
         renamed = False

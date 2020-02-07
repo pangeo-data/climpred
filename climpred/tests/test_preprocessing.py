@@ -5,10 +5,10 @@ import pytest
 import xarray as xr
 
 from climpred.constants import CLIMPRED_ENSEMBLE_DIMS
-from climpred.create_climpred_data import (
-    climpred_preprocess_internal,
-    climpred_preprocess_post,
+from climpred.preprocessing.shared import (
     load_hindcast,
+    rename_to_climpred_dims,
+    set_integer_axis,
 )
 
 on_mistral = False
@@ -17,6 +17,7 @@ try:
     for node in ['mlogin', 'mistralpp']:
         if node in host:
             on_mistral = True
+            from climpred.preprocessing.shared import get_path
 except KeyError:
     pass
 
@@ -37,11 +38,14 @@ def preprocess_1var(ds, v='global_primary_production'):
 
 @pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
 @pytest.mark.parametrize(
-    'inits,members', [([1961, 1962, 1963], [3, 4, 5]), (range(1970, 1972), range(1, 3))]
+    'inits,members',
+    [([1961, 1962, 1963], [3, 4, 5]), (range(1970, 1972), range(1, 3))],
 )
 def test_load_hindcast(inits, members):
     """Test that"""
-    actual = load_hindcast(inits=inits, members=members, preprocess=preprocess_1var)
+    actual = load_hindcast(
+        inits=inits, members=members, preprocess=preprocess_1var, get_path=get_path,
+    )
     assert isinstance(actual, xr.Dataset)
     assert (actual['init'].values == inits).all()
     assert (actual['member'].values == members).all()
@@ -70,14 +74,14 @@ def test_climpred_pre_with_intake_esm():
         # extract tiny spatial and temporal subset
         ds = ds.isel(lon=[50, 51, 52], lat=[50, 51, 52], time=np.arange(12 * 2))
         # make time dim identical
-        ds = climpred_preprocess_internal(ds)
+        ds = set_integer_axis(ds)
         return ds
 
     dset_dict = cat.to_dataset_dict(cdf_kwargs=cdf_kwargs, preprocess=preprocess)
     # get first dict value
     ds = dset_dict[list(dset_dict.keys())[0]]
     assert isinstance(ds, xr.Dataset)
-    ds = climpred_preprocess_post(ds)
+    ds = rename_to_climpred_dims(ds)
     # check for all CLIMPRED_DIMS
     for c in CLIMPRED_ENSEMBLE_DIMS:
         assert c in ds.coords

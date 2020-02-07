@@ -4,7 +4,6 @@ from . import (
     bootstrap,
     comparisons,
     constants,
-    create_climpred_data,
     exceptions,
     graphics,
     metrics,
@@ -15,6 +14,7 @@ from . import (
     tutorial,
 )
 from .classes import HindcastEnsemble, PerfectModelEnsemble
+from .preprocessing import mpi, shared
 from .versioning.print_versions import show_versions
 
 try:

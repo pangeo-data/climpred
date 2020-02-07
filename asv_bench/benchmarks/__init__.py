@@ -1,6 +1,7 @@
 # https://github.com/pydata/xarray/blob/master/asv_bench/benchmarks/__init__.py
 import itertools
 
+import dask
 import numpy as np
 
 _counter = itertools.count()
@@ -47,3 +48,10 @@ def randint(low, high=None, size=None, frac_minus=None, seed=0):
         x.flat[inds] = -1
 
     return x
+
+
+def ensure_loaded(res):
+    """Compute no lazy results."""
+    if dask.is_dask_collection(res):
+        res = res.compute()
+    return res

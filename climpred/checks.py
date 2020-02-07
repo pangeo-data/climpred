@@ -1,10 +1,14 @@
+import multiprocessing
 import warnings
 from functools import wraps
 
+import dask
 import xarray as xr
 
 from .constants import VALID_LEAD_UNITS
 from .exceptions import DatasetError, DimensionError, VariableError
+
+NCPU = multiprocessing.cpu_count()
 
 
 def dec_args_kwargs(wrapper):
@@ -18,6 +22,93 @@ def dec_args_kwargs(wrapper):
 # --------------------------------------#
 # CHECKS
 # --------------------------------------#
+def get_chunksize(da):
+    """Sum of the total number of chunks in a chunked xr.object."""
+    n = 1
+    if not dask.is_dask_collection(da):
+        raise ValueError('Please provide a chunked xr.object')
+    if isinstance(da, xr.Dataset):
+        da = da.to_array()
+    for i, c in enumerate(da.chunks):
+        n *= da.shape[i] // c[0]
+    return n
+
+
+def has_dataset(obj, kind, what):
+    """Checks that the PredictionEnsemble has a specific dataset in it."""
+    if len(obj) == 0:
+        raise DatasetError(
+            f'You need to add at least one {kind} dataset before '
+            f'attempting to {what}.'
+        )
+    return True
+
+
+def has_dims(xobj, dims, kind):
+    """
+    Checks that at the minimum, the object has provided dimensions.
+    """
+    if isinstance(dims, str):
+        dims = [dims]
+
+    if not all(dim in xobj.dims for dim in dims):
+        raise DimensionError(
+            f'Your {kind} object must contain the '
+            f'following dimensions at the minimum: {dims}'
+        )
+    return True
+
+
+def has_min_len(arr, len_, kind):
+    """
+    Checks that the array is at least the specified length.
+    """
+    arr_len = len(arr)
+    if arr_len < len_:
+        raise DimensionError(
+            f'Your {kind} array must be at least {len_}, '
+            f'but has only length {arr_len}!'
+        )
+    return True
+
+
+def has_valid_lead_units(xobj):
+    """
+    Checks that the object has valid units for the lead dimension.
+    """
+    LEAD_UNIT_ERROR = (
+        'The lead dimension must must have a valid '
+        f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
+    )
+    # Use `hasattr` here, as it doesn't throw an error if `xobj` doesn't have a
+    # coordinate for lead.
+    if hasattr(xobj['lead'], 'units'):
+
+        units = xobj['lead'].attrs['units']
+
+        # Check if letter s is appended to lead units string and add it if needed
+        if not units.endswith('s'):
+            units += 's'
+            xobj['lead'].attrs['units'] = units
+            warnings.warn(
+                f'The letter "s" was appended to the lead units; now {units}.'
+            )
+
+        # Raise Error if lead units is not valid
+        if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
+            raise AttributeError(LEAD_UNIT_ERROR)
+    else:
+        raise AttributeError(LEAD_UNIT_ERROR)
+    return True
+
+
+def is_in_list(item, list_, kind):
+    """Check whether an item is in a list; kind is just a string."""
+    if item not in list_:
+        raise KeyError(f'Specify {kind} from {list_}: got {item}')
+    return True
+
+
 @dec_args_kwargs
 def is_xarray(func, *dec_args):
     """
@@ -57,51 +148,6 @@ def is_xarray(func, *dec_args):
         return func(*args, **kwargs)
 
     return wrapper
-
-
-def has_dims(xobj, dims, kind):
-    """
-    Checks that at the minimum, the object has provided dimensions.
-    """
-    if isinstance(dims, str):
-        dims = [dims]
-
-    if not all(dim in xobj.dims for dim in dims):
-        raise DimensionError(
-            f'Your {kind} object must contain the '
-            f'following dimensions at the minimum: {dims}'
-        )
-    return True
-
-
-def has_min_len(arr, len_, kind):
-    """
-    Checks that the array is at least the specified length.
-    """
-    arr_len = len(arr)
-    if arr_len < len_:
-        raise DimensionError(
-            f'Your {kind} array must be at least {len_}, '
-            f'but has only length {arr_len}!'
-        )
-    return True
-
-
-def has_dataset(obj, kind, what):
-    """Checks that the PredictionEnsemble has a specific dataset in it."""
-    if len(obj) == 0:
-        raise DatasetError(
-            f'You need to add at least one {kind} dataset before '
-            f'attempting to {what}.'
-        )
-    return True
-
-
-def is_in_list(item, list_, kind):
-    """Check whether an item is in a list; kind is just a string."""
-    if item not in list_:
-        raise KeyError(f'Specify {kind} from {list_}: got {item}')
-    return True
 
 
 def match_initialized_dims(init, verif, uninitialized=False):
@@ -150,31 +196,42 @@ def match_initialized_vars(init, verif):
     return True
 
 
-def has_valid_lead_units(xobj):
-    """
-    Checks that the object has valid units for the lead dimension.
-    """
-    LEAD_UNIT_ERROR = (
-        'The lead dimension must must have a valid '
-        f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
-    )
-    # Use `hasattr` here, as it doesn't throw an error if `xobj` doesn't have a
-    # coordinate for lead.
-    if hasattr(xobj['lead'], 'units'):
+def warn_if_chunking_would_increase_performance(ds):
+    """Warn when chunking might make sense.
 
-        units = xobj['lead'].attrs['units']
-
-        # Check if letter s is appended to lead units string and add it if needed
-        if not units.endswith('s'):
-            units += 's'
-            xobj['lead'].attrs['units'] = units
+    Criteria for potential performance increase:
+    - input xr.object needs to be chunked realistically.
+    - input xr.object needs to sufficiently large so dask overhead doesn't
+     overcompensate parallel computation speedup.
+    - there should be several CPU available for the computation, like on a
+     cluster or multi-core computer
+    """
+    crit_size_in_MB = 100  # rough heuristic
+    nbytes_in_MB = ds.nbytes / (1024 ** 2)
+    if not dask.is_dask_collection(ds):
+        if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
             warnings.warn(
-                f'The letter "s" was appended to the lead units; now {units}.'
+                f'Consider chunking input `ds` along other dimensions than '
+                f'needed by algorithm, e.g. spatial dimensions, for parallelized '
+                'performance increase.'
             )
-
-        # Raise Error if lead units is not valid
-        if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
-            raise AttributeError(LEAD_UNIT_ERROR)
     else:
-        raise AttributeError(LEAD_UNIT_ERROR)
-    return True
+        if nbytes_in_MB < crit_size_in_MB:
+            warnings.warn(
+                'Chunking might not bring parallelized performance increase, '
+                f'because input size quite small, found {nbytes_in_MB} MB <'
+                f' {crit_size_in_MB} MB.'
+            )
+        if NCPU < 4:
+            warnings.warn(
+                f'Chunking might not bring parallelized performance increase, '
+                f'because only few CPUs available, found {NCPU} CPUs.'
+            )
+        number_of_chunks = get_chunksize(ds)
+        if number_of_chunks > NCPU:
+            # much larger than nworkers, warn smaller chunks
+            warnings.warn(
+                f'Chunking might not bring parallelized performance increase, '
+                f'because of much more chunks than CPUs, found {number_of_chunks} '
+                f'chunks and {NCPU} CPUs.'
+            )

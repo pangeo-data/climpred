@@ -1,6 +1,14 @@
 Examples
 #########
 
+
+Dask
+====
+.. toctree::
+   :maxdepth: 1
+
+   examples/dask/efficient_dask.ipynb
+
 Pre-Processing
 ==============
 .. toctree::

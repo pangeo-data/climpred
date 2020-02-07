@@ -304,6 +304,6 @@ def da_dcpp():
     member = np.arange(5)
     return xr.DataArray(
         np.random.rand(len(lead), len(init), len(member)),
-        dims=['init_year', 'time', 'member_id'],
+        dims=['dcpp_init_year', 'time', 'member_id'],
         coords=[init, lead, member],
     )

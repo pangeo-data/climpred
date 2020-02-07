@@ -27,12 +27,13 @@ def load_hindcast(
 
     Args:
         inits (list, array): List of initializations to be loaded.
-        Defaults to range(1961, 1965).
+            Defaults to range(1961, 1965).
         members (list, array): List of initializations to be loaded.
-        Defaults to range(1, 3).
+            Defaults to range(1, 3).
         preprocess (function): `preprocess` function accepting and returning
-        `xr.Dataset` only. To be passed to `xr.open_dataset`. Defaults to None.
-        lead_offset (int): Number of first lead. Defaults to 1.
+            `xr.Dataset` only. To be passed to `xr.open_dataset`. Defaults to None.
+        lead_offset (int): Label for first lead. Defaults to 1. Set to 0 if
+            initialization is not in January and yearmean output.
         parallel (bool): passed to `xr.open_dataset`. Defaults to True.
         engine (str): passed to `xr.open_dataset`. Defaults to None.
 
@@ -68,7 +69,7 @@ def load_hindcast(
                 compat='override',  # speed up
             ).squeeze()
             # set new integer time
-            member_ds = set_integer_axis(member_ds)
+            member_ds = set_integer_axis(member_ds, lead_offset=lead_offset)
             member_list.append(member_ds)
         member_ds = xr.concat(member_list, 'member')
         init_list.append(member_ds)

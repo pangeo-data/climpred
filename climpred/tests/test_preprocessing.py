@@ -9,7 +9,7 @@ from climpred.preprocessing.shared import (
     load_hindcast,
     rename_SLM_to_climpred_dims,
     rename_to_climpred_dims,
-    set_integer_axis,
+    set_integer_time_axis,
 )
 
 on_mistral = False
@@ -75,7 +75,7 @@ def test_climpred_pre_with_intake_esm():
         # extract tiny spatial and temporal subset
         ds = ds.isel(lon=[50, 51, 52], lat=[50, 51, 52], time=np.arange(12 * 2))
         # make time dim identical
-        ds = set_integer_axis(ds)
+        ds = set_integer_time_axis(ds)
         return ds
 
     dset_dict = cat.to_dataset_dict(cdf_kwargs=cdf_kwargs, preprocess=preprocess)

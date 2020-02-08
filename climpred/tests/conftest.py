@@ -5,7 +5,7 @@ import xarray as xr
 from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
 
-# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D
+# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D; generic xr.objects
 
 
 @pytest.fixture
@@ -298,7 +298,8 @@ def da_SLM():
 
 @pytest.fixture
 def da_dcpp():
-    """Small xr.DataArray with coords `init` and `lead`."""
+    """Small xr.DataArray with coords `dcpp_init_year`, `member_id` and `time` as from
+    `intake-esm` `hindcastA-dcpp`."""
     lead = np.arange(5)
     init = np.arange(5)
     member = np.arange(5)

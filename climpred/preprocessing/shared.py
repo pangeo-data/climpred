@@ -5,7 +5,7 @@ from ..constants import CLIMPRED_ENSEMBLE_DIMS
 from .mpi import get_path
 
 
-def set_integer_axis(ds, lead_offset=1, time_dim='time'):
+def set_integer_time_axis(ds, lead_offset=1, time_dim='time'):
     """CMIP6 DCPP preprocessing before the aggreatations of intake-esm happen."""
     # set time_dim to integers starting at lead_offset
     ds[time_dim] = np.arange(lead_offset, lead_offset + ds[time_dim].size)
@@ -31,22 +31,20 @@ def load_hindcast(
         members (list, array): List of initializations to be loaded.
             Defaults to range(1, 3).
         preprocess (function): `preprocess` function accepting and returning
-            `xr.Dataset` only. To be passed to `xr.open_dataset`. Defaults to None.
-        lead_offset (int): Label for first lead. Defaults to 1. Set to 0 if
-            initialization is not in January and yearmean output.
+            `xr.Dataset` only. To be passed to :py:func:`xarray.open_dataset`.
+            Defaults to None.
         parallel (bool): passed to `xr.open_dataset`. Defaults to True.
         engine (str): passed to `xr.open_dataset`. Defaults to None.
 
         .. note::
-            To load MPI-ESM grb files `conda install pynio`, pass `engine='pynio'` and
-            rename dimension to `time` in `preprocess`.
+            To load MPI-ESM grb files, pass `engine='pynio'`.
 
         get_path (callable): `get_path` function specific to modelling center output
-            format. Default: mpi/get_path
+            format. Defaults to :py:func:`climpred.preprocessing.mpi.get_path`.
         **get_path_kwargs (dict): parameters passed to `**get_path`.
 
     Returns:
-        xr.Dataset: climpred compatible dataset with dims: `member`, `init`, `lead`
+        xr.Dataset: `climpred` compatible dataset with dims: `member`, `init`, `lead`
 
     """
     init_list = []
@@ -69,7 +67,7 @@ def load_hindcast(
                 compat='override',  # speed up
             ).squeeze()
             # set new integer time
-            member_ds = set_integer_axis(member_ds, lead_offset=lead_offset)
+            member_ds = set_integer_time_axis(member_ds)
             member_list.append(member_ds)
         member_ds = xr.concat(member_list, 'member')
         init_list.append(member_ds)
@@ -89,14 +87,16 @@ def rename_SLM_to_climpred_dims(ds):
 
 
 def rename_to_climpred_dims(ds):
-    """Rename existing dimension to CLIMPRED_ENSEMBLE_DIMS."""
+    """Rename existing dimension in xr.object `ds` to CLIMPRED_ENSEMBLE_DIMS from
+    existing dimension names."""
     for cdim in CLIMPRED_ENSEMBLE_DIMS:
-        renamed = False
-        if cdim not in ds.dims:
-            for c in ds.dims:
-                if cdim in c:
+        renamed = False  # set renamed flag to false initiallly
+        if cdim not in ds.dims:  # if a CLIMPRED_ENSEMBLE_DIMS is not found
+            for c in ds.dims:  # check in ds.dims for dims
+                if cdim in c:  # containing the string of this CLIMPRED_ENSEMBLE_DIMS
                     ds = ds.rename({c: cdim})
                     renamed = True
+        # special case for hindcast when containing time
         if 'time' in ds.dims and 'lead' not in ds.dims:
             ds = ds.rename({'time': 'lead'})
             renamed = True
@@ -104,6 +104,6 @@ def rename_to_climpred_dims(ds):
             renamed = True
         if not renamed:
             raise ValueError(
-                f"Couldn't find a variable to rename to `{cdim}`, found {ds.dims}."
+                f"Couldn't find a dimension to rename to `{cdim}`, found {ds.dims}."
             )
     return ds

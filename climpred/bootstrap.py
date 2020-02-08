@@ -24,6 +24,13 @@ from .utils import (
 )
 
 
+def _ensure_loaded(res):
+    """Compute no lazy results."""
+    if dask.is_dask_collection(res):
+        res = res.compute()
+    return res
+
+
 def _resample(hind, shuffle_dim, to_be_shuffled):
     """Resample with replacement in dimension `shuffle_dim` from values of
     `to_be_shuffled`
@@ -431,19 +438,7 @@ def bootstrap_compute(
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use verif = control
             hist = verif
-        uninit_hind = resample_uninit(hind, hist)
-        # compute uninit skill
-        uninit.append(
-            compute(
-                uninit_hind,
-                verif,
-                metric=metric,
-                comparison=comparison,
-                dim=dim,
-                add_attrs=False,
-                **metric_kwargs,
-            )
-        )
+        uninit.append(resample_uninit(hind, hist))
         # compute persistence skill
         # impossible for probabilistic
         if not metric.probabilistic:
@@ -451,14 +446,27 @@ def bootstrap_compute(
                 compute_persistence(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
+    init = _ensure_loaded(init)
     # remove useless member = 0 coords after m2c
     if 'member' in init.coords and init.member.size == 1:
         if init.member.size == 1:
             del init['member']
     uninit = xr.concat(uninit, dim='bootstrap')
+    # compute uninit skill
+    uninit = compute(
+        uninit,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        add_attrs=False,
+        **metric_kwargs,
+    )
+    uninit = _ensure_loaded(uninit)
     # when persistence is not computed set flag
     if pers != []:
         pers = xr.concat(pers, dim='bootstrap')
+        pers = _ensure_loaded(pers)
         pers_output = True
     else:
         pers_output = False

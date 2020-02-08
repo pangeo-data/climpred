@@ -2,14 +2,7 @@ import numpy as np
 import xarray as xr
 
 from ..constants import CLIMPRED_ENSEMBLE_DIMS
-from .mpi import get_path
-
-
-def set_integer_time_axis(ds, offset=1, time_dim='time'):
-    """Set time axis to integers starting with `offset`. Used in hindcast preprocessing
-    before the concatination of `intake-esm` happens."""
-    ds[time_dim] = np.arange(offset, offset + ds[time_dim].size)
-    return ds
+from .mpi import get_path as get_path_mpi
 
 
 def load_hindcast(
@@ -19,7 +12,7 @@ def load_hindcast(
     lead_offset=1,
     parallel=True,
     engine=None,
-    get_path=get_path,
+    get_path=get_path_mpi,
     **get_path_kwargs,
 ):  # “pragma: no cover”
     """Load multi-member, multi-initialization hindcast experiment into one
@@ -77,33 +70,59 @@ def load_hindcast(
     return ds
 
 
-def rename_SLM_to_climpred_dims(ds):
-    """Rename ensemble dimensions common to SubX or CESM output."""
+def rename_SLM_to_climpred_dims(xro):
+    """Rename ensemble dimensions common to SubX or CESM output:
+
+        * ``S`` : Refers to start date and is changed to ``init``
+        * ``L`` : Refers to lead time and is changed to ``lead``
+        * ``M``: Refers to ensemble member and is changed to ``member``
+
+    Args:
+        xro (xr.object): input from CESM/SubX containing dims = ['S', 'L', 'M'].
+    Returns:
+        xr.object: `climpred` compatible with dims: `member`, `init`, `lead`.
+    """
     dim_dict = {'S': 'init', 'L': 'lead', 'M': 'member'}
     for dim in dim_dict.keys():
-        if dim in ds.dims:
-            ds = ds.rename({dim: dim_dict[dim]})
-    return ds
+        if dim in xro.dims:
+            xro = xro.rename({dim: dim_dict[dim]})
+    return xro
 
 
-def rename_to_climpred_dims(ds):
-    """Rename existing dimension in xr.object `ds` to CLIMPRED_ENSEMBLE_DIMS from
-    existing dimension names."""
+def rename_to_climpred_dims(xro):
+    """Rename existing dimension in xr.object `xro` to `CLIMPRED_ENSEMBLE_DIMS` from
+    existing dimension names. This function attempts to autocorrect dimension names to
+    climpred standards. e.g., `ensemble_member` becomes `member` and `lead_time`
+    becomes `lead`, and `time` gets renamed to `lead`.
+
+    Args:
+        xro (xr.object): input from DCPP via `intake-esm` containing dimension names
+            like ['dcpp_init_year', 'time', 'member_id'].
+    Returns:
+        xr.object: `climpred` compatible with dims: `member`, `init`, `lead`.
+    """
     for cdim in CLIMPRED_ENSEMBLE_DIMS:
         renamed = False  # set renamed flag to false initiallly
-        if cdim not in ds.dims:  # if a CLIMPRED_ENSEMBLE_DIMS is not found
-            for c in ds.dims:  # check in ds.dims for dims
+        if cdim not in xro.dims:  # if a CLIMPRED_ENSEMBLE_DIMS is not found
+            for c in xro.dims:  # check in xro.dims for dims
                 if cdim in c:  # containing the string of this CLIMPRED_ENSEMBLE_DIMS
-                    ds = ds.rename({c: cdim})
+                    xro = xro.rename({c: cdim})
                     renamed = True
         # special case for hindcast when containing time
-        if 'time' in ds.dims and 'lead' not in ds.dims:
-            ds = ds.rename({'time': 'lead'})
+        if 'time' in xro.dims and 'lead' not in xro.dims:
+            xro = xro.rename({'time': 'lead'})
             renamed = True
-        elif 'lead' in ds.dims:
+        elif 'lead' in xro.dims:
             renamed = True
         if not renamed:
             raise ValueError(
-                f"Couldn't find a dimension to rename to `{cdim}`, found {ds.dims}."
+                f"Couldn't find a dimension to rename to `{cdim}`, found {xro.dims}."
             )
-    return ds
+    return xro
+
+
+def set_integer_time_axis(xro, offset=1, time_dim='time'):
+    """Set time axis to integers starting from `offset`. Used in hindcast preprocessing
+    before the concatination of `intake-esm` happens."""
+    xro[time_dim] = np.arange(offset, offset + xro[time_dim].size)
+    return xro

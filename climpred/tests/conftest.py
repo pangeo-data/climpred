@@ -285,7 +285,8 @@ def multi_dim_ds():
 @pytest.fixture
 def da_SLM():
     """Small xr.DataArray with dims `S`, `M` and  `L` for `init`, `member` and
-    `lead`."""
+    `lead`.
+    """
     lead = np.arange(5)
     init = np.arange(5)
     member = np.arange(5)

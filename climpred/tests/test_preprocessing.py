@@ -40,10 +40,10 @@ def preprocess_1var(ds, v='global_primary_production'):
 @pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
 @pytest.mark.parametrize(
     'inits,members',
-    [([1961, 1962, 1963], [3, 4, 5]), (range(1970, 1972), range(1, 3))],
+    [(range(1961, 1964), range(3, 6)), (range(1970, 1972), range(1, 3))],
 )
 def test_load_hindcast(inits, members):
-    """Test that"""
+    """Test that `load_hindcast` loads the appropriate files."""
     actual = load_hindcast(
         inits=inits, members=members, preprocess=preprocess_1var, get_path=get_path,
     )
@@ -57,6 +57,8 @@ def test_load_hindcast(inits, members):
 @pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
 @pytest.mark.skipif(not intake_esm_loaded, reason='requires intake_esm to be installed')
 def test_climpred_pre_with_intake_esm():
+    """Test that `preprocess` including `set_integer_time_axis` enables concatination
+    of all hindcast into one xr.object."""
     col_url = '/home/mpim/m300524/intake-esm-datastore/catalogs/mistral-cmip6.json'
     col = intake.open_esm_datastore(col_url)
     # load 2 members for 2 inits from one model
@@ -92,7 +94,7 @@ def test_climpred_pre_with_intake_esm():
 
 
 def test_rename_SLM(da_SLM):
-    """Check that dimensions in input are renamed."""
+    """Check that dimensions in input are renamed by rename_SLM_to_climpred_dims."""
     da_renamed = rename_SLM_to_climpred_dims(da_SLM)
     for dim in CLIMPRED_ENSEMBLE_DIMS:
         assert dim in da_renamed.dims
@@ -101,6 +103,7 @@ def test_rename_SLM(da_SLM):
 
 
 def test_rename_climpred_dims(da_dcpp):
+    """Check that dimensions in input are renamed by rename_to_climpred_dims."""
     da_renamed = rename_to_climpred_dims(da_dcpp)
     for dim in CLIMPRED_ENSEMBLE_DIMS:
         assert dim in da_renamed.dims

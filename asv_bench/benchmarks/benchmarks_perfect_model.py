@@ -146,5 +146,5 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds['var'].chunk({'lon': self.nx // BOOTSTRAP})
-        self.control = self.control['var'].chunk({'lon': self.nx // BOOTSTRAP})
+        self.ds = self.ds['var'].chunk({'lead': 1}).persist()
+        self.control = self.control['var'].chunk({'time': -1}).persist()

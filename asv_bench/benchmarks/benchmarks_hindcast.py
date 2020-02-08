@@ -11,7 +11,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 HINDCAST_COMPARISONS = ['m2o']
 
-BOOTSTRAP = 8
+BOOTSTRAP = 2
 
 
 class Generate:
@@ -20,7 +20,7 @@ class Generate:
     """
 
     timeout = 600
-    repeat = (2, 5, 20)
+    repeat = (2, 5, 60)
 
     def make_hind_obs(self):
         """Generates initialized hindcast, uninitialized historical and observational
@@ -29,17 +29,19 @@ class Generate:
         self.observations = xr.Dataset()
         self.uninit = xr.Dataset()
 
-        self.nmember = 3
-        self.nlead = 3
-        self.nx = 64
-        self.ny = 64
+        self.nmember = 5
+        self.nlead = 5
+        self.nx = 128
+        self.ny = 128
         self.init_start = 1960
         self.init_end = 2000
-        self.ninit = self.init_end - self.init_start
+        self.ninit = self.init_end - self.init_start + 1
 
         FRAC_NAN = 0.0
 
-        inits = np.arange(self.init_start, self.init_end)
+        inits = xr.cftime_range(
+            start=str(self.init_start), end=str(self.init_end), freq='YS'
+        )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
 
@@ -69,6 +71,7 @@ class Generate:
             name='var',
             attrs={'units': 'var units', 'description': 'a description'},
         )
+        self.hind.lead.attrs['units'] = 'years'
         self.observations['var'] = xr.DataArray(
             randn((self.ninit, self.nx, self.ny), frac_nan=FRAC_NAN),
             coords={'lon': lons, 'lat': lats, 'time': inits},
@@ -76,17 +79,15 @@ class Generate:
             name='var',
             attrs={'units': 'var units', 'description': 'a description'},
         )
-
+        time = xr.cftime_range(
+            start=str(self.init_start), end=str(self.init_end + self.nlead), freq='YS',
+        )
         self.uninit['var'] = xr.DataArray(
             randn(
-                (self.ninit, self.nx, self.ny, self.nmember), frac_nan=FRAC_NAN
+                (self.ninit + self.nlead, self.nx, self.ny, self.nmember),
+                frac_nan=FRAC_NAN,
             ),
-            coords={
-                'lon': lons,
-                'lat': lats,
-                'time': inits,
-                'member': members,
-            },
+            coords={'lon': lons, 'lat': lats, 'time': time, 'member': members,},
             dims=('time', 'lon', 'lat', 'member'),
             name='var',
             attrs={'units': 'var units', 'description': 'a description'},
@@ -108,10 +109,7 @@ class Compute(Generate):
         """Take time for `compute_hindcast`."""
         ensure_loaded(
             compute_hindcast(
-                self.hind,
-                self.observations,
-                metric=metric,
-                comparison=comparison,
+                self.hind, self.observations, metric=metric, comparison=comparison,
             )
         )
 
@@ -120,10 +118,7 @@ class Compute(Generate):
         """Take memory peak for `compute_hindcast`."""
         ensure_loaded(
             compute_hindcast(
-                self.hind,
-                self.observations,
-                metric=metric,
-                comparison=comparison,
+                self.hind, self.observations, metric=metric, comparison=comparison,
             )
         )
 
@@ -168,8 +163,6 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.hind = self.hind['var'].chunk({'lon': self.nx // BOOTSTRAP})
-        self.observations = self.observations['var'].chunk(
-            {'lon': self.nx // BOOTSTRAP}
-        )
-        self.uninit = self.uninit['var'].chunk({'lon': self.nx // BOOTSTRAP})
+        self.hind = self.hind['var'].chunk({'lead': 1}).persist()
+        self.observations = self.observations['var'].chunk({'time': -1}).persist()
+        self.uninit = self.uninit['var'].chunk({'time': -1}).persist()

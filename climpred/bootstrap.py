@@ -388,7 +388,7 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    init = []
+    smp_init = []
     uninit = []
     pers = []
 
@@ -400,52 +400,31 @@ def bootstrap_compute(
     metric = get_metric_class(metric, ALL_METRICS)
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
-
+    dim = 'member'
     # which dim should be resampled: member or init
-    if dim == 'member' and 'member' in hind.dims:
-        members = hind.member.values
-        to_be_shuffled = members
-        shuffle_dim = 'member'
-    elif 'init' in dim and 'init' in hind.dims:
-        # also allows ['init','member']
-        inits = hind.init.values
-        to_be_shuffled = inits
-        shuffle_dim = 'init'
-    else:
-        raise ValueError('Shuffle either `member` or `init`; not', dim)
+    members = hind.member.values
+    to_be_shuffled = members
+    shuffle_dim = 'member'
 
     for i in range(bootstrap):
         # resample with replacement
         smp_hind = _resample(hind, shuffle_dim, to_be_shuffled)
-        # compute init skill
-        init_skill = compute(
-            smp_hind,
-            verif,
-            metric=metric,
-            comparison=comparison,
-            add_attrs=False,
-            dim=dim,
-            **metric_kwargs,
-        )
-        # reset inits when probabilistic, otherwise tests fail
-        if (
-            shuffle_dim == 'init'
-            and metric.probabilistic
-            and 'init' in init_skill.coords
-        ):
-            init_skill['init'] = inits
-        init.append(init_skill)
+        smp_init.append(smp_hind)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use verif = control
             hist = verif
+        # only resample, calc skill later
         uninit.append(resample_uninit(hind, hist))
-        # compute persistence skill
-        # impossible for probabilistic
-        if not metric.probabilistic:
-            pers.append(
-                compute_persistence(smp_hind, verif, metric=metric, **metric_kwargs)
-            )
-    init = xr.concat(init, dim='bootstrap')
+    init = xr.concat(smp_init, dim='bootstrap')
+    init = compute(
+        init,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        add_attrs=False,
+        dim=dim,
+        **metric_kwargs,
+    )
     init = _ensure_loaded(init)
     # remove useless member = 0 coords after m2c
     if 'member' in init.coords and init.member.size == 1:
@@ -464,12 +443,14 @@ def bootstrap_compute(
     )
     uninit = _ensure_loaded(uninit)
     # when persistence is not computed set flag
-    if pers != []:
-        pers = xr.concat(pers, dim='bootstrap')
-        pers = _ensure_loaded(pers)
-        pers_output = True
+    if not metric.probabilistic:
+        pers_skill = compute_persistence(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = pers_skill.expand_dims('bootstrap')
+        pers_skill = pers_skill.isel(bootstrap=[0] * bootstrap)
     else:
-        pers_output = False
+        pers_skill = init.isnull()
+    pers = pers_skill
+    pers_output = True
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(init, ci_low, ci_high)
@@ -500,10 +481,7 @@ def bootstrap_compute(
         del init_skill['member']
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
-    if not metric.probabilistic:
-        pers_skill = compute_persistence(hind, verif, metric=metric, **metric_kwargs)
-    else:
-        pers_skill = init_skill.isnull()
+
     # align to prepare for concat
     if set(pers_skill.coords) != set(init_skill.coords):
         init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)

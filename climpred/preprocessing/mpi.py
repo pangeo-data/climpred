@@ -10,7 +10,7 @@ def get_path(
     output_stream='monitoring_ym',
     timestr='*1231',
     ending='nc',
-):
+):  # “pragma: no cover”
     """Get the path of a file for MPI-ESM standard output file names and directory.
 
     Args:

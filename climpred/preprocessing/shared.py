@@ -5,10 +5,10 @@ from ..constants import CLIMPRED_ENSEMBLE_DIMS
 from .mpi import get_path
 
 
-def set_integer_time_axis(ds, lead_offset=1, time_dim='time'):
-    """CMIP6 DCPP preprocessing before the aggreatations of intake-esm happen."""
-    # set time_dim to integers starting at lead_offset
-    ds[time_dim] = np.arange(lead_offset, lead_offset + ds[time_dim].size)
+def set_integer_time_axis(ds, offset=1, time_dim='time'):
+    """Set time axis to integers starting with `offset`. Used in hindcast preprocessing
+    before the concatination of `intake-esm` happens."""
+    ds[time_dim] = np.arange(offset, offset + ds[time_dim].size)
     return ds
 
 
@@ -21,7 +21,7 @@ def load_hindcast(
     engine=None,
     get_path=get_path,
     **get_path_kwargs,
-):
+):  # “pragma: no cover”
     """Load multi-member, multi-initialization hindcast experiment into one
     `xr.Dataset` compatible with `climpred`.
 

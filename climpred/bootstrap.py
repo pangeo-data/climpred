@@ -11,7 +11,11 @@ from .checks import (
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
+from .prediction import (
+    compute_hindcast,
+    compute_perfect_model,
+    compute_persistence,
+)
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -61,7 +65,9 @@ def my_quantile(ds, q=0.95, dim='bootstrap'):
         """Daskified np.percentile."""
         if len(arr.chunks[axis]) > 1:
             arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
+        return dask.array.map_blocks(
+            np.percentile, arr, axis=axis, q=q, drop_axis=axis
+        )
 
     def _percentile(arr, axis=0, q=95):
         """percentile function for chunked and non-chunked `arr`."""
@@ -148,7 +154,9 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
+    n, freq = get_lead_cftime_shift_args(
+        hind.lead.attrs['units'], hind.lead.size
+    )
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
 
@@ -170,7 +178,9 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
+        uninit_at_one_init_year['member'] = np.arange(
+            1, 1 + len(random_members)
+        )
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -214,10 +224,13 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist), 'member',
+            (isel_years(control, start, length) for start in startlist),
+            'member',
         )
 
-    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
+    uninit = xr.concat(
+        (create_pseudo_members(control) for _ in range(nens)), 'init'
+    )
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -253,7 +266,9 @@ def _bootstrap_func(
                    dimensions of ds and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(f'Please provide func as a function, found {type(func)}')
+        raise ValueError(
+            f'Please provide func as a function, found {type(func)}'
+        )
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -289,7 +304,9 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     )
 
 
-def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
+def varweighted_mean_period_threshold(
+    control, sig=95, bootstrap=500, time_dim='time'
+):
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
@@ -297,7 +314,11 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
+        varweighted_mean_period,
+        control,
+        time_dim,
+        sig=sig,
+        bootstrap=bootstrap,
     )
 
 
@@ -425,7 +446,7 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
-    init = _ensure_loaded(init)
+    # init = _ensure_loaded(init)
     # remove useless member = 0 coords after m2c
     if 'member' in init.coords and init.member.size == 1:
         if init.member.size == 1:
@@ -441,10 +462,12 @@ def bootstrap_compute(
         add_attrs=False,
         **metric_kwargs,
     )
-    uninit = _ensure_loaded(uninit)
+    # uninit = _ensure_loaded(uninit)
     # when persistence is not computed set flag
     if not metric.probabilistic:
-        pers_skill = compute_persistence(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = compute_persistence(
+            hind, verif, metric=metric, **metric_kwargs
+        )
         pers_skill = pers_skill.expand_dims('bootstrap')
         pers_skill = pers_skill.isel(bootstrap=[0] * bootstrap)
     else:
@@ -467,12 +490,19 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
+    p_uninit_over_init = _pvalue_from_distributions(
+        uninit, init, metric=metric
+    )
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
+        hind,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')

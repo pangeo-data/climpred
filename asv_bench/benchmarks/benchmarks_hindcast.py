@@ -11,7 +11,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 HINDCAST_COMPARISONS = ['m2o']
 
-BOOTSTRAP = 2
+BOOTSTRAP = 16
 
 
 class Generate:
@@ -80,14 +80,21 @@ class Generate:
             attrs={'units': 'var units', 'description': 'a description'},
         )
         time = xr.cftime_range(
-            start=str(self.init_start), end=str(self.init_end + self.nlead), freq='YS',
+            start=str(self.init_start),
+            end=str(self.init_end + self.nlead),
+            freq='YS',
         )
         self.uninit['var'] = xr.DataArray(
             randn(
                 (self.ninit + self.nlead, self.nx, self.ny, self.nmember),
                 frac_nan=FRAC_NAN,
             ),
-            coords={'lon': lons, 'lat': lats, 'time': time, 'member': members,},
+            coords={
+                'lon': lons,
+                'lat': lats,
+                'time': time,
+                'member': members,
+            },
             dims=('time', 'lon', 'lat', 'member'),
             name='var',
             attrs={'units': 'var units', 'description': 'a description'},
@@ -109,7 +116,10 @@ class Compute(Generate):
         """Take time for `compute_hindcast`."""
         ensure_loaded(
             compute_hindcast(
-                self.hind, self.observations, metric=metric, comparison=comparison,
+                self.hind,
+                self.observations,
+                metric=metric,
+                comparison=comparison,
             )
         )
 
@@ -118,7 +128,10 @@ class Compute(Generate):
         """Take memory peak for `compute_hindcast`."""
         ensure_loaded(
             compute_hindcast(
-                self.hind, self.observations, metric=metric, comparison=comparison,
+                self.hind,
+                self.observations,
+                metric=metric,
+                comparison=comparison,
             )
         )
 
@@ -164,5 +177,7 @@ class ComputeDask(Compute):
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
         self.hind = self.hind['var'].chunk({'lead': 1}).persist()
-        self.observations = self.observations['var'].chunk({'time': -1}).persist()
+        self.observations = (
+            self.observations['var'].chunk({'time': -1}).persist()
+        )
         self.uninit = self.uninit['var'].chunk({'time': -1}).persist()

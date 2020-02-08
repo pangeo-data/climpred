@@ -26,18 +26,18 @@ def load_hindcast(
         preprocess (function): `preprocess` function accepting and returning
             `xr.Dataset` only. To be passed to :py:func:`xarray.open_dataset`.
             Defaults to None.
-        parallel (bool): passed to `xr.open_dataset`. Defaults to True.
-        engine (str): passed to `xr.open_dataset`. Defaults to None.
+        parallel (bool): passed to `xr.open_mfdataset`. Defaults to True.
+        engine (str): passed to `xr.open_mfdataset`. Defaults to None.
 
         .. note::
             To load MPI-ESM grb files, pass `engine='pynio'`.
 
         get_path (callable): `get_path` function specific to modelling center output
-            format. Defaults to :py:func:`climpred.preprocessing.mpi.get_path`.
+            format. Defaults to :py:func:`~climpred.preprocessing.mpi.get_path`.
         **get_path_kwargs (dict): parameters passed to `**get_path`.
 
     Returns:
-        xr.Dataset: `climpred` compatible dataset with dims: `member`, `init`, `lead`
+        xr.Dataset: `climpred` compatible dataset with dims: `member`, `init`, `lead`.
 
     """
     init_list = []
@@ -78,9 +78,9 @@ def rename_SLM_to_climpred_dims(xro):
         * ``M``: Refers to ensemble member and is changed to ``member``
 
     Args:
-        xro (xr.object): input from CESM/SubX containing dims = ['S', 'L', 'M'].
+        xro (xr.object): input from CESM/SubX containing dimensions: `S`, `L`, `M`.
     Returns:
-        xr.object: `climpred` compatible with dims: `member`, `init`, `lead`.
+        xr.object: `climpred` compatible with dimensions: `member`, `init`, `lead`.
     """
     dim_dict = {'S': 'init', 'L': 'lead', 'M': 'member'}
     for dim in dim_dict.keys():
@@ -96,10 +96,10 @@ def rename_to_climpred_dims(xro):
     becomes `lead`, and `time` gets renamed to `lead`.
 
     Args:
-        xro (xr.object): input from DCPP via `intake-esm` containing dimension names
-            like ['dcpp_init_year', 'time', 'member_id'].
+        xro (xr.object): input from DCPP via `intake-esm <intake-esm.readthedocs.io/>`_
+        containing dimension names like `dcpp_init_year`, `time`, `member_id`.
     Returns:
-        xr.object: `climpred` compatible with dims: `member`, `init`, `lead`.
+        xr.object: `climpred` compatible with dimensions: `member`, `init`, `lead`.
     """
     for cdim in CLIMPRED_ENSEMBLE_DIMS:
         renamed = False  # set renamed flag to false initiallly

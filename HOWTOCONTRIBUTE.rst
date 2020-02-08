@@ -146,7 +146,7 @@ Preparing Pull Requests
     PEP-8 for naming. When committing, ``pre-commit`` will modify the files as needed, or
     will generally be quite clear about what you need to do to pass the commit test.
 
-#. Break your edits up into reasonably sized commits.
+#. Break your edits up into reasonably sized commits::
 
     $ git commit -a -m "<commit message>"
     $ git push -u
@@ -157,7 +157,7 @@ Preparing Pull Requests
 
     $ pytest climpred
 
-   Check that your contribution is covered by tests and therefore increases the overall test coverage:
+   Check that your contribution is covered by tests and therefore increases the overall test coverage::
 
     $ coverage run --source climpred -m py.test
     $ coverage report

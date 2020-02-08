@@ -169,7 +169,7 @@ Preparing Pull Requests
 
 Performance matters and it is worth considering whether your code has introduced
 performance regressions. `climpred` is starting to write a suite of benchmarking tests
-using `asv <https://asv.readthedocs.io/en/stable/>`__
+using `asv <https://asv.readthedocs.io/en/stable/>`_
 to enable easy monitoring of the performance of critical `climpred` operations.
 These benchmarks are all found in the ``asv_bench`` directory.
 
@@ -213,7 +213,7 @@ defined in ``benchmarks_perfect_model.py``.
      alphabetical order.
 
  #. Add yourself to the
-    `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>_`
+    `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>`_
     list via ``docs/source/contributors.rst``.
 
 #. Finally, submit a pull request through the GitHub website using this data::

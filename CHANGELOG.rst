@@ -26,6 +26,13 @@ Internals/Minor Fixes
 - ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
 
 
+Documentation
+-------------
+- Demo and wrapper to setup your own raw model output compliant to ``climpred``
+  (:pr:`296`) `Aaron Spring`_.
+- Demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
+
+
 climpred v2.0.0 (2020-01-22)
 ============================
 
@@ -122,7 +129,6 @@ New Features
     * ``['spvalue', 'spval']`` for ``spearman_r_p_value``
     * ``['s_pval_eff', 'spvalue_eff', 'spval_eff']`` for ``spearman_r_eff_p_value``
     * ``'nev'`` for ``nmse``
-
 
 Internals/Minor Fixes
 ---------------------

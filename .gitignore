@@ -113,4 +113,6 @@ asv_bench/.asv/
 # VS Code
 .vscode/
 
+dask-worker-space
+
 # End of https://www.gitignore.io/api/python

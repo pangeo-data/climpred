@@ -5,7 +5,7 @@ import xarray as xr
 from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
 
-# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D
+# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D; generic xr.objects
 
 
 @pytest.fixture
@@ -280,3 +280,32 @@ def multi_dim_ds():
     ds = xr.tutorial.open_dataset('air_temperature')
     ds = ds.assign(**{'airx2': ds['air'] * 2})
     return ds
+
+
+@pytest.fixture
+def da_SLM():
+    """Small xr.DataArray with dims `S`, `M` and  `L` for `init`, `member` and
+    `lead`.
+    """
+    lead = np.arange(5)
+    init = np.arange(5)
+    member = np.arange(5)
+    return xr.DataArray(
+        np.random.rand(len(lead), len(init), len(member)),
+        dims=['S', 'L', 'M'],
+        coords=[init, lead, member],
+    )
+
+
+@pytest.fixture
+def da_dcpp():
+    """Small xr.DataArray with coords `dcpp_init_year`, `member_id` and `time` as from
+    `intake-esm` `hindcastA-dcpp`."""
+    lead = np.arange(5)
+    init = np.arange(5)
+    member = np.arange(5)
+    return xr.DataArray(
+        np.random.rand(len(lead), len(init), len(member)),
+        dims=['dcpp_init_year', 'time', 'member_id'],
+        coords=[init, lead, member],
+    )

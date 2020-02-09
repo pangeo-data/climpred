@@ -146,7 +146,7 @@ Preparing Pull Requests
     PEP-8 for naming. When committing, ``pre-commit`` will modify the files as needed, or
     will generally be quite clear about what you need to do to pass the commit test.
 
-#. Break your edits up into reasonably sized commits.
+#. Break your edits up into reasonably sized commits::
 
     $ git commit -a -m "<commit message>"
     $ git push -u
@@ -157,7 +157,7 @@ Preparing Pull Requests
 
     $ pytest climpred
 
-   Check that your contribution is covered by tests and therefore increases the overall test coverage:
+   Check that your contribution is covered by tests and therefore increases the overall test coverage::
 
     $ coverage run --source climpred -m py.test
     $ coverage report
@@ -169,7 +169,7 @@ Preparing Pull Requests
 
 Performance matters and it is worth considering whether your code has introduced
 performance regressions. `climpred` is starting to write a suite of benchmarking tests
-using `asv <https://asv.readthedocs.io/en/stable/>`__
+using `asv <https://asv.readthedocs.io/en/stable/>`_
 to enable easy monitoring of the performance of critical `climpred` operations.
 These benchmarks are all found in the ``asv_bench`` directory.
 
@@ -213,7 +213,7 @@ defined in ``benchmarks_perfect_model.py``.
      alphabetical order.
 
  #. Add yourself to the
-    `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>_`
+    `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>`_
     list via ``docs/source/contributors.rst``.
 
 #. Finally, submit a pull request through the GitHub website using this data::

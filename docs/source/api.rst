@@ -192,3 +192,21 @@ Tutorial
     :toctree: api/
 
     load_dataset
+
+Preprocessing
+~~~~~~~~~~~~~
+.. currentmodule:: climpred.preprocessing.shared
+
+.. autosummary::
+    :toctree: api/
+
+    load_hindcast
+    rename_to_climpred_dims
+    rename_SLM_to_climpred_dims
+
+.. currentmodule:: climpred.preprocessing.mpi
+
+.. autosummary::
+    :toctree: api/
+
+    get_path

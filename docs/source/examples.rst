@@ -1,6 +1,7 @@
 Examples
 #########
 
+
 Dask
 ====
 .. toctree::
@@ -8,8 +9,15 @@ Dask
 
    examples/dask/efficient_dask.ipynb
 
+Pre-Processing
+==============
+.. toctree::
+   :maxdepth: 1
+
+   examples/preprocessing/setup_your_own_data.ipynb
+
 Subseasonal
-=============
+===========
 .. toctree::
    :maxdepth: 1
 

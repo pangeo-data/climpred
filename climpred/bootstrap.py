@@ -11,11 +11,7 @@ from .checks import (
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import (
-    compute_hindcast,
-    compute_perfect_model,
-    compute_persistence,
-)
+from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -28,24 +24,24 @@ from .utils import (
 )
 
 
-def _resample(hind, shuffle_dim, to_be_shuffled):
-    """Resample with replacement in dimension `shuffle_dim` from values of
-    `to_be_shuffled`
+def _resample(hind, resample_dim, to_be_resampled):
+    """Resample with replacement in dimension `resample_dim` from values of
+    `to_be_resampled`
 
     Args:
         hind (xr.object): input xr.object to be shuffled.
-        shuffle_dim (str): dimension to shuffle along.
-        to_be_shuffled (list, xr.DataArray.values, np.ndarray): values to shuffle from.
+        resample_dim (str): dimension to shuffle along.
+        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to shuffle from.
 
     Returns:
-        xr.object: shuffled along `shuffle_dim`.
+        xr.object: shuffled along `resample_dim`.
 
     """
-    smp = np.random.choice(to_be_shuffled, len(to_be_shuffled))
-    smp_hind = hind.sel({shuffle_dim: smp})
+    smp = np.random.choice(to_be_resampled, len(to_be_resampled))
+    smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
-    if shuffle_dim != 'init':
-        smp_hind[shuffle_dim] = np.arange(1, 1 + smp_hind[shuffle_dim].size)
+    if resample_dim != 'init':
+        smp_hind[resample_dim] = np.arange(1, 1 + smp_hind[resample_dim].size)
     return smp_hind
 
 
@@ -58,9 +54,7 @@ def my_quantile(ds, q=0.95, dim='bootstrap'):
         """Daskified np.percentile."""
         if len(arr.chunks[axis]) > 1:
             arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(
-            np.percentile, arr, axis=axis, q=q, drop_axis=axis
-        )
+        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
 
     def _percentile(arr, axis=0, q=95):
         """percentile function for chunked and non-chunked `arr`."""
@@ -147,9 +141,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(
-        hind.lead.attrs['units'], hind.lead.size
-    )
+    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
 
@@ -171,9 +163,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(
-            1, 1 + len(random_members)
-        )
+        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -217,13 +207,10 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist),
-            'member',
+            (isel_years(control, start, length) for start in startlist), 'member',
         )
 
-    uninit = xr.concat(
-        (create_pseudo_members(control) for _ in range(nens)), 'init'
-    )
+    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -259,9 +246,7 @@ def _bootstrap_func(
                    dimensions of ds and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(
-            f'Please provide func as a function, found {type(func)}'
-        )
+        raise ValueError(f'Please provide func as a function, found {type(func)}')
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -297,9 +282,7 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     )
 
 
-def varweighted_mean_period_threshold(
-    control, sig=95, bootstrap=500, time_dim='time'
-):
+def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
@@ -307,11 +290,7 @@ def varweighted_mean_period_threshold(
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period,
-        control,
-        time_dim,
-        sig=sig,
-        bootstrap=bootstrap,
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
     )
 
 
@@ -322,6 +301,7 @@ def bootstrap_compute(
     metric='pearson_r',
     comparison='m2e',
     dim='init',
+    resample_dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -338,7 +318,8 @@ def bootstrap_compute(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
-        dim (str or list): dimension to apply metric over. default: 'init'
+        dim (str or list): dimension to apply metric over. default: 'init'.
+        resample_dim (str or list): dimension to resample from. default: 'init'.
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -418,22 +399,11 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    # which dim should be resampled: member or init
-    if dim == 'member' and 'member' in hind.dims:
-        members = hind.member.values
-        to_be_shuffled = members
-        shuffle_dim = 'member'
-    elif 'init' in dim and 'init' in hind.dims:
-        # also allows ['init','member']
-        inits = hind.init.values
-        to_be_shuffled = inits
-        shuffle_dim = 'init'
-    else:
-        raise ValueError('Shuffle either `member` or `init`; not', dim)
+    to_be_resampled = hind[resample_dim].values
 
     for i in range(bootstrap):
         # resample with replacement
-        smp_hind = _resample(hind, shuffle_dim, to_be_shuffled)
+        smp_hind = _resample(hind, resample_dim, to_be_resampled)
         # compute init skill
         init_skill = compute(
             smp_hind,
@@ -446,11 +416,11 @@ def bootstrap_compute(
         )
         # reset inits when probabilistic, otherwise tests fail
         if (
-            shuffle_dim == 'init'
+            resample_dim == 'init'
             and metric.probabilistic
             and 'init' in init_skill.coords
         ):
-            init_skill['init'] = inits
+            init_skill['init'] = hind.init.values
         init.append(init_skill)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use verif = control
@@ -472,9 +442,7 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                baseline_compute(
-                    smp_hind, verif, metric=metric, **metric_kwargs
-                )
+                baseline_compute(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -504,19 +472,12 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(
-        uninit, init, metric=metric
-    )
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind,
-        verif,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        **metric_kwargs,
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
@@ -526,9 +487,7 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = baseline_compute(
-            hind, verif, metric=metric, **metric_kwargs
-        )
+        pers_skill = baseline_compute(hind, verif, metric=metric, **metric_kwargs)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -562,7 +521,7 @@ def bootstrap_compute(
     metadata_dict = {
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
         'bootstrap_iterations': bootstrap,
-        'p': 'probability that initialized forecast performs better than verification data',
+        'p': 'probability that uninitialized ensemble performs better initialized',
         'baseline_compute': baseline_compute.__name__,
     }
     metadata_dict.update(metric_kwargs)
@@ -589,6 +548,7 @@ def bootstrap_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
+    resample_dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -604,7 +564,8 @@ def bootstrap_hindcast(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'e2o'.
-        dim (str): dimension to apply metric over. default: 'init'
+        dim (str): dimension to apply metric over. default: 'init'.
+        resample_dim (str or list): dimension to resample from. default: 'init'.
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -666,6 +627,7 @@ def bootstrap_hindcast(
         metric=metric,
         comparison=comparison,
         dim=dim,
+        resample_dim=resample_dim,
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
@@ -682,6 +644,7 @@ def bootstrap_perfect_model(
     metric='pearson_r',
     comparison='m2e',
     dim=None,
+    resample_dim='init',
     sig=95,
     bootstrap=500,
     pers_sig=None,
@@ -698,6 +661,7 @@ def bootstrap_perfect_model(
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
         dim (str): dimension to apply metric over. default: ['init', 'member']
+        resample_dim (str or list): dimension to resample from. default: 'init'.
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -754,6 +718,7 @@ def bootstrap_perfect_model(
         metric=metric,
         comparison=comparison,
         dim=dim,
+        resample_dim=resample_dim,
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,

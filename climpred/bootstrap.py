@@ -11,7 +11,11 @@ from .checks import (
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
+from .prediction import (
+    compute_hindcast,
+    compute_perfect_model,
+    compute_persistence,
+)
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -54,7 +58,9 @@ def my_quantile(ds, q=0.95, dim='bootstrap'):
         """Daskified np.percentile."""
         if len(arr.chunks[axis]) > 1:
             arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
+        return dask.array.map_blocks(
+            np.percentile, arr, axis=axis, q=q, drop_axis=axis
+        )
 
     def _percentile(arr, axis=0, q=95):
         """percentile function for chunked and non-chunked `arr`."""
@@ -141,7 +147,9 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
+    n, freq = get_lead_cftime_shift_args(
+        hind.lead.attrs['units'], hind.lead.size
+    )
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
 
@@ -163,7 +171,9 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
+        uninit_at_one_init_year['member'] = np.arange(
+            1, 1 + len(random_members)
+        )
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -207,10 +217,13 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist), 'member',
+            (isel_years(control, start, length) for start in startlist),
+            'member',
         )
 
-    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
+    uninit = xr.concat(
+        (create_pseudo_members(control) for _ in range(nens)), 'init'
+    )
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -246,7 +259,9 @@ def _bootstrap_func(
                    dimensions of ds and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(f'Please provide func as a function, found {type(func)}')
+        raise ValueError(
+            f'Please provide func as a function, found {type(func)}'
+        )
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -282,7 +297,9 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     )
 
 
-def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
+def varweighted_mean_period_threshold(
+    control, sig=95, bootstrap=500, time_dim='time'
+):
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
@@ -290,7 +307,11 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
+        varweighted_mean_period,
+        control,
+        time_dim,
+        sig=sig,
+        bootstrap=bootstrap,
     )
 
 
@@ -306,6 +327,7 @@ def bootstrap_compute(
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
+    baseline_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement.
@@ -332,6 +354,8 @@ def bootstrap_compute(
                         ensemble. Choose from:
                         [:py:func:`bootstrap_uninitialized_ensemble`,
                          :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
+        baseline_compute (func): function to compute a baseline forecast skill with.
+                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -448,7 +472,9 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                compute_persistence(smp_hind, verif, metric=metric, **metric_kwargs)
+                baseline_compute(
+                    smp_hind, verif, metric=metric, **metric_kwargs
+                )
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -478,12 +504,19 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
+    p_uninit_over_init = _pvalue_from_distributions(
+        uninit, init, metric=metric
+    )
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
+        hind,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
@@ -493,7 +526,9 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = compute_persistence(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = baseline_compute(
+            hind, verif, metric=metric, **metric_kwargs
+        )
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -527,8 +562,8 @@ def bootstrap_compute(
     metadata_dict = {
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
         'bootstrap_iterations': bootstrap,
-        'p': 'probability that initialized forecast performs \
-                          better than verification data',
+        'p': 'probability that initialized forecast performs better than verification data',
+        'baseline_compute': baseline_compute.__name__,
     }
     metadata_dict.update(metric_kwargs)
     results = assign_attrs(
@@ -557,6 +592,7 @@ def bootstrap_hindcast(
     sig=95,
     bootstrap=500,
     pers_sig=None,
+    baseline_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -575,6 +611,8 @@ def bootstrap_hindcast(
                         Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
+        baseline_compute (func): function to compute a baseline forecast skill with.
+                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -633,6 +671,7 @@ def bootstrap_hindcast(
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
+        baseline_compute=baseline_compute,
         **metric_kwargs,
     )
 
@@ -646,6 +685,7 @@ def bootstrap_perfect_model(
     sig=95,
     bootstrap=500,
     pers_sig=None,
+    baseline_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -664,6 +704,8 @@ def bootstrap_perfect_model(
                         Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
+        baseline_compute (func): function to compute a baseline forecast skill with.
+                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -717,5 +759,6 @@ def bootstrap_perfect_model(
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
+        baseline_compute=baseline_compute,
         **metric_kwargs,
     )

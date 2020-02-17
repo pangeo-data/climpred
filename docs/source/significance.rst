@@ -14,7 +14,7 @@ Metric-based p-value
 For the correlation `metrics <metrics.html>`__, like
 :py:func:`~climpred.metrics._pearson_r`, ``climpred`` also hosts the associated p-value, like
 :py:func:`~climpred.metrics._pearson_r_p_value`, that this correlation is significantly
-different to zero incorporating reduced degrees of freedom due to temporal
+different from zero incorporating reduced degrees of freedom due to temporal
 autocorrelation.
 
 Bootstrapping with replacement
@@ -43,7 +43,7 @@ Field significance
 ##################
 
 Please use :py:func:`~esmtools.testing.multipletests` to control the false discovery
-rate (FDR) from the above obtained p-values [Wilks2016]_.
+rate (FDR) in geospatial data from the above obtained p-values [Wilks2016]_.
 
 
 References

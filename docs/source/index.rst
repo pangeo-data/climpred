@@ -80,6 +80,7 @@ repository and running ``pip install . --upgrade`` in the main directory
 * :doc:`metrics`
 * :doc:`terminology`
 * :doc:`baselines`
+* :doc:`significance`
 
 .. toctree::
     :maxdepth: 2
@@ -92,6 +93,7 @@ repository and running ``pip install . --upgrade`` in the main directory
     comparisons
     terminology
     baselines
+    significance
 
 **Help & Reference**
 

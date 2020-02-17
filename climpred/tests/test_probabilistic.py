@@ -116,6 +116,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         func=func,
         bootstrap=BOOTSTRAP,
         dim='member',
+        resample_dim='member',
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
@@ -162,6 +163,7 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         func=func,
         bootstrap=BOOTSTRAP,
         dim='member',
+        resample_dim='member',
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')

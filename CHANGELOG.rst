@@ -16,6 +16,8 @@ New Features
     *  properly implemented handling for lazy results when chunked inputs
 
     *  user gets warned when chunking potentially (un)-necessary
+- new explicit keywords in bootstrap functions for ``resampling_dim`` and
+  ``baseline_compute`` (:pr:`320`) `Aaron Spring`_.
 
 
 Internals/Minor Fixes

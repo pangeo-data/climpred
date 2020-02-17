@@ -21,9 +21,7 @@ def test_pm_comparison_stack_dims_when_deterministic(
 ):
     metric = get_metric_class(metric, PM_METRICS)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison.function(
-        PM_da_initialized_1d, metric=metric
-    )
+    actual_f, actual_r = comparison.function(PM_da_initialized_1d, metric=metric)
     if not metric.probabilistic:
         assert 'member' in actual_f.dims
         assert 'member' in actual_r.dims
@@ -86,7 +84,7 @@ def test_compute_perfect_model_different_dims_quite_close(
         metric='rmse',
         dim='member',
     ).mean(['init'])
-    # no more than 10% difference
+    # no more than a 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
 
 

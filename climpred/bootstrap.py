@@ -54,9 +54,7 @@ def my_quantile(ds, q=0.95, dim='bootstrap'):
         """Daskified np.percentile."""
         if len(arr.chunks[axis]) > 1:
             arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(
-            np.percentile, arr, axis=axis, q=q, drop_axis=axis
-        )
+        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
 
     def _percentile(arr, axis=0, q=95):
         """percentile function for chunked and non-chunked `arr`."""
@@ -143,9 +141,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(
-        hind.lead.attrs['units'], hind.lead.size
-    )
+    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
 
@@ -167,9 +163,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(
-            1, 1 + len(random_members)
-        )
+        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -213,13 +207,10 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist),
-            'member',
+            (isel_years(control, start, length) for start in startlist), 'member',
         )
 
-    uninit = xr.concat(
-        (create_pseudo_members(control) for _ in range(nens)), 'init'
-    )
+    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -255,9 +246,7 @@ def _bootstrap_func(
                    dimensions of ds and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(
-            f'Please provide func as a function, found {type(func)}'
-        )
+        raise ValueError(f'Please provide func as a function, found {type(func)}')
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -293,9 +282,7 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     )
 
 
-def varweighted_mean_period_threshold(
-    control, sig=95, bootstrap=500, time_dim='time'
-):
+def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
@@ -303,11 +290,7 @@ def varweighted_mean_period_threshold(
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period,
-        control,
-        time_dim,
-        sig=sig,
-        bootstrap=bootstrap,
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
     )
 
 
@@ -459,9 +442,7 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                baseline_compute(
-                    smp_hind, verif, metric=metric, **metric_kwargs
-                )
+                baseline_compute(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -491,19 +472,12 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(
-        uninit, init, metric=metric
-    )
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind,
-        verif,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        **metric_kwargs,
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
@@ -513,9 +487,7 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = baseline_compute(
-            hind, verif, metric=metric, **metric_kwargs
-        )
+        pers_skill = baseline_compute(hind, verif, metric=metric, **metric_kwargs)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -700,7 +672,7 @@ def bootstrap_perfect_model(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
-        dim (str): dimension to apply metric over. default: ['init', 'member']
+        dim (str): dimension to apply metric over. default: ['init', 'member'].
         resample_dim (str or list): dimension to resample from. default: 'member'.
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.

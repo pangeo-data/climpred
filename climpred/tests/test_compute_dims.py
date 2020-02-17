@@ -21,7 +21,9 @@ def test_pm_comparison_stack_dims_when_deterministic(
 ):
     metric = get_metric_class(metric, PM_METRICS)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison.function(PM_da_initialized_1d, metric=metric)
+    actual_f, actual_r = comparison.function(
+        PM_da_initialized_1d, metric=metric
+    )
     if not metric.probabilistic:
         assert 'member' in actual_f.dims
         assert 'member' in actual_r.dims
@@ -98,6 +100,7 @@ def test_bootstrap_pm_dim(PM_da_initialized_1d, PM_da_control_1d):
         dim='member',
         comparison='m2c',
         bootstrap=BOOTSTRAP,
+        resample_dim='member',
     )
     assert 'init' in actual.dims
     for kind in ['init', 'uninit']:
@@ -121,6 +124,7 @@ def test_bootstrap_hindcast_dim(
         dim='member',
         comparison='m2o',
         bootstrap=BOOTSTRAP,
+        resample_dim='member',
     )
     assert 'init' in actual.dims
     for kind in ['init', 'uninit']:

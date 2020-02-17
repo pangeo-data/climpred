@@ -611,6 +611,18 @@ def bootstrap_hindcast(
     See also:
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_hindcast
+
+    Example:
+        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')['SST']
+        >>> hist = climpred.tutorial.load_dataset('CESM-LE')['SST']
+        >>> obs = load_dataset('ERSST')['SST']
+        >>> bootstrapped_skill = climpred.bootstrap.bootstrap_hindcast(hind, hist, obs)
+        >>> bootstrapped_skill.coords
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
+          * kind     (kind) object 'init' 'pers' 'uninit'
+          * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
+
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
@@ -707,6 +719,16 @@ def bootstrap_perfect_model(
     See also:
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_perfect_model
+
+    Example:
+        >>> init = climpred.tutorial.load_dataset('MPI-PM-DP-1D')
+        >>> control = climpred.tutorial.load_dataset('MPI-control-1D')
+        >>> bootstrapped_s = climpred.bootstrap.bootstrap_perfect_model(init, control)
+        >>> bootstrapped_s.coords
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
+          * kind     (kind) object 'init' 'pers' 'uninit'
+          * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
     """
 
     if dim is None:

@@ -6,7 +6,8 @@ How to access whether initialized ensembles are skillful? Is correlation of a le
 timeseries different from zero? What is a probability that a retrospective forecast was
 more valueable than a historical simulation? How to correct for spatial autocorrelation?
 All these questions deal with significance. Here is how you can use ``climpred`` to
-calculate this. Please also have a look at the `significance example <examples/decadal/significance.html>`__.
+calculate this. Please also have a look at the
+`significance example <examples/decadal/significance.html>`__.
 
 Metric-based p-value
 ####################

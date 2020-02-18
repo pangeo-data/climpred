@@ -51,10 +51,8 @@ dependencies:
   - xskillscore>=0.0.12
   # Visualization
   - cartopy
-  - proj4>=4.9.0
   - matplotlib
   - nc-time-axis
   - pip
   - pip:
       - pytest-tldr
-      - git+https://github.com/bradyrx/esmtools

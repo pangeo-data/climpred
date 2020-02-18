@@ -84,7 +84,7 @@ def test_compute_perfect_model_different_dims_quite_close(
         metric='rmse',
         dim='member',
     ).mean(['init'])
-    # no more than a 10% difference
+    # no more than 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
 
 

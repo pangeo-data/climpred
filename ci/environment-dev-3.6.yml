@@ -56,3 +56,4 @@ dependencies:
   - pip
   - pip:
       - pytest-tldr
+      - esmtools

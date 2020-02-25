@@ -1,5 +1,5 @@
 ---
-title: 'Gala: A Python package for galactic dynamics'
+title: 'climpred: analysis of ensemble forecast models for climate prediction'
 tags:
   - Python
   - astronomy
@@ -7,17 +7,17 @@ tags:
   - galactic dynamics
   - milky way
 authors:
-  - name: Adrian M. Price-Whelan
+  - name: Riley X. Brady
     orcid: 0000-0003-0872-7098
-    affiliation: "1, 2" # (Multiple affiliations must be quoted)
+    affiliation: 1
   - name: Author Without ORCID
     affiliation: 2
 affiliations:
- - name: Lyman Spitzer, Jr. Fellow, Princeton University
+ - name: Department of Atmospheric and Oceanic Sciences and Institute of Arctic and Alpine Research, University of Colorado Boulder, CO, USA
    index: 1
  - name: Institution 2
    index: 2
-date: 13 August 2017
+date: 01 March 2020
 bibliography: paper.bib
 ---
 
@@ -90,5 +90,5 @@ Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMjUzNjQxNzg5XX0=
+eyJoaXN0b3J5IjpbNjQyMzIzMjE3XX0=
 -->

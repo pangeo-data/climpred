@@ -8,6 +8,9 @@ reporting `issues <https://github.com/bradyrx/climpred/issues>`__.
 
 The following sections cover some general guidelines
 regarding development in ``climpred`` for maintainers and contributors.
+
+Please also review our `Code of Conduct <code_of_conduct.html>`__.
+
 Nothing here is set in stone and can't be changed.
 Feel free to suggest improvements or changes in the workflow.
 

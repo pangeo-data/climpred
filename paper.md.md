@@ -2,10 +2,9 @@
 title: 'climpred: analysis of ensemble forecast models for climate prediction'
 tags:
   - Python
-  - astronomy
-  - dynamics
-  - galactic dynamics
-  - milky way
+  - climate science
+  - numerical modeling
+  - initialized predictions
 authors:
   - name: Riley X. Brady
     orcid: 0000-0002-2309-8245
@@ -78,5 +77,5 @@ Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTE0Mjc1OTA3Ml19
+eyJoaXN0b3J5IjpbMTM4Njg4NjE2NF19
 -->

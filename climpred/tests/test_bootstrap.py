@@ -69,27 +69,42 @@ def test_bootstrap_PM_no_lazy_results(
 @pytest.mark.parametrize('chunk', [True, False])
 def test_bootstrap_hindcast_lazy(
     hind_da_initialized_1d,
-    hind_da_uninitialized_1d,
+    hist_da_uninitialized_1d,
     observations_da_1d,
     chunk,
     comparison,
 ):
     if chunk:
         hind_da_initialized_1d = hind_da_initialized_1d.chunk({'lead': 2}).persist()
-        hind_da_uninitialized_1d = hind_da_uninitialized_1d.chunk(
+        hist_da_uninitialized_1d = hist_da_uninitialized_1d.chunk(
             {'time': -1}
         ).persist()
         observations_da_1d = observations_da_1d.chunk({'time': -1}).persist()
     else:
         hind_da_initialized_1d = hind_da_initialized_1d.compute()
-        hind_da_uninitialized_1d = hind_da_uninitialized_1d.compute()
+        hist_da_uninitialized_1d = hist_da_uninitialized_1d.compute()
         observations_da_1d = observations_da_1d.compute()
     s = bootstrap_hindcast(
         hind_da_initialized_1d,
-        hind_da_uninitialized_1d,
+        hist_da_uninitialized_1d,
         observations_da_1d,
         bootstrap=BOOTSTRAP,
         comparison=comparison,
         metric='mse',
     )
     assert dask.is_dask_collection(s) == chunk
+
+
+@pytest.mark.parametrize('resample_dim', ['member', 'init'])
+def test_bootstrap_hindcast_resample_dim(
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim
+):
+    bootstrap_hindcast(
+        hind_da_initialized_1d,
+        hist_da_uninitialized_1d,
+        observations_da_1d,
+        bootstrap=BOOTSTRAP,
+        comparison='e2o',
+        metric='mse',
+        resample_dim=resample_dim,
+    )

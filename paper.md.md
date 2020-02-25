@@ -22,22 +22,21 @@ bibliography: paper.bib
 ---
 
 # Summary
+<!---
+Updated version of the "scope" section of the documentation.
+-->
 
-[comment]: <> ()
+# Datetime/Verification
 
+<!---
+Discussion of datetime alignment, challenge of doing this in the field.
+-->
 
+# Significance Testing
 
-# Mathematics
-
-Single dollars ($) are required for inline mathematics e.g. $f(x) = e^{\pi/x}$
-
-Double dollars make self-standing equations:
-
-$$\Theta(x) = \left\{\begin{array}{l}
-0\textrm{ if } x < 0\cr
-1\textrm{ else}
-\end{array}\right.$$
-
+<!---
+metric significance vs. bootstrapping
+-->
 
 # Citations
 
@@ -64,5 +63,5 @@ Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbLTg4NTQ4MTk0M119
+eyJoaXN0b3J5IjpbMTQ0MjkzNjU3MF19
 -->

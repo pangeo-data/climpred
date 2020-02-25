@@ -8,14 +8,14 @@ tags:
   - milky way
 authors:
   - name: Riley X. Brady
-    orcid: 0000-0003-0872-7098
+    orcid: 0000-0002-2309-8245
     affiliation: 1
-  - name: Author Without ORCID
+  - name: Aaron Spring
     affiliation: 2
 affiliations:
  - name: Department of Atmospheric and Oceanic Sciences and Institute of Arctic and Alpine Research, University of Colorado Boulder, CO, USA
    index: 1
- - name: Institution 2
+ - name: Max Planck Institute for Meteorology
    index: 2
 date: 01 March 2020
 bibliography: paper.bib
@@ -90,5 +90,5 @@ Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbNjQyMzIzMjE3XX0=
+eyJoaXN0b3J5IjpbLTEzNTc2NzM4ODddfQ==
 -->

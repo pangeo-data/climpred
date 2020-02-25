@@ -38,6 +38,21 @@ Discussion of datetime alignment, challenge of doing this in the field.
 metric significance vs. bootstrapping
 -->
 
+# Perfect Model and Hindcast
+
+<!---
+We support both of these formats.
+-->
+
+# Additional Functionality
+
+<!---
+* CMIP6/intake
+* dask/pangeo
+* metric/comparisons
+* modular
+-->
+
 # Citations
 
 Citations to entries in paper.bib should be in
@@ -63,5 +78,5 @@ Oh, and support from Kathryn Johnston during the genesis of this project.
 
 # References
 <!--stackedit_data:
-eyJoaXN0b3J5IjpbMTQ0MjkzNjU3MF19
+eyJoaXN0b3J5IjpbMTE0Mjc1OTA3Ml19
 -->

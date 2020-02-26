@@ -110,13 +110,13 @@ def test_bootstrap_pm_dim(PM_da_initialized_1d, PM_da_control_1d):
 
 
 def test_bootstrap_hindcast_dim(
-    hind_da_initialized_1d, hind_da_uninitialized_1d, observations_da_1d
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
 ):
     """Test whether bootstrap_hindcast calcs skill over member dim and
     returns init dim."""
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
-        hind_da_uninitialized_1d,
+        hist_da_uninitialized_1d,
         observations_da_1d,
         metric='rmse',
         dim='member',

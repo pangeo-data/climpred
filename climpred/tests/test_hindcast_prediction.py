@@ -101,13 +101,13 @@ def test_persistence_lead0_lead1(
     assert (res1.SST.values == res2.SST.values).all()
 
 
-def test_uninitialized(hind_da_uninitialized_1d, reconstruction_da_1d):
+def test_uninitialized(hist_da_uninitialized_1d, reconstruction_da_1d):
     """
     Checks that compute uninitialized works without breaking.
     """
     res = (
         compute_uninitialized(
-            hind_da_uninitialized_1d,
+            hist_da_uninitialized_1d,
             reconstruction_da_1d,
             metric='rmse',
             comparison='e2o',
@@ -119,14 +119,14 @@ def test_uninitialized(hind_da_uninitialized_1d, reconstruction_da_1d):
 
 
 def test_bootstrap_hindcast_da1d_not_nan(
-    hind_da_initialized_1d, hind_da_uninitialized_1d, reconstruction_da_1d
+    hind_da_initialized_1d, hist_da_uninitialized_1d, reconstruction_da_1d
 ):
     """
     Checks that there are no NaNs on bootstrap hindcast of 1D da.
     """
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
-        hind_da_uninitialized_1d,
+        hist_da_uninitialized_1d,
         reconstruction_da_1d,
         metric='rmse',
         comparison='e2o',
@@ -226,7 +226,7 @@ def test_compute_hindcast_CESM_3D_keep_coords(
 
 
 def test_bootstrap_hindcast_keeps_lead_units(
-    hind_da_initialized_1d, hind_da_uninitialized_1d, observations_da_1d
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
 ):
     """Test that lead units is kept in compute."""
     sig = 95
@@ -234,7 +234,7 @@ def test_bootstrap_hindcast_keeps_lead_units(
     hind_da_initialized_1d['lead'].attrs['units'] = units
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
-        hind_da_uninitialized_1d,
+        hist_da_uninitialized_1d,
         observations_da_1d,
         metric='mse',
         bootstrap=2,

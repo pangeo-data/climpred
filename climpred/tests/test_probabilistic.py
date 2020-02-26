@@ -130,7 +130,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
     hind_da_initialized_1d,
-    hind_da_uninitialized_1d,
+    hist_da_uninitialized_1d,
     observations_da_1d,
     metric,
     comparison,
@@ -154,7 +154,7 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
 
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
-        hind_da_uninitialized_1d,
+        hist_da_uninitialized_1d,
         observations_da_1d,
         comparison=comparison,
         metric=metric,

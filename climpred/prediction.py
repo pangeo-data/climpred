@@ -132,7 +132,7 @@ def compute_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
-    max_dof=False,
+    common='inits',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -156,13 +156,15 @@ def compute_hindcast(
                 * m2o : each member to the verification data
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
-        max_dof (bool):
-            If True, maximize the degrees of freedom by slicing ``hind`` and
+        common (str): which inits or verification times should be aligned?
+            - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
-
-            If False (default), then slice to a common time frame prior to computing
+            - inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+            - verif: slice to a common/consistent verification time frame prior to
+            computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of initializations.
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -220,13 +222,13 @@ def compute_hindcast(
         verif = verif.chunk({'time': -1})
 
     # take only inits for which we have verification data at all leads
-    if not max_dof:
+    if common == 'inits':
         forecast, verif = reduce_time_series(forecast, verif, nlags)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
-        if max_dof:
+        if common == 'max_dof':
             forecast, verif = reduce_time_series(forecast, verif, i)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
@@ -282,7 +284,7 @@ def compute_hindcast(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind, verif, metric='pearson_r', max_dof=False, **metric_kwargs
+    hind, verif, metric='pearson_r', common='inits', **metric_kwargs
 ):
     """Computes the skill of a persistence forecast from a simulation.
 
@@ -291,13 +293,15 @@ def compute_persistence(
         verif (xarray object): Verification data.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
-        max_dof (bool):
-            If True, maximize the degrees of freedom by slicing ``hind`` and ``verif``
-            to a common time frame at each lead.
-
-            If False (default), then slice to a common time frame prior to computing
+        common (str): which inits or verification times should be aligned?
+            - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+            ``verif`` to a common time frame at each lead.
+            - inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+            - verif: slice to a common/consistent verification time frame prior to
+            computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of initializations.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -310,6 +314,8 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
+    if common is None:
+        common = 'max_dof'
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     verif = convert_time_index(verif, 'time', 'verif[time]')
@@ -339,7 +345,7 @@ def compute_persistence(
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if not max_dof:
+    if common != 'max_dof':
         # slices down to inits in common with hindcast, plus gives enough room
         # for maximum lead time forecast.
         a, _ = reduce_time_series(hind, verif, nlags)
@@ -347,7 +353,7 @@ def compute_persistence(
 
     plag = []
     for lag in hind.lead.values:
-        if max_dof:
+        if common == 'max_dof':
             # slices down to inits in common with hindcast, but only gives enough
             # room for lead from current forecast
             a, _ = reduce_time_series(hind, verif, lag)

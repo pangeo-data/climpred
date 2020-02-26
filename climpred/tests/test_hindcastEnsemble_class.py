@@ -85,7 +85,7 @@ def test_compute_metric(
     # compute over single observation
     hindcast.compute_metric('reconstruction')
     # test all keywords
-    hindcast.compute_metric(max_dof=True, metric='rmse', comparison='m2o')
+    hindcast.compute_metric(common='max_dof', metric='rmse', comparison='m2o')
 
 
 def test_compute_metric_single(hind_ds_initialized_1d, reconstruction_ds_1d):
@@ -116,7 +116,7 @@ def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d
     hindcast.verify()  # compute over all observations
     hindcast.verify('reconstruction')  # compute over single observation
     # test all keywords
-    hindcast.verify(max_dof=True, metric='rmse', comparison='m2o')
+    hindcast.verify(common='max_dof', metric='rmse', comparison='m2o')
 
 
 def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):

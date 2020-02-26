@@ -12,7 +12,7 @@ def test_eff_sample_size_smaller_than_n_hind_da_initialized_1d(
     of the data."""
     N = hind_da_initialized_1d.mean('member').count('init')
     eff_N = compute_hindcast(
-        hind_da_initialized_1d, reconstruction_da_1d, metric='eff_n', max_dof=True,
+        hind_da_initialized_1d, reconstruction_da_1d, metric='eff_n', common='max_dof',
     )
     assert (eff_N <= N).all()
 
@@ -45,14 +45,14 @@ def test_eff_pearson_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='pearson_r_p_value',
-        max_dof=True,
+        common='max_dof',
         comparison=comparison,
     )
     eff_p = compute_hindcast(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='pearson_r_eff_p_value',
-        max_dof=True,
+        common='max_dof',
         comparison=comparison,
     )
     assert (normal_p <= eff_p).all()
@@ -89,14 +89,14 @@ def test_eff_spearman_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='spearman_r_p_value',
-        max_dof=True,
+        common='max_dof',
         comparison=comparison,
     )
     eff_p = compute_hindcast(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='spearman_r_eff_p_value',
-        max_dof=True,
+        common='max_dof',
         comparison=comparison,
     )
     assert (normal_p <= eff_p).all()

@@ -24,24 +24,25 @@ from .utils import (
 )
 
 
-def _resample(hind, shuffle_dim, to_be_shuffled):
-    """Resample with replacement in dimension `shuffle_dim` from values of
-    `to_be_shuffled`
+def _resample(hind, resample_dim, to_be_resampled):
+    """Resample with replacement in dimension `resample_dim` from values of
+    `to_be_resampled`
 
     Args:
-        hind (xr.object): input xr.object to be shuffled.
-        shuffle_dim (str): dimension to shuffle along.
-        to_be_shuffled (list, xr.DataArray.values, np.ndarray): values to shuffle from.
+        hind (xr.object): input xr.object to be resampled.
+        resample_dim (str): dimension to resample along.
+        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to resample
+            from.
 
     Returns:
-        xr.object: shuffled along `shuffle_dim`.
+        xr.object: resampled along `resample_dim`.
 
     """
-    smp = np.random.choice(to_be_shuffled, len(to_be_shuffled))
-    smp_hind = hind.sel({shuffle_dim: smp})
+    smp = np.random.choice(to_be_resampled, len(to_be_resampled))
+    smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
-    if shuffle_dim != 'init':
-        smp_hind[shuffle_dim] = np.arange(1, 1 + smp_hind[shuffle_dim].size)
+    if resample_dim != 'init':
+        smp_hind[resample_dim] = hind[resample_dim]
     return smp_hind
 
 
@@ -301,11 +302,13 @@ def bootstrap_compute(
     metric='pearson_r',
     comparison='m2e',
     dim='init',
+    resample_dim='member',
     sig=95,
     bootstrap=500,
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
+    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement.
@@ -316,7 +319,12 @@ def bootstrap_compute(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
-        dim (str or list): dimension to apply metric over. default: 'init'
+        dim (str or list): dimension(s) to apply metric over. default: 'init'.
+        resample_dim (str): dimension to resample from. default: 'member'::
+
+            - 'member': select a different set of members from hind
+            - 'init': select a different set of initializations from hind
+
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -332,32 +340,28 @@ def bootstrap_compute(
                         ensemble. Choose from:
                         [:py:func:`bootstrap_uninitialized_ensemble`,
                          :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
+        reference_compute (func): function to compute a reference forecast skill with.
+                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results
-            * init_ci (xr.Dataset): confidence levels of init_skill
-            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
-                                               that the difference of
-                                               skill between the
-                                               initialized and uninitialized
-                                               simulations is smaller or
-                                               equal to zero based on
-                                               bootstrapping with
-                                               replacement.
-                                               Defaults to None.
-            * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p value of the hypothesis
-                                             that the difference of
-                                             skill between the
-                                             initialized and persistence
-                                             simulations is smaller or
-                                             equal to zero based on
-                                             bootstrapping with
-                                             replacement.
-                                             Defaults to None.
+        results: (xr.Dataset): bootstrapped results for the three different kinds of
+                               predictions:
+
+            - `init` for the initialized hindcast `hind` and describes skill due to
+             initialization and external forcing
+            - `uninit` for the uninitialized historical `hist` and approximates skill
+             from external forcing
+            - `pers` for the reference forecast computed by `reference_compute`, which
+             defaults to `compute_persistence`
+
+        the different results:
+            - `skill`: skill values
+            - `p`: p value
+            - `low_ci` and `high_ci`: high and low ends of confidence intervals based
+             on significance threshold `sig`
+
 
     Reference:
         * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
@@ -394,22 +398,11 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    # which dim should be resampled: member or init
-    if dim == 'member' and 'member' in hind.dims:
-        members = hind.member.values
-        to_be_shuffled = members
-        shuffle_dim = 'member'
-    elif 'init' in dim and 'init' in hind.dims:
-        # also allows ['init','member']
-        inits = hind.init.values
-        to_be_shuffled = inits
-        shuffle_dim = 'init'
-    else:
-        raise ValueError('Shuffle either `member` or `init`; not', dim)
+    to_be_resampled = hind[resample_dim].values
 
     for i in range(bootstrap):
         # resample with replacement
-        smp_hind = _resample(hind, shuffle_dim, to_be_shuffled)
+        smp_hind = _resample(hind, resample_dim, to_be_resampled)
         # compute init skill
         init_skill = compute(
             smp_hind,
@@ -422,11 +415,11 @@ def bootstrap_compute(
         )
         # reset inits when probabilistic, otherwise tests fail
         if (
-            shuffle_dim == 'init'
+            resample_dim == 'init'
             and metric.probabilistic
             and 'init' in init_skill.coords
         ):
-            init_skill['init'] = inits
+            init_skill['init'] = hind.init.values
         init.append(init_skill)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use verif = control
@@ -448,7 +441,7 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                compute_persistence(smp_hind, verif, metric=metric, **metric_kwargs)
+                reference_compute(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -493,7 +486,7 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = compute_persistence(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = reference_compute(hind, verif, metric=metric, **metric_kwargs)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -527,8 +520,8 @@ def bootstrap_compute(
     metadata_dict = {
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
         'bootstrap_iterations': bootstrap,
-        'p': 'probability that initialized forecast performs \
-                          better than verification data',
+        'p': 'probability that uninitialized ensemble performs better than initialized',
+        'reference_compute': reference_compute.__name__,
     }
     metadata_dict.update(metric_kwargs)
     results = assign_attrs(
@@ -554,9 +547,11 @@ def bootstrap_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
+    resample_dim='member',
     sig=95,
     bootstrap=500,
     pers_sig=None,
+    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -568,39 +563,39 @@ def bootstrap_hindcast(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'e2o'.
-        dim (str): dimension to apply metric over. default: 'init'
+        dim (str): dimension to apply metric over. default: 'init'.
+        resample_dim (str or list): dimension to resample from. default: 'member'.
+
+            - 'member': select a different set of members from hind
+            - 'init': select a different set of initializations from hind
+
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
                         Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
+        reference_compute (func): function to compute a reference forecast skill with.
+                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results
-            * init_ci (xr.Dataset): confidence levels of init_skill
-            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
-                                               that the difference of
-                                               skill between the
-                                               initialized and uninitialized
-                                               simulations is smaller or
-                                               equal to zero based on
-                                               bootstrapping with
-                                               replacement.
-                                               Defaults to None.
-            * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p value of the hypothesis
-                                             that the difference of
-                                             skill between the
-                                             initialized and persistence
-                                             simulations is smaller or
-                                             equal to zero based on
-                                             bootstrapping with
-                                             replacement.
-                                             Defaults to None.
+        results: (xr.Dataset): bootstrapped results for the three different kinds of
+                               predictions:
+
+            - `init` for the initialized hindcast `hind` and describes skill due to
+             initialization and external forcing
+            - `uninit` for the uninitialized historical `hist` and approximates skill
+             from external forcing
+            - `pers` for the reference forecast computed by `reference_compute`, which
+             defaults to `compute_persistence`
+
+        the different results:
+            - `skill`: skill values
+            - `p`: p value
+            - `low_ci` and `high_ci`: high and low ends of confidence intervals based
+             on significance threshold `sig`
 
     Reference:
         * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
@@ -612,6 +607,18 @@ def bootstrap_hindcast(
     See also:
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_hindcast
+
+    Example:
+        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')['SST']
+        >>> hist = climpred.tutorial.load_dataset('CESM-LE')['SST']
+        >>> obs = load_dataset('ERSST')['SST']
+        >>> bootstrapped_skill = climpred.bootstrap.bootstrap_hindcast(hind, hist, obs)
+        >>> bootstrapped_skill.coords
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
+          * kind     (kind) object 'init' 'pers' 'uninit'
+          * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
+
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
@@ -628,11 +635,13 @@ def bootstrap_hindcast(
         metric=metric,
         comparison=comparison,
         dim=dim,
+        resample_dim=resample_dim,
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
+        reference_compute=reference_compute,
         **metric_kwargs,
     )
 
@@ -643,9 +652,11 @@ def bootstrap_perfect_model(
     metric='pearson_r',
     comparison='m2e',
     dim=None,
+    resample_dim='member',
     sig=95,
     bootstrap=500,
     pers_sig=None,
+    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -657,39 +668,39 @@ def bootstrap_perfect_model(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
-        dim (str): dimension to apply metric over. default: ['init', 'member']
+        dim (str): dimension to apply metric over. default: ['init', 'member'].
+        resample_dim (str or list): dimension to resample from. default: 'member'.
+
+            - 'member': select a different set of members from hind
+            - 'init': select a different set of initializations from hind
+
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
                         Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
+        reference_compute (func): function to compute a reference forecast skill with.
+                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results
-            * init_ci (xr.Dataset): confidence levels of init_skill
-            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
-                                               that the difference of
-                                               skill between the
-                                               initialized and uninitialized
-                                               simulations is smaller or
-                                               equal to zero based on
-                                               bootstrapping with
-                                               replacement.
-                                               Defaults to None.
-            * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p value of the hypothesis
-                                             that the difference of
-                                             skill between the
-                                             initialized and persistence
-                                             simulations is smaller or
-                                             equal to zero based on
-                                             bootstrapping with
-                                             replacement.
-                                             Defaults to None.
+        results: (xr.Dataset): bootstrapped results for the three different kinds of
+                               predictions:
+
+            - `init` for the initialized hindcast `hind` and describes skill due to
+             initialization and external forcing
+            - `uninit` for the uninitialized historical `hist` and approximates skill
+             from external forcing
+            - `pers` for the reference forecast computed by `reference_compute`, which
+             defaults to `compute_persistence`
+
+        the different results:
+            - `skill`: skill values
+            - `p`: p value
+            - `low_ci` and `high_ci`: high and low ends of confidence intervals based
+             on significance threshold `sig`
 
     Reference:
         * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
@@ -701,6 +712,16 @@ def bootstrap_perfect_model(
     See also:
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_perfect_model
+
+    Example:
+        >>> init = climpred.tutorial.load_dataset('MPI-PM-DP-1D')
+        >>> control = climpred.tutorial.load_dataset('MPI-control-1D')
+        >>> bootstrapped_s = climpred.bootstrap.bootstrap_perfect_model(init, control)
+        >>> bootstrapped_s.coords
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
+          * kind     (kind) object 'init' 'pers' 'uninit'
+          * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
     """
 
     if dim is None:
@@ -712,10 +733,12 @@ def bootstrap_perfect_model(
         metric=metric,
         comparison=comparison,
         dim=dim,
+        resample_dim=resample_dim,
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
+        reference_compute=reference_compute,
         **metric_kwargs,
     )

@@ -57,17 +57,17 @@ def test_add_observations_da_1d(hind_ds_initialized_1d, observations_da_1d):
     assert hindcast.get_observations()
 
 
-def test_add_uninitialized(hind_ds_initialized_1d, hind_ds_uninitialized_1d):
+def test_add_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
     """Test to see if an uninitialized ensemble can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_uninitialized(hind_ds_uninitialized_1d)
+    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     assert hindcast.get_uninitialized()
 
 
-def test_add_hind_da_uninitialized_1d(hind_ds_initialized_1d, hind_da_uninitialized_1d):
+def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitialized_1d):
     """Test to see if da uninitialized ensemble can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_uninitialized(hind_da_uninitialized_1d)
+    hindcast = hindcast.add_uninitialized(hist_da_uninitialized_1d)
     assert hindcast.get_uninitialized()
 
 
@@ -129,14 +129,14 @@ def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
 
 def test_compute_uninitialized(
     hind_ds_initialized_1d,
-    hind_ds_uninitialized_1d,
+    hist_ds_uninitialized_1d,
     reconstruction_ds_1d,
     observations_ds_1d,
 ):
     """Test to see if compute_uninitialized can be frun from the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast = hindcast.add_uninitialized(hind_ds_uninitialized_1d)
+    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     # single observations, no declaration of name.
     hindcast.compute_uninitialized()
     hindcast = hindcast.add_observations(observations_ds_1d, 'observations')
@@ -218,10 +218,10 @@ def test_get_initialized(hind_ds_initialized_1d):
     assert init == hindcast._datasets['initialized']
 
 
-def test_get_uninitialized(hind_ds_initialized_1d, hind_ds_uninitialized_1d):
+def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
     """Test whether get_uninitialized method works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_uninitialized(hind_ds_uninitialized_1d)
+    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     uninit = hindcast.get_uninitialized()
     assert uninit == hindcast._datasets['uninitialized']
 
@@ -260,7 +260,7 @@ def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
 
 
 def test_inplace(
-    hind_ds_initialized_1d, reconstruction_ds_1d, hind_ds_uninitialized_1d
+    hind_ds_initialized_1d, reconstruction_ds_1d, hist_ds_uninitialized_1d
 ):
     """Tests that inplace operations do not work."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
@@ -269,8 +269,8 @@ def test_inplace(
     with_obs = hindcast.add_observations(reconstruction_ds_1d, 'FOSI')
     assert hindcast != with_obs
     # Adding an uninitialized ensemble.
-    hindcast.add_uninitialized(hind_ds_uninitialized_1d)
-    with_uninit = hindcast.add_uninitialized(hind_ds_uninitialized_1d)
+    hindcast.add_uninitialized(hist_ds_uninitialized_1d)
+    with_uninit = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     assert hindcast != with_uninit
     # Applying arbitrary func.
     hindcast.sum('init')

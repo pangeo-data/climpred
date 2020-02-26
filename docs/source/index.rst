@@ -77,9 +77,10 @@ repository and running ``pip install . --upgrade`` in the main directory
 * :doc:`setting-up-data`
 * :doc:`prediction-ensemble-object`
 * :doc:`comparisons`
+* :doc:`significance`
 * :doc:`metrics`
 * :doc:`terminology`
-* :doc:`baselines`
+* :doc:`reference_forecast`
 
 .. toctree::
     :maxdepth: 2
@@ -90,8 +91,9 @@ repository and running ``pip install . --upgrade`` in the main directory
     prediction-ensemble-object.ipynb
     metrics
     comparisons
+    significance
     terminology
-    baselines
+    reference_forecast
 
 **Help & Reference**
 

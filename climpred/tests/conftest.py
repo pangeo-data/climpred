@@ -147,7 +147,7 @@ def hind_da_initialized_3d(hind_ds_initialized_3d):
 
 
 @pytest.fixture
-def hind_ds_uninitialized_1d():
+def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
     da = load_dataset('CESM-LE')
     # add member coordinate
@@ -156,9 +156,9 @@ def hind_ds_uninitialized_1d():
 
 
 @pytest.fixture
-def hind_da_uninitialized_1d(hind_ds_uninitialized_1d):
+def hist_da_uninitialized_1d(hist_ds_uninitialized_1d):
     """CESM-LE uninitialized historical timeseries members mean removed xr.DataArray."""
-    return hind_ds_uninitialized_1d['SST']
+    return hist_ds_uninitialized_1d['SST']
 
 
 @pytest.fixture

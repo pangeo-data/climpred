@@ -22,6 +22,7 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
+- Added our `Code of Conduct <code_of_conduct.html>`__ (:pr:`285`) `Aaron Spring`_.
 - Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.

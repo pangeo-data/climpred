@@ -18,8 +18,8 @@ All of these questions deal with statistical significance. See below on how to u
 to address these questions. Please also have a look at the `significance testing
 example <examples/decadal/significance.html>`__.
 
-Metric-based p-value
-####################
+p value for temporal correlations
+#################################
 
 For the correlation `metrics <metrics.html>`__, like
 :py:func:`~climpred.metrics._pearson_r` and :py:func:`~climpred.metrics._spearman_r`,
@@ -27,7 +27,8 @@ For the correlation `metrics <metrics.html>`__, like
 :py:func:`~climpred.metrics._pearson_r_p_value`,
 that this correlation is significantly different from zero.
 :py:func:`~climpred.metrics._pearson_r_eff_p_value` also incorporates the reduced degrees
-of freedom due to temporal autocorrelation.
+of freedom due to temporal autocorrelation. See
+`example <examples/decadal/significance.html#p-value-for-temporal-correlations>`__.
 
 Bootstrapping with replacement
 ##############################
@@ -53,7 +54,8 @@ This behavior is incorporated into ``climpred`` by the base function
 :py:func:`~climpred.bootstrap.bootstrap_compute`, which is wrapped by
 :py:func:`~climpred.bootstrap.bootstrap_hindcast` and
 :py:func:`~climpred.bootstrap.bootstrap_perfect_model` for the respective prediction
-simulation type.
+simulation type. See
+`example <examples/decadal/significance.html#Bootstrapping-with-replacement>`__
 
 
 Field significance
@@ -61,7 +63,7 @@ Field significance
 
 Please use :py:func:`esmtools.testing.multipletests` to control the false discovery
 rate (FDR) in geospatial data from the above obtained p-values [Wilks2016]_. See the
-`FDR example <examples/decadal/significance.html#field-significance>`__.
+`FDR example <examples/decadal/significance.html#Field-significance>`__.
 
 
 References

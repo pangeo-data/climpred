@@ -15,14 +15,16 @@ system is skillful. Some questions that significance testing can answer are:
       spatial autocorrelation?
 
 All of these questions deal with statistical significance. See below on how to use ``climpred``
-to address these questions. Please also have a look at the `significance testing example <examples/decadal/significance.html>`__.
+to address these questions. Please also have a look at the `significance testing
+example <examples/decadal/significance.html>`__.
 
 Metric-based p-value
 ####################
 
 For the correlation `metrics <metrics.html>`__, like
 :py:func:`~climpred.metrics._pearson_r` and :py:func:`~climpred.metrics._spearman_r`,
-``climpred`` also hosts the associated p-value, like :py:func:`~climpred.metrics._pearson_r_p_value`,
+``climpred`` also hosts the associated p-value, like
+:py:func:`~climpred.metrics._pearson_r_p_value`,
 that this correlation is significantly different from zero.
 :py:func:`~climpred.metrics._pearson_r_eff_p_value` also incorporates the reduced degrees
 of freedom due to temporal autocorrelation.
@@ -58,7 +60,8 @@ Field significance
 ##################
 
 Please use :py:func:`esmtools.testing.multipletests` to control the false discovery
-rate (FDR) in geospatial data from the above obtained p-values [Wilks2016]_. See the `FDR example <examples/decadal/significance.html#field-significance>`__.
+rate (FDR) in geospatial data from the above obtained p-values [Wilks2016]_. See the
+`FDR example <examples/decadal/significance.html#field-significance>`__.
 
 
 References

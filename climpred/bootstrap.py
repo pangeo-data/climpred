@@ -147,7 +147,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
 
     uninit_hind = []
     for init in hind.init:
-        random_members = dask.array.random.choice(hist.member, hind.member.size)
+        random_members = np.random.choice(hist.member, hind.member.size)
         # take random uninitialized members from hist at init forcing
         # (Goddard allows 5 year forcing range here)
         # TODO: implement these 5 years

@@ -99,6 +99,7 @@ def test_bootstrap_hindcast_lazy(
 def test_bootstrap_hindcast_resample_dim(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim
 ):
+    print(hind_da_initialized_1d)
     bootstrap_hindcast(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,

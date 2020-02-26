@@ -24,21 +24,18 @@ from .utils import (
 )
 
 
-def _resample(hind, resample_dim, to_be_resampled):
-    """Resample with replacement in dimension `resample_dim` from values of
-    `to_be_resampled`
+def _resample(hind, resample_dim):
+    """Resample with replacement in dimension `resample_dim`.
 
     Args:
         hind (xr.object): input xr.object to be resampled.
         resample_dim (str): dimension to resample along.
-        to_be_resampled (list, xr.DataArray.coords, np.ndarray): values to resample
-            from.
 
     Returns:
         xr.object: resampled along `resample_dim`.
 
     """
-    smp = dask.array.random.choice(to_be_resampled, len(to_be_resampled))
+    smp = np.random.choice(hind[resample_dim], hind[resample_dim].size)
     smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
     if resample_dim != 'init':
@@ -204,12 +201,14 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
         return new
 
     def create_pseudo_members(control):
-        startlist = dask.array.random.randint(c_start, c_end - length - 1, nmember)
+        startlist = np.random.randint(
+            c_start, c_end - length - 1, nmember
+        )  # .compute()  # fails without compute
         return xr.concat(
-            (isel_years(control, start, length) for start in startlist), 'member',
+            [isel_years(control, start, length) for start in startlist], 'member',
         )
 
-    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
+    uninit = xr.concat([create_pseudo_members(control) for _ in range(nens)], 'init')
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -253,9 +252,8 @@ def _bootstrap_func(
         psig = sig / 100
 
     bootstraped_results = []
-    resample_dim_values = ds[resample_dim]
     for _ in range(bootstrap):
-        smp_ds = _resample(ds, resample_dim, resample_dim_values)
+        smp_ds = _resample(ds, resample_dim)
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
     sig_level = xr.concat(bootstraped_results, 'bootstrap')
     # TODO: reimplement xr.quantile once fast
@@ -396,11 +394,9 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    to_be_resampled = hind[resample_dim]
-
     for i in range(bootstrap):
         # resample with replacement
-        smp_hind = _resample(hind, resample_dim, to_be_resampled)
+        smp_hind = _resample(hind, resample_dim)
         # compute init skill
         init_skill = compute(
             smp_hind,

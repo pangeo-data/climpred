@@ -107,6 +107,7 @@ def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control
 def hind_ds_initialized_1d():
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
     da = load_dataset('CESM-DP-SST')
+    da['init'] = da.init.astype('int32')
     return da - da.mean('init')
 
 

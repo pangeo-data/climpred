@@ -122,6 +122,7 @@ def test_seasonal_resolution_perfect_model(monthly_initialized, monthly_obs):
 def test_yearly_resolution_hindcast(monthly_initialized, monthly_obs):
     """Tests that yearly resolution hindcast predictions work."""
     yearly_hindcast = monthly_initialized.resample(init='YS').mean()
+    print(yearly_hindcast.init.values)
     yearly_obs = monthly_obs.resample(time='YS').mean()
     yearly_hindcast.lead.attrs['units'] = 'years'
     assert compute_hindcast(yearly_hindcast, yearly_obs).all()

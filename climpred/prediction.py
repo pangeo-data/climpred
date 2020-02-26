@@ -236,10 +236,11 @@ def compute_hindcast(
         # Take real time verification data using real time forecast dates.
         b = verif.sel(time=a.time.values)
 
-        logging.info(
-            f'at lead={str(i).zfill(2)}: dim={dim}: {a.time.min().values}-'
-            f'{a.time.max().values}'
-        )
+        if a.time.size > 0:
+            logging.info(
+                f'at lead={str(i).zfill(2)}: dim={dim}: {a.time.min().values}-'
+                f'{a.time.max().values}'
+            )
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:

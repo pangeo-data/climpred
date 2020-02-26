@@ -29,19 +29,20 @@ def _resample(hind, resample_dim, to_be_resampled):
     `to_be_resampled`
 
     Args:
-        hind (xr.object): input xr.object to be shuffled.
-        resample_dim (str): dimension to shuffle along.
-        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to shuffle from.
+        hind (xr.object): input xr.object to be resampled.
+        resample_dim (str): dimension to resample along.
+        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to resample
+            from.
 
     Returns:
-        xr.object: shuffled along `resample_dim`.
+        xr.object: resampled along `resample_dim`.
 
     """
     smp = np.random.choice(to_be_resampled, len(to_be_resampled))
     smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
     if resample_dim != 'init':
-        smp_hind[resample_dim] = np.arange(1, 1 + smp_hind[resample_dim].size)
+        smp_hind[resample_dim] = hind[resample_dim]
     return smp_hind
 
 
@@ -318,8 +319,12 @@ def bootstrap_compute(
         hist (xr.Dataset): historical/uninitialized simulation.
         metric (str): `metric`. Defaults to 'pearson_r'.
         comparison (str): `comparison`. Defaults to 'm2e'.
-        dim (str or list): dimension to apply metric over. default: 'init'.
-        resample_dim (str or list): dimension to resample from. default: 'member'.
+        dim (str or list): dimension(s) to apply metric over. default: 'init'.
+        resample_dim (str): dimension to resample from. default: 'member'::
+
+            - 'member': select a different set of members from hind
+            - 'init': select a different set of initializations from hind
+
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -341,28 +346,22 @@ def bootstrap_compute(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results
-            * init_ci (xr.Dataset): confidence levels of init_skill
-            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
-                                               that the difference of
-                                               skill between the
-                                               initialized and uninitialized
-                                               simulations is smaller or
-                                               equal to zero based on
-                                               bootstrapping with
-                                               replacement.
-                                               Defaults to None.
-            * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p value of the hypothesis
-                                             that the difference of
-                                             skill between the
-                                             initialized and persistence
-                                             simulations is smaller or
-                                             equal to zero based on
-                                             bootstrapping with
-                                             replacement.
-                                             Defaults to None.
+        results: (xr.Dataset): bootstrapped results for the three different kinds of
+                               predictions:
+
+            - `init` for the initialized hindcast `hind` and describes skill due to
+             initialization and external forcing
+            - `uninit` for the uninitialized historical `hist` and approximates skill
+             from external forcing
+            - `pers` for the reference forecast computed by `baseline_compute`, which
+             defaults to `compute_persistence`
+
+        the different results:
+            - `skill`: skill values
+            - `p`: p value
+            - `low_ci` and `high_ci`: high and low ends of confidence intervals based
+             on significance threshold `sig`
+
 
     Reference:
         * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
@@ -521,7 +520,7 @@ def bootstrap_compute(
     metadata_dict = {
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
         'bootstrap_iterations': bootstrap,
-        'p': 'probability that uninitialized ensemble performs better initialized',
+        'p': 'probability that uninitialized ensemble performs better than initialized',
         'baseline_compute': baseline_compute.__name__,
     }
     metadata_dict.update(metric_kwargs)
@@ -566,6 +565,10 @@ def bootstrap_hindcast(
         comparison (str): `comparison`. Defaults to 'e2o'.
         dim (str): dimension to apply metric over. default: 'init'.
         resample_dim (str or list): dimension to resample from. default: 'member'.
+
+            - 'member': select a different set of members from hind
+            - 'init': select a different set of initializations from hind
+
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -578,28 +581,21 @@ def bootstrap_hindcast(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results
-            * init_ci (xr.Dataset): confidence levels of init_skill
-            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
-                                               that the difference of
-                                               skill between the
-                                               initialized and uninitialized
-                                               simulations is smaller or
-                                               equal to zero based on
-                                               bootstrapping with
-                                               replacement.
-                                               Defaults to None.
-            * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p value of the hypothesis
-                                             that the difference of
-                                             skill between the
-                                             initialized and persistence
-                                             simulations is smaller or
-                                             equal to zero based on
-                                             bootstrapping with
-                                             replacement.
-                                             Defaults to None.
+        results: (xr.Dataset): bootstrapped results for the three different kinds of
+                               predictions:
+
+            - `init` for the initialized hindcast `hind` and describes skill due to
+             initialization and external forcing
+            - `uninit` for the uninitialized historical `hist` and approximates skill
+             from external forcing
+            - `pers` for the reference forecast computed by `baseline_compute`, which
+             defaults to `compute_persistence`
+
+        the different results:
+            - `skill`: skill values
+            - `p`: p value
+            - `low_ci` and `high_ci`: high and low ends of confidence intervals based
+             on significance threshold `sig`
 
     Reference:
         * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
@@ -674,6 +670,10 @@ def bootstrap_perfect_model(
         comparison (str): `comparison`. Defaults to 'm2e'.
         dim (str): dimension to apply metric over. default: ['init', 'member'].
         resample_dim (str or list): dimension to resample from. default: 'member'.
+
+            - 'member': select a different set of members from hind
+            - 'init': select a different set of initializations from hind
+
         sig (int): Significance level for uninitialized and
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
@@ -686,28 +686,21 @@ def bootstrap_perfect_model(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results
-            * init_ci (xr.Dataset): confidence levels of init_skill
-            * uninit_ci (xr.Dataset): confidence levels of uninit_skill
-            * p_uninit_over_init (xr.Dataset): p value of the hypothesis
-                                               that the difference of
-                                               skill between the
-                                               initialized and uninitialized
-                                               simulations is smaller or
-                                               equal to zero based on
-                                               bootstrapping with
-                                               replacement.
-                                               Defaults to None.
-            * pers_ci (xr.Dataset): confidence levels of pers_skill
-            * p_pers_over_init (xr.Dataset): p value of the hypothesis
-                                             that the difference of
-                                             skill between the
-                                             initialized and persistence
-                                             simulations is smaller or
-                                             equal to zero based on
-                                             bootstrapping with
-                                             replacement.
-                                             Defaults to None.
+        results: (xr.Dataset): bootstrapped results for the three different kinds of
+                               predictions:
+
+            - `init` for the initialized hindcast `hind` and describes skill due to
+             initialization and external forcing
+            - `uninit` for the uninitialized historical `hist` and approximates skill
+             from external forcing
+            - `pers` for the reference forecast computed by `baseline_compute`, which
+             defaults to `compute_persistence`
+
+        the different results:
+            - `skill`: skill values
+            - `p`: p value
+            - `low_ci` and `high_ci`: high and low ends of confidence intervals based
+             on significance threshold `sig`
 
     Reference:
         * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.

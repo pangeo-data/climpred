@@ -1,10 +1,10 @@
-******************
-Baseline Forecasts
-******************
+*******************
+Reference Forecasts
+*******************
 
 To quantify the quality of an initialized forecast, it is useful to judge it against some simple
-baseline forecast. ``climpred`` currently supports a persistence forecast, but future releases
-will allow computation of other baseline forecasts. Consider opening a
+reference forecast. ``climpred`` currently supports a persistence forecast, but future releases
+will allow computation of other reference forecasts. Consider opening a
 `Pull Request <contributing.html>`_ to get it implemented more quickly.
 
 **Persistence Forecast**: Whatever is observed at the time of initialization is forecasted to

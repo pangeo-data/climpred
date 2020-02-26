@@ -308,7 +308,7 @@ def bootstrap_compute(
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
-    baseline_compute=compute_persistence,
+    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement.
@@ -340,7 +340,7 @@ def bootstrap_compute(
                         ensemble. Choose from:
                         [:py:func:`bootstrap_uninitialized_ensemble`,
                          :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
-        baseline_compute (func): function to compute a baseline forecast skill with.
+        reference_compute (func): function to compute a reference forecast skill with.
                         Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -353,7 +353,7 @@ def bootstrap_compute(
              initialization and external forcing
             - `uninit` for the uninitialized historical `hist` and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `baseline_compute`, which
+            - `pers` for the reference forecast computed by `reference_compute`, which
              defaults to `compute_persistence`
 
         the different results:
@@ -441,7 +441,7 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                baseline_compute(smp_hind, verif, metric=metric, **metric_kwargs)
+                reference_compute(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
     # remove useless member = 0 coords after m2c
@@ -486,7 +486,7 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = baseline_compute(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = reference_compute(hind, verif, metric=metric, **metric_kwargs)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -521,7 +521,7 @@ def bootstrap_compute(
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
         'bootstrap_iterations': bootstrap,
         'p': 'probability that uninitialized ensemble performs better than initialized',
-        'baseline_compute': baseline_compute.__name__,
+        'reference_compute': reference_compute.__name__,
     }
     metadata_dict.update(metric_kwargs)
     results = assign_attrs(
@@ -551,7 +551,7 @@ def bootstrap_hindcast(
     sig=95,
     bootstrap=500,
     pers_sig=None,
-    baseline_compute=compute_persistence,
+    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -575,7 +575,7 @@ def bootstrap_hindcast(
                         Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        baseline_compute (func): function to compute a baseline forecast skill with.
+        reference_compute (func): function to compute a reference forecast skill with.
                         Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -588,7 +588,7 @@ def bootstrap_hindcast(
              initialization and external forcing
             - `uninit` for the uninitialized historical `hist` and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `baseline_compute`, which
+            - `pers` for the reference forecast computed by `reference_compute`, which
              defaults to `compute_persistence`
 
         the different results:
@@ -641,7 +641,7 @@ def bootstrap_hindcast(
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
-        baseline_compute=baseline_compute,
+        reference_compute=reference_compute,
         **metric_kwargs,
     )
 
@@ -656,7 +656,7 @@ def bootstrap_perfect_model(
     sig=95,
     bootstrap=500,
     pers_sig=None,
-    baseline_compute=compute_persistence,
+    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -680,7 +680,7 @@ def bootstrap_perfect_model(
                         Defaults to sig.
         bootstrap (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        baseline_compute (func): function to compute a baseline forecast skill with.
+        reference_compute (func): function to compute a reference forecast skill with.
                         Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -693,7 +693,7 @@ def bootstrap_perfect_model(
              initialization and external forcing
             - `uninit` for the uninitialized historical `hist` and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `baseline_compute`, which
+            - `pers` for the reference forecast computed by `reference_compute`, which
              defaults to `compute_persistence`
 
         the different results:
@@ -739,6 +739,6 @@ def bootstrap_perfect_model(
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
-        baseline_compute=baseline_compute,
+        reference_compute=reference_compute,
         **metric_kwargs,
     )

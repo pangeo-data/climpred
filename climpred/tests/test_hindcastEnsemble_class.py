@@ -57,7 +57,7 @@ def test_add_observations_da_1d(hind_ds_initialized_1d, observations_da_1d):
     assert hindcast.get_observations()
 
 
-def test_add_ialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
+def test_add_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
     """Test to see if an uninitialized ensemble can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)

@@ -31,14 +31,14 @@ def _resample(hind, resample_dim, to_be_resampled):
     Args:
         hind (xr.object): input xr.object to be resampled.
         resample_dim (str): dimension to resample along.
-        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to resample
+        to_be_resampled (list, xr.DataArray.coords, np.ndarray): values to resample
             from.
 
     Returns:
         xr.object: resampled along `resample_dim`.
 
     """
-    smp = np.random.choice(to_be_resampled, len(to_be_resampled))
+    smp = dask.array.random.choice(to_be_resampled, len(to_be_resampled))
     smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
     if resample_dim != 'init':
@@ -149,8 +149,8 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     hind = hind.sel(init=slice(first_init, last_init))
 
     uninit_hind = []
-    for init in hind.init.values:
-        random_members = np.random.choice(hist.member.values, hind.member.size)
+    for init in hind.init:
+        random_members = dask.array.random.choice(hist.member, hind.member.size)
         # take random uninitialized members from hist at init forcing
         # (Goddard allows 5 year forcing range here)
         # TODO: implement these 5 years
@@ -161,13 +161,11 @@ def bootstrap_uninitialized_ensemble(hind, hist):
             ),
             member=random_members,
         ).rename({'time': 'lead'})
-        uninit_at_one_init_year['lead'] = np.arange(
-            1, 1 + uninit_at_one_init_year['lead'].size
-        )
-        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
+        uninit_at_one_init_year['lead'] = hind.lead
+        uninit_at_one_init_year['member'] = hind.member
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
-    uninit_hind['init'] = hind['init'].values
+    uninit_hind['init'] = hind['init']
     uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return (
         _transpose_and_rechunk_to(uninit_hind, hind)
@@ -206,7 +204,7 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
         return new
 
     def create_pseudo_members(control):
-        startlist = np.random.randint(c_start, c_end - length - 1, nmember)
+        startlist = dask.array.random.randint(c_start, c_end - length - 1, nmember)
         return xr.concat(
             (isel_years(control, start, length) for start in startlist), 'member',
         )
@@ -255,7 +253,7 @@ def _bootstrap_func(
         psig = sig / 100
 
     bootstraped_results = []
-    resample_dim_values = ds[resample_dim].values
+    resample_dim_values = ds[resample_dim]
     for _ in range(bootstrap):
         smp_ds = _resample(ds, resample_dim, resample_dim_values)
         bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
@@ -398,7 +396,7 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    to_be_resampled = hind[resample_dim].values
+    to_be_resampled = hind[resample_dim]
 
     for i in range(bootstrap):
         # resample with replacement
@@ -419,7 +417,7 @@ def bootstrap_compute(
             and metric.probabilistic
             and 'init' in init_skill.coords
         ):
-            init_skill['init'] = hind.init.values
+            init_skill['init'] = hind.init
         init.append(init_skill)
         # generate uninitialized ensemble from hist
         if hist is None:  # PM path, use verif = control

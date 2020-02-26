@@ -205,7 +205,7 @@ def compute_hindcast(
         if dim == 'init':
             # for later thinking in real time
             dim = 'time'
-    nlags = max(hind.lead.values)
+    nlags = hind.lead.max()
 
     forecast, verif = comparison.function(hind, verif, metric=metric)
 
@@ -224,7 +224,7 @@ def compute_hindcast(
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
-    for i in forecast.lead.values:
+    for i in forecast.lead:
         if max_dof:
             forecast, verif = reduce_time_series(forecast, verif, i)
         # take lead year i timeseries and convert to real time based on temporal
@@ -233,7 +233,7 @@ def compute_hindcast(
         a = forecast.sel(lead=i).drop_vars('lead')
         a['time'] = shift_cftime_index(a, 'time', n, freq)
         # Take real time verification data using real time forecast dates.
-        b = verif.sel(time=a.time.values)
+        b = verif.sel(time=a.time)
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
@@ -252,7 +252,7 @@ def compute_hindcast(
             metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
         )
     skill = xr.concat(plag, 'lead')
-    skill['lead'] = forecast.lead.values
+    skill['lead'] = forecast.lead
     # rename back to init
     if 'time' in skill.dims:  # when dim was 'member'
         skill = skill.rename({'time': 'init'})
@@ -323,13 +323,13 @@ def compute_persistence(
         )
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
-    if [0] in hind.lead.values:
+    if [0] in hind.lead:
         hind = hind.copy()
         hind['lead'] += 1
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
         # Shift backwards shift for lead zero.
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
-    nlags = max(hind.lead.values)
+    nlags = hind.lead.max()
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
     if not max_dof:
@@ -339,7 +339,7 @@ def compute_persistence(
         inits = a['time']
 
     plag = []
-    for lag in hind.lead.values:
+    for lag in hind.lead:
         if max_dof:
             # slices down to inits in common with hindcast, but only gives enough
             # room for lead from current forecast
@@ -355,7 +355,7 @@ def compute_persistence(
             metric.function(o, f, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
-    pers['lead'] = hind.lead.values
+    pers['lead'] = hind.lead
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
     pers = copy_coords_from_to(hind.drop_vars(drop_dims), pers)
@@ -410,7 +410,9 @@ def compute_uninitialized(
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
     # Find common times between two for proper comparison.
-    common_time = intersect(forecast['time'].values, verif['time'].values)
+    common_time = intersect(
+        forecast['time'].values, verif['time'].values
+    )  # requires .values
     forecast = forecast.sel(time=common_time)
     verif = verif.sel(time=common_time)
     uninit_skill = metric.function(

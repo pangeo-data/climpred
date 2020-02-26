@@ -262,6 +262,7 @@ def intersect(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.
     """
+    # TODO: make this work on xarray coords
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
 

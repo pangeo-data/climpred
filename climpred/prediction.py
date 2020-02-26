@@ -1,4 +1,5 @@
 import inspect
+import logging
 import warnings
 
 import dask
@@ -212,7 +213,7 @@ def compute_hindcast(
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
 
-    # If dask, then chunk in time.
+    # If dask, then only one chunk in time.
     if dask.is_dask_collection(forecast):
         forecast = forecast.chunk({'time': -1})
     if dask.is_dask_collection(verif):
@@ -234,6 +235,11 @@ def compute_hindcast(
         a['time'] = shift_cftime_index(a, 'time', n, freq)
         # Take real time verification data using real time forecast dates.
         b = verif.sel(time=a.time.values)
+
+        logging.info(
+            f'at lead={i}: dim={dim}: {a.time.min().dt.year.values}-'
+            f'{a.time.max().dt.year.values}'
+        )
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:

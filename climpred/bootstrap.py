@@ -35,8 +35,8 @@ def _resample(hind, resample_dim):
         xr.object: resampled along `resample_dim`.
 
     """
-    smp = np.random.choice(hind[resample_dim], hind[resample_dim].size)
-    smp_hind = hind.sel({resample_dim: smp})
+    smp = np.random.choice(np.arange(hind[resample_dim].size), hind[resample_dim].size)
+    smp_hind = hind.isel({resample_dim: smp})
     # ignore because then inits should keep their labels
     if resample_dim != 'init':
         smp_hind[resample_dim] = hind[resample_dim]

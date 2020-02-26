@@ -237,8 +237,8 @@ def compute_hindcast(
         b = verif.sel(time=a.time.values)
 
         logging.info(
-            f'at lead={i}: dim={dim}: {a.time.min().dt.year.values}-'
-            f'{a.time.max().dt.year.values}'
+            f'at lead={str(i).zfill(2)}: dim={dim}: {a.time.min().values}-'
+            f'{a.time.max().values}'
         )
 
         # adapt weights to shorter time

@@ -28,7 +28,7 @@ New Features
       on the same set of initializations.
     * verif: slice to a common/consistent verification time frame prior to
       computing metric. This philosophy follows the thought that each lead
-      should be based on the same set of initializations.
+      should be based on the same set of verification dates.
 
 
 Internals/Minor Fixes

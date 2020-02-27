@@ -848,7 +848,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 based on the same set of initializations.
                 - verif: slice to a common/consistent verification time frame prior to
                 computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of initializations.
+                should be based on the same set of verification dates.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),
@@ -886,7 +886,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 based on the same set of initializations.
                 - verif: slice to a common/consistent verification time frame prior to
                 computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of initializations.
+                should be based on the same set of verification dates.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),
@@ -937,7 +937,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 based on the same set of initializations.
                 - verif: slice to a common/consistent verification time frame prior to
                 computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of initializations.
+                should be based on the same set of verification dates.
 
         Returns:
             Dataset of persistence forecast results (if ``name`` is not ``None``),

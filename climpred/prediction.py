@@ -164,7 +164,7 @@ def compute_hindcast(
             on the same set of initializations.
             - verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of initializations.
+            should be based on the same set of verification dates.
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -301,7 +301,7 @@ def compute_persistence(
             on the same set of initializations.
             - verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of initializations.
+            should be based on the same set of verification dates.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 

@@ -786,7 +786,7 @@ class HindcastEnsemble(PredictionEnsemble):
     # Analysis Functions
     # ------------------
     def verify(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='inits'
+        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_inits'
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -827,7 +827,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def compute_metric(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='inits'
+        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_inits'
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -845,11 +845,11 @@ class HindcastEnsemble(PredictionEnsemble):
             alignment (str): which inits or verification times should be aligned?
                 - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
-                - inits: slice to a common init frame prior to computing
+                - same_inits: slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
                 based on the same set of initializations.
-                - verif: slice to a common/consistent verification time frame prior to
-                computing metric. This philosophy follows the thought that each lead
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
                 should be based on the same set of verification dates.
 
         Returns:
@@ -883,11 +883,11 @@ class HindcastEnsemble(PredictionEnsemble):
             alignment (str): which inits or verification times should be aligned?
                 - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
-                - inits: slice to a common init frame prior to computing
+                - same_inits: slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
                 based on the same set of initializations.
-                - verif: slice to a common/consistent verification time frame prior to
-                computing metric. This philosophy follows the thought that each lead
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
                 should be based on the same set of verification dates.
 
         Returns:
@@ -913,7 +913,9 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
         )
 
-    def compute_persistence(self, name=None, metric='pearson_r', alignment='inits'):
+    def compute_persistence(
+        self, name=None, metric='pearson_r', alignment='same_inits'
+    ):
         """Verify against a persistence forecast of the observations/verification data.
 
         This simply applies some metric between the observational product and itself out
@@ -934,11 +936,11 @@ class HindcastEnsemble(PredictionEnsemble):
             alignment (str): which inits or verification times should be aligned?
                 - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
-                - inits: slice to a common init frame prior to computing
+                - same_inits: slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
                 based on the same set of initializations.
-                - verif: slice to a common/consistent verification time frame prior to
-                computing metric. This philosophy follows the thought that each lead
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
                 should be based on the same set of verification dates.
 
         Returns:

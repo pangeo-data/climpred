@@ -132,7 +132,7 @@ def compute_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
-    alignment='inits',
+    alignment='same_inits',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -159,10 +159,10 @@ def compute_hindcast(
         alignment (str): which inits or verification times should be aligned?
             - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
-            - inits: slice to a common init frame prior to computing
+            - same_inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
-            - verif: slice to a common/consistent verification time frame prior to
+            - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
         add_attrs (bool): write climpred compute args to attrs. default: True
@@ -222,7 +222,7 @@ def compute_hindcast(
         verif = verif.chunk({'time': -1})
 
     # take only inits for which we have verification data at all leads
-    if alignment == 'inits':
+    if alignment == 'same_inits':
         forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, nlags)
 
     plag = []
@@ -284,7 +284,7 @@ def compute_hindcast(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind, verif, metric='pearson_r', alignment='inits', **metric_kwargs
+    hind, verif, metric='pearson_r', alignment='same_inits', **metric_kwargs
 ):
     """Computes the skill of a persistence forecast from a simulation.
 
@@ -296,10 +296,10 @@ def compute_persistence(
         alignment (str): which inits or verification times should be aligned?
             - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
-            - inits: slice to a common init frame prior to computing
+            - same_inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
-            - verif: slice to a common/consistent verification time frame prior to
+            - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
         ** metric_kwargs (dict): additional keywords to be passed to metric

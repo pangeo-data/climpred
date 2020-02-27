@@ -37,7 +37,7 @@ def test_logg_compute_hindcast(hind_ds_initialized_1d, reconstruction_ds_1d, cap
             assert f'{first_year_per_lead}' in record[2]
 
 
-@pytest.mark.parametrize('alignment', ['init', 'verif', 'maximize', None])
+@pytest.mark.parametrize('alignment', ['init', 'same_verif', 'maximize'])
 def test_logg_compute_hindcast_alignment(
     hind_ds_initialized_1d, reconstruction_ds_1d, caplog, alignment
 ):
@@ -71,7 +71,7 @@ def test_logg_compute_hindcast_alignment(
                     hind_ds_initialized_1d.init.min().dt.year.values + lead
                 )
                 assert f'{first_year_per_lead}' in record[2]
-            elif alignment == 'verif':
+            elif alignment == 'same_verif':
                 # check that verification time is always the same
                 # const_verif_length = xx
                 pass  # skip test for now
@@ -100,7 +100,7 @@ def test_logg_compute_hindcast_alignment(
                 # assert const_verif_length == last_year_per_lead - first_year_per_lead
 
 
-@pytest.mark.parametrize('alignment', ['init', 'verif', 'maximize'])
+@pytest.mark.parametrize('alignment', ['init', 'same_verif', 'maximize'])
 def test_logg_compute_hindcast_alignment_checking_actual_years(
     hind_ds_initialized_1d, reconstruction_ds_1d, caplog, alignment
 ):
@@ -143,7 +143,7 @@ def test_logg_compute_hindcast_alignment_checking_actual_years(
                     hind_ds_initialized_1d.init.min().dt.year.values + lead
                 )
                 assert f'{first_year_per_lead}' in record[2]
-            elif alignment == 'verif':
+            elif alignment == 'same_verif':
                 # check that verification time is always the same
                 # const_verif_length = xx
                 pass  # skip test for now

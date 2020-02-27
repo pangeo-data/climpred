@@ -1,4 +1,5 @@
 import inspect
+import logging
 import warnings
 
 import dask
@@ -21,7 +22,7 @@ from .utils import (
     get_lead_cftime_shift_args,
     get_metric_class,
     intersect,
-    reduce_time_series,
+    reduce_time_series_for_aligned_inits,
     shift_cftime_index,
 )
 
@@ -131,7 +132,7 @@ def compute_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
-    max_dof=False,
+    alignment='same_inits',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -155,13 +156,15 @@ def compute_hindcast(
                 * m2o : each member to the verification data
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
-        max_dof (bool):
-            If True, maximize the degrees of freedom by slicing ``hind`` and
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
-
-            If False (default), then slice to a common time frame prior to computing
+            - same_inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+            - same_verif: slice to a common/consistent verification time frame prior to
+            computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of verification dates.
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -212,21 +215,21 @@ def compute_hindcast(
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
 
-    # If dask, then chunk in time.
+    # If dask, then only one chunk in time.
     if dask.is_dask_collection(forecast):
         forecast = forecast.chunk({'time': -1})
     if dask.is_dask_collection(verif):
         verif = verif.chunk({'time': -1})
 
     # take only inits for which we have verification data at all leads
-    if not max_dof:
-        forecast, verif = reduce_time_series(forecast, verif, nlags)
+    if alignment == 'same_inits':
+        forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, nlags)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
-        if max_dof:
-            forecast, verif = reduce_time_series(forecast, verif, i)
+        if alignment == 'maximize':
+            forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, i)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
@@ -234,6 +237,12 @@ def compute_hindcast(
         a['time'] = shift_cftime_index(a, 'time', n, freq)
         # Take real time verification data using real time forecast dates.
         b = verif.sel(time=a.time.values)
+
+        if a.time.size > 0:
+            logging.info(
+                f'at lead={str(i).zfill(2)}: dim={dim}: {a.time.min().values}-'
+                f'{a.time.max().values}'
+            )
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
@@ -275,7 +284,7 @@ def compute_hindcast(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind, verif, metric='pearson_r', max_dof=False, **metric_kwargs
+    hind, verif, metric='pearson_r', alignment='same_inits', **metric_kwargs
 ):
     """Computes the skill of a persistence forecast from a simulation.
 
@@ -284,13 +293,15 @@ def compute_persistence(
         verif (xarray object): Verification data.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
-        max_dof (bool):
-            If True, maximize the degrees of freedom by slicing ``hind`` and ``verif``
-            to a common time frame at each lead.
-
-            If False (default), then slice to a common time frame prior to computing
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+            ``verif`` to a common time frame at each lead.
+            - same_inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
+            - same_verif: slice to a common/consistent verification time frame prior to
+            computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of verification dates.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -332,18 +343,18 @@ def compute_persistence(
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if not max_dof:
+    if alignment != 'maximize':
         # slices down to inits in common with hindcast, plus gives enough room
         # for maximum lead time forecast.
-        a, _ = reduce_time_series(hind, verif, nlags)
+        a, _ = reduce_time_series_for_aligned_inits(hind, verif, nlags)
         inits = a['time']
 
     plag = []
     for lag in hind.lead.values:
-        if max_dof:
+        if alignment == 'maximize':
             # slices down to inits in common with hindcast, but only gives enough
             # room for lead from current forecast
-            a, _ = reduce_time_series(hind, verif, lag)
+            a, _ = reduce_time_series_for_aligned_inits(hind, verif, lag)
             inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
         target_dates = shift_cftime_index(a, 'time', n, freq)

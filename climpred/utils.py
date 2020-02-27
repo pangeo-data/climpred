@@ -273,9 +273,37 @@ def _load_into_memory(res):
     return res
 
 
-def reduce_time_series(forecast, verif, nlags):
-    """Reduces forecast and verification data to common time frame for prediction
-    and lag.
+def reduce_time_series_for_aligned_inits(forecast, verif, nlags):
+    """Reduces forecast and verification data to align initializations for prediction
+    across all lags.
+
+    Args:
+        forecast (`xarray` object): Prediction ensemble with ``init`` dim.
+        verif (`xarray` object): verification data being compared to (for verification,
+            persistence, etc.)
+        nlags (int): number of lags being computed
+
+    Returns:
+       forecast (`xarray` object): prediction ensemble reduced to
+       verif (`xarray` object):
+    """
+    n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
+    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
+
+    imin = max(forecast.time.min(), verif.time.min())
+    imax = min(forecast.time.max(), verif_dates.max())
+    imax = xr.DataArray(imax).rename('time')
+    forecast = forecast.where(forecast.time <= imax, drop=True)
+    forecast = forecast.where(forecast.time >= imin, drop=True)
+    verif = verif.where(verif.time >= imin, drop=True)
+    return forecast, verif
+
+
+def reduce_time_series_for_aligned_verifs(forecast, verif, nlags):
+    """Reduces forecast and verification data to align verification time for prediction
+    across all lags.
+    # just an idea. max(first_init+max_lead, verif_time)-min(last_init-max_lead)
+
 
     Args:
         forecast (`xarray` object): Prediction ensemble with ``init`` dim.

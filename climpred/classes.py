@@ -785,7 +785,9 @@ class HindcastEnsemble(PredictionEnsemble):
     # ------------------
     # Analysis Functions
     # ------------------
-    def verify(self, name=None, metric='pearson_r', comparison='e2o', common='inits'):
+    def verify(
+        self, name=None, metric='pearson_r', comparison='e2o', alignment='inits'
+    ):
         """Verifies the initialized ensemble against observations/verification data.
 
         This will automatically verify against all shared variables
@@ -799,7 +801,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
                 observations/verification data).
-            max_dof (bool, default False): If ``True``, maximize the degrees of freedom
+            maximize (bool, default False): If ``True``, maximize the degrees of freedom
                 for each lag calculation.
 
         Returns:
@@ -821,11 +823,11 @@ class HindcastEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
-            common=common,
+            alignment=alignment,
         )
 
     def compute_metric(
-        self, name=None, metric='pearson_r', comparison='e2o', common='inits'
+        self, name=None, metric='pearson_r', comparison='e2o', alignment='inits'
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -840,8 +842,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 observations/verification data. ('e2o'
                 for ensemble mean to observations/verification data.
                 'm2o' for each individual member to observations/verification data).
-            common (str): which inits or verification times should be aligned?
-                - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
                 - inits: slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
@@ -861,7 +863,7 @@ class HindcastEnsemble(PredictionEnsemble):
             PendingDeprecationWarning,
         )
         return self.verify(
-            name=name, metric=metric, comparison=comparison, common=common
+            name=name, metric=metric, comparison=comparison, alignment=alignment
         )
 
     def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
@@ -878,8 +880,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
                 observations/verification data).
-            common (str): which inits or verification times should be aligned?
-                - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
                 - inits: slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
@@ -911,7 +913,7 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
         )
 
-    def compute_persistence(self, name=None, metric='pearson_r', common='inits'):
+    def compute_persistence(self, name=None, metric='pearson_r', alignment='inits'):
         """Verify against a persistence forecast of the observations/verification data.
 
         This simply applies some metric between the observational product and itself out
@@ -929,8 +931,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 with which to compute the persistence forecast. If ``None``, compute
                 for all observations/verification data.
             metric (str, default 'pearson_r'): Metric to apply for verification.
-            common (str): which inits or verification times should be aligned?
-                - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
                 - inits: slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
@@ -961,5 +963,8 @@ class HindcastEnsemble(PredictionEnsemble):
             'init': True,
         }
         return self._apply_climpred_function(
-            compute_persistence, input_dict=input_dict, metric=metric, common=common
+            compute_persistence,
+            input_dict=input_dict,
+            metric=metric,
+            alignment=alignment,
         )

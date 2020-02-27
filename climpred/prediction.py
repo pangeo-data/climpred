@@ -14,7 +14,7 @@ from .metrics import (
     METRIC_ALIASES,
     PM_METRICS,
 )
-from .utils import (
+from .utils import (  # reduce_time_series_for_aligned_verifs,
     assign_attrs,
     convert_time_index,
     copy_coords_from_to,
@@ -22,7 +22,7 @@ from .utils import (
     get_lead_cftime_shift_args,
     get_metric_class,
     intersect,
-    reduce_time_series,
+    reduce_time_series_for_aligned_inits,
     shift_cftime_index,
 )
 
@@ -132,7 +132,7 @@ def compute_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
-    common='inits',
+    alignment='inits',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -156,8 +156,8 @@ def compute_hindcast(
                 * m2o : each member to the verification data
                 (see :ref:`Comparisons`)
         dim (str or list): dimension to apply metric over. default: 'init'
-        common (str): which inits or verification times should be aligned?
-            - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
             - inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
@@ -222,14 +222,14 @@ def compute_hindcast(
         verif = verif.chunk({'time': -1})
 
     # take only inits for which we have verification data at all leads
-    if common == 'inits':
-        forecast, verif = reduce_time_series(forecast, verif, nlags)
+    if alignment == 'inits':
+        forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, nlags)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast.lead.values:
-        if common == 'max_dof':
-            forecast, verif = reduce_time_series(forecast, verif, i)
+        if alignment == 'maximize':
+            forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, i)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
@@ -284,7 +284,7 @@ def compute_hindcast(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind, verif, metric='pearson_r', common='inits', **metric_kwargs
+    hind, verif, metric='pearson_r', alignment='inits', **metric_kwargs
 ):
     """Computes the skill of a persistence forecast from a simulation.
 
@@ -293,8 +293,8 @@ def compute_persistence(
         verif (xarray object): Verification data.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
-        common (str): which inits or verification times should be aligned?
-            - max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
             - inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
@@ -314,8 +314,6 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
     """
-    if common is None:
-        common = 'max_dof'
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     verif = convert_time_index(verif, 'time', 'verif[time]')
@@ -345,18 +343,18 @@ def compute_persistence(
     nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if common != 'max_dof':
+    if alignment != 'maximize':
         # slices down to inits in common with hindcast, plus gives enough room
         # for maximum lead time forecast.
-        a, _ = reduce_time_series(hind, verif, nlags)
+        a, _ = reduce_time_series_for_aligned_inits(hind, verif, nlags)
         inits = a['time']
 
     plag = []
     for lag in hind.lead.values:
-        if common == 'max_dof':
+        if alignment == 'maximize':
             # slices down to inits in common with hindcast, but only gives enough
             # room for lead from current forecast
-            a, _ = reduce_time_series(hind, verif, lag)
+            a, _ = reduce_time_series_for_aligned_inits(hind, verif, lag)
             inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
         target_dates = shift_cftime_index(a, 'time', n, freq)

@@ -288,11 +288,11 @@ def reduce_time_series_for_aligned_inits(forecast, verif, nlags):
        verif (`xarray` object):
     """
     n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
+    inits_for_max_lead = shift_cftime_index(verif, 'time', -1 * n, freq)
 
-    imin = max(forecast.time.min(), verif.time.min())
-    imax = min(forecast.time.max(), verif_dates.max())
-    imax = xr.DataArray(imax).rename('time')
+    imin = max(forecast.time.min(), inits_for_max_lead.min())
+    imax = min(forecast.time.max(), inits_for_max_lead.max())
+    imin, imax = xr.DataArray(imin).rename('time'), xr.DataArray(imax).rename('time')
     forecast = forecast.where(forecast.time <= imax, drop=True)
     forecast = forecast.where(forecast.time >= imin, drop=True)
     verif = verif.where(verif.time >= imin, drop=True)

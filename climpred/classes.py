@@ -801,8 +801,15 @@ class HindcastEnsemble(PredictionEnsemble):
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
                 observations/verification data).
-            maximize (bool, default False): If ``True``, maximize the degrees of freedom
-                for each lag calculation.
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+                ``verif`` to a common time frame at each lead.
+                - same_inits: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),

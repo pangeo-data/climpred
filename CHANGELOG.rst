@@ -18,16 +18,16 @@ New Features
     *  user gets warned when chunking potentially (un)-necessary
 - new explicit keywords in bootstrap functions for ``resampling_dim`` and
   ``reference_compute`` (:pr:`320`) `Aaron Spring`_.
-- new explicit keywords for ``common`` including logging for testing this
+- new explicit keywords for ``alignment`` including logging for testing this
   verification time matching (:pr:`324`) `Aaron Spring`_.
 
-    * max_dof/None: maximize the degrees of freedom by slicing ``hind`` and
+    * maximize/None: maximize the degrees of freedom by slicing ``hind`` and
       ``verif`` to a common time frame at each lead.
-    * inits: slice to a common init frame prior to computing
-      metric. This philosophy follows the thought that each lead should be based
-      on the same set of initializations.
-    * verif: slice to a common/consistent verification time frame prior to
-      computing metric. This philosophy follows the thought that each lead
+    * same_inits: slice to a common init frame prior to computing
+      metric. This philosophy follows the thought that each lead should be
+      based on the same set of initializations.
+    * same_verif: slice to a common/consistent verification time frame prior
+      to computing metric. This philosophy follows the thought that each lead
       should be based on the same set of verification dates.
 
 

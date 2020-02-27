@@ -14,7 +14,7 @@ from .metrics import (
     METRIC_ALIASES,
     PM_METRICS,
 )
-from .utils import (  # reduce_time_series_for_aligned_verifs,
+from .utils import (
     assign_attrs,
     convert_time_index,
     copy_coords_from_to,

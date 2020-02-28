@@ -26,25 +26,24 @@ from .utils import (
 concat_kwargs = {'coords': 'minimal', 'compat': 'override'}
 
 
-def _resample(hind, resample_dim, to_be_resampled):
+def _resample(hind, resample_dim):
     """Resample with replacement in dimension `resample_dim` from values of
     `to_be_resampled`.
 
     Args:
         hind (xr.object): input xr.object to be resampled.
         resample_dim (str): dimension to resample along.
-        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to resample
-            from.
 
     Returns:
         xr.object: resampled along `resample_dim`.
 
     """
+    to_be_resampled = hind[resample_dim].values
     smp = np.random.choice(to_be_resampled, len(to_be_resampled))
     smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
     if resample_dim != 'init':
-        smp_hind[resample_dim] = hind[resample_dim]
+        smp_hind[resample_dim] = hind[resample_dim].values
     return smp_hind
 
 
@@ -272,9 +271,8 @@ def _bootstrap_func(
         psig = sig / 100
 
     bootstraped_results = []
-    resample_dim_values = ds[resample_dim].values
     for _ in range(bootstrap):
-        smp_init_pm = _resample(ds, resample_dim, resample_dim_values)
+        smp_init_pm = _resample(ds, resample_dim)
         bootstraped_results.append(func(smp_init_pm, *func_args, **func_kwargs))
     sig_level = xr.concat(
         bootstraped_results, dim='bootstrap', coords='minimal', compat='override',
@@ -417,11 +415,9 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    to_be_resampled = hind[resample_dim].values
-
     for i in range(bootstrap):
         # resample with replacement
-        smp_hind = _resample(hind, resample_dim, to_be_resampled)
+        smp_hind = _resample(hind, resample_dim)
         # compute init skill
         init_skill = compute(
             smp_hind,

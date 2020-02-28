@@ -273,57 +273,38 @@ def _load_into_memory(res):
     return res
 
 
-def reduce_time_series_for_aligned_inits(forecast, verif, nlags):
-    """Reduces forecast and verification data to align initializations for prediction
-    across all lags.
+def reduce_forecast_to_same_inits(forecast, verif):
+    """Reduces the forecast to common set of initializations that verify over all lags.
 
     Args:
-        forecast (`xarray` object): Prediction ensemble with ``init`` dim.
-        verif (`xarray` object): verification data being compared to (for verification,
-            persistence, etc.)
-        nlags (int): number of lags being computed
+        forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
+            ``time`` and containing ``lead`` dim.
+        verif (``xarray`` object): Verification data with ``time`` dim.
 
     Returns:
-       forecast (`xarray` object): prediction ensemble reduced to
-       verif (`xarray` object):
+        forecast (``xarray`` object): Prediction ensemble with ``init`` sub-selected for
+            those that verify over all leads.
+        verif (``xarray`` object): Original verification data.
     """
-    n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    inits_for_max_lead = shift_cftime_index(verif, 'time', -1 * n, freq)
-
-    imin = max(forecast.time.min(), inits_for_max_lead.min())
-    imax = min(forecast.time.max(), inits_for_max_lead.max())
-    imin, imax = xr.DataArray(imin).rename('time'), xr.DataArray(imax).rename('time')
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    verif = verif.where(verif.time >= imin, drop=True)
-    return forecast, verif
-
-
-def reduce_time_series_for_aligned_verifs(forecast, verif, nlags):
-    """Reduces forecast and verification data to align verification time for prediction
-    across all lags.
-    # just an idea. max(first_init+max_lead, verif_time)-min(last_init-max_lead)
-
-
-    Args:
-        forecast (`xarray` object): Prediction ensemble with ``init`` dim.
-        verif (`xarray` object): verification data being compared to (for verification,
-            persistence, etc.)
-        nlags (int): number of lags being computed
-
-    Returns:
-       forecast (`xarray` object): prediction ensemble reduced to
-       verif (`xarray` object):
-    """
-    n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
-
-    imin = max(forecast.time.min(), verif.time.min())
-    imax = min(forecast.time.max(), verif_dates.max())
-    imax = xr.DataArray(imax).rename('time')
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    verif = verif.where(verif.time >= imin, drop=True)
+    # Arbitrary zero; just concerned with getting the shift frequency.
+    _, freq = get_lead_cftime_shift_args(forecast['lead'].attrs['units'], 0)
+    # Note that `init` is renamed to `time` in the compute function to compute metrics.
+    init_lead_matrix = xr.concat(
+        [
+            xr.DataArray(
+                shift_cftime_index(forecast, 'time', int(l), freq),
+                dims=['time'],
+                coords=[forecast['time']],
+            )
+            for l in forecast['lead'].values
+        ],
+        'lead',
+    )
+    # Checks at each `init` if all leads can verify.
+    keep_these_inits = forecast['time'].where(
+        init_lead_matrix.isin(verif['time']).all('lead'), drop=True
+    )
+    forecast = forecast.sel(time=keep_these_inits)
     return forecast, verif
 
 

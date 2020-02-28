@@ -22,7 +22,7 @@ from .utils import (
     get_lead_cftime_shift_args,
     get_metric_class,
     intersect,
-    reduce_time_series_for_aligned_inits,
+    reduce_forecast_to_same_inits,
     shift_cftime_index,
 )
 
@@ -208,7 +208,6 @@ def compute_hindcast(
         if dim == 'init':
             # for later thinking in real time
             dim = 'time'
-    nlags = max(hind.lead.values)
 
     forecast, verif = comparison.function(hind, verif, metric=metric)
 
@@ -223,13 +222,14 @@ def compute_hindcast(
 
     # take only inits for which we have verification data at all leads
     if alignment == 'same_inits':
-        forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, nlags)
+        forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
-    for i in forecast.lead.values:
+    for i in forecast['lead'].values:
         if alignment == 'maximize':
-            forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, i)
+            # TODO: This is not actually 'maximize' right now.
+            forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
@@ -240,8 +240,8 @@ def compute_hindcast(
 
         if a.time.size > 0:
             logging.info(
-                f'at lead={str(i).zfill(2)}: dim={dim}: {a.time.min().values}-'
-                f'{a.time.max().values}'
+                f'at lead={str(i).zfill(2)}: dim={dim}: {forecast["time"].min().values}'
+                f'-{forecast["time"].max().values}'
             )
 
         # adapt weights to shorter time
@@ -340,21 +340,17 @@ def compute_persistence(
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
         # Shift backwards shift for lead zero.
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
-    nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
     if alignment != 'maximize':
-        # slices down to inits in common with hindcast, plus gives enough room
-        # for maximum lead time forecast.
-        a, _ = reduce_time_series_for_aligned_inits(hind, verif, nlags)
+        a, _ = reduce_forecast_to_same_inits(hind, verif)
         inits = a['time']
 
     plag = []
     for lag in hind.lead.values:
         if alignment == 'maximize':
-            # slices down to inits in common with hindcast, but only gives enough
-            # room for lead from current forecast
-            a, _ = reduce_time_series_for_aligned_inits(hind, verif, lag)
+            # TODO: This is not actually 'maximize' right now.
+            a, _ = reduce_forecast_to_same_inits(hind, verif)
             inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
         target_dates = shift_cftime_index(a, 'time', n, freq)

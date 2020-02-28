@@ -494,8 +494,8 @@ def bootstrap_compute(
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
     # remove useless member = 0 coords after m2c
-    if 'member' in init_skill.coords and init_skill.member.size == 1:
-        del init_skill['member']
+    # if 'member' in init_skill.coords and init_skill.member.size == 1:
+    #    del init_skill['member']
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:

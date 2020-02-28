@@ -55,9 +55,7 @@ def my_quantile(ds, q=0.95, dim='bootstrap'):
         """Daskified np.percentile."""
         if len(arr.chunks[axis]) > 1:
             arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(
-            np.percentile, arr, axis=axis, q=q, drop_axis=axis
-        )
+        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
 
     def _percentile(arr, axis=0, q=95):
         """percentile function for chunked and non-chunked `arr`."""
@@ -144,9 +142,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(
-        hind.lead.attrs['units'], hind.lead.size
-    )
+    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
 
@@ -168,9 +164,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(
-            1, 1 + len(random_members)
-        )
+        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -182,7 +176,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     )
 
 
-def bootstrap_uninit_pm_ensemble_from_control(ds, control):
+def bootstrap_uninit_pm_ensemble_from_control(init_pm, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -192,18 +186,18 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
         control and rearranges them into ensemble and member dimensions.
 
     Args:
-        ds (xarray object): ensemble simulation.
+        init_pm (xarray object): ensemble simulation.
         control (xarray object): control simulation.
 
     Returns:
-        ds_e (xarray object): pseudo-ensemble generated from control run.
+        uninit (xarray object): pseudo-ensemble generated from control run.
     """
-    nens = ds.init.size
-    nmember = ds.member.size
-    length = ds.lead.size
+    nens = init_pm.init.size
+    nmember = init_pm.member.size
+    length = init_pm.lead.size
     c_start = 0
     c_end = control['time'].size
-    lead_time = ds['lead']
+    lead_time = init_pm['lead']
 
     def set_coords(uninit, init, dim):
         uninit[dim] = init[dim].values
@@ -220,29 +214,29 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
         return xr.concat(
             (isel_years(control, start, length) for start in startlist),
             dim='member',
-            coords="minimal",
+            coords='minimal',
             compat='override',
         )
 
     uninit = xr.concat(
         (
-            set_coords(create_pseudo_members(control), ds, 'member')
+            set_coords(create_pseudo_members(control), init_pm, 'member')
             for _ in range(nens)
         ),
         dim='init',
-        coords="minimal",
+        coords='minimal',
         compat='override',
     )
     # chunk to same dims
     return (
-        _transpose_and_rechunk_to(uninit, ds)
+        _transpose_and_rechunk_to(uninit, init_pm)
         if dask.is_dask_collection(uninit)
         else uninit
     )
 
 
 def _bootstrap_func(
-    func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs
+    func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs,
 ):
     """Sig percent threshold of function based on resampling with replacement.
 
@@ -265,12 +259,10 @@ def _bootstrap_func(
 
     Returns:
         sig_level: bootstrapped significance levels with
-                   dimensions of ds and len(sig) if sig is list
+                   dimensions of init_pm and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(
-            f'Please provide func as a function, found {type(func)}'
-        )
+        raise ValueError(f'Please provide func as a function, found {type(func)}')
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -280,9 +272,11 @@ def _bootstrap_func(
     bootstraped_results = []
     resample_dim_values = ds[resample_dim].values
     for _ in range(bootstrap):
-        smp_ds = _resample(ds, resample_dim, resample_dim_values)
-        bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
-    sig_level = xr.concat(bootstraped_results, 'bootstrap')
+        smp_init_pm = _resample(ds, resample_dim, resample_dim_values)
+        bootstraped_results.append(func(smp_init_pm, *func_args, **func_kwargs))
+    sig_level = xr.concat(
+        bootstraped_results, dim='bootstrap', coords='minimal', compat='override',
+    )
     # TODO: reimplement xr.quantile once fast
     sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
     return sig_level
@@ -306,9 +300,7 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
     )
 
 
-def varweighted_mean_period_threshold(
-    control, sig=95, bootstrap=500, time_dim='time'
-):
+def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
     """Calc the variance-weighted mean period significance levels from re-sampled dataset.
 
     See also:
@@ -316,11 +308,7 @@ def varweighted_mean_period_threshold(
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period,
-        control,
-        time_dim,
-        sig=sig,
-        bootstrap=bootstrap,
+        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
     )
 
 
@@ -470,15 +458,9 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                reference_compute(
-                    smp_hind, verif, metric=metric, **metric_kwargs
-                )
+                reference_compute(smp_hind, verif, metric=metric, **metric_kwargs)
             )
     init = xr.concat(init, dim='bootstrap')
-    # remove useless member = 0 coords after m2c
-    if 'member' in init.coords and init.member.size == 1:
-        if init.member.size == 1:
-            del init['member']
     uninit = xr.concat(uninit, dim='bootstrap')
     # when persistence is not computed set flag
     if pers != []:
@@ -502,19 +484,12 @@ def bootstrap_compute(
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(
-        uninit, init, metric=metric
-    )
+    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
     p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind,
-        verif,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        **metric_kwargs,
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
@@ -524,9 +499,7 @@ def bootstrap_compute(
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = reference_compute(
-            hind, verif, metric=metric, **metric_kwargs
-        )
+        pers_skill = reference_compute(hind, verif, metric=metric, **metric_kwargs)
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -538,6 +511,8 @@ def bootstrap_compute(
     skill['kind'] = ['init', 'uninit', 'pers']
 
     # probability that i beats init
+    print(p_uninit_over_init)
+    print(p_pers_over_init)
     p = xr.concat([p_uninit_over_init, p_pers_over_init], 'kind')
     p['kind'] = ['uninit', 'pers']
 
@@ -687,7 +662,7 @@ def bootstrap_hindcast(
 
 
 def bootstrap_perfect_model(
-    ds,
+    init_pm,
     control,
     metric='pearson_r',
     comparison='m2e',
@@ -767,7 +742,7 @@ def bootstrap_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     return bootstrap_compute(
-        ds,
+        init_pm,
         control,
         hist=None,
         metric=metric,

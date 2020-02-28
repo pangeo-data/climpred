@@ -238,10 +238,19 @@ def compute_hindcast(
         # Take real time verification data using real time forecast dates.
         b = verif.sel(time=a.time.values)
 
+        # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
             logging.info(
-                f'at lead={str(i).zfill(2)}: dim={dim}: {forecast["time"].min().values}'
-                f'-{forecast["time"].max().values}'
+                f'lead={str(i).zfill(2)} | '
+                f'dim={dim} | '
+                # This is the init-sliced forecast, thus displaying actual
+                # initializations.
+                f'inits={forecast["time"].min().values}'
+                f'-{forecast["time"].max().values} | '
+                # This is the verification window, thus displaying the
+                # verification dates.
+                f'verif={a["time"].min().values}'
+                f'-{a["time"].max().values}'
             )
 
         # adapt weights to shorter time

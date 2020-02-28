@@ -5,7 +5,12 @@ import xarray as xr
 from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
 
-# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D; generic xr.objects
+
+def set_cftime_to_int_dim(ds, dim, freq='YS'):
+    ds[dim] = xr.cftime_range(
+        start=str(ds[dim].min().values), freq=freq, periods=ds[dim].size,
+    )
+    return ds
 
 
 @pytest.fixture
@@ -112,6 +117,15 @@ def hind_ds_initialized_1d():
 
 
 @pytest.fixture
+def hind_ds_initialized_1d_cftime(hind_ds_initialized_1d):
+    """CESM-DPLE initialzed hindcast timeseries with cftime initializations."""
+    ds = hind_ds_initialized_1d
+    ds = set_cftime_to_int_dim(ds, 'init')
+    ds.lead.attrs['units'] = 'years'
+    return ds
+
+
+@pytest.fixture
 def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset in lead-0
     framework."""
@@ -168,6 +182,14 @@ def reconstruction_ds_1d():
     xr.Dataset."""
     da = load_dataset('FOSI-SST')
     return da - da.mean('time')
+
+
+@pytest.fixture
+def reconstruction_ds_1d_cftime(reconstruction_ds_1d):
+    """CESM-FOSI historical reconstruction timeseries with cftime time axis."""
+    ds = reconstruction_ds_1d
+    ds = set_cftime_to_int_dim(ds, 'time')
+    return ds
 
 
 @pytest.fixture

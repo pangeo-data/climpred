@@ -223,13 +223,14 @@ def compute_hindcast(
     # take only inits for which we have verification data at all leads
     if alignment == 'same_inits':
         forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
+    else:
+        raise NotImplementedError(
+            "Only 'same_inits' alignment is currently implemented."
+        )
 
     plag = []
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
-        if alignment == 'maximize':
-            # TODO: This is not actually 'maximize' right now.
-            forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
@@ -351,24 +352,23 @@ def compute_persistence(
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if alignment != 'maximize':
+    if alignment == 'same_inits':
         a, _ = reduce_forecast_to_same_inits(hind, verif)
-        inits = a['time']
+        initial = verif.sel(time=a['time'])
+    else:
+        raise NotImplementedError(
+            "Only 'same_inits' alignment is currently implemented."
+        )
 
     plag = []
     for lag in hind.lead.values:
-        if alignment == 'maximize':
-            # TODO: This is not actually 'maximize' right now.
-            a, _ = reduce_forecast_to_same_inits(hind, verif)
-            inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
         target_dates = shift_cftime_index(a, 'time', n, freq)
 
         o = verif.sel(time=target_dates)
-        f = verif.sel(time=inits)
-        o['time'] = f['time']
+        o['time'] = initial['time']
         plag.append(
-            metric.function(o, f, dim='time', comparison=__e2c, **metric_kwargs)
+            metric.function(o, initial, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values

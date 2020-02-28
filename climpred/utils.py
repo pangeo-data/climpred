@@ -301,10 +301,14 @@ def reduce_forecast_to_same_inits(forecast, verif):
         'lead',
     )
     # Checks at each `init` if all leads can verify.
-    keep_these_inits = forecast['time'].where(
-        init_lead_matrix.isin(verif['time']).all('lead'), drop=True
-    )
-    forecast = forecast.sel(time=keep_these_inits)
+    verifies_at_all_leads = init_lead_matrix.isin(verif['time']).all('lead')
+    forecast = forecast.where(verifies_at_all_leads, drop=True)
+    # Enforces that observations coincide with initializations, so that reference
+    # forecast can be evaluated over identical inits.
+    # TODO: Is there a way to have a switch to turn this on/off depending on if
+    # they are comparing to a reference?
+    union_with_verif = forecast['time'].isin(verif['time'])
+    forecast = forecast.where(union_with_verif, drop=True)
     return forecast, verif
 
 

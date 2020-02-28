@@ -286,17 +286,22 @@ def reduce_forecast_to_same_inits(forecast, verif):
             those that verify over all leads.
         verif (``xarray`` object): Original verification data.
     """
-    # Arbitrary zero; just concerned with getting the shift frequency.
-    _, freq = get_lead_cftime_shift_args(forecast['lead'].attrs['units'], 0)
+    # Construct list of tuples (N, freq) over all leads.
+    # TODO: Maybe make this a convenience function.
+    n_freq_tuples = [
+        get_lead_cftime_shift_args(forecast['lead'].attrs['units'], l)
+        for l in forecast['lead'].values
+    ]
+    n, freq = list(zip(*n_freq_tuples))
     # Note that `init` is renamed to `time` in the compute function to compute metrics.
     init_lead_matrix = xr.concat(
         [
             xr.DataArray(
-                shift_cftime_index(forecast, 'time', int(l), freq),
+                shift_cftime_index(forecast, 'time', n, freq[0]),
                 dims=['time'],
                 coords=[forecast['time']],
             )
-            for l in forecast['lead'].values
+            for n in n
         ],
         'lead',
     )

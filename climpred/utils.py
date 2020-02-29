@@ -293,6 +293,11 @@ def reduce_forecast_to_same_inits(forecast, verif):
         for l in forecast['lead'].values
     ]
     n, freq = list(zip(*n_freq_tuples))
+    n = list(n)
+    # Add lead 0 to check that init exists in the observations so that reference
+    # forecasts have the same set of inits.
+    if 0 not in n:
+        n.insert(0, 0)
     # Note that `init` is renamed to `time` in the compute function to compute metrics.
     init_lead_matrix = xr.concat(
         [
@@ -308,12 +313,6 @@ def reduce_forecast_to_same_inits(forecast, verif):
     # Checks at each `init` if all leads can verify.
     verifies_at_all_leads = init_lead_matrix.isin(verif['time']).all('lead')
     forecast = forecast.where(verifies_at_all_leads, drop=True)
-    # Enforces that observations coincide with initializations, so that reference
-    # forecast can be evaluated over identical inits.
-    # TODO: Is there a way to have a switch to turn this on/off depending on if
-    # they are comparing to a reference?
-    union_with_verif = forecast['time'].isin(verif['time'])
-    forecast = forecast.where(union_with_verif, drop=True)
     return forecast, verif
 
 

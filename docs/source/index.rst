@@ -76,9 +76,10 @@ repository and running ``pip install . --upgrade`` in the main directory
 
 * :doc:`setting-up-data`
 * :doc:`prediction-ensemble-object`
+* :doc:`alignment`
+* :doc:`metrics`
 * :doc:`comparisons`
 * :doc:`significance`
-* :doc:`metrics`
 * :doc:`terminology`
 * :doc:`reference_forecast`
 
@@ -89,6 +90,7 @@ repository and running ``pip install . --upgrade`` in the main directory
 
     setting-up-data
     prediction-ensemble-object.ipynb
+    alignment
     metrics
     comparisons
     significance

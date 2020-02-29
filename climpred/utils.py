@@ -231,11 +231,13 @@ def get_lead_cftime_shift_args(units, lead):
     Args:
         units (str): Units associated with the lead dimension. Must be
             years, seasons, months, weeks, pentads, days.
-        lead (int): increment of lead being computed.
+        lead (int): Increment of lead being computed.
 
     Returns:
-       n (int): Number of units to shift. ``value`` for ``CFTime.shift(value, str)``.
-       freq (str): Pandas frequency alias. ``str`` for ``CFTime.shift(value, str)``.
+       n (int): Number of units to shift. ``value`` for
+           ``CFTimeIndex.shift(value, str)``.
+       freq (str): Pandas frequency alias. ``str`` for
+           ``CFTimeIndex.shift(value, str)``.
     """
     lead = int(lead)
 
@@ -256,6 +258,26 @@ def get_lead_cftime_shift_args(units, lead):
         print(f'{units} is not a valid choice.')
         print(f'Accepted `units` values include: {d.keys()}')
     return n, freq
+
+
+def get_multiple_lead_cftime_shift_args(units, leads):
+    """Returns ``CFTimeIndex.shift()`` offset increment for an arbitrary number of
+    leads.
+
+    Args:
+        units (str): Units associated with the lead dimension. Must be one of
+            years, seasons, months, weeks, pentads, days.
+        leads (list, array, xr.DataArray of ints): Leads to return offset for.
+
+    Returns:
+        n (tuple of ints): Number of units to shift for ``leads``. ``value`` for
+            ``CFTimeIndex.shift(value, str)``.
+        freq (str): Pandas frequency alias. ``str`` for
+            ``CFTimeIndex.shift(value, str)``.
+    """
+    n_freq_tuples = [get_lead_cftime_shift_args(units, l) for l in leads]
+    n, freq = list(zip(*n_freq_tuples))
+    return n, freq[0]
 
 
 def intersect(lst1, lst2):
@@ -286,13 +308,10 @@ def reduce_forecast_to_same_inits(forecast, verif):
             those that verify over all leads.
         verif (``xarray`` object): Original verification data.
     """
-    # Construct list of tuples (N, freq) over all leads.
-    # TODO: Maybe make this a convenience function.
-    n_freq_tuples = [
-        get_lead_cftime_shift_args(forecast['lead'].attrs['units'], l)
-        for l in forecast['lead'].values
-    ]
-    n, freq = list(zip(*n_freq_tuples))
+    # Construct list of `n` offset over all leads.
+    n, freq = get_multiple_lead_cftime_shift_args(
+        forecast['lead'].attrs['units'], forecast['lead'].values
+    )
     n = list(n)
     # Add lead 0 to check that init exists in the observations so that reference
     # forecasts have the same set of inits.
@@ -302,7 +321,7 @@ def reduce_forecast_to_same_inits(forecast, verif):
     init_lead_matrix = xr.concat(
         [
             xr.DataArray(
-                shift_cftime_index(forecast, 'time', n, freq[0]),
+                shift_cftime_index(forecast, 'time', n, freq),
                 dims=['time'],
                 coords=[forecast['time']],
             )

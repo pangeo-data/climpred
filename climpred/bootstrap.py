@@ -212,12 +212,14 @@ def bootstrap_uninit_pm_ensemble_from_control(init_pm, control):
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat(
+        uninit_ens = xr.concat(
             (isel_years(control, start, length) for start in startlist),
             dim='member',
             coords='minimal',
             compat='override',
         )
+        # uninit_ens['init'] = [c_start]
+        return uninit_ens
 
     uninit = xr.concat(
         (

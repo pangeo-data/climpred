@@ -61,6 +61,7 @@ def test_intersect():
 def test_da_assign_attrs():
     """Test assigning attrs for compute_perfect_model and dataarrays."""
     v = 'tos'
+    alignment = 'same_inits'
     metric = 'pearson_r'
     comparison = 'm2e'
     da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
@@ -68,6 +69,7 @@ def test_da_assign_attrs():
     actual = compute_perfect_model(
         da, control, metric=metric, comparison=comparison
     ).attrs
+    assert actual['alignment'] == alignment
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
@@ -83,6 +85,7 @@ def test_ds_assign_attrs():
     """Test assigning attrs for datasets."""
     metric = 'mse'
     comparison = 'm2e'
+    alignment = 'same_inits'
     v = 'tos'
     dim = ['init', 'member']
     da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)[v]
@@ -91,6 +94,7 @@ def test_ds_assign_attrs():
     actual = compute_perfect_model(
         da, control, metric=metric, comparison=comparison, dim=dim
     ).attrs
+    assert actual['alignment'] == alignment
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
@@ -137,7 +141,6 @@ def test_hindcast_assign_attrs():
 
 def test_copy_coords_from_to_ds(PM_ds_control_3d):
     """Test whether coords are copied from one xr object to another."""
-    #
     xro = PM_ds_control_3d
     c_1time = xro.isel(time=4).drop_vars('time')
     assert 'time' not in c_1time.coords
@@ -147,7 +150,6 @@ def test_copy_coords_from_to_ds(PM_ds_control_3d):
 
 def test_copy_coords_from_to_da(PM_da_control_3d):
     """Test whether coords are copied from one xr object to another."""
-    #
     xro = PM_da_control_3d
     c_1time = xro.isel(time=4).drop_vars('time')
     assert 'time' not in c_1time.coords
@@ -157,7 +159,6 @@ def test_copy_coords_from_to_da(PM_da_control_3d):
 
 def test_copy_coords_from_to_ds_chunk(PM_ds_control_3d):
     """Test whether coords are copied from one xr object to another."""
-    #
     xro = PM_ds_control_3d.chunk({'time': 5})
     c_1time = xro.isel(time=4).drop_vars('time')
     assert 'time' not in c_1time.coords

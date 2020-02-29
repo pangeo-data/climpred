@@ -332,3 +332,22 @@ def da_dcpp():
         dims=['dcpp_init_year', 'time', 'member_id'],
         coords=[init, lead, member],
     )
+
+
+@pytest.fixture
+def small_initialized_da():
+    """Very small simulation of an initialized forecasting system."""
+    inits = [1990, 1991, 1992, 1993]
+    lead = [1]
+    return xr.DataArray(
+        np.random.rand(len(inits), len(lead)),
+        dims=['init', 'lead'],
+        coords=[inits, lead],
+    )
+
+
+@pytest.fixture
+def small_verif_da():
+    """Very small simulation of a verification product."""
+    time = [1990, 1991, 1992, 1993, 1994]
+    return xr.DataArray(np.random.rand(len(time)), dims=['time'], coords=[time])

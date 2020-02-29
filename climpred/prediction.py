@@ -284,6 +284,7 @@ def compute_hindcast(
             skill,
             hind,
             function_name=inspect.stack()[0][3],
+            alignment=alignment,
             metric=metric,
             comparison=comparison,
             dim=dim,

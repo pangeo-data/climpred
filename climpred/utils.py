@@ -19,6 +19,7 @@ def assign_attrs(
     ds,
     function_name,
     metadata_dict=None,
+    alignment='same_inits',
     metric=None,
     comparison=None,
     dim=None,
@@ -30,6 +31,7 @@ def assign_attrs(
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
+        alignment (str): method used to align inits and verification data.
         metric (class) : metric used in comparing the forecast and verification data.
         comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
@@ -50,6 +52,7 @@ def assign_attrs(
     if 'member' in ds.coords:
         skill.attrs['number_of_members'] = ds.member.size
 
+    skill.attrs['alignment'] = alignment
     skill.attrs['metric'] = metric.name
     skill.attrs['comparison'] = comparison.name
     skill.attrs['dim'] = dim

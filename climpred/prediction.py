@@ -34,7 +34,7 @@ from .utils import (
 # --------------------------------------------#
 @is_xarray([0, 1])
 def compute_perfect_model(
-    ds,
+    init_pm,
     control,
     metric='pearson_r',
     comparison='m2e',
@@ -47,7 +47,7 @@ def compute_perfect_model(
     simulation dataset.
 
     Args:
-        ds (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
+        init_pm (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
         control (xarray object): control with dimension ``time``.
         metric (str): `metric` name, see
          :py:func:`climpred.utils.get_metric_class` and (see :ref:`Metrics`).
@@ -100,7 +100,7 @@ def compute_perfect_model(
             )
             dim = 'init'
 
-    forecast, reference = comparison.function(ds, metric=metric)
+    forecast, reference = comparison.function(init_pm, metric=metric)
 
     # in case you want to compute deterministic skill over member dim
     if (forecast.dims != reference.dims) and not metric.probabilistic:
@@ -115,7 +115,7 @@ def compute_perfect_model(
     if add_attrs:
         skill = assign_attrs(
             skill,
-            ds,
+            init_pm,
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,

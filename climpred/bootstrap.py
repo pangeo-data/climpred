@@ -4,6 +4,8 @@ import dask
 import numpy as np
 import xarray as xr
 
+from climpred.constants import CONCAT_KWARGS
+
 from .checks import (
     has_dims,
     has_valid_lead_units,
@@ -24,25 +26,23 @@ from .utils import (
 )
 
 
-def _resample(hind, resample_dim, to_be_resampled):
-    """Resample with replacement in dimension `resample_dim` from values of
-    `to_be_resampled`
+def _resample(hind, resample_dim):
+    """Resample with replacement in dimension ``resample_dim``.
 
     Args:
         hind (xr.object): input xr.object to be resampled.
         resample_dim (str): dimension to resample along.
-        to_be_resampled (list, xr.DataArray.values, np.ndarray): values to resample
-            from.
 
     Returns:
-        xr.object: resampled along `resample_dim`.
+        xr.object: resampled along ``resample_dim``.
 
     """
+    to_be_resampled = hind[resample_dim].values
     smp = np.random.choice(to_be_resampled, len(to_be_resampled))
     smp_hind = hind.sel({resample_dim: smp})
     # ignore because then inits should keep their labels
     if resample_dim != 'init':
-        smp_hind[resample_dim] = hind[resample_dim]
+        smp_hind[resample_dim] = hind[resample_dim].values
     return smp_hind
 
 
@@ -152,8 +152,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     for init in hind.init.values:
         random_members = np.random.choice(hist.member.values, hind.member.size)
         # take random uninitialized members from hist at init forcing
-        # (Goddard allows 5 year forcing range here)
-        # TODO: implement these 5 years
+        # (Goddard et al. allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
             time=slice(
                 shift_cftime_singular(init, 1, freq),
@@ -176,7 +175,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     )
 
 
-def bootstrap_uninit_pm_ensemble_from_control(ds, control):
+def bootstrap_uninit_pm_ensemble_from_control(init_pm, control):
     """
     Create a pseudo-ensemble from control run.
 
@@ -186,18 +185,22 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
         control and rearranges them into ensemble and member dimensions.
 
     Args:
-        ds (xarray object): ensemble simulation.
+        init_pm (xarray object): ensemble simulation.
         control (xarray object): control simulation.
 
     Returns:
-        ds_e (xarray object): pseudo-ensemble generated from control run.
+        uninit (xarray object): pseudo-ensemble generated from control run.
     """
-    nens = ds.init.size
-    nmember = ds.member.size
-    length = ds.lead.size
+    nens = init_pm.init.size
+    nmember = init_pm.member.size
+    length = init_pm.lead.size
     c_start = 0
     c_end = control['time'].size
-    lead_time = ds['lead']
+    lead_time = init_pm['lead']
+
+    def set_coords(uninit, init, dim):
+        uninit[dim] = init[dim].values
+        return uninit
 
     def isel_years(control, year_s, length):
         new = control.isel(time=slice(year_s, year_s + length))
@@ -207,21 +210,31 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
 
     def create_pseudo_members(control):
         startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        return xr.concat(
-            (isel_years(control, start, length) for start in startlist), 'member',
+        uninit_ens = xr.concat(
+            (isel_years(control, start, length) for start in startlist),
+            dim='member',
+            **CONCAT_KWARGS,
         )
+        return uninit_ens
 
-    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
+    uninit = xr.concat(
+        (
+            set_coords(create_pseudo_members(control), init_pm, 'member')
+            for _ in range(nens)
+        ),
+        dim='init',
+        **CONCAT_KWARGS,
+    )
     # chunk to same dims
     return (
-        _transpose_and_rechunk_to(uninit, ds)
+        _transpose_and_rechunk_to(uninit, init_pm)
         if dask.is_dask_collection(uninit)
         else uninit
     )
 
 
 def _bootstrap_func(
-    func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs
+    func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs,
 ):
     """Sig percent threshold of function based on resampling with replacement.
 
@@ -244,7 +257,7 @@ def _bootstrap_func(
 
     Returns:
         sig_level: bootstrapped significance levels with
-                   dimensions of ds and len(sig) if sig is list
+                   dimensions of init_pm and len(sig) if sig is list
     """
     if not callable(func):
         raise ValueError(f'Please provide func as a function, found {type(func)}')
@@ -255,11 +268,10 @@ def _bootstrap_func(
         psig = sig / 100
 
     bootstraped_results = []
-    resample_dim_values = ds[resample_dim].values
     for _ in range(bootstrap):
-        smp_ds = _resample(ds, resample_dim, resample_dim_values)
-        bootstraped_results.append(func(smp_ds, *func_args, **func_kwargs))
-    sig_level = xr.concat(bootstraped_results, 'bootstrap')
+        smp_init_pm = _resample(ds, resample_dim)
+        bootstraped_results.append(func(smp_init_pm, *func_args, **func_kwargs))
+    sig_level = xr.concat(bootstraped_results, dim='bootstrap', **CONCAT_KWARGS)
     # TODO: reimplement xr.quantile once fast
     sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
     return sig_level
@@ -399,11 +411,9 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    to_be_resampled = hind[resample_dim].values
-
     for i in range(bootstrap):
         # resample with replacement
-        smp_hind = _resample(hind, resample_dim, to_be_resampled)
+        smp_hind = _resample(hind, resample_dim)
         # compute init skill
         init_skill = compute(
             smp_hind,
@@ -444,15 +454,11 @@ def bootstrap_compute(
             pers.append(
                 reference_compute(smp_hind, verif, metric=metric, **metric_kwargs)
             )
-    init = xr.concat(init, dim='bootstrap')
-    # remove useless member = 0 coords after m2c
-    if 'member' in init.coords and init.member.size == 1:
-        if init.member.size == 1:
-            del init['member']
-    uninit = xr.concat(uninit, dim='bootstrap')
+    init = xr.concat(init, dim='bootstrap', **CONCAT_KWARGS)
+    uninit = xr.concat(uninit, dim='bootstrap', **CONCAT_KWARGS)
     # when persistence is not computed set flag
     if pers != []:
-        pers = xr.concat(pers, dim='bootstrap')
+        pers = xr.concat(pers, dim='bootstrap', **CONCAT_KWARGS)
         pers_output = True
     else:
         pers_output = False
@@ -481,9 +487,6 @@ def bootstrap_compute(
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
-    # remove useless member = 0 coords after m2c
-    if 'member' in init_skill.coords and init_skill.member.size == 1:
-        del init_skill['member']
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
@@ -495,11 +498,13 @@ def bootstrap_compute(
         init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)
 
     # wrap results together in one dataarray
-    skill = xr.concat([init_skill, uninit_skill, pers_skill], 'kind')
+    skill = xr.concat(
+        [init_skill, uninit_skill, pers_skill], dim='kind', **CONCAT_KWARGS
+    )
     skill['kind'] = ['init', 'uninit', 'pers']
 
     # probability that i beats init
-    p = xr.concat([p_uninit_over_init, p_pers_over_init], 'kind')
+    p = xr.concat([p_uninit_over_init, p_pers_over_init], dim='kind', **CONCAT_KWARGS)
     p['kind'] = ['uninit', 'pers']
 
     # ci for each skill
@@ -508,14 +513,14 @@ def bootstrap_compute(
     )
     ci['kind'] = ['init', 'uninit', 'pers']
 
-    results = xr.concat([skill, p], 'results')
+    results = xr.concat([skill, p], dim='results', **CONCAT_KWARGS)
     results['results'] = ['skill', 'p']
     if set(results.coords) != set(ci.coords):
         res_drop = [c for c in results.coords if c not in ci.coords]
         ci_drop = [c for c in ci.coords if c not in results.coords]
         results = results.drop_vars(res_drop)
         ci = ci.drop_vars(ci_drop)
-    results = xr.concat([results, ci], 'results')
+    results = xr.concat([results, ci], dim='results', **CONCAT_KWARGS)
     results['results'] = ['skill', 'p', 'low_ci', 'high_ci']
     # Attach climpred compute information to skill
     metadata_dict = {
@@ -651,7 +656,7 @@ def bootstrap_hindcast(
 
 
 def bootstrap_perfect_model(
-    ds,
+    init_pm,
     control,
     metric='pearson_r',
     comparison='m2e',
@@ -731,7 +736,7 @@ def bootstrap_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     return bootstrap_compute(
-        ds,
+        init_pm,
         control,
         hist=None,
         metric=metric,

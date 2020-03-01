@@ -20,6 +20,7 @@ def assign_attrs(
     ds,
     function_name,
     metadata_dict=None,
+    alignment='same_inits',
     metric=None,
     comparison=None,
     dim=None,
@@ -31,6 +32,7 @@ def assign_attrs(
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
         metadata_dict (dict): optional attrs
+        alignment (str): method used to align inits and verification data.
         metric (class) : metric used in comparing the forecast and verification data.
         comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
@@ -51,6 +53,7 @@ def assign_attrs(
     if 'member' in ds.coords:
         skill.attrs['number_of_members'] = ds.member.size
 
+    skill.attrs['alignment'] = alignment
     skill.attrs['metric'] = metric.name
     skill.attrs['comparison'] = comparison.name
     skill.attrs['dim'] = dim
@@ -267,11 +270,13 @@ def get_lead_cftime_shift_args(units, lead):
     Args:
         units (str): Units associated with the lead dimension. Must be
             years, seasons, months, weeks, pentads, days.
-        lead (int): increment of lead being computed.
+        lead (int): Increment of lead being computed.
 
     Returns:
-       n (int): Number of units to shift. ``value`` for ``CFTime.shift(value, str)``.
-       freq (str): Pandas frequency alias. ``str`` for ``CFTime.shift(value, str)``.
+       n (int): Number of units to shift. ``value`` for
+           ``CFTimeIndex.shift(value, str)``.
+       freq (str): Pandas frequency alias. ``str`` for
+           ``CFTimeIndex.shift(value, str)``.
     """
     lead = int(lead)
 
@@ -294,6 +299,26 @@ def get_lead_cftime_shift_args(units, lead):
     return n, freq
 
 
+def get_multiple_lead_cftime_shift_args(units, leads):
+    """Returns ``CFTimeIndex.shift()`` offset increment for an arbitrary number of
+    leads.
+
+    Args:
+        units (str): Units associated with the lead dimension. Must be one of
+            years, seasons, months, weeks, pentads, days.
+        leads (list, array, xr.DataArray of ints): Leads to return offset for.
+
+    Returns:
+        n (tuple of ints): Number of units to shift for ``leads``. ``value`` for
+            ``CFTimeIndex.shift(value, str)``.
+        freq (str): Pandas frequency alias. ``str`` for
+            ``CFTimeIndex.shift(value, str)``.
+    """
+    n_freq_tuples = [get_lead_cftime_shift_args(units, l) for l in leads]
+    n, freq = list(zip(*n_freq_tuples))
+    return n, freq[0]
+
+
 def intersect(lst1, lst2):
     """
     Custom intersection, since `set.intersection()` changes type of list.
@@ -309,57 +334,43 @@ def _load_into_memory(res):
     return res
 
 
-def reduce_time_series_for_aligned_inits(forecast, verif, nlags):
-    """Reduces forecast and verification data to align initializations for prediction
-    across all lags.
+def reduce_forecast_to_same_inits(forecast, verif):
+    """Reduces the forecast to common set of initializations that verify over all lags.
 
     Args:
-        forecast (`xarray` object): Prediction ensemble with ``init`` dim.
-        verif (`xarray` object): verification data being compared to (for verification,
-            persistence, etc.)
-        nlags (int): number of lags being computed
+        forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
+            ``time`` and containing ``lead`` dim.
+        verif (``xarray`` object): Verification data with ``time`` dim.
 
     Returns:
-       forecast (`xarray` object): prediction ensemble reduced to
-       verif (`xarray` object):
+        forecast (``xarray`` object): Prediction ensemble with ``init`` sub-selected for
+            those that verify over all leads.
+        verif (``xarray`` object): Original verification data.
     """
-    n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
-
-    imin = max(forecast.time.min(), verif.time.min())
-    imax = min(forecast.time.max(), verif_dates.max())
-    imax = xr.DataArray(imax).rename('time')
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    verif = verif.where(verif.time >= imin, drop=True)
-    return forecast, verif
-
-
-def reduce_time_series_for_aligned_verifs(forecast, verif, nlags):
-    """Reduces forecast and verification data to align verification time for prediction
-    across all lags.
-    # just an idea. max(first_init+max_lead, verif_time)-min(last_init-max_lead)
-
-
-    Args:
-        forecast (`xarray` object): Prediction ensemble with ``init`` dim.
-        verif (`xarray` object): verification data being compared to (for verification,
-            persistence, etc.)
-        nlags (int): number of lags being computed
-
-    Returns:
-       forecast (`xarray` object): prediction ensemble reduced to
-       verif (`xarray` object):
-    """
-    n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], nlags)
-    verif_dates = shift_cftime_index(verif, 'time', -1 * n, freq)
-
-    imin = max(forecast.time.min(), verif.time.min())
-    imax = min(forecast.time.max(), verif_dates.max())
-    imax = xr.DataArray(imax).rename('time')
-    forecast = forecast.where(forecast.time <= imax, drop=True)
-    forecast = forecast.where(forecast.time >= imin, drop=True)
-    verif = verif.where(verif.time >= imin, drop=True)
+    # Construct list of `n` offset over all leads.
+    n, freq = get_multiple_lead_cftime_shift_args(
+        forecast['lead'].attrs['units'], forecast['lead'].values
+    )
+    n = list(n)
+    # Add lead 0 to check that init exists in the observations so that reference
+    # forecasts have the same set of inits.
+    if 0 not in n:
+        n.insert(0, 0)
+    # Note that `init` is renamed to `time` in the compute function to compute metrics.
+    init_lead_matrix = xr.concat(
+        [
+            xr.DataArray(
+                shift_cftime_index(forecast, 'time', n, freq),
+                dims=['time'],
+                coords=[forecast['time']],
+            )
+            for n in n
+        ],
+        'lead',
+    )
+    # Checks at each `init` if all leads can verify.
+    verifies_at_all_leads = init_lead_matrix.isin(verif['time']).all('lead')
+    forecast = forecast.where(verifies_at_all_leads, drop=True)
     return forecast, verif
 
 

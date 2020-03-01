@@ -14,3 +14,7 @@ FREQ_LIST = ['day', 'month', 'year']
 # calendar type for PM (needed for bootstrapping_uninit)
 # Leap also works, but changing Leap,NoLeap fails
 PM_CALENDAR_STR = 'DatetimeNoLeap'
+
+# default kwargs when using concat
+# data_vars='minimal' could be added but needs to check that not xr.Dataset
+CONCAT_KWARGS = {'coords': 'minimal', 'compat': 'override'}

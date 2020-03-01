@@ -1,3 +1,4 @@
+import cftime
 import numpy as np
 import pytest
 import xarray as xr
@@ -7,7 +8,10 @@ from climpred.constants import PM_CALENDAR_STR
 from climpred.tutorial import load_dataset
 from climpred.utils import set_cftime_to_int_dim
 
-# ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D; generic xr.objects
+
+def set_cftime_to_int_dim(ds, dim, freq='YS', calendar='DatetimeNoLeap'):
+    ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
+    return ds
 
 CALENDAR = PM_CALENDAR_STR.strip('Datetime').lower()
 
@@ -120,6 +124,15 @@ def hind_ds_initialized_1d():
 
 
 @pytest.fixture
+def hind_ds_initialized_1d_cftime(hind_ds_initialized_1d):
+    """CESM-DPLE initialzed hindcast timeseries with cftime initializations."""
+    ds = hind_ds_initialized_1d
+    ds = set_cftime_to_int_dim(ds, 'init')
+    ds.lead.attrs['units'] = 'years'
+    return ds
+
+
+@pytest.fixture
 def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset in lead-0
     framework."""
@@ -176,6 +189,14 @@ def reconstruction_ds_1d():
     xr.Dataset."""
     da = load_dataset('FOSI-SST')
     return da - da.mean('time')
+
+
+@pytest.fixture
+def reconstruction_ds_1d_cftime(reconstruction_ds_1d):
+    """CESM-FOSI historical reconstruction timeseries with cftime time axis."""
+    ds = reconstruction_ds_1d
+    ds = set_cftime_to_int_dim(ds, 'time')
+    return ds
 
 
 @pytest.fixture
@@ -388,3 +409,21 @@ def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
         start='3000', periods=PM_ds_control_1d.time.size, freq='D', calendar=CALENDAR
     )
     return PM_ds_control_1d
+
+@pytest.fixture
+def small_initialized_da():
+    """Very small simulation of an initialized forecasting system."""
+    inits = [1990, 1991, 1992, 1993]
+    lead = [1]
+    return xr.DataArray(
+        np.random.rand(len(inits), len(lead)),
+        dims=['init', 'lead'],
+        coords=[inits, lead],
+    )
+
+
+@pytest.fixture
+def small_verif_da():
+    """Very small simulation of a verification product."""
+    time = [1990, 1991, 1992, 1993, 1994]
+    return xr.DataArray(np.random.rand(len(time)), dims=['time'], coords=[time])

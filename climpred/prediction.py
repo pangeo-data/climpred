@@ -6,6 +6,7 @@ from datetime import datetime
 import dask
 import xarray as xr
 
+from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_in_list, is_xarray
 from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
@@ -23,7 +24,6 @@ from .utils import (
     get_lead_cftime_shift_args,
     get_metric_class,
     intersect,
-    reduce_forecast_to_same_inits,
     shift_cftime_index,
 )
 
@@ -221,13 +221,9 @@ def compute_hindcast(
     if dask.is_dask_collection(verif):
         verif = verif.chunk({'time': -1})
 
-    # take only inits for which we have verification data at all leads
-    if alignment == 'same_inits':
-        inits, verif_dates = reduce_forecast_to_same_inits(forecast, verif)
-    else:
-        raise NotImplementedError(
-            "Only 'same_inits' alignment is currently implemented."
-        )
+    inits, verif_dates = return_inits_and_verif_dates(
+        forecast, verif, alignment=alignment
+    )
 
     plag = []
     logging.info(
@@ -237,7 +233,8 @@ def compute_hindcast(
     )
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
-        a = forecast.sel(lead=i, time=inits[i]).drop_vars('lead')
+        # Use `.where()` instead of `.sel()` to account for resampled inits.
+        a = forecast.sel(lead=i).where(forecast['time'].isin(inits[i]), drop=True)
         b = verif.sel(time=verif_dates[i])
         # Align time coordinate for metric computations.
         a['time'] = b['time']
@@ -249,12 +246,12 @@ def compute_hindcast(
                 f'dim={dim} | '
                 # This is the init-sliced forecast, thus displaying actual
                 # initializations.
-                f'inits={forecast["time"].min().values}'
-                f'-{forecast["time"].max().values} | '
+                f'inits={inits[i].min().values}'
+                f'-{inits[i].max().values} | '
                 # This is the verification window, thus displaying the
                 # verification dates.
-                f'verif={a["time"].min().values}'
-                f'-{a["time"].max().values}'
+                f'verif={verif_dates[i].min()}'
+                f'-{verif_dates[i].max()}'
             )
 
         # adapt weights to shorter time
@@ -356,12 +353,7 @@ def compute_persistence(
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if alignment == 'same_inits':
-        inits, verif_dates = reduce_forecast_to_same_inits(hind, verif)
-    else:
-        raise NotImplementedError(
-            "Only 'same_inits' alignment is currently implemented."
-        )
+    inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
     plag = []
     for i in hind.lead.values:

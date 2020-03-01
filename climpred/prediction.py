@@ -223,7 +223,7 @@ def compute_hindcast(
 
     # take only inits for which we have verification data at all leads
     if alignment == 'same_inits':
-        forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
+        inits, verif_dates = reduce_forecast_to_same_inits(forecast, verif)
     else:
         raise NotImplementedError(
             "Only 'same_inits' alignment is currently implemented."
@@ -237,13 +237,10 @@ def compute_hindcast(
     )
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
-        # take lead year i timeseries and convert to real time based on temporal
-        # resolution of lead.
-        n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
-        a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = shift_cftime_index(a, 'time', n, freq)
-        # Take real time verification data using real time forecast dates.
-        b = verif.sel(time=a.time.values)
+        a = forecast.sel(lead=i, time=inits[i]).drop_vars('lead')
+        b = verif.sel(time=verif_dates[i])
+        # Align time coordinate for metric computations.
+        a['time'] = b['time']
 
         # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
@@ -360,22 +357,19 @@ def compute_persistence(
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
     if alignment == 'same_inits':
-        a, _ = reduce_forecast_to_same_inits(hind, verif)
-        initial = verif.sel(time=a['time'])
+        inits, verif_dates = reduce_forecast_to_same_inits(hind, verif)
     else:
         raise NotImplementedError(
             "Only 'same_inits' alignment is currently implemented."
         )
 
     plag = []
-    for lag in hind.lead.values:
-        n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
-        target_dates = shift_cftime_index(a, 'time', n, freq)
-
-        o = verif.sel(time=target_dates)
-        o['time'] = initial['time']
+    for i in hind.lead.values:
+        a = verif.sel(time=inits[i])
+        b = verif.sel(time=verif_dates[i])
+        a['time'] = b['time']
         plag.append(
-            metric.function(o, initial, dim='time', comparison=__e2c, **metric_kwargs)
+            metric.function(a, b, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values

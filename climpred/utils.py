@@ -299,7 +299,8 @@ def _load_into_memory(res):
 
 
 def reduce_forecast_to_same_inits(forecast, verif):
-    """Reduces the forecast to common set of initializations that verify over all lags.
+    """Returns initializations and verification dates, maintaining the same inits at
+    each lead.
 
     Args:
         forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
@@ -307,19 +308,15 @@ def reduce_forecast_to_same_inits(forecast, verif):
         verif (``xarray`` object): Verification data with ``time`` dim.
 
     Returns:
-        forecast (``xarray`` object): Prediction ensemble with ``init`` sub-selected for
-            those that verify over all leads.
-        verif (``xarray`` object): Original verification data.
+        inits (dict): Keys are the lead time integer, values are an ``xr.DataArray`` of
+            initialization dates.
+        verif_dates (dict): Keys are the lead time integer, values are an
+            ``xr.CFTimeIndex`` of verification dates.
     """
+    units = forecast['lead'].attrs['units']
+    leads = forecast['lead'].values
     # Construct list of `n` offset over all leads.
-    n, freq = get_multiple_lead_cftime_shift_args(
-        forecast['lead'].attrs['units'], forecast['lead'].values
-    )
-    n = list(n)
-    # Add lead 0 to check that init exists in the observations so that reference
-    # forecasts have the same set of inits.
-    if 0 not in n:
-        n.insert(0, 0)
+    n, freq = get_multiple_lead_cftime_shift_args(units, leads)
     # Note that `init` is renamed to `time` in the compute function to compute metrics.
     init_lead_matrix = xr.concat(
         [
@@ -332,10 +329,16 @@ def reduce_forecast_to_same_inits(forecast, verif):
         ],
         'lead',
     )
-    # Checks at each `init` if all leads can verify.
     verifies_at_all_leads = init_lead_matrix.isin(verif['time']).all('lead')
-    forecast = forecast.where(verifies_at_all_leads, drop=True)
-    return forecast, verif
+    union_with_observations = init_lead_matrix['time'].isin(verif['time'])
+    inits = forecast['time'].where(
+        verifies_at_all_leads & union_with_observations, drop=True
+    )
+    inits = {l: inits for l in leads}
+    verif_dates = {
+        l: shift_cftime_index(inits[l], 'time', n, freq) for (l, n) in zip(leads, n)
+    }
+    return inits, verif_dates
 
 
 def shift_cftime_index(xobj, time_string, n, freq):

@@ -842,11 +842,11 @@ def bootstrap_perfect_model(
         dim = ['init', 'member']
     # set cftime
     # TODO: check cftime and reset
-    if 'int' in str(ds.init.dtype):
-        ds = set_cftime_to_int_dim(ds, 'init')
+    if 'int' in str(init_pm.init.dtype):
+        init_pm = set_cftime_to_int_dim(init_pm, 'init')
     if 'int' in str(control.time.dtype):
         control = set_cftime_to_int_dim(control, 'time')
-    check_lead_units_equal_control_time_stride(ds, control)
+    check_lead_units_equal_control_time_stride(init_pm, control)
     return bootstrap_compute(
         init_pm,
         control,

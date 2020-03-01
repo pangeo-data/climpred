@@ -103,7 +103,7 @@ def test_seasonal_resolution_hindcast(monthly_initialized, monthly_obs):
     seasonal_hindcast = (
         monthly_initialized.rolling(lead=3, center=True).mean().dropna(dim='lead')
     )
-    seasonal_hindcast = seasonal_hindcast.isel(init=slice(0, None, 3))
+    seasonal_hindcast = seasonal_hindcast.isel(lead=slice(0, None, 3))
     seasonal_obs = monthly_obs.rolling(time=3, center=True).mean().dropna(dim='time')
     seasonal_hindcast.lead.attrs['units'] = 'seasons'
     assert compute_hindcast(seasonal_hindcast, seasonal_obs).all()
@@ -114,7 +114,7 @@ def test_seasonal_resolution_perfect_model(monthly_initialized, monthly_obs):
     seasonal_pm = (
         monthly_initialized.rolling(lead=3, center=True).mean().dropna(dim='lead')
     )
-    seasonal_pm = seasonal_pm.isel(init=slice(0, None, 3))
+    seasonal_pm = seasonal_pm.isel(lead=slice(0, None, 3))
     seasonal_obs = monthly_obs.rolling(time=3, center=True).mean().dropna(dim='time')
     assert compute_perfect_model(seasonal_pm, seasonal_obs).all()
 

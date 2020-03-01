@@ -207,6 +207,8 @@ def _m2c(ds, control_member=None, metric=None):
     forecast = _drop_members(ds, removed_member=ds.member.values[control_member])
     if not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
+    elif 'member' in reference.coords:
+        del reference['member']
     return forecast, reference
 
 

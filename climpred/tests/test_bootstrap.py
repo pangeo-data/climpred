@@ -2,9 +2,16 @@ import time
 
 import dask
 import pytest
+import xarray as xr
 from xarray.testing import assert_allclose
 
-from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model, my_quantile
+from climpred.bootstrap import (
+    bootstrap_by_reshape,
+    bootstrap_hindcast,
+    bootstrap_perfect_model,
+    bootstrap_uninit_pm_ensemble_from_control_cftime,
+    my_quantile,
+)
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 
 BOOTSTRAP = 2
@@ -108,3 +115,113 @@ def test_bootstrap_hindcast_resample_dim(
         metric='mse',
         resample_dim=resample_dim,
     )
+
+
+def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+):
+    """Test ``bootstrap_uninit_pm_ensemble_from_control_cftime`` cftime identical to
+    ``bootstrap_uninit_pm_ensemble_from_control`` for annual data."""
+    cftime_res = bootstrap_uninit_pm_ensemble_from_control_cftime(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+    )
+    noncftime_res = bootstrap_uninit_pm_ensemble_from_control_cftime(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+    )
+    # lead and member identical
+    for d in ['lead', 'member']:
+        assert (cftime_res[d] == noncftime_res[d]).all()
+    # init same size
+    assert cftime_res['init'].size == noncftime_res['init'].size
+
+
+def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+):
+    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for annual data."""
+    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+    )
+    # lead and member identical
+    for d in ['lead', 'member']:
+        assert (uninit[d] == PM_ds_initialized_1d_ym_cftime[d]).all()
+    # init same size
+    assert uninit['init'].size == PM_ds_initialized_1d_ym_cftime['init'].size
+
+
+def test_bootstrap_uninit_pm_ensemble_from_control_cftime_monthly(
+    PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
+):
+    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for monthly data."""
+    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
+        PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
+    )
+    # lead and member identical
+    for d in ['lead', 'member']:
+        assert (uninit[d] == PM_ds_initialized_1d_mm_cftime[d]).all()
+    # init same size
+    assert uninit['init'].size == PM_ds_initialized_1d_mm_cftime['init'].size
+
+
+def test_bootstrap_uninit_pm_ensemble_from_control_cftime_daily(
+    PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
+):
+    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for daily data."""
+    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
+        PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
+    )
+    # lead and member identical
+    for d in ['lead', 'member']:
+        assert (uninit[d] == PM_ds_initialized_1d_dm_cftime[d]).all()
+    # init same size
+    assert uninit['init'].size == PM_ds_initialized_1d_dm_cftime['init'].size
+
+
+def test_bootstrap_by_reshape_dataset(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+):
+    res = bootstrap_by_reshape(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+    )
+    assert res.lead.attrs['units'] == 'years'
+    assert isinstance(res, xr.Dataset)
+
+
+def test_bootstrap_by_reshape_dataarray(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+):
+    v = list(PM_ds_initialized_1d_ym_cftime.data_vars)[0]
+    res = bootstrap_by_reshape(
+        PM_ds_initialized_1d_ym_cftime[v], PM_ds_control_1d_dm_cftime[v]
+    )
+    assert res.lead.attrs['units'] == 'years'
+    assert isinstance(res, xr.DataArray)
+
+
+def test_bootstrap_by_reshape_chunked(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+):
+    res_chunked = bootstrap_by_reshape(
+        PM_ds_initialized_1d_ym_cftime.chunk(), PM_ds_control_1d_dm_cftime.chunk()
+    )
+    assert dask.is_dask_collection(res_chunked)
+    res_chunked = res_chunked.compute()
+    res = bootstrap_by_reshape(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+    )
+    for d in ['lead', 'member']:
+        assert (res_chunked[d] == res[d]).all()
+    # init same size
+    assert res_chunked['init'].size == res['init'].size
+
+
+def test_bootstrap_by_reshape_two_var_dataset(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+):
+    """Test test_bootstrap_by_reshape when init_pm and control two variable dataset."""
+    PM_ds_initialized_1d_ym_cftime['sos'] = PM_ds_initialized_1d_ym_cftime['tos']
+    PM_ds_control_1d_dm_cftime['sos'] = PM_ds_control_1d_dm_cftime['tos']
+    res = bootstrap_by_reshape(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+    )
+    assert len(list(res.data_vars)) == 2

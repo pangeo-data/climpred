@@ -4,6 +4,7 @@ import xarray as xr
 
 from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
+from climpred.utils import set_cftime_to_int_dim
 
 # ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D; generic xr.objects
 
@@ -11,7 +12,9 @@ from climpred.tutorial import load_dataset
 @pytest.fixture
 def PM_ds_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.Dataset."""
-    return load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
+    return (
+        load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1).drop_vars(['sos', 'AMO'])
+    )
 
 
 @pytest.fixture
@@ -60,7 +63,9 @@ def PM_da_initialized_3d(PM_ds_initialized_3d):
 @pytest.fixture
 def PM_ds_control_1d():
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset."""
-    return load_dataset('MPI-control-1D').isel(area=1, period=-1)
+    return (
+        load_dataset('MPI-control-1D').isel(area=1, period=-1).drop_vars(['sos', 'AMO'])
+    )
 
 
 @pytest.fixture
@@ -310,3 +315,73 @@ def da_dcpp():
         dims=['dcpp_init_year', 'time', 'member_id'],
         coords=[init, lead, member],
     )
+
+
+@pytest.fixture
+def PM_ds_initialized_1d_ym_cftime(PM_ds_initialized_1d):
+    """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
+    cftime."""
+    PM_ds_initialized_1d = set_cftime_to_int_dim(PM_ds_initialized_1d, 'init')
+    PM_ds_initialized_1d['lead'].attrs['units'] = 'years'
+    return PM_ds_initialized_1d
+
+
+@pytest.fixture
+def PM_ds_control_1d_ym_cftime(PM_ds_control_1d):
+    """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
+    time as cftime."""
+    PM_ds_control_1d = set_cftime_to_int_dim(PM_ds_control_1d, 'time')
+    return PM_ds_control_1d
+
+
+@pytest.fixture
+def PM_ds_initialized_1d_mm_cftime(PM_ds_initialized_1d):
+    """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
+    cftime faking all inits with monthly separation in one year and lead units to
+    monthly."""
+    PM_ds_initialized_1d['init'] = xr.cftime_range(
+        start='3004',
+        periods=PM_ds_initialized_1d.init.size,
+        freq='MS',
+        calendar='noleap',
+    )
+    PM_ds_initialized_1d['lead'].attrs['units'] = 'months'
+    return PM_ds_initialized_1d
+
+
+@pytest.fixture
+def PM_ds_control_1d_mm_cftime(PM_ds_control_1d):
+    """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
+    time as cftime faking the time resolution to monthly means."""
+    PM_ds_control_1d['time'] = xr.cftime_range(
+        start='3000', periods=PM_ds_control_1d.time.size, freq='MS', calendar='noleap'
+    )
+    return PM_ds_control_1d
+
+
+@pytest.fixture
+def PM_ds_initialized_1d_dm_cftime(PM_ds_initialized_1d):
+    """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
+    cftime faking all inits with daily separation in one year and lead units to
+    daily."""
+    PM_ds_initialized_1d['init'] = xr.cftime_range(
+        start='3004',
+        periods=PM_ds_initialized_1d.init.size,
+        freq='D',
+        calendar='noleap',
+    )
+    PM_ds_initialized_1d['lead'].attrs['units'] = 'days'
+    return PM_ds_initialized_1d
+
+
+@pytest.fixture
+def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
+    """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
+    time as cftime faking the time resolution to daily means."""
+    PM_ds_control_1d = PM_ds_control_1d.isel(
+        time=np.random.randint(0, PM_ds_control_1d.time.size, 5000)
+    )
+    PM_ds_control_1d['time'] = xr.cftime_range(
+        start='3000', periods=PM_ds_control_1d.time.size, freq='D', calendar='noleap'
+    )
+    return PM_ds_control_1d

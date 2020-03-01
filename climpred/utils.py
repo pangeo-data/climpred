@@ -11,6 +11,7 @@ from xarray.coding.cftime_offsets import to_offset
 from . import comparisons, metrics
 from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
+from .constants import FREQ_LIST
 from .metrics import METRIC_ALIASES
 
 
@@ -79,6 +80,21 @@ def assign_attrs(
         'created'
     ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
     return skill
+
+
+def check_lead_units_equal_control_time_stride(init_pm, control):
+    """Checl that the lead units of the initialized ensemble have the same frequency as
+    the control stride."""
+    control_time_stride = freq_at_which_different(control, 'time')
+    lead_units = init_pm.lead.attrs['units'].strip('s')
+    if control_time_stride != lead_units:
+        raise ValueError(
+            'Please provide the same temporal resolution for control.time',
+            f'(found {control_time_stride}) and init_pm.init (found',
+            f'{lead_units}).',
+        )
+    else:
+        return True
 
 
 def copy_coords_from_to(xro_from, xro_to):
@@ -156,6 +172,26 @@ def convert_time_index(xobj, time_string, kind):
         xobj[time_string] = time_index
 
     return xobj
+
+
+def find_start_dates(init_pm, control, single_init):
+    """Find the same start dates for single_init across different years in control.
+    Return control.time. Therefore require calendar=Datetime(No)Leap."""
+    take_same_time = 'dayofyear'
+    return control.sel(
+        time=getattr(control.time.dt, take_same_time).values
+        == getattr(single_init.init.dt, take_same_time).values
+    ).time
+
+
+def freq_at_which_different(ds, dim):
+    """Find the frequency starting from high freq. at which all ds.dim are not equal."""
+    for freq in FREQ_LIST:
+        # first dim values not equal all others
+        if not (
+            getattr(ds.isel({dim: 0})[dim].dt, freq) == getattr(ds[dim].dt, freq)
+        ).all():
+            return freq
 
 
 def get_metric_class(metric, list_):
@@ -325,6 +361,11 @@ def reduce_time_series_for_aligned_verifs(forecast, verif, nlags):
     forecast = forecast.where(forecast.time >= imin, drop=True)
     verif = verif.where(verif.time >= imin, drop=True)
     return forecast, verif
+
+
+def set_cftime_to_int_dim(ds, dim, calendar='DatetimeNoLeap'):
+    ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
+    return ds
 
 
 def shift_cftime_index(xobj, time_string, n, freq):

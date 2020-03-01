@@ -4,6 +4,8 @@ import dask
 import numpy as np
 import xarray as xr
 
+from climpred.constants import CLIMPRED_DIMS
+
 from .checks import (
     has_dims,
     has_valid_lead_units,
@@ -16,7 +18,9 @@ from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
     assign_attrs,
+    check_lead_units_equal_control_time_stride,
     convert_time_index,
+    find_start_dates,
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
@@ -192,7 +196,6 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     Returns:
         ds_e (xarray object): pseudo-ensemble generated from control run.
     """
-    nens = ds.init.size
     nmember = ds.member.size
     length = ds.lead.size
     c_start = 0
@@ -211,13 +214,115 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
             (isel_years(control, start, length) for start in startlist), 'member',
         )
 
-    uninit = xr.concat((create_pseudo_members(control) for _ in range(nens)), 'init')
+    uninit = xr.concat(
+        (create_pseudo_members(control) for _ in range(ds.init.size)), 'init'
+    )
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
         if dask.is_dask_collection(uninit)
         else uninit
     )
+
+
+def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
+    """
+    Create a pseudo-ensemble from control run. Bootstrap random numbers for years to
+    construct an uninitialized ensemble from. This assumes a continous control
+    simulation without gaps.
+
+    Note:
+        Needed for block bootstrapping  a metric in perfect-model framework. Takes
+        random segments of length ``block_length`` from control based on ``dayofyear``
+        (and therefore assumes a constant climate control simulation) and rearranges
+        them into ensemble and member dimensions.
+
+    Args:
+        init_pm (xarray object): ensemble simulation.
+        control (xarray object): control simulation.
+
+    Returns:
+        uninit_pm (xarray object): uninitialized ensemble generated from control run.
+    """
+    check_lead_units_equal_control_time_stride(init_pm, control)
+    # short cut if annual leads
+    if init_pm.lead.attrs['units'] == 'years':
+        return bootstrap_by_reshape(init_pm, control)
+
+    block_length = init_pm.lead.size
+    freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
+    nmember = init_pm.member.size
+    c_start_year = control.time.min().dt.year.astype('int')
+    # dont resample from years that control wont have timesteps for all leads
+    c_end_year = (
+        shift_cftime_singular(control.time.max(), -block_length, freq).dt.year.astype(
+            'int'
+        )
+        - 1
+    )
+
+    def sel_time(control, start_year_int, suitable_start_dates):
+        """Select time segments from control from ``suitable_start_dates`` based on
+        year ``start_year_int``."""
+        start_time = suitable_start_dates.time.sel(time=str(start_year_int))
+        end_time = shift_cftime_singular(start_time, block_length - 1, freq)
+        new = control.sel(time=slice(*start_time, *end_time))
+        new['time'] = init_pm.lead.values
+        return new
+
+    def create_pseudo_members(control, init):
+        """For every initialization take a different set of start years."""
+        startlist = np.random.randint(c_start_year, c_end_year, nmember)
+        suitable_start_dates = find_start_dates(init_pm, control, init)
+        return xr.concat(
+            (sel_time(control, start, suitable_start_dates) for start in startlist),
+            'member',
+        )
+
+    uninit = xr.concat(
+        (create_pseudo_members(control, init) for init in init_pm.init), 'init'
+    ).rename({'time': 'lead'})
+    uninit['member'] = init_pm.member.values
+    uninit['lead'] = init_pm.lead
+    # chunk to same dims
+    return (
+        _transpose_and_rechunk_to(uninit, init_pm)
+        if dask.is_dask_collection(uninit)
+        else uninit
+    )
+
+
+def bootstrap_by_reshape(init_pm, control):
+    """Bootstrap member, lead, init from control by reshaping."""
+    assert type(init_pm) == type(control)
+    if isinstance(init_pm, xr.Dataset):
+        init_pm = init_pm.to_array().squeeze()
+        init_was_dataset = True
+    else:
+        init_was_dataset = False
+    if isinstance(control, xr.Dataset):
+        control = control.to_array().squeeze()
+
+    init_size = init_pm.init.size * init_pm.member.size * init_pm.lead.size
+    # select random start points
+    new_time = np.random.randint(
+        0, control.time.size - init_pm.lead.size, init_size // (init_pm.lead.size)
+    )
+    new_time = np.array(
+        [np.arange(s, s + init_pm.lead.size) for s in new_time]
+    ).flatten()[:init_size]
+    larger = control.isel(time=new_time)
+    fake_init = init_pm.stack(time=set(d for d in init_pm.dims if d in CLIMPRED_DIMS))
+    # exchange values
+    fake_init.data = larger.data
+    fake_uninit = fake_init.unstack()
+    if init_was_dataset:
+        if 'variable' not in fake_uninit.dims:
+            fake_uninit = fake_uninit.to_dataset(name=str(fake_uninit.name))
+        else:
+            fake_uninit = fake_uninit.to_dataset(dim='variable')
+    fake_uninit['lead'] = init_pm['lead']
+    return fake_uninit
 
 
 def _bootstrap_func(
@@ -284,7 +389,8 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
 
 
 def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
-    """Calc the variance-weighted mean period significance levels from re-sampled dataset.
+    """Calc the variance-weighted mean period significance levels from re-sampled
+    dataset.
 
     See also:
         * climpred.bootstrap._bootstrap_func

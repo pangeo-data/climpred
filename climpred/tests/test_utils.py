@@ -11,8 +11,11 @@ from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
+    check_lead_units_equal_control_time_stride,
     convert_time_index,
     copy_coords_from_to,
+    find_start_dates,
+    freq_at_which_different,
     get_comparison_class,
     get_metric_class,
     intersect,
@@ -260,3 +263,80 @@ def test_shift_cftime_index():
     expected = idx.shift(3, 'YS')
     res = shift_cftime_index(da, 'time', 3, 'YS')
     assert (expected == res).all()
+
+
+def test_freq_at_which_different_annual_init_pm(PM_ds_initialized_1d_ym_cftime):
+    """Test that freq_at_which_different returns expected freq for annual lead units."""
+    actual = freq_at_which_different(PM_ds_initialized_1d_ym_cftime, 'init')
+    expected = PM_ds_initialized_1d_ym_cftime.lead.attrs['units'].strip('s')
+    assert actual == expected
+
+
+def test_freq_at_which_different_monthly_init_pm(PM_ds_initialized_1d_mm_cftime):
+    """Test that freq_at_which_different returns expected freq for monthly lead
+    units."""
+    actual = freq_at_which_different(PM_ds_initialized_1d_mm_cftime, 'init')
+    expected = PM_ds_initialized_1d_mm_cftime.lead.attrs['units'].strip('s')
+    assert actual == expected
+
+
+def test_freq_at_which_different_daily_init_pm(PM_ds_initialized_1d_dm_cftime):
+    """Test that freq_at_which_different returns expected freq for daily lead units."""
+    actual = freq_at_which_different(PM_ds_initialized_1d_dm_cftime, 'init')
+    expected = PM_ds_initialized_1d_dm_cftime.lead.attrs['units'].strip('s')
+    assert actual == expected
+
+
+def test_check_lead_units_equal_control_time_stride_annual(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+):
+    """Test that init_pm annual and control annual is compatible."""
+    assert check_lead_units_equal_control_time_stride(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+    )
+
+
+def test_check_lead_units_equal_control_time_stride_monthly(
+    PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
+):
+    """Test that init_pm monthly and control monthly is compatible."""
+    assert check_lead_units_equal_control_time_stride(
+        PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
+    )
+
+
+def test_check_lead_units_equal_control_time_stride_daily(
+    PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
+):
+    """Test that init_pm daily and control daily is compatible."""
+    assert check_lead_units_equal_control_time_stride(
+        PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
+    )
+
+
+def test_check_lead_units_equal_control_time_stride_daily_fails(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+):
+    """Test that init_pm annual and control daily is not compatible."""
+    with pytest.raises(ValueError) as excinfo:
+        check_lead_units_equal_control_time_stride(
+            PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_dm_cftime
+        )
+        assert 'Please provide the same temporal resolution for control.time' in str(
+            excinfo.value
+        )
+
+
+def test_find_start_dates(PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime):
+    """Test that start dates are one year apart."""
+    for init in PM_ds_initialized_1d_mm_cftime.init:
+        start_dates = find_start_dates(
+            PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime, init
+        )
+        freq = freq_at_which_different(PM_ds_initialized_1d_mm_cftime, 'init')
+        assert freq_at_which_different(start_dates, 'time') == 'year'
+        assert (getattr(start_dates.time.dt, freq) == getattr(init.dt, freq)).all()
+        # same number of start dates are years or one less
+        assert start_dates.time.size - len(
+            np.unique(PM_ds_control_1d_mm_cftime.time.dt.year.values)
+        ) in [0, 1]

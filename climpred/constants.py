@@ -7,3 +7,6 @@ CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']
 
 # Valid units for lead dimension
 VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
+
+# List of frequencies to check a dimension has different coords
+FREQ_LIST = ['day', 'month', 'year']

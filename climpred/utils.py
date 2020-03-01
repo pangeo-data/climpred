@@ -116,13 +116,14 @@ def copy_coords_from_to(xro_from, xro_to):
     return xro_to
 
 
-def convert_time_index(xobj, time_string, kind):
+def convert_time_index(xobj, time_string, kind, calendar='DatetimeProlepticGregorian'):
     """Converts incoming time index to a standard xr.CFTimeIndex.
 
     Args:
         xobj (xarray object): Dataset or DataArray with a time dimension to convert.
         time_string (str): Name of time dimension.
         kind (str): Kind of object for error message.
+        calendar (str): calendar to set time dimension to.
 
     Returns:
         Dataset or DataArray with converted time dimension. If incoming time index is
@@ -168,7 +169,7 @@ def convert_time_index(xobj, time_string, kind):
             )
         # TODO: Account for differing calendars. Currently assuming `Gregorian`.
         cftime_dates = [
-            cftime.DatetimeProlepticGregorian(int(y), int(m), int(d))
+            getattr(cftime, calendar)(int(y), int(m), int(d))
             for (y, m, d) in split_dates
         ]
         time_index = xr.CFTimeIndex(cftime_dates)

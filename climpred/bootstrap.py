@@ -4,7 +4,7 @@ import dask
 import numpy as np
 import xarray as xr
 
-from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS
+from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS, PM_CALENDAR_STR
 
 from .checks import (
     has_dims,
@@ -24,7 +24,6 @@ from .utils import (
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
-    set_cftime_to_int_dim,
     shift_cftime_singular,
 )
 
@@ -258,7 +257,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     check_lead_units_equal_control_time_stride(init_pm, control)
     # short cut if annual leads
     if init_pm.lead.attrs['units'] == 'years':
-        return bootstrap_by_reshape(init_pm, control)
+        return bootstrap_by_stacking(init_pm, control)
 
     block_length = init_pm.lead.size
     freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
@@ -304,7 +303,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     )
 
 
-def bootstrap_by_reshape(init_pm, control):
+def bootstrap_by_stacking(init_pm, control):
     """Bootstrap member, lead, init from control by reshaping."""
     assert type(init_pm) == type(control)
     lead_unit = init_pm.lead.attrs['units']
@@ -840,12 +839,13 @@ def bootstrap_perfect_model(
 
     if dim is None:
         dim = ['init', 'member']
-    # set cftime
-    # TODO: check cftime and reset
-    if 'int' in str(init_pm.init.dtype):
-        init_pm = set_cftime_to_int_dim(init_pm, 'init')
-    if 'int' in str(control.time.dtype):
-        control = set_cftime_to_int_dim(control, 'time')
+    # Check init & time is int, cftime, or datetime; convert ints or cftime to datetime.
+    init_pm = convert_time_index(
+        init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
+    )
+    control = convert_time_index(
+        control, 'time', 'control[time]', calendar=PM_CALENDAR_STR
+    )
     check_lead_units_equal_control_time_stride(init_pm, control)
     return bootstrap_compute(
         init_pm,

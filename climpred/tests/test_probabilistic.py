@@ -318,7 +318,8 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
         f'computed over dimension `dim="member"`. '
         f'Set automatically.'
     )
-    assert record[0].message.args[0] == expected
+    # get second warning here
+    assert record[1].message.args[0] == expected
 
 
 @pytest.mark.parametrize('metric', ['crps'])

@@ -6,7 +6,7 @@ import xarray as xr
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import (
-    bootstrap_by_reshape,
+    bootstrap_by_stacking,
     bootstrap_hindcast,
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control,
@@ -203,10 +203,10 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_daily(
     assert uninit['init'].size == PM_ds_initialized_1d_dm_cftime['init'].size
 
 
-def test_bootstrap_by_reshape_dataset(
+def test_bootstrap_by_stacking_dataset(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
-    res = bootstrap_by_reshape(
+    res = bootstrap_by_stacking(
         PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
     )
     assert res.lead.attrs['units'] == 'years'
@@ -214,11 +214,11 @@ def test_bootstrap_by_reshape_dataset(
     assert res.tos.dims == PM_ds_initialized_1d_ym_cftime.tos.dims
 
 
-def test_bootstrap_by_reshape_dataarray(
+def test_bootstrap_by_stacking_dataarray(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
     v = list(PM_ds_initialized_1d_ym_cftime.data_vars)[0]
-    res = bootstrap_by_reshape(
+    res = bootstrap_by_stacking(
         PM_ds_initialized_1d_ym_cftime[v], PM_ds_control_1d_ym_cftime[v]
     )
     assert res.lead.attrs['units'] == 'years'
@@ -226,15 +226,15 @@ def test_bootstrap_by_reshape_dataarray(
     assert res.dims == PM_ds_initialized_1d_ym_cftime[v].dims
 
 
-def test_bootstrap_by_reshape_chunked(
+def test_bootstrap_by_stacking_chunked(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
-    res_chunked = bootstrap_by_reshape(
+    res_chunked = bootstrap_by_stacking(
         PM_ds_initialized_1d_ym_cftime.chunk(), PM_ds_control_1d_ym_cftime.chunk()
     )
     assert dask.is_dask_collection(res_chunked)
     res_chunked = res_chunked.compute()
-    res = bootstrap_by_reshape(
+    res = bootstrap_by_stacking(
         PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
     )
     for d in ['lead', 'member']:
@@ -243,13 +243,13 @@ def test_bootstrap_by_reshape_chunked(
     assert res_chunked['init'].size == res['init'].size
 
 
-def test_bootstrap_by_reshape_two_var_dataset(
+def test_bootstrap_by_stacking_two_var_dataset(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
-    """Test test_bootstrap_by_reshape when init_pm and control two variable dataset."""
+    """Test test_bootstrap_by_stacking when init_pm and control two variable dataset."""
     PM_ds_initialized_1d_ym_cftime['sos'] = PM_ds_initialized_1d_ym_cftime['tos']
     PM_ds_control_1d_ym_cftime['sos'] = PM_ds_control_1d_ym_cftime['tos']
-    res = bootstrap_by_reshape(
+    res = bootstrap_by_stacking(
         PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
     )
     res_cf = bootstrap_uninit_pm_ensemble_from_control_cftime(

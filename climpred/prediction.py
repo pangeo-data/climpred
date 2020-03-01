@@ -8,7 +8,7 @@ import xarray as xr
 
 from .checks import has_valid_lead_units, is_in_list, is_xarray
 from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
-from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
+from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_METRICS,
@@ -68,6 +68,10 @@ def compute_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     is_in_list(dim, ['member', 'init', ['init', 'member']], '')
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    init_pm = convert_time_index(
+        init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
+    )
     # get metric and comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     comparison = COMPARISON_ALIASES.get(comparison, comparison)

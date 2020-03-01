@@ -161,46 +161,31 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical_da(
     # assert cftime_res.dims == noncftime_res.dims
 
 
-def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual(
-    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
-):
-    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for annual data."""
-    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
-        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
-    )
+@pytest.mark.parametrize(
+    'init, control',
+    [
+        (
+            pytest.lazy_fixture('PM_ds_initialized_1d_ym_cftime'),
+            pytest.lazy_fixture('PM_ds_control_1d_ym_cftime'),
+        ),
+        (
+            pytest.lazy_fixture('PM_ds_initialized_1d_mm_cftime'),
+            pytest.lazy_fixture('PM_ds_control_1d_mm_cftime'),
+        ),
+        (
+            pytest.lazy_fixture('PM_ds_initialized_1d_dm_cftime'),
+            pytest.lazy_fixture('PM_ds_control_1d_dm_cftime'),
+        ),
+    ],
+)
+def test_bootstrap_uninit_pm_ensemble_from_control_cftime_all_freq(init, control):
+    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for all freq data."""
+    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(init, control)
     # lead and member identical
     for d in ['lead', 'member']:
-        assert (uninit[d] == PM_ds_initialized_1d_ym_cftime[d]).all()
+        assert (uninit[d] == init[d]).all()
     # init same size
-    assert uninit['init'].size == PM_ds_initialized_1d_ym_cftime['init'].size
-
-
-def test_bootstrap_uninit_pm_ensemble_from_control_cftime_monthly(
-    PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
-):
-    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for monthly data."""
-    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
-        PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
-    )
-    # lead and member identical
-    for d in ['lead', 'member']:
-        assert (uninit[d] == PM_ds_initialized_1d_mm_cftime[d]).all()
-    # init same size
-    assert uninit['init'].size == PM_ds_initialized_1d_mm_cftime['init'].size
-
-
-def test_bootstrap_uninit_pm_ensemble_from_control_cftime_daily(
-    PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
-):
-    """Test bootstrap_uninit_pm_ensemble_from_control_cftime for daily data."""
-    uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
-        PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
-    )
-    # lead and member identical
-    for d in ['lead', 'member']:
-        assert (uninit[d] == PM_ds_initialized_1d_dm_cftime[d]).all()
-    # init same size
-    assert uninit['init'].size == PM_ds_initialized_1d_dm_cftime['init'].size
+    assert uninit['init'].size == init['init'].size
 
 
 def test_bootstrap_by_stacking_dataset(

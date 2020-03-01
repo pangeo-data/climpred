@@ -266,53 +266,42 @@ def test_shift_cftime_index():
     assert (expected == res).all()
 
 
-def test_freq_at_which_different_annual_init_pm(PM_ds_initialized_1d_ym_cftime):
-    """Test that freq_at_which_different returns expected freq for annual lead units."""
-    actual = freq_at_which_different(PM_ds_initialized_1d_ym_cftime, 'init')
-    expected = PM_ds_initialized_1d_ym_cftime.lead.attrs['units'].strip('s')
-    assert actual == expected
-
-
-def test_freq_at_which_different_monthly_init_pm(PM_ds_initialized_1d_mm_cftime):
-    """Test that freq_at_which_different returns expected freq for monthly lead
+@pytest.mark.parametrize(
+    'init',
+    [
+        pytest.lazy_fixture('PM_ds_initialized_1d_ym_cftime'),
+        pytest.lazy_fixture('PM_ds_initialized_1d_mm_cftime'),
+        pytest.lazy_fixture('PM_ds_initialized_1d_dm_cftime'),
+    ],
+)
+def test_freq_at_which_different_freq_init_pm(init):
+    """Test that freq_at_which_different returns expected freq for different lead
     units."""
-    actual = freq_at_which_different(PM_ds_initialized_1d_mm_cftime, 'init')
-    expected = PM_ds_initialized_1d_mm_cftime.lead.attrs['units'].strip('s')
+    actual = freq_at_which_different(init, 'init')
+    expected = init.lead.attrs['units'].strip('s')
     assert actual == expected
 
 
-def test_freq_at_which_different_daily_init_pm(PM_ds_initialized_1d_dm_cftime):
-    """Test that freq_at_which_different returns expected freq for daily lead units."""
-    actual = freq_at_which_different(PM_ds_initialized_1d_dm_cftime, 'init')
-    expected = PM_ds_initialized_1d_dm_cftime.lead.attrs['units'].strip('s')
-    assert actual == expected
-
-
-def test_check_lead_units_equal_control_time_stride_annual(
-    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
-):
-    """Test that init_pm annual and control annual is compatible."""
-    assert check_lead_units_equal_control_time_stride(
-        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
-    )
-
-
-def test_check_lead_units_equal_control_time_stride_monthly(
-    PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
-):
-    """Test that init_pm monthly and control monthly is compatible."""
-    assert check_lead_units_equal_control_time_stride(
-        PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
-    )
-
-
-def test_check_lead_units_equal_control_time_stride_daily(
-    PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
-):
-    """Test that init_pm daily and control daily is compatible."""
-    assert check_lead_units_equal_control_time_stride(
-        PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
-    )
+@pytest.mark.parametrize(
+    'init, control',
+    [
+        (
+            pytest.lazy_fixture('PM_ds_initialized_1d_ym_cftime'),
+            pytest.lazy_fixture('PM_ds_control_1d_ym_cftime'),
+        ),
+        (
+            pytest.lazy_fixture('PM_ds_initialized_1d_mm_cftime'),
+            pytest.lazy_fixture('PM_ds_control_1d_mm_cftime'),
+        ),
+        (
+            pytest.lazy_fixture('PM_ds_initialized_1d_dm_cftime'),
+            pytest.lazy_fixture('PM_ds_control_1d_dm_cftime'),
+        ),
+    ],
+)
+def test_check_lead_units_equal_control_time_stride_freq(init, control):
+    """Test that init_pm and control are compatible when both same freq."""
+    assert check_lead_units_equal_control_time_stride(init, control)
 
 
 def test_check_lead_units_equal_control_time_stride_daily_fails(

@@ -8,6 +8,5 @@ def test_show_versions(as_json):
     show_versions(as_json=as_json)
 
 
-@pytest.mark.slow
 def test_main():
     main()

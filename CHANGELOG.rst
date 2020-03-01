@@ -38,6 +38,8 @@ Internals/Minor Fixes
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
 - ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
+- ignore irrelevant warnings in ``pytest`` and mark slow tests
+  (:pr:`333`) `Aaron Spring`_.
 
 
 Documentation

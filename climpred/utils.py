@@ -179,8 +179,9 @@ def convert_time_index(xobj, time_string, kind, calendar='DatetimeProlepticGrego
 
 
 def find_start_dates(init_pm, control, single_init):
-    """Find the same start dates for single_init across different years in control.
-    Return control.time. Therefore require calendar=Datetime(No)Leap."""
+    """Find the same start dates for cftime single_init across different years in
+    control. Return control.time. Requires calendar=Datetime(No)Leap for consistent
+    `dayofyear`."""
     take_same_time = 'dayofyear'
     return control.sel(
         time=getattr(control.time.dt, take_same_time).values
@@ -189,7 +190,8 @@ def find_start_dates(init_pm, control, single_init):
 
 
 def freq_at_which_different(ds, dim):
-    """Find the frequency starting from high freq. at which all ds.dim are not equal."""
+    """Find the frequency starting from high frequencies at which all ds.dim are not
+    equal."""
     for freq in FREQ_LIST:
         # first dim values not equal all others
         if not (
@@ -376,7 +378,7 @@ def reduce_forecast_to_same_inits(forecast, verif):
 
 
 def set_cftime_to_int_dim(ds, dim, calendar=PM_CALENDAR_STR):
-    """Set cftime to int dim."""
+    """Set to integer `dim` to cftime using `calendar`."""
     ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
     if dim == 'init':
         ds.lead.attrs['units'] = 'years'

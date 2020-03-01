@@ -304,7 +304,8 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
 
 
 def bootstrap_by_stacking(init_pm, control):
-    """Bootstrap member, lead, init from control by reshaping."""
+    """Bootstrap member, lead, init from control by reshaping. Fast track of function
+    `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'."""
     assert type(init_pm) == type(control)
     lead_unit = init_pm.lead.attrs['units']
     if isinstance(init_pm, xr.Dataset):

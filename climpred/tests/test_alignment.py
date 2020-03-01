@@ -1,5 +1,6 @@
 import logging
 
+import numpy as np
 import xskillscore as xs
 
 from climpred.prediction import compute_hindcast
@@ -15,11 +16,12 @@ def test_same_inits_initializations(
             reconstruction_ds_1d_cftime,
             alignment='same_inits',
         )
-        for record in caplog.record_tuples:
-            print(record)
-            # Hard-coded for now, since we know what the inits should be for the demo
-            # data.
-            assert 'inits=1954-01-01 00:00:00-2007-01-01 00:00:00' in record[2]
+        for i, record in enumerate(caplog.record_tuples):
+            if i >= 2:
+                print(record)
+                # Hard-coded for now, since we know what the inits should be for the
+                # demo data.
+                assert 'inits=1954-01-01 00:00:00-2007-01-01 00:00:00' in record[2]
 
 
 def test_same_inits_verification_dates(
@@ -35,13 +37,18 @@ def test_same_inits_verification_dates(
             reconstruction_ds_1d_cftime,
             alignment='same_inits',
         )
-        for i, record in zip(
-            hind_ds_initialized_1d_cftime['lead'].values, caplog.record_tuples
+        nleads = hind_ds_initialized_1d_cftime['lead'].size
+        for i, j, record in zip(
+            np.arange(nleads + 2),
+            hind_ds_initialized_1d_cftime['lead'].values,
+            caplog.record_tuples,
         ):
-            assert (
-                f'verif={FIRST_INIT+i}-01-01 00:00:00-{LAST_INIT+i}-01-01 00:00:00'
-                in record[2]
-            )
+            if i >= 2:
+                print(record)
+                assert (
+                    f'verif={FIRST_INIT+i}-01-01 00:00:00-{LAST_INIT+i}-01-01 00:00:00'
+                    in record[2]
+                )
 
 
 def test_same_inits_disjoint_verif_time(small_initialized_da, small_verif_da):

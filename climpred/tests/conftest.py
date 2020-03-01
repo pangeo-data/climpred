@@ -1,3 +1,4 @@
+import cftime
 import numpy as np
 import pytest
 import xarray as xr
@@ -6,10 +7,8 @@ from climpred import PerfectModelEnsemble
 from climpred.tutorial import load_dataset
 
 
-def set_cftime_to_int_dim(ds, dim, freq='YS'):
-    ds[dim] = xr.cftime_range(
-        start=str(ds[dim].min().values), freq=freq, periods=ds[dim].size,
-    )
+def set_cftime_to_int_dim(ds, dim, freq='YS', calendar='DatetimeNoLeap'):
+    ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
     return ds
 
 

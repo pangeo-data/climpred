@@ -1,6 +1,7 @@
 import inspect
 import logging
 import warnings
+from datetime import datetime
 
 import dask
 import xarray as xr
@@ -229,6 +230,11 @@ def compute_hindcast(
         )
 
     plag = []
+    logging.info(
+        f'`compute_hindcast` for metric {metric.name} and '
+        f'comparison {comparison.name} at {str(datetime.now())}\n'
+        f'++++++++++++++++++++++++++++++++++++++++++++++++'
+    )
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
         # take lead year i timeseries and convert to real time based on temporal

@@ -38,8 +38,7 @@ Same initializations
     ``alignment='same_inits'``
 
 Below is an example of the logic used in ``climpred`` to select initializations that
-verify with the given verification data over all leads. This type of alignment is used
-in [MurCSS]_.
+verify with the given verification data over all leads.
 
 Here we have an initialized forecasting system with annual initializations from 1990
 through 2000 and three lead years. We are verifying it against a product that spans 1995
@@ -60,9 +59,3 @@ Two conditions must be met to retain the initializations for verification:
    initialized forecast.
 
 .. image:: images/alignment_plots/same_inits_alignment.png
-
-
-References
-##########
-
-.. [MurCSS] https://www-miklip.dkrz.de/about/murcss/

@@ -49,15 +49,15 @@ def test_same_inits_disjoint_verif_time(small_initialized_da, small_verif_da):
     data, i.e., non-continuous time sampling to verify against."""
     hind = small_initialized_da
     verif = small_verif_da.drop_sel(time=1992)
-    res = compute_hindcast(hind, verif, alignment='same_inits', metric='mse')
-    assert res.notnull().all()
+    actual = compute_hindcast(hind, verif, alignment='same_inits', metric='mse')
+    assert actual.notnull().all()
     # hindcast inits: [1990, 1991, 1992, 1993]
     # verif times: [1990, 1991, 1993, 1994]
     a = hind.sel(init=[1990, 1993]).rename({'init': 'time'})
     b = verif.sel(time=[1991, 1994])
     a['time'] = b['time']
-    direct_res = xs.mse(a, b, 'time')
-    assert res == direct_res
+    expected = xs.mse(a, b, 'time')
+    assert actual == expected
 
 
 def test_same_inits_disjoint_inits(small_initialized_da, small_verif_da):
@@ -65,12 +65,12 @@ def test_same_inits_disjoint_inits(small_initialized_da, small_verif_da):
     data, i.e., non-continuous initializing to verify with."""
     hind = small_initialized_da.drop_sel(init=1991)
     verif = small_verif_da
-    res = compute_hindcast(hind, verif, alignment='same_inits', metric='mse')
-    assert res.notnull().all()
+    actual = compute_hindcast(hind, verif, alignment='same_inits', metric='mse')
+    assert actual.notnull().all()
     # hindcast inits: [1990, 1992, 1993]
     # verif times: [1990, 1991, 1992, 1993, 1994]
     a = hind.rename({'init': 'time'})
     b = verif.sel(time=[1991, 1993, 1994])
     a['time'] = b['time']
-    direct_res = xs.mse(a, b, 'time')
-    assert res == direct_res
+    expected = xs.mse(a, b, 'time')
+    assert actual == expected

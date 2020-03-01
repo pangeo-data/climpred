@@ -271,9 +271,7 @@ def _bootstrap_func(
     for _ in range(bootstrap):
         smp_init_pm = _resample(ds, resample_dim)
         bootstraped_results.append(func(smp_init_pm, *func_args, **func_kwargs))
-    sig_level = xr.concat(
-        bootstraped_results, dim='bootstrap', coords='minimal', compat='override',
-    )
+    sig_level = xr.concat(bootstraped_results, dim='bootstrap', **CONCAT_KWARGS)
     # TODO: reimplement xr.quantile once fast
     sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
     return sig_level
@@ -500,20 +498,12 @@ def bootstrap_compute(
 
     # wrap results together in one dataarray
     skill = xr.concat(
-        [init_skill, uninit_skill, pers_skill],
-        dim='kind',
-        coords='minimal',
-        compat='override',
+        [init_skill, uninit_skill, pers_skill], dim='kind', **CONCAT_KWARGS
     )
     skill['kind'] = ['init', 'uninit', 'pers']
 
     # probability that i beats init
-    p = xr.concat(
-        [p_uninit_over_init, p_pers_over_init],
-        dim='kind',
-        coords='minimal',
-        compat='override',
-    )
+    p = xr.concat([p_uninit_over_init, p_pers_over_init], dim='kind', **CONCAT_KWARGS)
     p['kind'] = ['uninit', 'pers']
 
     # ci for each skill

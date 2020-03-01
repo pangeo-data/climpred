@@ -248,8 +248,8 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     """
     check_lead_units_equal_control_time_stride(init_pm, control)
     # short cut if annual leads
-    # if init_pm.lead.attrs['units'] == 'years':
-    #    return bootstrap_by_reshape(init_pm, control)
+    if init_pm.lead.attrs['units'] == 'years':
+        return bootstrap_by_reshape(init_pm, control)
 
     block_length = init_pm.lead.size
     freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
@@ -298,13 +298,14 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
 def bootstrap_by_reshape(init_pm, control):
     """Bootstrap member, lead, init from control by reshaping."""
     assert type(init_pm) == type(control)
+    lead_unit = init_pm.lead.attrs['units']
     if isinstance(init_pm, xr.Dataset):
-        init_pm = init_pm.to_array().squeeze()
+        init_pm = init_pm.to_array()
         init_was_dataset = True
     else:
         init_was_dataset = False
     if isinstance(control, xr.Dataset):
-        control = control.to_array().squeeze()
+        control = control.to_array()
 
     init_size = init_pm.init.size * init_pm.member.size * init_pm.lead.size
     # select random start points
@@ -317,14 +318,13 @@ def bootstrap_by_reshape(init_pm, control):
     larger = control.isel(time=new_time)
     fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
     # exchange values
+    larger = larger.transpose(*fake_init.dims)
     fake_init.data = larger.data
     fake_uninit = fake_init.unstack()
     if init_was_dataset:
-        if 'variable' not in fake_uninit.dims:
-            fake_uninit = fake_uninit.to_dataset(name=str(fake_uninit.name))
-        else:
-            fake_uninit = fake_uninit.to_dataset(dim='variable')
+        fake_uninit = fake_uninit.to_dataset(dim='variable')
     fake_uninit['lead'] = init_pm['lead']
+    fake_uninit.lead.attrs['units'] = lead_unit
     return fake_uninit
 
 

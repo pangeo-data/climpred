@@ -97,6 +97,7 @@ def test_bootstrap_hindcast_lazy(
     assert dask.is_dask_collection(s) == chunk
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('resample_dim', ['member', 'init'])
 def test_bootstrap_hindcast_resample_dim(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim

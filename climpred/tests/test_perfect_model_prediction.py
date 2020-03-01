@@ -13,7 +13,7 @@ DETERMINISTIC_PM_METRICS_LUACC.remove('uacc')
 # run less tests
 PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 
-BOOTSTRAP = 3
+BOOTSTRAP = 2
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
@@ -129,6 +129,7 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_initialized_1d, PM_da_contro
     assert not actual_uninit_p
 
 
+@pytest.mark.slow
 def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_initialized_1d, PM_ds_control_1d):
     """
     Checks that there are no NaNs on bootstrap perfect_model of 1D ds.

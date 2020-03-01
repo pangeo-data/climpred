@@ -3,10 +3,13 @@ import pytest
 import xarray as xr
 
 from climpred import PerfectModelEnsemble
+from climpred.constants import PM_CALENDAR_STR
 from climpred.tutorial import load_dataset
 from climpred.utils import set_cftime_to_int_dim
 
 # ordering: PM MPI, CESM; xr.Dataset, xr.DataArray; 1D, 3D; generic xr.objects
+
+CALENDAR = PM_CALENDAR_STR.strip('Datetime').lower()
 
 
 @pytest.fixture
@@ -343,7 +346,7 @@ def PM_ds_initialized_1d_mm_cftime(PM_ds_initialized_1d):
         start='3004',
         periods=PM_ds_initialized_1d.init.size,
         freq='MS',
-        calendar='noleap',
+        calendar=CALENDAR,
     )
     PM_ds_initialized_1d['lead'].attrs['units'] = 'months'
     return PM_ds_initialized_1d
@@ -354,7 +357,7 @@ def PM_ds_control_1d_mm_cftime(PM_ds_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     time as cftime faking the time resolution to monthly means."""
     PM_ds_control_1d['time'] = xr.cftime_range(
-        start='3000', periods=PM_ds_control_1d.time.size, freq='MS', calendar='noleap'
+        start='3000', periods=PM_ds_control_1d.time.size, freq='MS', calendar=CALENDAR
     )
     return PM_ds_control_1d
 
@@ -368,7 +371,7 @@ def PM_ds_initialized_1d_dm_cftime(PM_ds_initialized_1d):
         start='3004',
         periods=PM_ds_initialized_1d.init.size,
         freq='D',
-        calendar='noleap',
+        calendar=CALENDAR,
     )
     PM_ds_initialized_1d['lead'].attrs['units'] = 'days'
     return PM_ds_initialized_1d
@@ -382,6 +385,6 @@ def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
         time=np.random.randint(0, PM_ds_control_1d.time.size, 5000)
     )
     PM_ds_control_1d['time'] = xr.cftime_range(
-        start='3000', periods=PM_ds_control_1d.time.size, freq='D', calendar='noleap'
+        start='3000', periods=PM_ds_control_1d.time.size, freq='D', calendar=CALENDAR
     )
     return PM_ds_control_1d

@@ -11,7 +11,7 @@ from xarray.coding.cftime_offsets import to_offset
 from . import comparisons, metrics
 from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
-from .constants import FREQ_LIST
+from .constants import FREQ_LIST, PM_CALENDAR_STR
 from .metrics import METRIC_ALIASES
 
 
@@ -363,7 +363,7 @@ def reduce_time_series_for_aligned_verifs(forecast, verif, nlags):
     return forecast, verif
 
 
-def set_cftime_to_int_dim(ds, dim, calendar='DatetimeNoLeap'):
+def set_cftime_to_int_dim(ds, dim, calendar=PM_CALENDAR_STR):
     ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
     return ds
 

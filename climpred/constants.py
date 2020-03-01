@@ -10,3 +10,7 @@ VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
 
 # List of frequencies to check a dimension has different coords
 FREQ_LIST = ['day', 'month', 'year']
+
+# calendar type for PM (needed for bootstrapping_uninit)
+# Leap also works, but changing Leap,NoLeap fails
+PM_CALENDAR_STR = 'DatetimeNoLeap'

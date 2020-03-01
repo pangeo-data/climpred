@@ -364,7 +364,10 @@ def reduce_time_series_for_aligned_verifs(forecast, verif, nlags):
 
 
 def set_cftime_to_int_dim(ds, dim, calendar=PM_CALENDAR_STR):
+    """Set cftime to int dim."""
     ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
+    if dim == 'init':
+        ds.lead.attrs['units'] = 'years'
     return ds
 
 

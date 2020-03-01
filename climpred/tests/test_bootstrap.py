@@ -9,6 +9,7 @@ from climpred.bootstrap import (
     bootstrap_by_reshape,
     bootstrap_hindcast,
     bootstrap_perfect_model,
+    bootstrap_uninit_pm_ensemble_from_control,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
     my_quantile,
 )
@@ -53,7 +54,7 @@ def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk)
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('chunk', [True, False])
-def test_bootstrap_PM_no_lazy_results(
+def test_bootstrap_PM_lazy_results(
     PM_da_initialized_3d, PM_da_control_3d, chunk, comparison
 ):
     if chunk:
@@ -125,7 +126,7 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical(
     cftime_res = bootstrap_uninit_pm_ensemble_from_control_cftime(
         PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
     )
-    noncftime_res = bootstrap_uninit_pm_ensemble_from_control_cftime(
+    noncftime_res = bootstrap_uninit_pm_ensemble_from_control(
         PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
     )
     # lead and member identical
@@ -133,6 +134,31 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical(
         assert (cftime_res[d] == noncftime_res[d]).all()
     # init same size
     assert cftime_res['init'].size == noncftime_res['init'].size
+    assert cftime_res.dims == noncftime_res.dims
+    assert list(cftime_res.data_vars) == list(noncftime_res.data_vars)
+
+
+def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical_da(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+):
+    """Test ``bootstrap_uninit_pm_ensemble_from_control_cftime`` cftime identical to
+    ``bootstrap_uninit_pm_ensemble_from_control`` for annual data."""
+    PM_ds_initialized_1d_ym_cftime = PM_ds_initialized_1d_ym_cftime['tos']
+    PM_ds_control_1d_ym_cftime = PM_ds_control_1d_ym_cftime['tos']
+    cftime_res = bootstrap_uninit_pm_ensemble_from_control_cftime(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+    )
+    noncftime_res = bootstrap_uninit_pm_ensemble_from_control(
+        PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+    )
+    # lead and member identical
+    for d in ['lead', 'member']:
+        assert (cftime_res[d] == noncftime_res[d]).all()
+    # init same size
+    assert cftime_res['init'].size == noncftime_res['init'].size
+    assert cftime_res.name == noncftime_res.name
+    assert cftime_res.shape == noncftime_res.shape
+    assert cftime_res.dims == noncftime_res.dims
 
 
 def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual(

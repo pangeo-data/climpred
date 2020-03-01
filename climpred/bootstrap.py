@@ -24,6 +24,7 @@ from .utils import (
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
+    set_cftime_to_int_dim,
     shift_cftime_singular,
 )
 
@@ -217,6 +218,7 @@ def bootstrap_uninit_pm_ensemble_from_control(ds, control):
     uninit = xr.concat(
         (create_pseudo_members(control) for _ in range(ds.init.size)), 'init'
     )
+    uninit = uninit.transpose(*ds.dims)
     # chunk to same dims
     return (
         _transpose_and_rechunk_to(uninit, ds)
@@ -246,8 +248,8 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     """
     check_lead_units_equal_control_time_stride(init_pm, control)
     # short cut if annual leads
-    if init_pm.lead.attrs['units'] == 'years':
-        return bootstrap_by_reshape(init_pm, control)
+    # if init_pm.lead.attrs['units'] == 'years':
+    #    return bootstrap_by_reshape(init_pm, control)
 
     block_length = init_pm.lead.size
     freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
@@ -285,6 +287,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     uninit['member'] = init_pm.member.values
     uninit['lead'] = init_pm.lead
     # chunk to same dims
+    uninit = uninit.transpose(*init_pm.dims)
     return (
         _transpose_and_rechunk_to(uninit, init_pm)
         if dask.is_dask_collection(uninit)
@@ -312,7 +315,7 @@ def bootstrap_by_reshape(init_pm, control):
         [np.arange(s, s + init_pm.lead.size) for s in new_time]
     ).flatten()[:init_size]
     larger = control.isel(time=new_time)
-    fake_init = init_pm.stack(time=set(d for d in init_pm.dims if d in CLIMPRED_DIMS))
+    fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
     # exchange values
     fake_init.data = larger.data
     fake_uninit = fake_init.unstack()
@@ -832,6 +835,13 @@ def bootstrap_perfect_model(
 
     if dim is None:
         dim = ['init', 'member']
+    # set cftime
+    # TODO: check cftime and reset
+    if 'int' in str(ds.init.dtype):
+        ds = set_cftime_to_int_dim(ds, 'init')
+    if 'int' in str(control.time.dtype):
+        control = set_cftime_to_int_dim(control, 'time')
+    check_lead_units_equal_control_time_stride(ds, control)
     return bootstrap_compute(
         ds,
         control,
@@ -844,7 +854,7 @@ def bootstrap_perfect_model(
         bootstrap=bootstrap,
         pers_sig=pers_sig,
         compute=compute_perfect_model,
-        resample_uninit=bootstrap_uninit_pm_ensemble_from_control,
+        resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
         reference_compute=reference_compute,
         **metric_kwargs,
     )

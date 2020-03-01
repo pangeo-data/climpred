@@ -126,6 +126,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         assert not actualk
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
@@ -194,6 +195,7 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
     assert not actual
 
 
+@pytest.mark.slow
 def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
     PM_da_initialized_1d, PM_da_control_1d
 ):
@@ -219,6 +221,7 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
     assert not actual
 
 
+@pytest.mark.slow
 @pytest.mark.skip(reason='takes quite long')
 def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
     hind_da_initialized_1d, observations_da_1d

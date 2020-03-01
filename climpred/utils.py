@@ -376,4 +376,5 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
+    # transpose_coords=False as was when xarray implemented this at first
     return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(ori_chunk_ds.chunks)

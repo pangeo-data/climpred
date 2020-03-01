@@ -44,6 +44,7 @@ def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk)
     assert elapsed_time_xr_quantile > elapsed_time_my_quantile
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('chunk', [True, False])
 def test_bootstrap_PM_no_lazy_results(
@@ -65,6 +66,7 @@ def test_bootstrap_PM_no_lazy_results(
     assert dask.is_dask_collection(s) == chunk
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('chunk', [True, False])
 def test_bootstrap_hindcast_lazy(

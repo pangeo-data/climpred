@@ -21,55 +21,40 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
             initialization dates.
         verif_dates (dict): Keys are the lead time integer, values are an
             ``xr.CFTimeIndex`` of verification dates.
-
-    Raises:
     """
     # Add check that alignment is one of `same_init`, `same_inits`, `same_verif`,
     # `same_verifs`, `maximize`
+    units = forecast['lead'].attrs['units']
+    leads = forecast['lead'].values
+    all_inits = forecast['time']
+    all_verifs = verif['time']
+    union_with_verifs = all_inits.isin(all_verifs)
+
+    # Construct list of `n` offset over all leads.
+    n, freq = get_multiple_lead_cftime_shift_args(units, leads)
+    init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
+    init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
+
     if (alignment == 'same_inits') | (alignment == 'same_init'):
-        return same_inits_alignment(forecast, verif)
+        return _same_inits_alignment(
+            init_lead_matrix, all_inits, all_verifs, leads, n, freq
+        )
     elif (alignment == 'same_verifs') | (alignment == 'same_verif'):
-        return same_verifs_alignment(forecast, verif)
+        return _same_verifs_alignment(
+            init_lead_matrix, all_inits, all_verifs, leads, n, freq
+        )
     else:
         raise NotImplementedError('Work in progress.')
 
 
-def same_inits_alignment(forecast, verif):
+def _same_inits_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, freq):
     """Returns initializations and verification dates, maintaining the same inits at
     each lead.
 
-    Args:
-        forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
-            ``time`` and containing ``lead`` dim.
-        verif (``xarray`` object): Verification data with ``time`` dim.
-
-    Returns:
-        inits (dict): Keys are the lead time integer, values are an ``xr.DataArray`` of
-            initialization dates.
-        verif_dates (dict): Keys are the lead time integer, values are an
-            ``xr.CFTimeIndex`` of verification dates.
+    See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
-    units = forecast['lead'].attrs['units']
-    leads = forecast['lead'].values
-    # Construct list of `n` offset over all leads.
-    n, freq = get_multiple_lead_cftime_shift_args(units, leads)
-    # Note that `init` is renamed to `time` in the compute function to compute metrics.
-    init_lead_matrix = xr.concat(
-        [
-            xr.DataArray(
-                shift_cftime_index(forecast, 'time', n, freq),
-                dims=['time'],
-                coords=[forecast['time']],
-            )
-            for n in n
-        ],
-        'lead',
-    )
-    verifies_at_all_leads = init_lead_matrix.isin(verif['time']).all('lead')
-    union_with_observations = init_lead_matrix['time'].isin(verif['time'])
-    inits = forecast['time'].where(
-        verifies_at_all_leads & union_with_observations, drop=True
-    )
+    verifies_at_all_leads = init_lead_matrix.isin(all_verifs).all('lead')
+    inits = all_inits.where(verifies_at_all_leads, drop=True)
     inits = {l: inits for l in leads}
     verif_dates = {
         l: shift_cftime_index(inits[l], 'time', n, freq) for (l, n) in zip(leads, n)
@@ -77,28 +62,43 @@ def same_inits_alignment(forecast, verif):
     return inits, verif_dates
 
 
-def same_verifs_alignment(forecast, verif):
+def _same_verifs_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, freq):
     """Returns initializations and verification dates, maintaining the same verification
     window at each lead.
 
-    Args:
-        forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
+    See ``return_inits_and_verif_dates`` for descriptions of expected variables.
+    """
+    verif_dates = xr.concat(
+        [i for i in all_verifs if (i == init_lead_matrix).any('time').all('lead')],
+        'time',
+    )
+    inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
+    inits = {
+        l: all_inits.where(inits_that_verify_with_verif_dates.sel(lead=l), drop=True)
+        for l in leads
+    }
+    verif_dates = {l: verif_dates for l in leads}
+    return inits, verif_dates
+
+
+def _construct_init_lead_matrix(forecast, n, freq, leads):
+    """Returns xr.DataArray of "real time" (init + lead) over all inits and leads.
+
+    Arguments:
+        forecast (``xarray object``): Prediction ensemble with ``init`` dim renamed to
             ``time`` and containing ``lead`` dim.
-        verif (``xarray`` object): Verification data with ``time`` dim.
+        n (tuple of ints): Number of units to shift for ``leads``. ``value`` for
+            ``CFTimeIndex.shift(value, str)``.
+        freq (str): Pandas frequency alias. ``str`` for
+            ``CFTimeIndex.shift(value, str)``.
+        leads (list, array, xr.DataArray of ints): Leads to return offset for.
 
     Returns:
-        inits (dict): Keys are the lead time integer, values are an ``xr.DataArray`` of
-            initialization dates.
-        verif_dates (dict): Keys are the lead time integer, values are an
-            ``xr.CFTimeIndex`` of verification dates.
+        init_lead_matrix (``xr.DataArray``): DataArray with x=inits and y=lead with
+            values corresponding to "real time", or ``init + lead`` over all inits and
+            leads.
     """
-    units = forecast['lead'].attrs['units']
-    leads = forecast['lead'].values
-    all_inits = forecast['time']
-    all_verifs = verif['time']
-    # Construct list of `n` offset over all leads.
-    n, freq = get_multiple_lead_cftime_shift_args(units, leads)
-    # Note that `init` is renamed to `time` in the compute function to compute metrics.
+    # Note that `init` is renamed to `time` in compute functions.
     init_lead_matrix = xr.concat(
         [
             xr.DataArray(
@@ -111,15 +111,4 @@ def same_verifs_alignment(forecast, verif):
         'lead',
     )
     init_lead_matrix['lead'] = leads
-    # Construct set of verification dates that can be verified over all leads.
-    verif_dates = xr.concat(
-        [i for i in all_verifs if (i == init_lead_matrix).any('time').all('lead')],
-        'time',
-    )
-    verifies_with_verif_dates = init_lead_matrix.isin(verif_dates)
-    inits = {
-        l: all_inits.where(verifies_with_verif_dates.sel(lead=l), drop=True)
-        for l in leads
-    }
-    verif_dates = {l: verif_dates for l in leads}
-    return inits, verif_dates
+    return init_lead_matrix

@@ -1,5 +1,7 @@
 import xarray as xr
 
+from .checks import is_in_list
+from .constants import VALID_ALIGNMENTS
 from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 
 
@@ -22,8 +24,7 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
         verif_dates (dict): Keys are the lead time integer, values are an
             ``xr.CFTimeIndex`` of verification dates.
     """
-    # Add check that alignment is one of `same_init`, `same_inits`, `same_verif`,
-    # `same_verifs`, `maximize`
+    is_in_list(alignment, VALID_ALIGNMENTS, 'alignment')
     units = forecast['lead'].attrs['units']
     leads = forecast['lead'].values
     all_inits = forecast['time']
@@ -71,7 +72,7 @@ def _same_verifs_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, fr
     verif_dates = xr.concat(
         [i for i in all_verifs if (i == init_lead_matrix).any('time').all('lead')],
         'time',
-    )
+    ).to_index()  # Force to CFTimeIndex for consistency with `same_inits`
     inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
     inits = {
         l: all_inits.where(inits_that_verify_with_verif_dates.sel(lead=l), drop=True)

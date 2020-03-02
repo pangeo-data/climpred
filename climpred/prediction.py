@@ -36,6 +36,20 @@ from .utils import (
 
 
 def get_metric_comparison_dim(metric, comparison, dim, kind):
+    """Check whether `metric`, `comparison` and `dim` can work together in experiment
+    type `kind` and return corrected.
+
+    Args:
+        metric (str): metric or alias string
+        comparison (str): Description of parameter `comparison`.
+        dim (list of st or str): dimension to apply metric to.
+        kind (str): experiment type from ['hindcast', 'PM'].
+
+    Returns:
+        metric (Metric): metric class
+        comparison (Comparison): comparison class.
+        dim (list of st or str): corrected dimension to apply metric to.
+    """
     # check kind allowed
     is_in_list(kind, ['hindcast', 'PM'], str)
     # set default dim
@@ -53,7 +67,6 @@ def get_metric_comparison_dim(metric, comparison, dim, kind):
 
     METRICS = HINDCAST_METRICS if kind == 'hindcast' else PM_METRICS
     COMPARISONS = HINDCAST_COMPARISONS if kind == 'hindcast' else PM_COMPARISONS
-
     # get class from string metric(Metric)
     metric = get_metric_class(metric, METRICS)
     # get class comparison(Comparison)
@@ -69,7 +82,7 @@ def get_metric_comparison_dim(metric, comparison, dim, kind):
         if not comparison.probabilistic:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison '
-                f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}` ,'
+                f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
                 f'found `{comparison.name}`.'
             )
         if dim != 'member':
@@ -80,20 +93,20 @@ def get_metric_comparison_dim(metric, comparison, dim, kind):
             )
             dim = 'member'
     else:  # determinstic metric
-        if dim == 'init':
-            if kind == 'hindcast':
+        if kind == 'hindcast':
+            if dim == 'init':
                 # for thinking in real time # compute_hindcast renames init to time
                 dim = 'time'
-            if kind == 'PM':
-                # prevent comparison e2c and member in dim
-                if (comparison.name == 'e2c') and (
-                    set(dim) == set(['init', 'member']) or dim == 'member'
-                ):
-                    warnings.warn(
-                        f'comparison `e2c` does not work on `member` in dims, found '
-                        f'{dim}, automatically changed to dim=`init`.'
-                    )
-                    dim = 'init'
+        elif kind == 'PM':
+            # prevent comparison e2c and member in dim
+            if (comparison.name == 'e2c') and (
+                set(dim) == set(['init', 'member']) or dim == 'member'
+            ):
+                warnings.warn(
+                    f'comparison `{comparison.name}` does not work on `member` in dims,'
+                    f' found {dim}, automatically changed to dim=`init`.'
+                )
+                dim = 'init'
     return metric, comparison, dim
 
 
@@ -134,6 +147,7 @@ def compute_perfect_model(
                                without `dim`.
 
     """
+    # check args compatible with each other
     metric, comparison, dim = get_metric_comparison_dim(
         metric, comparison, dim, kind='PM'
     )
@@ -212,6 +226,7 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
+    # check args compatible with each other
     metric, comparison, dim = get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )

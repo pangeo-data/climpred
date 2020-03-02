@@ -452,7 +452,9 @@ def bootstrap_compute(
         # impossible for probabilistic
         if not metric.probabilistic:
             pers.append(
-                reference_compute(smp_hind, verif, metric=metric, **metric_kwargs)
+                reference_compute(
+                    smp_hind, verif, metric=metric, add_attrs=False, **metric_kwargs
+                )
             )
     init = xr.concat(init, dim='bootstrap', **CONCAT_KWARGS)
     uninit = xr.concat(uninit, dim='bootstrap', **CONCAT_KWARGS)

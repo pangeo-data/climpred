@@ -49,13 +49,15 @@ def assign_attrs(
     skill.attrs['skill_calculated_by_function'] = function_name
     if 'init' in ds.coords:
         skill.attrs['number_of_initializations'] = ds.init.size
-    if 'member' in ds.coords:
+    if 'member' in ds.coords and function_name != 'compute_persistence':
         skill.attrs['number_of_members'] = ds.member.size
 
     skill.attrs['alignment'] = alignment
     skill.attrs['metric'] = metric.name
-    skill.attrs['comparison'] = comparison.name
-    skill.attrs['dim'] = dim
+    if comparison is not None:
+        skill.attrs['comparison'] = comparison.name
+    if dim is not None:
+        skill.attrs['dim'] = dim
 
     # change unit power
     if metric.unit_power == 0:

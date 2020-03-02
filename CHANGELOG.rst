@@ -2,7 +2,6 @@
 What's New
 ==========
 
-
 climpred v2.0.1 (2020-01-##)
 ============================
 
@@ -18,15 +17,17 @@ New Features
     *  user gets warned when chunking potentially (un)-necessary
 - new explicit keywords in bootstrap functions for ``resampling_dim`` and
   ``reference_compute`` (:pr:`320`) `Aaron Spring`_.
-- new explicit keywords for ``alignment`` including logging for testing this
-  verification time matching (:pr:`324`) `Aaron Spring`_.
+- Logging now included for ``compute_hindcast`` which displays the inits and
+  verification dates used at each lead (:pr:`324`) `Aaron Spring`_.
+- new explicit keywords added for ``alignment`` of verification dates and
+  initializations. (:pr:`324`, :pr:`328`) `Aaron Spring`_ and `Riley X. Brady`_.
 
-    * maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+    * ``'maximize'``: Maximize the degrees of freedom by slicing ``hind`` and
       ``verif`` to a common time frame at each lead.
-    * same_inits: slice to a common init frame prior to computing
+    * ``'same_inits'``: slice to a common init frame prior to computing
       metric. This philosophy follows the thought that each lead should be
       based on the same set of initializations.
-    * same_verif: slice to a common/consistent verification time frame prior
+    * ``'same_verif'``: slice to a common/consistent verification time frame prior
       to computing metric. This philosophy follows the thought that each lead
       should be based on the same set of verification dates.
 
@@ -38,6 +39,10 @@ Internals/Minor Fixes
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
 - ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
+- default ``CONCAT_KWARGS`` now in all ``xr.concat`` to speed up bootstrapping.
+  (:pr:`330`) `Aaron Spring`_.
+- Remove ``member`` coords for ``m2c`` comparison for probabilistic metrics.
+  (:pr:`330`) `Aaron Spring`_.
 
 
 Documentation
@@ -45,6 +50,8 @@ Documentation
 - Demo and wrapper to setup your own raw model output compliant to ``climpred``
   (:pr:`296`) `Aaron Spring`_.
 - Demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
+- Add `Verification Alignment <alignment.html>`_ page explaining how initializations
+  are selected and aligned with verification data. (:pr:`328`) `Riley X. Brady`_.
 
 
 climpred v2.0.0 (2020-01-22)

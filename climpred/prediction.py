@@ -1,6 +1,7 @@
 import inspect
 import logging
 import warnings
+from datetime import datetime
 
 import dask
 import xarray as xr
@@ -29,7 +30,7 @@ from .utils import (
     get_lead_cftime_shift_args,
     get_metric_class,
     intersect,
-    reduce_time_series_for_aligned_inits,
+    reduce_forecast_to_same_inits,
     shift_cftime_index,
 )
 
@@ -103,7 +104,7 @@ def get_metric_comparison_dim(metric, comparison, dim, kind):
 # --------------------------------------------#
 @is_xarray([0, 1])
 def compute_perfect_model(
-    ds,
+    init_pm,
     control,
     metric='pearson_r',
     comparison='m2e',
@@ -116,7 +117,7 @@ def compute_perfect_model(
     simulation dataset.
 
     Args:
-        ds (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
+        init_pm (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
         control (xarray object): control with dimension ``time``.
         metric (str): `metric` name, see
          :py:func:`climpred.utils.get_metric_class` and (see :ref:`Metrics`).
@@ -137,7 +138,7 @@ def compute_perfect_model(
         metric, comparison, dim, kind='PM'
     )
 
-    forecast, reference = comparison.function(ds, metric=metric)
+    forecast, reference = comparison.function(init_pm, metric=metric)
 
     # in case you want to compute deterministic skill over member dim
     if (forecast.dims != reference.dims) and not metric.probabilistic:
@@ -152,7 +153,7 @@ def compute_perfect_model(
     if add_attrs:
         skill = assign_attrs(
             skill,
-            ds,
+            init_pm,
             function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
@@ -221,8 +222,6 @@ def compute_hindcast(
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
-    nlags = max(hind.lead.values)
-
     forecast, verif = comparison.function(hind, verif, metric=metric)
 
     # think in real time dimension: real time = init + lag
@@ -236,13 +235,20 @@ def compute_hindcast(
 
     # take only inits for which we have verification data at all leads
     if alignment == 'same_inits':
-        forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, nlags)
+        forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
+    else:
+        raise NotImplementedError(
+            "Only 'same_inits' alignment is currently implemented."
+        )
 
     plag = []
+    logging.info(
+        f'`compute_hindcast` for metric {metric.name} and '
+        f'comparison {comparison.name} at {str(datetime.now())}\n'
+        f'++++++++++++++++++++++++++++++++++++++++++++++++'
+    )
     # iterate over all leads (accounts for lead.min() in [0,1])
-    for i in forecast.lead.values:
-        if alignment == 'maximize':
-            forecast, verif = reduce_time_series_for_aligned_inits(forecast, verif, i)
+    for i in forecast['lead'].values:
         # take lead year i timeseries and convert to real time based on temporal
         # resolution of lead.
         n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
@@ -251,10 +257,19 @@ def compute_hindcast(
         # Take real time verification data using real time forecast dates.
         b = verif.sel(time=a.time.values)
 
+        # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
             logging.info(
-                f'at lead={str(i).zfill(2)}: dim={dim}: {a.time.min().values}-'
-                f'{a.time.max().values}'
+                f'lead={str(i).zfill(2)} | '
+                f'dim={dim} | '
+                # This is the init-sliced forecast, thus displaying actual
+                # initializations.
+                f'inits={forecast["time"].min().values}'
+                f'-{forecast["time"].max().values} | '
+                # This is the verification window, thus displaying the
+                # verification dates.
+                f'verif={a["time"].min().values}'
+                f'-{a["time"].max().values}'
             )
 
         # adapt weights to shorter time
@@ -287,6 +302,7 @@ def compute_hindcast(
             skill,
             hind,
             function_name=inspect.stack()[0][3],
+            alignment=alignment,
             metric=metric,
             comparison=comparison,
             dim=dim,
@@ -353,30 +369,25 @@ def compute_persistence(
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
         # Shift backwards shift for lead zero.
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
-    nlags = max(hind.lead.values)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if alignment != 'maximize':
-        # slices down to inits in common with hindcast, plus gives enough room
-        # for maximum lead time forecast.
-        a, _ = reduce_time_series_for_aligned_inits(hind, verif, nlags)
-        inits = a['time']
+    if alignment == 'same_inits':
+        a, _ = reduce_forecast_to_same_inits(hind, verif)
+        initial = verif.sel(time=a['time'])
+    else:
+        raise NotImplementedError(
+            "Only 'same_inits' alignment is currently implemented."
+        )
 
     plag = []
     for lag in hind.lead.values:
-        if alignment == 'maximize':
-            # slices down to inits in common with hindcast, but only gives enough
-            # room for lead from current forecast
-            a, _ = reduce_time_series_for_aligned_inits(hind, verif, lag)
-            inits = a['time']
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
         target_dates = shift_cftime_index(a, 'time', n, freq)
 
         o = verif.sel(time=target_dates)
-        f = verif.sel(time=inits)
-        o['time'] = f['time']
+        o['time'] = initial['time']
         plag.append(
-            metric.function(o, f, dim='time', comparison=__e2c, **metric_kwargs)
+            metric.function(o, initial, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values

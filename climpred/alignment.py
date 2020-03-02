@@ -35,27 +35,28 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
     init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
     init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
+    valid_inits = init_lead_matrix['time']
 
     if (alignment == 'same_inits') | (alignment == 'same_init'):
         return _same_inits_alignment(
-            init_lead_matrix, all_inits, all_verifs, leads, n, freq
+            init_lead_matrix, valid_inits, all_verifs, leads, n, freq
         )
     elif (alignment == 'same_verifs') | (alignment == 'same_verif'):
         return _same_verifs_alignment(
-            init_lead_matrix, all_inits, all_verifs, leads, n, freq
+            init_lead_matrix, valid_inits, all_verifs, leads, n, freq
         )
     else:
         raise NotImplementedError('Work in progress.')
 
 
-def _same_inits_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, freq):
+def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):
     """Returns initializations and verification dates, maintaining the same inits at
     each lead.
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
     verifies_at_all_leads = init_lead_matrix.isin(all_verifs).all('lead')
-    inits = all_inits.where(verifies_at_all_leads, drop=True)
+    inits = valid_inits.where(verifies_at_all_leads, drop=True)
     inits = {l: inits for l in leads}
     verif_dates = {
         l: shift_cftime_index(inits[l], 'time', n, freq) for (l, n) in zip(leads, n)
@@ -63,7 +64,7 @@ def _same_inits_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, fre
     return inits, verif_dates
 
 
-def _same_verifs_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, freq):
+def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):
     """Returns initializations and verification dates, maintaining the same verification
     window at each lead.
 
@@ -75,7 +76,7 @@ def _same_verifs_alignment(init_lead_matrix, all_inits, all_verifs, leads, n, fr
     ).to_index()  # Force to CFTimeIndex for consistency with `same_inits`
     inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
     inits = {
-        l: all_inits.where(inits_that_verify_with_verif_dates.sel(lead=l), drop=True)
+        l: valid_inits.where(inits_that_verify_with_verif_dates.sel(lead=l), drop=True)
         for l in leads
     }
     verif_dates = {l: verif_dates for l in leads}

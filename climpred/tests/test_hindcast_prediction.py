@@ -77,12 +77,14 @@ def test_persistence(hind_da_initialized_1d, reconstruction_da_1d, metric):
     """
     Checks that compute persistence works without breaking.
     """
-    res = (
-        compute_persistence(hind_da_initialized_1d, reconstruction_da_1d, metric=metric)
-        .isnull()
-        .any()
+    res = compute_persistence(
+        hind_da_initialized_1d, reconstruction_da_1d, metric=metric
     )
-    assert not res
+    assert not res.isnull().any()
+    # check persistence metadata
+    assert res.attrs['metric'] == metric
+    assert res.attrs['skill_calculated_by_function'] == 'compute_persistence'
+    assert 'number of members' not in res.attrs
 
 
 def test_persistence_lead0_lead1(

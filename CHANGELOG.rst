@@ -39,10 +39,14 @@ Internals/Minor Fixes
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
 - ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
+- ignore irrelevant warnings in ``pytest`` and mark slow tests
+  (:pr:`333`) `Aaron Spring`_.
 - default ``CONCAT_KWARGS`` now in all ``xr.concat`` to speed up bootstrapping.
   (:pr:`330`) `Aaron Spring`_.
 - Remove ``member`` coords for ``m2c`` comparison for probabilistic metrics.
   (:pr:`330`) `Aaron Spring`_.
+- Refactoring :py:func:`~climpred.prediction.compute_hindcast` and
+  :py:func:`~climpred.prediction.compute_perfect_model`. (:pr:`330`) `Aaron Spring`_.
 
 
 Documentation

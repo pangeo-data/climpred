@@ -8,7 +8,14 @@ import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_in_list, is_xarray
-from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
+from .comparisons import (
+    COMPARISON_ALIASES,
+    HINDCAST_COMPARISONS,
+    PM_COMPARISONS,
+    PROBABILISTIC_HINDCAST_COMPARISONS,
+    PROBABILISTIC_PM_COMPARISONS,
+    __e2c,
+)
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
@@ -26,6 +33,78 @@ from .utils import (
     intersect,
     shift_cftime_index,
 )
+
+
+def get_metric_comparison_dim(metric, comparison, dim, kind):
+    """Returns `metric`, `comparison` and `dim` for compute functions.
+
+    Args:
+        metric (str): metric or alias string
+        comparison (str): Description of parameter `comparison`.
+        dim (list of str or str): dimension to apply metric to.
+        kind (str): experiment type from ['hindcast', 'PM'].
+
+    Returns:
+        metric (Metric): metric class
+        comparison (Comparison): comparison class.
+        dim (list of str or str): corrected dimension to apply metric to.
+    """
+    # check kind allowed
+    is_in_list(kind, ['hindcast', 'PM'], 'kind')
+    # set default dim
+    if dim is None:
+        dim = 'init' if kind == 'hindcast' else ['init', 'member']
+    # check allowed dims
+    if kind == 'hindcast':
+        is_in_list(dim, ['member', 'init'], 'dim')
+    elif kind == 'PM':
+        is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
+
+    # get metric and comparison strings incorporating alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
+    METRICS = HINDCAST_METRICS if kind == 'hindcast' else PM_METRICS
+    COMPARISONS = HINDCAST_COMPARISONS if kind == 'hindcast' else PM_COMPARISONS
+    metric = get_metric_class(metric, METRICS)
+    comparison = get_comparison_class(comparison, COMPARISONS)
+
+    # check whether combination of metric and comparison works
+    PROBABILISTIC_COMPARISONS = (
+        PROBABILISTIC_HINDCAST_COMPARISONS
+        if kind == 'hindcast'
+        else PROBABILISTIC_PM_COMPARISONS
+    )
+    if metric.probabilistic:
+        if not comparison.probabilistic:
+            raise ValueError(
+                f'Probabilistic metric `{metric.name}` requires comparison '
+                f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
+                f'found `{comparison.name}`.'
+            )
+        if dim != 'member':
+            warnings.warn(
+                f'Probabilistic metric {metric.name} requires to be '
+                f'computed over dimension `dim="member"`. '
+                f'Set automatically.'
+            )
+            dim = 'member'
+    else:  # determinstic metric
+        if kind == 'hindcast':
+            if dim == 'init':
+                # for thinking in real time # compute_hindcast renames init to time
+                dim = 'time'
+        elif kind == 'PM':
+            # prevent comparison e2c and member in dim
+            if (comparison.name == 'e2c') and (
+                set(dim) == set(['init', 'member']) or dim == 'member'
+            ):
+                warnings.warn(
+                    f'comparison `{comparison.name}` does not work on `member` in dims,'
+                    f' found {dim}, automatically changed to dim=`init`.'
+                )
+                dim = 'init'
+    return metric, comparison, dim
 
 
 # --------------------------------------------#
@@ -65,41 +144,10 @@ def compute_perfect_model(
                                without `dim`.
 
     """
-    if dim is None:
-        dim = ['init', 'member']
-    is_in_list(dim, ['member', 'init', ['init', 'member']], '')
-    # get metric and comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
-    # get class metric(Metric)
-    metric = get_metric_class(metric, PM_METRICS)
-    # get class comparison(Comparison)
-    comparison = get_comparison_class(comparison, PM_COMPARISONS)
-
-    if metric.probabilistic:
-        if not comparison.probabilistic:
-            raise ValueError(
-                f'Probabilistic metric {metric.name} cannot work with '
-                f'comparison {comparison.name}.'
-            )
-        if dim != 'member':
-            warnings.warn(
-                f'Probabilistic metric {metric.name} requires to be '
-                f'computed over dimension `dim="member"`. '
-                f'Set automatically.'
-            )
-            dim = 'member'
-    else:  # deterministic metric
-        # prevent comparison e2c and member in dim
-        if (comparison.name == 'e2c') and (
-            set(dim) == set(['init', 'member']) or dim == 'member'
-        ):
-            warnings.warn(
-                f'comparison `e2c` does not work on `member` in dims, found '
-                f'{dim}, automatically changed to dim=`init`.'
-            )
-            dim = 'init'
+    # check args compatible with each other
+    metric, comparison, dim = get_metric_comparison_dim(
+        metric, comparison, dim, kind='PM'
+    )
 
     forecast, reference = comparison.function(init_pm, metric=metric)
 
@@ -175,40 +223,16 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
-    is_in_list(dim, ['member', 'init'], str)
+    # check args compatible with each other
+    metric, comparison, dim = get_metric_comparison_dim(
+        metric, comparison, dim, kind='hindcast'
+    )
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     verif = convert_time_index(verif, 'time', 'verif[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
-
-    # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
-    # get class metric(Metric)
-    metric = get_metric_class(metric, HINDCAST_METRICS)
-    # get class comparison(Comparison)
-    comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
-
-    if metric.probabilistic:
-        if not comparison.probabilistic:
-            raise ValueError(
-                f'Probabilistic metric `{metric.name}` requires comparison'
-                f' e.g. `m2o`, found `{comparison.name}`.'
-            )
-        if dim != 'member':
-            warnings.warn(
-                f'Probabilistic metric {metric.name} requires to be '
-                f'computed over dimension `dim="member"`. '
-                f'Set automatically.'
-            )
-            dim = 'member'
-    else:
-        if dim == 'init':
-            # for later thinking in real time
-            dim = 'time'
 
     forecast, verif = comparison.function(hind, verif, metric=metric)
 
@@ -295,7 +319,12 @@ def compute_hindcast(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind, verif, metric='pearson_r', alignment='same_inits', **metric_kwargs
+    hind,
+    verif,
+    metric='pearson_r',
+    alignment='same_inits',
+    add_attrs=True,
+    **metric_kwargs,
 ):
     """Computes the skill of a persistence forecast from a simulation.
 
@@ -313,6 +342,8 @@ def compute_persistence(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
+        add_attrs (bool): write climpred compute_persistence args to attrs.
+            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -368,7 +399,15 @@ def compute_persistence(
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
     pers = copy_coords_from_to(hind.drop_vars(drop_dims), pers)
-    # TODO: add climpred metadata
+    if add_attrs:
+        pers = assign_attrs(
+            pers,
+            hind,
+            function_name=inspect.stack()[0][3],
+            alignment=alignment,
+            metric=metric,
+            metadata_dict=metric_kwargs,
+        )
     return pers
 
 

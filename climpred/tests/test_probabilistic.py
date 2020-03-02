@@ -3,7 +3,7 @@ from scipy.stats import norm
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.comparisons import (
-    PM_COMPARISONS,
+    NON_PROBABILISTIC_PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_PM_COMPARISONS,
 )
@@ -126,6 +126,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         assert not actualk
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
@@ -194,6 +195,7 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
     assert not actual
 
 
+@pytest.mark.slow
 def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
     PM_da_initialized_1d, PM_da_control_1d
 ):
@@ -219,6 +221,7 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
     assert not actual
 
 
+@pytest.mark.slow
 @pytest.mark.skip(reason='takes quite long')
 def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
     hind_da_initialized_1d, observations_da_1d
@@ -274,14 +277,7 @@ def test_pm_crpss_orientation(PM_da_initialized_1d, PM_da_control_1d):
 
 
 # test api
-
-
-NON_PROBABILISTIC_PM_COMPARISONS = list(
-    set(PM_COMPARISONS) - set(PROBABILISTIC_PM_COMPARISONS)
-)
-
-
-# Probabilistic PM metrics dont work with non-prob. PM comparison m2e and e2c
+# Probabilistic PM metrics dont work with non-prob PM comparison m2e and e2c
 @pytest.mark.parametrize('comparison', NON_PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
@@ -294,10 +290,7 @@ def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
             comparison=comparison,
             metric=metric,
         )
-    assert (
-        f'Probabilistic metric {metric} cannot work with comparison {comparison}'
-        in str(excinfo.value)
-    )
+    assert f'Probabilistic metric `{metric}` requires comparison' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('dim', ['init', ['init', 'member']])
@@ -358,4 +351,4 @@ def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
     )
     # Set this to the third message since the first two are about converting the integer
     # time to annual `cftime`.
-    assert record[2].message.args[0] == expected
+    assert record[0].message.args[0] == expected

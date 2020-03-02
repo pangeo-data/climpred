@@ -1,5 +1,5 @@
-'''utility functions for printing version information
-see pandas/pandas/util/_print_versions.py'''
+"""utility functions for printing version information
+see pandas/pandas/util/_print_versions.py"""
 
 import codecs
 import importlib

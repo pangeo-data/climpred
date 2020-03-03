@@ -36,30 +36,29 @@ from .utils import (
 
 
 def get_metric_comparison_dim(metric, comparison, dim, kind):
-    """Check whether `metric`, `comparison` and `dim` can work together in experiment
-    type `kind` and return corrected.
+    """Returns `metric`, `comparison` and `dim` for compute functions.
 
     Args:
         metric (str): metric or alias string
         comparison (str): Description of parameter `comparison`.
-        dim (list of st or str): dimension to apply metric to.
+        dim (list of str or str): dimension to apply metric to.
         kind (str): experiment type from ['hindcast', 'PM'].
 
     Returns:
         metric (Metric): metric class
         comparison (Comparison): comparison class.
-        dim (list of st or str): corrected dimension to apply metric to.
+        dim (list of str or str): corrected dimension to apply metric to.
     """
     # check kind allowed
-    is_in_list(kind, ['hindcast', 'PM'], str)
+    is_in_list(kind, ['hindcast', 'PM'], 'kind')
     # set default dim
     if dim is None:
         dim = 'init' if kind == 'hindcast' else ['init', 'member']
     # check allowed dims
     if kind == 'hindcast':
-        is_in_list(dim, ['member', 'init'], str)
+        is_in_list(dim, ['member', 'init'], 'dim')
     elif kind == 'PM':
-        is_in_list(dim, ['member', 'init', ['init', 'member']], '')
+        is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
 
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -67,9 +66,7 @@ def get_metric_comparison_dim(metric, comparison, dim, kind):
 
     METRICS = HINDCAST_METRICS if kind == 'hindcast' else PM_METRICS
     COMPARISONS = HINDCAST_COMPARISONS if kind == 'hindcast' else PM_COMPARISONS
-    # get class from string metric(Metric)
     metric = get_metric_class(metric, METRICS)
-    # get class comparison(Comparison)
     comparison = get_comparison_class(comparison, COMPARISONS)
 
     # check whether combination of metric and comparison works

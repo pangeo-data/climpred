@@ -14,9 +14,15 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
             ``time`` and containing ``lead`` dim.
         verif (``xarray`` object): Verification data with ``time`` dim.
         alignment (str): Strategy for initialization-verification alignment.
-            * 'same_inits':
-            * 'same_verifs':
-            * 'maximize':
+            * 'same_inits': Use a common set of initializations that verify
+               across all leads. This ensures that there is no bias in the result due
+               to the state of the system for the given initializations.
+            * 'same_verifs': Use a common verification window across all leads. This
+               ensures that there is no bias in the result due to the observational
+               period being verified against.
+            * 'maximize': Use all available initializations at each lead that verify
+               against the observations provided. This changes both the set of
+               initializations and the verification window used at each lead.
 
     Returns:
         inits (dict): Keys are the lead time integer, values are an ``xr.DataArray`` of
@@ -34,24 +40,28 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
     init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
+    # Currently enforce a union between `inits` and observations in the verification
+    # data. This is because persistence forecasts with the verification data need to
+    # have the same initializations for consistency. This behavior should be changed
+    # as alternative reference forecasts are introduced.
     init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
     valid_inits = init_lead_matrix['time']
 
-    if (alignment == 'same_inits') | (alignment == 'same_init'):
+    if 'same_init' in alignment:
         return _same_inits_alignment(
             init_lead_matrix, valid_inits, all_verifs, leads, n, freq
         )
-    elif (alignment == 'same_verifs') | (alignment == 'same_verif'):
+    elif 'same_verif' in alignment:
         return _same_verifs_alignment(
             init_lead_matrix, valid_inits, all_verifs, leads, n, freq
         )
     else:
-        raise NotImplementedError('Work in progress.')
+        raise NotImplementedError('Still need to do maximize.')
 
 
 def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):
-    """Returns initializations and verification dates, maintaining the same inits at
-    each lead.
+    """Returns initializations and verification dates, maintaining a common set of inits
+    at all leads.
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
@@ -65,8 +75,8 @@ def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, f
 
 
 def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):
-    """Returns initializations and verification dates, maintaining the same verification
-    window at each lead.
+    """Returns initializations and verification dates, maintaining a common verification
+    window at all leads.
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """

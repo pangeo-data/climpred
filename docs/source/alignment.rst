@@ -10,9 +10,9 @@ One can pass the keyword ``alignment=...`` to any hindcast compute functions (e.
 :py:func:`~climpred.prediction.compute_persistence`,
 :py:func:`~climpred.prediction.compute_hindcast`,
 :py:meth:`~climpred.classes.HindcastEnsemble.verify`) to change the behavior for
-aligning forecasts with the verification product. **Note that the alignment decision
+aligning forecasts with the verification product. Note that the alignment decision
 only matters for `hindcast experiments <terminology.html#simulation-design>`_.
-Perfect model experiments are perfectly time-aligned by design.**
+Perfect model experiments are perfectly time-aligned by design.
 
 The available keywords are:
 
@@ -65,6 +65,37 @@ Two conditions must be met to retain the initializations for verification:
    initialized forecast.
 
 .. image:: images/alignment_plots/same_inits_alignment.png
+
+
+Same Verification Dates
+#######################
+
+.. code::
+
+    ``alignment='same_verifs'``
+
+Below is an example of the logic used in ``climpred`` to select a constant verification
+window across all leads.
+
+Here we have an initialized forecasting system with annual initializations from 1990
+through 2000 and three lead years. We are verifying it against a product that spans 1995
+through 2002.
+
+Two conditions must be met when selecting the verification window:
+
+1. A given verification time must exist across all leads. This is to ensure that at each
+   lead, the entire set of chosen verification dates can be verified against. This is
+   represented by diagonals in the top panel below (and the dashed black lines).
+   This would set the verification window to 1993-2001 in the below example.
+
+2. There must be a union between the initialization dates and verification dates. This
+   is represented by the black vertical lines in the top panel below, which leave out
+   1990-1994 initializations since there aren't observations before 1995. This logic
+   exists so that any `reference forecasts <reference_forecast.html>`__
+   (e.g. a persistence forecast) use an identical set of initializations as the
+   initialized forecast.
+
+.. image:: images/alignment_plots/same_verifs_alignment.png
 
 Logging
 #######

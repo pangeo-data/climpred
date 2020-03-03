@@ -106,6 +106,7 @@ def test_compute_metric_deprecated(hind_ds_initialized_1d, reconstruction_ds_1d)
     assert 'deprecated' in record[0].message.args[0]
 
 
+@pytest.mark.slow
 def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d):
     """Test to see if verify can be run from the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)

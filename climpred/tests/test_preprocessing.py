@@ -37,6 +37,7 @@ def preprocess_1var(ds, v='global_primary_production'):
     return ds[v].to_dataset(name=v).squeeze()
 
 
+@pytest.mark.mistral
 @pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
 @pytest.mark.parametrize(
     'inits,members',
@@ -54,6 +55,7 @@ def test_load_hindcast(inits, members):
     assert len(actual.data_vars) == 1
 
 
+@pytest.mark.mistral
 @pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
 @pytest.mark.skipif(not intake_esm_loaded, reason='requires intake_esm to be installed')
 def test_climpred_pre_with_intake_esm():

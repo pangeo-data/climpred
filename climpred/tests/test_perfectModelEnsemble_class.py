@@ -1,3 +1,5 @@
+import pytest
+
 from climpred import PerfectModelEnsemble
 
 
@@ -43,6 +45,7 @@ def test_compute_persistence(perfectModelEnsemble_initialized_control):
     perfectModelEnsemble_initialized_control.compute_persistence()
 
 
+@pytest.mark.slow
 def test_bootstrap(perfectModelEnsemble_initialized_control):
     """Test that perfect model ensemble object can be bootstrapped"""
     perfectModelEnsemble_initialized_control.bootstrap(bootstrap=2)

@@ -111,3 +111,38 @@ def test_bootstrap_hindcast_resample_dim(
         metric='mse',
         resample_dim=resample_dim,
     )
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs'])
+def test_bootstrap_hindcast_alignment(
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment
+):
+    bootstrap_hindcast(
+        hind_da_initialized_1d,
+        hist_da_uninitialized_1d,
+        observations_da_1d,
+        bootstrap=BOOTSTRAP,
+        comparison='e2o',
+        metric='mse',
+        resample_dim='member',
+        alignment=alignment,
+    )
+
+
+def test_bootstrap_hindcast_raises_error(
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
+):
+    """Test that error is raised when user tries to resample over init and align over
+    same_verifs."""
+    with pytest.raises(ValueError):
+        bootstrap_hindcast(
+            hind_da_initialized_1d,
+            hist_da_uninitialized_1d,
+            observations_da_1d,
+            bootstrap=BOOTSTRAP,
+            comparison='e2o',
+            metric='mse',
+            resample_dim='init',
+            alignment='same_verifs',
+        )

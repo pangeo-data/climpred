@@ -442,6 +442,7 @@ def bootstrap_compute(
             compute(
                 uninit_hind,
                 verif,
+                alignment=alignment,
                 metric=metric,
                 comparison=comparison,
                 dim=dim,
@@ -643,6 +644,14 @@ def bootstrap_hindcast(
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
+
+    if ('same_verif' in alignment) & (resample_dim == 'init'):
+        raise ValueError(
+            "Cannot have both alignment='same_verifs' and "
+            "resample_dim='init'. Change `resample_dim` to 'member' to keep "
+            "common verification alignment or `alignment` to 'same_inits' to "
+            'resample over initializations.'
+        )
 
     return bootstrap_compute(
         hind,

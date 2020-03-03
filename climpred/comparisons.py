@@ -345,6 +345,10 @@ ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
 PROBABILISTIC_PM_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and c.probabilistic)
 ]
+NON_PROBABILISTIC_PM_COMPARISONS = [
+    c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and not c.probabilistic)
+]
+
 # ['m2o']
 PROBABILISTIC_HINDCAST_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (c.hindcast and c.probabilistic)

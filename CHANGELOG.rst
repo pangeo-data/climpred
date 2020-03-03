@@ -45,6 +45,8 @@ Internals/Minor Fixes
   (:pr:`330`) `Aaron Spring`_.
 - Remove ``member`` coords for ``m2c`` comparison for probabilistic metrics.
   (:pr:`330`) `Aaron Spring`_.
+- Refactoring :py:func:`~climpred.prediction.compute_hindcast` and
+  :py:func:`~climpred.prediction.compute_perfect_model`. (:pr:`330`) `Aaron Spring`_.
 
 
 Documentation

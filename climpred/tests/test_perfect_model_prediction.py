@@ -37,6 +37,23 @@ def test_pvalue_from_bootstrapping(PM_da_initialized_1d, PM_da_control_1d, metri
 
 
 @pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
+def test_compute_persistence_add_attrs(PM_ds_initialized_1d, PM_ds_control_1d, metric):
+    """
+    Checks that there are no NaNs on persistence forecast of 1D time series.
+    """
+    attrs = (
+        compute_persistence(PM_ds_initialized_1d, PM_ds_control_1d, metric=metric)
+    ).attrs
+    assert (
+        attrs['prediction_skill']
+        == 'calculated by climpred https://climpred.readthedocs.io/'
+    )
+    assert attrs['skill_calculated_by_function'] == 'compute_persistence'
+    assert 'number of members' not in attrs
+    assert attrs['metric'] == metric
+
+
+@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_persistence_ds1d_not_nan(
     PM_ds_initialized_1d, PM_ds_control_1d, metric
 ):

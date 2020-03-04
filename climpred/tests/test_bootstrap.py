@@ -6,6 +6,7 @@ from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model, my_quantile
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
+from climpred.exceptions import KeywordError
 
 BOOTSTRAP = 2
 
@@ -135,7 +136,7 @@ def test_bootstrap_hindcast_raises_error(
 ):
     """Test that error is raised when user tries to resample over init and align over
     same_verifs."""
-    with pytest.raises(ValueError):
+    with pytest.raises(KeywordError):
         bootstrap_hindcast(
             hind_da_initialized_1d,
             hist_da_uninitialized_1d,

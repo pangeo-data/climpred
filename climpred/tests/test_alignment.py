@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 import xskillscore as xs
 
+from climpred.exceptions import CoordinateError
 from climpred.prediction import compute_hindcast
 
 
@@ -131,5 +132,5 @@ def test_same_verifs_raises_error_when_not_possible(
     """Tests that appropriate error is raised when a common set of verification dates
     cannot be found with the supplied initializations."""
     hind = hind_ds_initialized_1d_cftime.isel(lead=slice(0, 3), init=[1, 3, 5, 7, 9])
-    with pytest.raises(ValueError):
+    with pytest.raises(CoordinateError):
         compute_hindcast(hind, reconstruction_ds_1d_cftime, alignment='same_verifs')

@@ -2,6 +2,7 @@ import xarray as xr
 
 from .checks import is_in_list
 from .constants import VALID_ALIGNMENTS
+from .exceptions import CoordinateError
 from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 
 
@@ -85,7 +86,7 @@ def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, 
         i for i in all_verifs if (i == init_lead_matrix).any('time').all('lead')
     ]
     if not common_set_of_verifs:
-        raise ValueError(
+        raise CoordinateError(
             'A common set of verification dates cannot be found for the '
             'initializations and verification data supplied. Change `alignment` to '
             "'same_inits' or 'maximize'."

@@ -12,6 +12,7 @@ from .checks import (
     warn_if_chunking_would_increase_performance,
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
+from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
@@ -654,7 +655,7 @@ def bootstrap_hindcast(
     has_valid_lead_units(hind)
 
     if ('same_verif' in alignment) & (resample_dim == 'init'):
-        raise ValueError(
+        raise KeywordError(
             "Cannot have both alignment='same_verifs' and "
             "resample_dim='init'. Change `resample_dim` to 'member' to keep "
             "common verification alignment or `alignment` to 'same_inits' to "

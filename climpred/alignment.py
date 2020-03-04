@@ -57,8 +57,32 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
         return _same_verifs_alignment(
             init_lead_matrix, valid_inits, all_verifs, leads, n, freq
         )
+    elif alignment == 'maximize':
+        return _maximize_alignment(init_lead_matrix, all_verifs, leads)
     else:
         raise NotImplementedError('Still need to do maximize.')
+
+
+def _maximize_alignment(init_lead_matrix, all_verifs, leads):
+    """Returns initializations and verification dates, maximizing the degrees of freedom
+    at each lead individually.
+
+    See ``return_inits_and_verif_dates`` for descriptions of expected variables.
+    """
+    # Move row-wise and find all forecasted times that align with verification dates at
+    # the given lead.
+    verify_with_observations = init_lead_matrix.isin(all_verifs)
+    lead_dependent_verif_dates = init_lead_matrix.where(verify_with_observations)
+    # Probably a way to do this more efficiently since we're doing essentially
+    # the same thing at each step.
+    verif_dates = {
+        l: lead_dependent_verif_dates.sel(lead=l).dropna('time').to_index()
+        for l in leads
+    }
+    inits = {
+        l: lead_dependent_verif_dates.sel(lead=l).dropna('time')['time'] for l in leads
+    }
+    return inits, verif_dates
 
 
 def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):

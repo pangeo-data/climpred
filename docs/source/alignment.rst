@@ -97,6 +97,12 @@ Two conditions must be met when selecting the verification window:
 
 .. image:: images/alignment_plots/same_verifs_alignment.png
 
+
+Maximize Degrees of Freedom
+###########################
+
+Placeholder for this section.
+
 Logging
 #######
 

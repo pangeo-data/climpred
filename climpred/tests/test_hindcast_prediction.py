@@ -5,11 +5,7 @@ from climpred.bootstrap import bootstrap_hindcast
 from climpred.comparisons import HINDCAST_COMPARISONS
 from climpred.constants import CLIMPRED_DIMS
 from climpred.metrics import DETERMINISTIC_HINDCAST_METRICS
-from climpred.prediction import (
-    compute_hindcast,
-    compute_persistence,
-    compute_uninitialized,
-)
+from climpred.prediction import compute_hindcast, compute_persistence
 
 # uacc is sqrt(MSSS), fails when MSSS negative
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
@@ -102,23 +98,6 @@ def test_persistence_lead0_lead1(
         hind_ds_initialized_1d_lead0, reconstruction_ds_1d, metric='rmse'
     )
     assert (res1.SST.values == res2.SST.values).all()
-
-
-def test_uninitialized(hist_da_uninitialized_1d, reconstruction_da_1d):
-    """
-    Checks that compute uninitialized works without breaking.
-    """
-    res = (
-        compute_uninitialized(
-            hist_da_uninitialized_1d,
-            reconstruction_da_1d,
-            metric='rmse',
-            comparison='e2o',
-        )
-        .isnull()
-        .any()
-    )
-    assert not res
 
 
 def test_bootstrap_hindcast_da1d_not_nan(

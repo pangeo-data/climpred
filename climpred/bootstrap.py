@@ -492,14 +492,22 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
+        hind,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        alignment=alignment,
+        dim=dim,
+        **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = reference_compute(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = reference_compute(
+            hind, verif, metric=metric, alignment=alignment, **metric_kwargs
+        )
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat

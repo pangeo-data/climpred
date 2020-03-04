@@ -112,7 +112,7 @@ def hind_ds_initialized_1d():
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
     da = load_dataset('CESM-DP-SST')
     da['init'] = da.init.astype('int')
-    return da - da.mean('init')
+    return da
 
 
 @pytest.fixture

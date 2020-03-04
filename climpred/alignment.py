@@ -33,6 +33,7 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
     is_in_list(alignment, VALID_ALIGNMENTS, 'alignment')
     units = forecast['lead'].attrs['units']
     leads = forecast['lead'].values
+    # `init` renamed to `time` in compute functions.
     all_inits = forecast['time']
     all_verifs = verif['time']
     union_with_verifs = all_inits.isin(all_verifs)
@@ -80,10 +81,17 @@ def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, 
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
-    verif_dates = xr.concat(
-        [i for i in all_verifs if (i == init_lead_matrix).any('time').all('lead')],
-        'time',
-    ).to_index()  # Force to CFTimeIndex for consistency with `same_inits`
+    common_set_of_verifs = [
+        i for i in all_verifs if (i == init_lead_matrix).any('time').all('lead')
+    ]
+    if not common_set_of_verifs:
+        raise ValueError(
+            'A common set of verification dates cannot be found for the '
+            'initializations and verification data supplied. Change `alignment` to '
+            "'same_inits' or 'maximize'."
+        )
+    # Force to CFTimeIndex for consistency with `same_inits`
+    verif_dates = xr.concat(common_set_of_verifs, 'time').to_index()
     inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
     inits = {
         l: valid_inits.where(inits_that_verify_with_verif_dates.sel(lead=l), drop=True)

@@ -12,6 +12,7 @@ from climpred.prediction import (
 )
 
 # uacc is sqrt(MSSS), fails when MSSS negative
+DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
 

@@ -12,6 +12,7 @@ from .checks import (
     warn_if_chunking_would_increase_performance,
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
+from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
 from .stats import dpp, varweighted_mean_period
@@ -420,6 +421,7 @@ def bootstrap_compute(
             verif,
             metric=metric,
             comparison=comparison,
+            alignment=alignment,
             add_attrs=False,
             dim=dim,
             **metric_kwargs,
@@ -441,6 +443,7 @@ def bootstrap_compute(
             compute(
                 uninit_hind,
                 verif,
+                alignment=alignment,
                 metric=metric,
                 comparison=comparison,
                 dim=dim,
@@ -453,7 +456,12 @@ def bootstrap_compute(
         if not metric.probabilistic:
             pers.append(
                 reference_compute(
-                    smp_hind, verif, metric=metric, add_attrs=False, **metric_kwargs
+                    smp_hind,
+                    verif,
+                    metric=metric,
+                    alignment=alignment,
+                    add_attrs=False,
+                    **metric_kwargs,
                 )
             )
     init = xr.concat(init, dim='bootstrap', **CONCAT_KWARGS)
@@ -485,14 +493,22 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
+        hind,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        alignment=alignment,
+        dim=dim,
+        **metric_kwargs,
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
     # uninit skill as mean resampled uninit skill
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
-        pers_skill = reference_compute(hind, verif, metric=metric, **metric_kwargs)
+        pers_skill = reference_compute(
+            hind, verif, metric=metric, alignment=alignment, **metric_kwargs
+        )
     else:
         pers_skill = init_skill.isnull()
     # align to prepare for concat
@@ -637,6 +653,14 @@ def bootstrap_hindcast(
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
+
+    if ('same_verif' in alignment) & (resample_dim == 'init'):
+        raise KeywordError(
+            "Cannot have both alignment='same_verifs' and "
+            "resample_dim='init'. Change `resample_dim` to 'member' to keep "
+            "common verification alignment or `alignment` to 'same_inits' to "
+            'resample over initializations.'
+        )
 
     return bootstrap_compute(
         hind,

@@ -9,27 +9,25 @@ New Features
 ------------
 
 - speed-up in bootstrap functions: (:pr:`285`) `Aaron Spring`_.
-
     *  ``xr.quantile`` exchanged for ``dask.map_blocks(np.percentile)``
-
     *  properly implemented handling for lazy results when chunked inputs
-
     *  user gets warned when chunking potentially (un)-necessary
 - new explicit keywords in bootstrap functions for ``resampling_dim`` and
   ``reference_compute`` (:pr:`320`) `Aaron Spring`_.
 - Logging now included for ``compute_hindcast`` which displays the inits and
   verification dates used at each lead (:pr:`324`) `Aaron Spring`_.
 - new explicit keywords added for ``alignment`` of verification dates and
-  initializations. (:pr:`324`, :pr:`328`) `Aaron Spring`_ and `Riley X. Brady`_.
+  initializations. (:pr:`324`) `Aaron Spring`_.
 
     * ``'maximize'``: Maximize the degrees of freedom by slicing ``hind`` and
       ``verif`` to a common time frame at each lead.
     * ``'same_inits'``: slice to a common init frame prior to computing
       metric. This philosophy follows the thought that each lead should be
-      based on the same set of initializations.
-    * ``'same_verif'``: slice to a common/consistent verification time frame prior
+      based on the same set of initializations. (:pr:`328`) `Riley X. Brady`_.
+    * ``'same_verifs'``: slice to a common/consistent verification time frame prior
       to computing metric. This philosophy follows the thought that each lead
-      should be based on the same set of verification dates.
+      should be based on the same set of verification dates. (:pr:`331`)
+      `Riley X. Brady`_.
 
 
 Internals/Minor Fixes

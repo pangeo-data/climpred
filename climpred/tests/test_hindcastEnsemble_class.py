@@ -128,6 +128,7 @@ def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast.verify()
 
 
+@pytest.mark.skip(reason='will be addressed when refactoring hindcast stuff.')
 def test_compute_uninitialized(
     hind_ds_initialized_1d,
     hist_ds_uninitialized_1d,

@@ -1,7 +1,5 @@
 import inspect
-import logging
 import warnings
-from datetime import datetime
 
 import dask
 import xarray as xr
@@ -17,6 +15,7 @@ from .comparisons import (
     __e2c,
 )
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
+from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_METRICS,
@@ -248,12 +247,8 @@ def compute_hindcast(
         forecast, verif, alignment=alignment
     )
 
+    log_compute_hindcast_header(metric, comparison, dim, alignment)
     plag = []
-    logging.info(
-        f'`compute_hindcast` for metric {metric.name} and '
-        f'comparison {comparison.name} at {str(datetime.now())}\n'
-        f'++++++++++++++++++++++++++++++++++++++++++++++++'
-    )
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
         # Use `.where()` instead of `.sel()` to account for resampled inits.
@@ -264,18 +259,7 @@ def compute_hindcast(
 
         # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
-            logging.info(
-                f'lead={str(i).zfill(2)} | '
-                f'dim={dim} | '
-                # This is the init-sliced forecast, thus displaying actual
-                # initializations.
-                f'inits={inits[i].min().values}'
-                f'-{inits[i].max().values} | '
-                # This is the verification window, thus displaying the
-                # verification dates.
-                f'verif={verif_dates[i].min()}'
-                f'-{verif_dates[i].max()}'
-            )
+            log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:

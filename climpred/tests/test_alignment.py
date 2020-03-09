@@ -21,7 +21,7 @@ def test_same_inits_initializations(
         for i, record in enumerate(caplog.record_tuples):
             if i >= 2:
                 print(record)
-                assert 'inits=1954-01-01 00:00:00-2007-01-01 00:00:00' in record[2]
+                assert 'inits: 1954-01-01 00:00:00-2007-01-01 00:00:00' in record[2]
 
 
 def test_same_inits_verification_dates(
@@ -41,7 +41,7 @@ def test_same_inits_verification_dates(
             if i >= 2:
                 print(record)
                 assert (
-                    f'verif={FIRST_INIT+i}-01-01 00:00:00-{LAST_INIT+i}-01-01 00:00:00'
+                    f'verifs: {FIRST_INIT+i}-01-01 00:00:00-{LAST_INIT+i}-01-01'
                     in record[2]
                 )
 
@@ -95,7 +95,7 @@ def test_same_verifs_verification_dates(
         for i, record in enumerate(caplog.record_tuples):
             if i >= 2:
                 print(record)
-                assert 'verif=1964-01-01 00:00:00-2017-01-01 00:00:00' in record[2]
+                assert 'verifs: 1964-01-01 00:00:00-2017-01-01 00:00:00' in record[2]
 
 
 def test_same_verifs_initializations(
@@ -115,7 +115,7 @@ def test_same_verifs_initializations(
             if i >= 2:
                 print(record)
                 assert (
-                    f'inits={FIRST_INIT-i}-01-01 00:00:00-{LAST_INIT-i}-01-01 00:00:00'
+                    f'inits: {FIRST_INIT-i}-01-01 00:00:00-{LAST_INIT-i}-01-01 00:00:00'
                     in record[2]
                 )
 
@@ -147,7 +147,9 @@ def test_maximize_alignment_inits(
         ):
             if i >= 1:
                 print(record)
-                assert f'inits=1954-01-01 00:00:00-{2016-i}-01-01 00:00:00' in record[2]
+                assert (
+                    f'inits: 1954-01-01 00:00:00-{2016-i}-01-01 00:00:00' in record[2]
+                )
 
 
 def test_maximize_alignment_verifs(
@@ -167,4 +169,6 @@ def test_maximize_alignment_verifs(
         ):
             if i >= 1:
                 print(record)
-                assert f'verif={1955+i}-01-01 00:00:00-2017-01-01 00:00:00' in record[2]
+                assert (
+                    f'verifs: {1955+i}-01-01 00:00:00-2017-01-01 00:00:00' in record[2]
+                )

@@ -13,6 +13,7 @@ Please delete options that are not relevant.
 -   [ ]  Breaking change (fix or feature that would cause existing functionality to not work as expected)
 -   [ ]  This change requires a documentation update
 -   [ ]  Performance (if you touched existing code run `asv` to detect performance changes)
+-   [ ]  refactoring
 
 # How Has This Been Tested?
 

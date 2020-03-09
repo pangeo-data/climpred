@@ -2209,7 +2209,7 @@ for m in __ALL_METRICS__:
 
 
 DETERMINISTIC_METRICS = [m.name for m in __ALL_METRICS__ if not m.probabilistic]
-DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS
+DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS.copy()
 # Metrics to be used in compute_perfect_model.
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 # Used to set attrs['units'] to None.

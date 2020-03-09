@@ -50,13 +50,15 @@ def assign_attrs(
     skill.attrs['skill_calculated_by_function'] = function_name
     if 'init' in ds.coords:
         skill.attrs['number_of_initializations'] = ds.init.size
-    if 'member' in ds.coords:
+    if 'member' in ds.coords and function_name != 'compute_persistence':
         skill.attrs['number_of_members'] = ds.member.size
 
     skill.attrs['alignment'] = alignment
     skill.attrs['metric'] = metric.name
-    skill.attrs['comparison'] = comparison.name
-    skill.attrs['dim'] = dim
+    if comparison is not None:
+        skill.attrs['comparison'] = comparison.name
+    if dim is not None:
+        skill.attrs['dim'] = dim
 
     # change unit power
     if metric.unit_power == 0:
@@ -434,4 +436,7 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(ori_chunk_ds.chunks)
+    # transpose_coords=False as was when xarray implemented this at first
+    return new_chunk_ds.transpose(*ori_chunk_ds.dims, transpose_coords=False).chunk(
+        ori_chunk_ds.chunks
+    )

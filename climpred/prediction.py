@@ -6,9 +6,12 @@ from datetime import datetime
 import dask
 import xarray as xr
 
+from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_in_list, is_xarray
-from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
+
+from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c, PM_COMPARISONS, PROBABILISTIC_HINDCAST_COMPARISONS, PROBABILISTIC_PM_COMPARISONS
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM, PM_CALENDAR_STR
+
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_METRICS,
@@ -22,10 +25,80 @@ from .utils import (
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
-    intersect,
-    reduce_forecast_to_same_inits,
     shift_cftime_index,
 )
+
+
+def get_metric_comparison_dim(metric, comparison, dim, kind):
+    """Returns `metric`, `comparison` and `dim` for compute functions.
+
+    Args:
+        metric (str): metric or alias string
+        comparison (str): Description of parameter `comparison`.
+        dim (list of str or str): dimension to apply metric to.
+        kind (str): experiment type from ['hindcast', 'PM'].
+
+    Returns:
+        metric (Metric): metric class
+        comparison (Comparison): comparison class.
+        dim (list of str or str): corrected dimension to apply metric to.
+    """
+    # check kind allowed
+    is_in_list(kind, ['hindcast', 'PM'], 'kind')
+    # set default dim
+    if dim is None:
+        dim = 'init' if kind == 'hindcast' else ['init', 'member']
+    # check allowed dims
+    if kind == 'hindcast':
+        is_in_list(dim, ['member', 'init'], 'dim')
+    elif kind == 'PM':
+        is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
+
+    # get metric and comparison strings incorporating alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
+    METRICS = HINDCAST_METRICS if kind == 'hindcast' else PM_METRICS
+    COMPARISONS = HINDCAST_COMPARISONS if kind == 'hindcast' else PM_COMPARISONS
+    metric = get_metric_class(metric, METRICS)
+    comparison = get_comparison_class(comparison, COMPARISONS)
+
+    # check whether combination of metric and comparison works
+    PROBABILISTIC_COMPARISONS = (
+        PROBABILISTIC_HINDCAST_COMPARISONS
+        if kind == 'hindcast'
+        else PROBABILISTIC_PM_COMPARISONS
+    )
+    if metric.probabilistic:
+        if not comparison.probabilistic:
+            raise ValueError(
+                f'Probabilistic metric `{metric.name}` requires comparison '
+                f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
+                f'found `{comparison.name}`.'
+            )
+        if dim != 'member':
+            warnings.warn(
+                f'Probabilistic metric {metric.name} requires to be '
+                f'computed over dimension `dim="member"`. '
+                f'Set automatically.'
+            )
+            dim = 'member'
+    else:  # determinstic metric
+        if kind == 'hindcast':
+            if dim == 'init':
+                # for thinking in real time # compute_hindcast renames init to time
+                dim = 'time'
+        elif kind == 'PM':
+            # prevent comparison e2c and member in dim
+            if (comparison.name == 'e2c') and (
+                set(dim) == set(['init', 'member']) or dim == 'member'
+            ):
+                warnings.warn(
+                    f'comparison `{comparison.name}` does not work on `member` in dims,'
+                    f' found {dim}, automatically changed to dim=`init`.'
+                )
+                dim = 'init'
+    return metric, comparison, dim
 
 
 # --------------------------------------------#
@@ -65,45 +138,16 @@ def compute_perfect_model(
                                without `dim`.
 
     """
-    if dim is None:
-        dim = ['init', 'member']
-    is_in_list(dim, ['member', 'init', ['init', 'member']], '')
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     init_pm = convert_time_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
-    # get metric and comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+    
+    # check args compatible with each other
+    metric, comparison, dim = get_metric_comparison_dim(
+        metric, comparison, dim, kind='PM'
+    )
 
-    # get class metric(Metric)
-    metric = get_metric_class(metric, PM_METRICS)
-    # get class comparison(Comparison)
-    comparison = get_comparison_class(comparison, PM_COMPARISONS)
-
-    if metric.probabilistic:
-        if not comparison.probabilistic:
-            raise ValueError(
-                f'Probabilistic metric {metric.name} cannot work with '
-                f'comparison {comparison.name}.'
-            )
-        if dim != 'member':
-            warnings.warn(
-                f'Probabilistic metric {metric.name} requires to be '
-                f'computed over dimension `dim="member"`. '
-                f'Set automatically.'
-            )
-            dim = 'member'
-    else:  # deterministic metric
-        # prevent comparison e2c and member in dim
-        if (comparison.name == 'e2c') and (
-            set(dim) == set(['init', 'member']) or dim == 'member'
-        ):
-            warnings.warn(
-                f'comparison `e2c` does not work on `member` in dims, found '
-                f'{dim}, automatically changed to dim=`init`.'
-            )
-            dim = 'init'
 
     forecast, reference = comparison.function(init_pm, metric=metric)
 
@@ -179,40 +223,16 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
-    is_in_list(dim, ['member', 'init'], str)
+    # check args compatible with each other
+    metric, comparison, dim = get_metric_comparison_dim(
+        metric, comparison, dim, kind='hindcast'
+    )
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     verif = convert_time_index(verif, 'time', 'verif[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
-
-    # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
-    # get class metric(Metric)
-    metric = get_metric_class(metric, HINDCAST_METRICS)
-    # get class comparison(Comparison)
-    comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
-
-    if metric.probabilistic:
-        if not comparison.probabilistic:
-            raise ValueError(
-                f'Probabilistic metric `{metric.name}` requires comparison'
-                f' e.g. `m2o`, found `{comparison.name}`.'
-            )
-        if dim != 'member':
-            warnings.warn(
-                f'Probabilistic metric {metric.name} requires to be '
-                f'computed over dimension `dim="member"`. '
-                f'Set automatically.'
-            )
-            dim = 'member'
-    else:
-        if dim == 'init':
-            # for later thinking in real time
-            dim = 'time'
 
     forecast, verif = comparison.function(hind, verif, metric=metric)
 
@@ -225,13 +245,9 @@ def compute_hindcast(
     if dask.is_dask_collection(verif):
         verif = verif.chunk({'time': -1})
 
-    # take only inits for which we have verification data at all leads
-    if alignment == 'same_inits':
-        forecast, verif = reduce_forecast_to_same_inits(forecast, verif)
-    else:
-        raise NotImplementedError(
-            "Only 'same_inits' alignment is currently implemented."
-        )
+    inits, verif_dates = return_inits_and_verif_dates(
+        forecast, verif, alignment=alignment
+    )
 
     plag = []
     logging.info(
@@ -241,13 +257,11 @@ def compute_hindcast(
     )
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
-        # take lead year i timeseries and convert to real time based on temporal
-        # resolution of lead.
-        n, freq = get_lead_cftime_shift_args(forecast.lead.attrs['units'], i)
-        a = forecast.sel(lead=i).drop_vars('lead')
-        a['time'] = shift_cftime_index(a, 'time', n, freq)
-        # Take real time verification data using real time forecast dates.
-        b = verif.sel(time=a.time.values)
+        # Use `.where()` instead of `.sel()` to account for resampled inits.
+        a = forecast.sel(lead=i).where(forecast['time'].isin(inits[i]), drop=True)
+        b = verif.sel(time=verif_dates[i])
+        # Align time coordinate for metric computations.
+        a['time'] = b['time']
 
         # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
@@ -256,12 +270,12 @@ def compute_hindcast(
                 f'dim={dim} | '
                 # This is the init-sliced forecast, thus displaying actual
                 # initializations.
-                f'inits={forecast["time"].min().values}'
-                f'-{forecast["time"].max().values} | '
+                f'inits={inits[i].min().values}'
+                f'-{inits[i].max().values} | '
                 # This is the verification window, thus displaying the
                 # verification dates.
-                f'verif={a["time"].min().values}'
-                f'-{a["time"].max().values}'
+                f'verif={verif_dates[i].min()}'
+                f'-{verif_dates[i].max()}'
             )
 
         # adapt weights to shorter time
@@ -305,7 +319,12 @@ def compute_hindcast(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind, verif, metric='pearson_r', alignment='same_inits', **metric_kwargs
+    hind,
+    verif,
+    metric='pearson_r',
+    alignment='same_inits',
+    add_attrs=True,
+    **metric_kwargs,
 ):
     """Computes the skill of a persistence forecast from a simulation.
 
@@ -323,6 +342,8 @@ def compute_persistence(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
+        add_attrs (bool): write climpred compute_persistence args to attrs.
+            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -363,40 +384,42 @@ def compute_persistence(
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
-    if alignment == 'same_inits':
-        a, _ = reduce_forecast_to_same_inits(hind, verif)
-        initial = verif.sel(time=a['time'])
-    else:
-        raise NotImplementedError(
-            "Only 'same_inits' alignment is currently implemented."
-        )
+    inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
     plag = []
-    for lag in hind.lead.values:
-        n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], lag)
-        target_dates = shift_cftime_index(a, 'time', n, freq)
-
-        o = verif.sel(time=target_dates)
-        o['time'] = initial['time']
+    for i in hind.lead.values:
+        a = verif.sel(time=inits[i])
+        b = verif.sel(time=verif_dates[i])
+        a['time'] = b['time']
         plag.append(
-            metric.function(o, initial, dim='time', comparison=__e2c, **metric_kwargs)
+            metric.function(a, b, dim='time', comparison=__e2c, **metric_kwargs)
         )
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
     pers = copy_coords_from_to(hind.drop_vars(drop_dims), pers)
-    # TODO: add climpred metadata
+    if add_attrs:
+        pers = assign_attrs(
+            pers,
+            hind,
+            function_name=inspect.stack()[0][3],
+            alignment=alignment,
+            metric=metric,
+            metadata_dict=metric_kwargs,
+        )
     return pers
 
 
 @is_xarray([0, 1])
 def compute_uninitialized(
+    hind,
     uninit,
     verif,
     metric='pearson_r',
     comparison='e2o',
     dim='time',
+    alignment='same_inits',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -407,6 +430,7 @@ def compute_uninitialized(
         first lag and then projected out to any further lags being analyzed.
 
     Args:
+        hind (xarray object): Initialized ensemble.
         uninit (xarray object): Uninitialized ensemble.
         verif (xarray object): Verification data with some temporal overlap with the
             uninitialized ensemble.
@@ -417,6 +441,15 @@ def compute_uninitialized(
             How to compare the uninitialized ensemble to the verification data:
                 * e2o : ensemble mean to verification data (Default)
                 * m2o : each member to the verification data
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+            ``verif`` to a common time frame at each lead.
+            - same_inits: slice to a common init frame prior to computing
+            metric. This philosophy follows the thought that each lead should be based
+            on the same set of initializations.
+            - same_verif: slice to a common/consistent verification time frame prior to
+            computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of verification dates.
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
@@ -426,8 +459,10 @@ def compute_uninitialized(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    hind = convert_time_index(hind, 'init', 'hind[init]')
     uninit = convert_time_index(uninit, 'time', 'uninit[time]')
     verif = convert_time_index(verif, 'time', 'verif[time]')
+    has_valid_lead_units(hind)
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -436,13 +471,28 @@ def compute_uninitialized(
     comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
-    # Find common times between two for proper comparison.
-    common_time = intersect(forecast['time'].values, verif['time'].values)
-    forecast = forecast.sel(time=common_time)
-    verif = verif.sel(time=common_time)
-    uninit_skill = metric.function(
-        forecast, verif, dim=dim, comparison=comparison, **metric_kwargs
-    )
+
+    hind = hind.rename({'init': 'time'})
+
+    _, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
+
+    plag = []
+    # TODO: Refactor this, getting rid of `compute_uninitialized` completely.
+    # `same_verifs` does not need to go through the loop, since it's a fixed
+    # skill over all leads.
+    for i in hind['lead'].values:
+        # Ensure that the uninitialized reference has all of the
+        # dates for alignment.
+        dates = list(set(forecast['time'].values) & set(verif_dates[i]))
+        a = forecast.sel(time=dates)
+        b = verif.sel(time=dates)
+        a['time'] = b['time']
+        plag.append(
+            metric.function(a, b, dim='time', comparison=comparison, **metric_kwargs)
+        )
+    uninit_skill = xr.concat(plag, 'lead')
+    uninit_skill['lead'] = hind.lead.values
+
     # Attach climpred compute information to skill
     if add_attrs:
         uninit_skill = assign_attrs(

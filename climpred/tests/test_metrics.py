@@ -40,11 +40,10 @@ def test_new_metric_passed_to_compute(
     assert_allclose(actual, expected)
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
-def test_new_metric_passed_to_bootstrap_compute(
-    PM_da_initialized_1d, PM_da_control_1d, comparison
-):
-    bootstrap = 3
+@pytest.mark.slow
+def test_new_metric_passed_to_bootstrap_compute(PM_da_initialized_1d, PM_da_control_1d):
+    comparison = 'e2c'
+    BOOTSTRAP = 2
     dim = 'init'
     np.random.seed(42)
     actual = bootstrap_perfect_model(
@@ -52,7 +51,7 @@ def test_new_metric_passed_to_bootstrap_compute(
         PM_da_control_1d,
         comparison=comparison,
         metric=my_mse,
-        bootstrap=bootstrap,
+        bootstrap=BOOTSTRAP,
         dim=dim,
     )
 
@@ -61,7 +60,7 @@ def test_new_metric_passed_to_bootstrap_compute(
         PM_da_control_1d,
         comparison=comparison,
         metric='mse',
-        bootstrap=bootstrap,
+        bootstrap=BOOTSTRAP,
         dim=dim,
     )
 

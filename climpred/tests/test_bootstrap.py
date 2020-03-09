@@ -19,6 +19,7 @@ from climpred.exceptions import KeywordError
 BOOTSTRAP = 2
 
 
+@pytest.skip(reason='xr.quantile now faster')
 @pytest.mark.parametrize('chunk', [True, False])
 def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk):
     chunk_dim, dim = 'x', 'time'
@@ -251,6 +252,7 @@ def test_bootstrap_by_stacking_two_var_dataset(
     # init same size
     assert res['init'].size == res_cf['init'].size
 
+
 @pytest.mark.slow
 @pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs'])
 def test_bootstrap_hindcast_alignment(
@@ -284,4 +286,3 @@ def test_bootstrap_hindcast_raises_error(
             resample_dim='init',
             alignment='same_verifs',
         )
-

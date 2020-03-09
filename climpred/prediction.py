@@ -8,10 +8,15 @@ import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_in_list, is_xarray
-
-from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c, PM_COMPARISONS, PROBABILISTIC_HINDCAST_COMPARISONS, PROBABILISTIC_PM_COMPARISONS
+from .comparisons import (
+    COMPARISON_ALIASES,
+    HINDCAST_COMPARISONS,
+    PM_COMPARISONS,
+    PROBABILISTIC_HINDCAST_COMPARISONS,
+    PROBABILISTIC_PM_COMPARISONS,
+    __e2c,
+)
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM, PM_CALENDAR_STR
-
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_METRICS,
@@ -142,12 +147,11 @@ def compute_perfect_model(
     init_pm = convert_time_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
-    
+
     # check args compatible with each other
     metric, comparison, dim = get_metric_comparison_dim(
         metric, comparison, dim, kind='PM'
     )
-
 
     forecast, reference = comparison.function(init_pm, metric=metric)
 

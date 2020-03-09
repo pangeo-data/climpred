@@ -1,4 +1,3 @@
-import cftime
 import numpy as np
 import pytest
 import xarray as xr
@@ -7,11 +6,6 @@ from climpred import PerfectModelEnsemble
 from climpred.constants import PM_CALENDAR_STR
 from climpred.tutorial import load_dataset
 from climpred.utils import set_cftime_to_int_dim
-
-
-def set_cftime_to_int_dim(ds, dim, freq='YS', calendar='DatetimeNoLeap'):
-    ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
-    return ds
 
 CALENDAR = PM_CALENDAR_STR.strip('Datetime').lower()
 
@@ -409,6 +403,7 @@ def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
         start='3000', periods=PM_ds_control_1d.time.size, freq='D', calendar=CALENDAR
     )
     return PM_ds_control_1d
+
 
 @pytest.fixture
 def small_initialized_da():

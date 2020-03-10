@@ -105,11 +105,6 @@ def get_metric_comparison_dim(metric, comparison, dim, kind):
     return metric, comparison, dim
 
 
-# --------------------------------------------#
-# COMPUTE PREDICTABILITY/FORECASTS
-# Highest-level features for computing
-# predictability.
-# --------------------------------------------#
 @is_xarray([0, 1])
 def compute_perfect_model(
     init_pm,
@@ -147,14 +142,14 @@ def compute_perfect_model(
         metric, comparison, dim, kind='PM'
     )
 
-    forecast, reference = comparison.function(init_pm, metric=metric)
+    forecast, verif = comparison.function(init_pm, metric=metric)
 
     # in case you want to compute deterministic skill over member dim
-    if (forecast.dims != reference.dims) and not metric.probabilistic:
-        forecast, reference = xr.broadcast(forecast, reference)
+    if (forecast.dims != verif.dims) and not metric.probabilistic:
+        forecast, verif = xr.broadcast(forecast, verif)
 
     skill = metric.function(
-        forecast, reference, dim=dim, comparison=comparison, **metric_kwargs
+        forecast, verif, dim=dim, comparison=comparison, **metric_kwargs
     )
     if comparison.name == 'm2m':
         skill = skill.mean(M2M_MEMBER_DIM)
@@ -221,15 +216,11 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
-    # check args compatible with each other
     metric, comparison, dim = get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )
-    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
     verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
-    # Put this after `convert_time_index` since it assigns 'years' attribute if the
-    # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
     forecast, verif = comparison.function(hind, verif, metric=metric)

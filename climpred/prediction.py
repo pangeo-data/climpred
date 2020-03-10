@@ -13,7 +13,7 @@ from .comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
     __e2c,
 )
-from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
+from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
@@ -244,6 +244,8 @@ def compute_hindcast(
             log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
 
         # adapt weights to shorter time
+        # TODO: Make this a function, consider if it's necessary. Is it easy to make
+        # space weights usable, like for a pattern corr?
         if 'weights' in metric_kwargs:
             metric_kwargs.update(
                 {
@@ -254,12 +256,13 @@ def compute_hindcast(
             )
 
         # broadcast dims when deterministic metric and apply over member
+        # TODO: Move to function.
         if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
             a, b = xr.broadcast(a, b)
         plag.append(
             metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
         )
-    skill = xr.concat(plag, 'lead')
+    skill = xr.concat(plag, dim='lead', **CONCAT_KWARGS)
     skill['lead'] = forecast.lead.values
     # rename back to init
     if 'time' in skill.dims:  # when dim was 'member'

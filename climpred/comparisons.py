@@ -99,8 +99,6 @@ class Comparison:
 # --------------------------------------------#
 # PERFECT-MODEL COMPARISONS
 # --------------------------------------------#
-
-
 def _m2m(ds, metric=None):
     """Compare all members to all others in turn while leaving out the verification
     ``member``.

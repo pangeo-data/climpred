@@ -514,7 +514,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'init': True,
         }
         return self._apply_climpred_function(
-            compute_persistence, input_dict=input_dict, metric=metric
+            compute_persistence,
+            input_dict=input_dict,
+            metric=metric,
+            alignment='same_inits',
         )
 
     def bootstrap(

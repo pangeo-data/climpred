@@ -59,8 +59,6 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
         )
     elif alignment == 'maximize':
         return _maximize_alignment(init_lead_matrix, all_verifs, leads)
-    else:
-        raise NotImplementedError('Still need to do maximize.')
 
 
 def _maximize_alignment(init_lead_matrix, all_verifs, leads):

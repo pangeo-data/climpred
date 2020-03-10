@@ -179,7 +179,7 @@ def compute_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
-    alignment='same_inits',
+    alignment='same_verifs',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -256,8 +256,6 @@ def compute_hindcast(
         b = verif.sel(time=verif_dates[i])
         # Align time coordinate for metric computations.
         a['time'] = b['time']
-
-        # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
             log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
 
@@ -305,7 +303,7 @@ def compute_persistence(
     hind,
     verif,
     metric='pearson_r',
-    alignment='same_inits',
+    alignment='same_verifs',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -402,7 +400,7 @@ def compute_uninitialized(
     metric='pearson_r',
     comparison='e2o',
     dim='time',
-    alignment='same_inits',
+    alignment='same_verifs',
     add_attrs=True,
     **metric_kwargs,
 ):

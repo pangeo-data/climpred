@@ -786,7 +786,7 @@ class HindcastEnsemble(PredictionEnsemble):
     # Analysis Functions
     # ------------------
     def verify(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_inits'
+        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -834,7 +834,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def compute_metric(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_inits'
+        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -921,7 +921,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def compute_persistence(
-        self, name=None, metric='pearson_r', alignment='same_inits'
+        self, name=None, metric='pearson_r', alignment='same_verifs'
     ):
         """Verify against a persistence forecast of the observations/verification data.
 

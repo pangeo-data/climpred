@@ -6,6 +6,7 @@ from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model, my_quantile
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
+from climpred.constants import VALID_ALIGNMENTS
 from climpred.exceptions import KeywordError
 
 BOOTSTRAP = 2
@@ -115,7 +116,7 @@ def test_bootstrap_hindcast_resample_dim(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs'])
+@pytest.mark.parametrize('alignment', VALID_ALIGNMENTS)
 def test_bootstrap_hindcast_alignment(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment
 ):

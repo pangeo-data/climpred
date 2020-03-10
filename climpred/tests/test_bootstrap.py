@@ -14,8 +14,10 @@ BOOTSTRAP = 2
 
 @pytest.mark.parametrize('chunk', [True, False])
 def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk):
-    """Test my_quantile fastser than xr.quantile. Remove after xr=0.15.1 and add
-    skipna=False."""
+    """Test my_quantile faster than xr.quantile.
+
+    TODO: Remove after xr=0.15.1 and add skipna=False.
+    """
     chunk_dim, dim = 'x', 'time'
     if chunk:
         chunks = {chunk_dim: 24}
@@ -108,7 +110,7 @@ def test_bootstrap_hindcast_lazy(
 def test_bootstrap_hindcast_resample_dim(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim
 ):
-    """Test bootstrap_hindcast when resampling member or init und alignment
+    """Test bootstrap_hindcast when resampling member or init and alignment
     same_inits."""
     bootstrap_hindcast(
         hind_da_initialized_1d,

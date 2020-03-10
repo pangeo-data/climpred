@@ -412,8 +412,9 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    hindcast = True if comparison in HINDCAST_COMPARISONS else False
-    reference_alignment = alignment if hindcast else 'same_inits'
+    # Perfect Model requires `same_inits` setup.
+    isHindcast = True if comparison in HINDCAST_COMPARISONS else False
+    reference_alignment = alignment if isHindcast else 'same_inits'
 
     for i in range(bootstrap):
         # resample with replacement
@@ -457,7 +458,6 @@ def bootstrap_compute(
         # compute persistence skill
         # impossible for probabilistic
         if not metric.probabilistic:
-            print(reference_alignment)
             pers.append(
                 reference_compute(
                     smp_hind,

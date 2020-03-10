@@ -19,7 +19,7 @@ from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
     assign_attrs,
-    convert_time_index,
+    convert_to_cftime_index,
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
@@ -651,9 +651,9 @@ def bootstrap_hindcast(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, 'init', 'hind[init]')
-    hist = convert_time_index(hist, 'time', 'uninitialized[time]')
-    verif = convert_time_index(verif, 'time', 'verif[time]')
+    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
+    hist = convert_to_cftime_index(hist, 'time', 'uninitialized[time]')
+    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)

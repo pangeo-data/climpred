@@ -1,7 +1,6 @@
 import inspect
 import warnings
 
-import dask
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -227,12 +226,6 @@ def compute_hindcast(
 
     # think in real time dimension: real time = init + lag
     forecast = forecast.rename({'init': 'time'})
-
-    # If dask, then only one chunk in time.
-    if dask.is_dask_collection(forecast):
-        forecast = forecast.chunk({'time': -1})
-    if dask.is_dask_collection(verif):
-        verif = verif.chunk({'time': -1})
 
     inits, verif_dates = return_inits_and_verif_dates(
         forecast, verif, alignment=alignment

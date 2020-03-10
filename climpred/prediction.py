@@ -365,6 +365,7 @@ def compute_persistence(
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
+
     inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
     plag = []

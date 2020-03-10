@@ -6,6 +6,7 @@ from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model, my_quantile
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
+from climpred.constants import VALID_ALIGNMENTS
 from climpred.exceptions import KeywordError
 
 BOOTSTRAP = 2
@@ -13,6 +14,10 @@ BOOTSTRAP = 2
 
 @pytest.mark.parametrize('chunk', [True, False])
 def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk):
+    """Test my_quantile faster than xr.quantile.
+
+    TODO: Remove after xr=0.15.1 and add skipna=False.
+    """
     chunk_dim, dim = 'x', 'time'
     if chunk:
         chunks = {chunk_dim: 24}
@@ -51,6 +56,7 @@ def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk)
 def test_bootstrap_PM_no_lazy_results(
     PM_da_initialized_3d, PM_da_control_3d, chunk, comparison
 ):
+    """Test bootstrap_perfect_model works lazily."""
     if chunk:
         PM_da_initialized_3d = PM_da_initialized_3d.chunk({'lead': 2}).persist()
         PM_da_control_3d = PM_da_control_3d.chunk({'time': -1}).persist()
@@ -77,6 +83,7 @@ def test_bootstrap_hindcast_lazy(
     chunk,
     comparison,
 ):
+    """Test bootstrap_hindcast works lazily."""
     if chunk:
         hind_da_initialized_1d = hind_da_initialized_1d.chunk({'lead': 2}).persist()
         hist_da_uninitialized_1d = hist_da_uninitialized_1d.chunk(
@@ -103,6 +110,8 @@ def test_bootstrap_hindcast_lazy(
 def test_bootstrap_hindcast_resample_dim(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim
 ):
+    """Test bootstrap_hindcast when resampling member or init and alignment
+    same_inits."""
     bootstrap_hindcast(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
@@ -111,14 +120,16 @@ def test_bootstrap_hindcast_resample_dim(
         comparison='e2o',
         metric='mse',
         resample_dim=resample_dim,
+        alignment='same_inits',
     )
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs'])
+@pytest.mark.parametrize('alignment', VALID_ALIGNMENTS)
 def test_bootstrap_hindcast_alignment(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment
 ):
+    """Test bootstrap_hindcast for all alginments when resampling member."""
     bootstrap_hindcast(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,

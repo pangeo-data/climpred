@@ -42,7 +42,12 @@ def test_compute_persistence_add_attrs(PM_ds_initialized_1d, PM_ds_control_1d, m
     Checks that there are no NaNs on persistence forecast of 1D time series.
     """
     attrs = (
-        compute_persistence(PM_ds_initialized_1d, PM_ds_control_1d, metric=metric)
+        compute_persistence(
+            PM_ds_initialized_1d,
+            PM_ds_control_1d,
+            metric=metric,
+            alignment='same_inits',
+        )
     ).attrs
     assert (
         attrs['prediction_skill']
@@ -61,7 +66,12 @@ def test_compute_persistence_ds1d_not_nan(
     Checks that there are no NaNs on persistence forecast of 1D time series.
     """
     actual = (
-        compute_persistence(PM_ds_initialized_1d, PM_ds_control_1d, metric=metric)
+        compute_persistence(
+            PM_ds_initialized_1d,
+            PM_ds_control_1d,
+            metric=metric,
+            alignment='same_inits',
+        )
         .isnull()
         .any()
     )
@@ -76,9 +86,14 @@ def test_compute_persistence_lead0_lead1(
     """
     Checks that persistence forecast results are identical for a lead 0 and lead 1 setup
     """
-    res1 = compute_persistence(PM_da_initialized_1d, PM_da_control_1d, metric=metric)
+    res1 = compute_persistence(
+        PM_da_initialized_1d, PM_da_control_1d, metric=metric, alignment='same_inits'
+    )
     res2 = compute_persistence(
-        PM_da_initialized_1d_lead0, PM_da_control_1d, metric=metric
+        PM_da_initialized_1d_lead0,
+        PM_da_control_1d,
+        metric=metric,
+        alignment='same_inits',
     )
     assert (res1.values == res2.values).all()
 

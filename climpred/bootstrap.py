@@ -19,12 +19,12 @@ from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
     assign_attrs,
-    check_lead_units_equal_control_time_stride,
     convert_time_index,
-    find_start_dates,
+    find_start_dates_for_given_init,
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
+    lead_units_equal_control_time_stride,
     shift_cftime_singular,
 )
 
@@ -238,7 +238,9 @@ def bootstrap_uninit_pm_ensemble_from_control(init_pm, control):
 
 def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     """
-    Create a pseudo-ensemble from control run. Bootstrap random numbers for years to
+    Create a pseudo-ensemble from control run.
+
+    Bootstrap random numbers for years to
     construct an uninitialized ensemble from. This assumes a continous control
     simulation without gaps.
 
@@ -249,16 +251,16 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
         them into ensemble and member dimensions.
 
     Args:
-        init_pm (xarray object): ensemble simulation.
+        init_pm (xarray object): initializes ensemble simulation.
         control (xarray object): control simulation.
 
     Returns:
         uninit_pm (xarray object): uninitialized ensemble generated from control run.
     """
-    check_lead_units_equal_control_time_stride(init_pm, control)
+    lead_units_equal_control_time_stride(init_pm, control)
     # short cut if annual leads
     if init_pm.lead.attrs['units'] == 'years':
-        return bootstrap_by_stacking(init_pm, control)
+        return _bootstrap_by_stacking(init_pm, control)
 
     block_length = init_pm.lead.size
     freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
@@ -284,14 +286,17 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     def create_pseudo_members(control, init):
         """For every initialization take a different set of start years."""
         startlist = np.random.randint(c_start_year, c_end_year, nmember)
-        suitable_start_dates = find_start_dates(init_pm, control, init)
+        suitable_start_dates = find_start_dates_for_given_init(init_pm, control, init)
         return xr.concat(
             (sel_time(control, start, suitable_start_dates) for start in startlist),
-            'member',
+            dim='member',
+            **CONCAT_KWARGS,
         )
 
     uninit = xr.concat(
-        (create_pseudo_members(control, init) for init in init_pm.init), 'init'
+        (create_pseudo_members(control, init) for init in init_pm.init),
+        dim='init',
+        **CONCAT_KWARGS,
     ).rename({'time': 'lead'})
     uninit['member'] = init_pm.member.values
     uninit['lead'] = init_pm.lead
@@ -304,7 +309,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     )
 
 
-def bootstrap_by_stacking(init_pm, control):
+def _bootstrap_by_stacking(init_pm, control):
     """Bootstrap member, lead, init from control by reshaping. Fast track of function
     `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'."""
     assert type(init_pm) == type(control)
@@ -873,7 +878,7 @@ def bootstrap_perfect_model(
     control = convert_time_index(
         control, 'time', 'control[time]', calendar=PM_CALENDAR_STR
     )
-    check_lead_units_equal_control_time_stride(init_pm, control)
+    lead_units_equal_control_time_stride(init_pm, control)
     return bootstrap_compute(
         init_pm,
         control,

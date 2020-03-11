@@ -11,7 +11,7 @@ from xarray.coding.cftime_offsets import to_offset
 from . import comparisons, metrics
 from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
-from .constants import FREQ_LIST, PM_CALENDAR_STR
+from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .metrics import METRIC_ALIASES
 
 
@@ -87,15 +87,24 @@ def assign_attrs(
     return skill
 
 
-def check_lead_units_equal_control_time_stride(init_pm, control):
-    """Checl that the lead units of the initialized ensemble have the same frequency as
-    the control stride."""
-    control_time_stride = freq_at_which_different(control, 'time')
-    lead_units = init_pm.lead.attrs['units'].strip('s')
-    if control_time_stride != lead_units:
+def lead_units_equal_control_time_stride(init, verif):
+    """Check that the lead units of the initialized ensemble have the same frequency as
+    the control stride.
+
+    Args:
+        init (xr.object): initialized ensemble with lead units.
+        verif (xr.object): control, uninitialized historical simulation / observations.
+
+    Returns:
+        bool: Possible to continue or raise warning.
+
+    """
+    verif_time_stride = return_time_series_freq(verif, 'time')
+    lead_units = init.lead.attrs['units'].strip('s')
+    if verif_time_stride != lead_units:
         raise ValueError(
-            'Please provide the same temporal resolution for control.time',
-            f'(found {control_time_stride}) and init_pm.init (found',
+            'Please provide the same temporal resolution for verif.time',
+            f'(found {verif_time_stride}) and init.init (found',
             f'{lead_units}).',
         )
     else:
@@ -118,7 +127,7 @@ def copy_coords_from_to(xro_from, xro_to):
     return xro_to
 
 
-def convert_time_index(xobj, time_string, kind, calendar='DatetimeProlepticGregorian'):
+def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
     """Converts incoming time index to a standard xr.CFTimeIndex.
 
     Args:
@@ -180,10 +189,11 @@ def convert_time_index(xobj, time_string, kind, calendar='DatetimeProlepticGrego
     return xobj
 
 
-def find_start_dates(init_pm, control, single_init):
+def find_start_dates_for_given_init(init_pm, control, single_init):
     """Find the same start dates for cftime single_init across different years in
     control. Return control.time. Requires calendar=Datetime(No)Leap for consistent
     `dayofyear`."""
+    # if init_pm.init
     take_same_time = 'dayofyear'
     return control.sel(
         time=getattr(control.time.dt, take_same_time).values
@@ -191,10 +201,19 @@ def find_start_dates(init_pm, control, single_init):
     ).time
 
 
-def freq_at_which_different(ds, dim):
-    """Find the frequency starting from high frequencies at which all ds.dim are not
-    equal."""
-    for freq in FREQ_LIST:
+def return_time_series_freq(ds, dim):
+    """Return the temporal frequency of the input time series. Finds the frequency
+    starting from high frequencies at which all ds.dim are not equal.
+
+    Args:
+        ds (xr.object): input with dimension `dim`.
+        dim (str): name of dimension.
+
+    Returns:
+        str: frequency string from FREQ_LIST_TO_INFER_STRIDE
+
+    """
+    for freq in FREQ_LIST_TO_INFER_STRIDE:
         # first dim values not equal all others
         if not (
             getattr(ds.isel({dim: 0})[dim].dt, freq) == getattr(ds[dim].dt, freq)
@@ -337,54 +356,6 @@ def _load_into_memory(res):
     if dask.is_dask_collection(res):
         res = res.compute()
     return res
-
-
-def reduce_forecast_to_same_inits(forecast, verif):
-    """Reduces the forecast to common set of initializations that verify over all lags.
-
-    Args:
-        forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
-            ``time`` and containing ``lead`` dim.
-        verif (``xarray`` object): Verification data with ``time`` dim.
-
-    Returns:
-        forecast (``xarray`` object): Prediction ensemble with ``init`` sub-selected for
-            those that verify over all leads.
-        verif (``xarray`` object): Original verification data.
-    """
-    # Construct list of `n` offset over all leads.
-    n, freq = get_multiple_lead_cftime_shift_args(
-        forecast['lead'].attrs['units'], forecast['lead'].values
-    )
-    n = list(n)
-    # Add lead 0 to check that init exists in the observations so that reference
-    # forecasts have the same set of inits.
-    if 0 not in n:
-        n.insert(0, 0)
-    # Note that `init` is renamed to `time` in the compute function to compute metrics.
-    init_lead_matrix = xr.concat(
-        [
-            xr.DataArray(
-                shift_cftime_index(forecast, 'time', n, freq),
-                dims=['time'],
-                coords=[forecast['time']],
-            )
-            for n in n
-        ],
-        'lead',
-    )
-    # Checks at each `init` if all leads can verify.
-    verifies_at_all_leads = init_lead_matrix.isin(verif['time']).all('lead')
-    forecast = forecast.where(verifies_at_all_leads, drop=True)
-    return forecast, verif
-
-
-def set_cftime_to_int_dim(ds, dim, calendar=PM_CALENDAR_STR):
-    """Set to integer `dim` to cftime using `calendar`."""
-    ds[dim] = [getattr(cftime, calendar)(i, 1, 1) for i in ds[dim].values]
-    if dim == 'init':
-        ds.lead.attrs['units'] = 'years'
-    return ds
 
 
 def shift_cftime_index(xobj, time_string, n, freq):

@@ -274,7 +274,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
         - 1
     )
 
-    def sel_time(control, start_year_int, suitable_start_dates):
+    def sel_time(start_year_int, suitable_start_dates):
         """Select time segments from control from ``suitable_start_dates`` based on
         year ``start_year_int``."""
         start_time = suitable_start_dates.time.sel(time=str(start_year_int))
@@ -283,18 +283,18 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
         new['time'] = init_pm.lead.values
         return new
 
-    def create_pseudo_members(control, init):
+    def create_pseudo_members(init):
         """For every initialization take a different set of start years."""
         startlist = np.random.randint(c_start_year, c_end_year, nmember)
         suitable_start_dates = find_start_dates_for_given_init(init_pm, control, init)
         return xr.concat(
-            (sel_time(control, start, suitable_start_dates) for start in startlist),
+            (sel_time(start, suitable_start_dates) for start in startlist),
             dim='member',
             **CONCAT_KWARGS,
         )
 
     uninit = xr.concat(
-        (create_pseudo_members(control, init) for init in init_pm.init),
+        (create_pseudo_members(init) for init in init_pm.init),
         dim='init',
         **CONCAT_KWARGS,
     ).rename({'time': 'lead'})

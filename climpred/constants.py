@@ -2,9 +2,6 @@
 CLIMPRED_ENSEMBLE_DIMS = ['init', 'member', 'lead']
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']
 
-# Valid units for lead dimension
-VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']
-
 # List of frequencies to check to infer time series stride
 FREQ_LIST_TO_INFER_STRIDE = ['day', 'month', 'year']
 
@@ -23,3 +20,6 @@ M2M_MEMBER_DIM = 'forecast_member'
 
 # Valid keywords for aligning inits and verification dates.
 VALID_ALIGNMENTS = ['same_inits', 'same_init', 'same_verifs', 'same_verif']
+
+# Valid units for lead dimension
+VALID_LEAD_UNITS = ['years', 'seasons', 'months', 'weeks', 'pentads', 'days']

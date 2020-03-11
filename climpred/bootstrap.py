@@ -11,7 +11,7 @@ from .checks import (
     has_valid_lead_units,
     warn_if_chunking_would_increase_performance,
 )
-from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES
+from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
@@ -422,7 +422,7 @@ def bootstrap_compute(
     hind,
     verif,
     hist=None,
-    alignment='same_inits',
+    alignment='same_verifs',
     metric='pearson_r',
     comparison='m2e',
     dim='init',
@@ -522,6 +522,10 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
+    # Perfect Model requires `same_inits` setup.
+    isHindcast = True if comparison in HINDCAST_COMPARISONS else False
+    reference_alignment = alignment if isHindcast else 'same_inits'
+
     for i in range(bootstrap):
         # resample with replacement
         smp_hind = _resample(hind, resample_dim)
@@ -569,7 +573,7 @@ def bootstrap_compute(
                     smp_hind,
                     verif,
                     metric=metric,
-                    alignment=alignment,
+                    alignment=reference_alignment,
                     add_attrs=False,
                     **metric_kwargs,
                 )
@@ -617,7 +621,7 @@ def bootstrap_compute(
     uninit_skill = uninit.mean('bootstrap')
     if not metric.probabilistic:
         pers_skill = reference_compute(
-            hind, verif, metric=metric, alignment=alignment, **metric_kwargs
+            hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
         )
     else:
         pers_skill = init_skill.isnull()
@@ -679,7 +683,7 @@ def bootstrap_hindcast(
     hind,
     hist,
     verif,
-    alignment='same_inits',
+    alignment='same_verifs',
     metric='pearson_r',
     comparison='e2o',
     dim='init',

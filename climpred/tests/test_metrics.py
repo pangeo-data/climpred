@@ -26,9 +26,10 @@ my_mse = Metric(
 
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
-def test_new_metric_passed_to_compute(
+def test_custom_metric_passed_to_compute(
     PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
+    """Test custom metric in compute_perfect_model."""
     actual = compute_perfect_model(
         PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric=my_mse,
     )
@@ -41,7 +42,10 @@ def test_new_metric_passed_to_compute(
 
 
 @pytest.mark.slow
-def test_new_metric_passed_to_bootstrap_compute(PM_da_initialized_1d, PM_da_control_1d):
+def test_custom_metric_passed_to_bootstrap_compute(
+    PM_da_initialized_1d, PM_da_control_1d
+):
+    """Test custom metric in bootstrap_perfect_model."""
     comparison = 'e2c'
     BOOTSTRAP = 2
     dim = 'init'
@@ -69,6 +73,7 @@ def test_new_metric_passed_to_bootstrap_compute(PM_da_initialized_1d, PM_da_cont
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
+    """Test skipna in compute_perfect_model."""
     PM_da_initialized_3d = PM_da_initialized_3d.copy()
     # manipulating data
     PM_da_initialized_3d.values[1:3, 1:4, 1:4, 4:6, 4:6] = np.nan
@@ -97,7 +102,7 @@ def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ('e2c', 'm2c'))
 def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, metric):
-    # distribute weights on initializations
+    """Test init weights in compute_perfect_model."""
     dim = 'init'
     base = compute_perfect_model(
         PM_da_initialized_3d,
@@ -126,6 +131,7 @@ def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, m
 def test_pm_metric_weights_m2x(
     PM_da_initialized_3d, PM_da_control_3d, comparison, metric
 ):
+    """Test init weights in compute_perfect_model."""
     # distribute weights on initializations
     dim = 'init'
     base = compute_perfect_model(
@@ -158,6 +164,7 @@ def test_pm_metric_weights_m2x(
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, metric):
+    """Test skipna argument in hindcast_metric."""
     # manipulating data with nans
     hind_da_initialized_3d[0, 2, 0, 2] = np.nan
     base = compute_hindcast(
@@ -166,6 +173,7 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
         metric=metric,
         skipna=False,
         dim='init',
+        alignment='same_inits',
     )
     skipping = compute_hindcast(
         hind_da_initialized_3d,
@@ -173,8 +181,8 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
         metric=metric,
         skipna=True,
         dim='init',
+        alignment='same_inits',
     )
-
     div = base / skipping
     assert (div != 1).any()
 
@@ -184,7 +192,7 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
 def test_hindcast_metric_weights(
     hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
 ):
-    # distribute weights on initializations
+    """Test time=lead weights in compute_hindcast."""
     dim = 'init'
     base = compute_hindcast(
         hind_da_initialized_3d,
@@ -217,7 +225,7 @@ def test_hindcast_metric_weights(
 def test_hindcast_metric_weights_x2r(
     hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
 ):
-    # distribute weights on initializations
+    """Test init weights in compute_hindcast."""
     dim = 'init'
     base = compute_hindcast(
         hind_da_initialized_3d,

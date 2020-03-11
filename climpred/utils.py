@@ -20,7 +20,7 @@ def assign_attrs(
     ds,
     function_name,
     metadata_dict=None,
-    alignment='same_inits',
+    alignment=None,
     metric=None,
     comparison=None,
     dim=None,
@@ -53,7 +53,8 @@ def assign_attrs(
     if 'member' in ds.coords and function_name != 'compute_persistence':
         skill.attrs['number_of_members'] = ds.member.size
 
-    skill.attrs['alignment'] = alignment
+    if alignment is not None:
+        skill.attrs['alignment'] = alignment
     skill.attrs['metric'] = metric.name
     if comparison is not None:
         skill.attrs['comparison'] = comparison.name

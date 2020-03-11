@@ -90,7 +90,7 @@ repository and running ``pip install . --upgrade`` in the main directory
 
     setting-up-data
     prediction-ensemble-object.ipynb
-    alignment
+    alignment.ipynb
     metrics
     comparisons
     significance

@@ -61,16 +61,17 @@ def test_intersect():
     assert all(a == e for a, e in zip(actual, expected))
 
 
-def test_da_assign_attrs():
+def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     """Test assigning attrs for compute_perfect_model and dataarrays."""
-    v = 'tos'
     alignment = 'same_inits'
     metric = 'pearson_r'
     comparison = 'm2e'
-    da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
-    control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
     actual = compute_perfect_model(
-        da, control, metric=metric, comparison=comparison
+        PM_ds_initialized_1d,
+        PM_ds_control_1d,
+        metric=metric,
+        comparison=comparison,
+        alignment=alignment,
     ).attrs
     assert actual['alignment'] == alignment
     assert actual['metric'] == metric
@@ -84,18 +85,20 @@ def test_da_assign_attrs():
     )
 
 
-def test_ds_assign_attrs():
+def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     """Test assigning attrs for datasets."""
     metric = 'mse'
     comparison = 'm2e'
     alignment = 'same_inits'
-    v = 'tos'
     dim = ['init', 'member']
-    da = load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)[v]
-    control = load_dataset('MPI-control-1D').isel(area=1, period=-1)[v]
-    da.attrs['units'] = 'C'
+    PM_ds_initialized_1d.attrs['units'] = 'C'
     actual = compute_perfect_model(
-        da, control, metric=metric, comparison=comparison, dim=dim
+        PM_ds_initialized_1d,
+        PM_ds_control_1d,
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        alignment=alignment,
     ).attrs
     assert actual['alignment'] == alignment
     assert actual['metric'] == metric

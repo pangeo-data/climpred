@@ -1,7 +1,5 @@
 import inspect
-import logging
 import warnings
-from datetime import datetime
 
 import dask
 import xarray as xr
@@ -17,6 +15,7 @@ from .comparisons import (
     __e2c,
 )
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM, PM_CALENDAR_STR
+from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     HINDCAST_METRICS,
@@ -185,7 +184,7 @@ def compute_hindcast(
     metric='pearson_r',
     comparison='e2o',
     dim='init',
-    alignment='same_inits',
+    alignment='same_verifs',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -253,12 +252,8 @@ def compute_hindcast(
         forecast, verif, alignment=alignment
     )
 
+    log_compute_hindcast_header(metric, comparison, dim, alignment)
     plag = []
-    logging.info(
-        f'`compute_hindcast` for metric {metric.name} and '
-        f'comparison {comparison.name} at {str(datetime.now())}\n'
-        f'++++++++++++++++++++++++++++++++++++++++++++++++'
-    )
     # iterate over all leads (accounts for lead.min() in [0,1])
     for i in forecast['lead'].values:
         # Use `.where()` instead of `.sel()` to account for resampled inits.
@@ -266,21 +261,8 @@ def compute_hindcast(
         b = verif.sel(time=verif_dates[i])
         # Align time coordinate for metric computations.
         a['time'] = b['time']
-
-        # TODO: Move this into logging.py with refactoring.
         if a.time.size > 0:
-            logging.info(
-                f'lead={str(i).zfill(2)} | '
-                f'dim={dim} | '
-                # This is the init-sliced forecast, thus displaying actual
-                # initializations.
-                f'inits={inits[i].min().values}'
-                f'-{inits[i].max().values} | '
-                # This is the verification window, thus displaying the
-                # verification dates.
-                f'verif={verif_dates[i].min()}'
-                f'-{verif_dates[i].max()}'
-            )
+            log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
 
         # adapt weights to shorter time
         if 'weights' in metric_kwargs:
@@ -326,7 +308,7 @@ def compute_persistence(
     hind,
     verif,
     metric='pearson_r',
-    alignment='same_inits',
+    alignment='same_verifs',
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -388,6 +370,7 @@ def compute_persistence(
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
     hind = hind.rename({'init': 'time'})
+
     inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
     plag = []
@@ -423,7 +406,7 @@ def compute_uninitialized(
     metric='pearson_r',
     comparison='e2o',
     dim='time',
-    alignment='same_inits',
+    alignment='same_verifs',
     add_attrs=True,
     **metric_kwargs,
 ):

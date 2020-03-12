@@ -325,9 +325,7 @@ def test_find_start_dates_for_given_init(
 ):
     """Test that start dates are one year apart."""
     for init in PM_ds_initialized_1d_mm_cftime.init:
-        start_dates = find_start_dates_for_given_init(
-            PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime, init
-        )
+        start_dates = find_start_dates_for_given_init(PM_ds_control_1d_mm_cftime, init)
         freq = return_time_series_freq(PM_ds_initialized_1d_mm_cftime, 'init')
         assert return_time_series_freq(start_dates, 'time') == 'year'
         assert (getattr(start_dates.time.dt, freq) == getattr(init.dt, freq)).all()

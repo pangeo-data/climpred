@@ -88,30 +88,6 @@ def assign_attrs(
     return skill
 
 
-def lead_units_equal_control_time_stride(init, verif):
-    """Check that the lead units of the initialized ensemble have the same frequency as
-    the control stride.
-
-    Args:
-        init (xr.object): initialized ensemble with lead units.
-        verif (xr.object): control, uninitialized historical simulation / observations.
-
-    Returns:
-        bool: Possible to continue or raise warning.
-
-    """
-    verif_time_stride = return_time_series_freq(verif, 'time')
-    lead_units = init.lead.attrs['units'].strip('s')
-    if verif_time_stride != lead_units:
-        raise ValueError(
-            'Please provide the same temporal resolution for verif.time',
-            f'(found {verif_time_stride}) and init.init (found',
-            f'{lead_units}).',
-        )
-    else:
-        return True
-
-
 def copy_coords_from_to(xro_from, xro_to):
     """Copy coords from one xr object to another."""
     if isinstance(xro_from, xr.DataArray) and isinstance(xro_to, xr.DataArray):
@@ -190,11 +166,22 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
     return xobj
 
 
-def find_start_dates_for_given_init(init_pm, control, single_init):
+def find_start_dates_for_given_init(control, single_init):
     """Find the same start dates for cftime single_init across different years in
     control. Return control.time. Requires calendar=Datetime(No)Leap for consistent
     `dayofyear`."""
-    # if init_pm.init
+    # check that Leap or NoLeap calendar
+    for dim in [single_init.init, control.time]:
+        # dirty workaround .values requires a dimension but single init is only a
+        # single initialization
+        dim = dim.expand_dims('init') if 'time' not in dim.coords else dim
+        calendar = type(dim.values[0]).__name__
+        if 'Leap' not in calendar:
+            raise ValueError(
+                f'inputs to `find_start_dates_for_given_init` must be `Leap` '
+                f' or `NoLeap` calendar, found {calendar} in {dim}.'
+            )
+    # could also just take first of month or even a random number day in month
     take_same_time = 'dayofyear'
     return control.sel(
         time=getattr(control.time.dt, take_same_time).values
@@ -350,6 +337,30 @@ def intersect(lst1, lst2):
     """
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
+
+
+def lead_units_equal_control_time_stride(init, verif):
+    """Check that the lead units of the initialized ensemble have the same frequency as
+    the control stride.
+
+    Args:
+        init (xr.object): initialized ensemble with lead units.
+        verif (xr.object): control, uninitialized historical simulation / observations.
+
+    Returns:
+        bool: Possible to continue or raise warning.
+
+    """
+    verif_time_stride = return_time_series_freq(verif, 'time')
+    lead_units = init.lead.attrs['units'].strip('s')
+    if verif_time_stride != lead_units:
+        raise ValueError(
+            'Please provide the same temporal resolution for verif.time',
+            f'(found {verif_time_stride}) and init.init (found',
+            f'{lead_units}).',
+        )
+    else:
+        return True
 
 
 def _load_into_memory(res):

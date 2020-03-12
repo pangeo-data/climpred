@@ -286,7 +286,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     def create_pseudo_members(init):
         """For every initialization take a different set of start years."""
         startlist = np.random.randint(c_start_year, c_end_year, nmember)
-        suitable_start_dates = find_start_dates_for_given_init(init_pm, control, init)
+        suitable_start_dates = find_start_dates_for_given_init(control, init)
         return xr.concat(
             (sel_time(start, suitable_start_dates) for start in startlist),
             dim='member',

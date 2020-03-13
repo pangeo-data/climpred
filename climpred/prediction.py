@@ -193,6 +193,9 @@ def _apply_metric_over_leads(
         )
     result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
     result['lead'] = forecast['lead']
+    # rename back to 'init'
+    if 'time' in result.dims:  # If dim is 'member'
+        result = result.rename({'time': 'init'})
     return result
 
 
@@ -237,13 +240,12 @@ def compute_hindcast(
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
         add_attrs (bool): write climpred compute args to attrs. default: True
-        ** metric_kwargs (dict): additional keywords to be passed to metric
+        **metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        skill (xarray object):
-            Predictability with main dimension ``lag`` without dimension ``dim``
-
+        result (xarray object):
+            Verification metric over ``lead`` reduced by dimension(s) ``dim``.
     """
     if 'weights' in metric_kwargs:
         warnings.warn(
@@ -268,19 +270,19 @@ def compute_hindcast(
     )
 
     log_compute_hindcast_header(metric, comparison, dim, alignment)
-    skill = _apply_metric_over_leads(
+    result = _apply_metric_over_leads(
         forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
     )
-    # rename back to init
-    if 'time' in skill.dims:  # when dim was 'member'
-        skill = skill.rename({'time': 'init'})
-    # keep coords from hind
+
+    # These computations sometimes drop coordinates along the way. This appends them
+    # back onto the results of the metric.
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
-    skill = copy_coords_from_to(hind.drop_vars(drop_dims), skill)
-    # attach climpred compute information to skill
+    result = copy_coords_from_to(hind.drop_vars(drop_dims), result)
+
+    # Attach climpred compute information to result
     if add_attrs:
-        skill = assign_attrs(
-            skill,
+        result = assign_attrs(
+            result,
             hind,
             function_name=inspect.stack()[0][3],
             alignment=alignment,
@@ -289,4 +291,4 @@ def compute_hindcast(
             dim=dim,
             metadata_dict=metric_kwargs,
         )
-    return skill
+    return result

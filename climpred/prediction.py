@@ -292,3 +292,51 @@ def compute_hindcast(
             metadata_dict=metric_kwargs,
         )
     return result
+
+
+def compute_reference(
+    hind,
+    verif,
+    hist=None,
+    metric='pearson_r',
+    comparison='e2o',
+    dim='init',
+    alignment='same_verifs',
+):
+    """Work in progress on a generic reference forecast function.
+
+    Persistence:
+        * Just uses hind & verif.
+
+    Historical:
+        * Requires a `hist` time series.
+    """
+    metric, comparison, dim = _get_metric_comparison_dim(
+        metric, comparison, dim, kind='hindcast'
+    )
+
+    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
+    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
+    has_valid_lead_units(hind)
+
+    forecast, verif = comparison.function(hind, verif, metric=metric)
+
+    # think in real time dimension: real time = init + lag
+    forecast = forecast.rename({'init': 'time'})
+
+    inits, verif_dates = return_inits_and_verif_dates(
+        forecast, verif, alignment=alignment
+    )
+
+    # UP UNTIL THIS POINT, THE SETUP IS IDENTICAL TO COMPUTE_HINDCAST. So we should
+    # probably have a sub-function for this portion, then branch here. Need to think
+    # about how this works for PM.
+
+    # Now we apply over each lead.
+    # Persistence/Damped Persistence:
+    # Just uses the `verif` as is and selects the same set of "inits" and verif dates
+    # at each lead.
+    #
+    # Hist/Uninitialized:
+    # Needs to go into `return_inits_and_verif_dates`. Will alter which inits/verif
+    # dates are usable. But then just is aligned with `verif_dates` dictionary.

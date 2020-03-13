@@ -167,35 +167,27 @@ def compute_perfect_model(
     return skill
 
 
-def _apply_metric_over_leads(
-    forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
+def _apply_hindcast_metric(
+    forecast, verif, metric, comparison, dim, inits, verif_dates, lead, **metric_kwargs
 ):
-    metric_over_leads = []
-    for i in forecast['lead'].data:
-        # Use `.where()` instead of `.sel()` to account for resampled inits when
-        # bootstrapping.
-        a = (
-            forecast.sel(lead=i)
-            .where(forecast['time'].isin(inits[i]), drop=True)
-            .drop_vars('lead')
-        )
-        b = verif.sel(time=verif_dates[i])
-        a['time'] = b['time']
+    """Temporary docstring. Will clean up args and document this properly."""
+    # Use `.where()` instead of `.sel()` to account for resampled inits when
+    # bootstrapping.
+    a = (
+        forecast.sel(lead=lead)
+        .where(forecast['time'].isin(inits[lead]), drop=True)
+        .drop_vars('lead')
+    )
+    b = verif.sel(time=verif_dates[lead])
+    a['time'] = b['time']
 
-        if a.time.size > 0:
-            log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
+    if a.time.size > 0:
+        log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
 
-        # broadcast dims when deterministic metric and apply over member
-        if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
-            a, b = xr.broadcast(a, b)
-        metric_over_leads.append(
-            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
-        )
-    result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
-    result['lead'] = forecast['lead']
-    # rename back to 'init'
-    if 'time' in result.dims:  # If dim is 'member'
-        result = result.rename({'time': 'init'})
+    # broadcast dims when deterministic metric and apply over member
+    if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
+        a, b = xr.broadcast(a, b)
+    result = metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
     return result
 
 
@@ -270,10 +262,29 @@ def compute_hindcast(
     )
 
     log_compute_hindcast_header(metric, comparison, dim, alignment)
-    result = _apply_metric_over_leads(
-        forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
-    )
 
+    # NOTE: Here we can just do list comprehension looping. The apply_metric function
+    # should just handle alignment. This will open up the pathway to inserting some
+    # reference function more easily.
+    metric_over_leads = [
+        _apply_hindcast_metric(
+            forecast,
+            verif,
+            metric,
+            comparison,
+            dim,
+            inits,
+            verif_dates,
+            i,
+            **metric_kwargs,
+        )
+        for i in forecast['lead'].data
+    ]
+    result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+    result['lead'] = forecast['lead']
+    # rename back to 'init'
+    if 'time' in result.dims:  # If dim is 'member'
+        result = result.rename({'time': 'init'})
     # These computations sometimes drop coordinates along the way. This appends them
     # back onto the results of the metric.
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]

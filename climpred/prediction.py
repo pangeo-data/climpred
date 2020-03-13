@@ -32,7 +32,7 @@ from .utils import (
 )
 
 
-def get_metric_comparison_dim(metric, comparison, dim, kind):
+def _get_metric_comparison_dim(metric, comparison, dim, kind):
     """Returns `metric`, `comparison` and `dim` for compute functions.
 
     Args:
@@ -137,12 +137,12 @@ def compute_perfect_model(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    init_pm = convert_time_index(
+    init_pm = convert_to_cftime_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
 
     # check args compatible with each other
-    metric, comparison, dim = get_metric_comparison_dim(
+    metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='PM'
     )
 
@@ -220,7 +220,7 @@ def compute_hindcast(
             Predictability with main dimension ``lag`` without dimension ``dim``
 
     """
-    metric, comparison, dim = get_metric_comparison_dim(
+    metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )
     hind = convert_to_cftime_index(hind, 'init', 'hind[init]')

@@ -15,8 +15,8 @@ from .checks import (
     match_initialized_vars,
 )
 from .exceptions import DimensionError
-from .prediction import compute_hindcast, compute_perfect_model, compute_uninitialized
-from .reference import compute_persistence
+from .prediction import compute_hindcast, compute_perfect_model
+from .reference import compute_persistence, compute_uninitialized
 from .smoothing import (
     smooth_goddard_2013,
     spatial_smoothing_xesmf,

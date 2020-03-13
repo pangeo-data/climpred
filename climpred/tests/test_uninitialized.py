@@ -3,7 +3,7 @@ import pytest
 from climpred.comparisons import HINDCAST_COMPARISONS
 from climpred.constants import VALID_ALIGNMENTS
 from climpred.metrics import DETERMINISTIC_HINDCAST_METRICS
-from climpred.prediction import compute_uninitialized
+from climpred.reference import compute_uninitialized
 
 # uacc breaks
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()

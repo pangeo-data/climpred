@@ -56,4 +56,5 @@ dependencies:
   - pip
   - pip:
       - pytest-tldr
+      - pytest-lazy-fixture
       - git+https://github.com/bradyrx/esmtools

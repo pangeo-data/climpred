@@ -11,6 +11,7 @@ from xarray.coding.cftime_offsets import to_offset
 from . import comparisons, metrics
 from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
+from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .metrics import METRIC_ALIASES
 
 
@@ -110,6 +111,7 @@ def convert_to_cftime_index(xobj, time_string, kind):
         xobj (xarray object): Dataset or DataArray with a time dimension to convert.
         time_string (str): Name of time dimension.
         kind (str): Kind of object for error message.
+        calendar (str): calendar to set time dimension to.
 
     Returns:
         Dataset or DataArray with converted time dimension. If incoming time index is
@@ -155,13 +157,56 @@ def convert_to_cftime_index(xobj, time_string, kind):
             )
         # TODO: Account for differing calendars. Currently assuming `Gregorian`.
         cftime_dates = [
-            cftime.DatetimeProlepticGregorian(int(y), int(m), int(d))
+            getattr(cftime, calendar)(int(y), int(m), int(d))
             for (y, m, d) in split_dates
         ]
         time_index = xr.CFTimeIndex(cftime_dates)
         xobj[time_string] = time_index
 
     return xobj
+
+
+def find_start_dates_for_given_init(control, single_init):
+    """Find the same start dates for cftime single_init across different years in
+    control. Return control.time. Requires calendar=Datetime(No)Leap for consistent
+    `dayofyear`."""
+    # check that Leap or NoLeap calendar
+    for dim in [single_init.init, control.time]:
+        # dirty workaround .values requires a dimension but single_init is only a
+        # single initialization and therefore without init dim
+        dim = dim.expand_dims('init') if 'time' not in dim.coords else dim
+        calendar = type(dim.values[0]).__name__
+        if 'Leap' not in calendar:
+            raise ValueError(
+                f'inputs to `find_start_dates_for_given_init` must be `Leap` '
+                f' or `NoLeap` calendar, found {calendar} in {dim}.'
+            )
+    # could also just take first of month or even a random number day in month
+    take_same_time = 'dayofyear'
+    return control.sel(
+        time=getattr(control.time.dt, take_same_time).values
+        == getattr(single_init.init.dt, take_same_time).values
+    ).time
+
+
+def return_time_series_freq(ds, dim):
+    """Return the temporal frequency of the input time series. Finds the frequency
+    starting from high frequencies at which all ds.dim are not equal.
+
+    Args:
+        ds (xr.object): input with dimension `dim`.
+        dim (str): name of dimension.
+
+    Returns:
+        str: frequency string from FREQ_LIST_TO_INFER_STRIDE
+
+    """
+    for freq in FREQ_LIST_TO_INFER_STRIDE:
+        # first dim values not equal all others
+        if not (
+            getattr(ds.isel({dim: 0})[dim].dt, freq) == getattr(ds[dim].dt, freq)
+        ).all():
+            return freq
 
 
 def get_metric_class(metric, list_):
@@ -292,6 +337,30 @@ def intersect(lst1, lst2):
     """
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
+
+
+def lead_units_equal_control_time_stride(init, verif):
+    """Check that the lead units of the initialized ensemble have the same frequency as
+    the control stride.
+
+    Args:
+        init (xr.object): initialized ensemble with lead units.
+        verif (xr.object): control, uninitialized historical simulation / observations.
+
+    Returns:
+        bool: Possible to continue or raise warning.
+
+    """
+    verif_time_stride = return_time_series_freq(verif, 'time')
+    lead_units = init.lead.attrs['units'].strip('s')
+    if verif_time_stride != lead_units:
+        raise ValueError(
+            'Please provide the same temporal resolution for verif.time',
+            f'(found {verif_time_stride}) and init.init (found',
+            f'{lead_units}).',
+        )
+    else:
+        return True
 
 
 def _load_into_memory(res):

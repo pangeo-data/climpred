@@ -45,6 +45,8 @@ def test_compute_perfect_model_dim_over_member(
     )
     assert 'init' in actual.dims
     assert not actual.isnull().any()
+    # check that init is cftime object
+    assert 'cftime' in str(type(actual.init.values[0]))
 
 
 # cannot work for e2o comparison because only 1:1 comparison

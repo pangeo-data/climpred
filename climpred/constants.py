@@ -2,6 +2,15 @@
 CLIMPRED_ENSEMBLE_DIMS = ['init', 'member', 'lead']
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ['time']
 
+# List of frequencies to check to infer time series stride
+FREQ_LIST_TO_INFER_STRIDE = ['day', 'month', 'year']
+
+# calendar type for perfect-model (PM) (needed for bootstrapping_uninit)
+# Leap also works, but changing Leap,NoLeap fails
+PM_CALENDAR_STR = 'DatetimeNoLeap'
+# standard calendar for hindcast experiments
+HINDCAST_CALENDAR_STR = 'DatetimeProlepticGregorian'
+
 # default kwargs when using concat
 # data_vars='minimal' could be added but needs to check that not xr.Dataset
 CONCAT_KWARGS = {'coords': 'minimal', 'compat': 'override'}

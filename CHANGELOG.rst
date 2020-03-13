@@ -8,6 +8,11 @@ climpred v2.0.1 (2020-01-##)
 New Features
 ------------
 
+- compute_perfect_model now accepts inits as cftime and integer. Implemented cftime
+  into bootstrap_uninit function, which requires a Leap or NoLeap calendar.
+  (:pr:`332`) `Aaron Spring`_.
+- speed-up in bootstrapping uninitialized skill in perfect-model for annual leads by
+  reshaping. (:pr:`332`) `Aaron Spring`_.
 - speed-up in bootstrap functions: (:pr:`285`) `Aaron Spring`_.
     *  ``xr.quantile`` exchanged for ``dask.map_blocks(np.percentile)``
     *  properly implemented handling for lazy results when chunked inputs

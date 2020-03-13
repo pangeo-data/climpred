@@ -4,7 +4,7 @@ import xarray as xr
 
 from .bootstrap import (
     bootstrap_perfect_model,
-    bootstrap_uninit_pm_ensemble_from_control,
+    bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
 from .checks import (
     has_dataset,
@@ -415,7 +415,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             self._datasets['control'], 'control', 'generate an uninitialized ensemble.'
         )
 
-        uninit = bootstrap_uninit_pm_ensemble_from_control(
+        uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
             self._datasets['initialized'], self._datasets['control']
         )
         datasets = self._datasets.copy()

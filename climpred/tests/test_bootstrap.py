@@ -1,11 +1,10 @@
 import time
 
-import dask
 import numpy as np
+
+import dask
 import pytest
 import xarray as xr
-from xarray.testing import assert_allclose
-
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
     bootstrap_hindcast,
@@ -17,6 +16,8 @@ from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.constants import CONCAT_KWARGS, VALID_ALIGNMENTS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
+from pytest_lazyfixture import lazy_fixture
+from xarray.testing import assert_allclose
 
 BOOTSTRAP = 2
 
@@ -241,16 +242,16 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical_da(
     'init, control',
     [
         (
-            pytest.lazy_fixture('PM_ds_initialized_1d_ym_cftime'),
-            pytest.lazy_fixture('PM_ds_control_1d_ym_cftime'),
+            lazy_fixture('PM_ds_initialized_1d_ym_cftime'),
+            lazy_fixture('PM_ds_control_1d_ym_cftime'),
         ),
         (
-            pytest.lazy_fixture('PM_ds_initialized_1d_mm_cftime'),
-            pytest.lazy_fixture('PM_ds_control_1d_mm_cftime'),
+            lazy_fixture('PM_ds_initialized_1d_mm_cftime'),
+            lazy_fixture('PM_ds_control_1d_mm_cftime'),
         ),
         (
-            pytest.lazy_fixture('PM_ds_initialized_1d_dm_cftime'),
-            pytest.lazy_fixture('PM_ds_control_1d_dm_cftime'),
+            lazy_fixture('PM_ds_initialized_1d_dm_cftime'),
+            lazy_fixture('PM_ds_control_1d_dm_cftime'),
         ),
     ],
 )

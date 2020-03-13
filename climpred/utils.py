@@ -172,8 +172,8 @@ def find_start_dates_for_given_init(control, single_init):
     `dayofyear`."""
     # check that Leap or NoLeap calendar
     for dim in [single_init.init, control.time]:
-        # dirty workaround .values requires a dimension but single init is only a
-        # single initialization
+        # dirty workaround .values requires a dimension but single_init is only a
+        # single initialization and therefore without init dim
         dim = dim.expand_dims('init') if 'time' not in dim.coords else dim
         calendar = type(dim.values[0]).__name__
         if 'Leap' not in calendar:

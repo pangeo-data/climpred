@@ -178,67 +178,8 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     )
 
 
-def bootstrap_uninit_pm_ensemble_from_control(init_pm, control):
-    """
-    Create a pseudo-ensemble from control run.
-
-    Note:
-        Needed for block bootstrapping confidence intervals of a metric in perfect
-        model framework. Takes randomly segments of length of ensemble dataset from
-        control and rearranges them into ensemble and member dimensions.
-
-    Args:
-        init_pm (xarray object): ensemble simulation.
-        control (xarray object): control simulation.
-
-    Returns:
-        uninit (xarray object): pseudo-ensemble generated from control run.
-    """
-    nens = init_pm.init.size
-    nmember = init_pm.member.size
-    length = init_pm.lead.size
-    c_start = 0
-    c_end = control['time'].size
-    lead_time = init_pm['lead']
-
-    def set_coords(uninit, init, dim):
-        uninit[dim] = init[dim].values
-        return uninit
-
-    def isel_years(control, year_s, length):
-        new = control.isel(time=slice(year_s, year_s + length))
-        new = new.rename({'time': 'lead'})
-        new['lead'] = lead_time
-        return new
-
-    def create_pseudo_members(control):
-        startlist = np.random.randint(c_start, c_end - length - 1, nmember)
-        uninit_ens = xr.concat(
-            (isel_years(control, start, length) for start in startlist),
-            dim='member',
-            **CONCAT_KWARGS,
-        )
-        return uninit_ens
-
-    uninit = xr.concat(
-        (
-            set_coords(create_pseudo_members(control), init_pm, 'member')
-            for _ in range(nens)
-        ),
-        dim='init',
-        **CONCAT_KWARGS,
-    )
-    # chunk to same dims
-    return (
-        _transpose_and_rechunk_to(uninit, init_pm)
-        if dask.is_dask_collection(uninit)
-        else uninit
-    )
-
-
 def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
-    """
-    Create a pseudo-ensemble from control run.
+    """Create a pseudo-ensemble from control run.
 
     Bootstrap random numbers for years to
     construct an uninitialized ensemble from. This assumes a continous control
@@ -251,7 +192,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
         them into ensemble and member dimensions.
 
     Args:
-        init_pm (xarray object): initializes ensemble simulation.
+        init_pm (xarray object): initialized ensemble simulation.
         control (xarray object): control simulation.
 
     Returns:
@@ -265,6 +206,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     block_length = init_pm.lead.size
     freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
     nmember = init_pm.member.size
+    # start and end years possible to resample the actual uninitialized ensembles from
     c_start_year = control.time.min().dt.year.astype('int')
     # dont resample from years that control wont have timesteps for all leads
     c_end_year = (

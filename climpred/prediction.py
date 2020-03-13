@@ -14,7 +14,7 @@ from .comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
     __e2c,
 )
-from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
+from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
@@ -142,6 +142,11 @@ def compute_perfect_model(
                                without `dim`.
 
     """
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    init_pm = convert_time_index(
+        init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
+    )
+
     # check args compatible with each other
     metric, comparison, dim = get_metric_comparison_dim(
         metric, comparison, dim, kind='PM'

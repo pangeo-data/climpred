@@ -163,6 +163,51 @@ def compute_perfect_model(
     return skill
 
 
+def _align_weights_to_forecast_time(a, weights):
+    if weights is not None:
+        weights = weights.sel(time=a['time'])
+        return weights
+
+
+def _apply_metric_over_leads(
+    forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
+):
+    """Loops through all leads and applies metric. Needed for hindcast."""
+    if 'weights' in metric_kwargs:
+        weights = metric_kwargs['weights']
+        weights = convert_to_cftime_index(weights, 'time', 'weights[time]')
+        del metric_kwargs['weights']
+    else:
+        weights = None
+    plag = []
+    for i in forecast['lead'].values:
+        # Use `.where()` instead of `.sel()` to account for resampled inits.
+        a = (
+            forecast.sel(lead=i)
+            .where(forecast['time'].isin(inits[i]), drop=True)
+            .drop_vars('lead')
+        )
+        b = verif.sel(time=verif_dates[i])
+        a['time'] = b['time']
+
+        if a.time.size > 0:
+            log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
+
+        weights = _align_weights_to_forecast_time(a, weights)
+        # broadcast dims when deterministic metric and apply over member
+        # TODO: Move to function.
+        if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
+            a, b = xr.broadcast(a, b)
+        plag.append(
+            metric.function(
+                a, b, dim=dim, comparison=comparison, weights=weights, **metric_kwargs,
+            )
+        )
+    skill = xr.concat(plag, dim='lead', **CONCAT_KWARGS)
+    skill['lead'] = forecast.lead.values
+    return skill
+
+
 @is_xarray([0, 1])
 def compute_hindcast(
     hind,
@@ -229,38 +274,9 @@ def compute_hindcast(
     )
 
     log_compute_hindcast_header(metric, comparison, dim, alignment)
-    plag = []
-    # iterate over all leads (accounts for lead.min() in [0,1])
-    for i in forecast['lead'].values:
-        # Use `.where()` instead of `.sel()` to account for resampled inits.
-        a = forecast.sel(lead=i).where(forecast['time'].isin(inits[i]), drop=True)
-        b = verif.sel(time=verif_dates[i])
-        # Align time coordinate for metric computations.
-        a['time'] = b['time']
-        if a.time.size > 0:
-            log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
-
-        # adapt weights to shorter time
-        # TODO: Make this a function, consider if it's necessary. Is it easy to make
-        # space weights usable, like for a pattern corr?
-        if 'weights' in metric_kwargs:
-            metric_kwargs.update(
-                {
-                    'weights': metric_kwargs['weights'].isel(
-                        time=slice(None, a.time.size)
-                    )
-                }
-            )
-
-        # broadcast dims when deterministic metric and apply over member
-        # TODO: Move to function.
-        if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
-            a, b = xr.broadcast(a, b)
-        plag.append(
-            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
-        )
-    skill = xr.concat(plag, dim='lead', **CONCAT_KWARGS)
-    skill['lead'] = forecast.lead.values
+    skill = _apply_metric_over_leads(
+        forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
+    )
     # rename back to init
     if 'time' in skill.dims:  # when dim was 'member'
         skill = skill.rename({'time': 'init'})

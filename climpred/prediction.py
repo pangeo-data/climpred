@@ -163,22 +163,9 @@ def compute_perfect_model(
     return skill
 
 
-def _align_weights_to_forecast_time(a, weights):
-    if weights is not None:
-        weights = weights.sel(time=a['time'])
-        return weights
-
-
 def _apply_metric_over_leads(
     forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
 ):
-    """Loops through all leads and applies metric. Needed for hindcast."""
-    if 'weights' in metric_kwargs:
-        weights = metric_kwargs['weights']
-        weights = convert_to_cftime_index(weights, 'time', 'weights[time]')
-        del metric_kwargs['weights']
-    else:
-        weights = None
     plag = []
     for i in forecast['lead'].values:
         # Use `.where()` instead of `.sel()` to account for resampled inits.
@@ -193,15 +180,12 @@ def _apply_metric_over_leads(
         if a.time.size > 0:
             log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
 
-        weights = _align_weights_to_forecast_time(a, weights)
         # broadcast dims when deterministic metric and apply over member
         # TODO: Move to function.
         if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
             a, b = xr.broadcast(a, b)
         plag.append(
-            metric.function(
-                a, b, dim=dim, comparison=comparison, weights=weights, **metric_kwargs,
-            )
+            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
         )
     skill = xr.concat(plag, dim='lead', **CONCAT_KWARGS)
     skill['lead'] = forecast.lead.values

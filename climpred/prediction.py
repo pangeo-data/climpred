@@ -170,9 +170,10 @@ def compute_perfect_model(
 def _apply_metric_over_leads(
     forecast, verif, metric, comparison, dim, inits, verif_dates, **metric_kwargs
 ):
-    plag = []
-    for i in forecast['lead'].values:
-        # Use `.where()` instead of `.sel()` to account for resampled inits.
+    metric_over_leads = []
+    for i in forecast['lead'].data:
+        # Use `.where()` instead of `.sel()` to account for resampled inits when
+        # bootstrapping.
         a = (
             forecast.sel(lead=i)
             .where(forecast['time'].isin(inits[i]), drop=True)
@@ -185,15 +186,14 @@ def _apply_metric_over_leads(
             log_compute_hindcast_inits_and_verifs(dim, i, inits, verif_dates)
 
         # broadcast dims when deterministic metric and apply over member
-        # TODO: Move to function.
         if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
             a, b = xr.broadcast(a, b)
-        plag.append(
+        metric_over_leads.append(
             metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
         )
-    skill = xr.concat(plag, dim='lead', **CONCAT_KWARGS)
-    skill['lead'] = forecast.lead.values
-    return skill
+    result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+    result['lead'] = forecast['lead']
+    return result
 
 
 @is_xarray([0, 1])
@@ -249,9 +249,11 @@ def compute_hindcast(
         warnings.warn(
             'Weights is not currently supported by climpred and will be ignored.'
         )
+
     metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )
+
     hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
     verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
     has_valid_lead_units(hind)

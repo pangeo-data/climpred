@@ -5,7 +5,8 @@ from climpred.bootstrap import bootstrap_hindcast
 from climpred.comparisons import HINDCAST_COMPARISONS
 from climpred.constants import CLIMPRED_DIMS
 from climpred.metrics import DETERMINISTIC_HINDCAST_METRICS
-from climpred.prediction import compute_hindcast, compute_persistence
+from climpred.prediction import compute_hindcast
+from climpred.reference import compute_persistence
 
 # uacc is sqrt(MSSS), fails when MSSS negative
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()

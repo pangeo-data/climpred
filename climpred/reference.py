@@ -2,21 +2,17 @@ import inspect
 
 import xarray as xr
 
-from climpred.alignment import return_inits_and_verif_dates
-from climpred.checks import has_valid_lead_units, is_xarray
-from climpred.comparisons import (
+from .alignment import return_inits_and_verif_dates
+from .checks import has_valid_lead_units, is_xarray
+from .comparisons import (
     COMPARISON_ALIASES,
     HINDCAST_COMPARISONS,
     __e2c,
     get_comparison_class,
 )
-from climpred.constants import CLIMPRED_DIMS
-from climpred.metrics import (
-    DETERMINISTIC_HINDCAST_METRICS,
-    METRIC_ALIASES,
-    get_metric_class,
-)
-from climpred.utils import (
+from .constants import CLIMPRED_DIMS
+from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES, get_metric_class
+from .utils import (
     assign_attrs,
     convert_to_cftime_index,
     copy_coords_from_to,

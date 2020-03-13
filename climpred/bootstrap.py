@@ -14,7 +14,8 @@ from .checks import (
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
+from .prediction import compute_hindcast, compute_perfect_model
+from .reference import compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -818,10 +819,10 @@ def bootstrap_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     # Check init & time is int, cftime, or datetime; convert ints or cftime to datetime.
-    init_pm = convert_time_index(
+    init_pm = convert_to_cftime_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
-    control = convert_time_index(
+    control = convert_to_cftime_index(
         control, 'time', 'control[time]', calendar=PM_CALENDAR_STR
     )
     lead_units_equal_control_time_stride(init_pm, control)

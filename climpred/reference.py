@@ -4,19 +4,16 @@ import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_xarray
-from .comparisons import (
-    COMPARISON_ALIASES,
-    HINDCAST_COMPARISONS,
-    __e2c,
-    get_comparison_class,
-)
+from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, __e2c
 from .constants import CLIMPRED_DIMS
-from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES, get_metric_class
+from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES
 from .utils import (
     assign_attrs,
     convert_to_cftime_index,
     copy_coords_from_to,
+    get_comparison_class,
     get_lead_cftime_shift_args,
+    get_metric_class,
     shift_cftime_index,
 )
 

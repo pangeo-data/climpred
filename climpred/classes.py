@@ -35,8 +35,6 @@ from .smoothing import (
 )
 from .utils import convert_to_cftime_index, get_comparison_class, get_metric_class
 
-RESERVED = ['kind']
-
 
 def _display_metadata(self):
     """
@@ -785,6 +783,43 @@ class HindcastEnsemble(PredictionEnsemble):
                 return self._datasets['observations']
         else:
             return self._datasets['observations'][name]
+
+    def reference(
+        self,
+        name=None,
+        reference='persistence',
+        metric='pearson_r',
+        comparison='e2o',
+        alignment='same_verifs',
+    ):
+        # def _reference(
+        #     hind, verif, hist=None,
+        # ):
+        #     metric, comparison, dim = self._get_metric_comparison_dim(
+        #         metric, comparison, dim
+        #     )
+        #     forecast, verif = comparison.function(hind, verif, metric=metric)
+        #     forecast = forecast.rename({'init': 'time'})
+        #     inits, verif_dates = return_inits_and_verif_dates(
+        #         forecast, verif, alignment=alignment
+        #     )
+        #     metric_over_leads = [
+        #         _apply_metric_at_given_lead(
+        #             forecast,
+        #             verif,
+        #             inits,
+        #             verif_dates,
+        #             i,
+        #             metric=metric,
+        #             comparison=comparison,
+        #             dim=dim,
+        #             **metric_kwargs,
+        #         )
+        #         for i in forecast['lead'].data
+        #     ]
+        #     result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+        #     result['lead'] = forecast['lead']
+        pass
 
     def verify(
         self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'

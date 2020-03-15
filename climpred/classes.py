@@ -586,9 +586,6 @@ class HindcastEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    # -------------
-    # Magic Methods
-    # -------------
     def __init__(self, xobj):
         """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
@@ -606,9 +603,6 @@ class HindcastEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         self._datasets.update({'observations': {}})
 
-    # ----------------
-    # Helper Functions
-    # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
@@ -678,9 +672,6 @@ class HindcastEnsemble(PredictionEnsemble):
         obs_vars_to_drop = list(set(obs_vars) - set(init_vars))
         return init_vars_to_drop, obs_vars_to_drop
 
-    # ---------------
-    # Object Builders
-    # ---------------
     @is_xarray(1)
     def add_observations(self, xobj, name):
         """Add a verification data with which to verify the initialized ensemble.
@@ -740,9 +731,6 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets)
 
-    # -----------------
-    # Getters & Setters
-    # -----------------
     def get_observations(self, name=None):
         """Returns xarray Datasets of the observations/verification data.
 
@@ -781,9 +769,6 @@ class HindcastEnsemble(PredictionEnsemble):
         )
         return self.get_observations(name=name)
 
-    # ------------------
-    # Analysis Functions
-    # ------------------
     def verify(
         self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
     ):

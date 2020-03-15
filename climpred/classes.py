@@ -897,46 +897,6 @@ class HindcastEnsemble(PredictionEnsemble):
             dim='init',
         )
 
-    def compute_metric(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
-    ):
-        """Verifies the initialized ensemble against observations/verification data.
-
-        This will automatically verify against all shared variables
-        between the initialized ensemble and observations/verification data.
-
-        Args:
-            name (str): Short name of observations/verification data to compare to.
-                If ``None``, compare to all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the
-                observations/verification data. ('e2o'
-                for ensemble mean to observations/verification data.
-                'm2o' for each individual member to observations/verification data).
-            alignment (str): which inits or verification times should be aligned?
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
-
-        Returns:
-            Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to observations short
-            name.
-        """
-        warnings.warn(
-            '`HindcastEnsemble.compute_metric()` will be deprecated. '
-            'Using `HindcastEnsemble.verify()` is encouraged.',
-            PendingDeprecationWarning,
-        )
-        return self.verify(
-            name=name, metric=metric, comparison=comparison, alignment=alignment
-        )
-
     def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
         """Verifies the uninitialized ensemble against observations/verification data.
 

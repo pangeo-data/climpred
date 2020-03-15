@@ -346,7 +346,8 @@ def reference_forecast(
 
     hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
     verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
-    hist = convert_to_cftime_index(hist, 'time', 'hist[time]')
+    if hist is not None:
+        hist = convert_to_cftime_index(hist, 'time', 'hist[time]')
     has_valid_lead_units(hind)
 
     forecast, verif = comparison.function(hind, verif, metric=metric)

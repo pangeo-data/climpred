@@ -26,7 +26,7 @@ from .comparisons import (
 from .exceptions import DimensionError
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .prediction import _apply_metric_at_given_lead, verify_perfect_model
-from .reference import compute_persistence, compute_uninitialized
+from .reference import compute_persistence
 from .smoothing import (
     smooth_goddard_2013,
     spatial_smoothing_xesmf,
@@ -748,22 +748,6 @@ class HindcastEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind='hindcast')
 
     @is_xarray(1)
-    def add_reference(self, xobj, name):
-        """Add an observational product with which to verify the initialized ensemble.
-
-        Args:
-            xobj (xarray object): Dataset/DataArray to append to the
-                                  `HindcastEnsemble` object.
-            name (str): Short name for referencing the verification data.
-        """
-        warnings.warn(
-            '`HindcastEnsemble.add_reference()` will be deprecated. '
-            'Using `HindcastEnsemble.add_observations()` is encouraged.',
-            PendingDeprecationWarning,
-        )
-        return self.add_observations(xobj, name)
-
-    @is_xarray(1)
     def add_uninitialized(self, xobj):
         """Add a companion uninitialized ensemble for comparison to verification data.
 
@@ -801,24 +785,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 return self._datasets['observations']
         else:
             return self._datasets['observations'][name]
-
-    def get_reference(self, name=None):
-        """Returns xarray Datasets of the observations/verification data.
-
-        Args:
-            name (str, optional): Name of the observations/verification data to return.
-                If ``None``, return dictionary of all observations/verification data.
-
-        Returns:
-            Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
-            ``xarray`` Dataset.
-        """
-        warnings.warn(
-            '`HindcastEnsemble.get_reference()` will be deprecated. '
-            'Using `HindcastEnsemble.get_observations()` is encouraged.',
-            PendingDeprecationWarning,
-        )
-        return self.get_observations(name=name)
 
     def verify(
         self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
@@ -895,53 +861,6 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
             alignment=alignment,
             dim='init',
-        )
-
-    def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
-        """Verifies the uninitialized ensemble against observations/verification data.
-
-        This will automatically verify against all shared variables
-        between the uninitialized ensemble and observations/verification data.
-
-        Args:
-            name (str): Short name of observations/verification data to compare to.
-                If ``None``, compare to all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the
-                observations/verification data. ('e2o' for ensemble mean to
-                observations/verification data. 'm2o' for each individual member to
-                observations/verification data).
-            alignment (str): which inits or verification times should be aligned?
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
-
-        Returns:
-            Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to
-            observations/verification data short name.
-        """
-        has_dataset(
-            self._datasets['uninitialized'],
-            'uninitialized',
-            'compute an uninitialized metric',
-        )
-        input_dict = {
-            'ensemble': self._datasets['uninitialized'],
-            'observations': self._datasets['observations'],
-            'name': name,
-            'init': False,
-        }
-        return self._apply_climpred_function(
-            compute_uninitialized,
-            input_dict=input_dict,
-            metric=metric,
-            comparison=comparison,
         )
 
     def compute_persistence(

@@ -129,10 +129,6 @@ def verify_perfect_model(
                                without `dim`.
 
     """
-    if 'weights' in metric_kwargs:
-        warnings.warn(
-            'Weights is not currently supported by climpred and will be ignored.'
-        )
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     init_pm = convert_to_cftime_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
@@ -255,11 +251,6 @@ def verify_hindcast(
         result (xarray object):
             Verification metric over ``lead`` reduced by dimension(s) ``dim``.
     """
-    if 'weights' in metric_kwargs:
-        warnings.warn(
-            'Weights is not currently supported by climpred and will be ignored.'
-        )
-
     metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )

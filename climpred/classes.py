@@ -11,14 +11,21 @@ from .checks import (
     has_dataset,
     has_dims,
     has_valid_lead_units,
+    is_in_list,
     is_xarray,
     match_initialized_dims,
     match_initialized_vars,
 )
-from .comparisons import HINDCAST_COMPARISONS
+from .comparisons import (
+    COMPARISON_ALIASES,
+    HINDCAST_COMPARISONS,
+    PM_COMPARISONS,
+    PROBABILISTIC_HINDCAST_COMPARISONS,
+    PROBABILISTIC_PM_COMPARISONS,
+)
 from .exceptions import DimensionError
-from .metrics import HINDCAST_METRICS
-from .prediction import _apply_hindcast_metric, verify_perfect_model
+from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
+from .prediction import _apply_metric_at_given_lead, verify_perfect_model
 from .reference import compute_persistence, compute_uninitialized
 from .smoothing import (
     smooth_goddard_2013,
@@ -28,10 +35,9 @@ from .smoothing import (
 )
 from .utils import convert_to_cftime_index, get_comparison_class, get_metric_class
 
+RESERVED = ['kind']
 
-# ----------
-# Aesthetics
-# ----------
+
 def _display_metadata(self):
     """
     This is called in the following case:
@@ -86,9 +92,6 @@ def _display_metadata(self):
     return summary
 
 
-# -----------------
-# CLASS DEFINITIONS
-# -----------------
 class PredictionEnsemble:
     """
     The main object. This is the super of both `PerfectModelEnsemble` and
@@ -96,9 +99,6 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
 
-    # -------------
-    # Magic Methods
-    # -------------
     @is_xarray(1)
     def __init__(self, xobj):
         if isinstance(xobj, xr.DataArray):
@@ -114,6 +114,7 @@ class PredictionEnsemble:
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}
+        self.kind = 'prediction'
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
@@ -126,6 +127,7 @@ class PredictionEnsemble:
         Args:
             * name: Function, e.g., .isel() or .sum().
         """
+        kind = self.kind
 
         def wrapper(*args, **kwargs):
             """Applies arbitrary function to all datasets in the PredictionEnsemble
@@ -183,7 +185,7 @@ class PredictionEnsemble:
                         )
                     datasets.update({outer_k: temporary_dataset})
             # Instantiates new object with the modified datasets.
-            return self._construct_direct(datasets)
+            return self._construct_direct(datasets, kind=kind)
 
         return wrapper
 
@@ -191,7 +193,7 @@ class PredictionEnsemble:
     # Helper Functions
     # ----------------
     @classmethod
-    def _construct_direct(cls, datasets):
+    def _construct_direct(cls, datasets, kind):
         """Shortcut around __init__ for internal use to avoid inplace
         operations.
 
@@ -200,7 +202,66 @@ class PredictionEnsemble:
         """
         obj = object.__new__(cls)
         obj._datasets = datasets
+        obj.kind = kind
         return obj
+
+    def _get_metric_comparison_dim(self, metric, comparison, dim):
+        kind = self.kind
+
+        if dim is None:
+            dim = 'init' if kind == 'hindcast' else ['init', 'member']
+
+        if kind == 'hindcast':
+            is_in_list(dim, ['member', 'init'], 'dim')
+        elif kind == 'perfect':
+            is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
+
+        # get metric and comparison strings incorporating alias
+        metric = METRIC_ALIASES.get(metric, metric)
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
+        METRICS = HINDCAST_METRICS if kind == 'hindcast' else PM_METRICS
+        COMPARISONS = HINDCAST_COMPARISONS if kind == 'hindcast' else PM_COMPARISONS
+        metric = get_metric_class(metric, METRICS)
+        comparison = get_comparison_class(comparison, COMPARISONS)
+
+        # check whether combination of metric and comparison works
+        PROBABILISTIC_COMPARISONS = (
+            PROBABILISTIC_HINDCAST_COMPARISONS
+            if kind == 'hindcast'
+            else PROBABILISTIC_PM_COMPARISONS
+        )
+        if metric.probabilistic:
+            if not comparison.probabilistic:
+                raise ValueError(
+                    f'Probabilistic metric `{metric.name}` requires comparison '
+                    f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
+                    f'found `{comparison.name}`.'
+                )
+            if dim != 'member':
+                warnings.warn(
+                    f'Probabilistic metric {metric.name} requires to be '
+                    f'computed over dimension `dim="member"`. '
+                    f'Set automatically.'
+                )
+                dim = 'member'
+        else:  # determinstic metric
+            if kind == 'hindcast':
+                if dim == 'init':
+                    # for thinking in real time # verify_hindcast renames init to time
+                    dim = 'time'
+            elif kind == 'perfect':
+                # prevent comparison e2c and member in dim
+                if (comparison.name == 'e2c') and (
+                    set(dim) == set(['init', 'member']) or dim == 'member'
+                ):
+                    warnings.warn(
+                        f'comparison `{comparison.name}` does not work on `member` '
+                        f'in dims,'
+                        f' found {dim}, automatically changed to dim=`init`.'
+                    )
+                    dim = 'init'
+        return metric, comparison, dim
 
     # -----------------
     # Getters & Setters
@@ -309,9 +370,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    # -------------
-    # Magic Methods
-    # -------------
     def __init__(self, xobj):
         """Create a `PerfectModelEnsemble` object by inputting output from the
         control run in `xarray` format.
@@ -330,10 +388,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         # Reserve sub-dictionary for the control simulation.
         self._datasets.update({'control': {}})
+        self.kind = 'perfect'
 
-    # ----------------
-    # Helper Functions
-    # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary climpred
         function.
@@ -380,9 +436,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
         return init_vars_to_drop, ctrl_vars_to_drop
 
-    # ---------------
-    # Object Builders
-    # ---------------
     @is_xarray(1)
     def add_control(self, xobj):
         """Add the control run that initialized the climate prediction
@@ -401,7 +454,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         xobj = convert_to_cftime_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='perfect')
 
     def generate_uninitialized(self):
         """Generate an uninitialized ensemble by bootstrapping the
@@ -419,18 +472,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': uninit})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='perfect')
 
-    # -----------------
-    # Getters & Setters
-    # -----------------
     def get_control(self):
         """Returns the control as an xarray dataset."""
         return self._datasets['control']
 
-    # ------------------
-    # Analysis Functions
-    # ------------------
     def compute_metric(self, metric='pearson_r', comparison='m2m'):
         """Compares the initialized ensemble to the control run.
 
@@ -605,6 +652,7 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         super().__init__(xobj)
         self._datasets.update({'observations': {}})
+        self.kind = 'hindcast'
 
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary
@@ -697,7 +745,7 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets = self._datasets.copy()
         datasets_obs.update({name: xobj})
         datasets.update({'observations': datasets_obs})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='hindcast')
 
     @is_xarray(1)
     def add_reference(self, xobj, name):
@@ -732,7 +780,7 @@ class HindcastEnsemble(PredictionEnsemble):
         xobj = convert_to_cftime_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='hindcast')
 
     def get_observations(self, name=None):
         """Returns xarray Datasets of the observations/verification data.
@@ -805,15 +853,16 @@ class HindcastEnsemble(PredictionEnsemble):
         """
 
         def _verify(hind, verif, metric, comparison, alignment, dim, **metric_kwargs):
-            metric = get_metric_class(metric, HINDCAST_METRICS)
-            comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
+            metric, comparison, dim = self._get_metric_comparison_dim(
+                metric, comparison, dim
+            )
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({'init': 'time'})
             inits, verif_dates = return_inits_and_verif_dates(
                 forecast, verif, alignment=alignment
             )
             metric_over_leads = [
-                _apply_hindcast_metric(
+                _apply_metric_at_given_lead(
                     forecast,
                     verif,
                     metric,

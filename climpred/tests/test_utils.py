@@ -8,7 +8,7 @@ from xarray.testing import assert_allclose
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS, __m2c
 from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
-from climpred.prediction import compute_perfect_model, verify_hindcast
+from climpred.prediction import verify_hindcast, verify_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
     convert_to_cftime_index,
@@ -62,11 +62,11 @@ def test_intersect():
 
 
 def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
-    """Test assigning attrs for compute_perfect_model and dataarrays."""
+    """Test assigning attrs for verify_perfect_model and dataarrays."""
     alignment = 'same_inits'
     metric = 'pearson_r'
     comparison = 'm2e'
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_ds_initialized_1d,
         PM_ds_control_1d,
         metric=metric,
@@ -78,7 +78,7 @@ def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
         assert actual['units'] == 'None'
-    assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
+    assert actual['skill_calculated_by_function'] == 'verify_perfect_model'
     assert (
         actual['prediction_skill']
         == 'calculated by climpred https://climpred.readthedocs.io/'
@@ -92,7 +92,7 @@ def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     alignment = 'same_inits'
     dim = ['init', 'member']
     PM_ds_initialized_1d.attrs['units'] = 'C'
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_ds_initialized_1d,
         PM_ds_control_1d,
         metric=metric,
@@ -105,7 +105,7 @@ def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
         assert actual['units'] == 'None'
-    assert actual['skill_calculated_by_function'] == 'compute_perfect_model'
+    assert actual['skill_calculated_by_function'] == 'verify_perfect_model'
     assert actual['units'] == '(C)^2'
     assert actual['dim'] == dim
 

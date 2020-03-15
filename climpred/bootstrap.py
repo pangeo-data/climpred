@@ -14,7 +14,7 @@ from .checks import (
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import compute_perfect_model, verify_hindcast
+from .prediction import verify_hindcast, verify_perfect_model
 from .reference import compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
@@ -478,7 +478,7 @@ def bootstrap_compute(
                          with replacement). Defaults to 500.
         compute (func): function to compute skill.
                         Choose from
-                        [:py:func:`climpred.prediction.compute_perfect_model`,
+                        [:py:func:`climpred.prediction.verify_perfect_model`,
                          :py:func:`climpred.prediction.verify_hindcast`].
         resample_uninit (func): function to create an uninitialized ensemble
                         from a control simulation or uninitialized large
@@ -881,7 +881,7 @@ def bootstrap_perfect_model(
 
     See also:
         * climpred.bootstrap.bootstrap_compute
-        * climpred.prediction.compute_perfect_model
+        * climpred.prediction.verify_perfect_model
 
     Example:
         >>> init = climpred.tutorial.load_dataset('MPI-PM-DP-1D')
@@ -915,7 +915,7 @@ def bootstrap_perfect_model(
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
-        compute=compute_perfect_model,
+        compute=verify_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
         reference_compute=reference_compute,
         **metric_kwargs,

@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from climpred.prediction import compute_perfect_model, verify_hindcast
+from climpred.prediction import verify_hindcast, verify_perfect_model
 
 
 @pytest.fixture()
@@ -51,7 +51,7 @@ def test_daily_resolution_hindcast(daily_initialized, daily_obs):
 def test_daily_resolution_perfect_model(daily_initialized, daily_obs):
     """Tests that daily resolution perfect model predictions work."""
     daily_initialized.lead.attrs['units'] = 'days'
-    assert compute_perfect_model(daily_initialized, daily_obs).all()
+    assert verify_perfect_model(daily_initialized, daily_obs).all()
 
 
 def test_pentadal_resolution_hindcast(daily_initialized, daily_obs):
@@ -95,7 +95,7 @@ def test_monthly_resolution_hindcast(monthly_initialized, monthly_obs):
 def test_monthly_resolution_perfect_model(monthly_initialized, monthly_obs):
     """Tests that monthly resolution perfect model predictions work."""
     monthly_initialized.lead.attrs['units'] = 'months'
-    assert compute_perfect_model(monthly_initialized, monthly_obs).all()
+    assert verify_perfect_model(monthly_initialized, monthly_obs).all()
 
 
 def test_seasonal_resolution_hindcast(monthly_initialized, monthly_obs):
@@ -116,7 +116,7 @@ def test_seasonal_resolution_perfect_model(monthly_initialized, monthly_obs):
     )
     seasonal_pm = seasonal_pm.isel(lead=slice(0, None, 3))
     seasonal_obs = monthly_obs.rolling(time=3, center=True).mean().dropna(dim='time')
-    assert compute_perfect_model(seasonal_pm, seasonal_obs).all()
+    assert verify_perfect_model(seasonal_pm, seasonal_obs).all()
 
 
 def test_yearly_resolution_hindcast(monthly_initialized, monthly_obs):
@@ -134,4 +134,4 @@ def test_yearly_resolution_perfect_model(monthly_initialized, monthly_obs):
     yearly_pm = monthly_initialized.resample(init='YS').mean()
     yearly_obs = monthly_obs.resample(time='YS').mean()
     yearly_pm.lead.attrs['units'] = 'years'
-    assert compute_perfect_model(yearly_pm, yearly_obs).all()
+    assert verify_perfect_model(yearly_pm, yearly_obs).all()

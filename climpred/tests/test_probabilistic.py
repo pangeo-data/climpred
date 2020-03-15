@@ -8,14 +8,14 @@ from climpred.comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.metrics import METRIC_ALIASES, PROBABILISTIC_METRICS
-from climpred.prediction import compute_perfect_model, verify_hindcast
+from climpred.prediction import verify_hindcast, verify_perfect_model
 
 BOOTSTRAP = 3
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
-def test_compute_perfect_model_da1d_not_nan_probabilistic(
+def test_verify_perfect_model_da1d_not_nan_probabilistic(
     PM_da_initialized_1d, PM_da_control_1d, metric, comparison
 ):
     """
@@ -35,7 +35,7 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
     else:
         func = None
 
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison=comparison,
@@ -174,14 +174,14 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         assert not actualk
 
 
-def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
+def test_verify_perfect_model_da1d_not_nan_crpss_quadratic(
     PM_da_initialized_1d, PM_da_control_1d
 ):
     """
     Checks that there are no NaNs on perfect model metrics of 1D time series.
     """
     actual = (
-        compute_perfect_model(
+        verify_perfect_model(
             PM_da_initialized_1d.isel(lead=[0]),
             PM_da_control_1d,
             comparison='m2c',
@@ -196,14 +196,14 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
 
 
 @pytest.mark.slow
-def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
+def test_verify_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
     PM_da_initialized_1d, PM_da_control_1d
 ):
     """
     Checks that there are no NaNs on perfect model metrics of 1D time series.
     """
     actual = (
-        compute_perfect_model(
+        verify_perfect_model(
             PM_da_initialized_1d.isel(lead=[0]),
             PM_da_control_1d,
             comparison='m2c',
@@ -264,7 +264,7 @@ def test_pm_crpss_orientation(PM_da_initialized_1d, PM_da_control_1d):
     """
     Checks that CRPSS in PM as skill score > 0.
     """
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison='m2m',
@@ -284,7 +284,7 @@ def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
     PM_da_initialized_1d, PM_da_control_1d, metric, comparison
 ):
     with pytest.raises(ValueError) as excinfo:
-        compute_perfect_model(
+        verify_perfect_model(
             PM_da_initialized_1d,
             PM_da_control_1d,
             comparison=comparison,
@@ -299,7 +299,7 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
     PM_da_initialized_1d, PM_da_control_1d, metric, dim
 ):
     with pytest.warns(UserWarning) as record:
-        compute_perfect_model(
+        verify_perfect_model(
             PM_da_initialized_1d,
             PM_da_control_1d,
             comparison='m2c',

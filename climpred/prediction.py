@@ -98,7 +98,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
 
 
 @is_xarray([0, 1])
-def compute_perfect_model(
+def verify_perfect_model(
     init_pm,
     control,
     metric='pearson_r',
@@ -321,7 +321,7 @@ def verify_hindcast(
     return result
 
 
-def hindcast_reference(
+def reference_forecast(
     hind,
     verif,
     hist=None,

@@ -8,7 +8,7 @@ from climpred.comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
-from climpred.prediction import compute_perfect_model, verify_hindcast
+from climpred.prediction import verify_hindcast, verify_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
 
 BOOTSTRAP = 3
@@ -32,11 +32,11 @@ def test_pm_comparison_stack_dims_when_deterministic(
 
 # cannot work for e2c, m2e comparison because only 1:1 comparison
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
-def test_compute_perfect_model_dim_over_member(
+def test_verify_perfect_model_dim_over_member(
     PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     """Test deterministic metric calc skill over member dim."""
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison=comparison,
@@ -67,19 +67,19 @@ def test_verify_hindcast_dim_over_member(
     assert not actual.mean('init').isnull().any()
 
 
-def test_compute_perfect_model_different_dims_quite_close(
+def test_verify_perfect_model_different_dims_quite_close(
     PM_da_initialized_1d, PM_da_control_1d
 ):
     """Test whether dim=['init','member'] and
     dim='member' results."""
-    stack_dims_true = compute_perfect_model(
+    stack_dims_true = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison='m2c',
         metric='rmse',
         dim=['init', 'member'],
     )
-    stack_dims_false = compute_perfect_model(
+    stack_dims_false = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison='m2c',
@@ -143,7 +143,7 @@ def test_compute_pm_dims(
 ):
     """Test whether compute_pm calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         metric=metric,

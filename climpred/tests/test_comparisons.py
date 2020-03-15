@@ -15,7 +15,7 @@ from climpred.comparisons import (
     _drop_members,
 )
 from climpred.metrics import PM_METRICS, __mse as metric
-from climpred.prediction import compute_perfect_model
+from climpred.prediction import verify_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
 
 
@@ -171,14 +171,14 @@ my_m2me_comparison = Comparison(
 def test_new_comparison_passed_to_compute(
     PM_da_initialized_1d, PM_da_control_1d, metric
 ):
-    actual = compute_perfect_model(
+    actual = verify_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison=my_m2me_comparison,
         metric=metric,
     )
 
-    expected = compute_perfect_model(
+    expected = verify_perfect_model(
         PM_da_initialized_1d, PM_da_control_1d, comparison='m2e', metric='mse'
     )
 

@@ -57,7 +57,7 @@ def _get_norm_factor(comparison):
         >>> # check skill saturation value of roughly 1 for different comparisons
         >>> metric = 'nrmse'
         >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:
-                s = compute_perfect_model(ds, control, metric=metric, comparison=c)
+                s = verify_perfect_model(ds, control, metric=metric, comparison=c)
                 s.plot(label=' '.join([metric,c]))
         >>> plt.legend()
 
@@ -1753,7 +1753,7 @@ def _brier_score(forecast, verif, **metric_kwargs):
 
     Example:
         >>> def pos(x): return x > 0
-        >>> compute_perfect_model(ds, control, metric='brier_score', func=pos)
+        >>> verify_perfect_model(ds, control, metric='brier_score', func=pos)
     """
     if 'func' in metric_kwargs:
         func = metric_kwargs['func']
@@ -1819,7 +1819,7 @@ def _threshold_brier_score(forecast, verif, **metric_kwargs):
         * xskillscore.threshold_brier_score
 
     Example:
-        >>> compute_perfect_model(ds, control,
+        >>> verify_perfect_model(ds, control,
                                   metric='threshold_brier_score', threshold=.5)
     """
     if 'threshold' not in metric_kwargs:
@@ -2019,8 +2019,8 @@ def _crpss(forecast, verif, **metric_kwargs):
           https://doi.org/10/c6758w.
 
     Example:
-        >>> compute_perfect_model(ds, control, metric='crpss')
-        >>> compute_perfect_model(ds, control, metric='crpss', gaussian=False,
+        >>> verify_perfect_model(ds, control, metric='crpss')
+        >>> verify_perfect_model(ds, control, metric='crpss', gaussian=False,
                                   cdf_or_dist=scipy.stats.norm, xminimum=-10,
                                   xmaximum=10, tol=1e-6)
 
@@ -2128,7 +2128,7 @@ def _crpss_es(forecast, verif, **metric_kwargs):
     """
     # helper dim to calc mu
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS + ['time']]
-    # inside compute_perfect_model
+    # inside verify_perfect_model
     if 'init' in forecast.dims:
         dim2 = 'init'
     # inside verify_hindcast
@@ -2210,7 +2210,7 @@ for m in __ALL_METRICS__:
 
 DETERMINISTIC_METRICS = [m.name for m in __ALL_METRICS__ if not m.probabilistic]
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS.copy()
-# Metrics to be used in compute_perfect_model.
+# Metrics to be used in verify_perfect_model.
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 # Used to set attrs['units'] to None.
 DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
@@ -2218,7 +2218,7 @@ DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
 POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
 PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
 
-# Combined allowed metrics for verify_hindcast and compute_perfect_model
+# Combined allowed metrics for verify_hindcast and verify_perfect_model
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
 ALL_METRICS = [m.name for m in __ALL_METRICS__]

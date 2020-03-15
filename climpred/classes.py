@@ -18,7 +18,7 @@ from .checks import (
 from .comparisons import HINDCAST_COMPARISONS
 from .exceptions import DimensionError
 from .metrics import HINDCAST_METRICS
-from .prediction import _apply_hindcast_metric, compute_perfect_model
+from .prediction import _apply_hindcast_metric, verify_perfect_model
 from .reference import compute_persistence, compute_uninitialized
 from .smoothing import (
     smooth_goddard_2013,
@@ -450,7 +450,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'init': True,
         }
         return self._apply_climpred_function(
-            compute_perfect_model,
+            verify_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
@@ -481,7 +481,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'init': False,
         }
         return self._apply_climpred_function(
-            compute_perfect_model,
+            verify_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,

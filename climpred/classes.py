@@ -784,45 +784,13 @@ class HindcastEnsemble(PredictionEnsemble):
         else:
             return self._datasets['observations'][name]
 
-    def reference(
+    def verify(
         self,
         name=None,
-        reference='persistence',
+        reference=None,
         metric='pearson_r',
         comparison='e2o',
         alignment='same_verifs',
-    ):
-        # def _reference(
-        #     hind, verif, hist=None,
-        # ):
-        #     metric, comparison, dim = self._get_metric_comparison_dim(
-        #         metric, comparison, dim
-        #     )
-        #     forecast, verif = comparison.function(hind, verif, metric=metric)
-        #     forecast = forecast.rename({'init': 'time'})
-        #     inits, verif_dates = return_inits_and_verif_dates(
-        #         forecast, verif, alignment=alignment
-        #     )
-        #     metric_over_leads = [
-        #         _apply_metric_at_given_lead(
-        #             forecast,
-        #             verif,
-        #             inits,
-        #             verif_dates,
-        #             i,
-        #             metric=metric,
-        #             comparison=comparison,
-        #             dim=dim,
-        #             **metric_kwargs,
-        #         )
-        #         for i in forecast['lead'].data
-        #     ]
-        #     result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
-        #     result['lead'] = forecast['lead']
-        pass
-
-    def verify(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -853,7 +821,17 @@ class HindcastEnsemble(PredictionEnsemble):
             observations/verification data short name.
         """
 
-        def _verify(hind, verif, metric, comparison, alignment, dim, **metric_kwargs):
+        def _verify(
+            hind,
+            verif,
+            hist,
+            reference,
+            metric,
+            comparison,
+            alignment,
+            dim,
+            **metric_kwargs,
+        ):
             metric, comparison, dim = self._get_metric_comparison_dim(
                 metric, comparison, dim
             )
@@ -869,6 +847,8 @@ class HindcastEnsemble(PredictionEnsemble):
                     inits,
                     verif_dates,
                     i,
+                    reference=reference,
+                    hist=hist,
                     metric=metric,
                     comparison=comparison,
                     dim=dim,
@@ -883,6 +863,13 @@ class HindcastEnsemble(PredictionEnsemble):
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'
         )
+        if reference == 'historical':
+            has_dataset(
+                self._datasets['uninitialized'],
+                'uninitialized',
+                'compute an uninitialized reference forecast',
+            )
+
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'observations': self._datasets['observations'],
@@ -896,62 +883,6 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
             alignment=alignment,
             dim='init',
-        )
-
-    def compute_persistence(
-        self, name=None, metric='pearson_r', alignment='same_verifs'
-    ):
-        """Verify against a persistence forecast of the observations/verification data.
-
-        This simply applies some metric between the observational product and itself out
-        to some lag (e.g., an ACF in the case of 'pearson_r').
-
-        .. note::
-
-            The persistence forecast is computed starting from the initialization date
-            and moving forward one time step. Some protocols suggest that the "lead one"
-            persistence forecast is actually from the time step prior to initialization.
-            This will be implemented as an option in a future version of ``climpred``.
-
-        Args:
-            name (str, default None): Short name of observations/verification data
-                with which to compute the persistence forecast. If ``None``, compute
-                for all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            alignment (str): which inits or verification times should be aligned?
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
-
-        Returns:
-            Dataset of persistence forecast results (if ``name`` is not ``None``),
-            or dictionary of Datasets with keys corresponding to
-            observations/verification data short name.
-
-        Reference:
-            * Chapter 8 (Short-Term Climate Prediction) in
-              Van den Dool, Huug. Empirical methods in short-term climate
-              prediction. Oxford University Press, 2007.
-        """
-        has_dataset(
-            self._datasets['observations'],
-            'observational',
-            'compute a persistence forecast',
-        )
-        input_dict = {
-            'ensemble': self._datasets['initialized'],
-            'observations': self._datasets['observations'],
-            'name': name,
-            'init': True,
-        }
-        return self._apply_climpred_function(
-            compute_persistence,
-            input_dict=input_dict,
-            metric=metric,
-            alignment=alignment,
+            hist=self._datasets['uninitialized'],
+            reference=reference,
         )

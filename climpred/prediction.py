@@ -344,6 +344,13 @@ def compute_reference(
         metric, comparison, dim, kind='hindcast'
     )
 
+    if (metric.probabilistic) and (reference == 'persistence'):
+        raise ValueError(
+            'probabilistic metric ',
+            metric.name,
+            'cannot compute persistence forecast.',
+        )
+
     hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
     verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
     hist = convert_to_cftime_index(hist, 'time', 'hist[time]')

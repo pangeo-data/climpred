@@ -361,6 +361,84 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
     )
 
 
+def bootstrap_initialized_skill(
+    hind,
+    verif,
+    iterations,
+    metric='pearson_r',
+    comparison='m2e',
+    alignment='same_verifs',
+    dim='init',
+    resample_dim='member',
+    compute=compute_hindcast,
+    **metric_kwargs,
+):
+    """Bootstraps the initialized forecast metric N times."""
+    # Convert/check cftime
+    init = []
+    # TODO: Change this out to a multi-level indexing strategy to perform at once.
+    for i in range(iterations):
+        hindcast_resampled = _resample(hind, resample_dim)
+        init_skill = compute(
+            hindcast_resampled,
+            verif,
+            metric=metric,
+            comparison=comparison,
+            alignment=alignment,
+            add_attrs=False,
+            dim=dim,
+            **metric_kwargs,
+        )
+        # reset inits when probabilistic, otherwise tests fail
+        if (
+            resample_dim == 'init'
+            and metric.probabilistic
+            and 'init' in init_skill.coords
+        ):
+            init_skill['init'] = hind.init.values
+        init.append(init_skill)
+    init = xr.concat(init, dim='bootstrap', **CONCAT_KWARGS)
+    return init
+
+
+def bootstrap_uninitialized_skill(
+    hind,
+    verif,
+    iterations,
+    hist=None,
+    metric='pearson_r',
+    comparison='m2e',
+    alignment='same_verifs',
+    dim='init',
+    resample_dim='member',
+    compute=compute_hindcast,
+    resample_uninit=bootstrap_uninitialized_ensemble,
+    **metric_kwargs,
+):
+    """Bootstraps the uninitialized forecast metric N times."""
+    # Convert/check cftime
+    # For PM, use control run.
+    if hist is None:
+        hist = verif
+
+    result = []
+    for i in range(iterations):
+        uninit_hind = resample_uninit(hind, hist)
+        uninit_skill = compute(
+            uninit_hind,
+            verif,
+            metric=metric,
+            comparison=comparison,
+            alignment=alignment,
+            add_attrs=False,
+            dim=dim,
+            **metric_kwargs,
+        )
+        result.append(uninit_skill)
+    result = xr.concat(result, dim='bootstrap', **CONCAT_KWARGS)
+    return result
+
+
 def bootstrap_compute(
     hind,
     verif,

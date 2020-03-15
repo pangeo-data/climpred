@@ -865,12 +865,12 @@ class HindcastEnsemble(PredictionEnsemble):
                 _apply_metric_at_given_lead(
                     forecast,
                     verif,
-                    metric,
-                    comparison,
-                    dim,
                     inits,
                     verif_dates,
                     i,
+                    metric=metric,
+                    comparison=comparison,
+                    dim=dim,
                     **metric_kwargs,
                 )
                 for i in forecast['lead'].data
@@ -894,7 +894,7 @@ class HindcastEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             alignment=alignment,
-            dim='time',
+            dim='init',
         )
 
     def compute_metric(

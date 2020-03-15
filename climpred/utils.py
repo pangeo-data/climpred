@@ -217,7 +217,7 @@ def get_metric_class(metric, list_):
     Currently compatable with functions:
     * compute_persistence()
     * compute_perfect_model()
-    * compute_hindcast()
+    * verify_hindcast()
 
     Args:
         metric (str): name of metric.

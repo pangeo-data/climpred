@@ -8,7 +8,7 @@ from climpred.comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
-from climpred.prediction import compute_hindcast, compute_perfect_model
+from climpred.prediction import compute_perfect_model, verify_hindcast
 from climpred.utils import get_comparison_class, get_metric_class
 
 BOOTSTRAP = 3
@@ -51,11 +51,11 @@ def test_compute_perfect_model_dim_over_member(
 
 # cannot work for e2o comparison because only 1:1 comparison
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
-def test_compute_hindcast_dim_over_member(
+def test_verify_hindcast_dim_over_member(
     hind_da_initialized_1d, observations_da_1d, comparison
 ):
     """Test deterministic metric calc skill over member dim."""
-    actual = compute_hindcast(
+    actual = verify_hindcast(
         hind_da_initialized_1d,
         observations_da_1d,
         comparison=comparison,
@@ -165,12 +165,12 @@ def test_compute_pm_dims(
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('metric', ('rmse', 'crpss', 'crpss_es'))
 @pytest.mark.parametrize('dim', ('init', 'member'))
-def test_compute_hindcast_dims(
+def test_verify_hindcast_dims(
     hind_da_initialized_1d, observations_da_1d, dim, comparison, metric
 ):
-    """Test whether compute_hindcast calcs skill over all possible dims
+    """Test whether verify_hindcast calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
-    actual = compute_hindcast(
+    actual = verify_hindcast(
         hind_da_initialized_1d,
         observations_da_1d,
         metric=metric,

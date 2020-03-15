@@ -8,7 +8,7 @@ from climpred.comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.metrics import METRIC_ALIASES, PROBABILISTIC_METRICS
-from climpred.prediction import compute_hindcast, compute_perfect_model
+from climpred.prediction import compute_perfect_model, verify_hindcast
 
 BOOTSTRAP = 3
 
@@ -51,7 +51,7 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
 
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
-def test_compute_hindcast_probabilistic(
+def test_verify_hindcast_probabilistic(
     hind_da_initialized_1d, observations_da_1d, metric, comparison
 ):
     """
@@ -68,7 +68,7 @@ def test_compute_hindcast_probabilistic(
 
     else:
         func = None
-    res = compute_hindcast(
+    res = verify_hindcast(
         hind_da_initialized_1d,
         observations_da_1d,
         metric=metric,
@@ -223,14 +223,14 @@ def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
 
 @pytest.mark.slow
 @pytest.mark.skip(reason='takes quite long')
-def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
+def test_verify_hindcast_da1d_not_nan_crpss_quadratic(
     hind_da_initialized_1d, observations_da_1d
 ):
     """
     Checks that there are no NaNs on hindcast metrics of 1D time series.
     """
     actual = (
-        compute_hindcast(
+        verify_hindcast(
             hind_da_initialized_1d,
             observations_da_1d,
             comparison='m2o',
@@ -248,7 +248,7 @@ def test_hindcast_crpss_orientation(hind_da_initialized_1d, observations_da_1d):
     """
     Checks that CRPSS hindcast as skill score > 0.
     """
-    actual = compute_hindcast(
+    actual = verify_hindcast(
         hind_da_initialized_1d,
         observations_da_1d,
         comparison='m2o',
@@ -316,12 +316,12 @@ def test_compute_pm_probabilistic_metric_not_dim_member_warn(
 
 
 @pytest.mark.parametrize('metric', ['crps'])
-def test_compute_hindcast_probabilistic_metric_e2o_fails(
+def test_verify_hindcast_probabilistic_metric_e2o_fails(
     hind_da_initialized_1d, observations_da_1d, metric
 ):
     metric = METRIC_ALIASES.get(metric, metric)
     with pytest.raises(ValueError) as excinfo:
-        compute_hindcast(
+        verify_hindcast(
             hind_da_initialized_1d,
             observations_da_1d,
             comparison='e2o',
@@ -333,12 +333,12 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
 
 @pytest.mark.parametrize('dim', ['init'])
 @pytest.mark.parametrize('metric', ['crps'])
-def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
+def test_verify_hindcast_probabilistic_metric_not_dim_member_warn(
     hind_da_initialized_1d, observations_da_1d, metric, dim
 ):
     metric = METRIC_ALIASES.get(metric, metric)
     with pytest.warns(UserWarning) as record:
-        compute_hindcast(
+        verify_hindcast(
             hind_da_initialized_1d,
             observations_da_1d,
             comparison='m2o',

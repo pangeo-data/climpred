@@ -2,6 +2,7 @@ import warnings
 
 import xarray as xr
 
+from .alignment import return_inits_and_verif_dates
 from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
@@ -14,8 +15,10 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
 )
+from .comparisons import HINDCAST_COMPARISONS
 from .exceptions import DimensionError
-from .prediction import compute_hindcast, compute_perfect_model
+from .metrics import HINDCAST_METRICS
+from .prediction import _apply_hindcast_metric, compute_perfect_model
 from .reference import compute_persistence, compute_uninitialized
 from .smoothing import (
     smooth_goddard_2013,
@@ -23,7 +26,7 @@ from .smoothing import (
     spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
-from .utils import convert_to_cftime_index
+from .utils import convert_to_cftime_index, get_comparison_class, get_metric_class
 
 
 # ----------
@@ -800,6 +803,33 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to
             observations/verification data short name.
         """
+
+        def _verify(hind, verif, metric, comparison, alignment, dim, **metric_kwargs):
+            metric = get_metric_class(metric, HINDCAST_METRICS)
+            comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
+            forecast, verif = comparison.function(hind, verif, metric=metric)
+            forecast = forecast.rename({'init': 'time'})
+            inits, verif_dates = return_inits_and_verif_dates(
+                forecast, verif, alignment=alignment
+            )
+            metric_over_leads = [
+                _apply_hindcast_metric(
+                    forecast,
+                    verif,
+                    metric,
+                    comparison,
+                    dim,
+                    inits,
+                    verif_dates,
+                    i,
+                    **metric_kwargs,
+                )
+                for i in forecast['lead'].data
+            ]
+            result = xr.concat(metric_over_leads, dim='lead')
+            result['lead'] = forecast['lead']
+            return result
+
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'
         )
@@ -810,11 +840,12 @@ class HindcastEnsemble(PredictionEnsemble):
             'init': True,
         }
         return self._apply_climpred_function(
-            compute_hindcast,
+            _verify,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
             alignment=alignment,
+            dim='time',
         )
 
     def compute_metric(

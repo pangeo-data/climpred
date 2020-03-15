@@ -14,7 +14,7 @@ from .checks import (
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import compute_hindcast, compute_perfect_model
+from .prediction import compute_perfect_model, verify_hindcast
 from .reference import compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
@@ -370,7 +370,7 @@ def bootstrap_initialized_skill(
     alignment='same_verifs',
     dim='init',
     resample_dim='member',
-    compute=compute_hindcast,
+    compute=verify_hindcast,
     **metric_kwargs,
 ):
     """Bootstraps the initialized forecast metric N times."""
@@ -411,7 +411,7 @@ def bootstrap_uninitialized_skill(
     alignment='same_verifs',
     dim='init',
     resample_dim='member',
-    compute=compute_hindcast,
+    compute=verify_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
     **metric_kwargs,
 ):
@@ -451,7 +451,7 @@ def bootstrap_compute(
     sig=95,
     bootstrap=500,
     pers_sig=None,
-    compute=compute_hindcast,
+    compute=verify_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
     reference_compute=compute_persistence,
     **metric_kwargs,
@@ -479,7 +479,7 @@ def bootstrap_compute(
         compute (func): function to compute skill.
                         Choose from
                         [:py:func:`climpred.prediction.compute_perfect_model`,
-                         :py:func:`climpred.prediction.compute_hindcast`].
+                         :py:func:`climpred.prediction.verify_hindcast`].
         resample_uninit (func): function to create an uninitialized ensemble
                         from a control simulation or uninitialized large
                         ensemble. Choose from:
@@ -767,7 +767,7 @@ def bootstrap_hindcast(
 
     See also:
         * climpred.bootstrap.bootstrap_compute
-        * climpred.prediction.compute_hindcast
+        * climpred.prediction.verify_hindcast
 
     Example:
         >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')['SST']
@@ -809,7 +809,7 @@ def bootstrap_hindcast(
         sig=sig,
         bootstrap=bootstrap,
         pers_sig=pers_sig,
-        compute=compute_hindcast,
+        compute=verify_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
         reference_compute=reference_compute,
         **metric_kwargs,

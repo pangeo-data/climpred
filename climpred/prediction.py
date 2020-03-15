@@ -82,7 +82,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
     else:  # determinstic metric
         if kind == 'hindcast':
             if dim == 'init':
-                # for thinking in real time # compute_hindcast renames init to time
+                # for thinking in real time # verify_hindcast renames init to time
                 dim = 'time'
         elif kind == 'PM':
             # prevent comparison e2c and member in dim
@@ -208,7 +208,7 @@ def _apply_hindcast_metric(
 
 
 @is_xarray([0, 1])
-def compute_hindcast(
+def verify_hindcast(
     hind,
     verif,
     metric='pearson_r',

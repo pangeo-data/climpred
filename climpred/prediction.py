@@ -15,6 +15,7 @@ from .comparisons import (
 from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
+from .reference import historical, persistence
 from .utils import (
     assign_attrs,
     convert_to_cftime_index,
@@ -168,18 +169,33 @@ def compute_perfect_model(
 
 
 def _apply_hindcast_metric(
-    forecast, verif, metric, comparison, dim, inits, verif_dates, lead, **metric_kwargs
+    forecast,
+    verif,
+    inits,
+    verif_dates,
+    lead,
+    hist=None,
+    reference=None,
+    metric=None,
+    comparison=None,
+    dim=None,
+    **metric_kwargs,
 ):
     """Temporary docstring. Will clean up args and document this properly."""
-    # Use `.where()` instead of `.sel()` to account for resampled inits when
-    # bootstrapping.
-    a = (
-        forecast.sel(lead=lead)
-        .where(forecast['time'].isin(inits[lead]), drop=True)
-        .drop_vars('lead')
-    )
-    b = verif.sel(time=verif_dates[lead])
-    a['time'] = b['time']
+    if reference is None:
+        # Use `.where()` instead of `.sel()` to account for resampled inits when
+        # bootstrapping.
+        a = (
+            forecast.sel(lead=lead)
+            .where(forecast['time'].isin(inits[lead]), drop=True)
+            .drop_vars('lead')
+        )
+        b = verif.sel(time=verif_dates[lead])
+        a['time'] = b['time']
+    elif reference == 'persistence':
+        a, b = persistence(verif, inits, verif_dates, lead)
+    elif reference == 'historical':
+        a, b = historical(hist, verif, inits, verif_dates, lead)
 
     if a.time.size > 0:
         log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
@@ -270,12 +286,12 @@ def compute_hindcast(
         _apply_hindcast_metric(
             forecast,
             verif,
-            metric,
-            comparison,
-            dim,
             inits,
             verif_dates,
             i,
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
             **metric_kwargs,
         )
         for i in forecast['lead'].data
@@ -309,10 +325,12 @@ def compute_reference(
     hind,
     verif,
     hist=None,
+    reference='persistence',
     metric='pearson_r',
     comparison='e2o',
     dim='init',
     alignment='same_verifs',
+    **metric_kwargs,
 ):
     """Work in progress on a generic reference forecast function.
 
@@ -328,6 +346,7 @@ def compute_reference(
 
     hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
     verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
+    hist = convert_to_cftime_index(hist, 'time', 'hist[time]')
     has_valid_lead_units(hind)
 
     forecast, verif = comparison.function(hind, verif, metric=metric)
@@ -339,15 +358,22 @@ def compute_reference(
         forecast, verif, alignment=alignment
     )
 
-    # UP UNTIL THIS POINT, THE SETUP IS IDENTICAL TO COMPUTE_HINDCAST. So we should
-    # probably have a sub-function for this portion, then branch here. Need to think
-    # about how this works for PM.
-
-    # Now we apply over each lead.
-    # Persistence/Damped Persistence:
-    # Just uses the `verif` as is and selects the same set of "inits" and verif dates
-    # at each lead.
-    #
-    # Hist/Uninitialized:
-    # Needs to go into `return_inits_and_verif_dates`. Will alter which inits/verif
-    # dates are usable. But then just is aligned with `verif_dates` dictionary.
+    metric_over_leads = [
+        _apply_hindcast_metric(
+            forecast,
+            verif,
+            inits,
+            verif_dates,
+            i,
+            hist=hist,
+            reference=reference,
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            **metric_kwargs,
+        )
+        for i in forecast['lead'].data
+    ]
+    result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+    result['lead'] = forecast['lead']
+    return result

@@ -332,14 +332,7 @@ def compute_reference(
     alignment='same_verifs',
     **metric_kwargs,
 ):
-    """Work in progress on a generic reference forecast function.
-
-    Persistence:
-        * Just uses hind & verif.
-
-    Historical:
-        * Requires a `hist` time series.
-    """
+    """Work in progress on a generic reference forecast function."""
     metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )

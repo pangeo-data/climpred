@@ -321,7 +321,7 @@ def verify_hindcast(
     return result
 
 
-def compute_reference(
+def hindcast_reference(
     hind,
     verif,
     hist=None,

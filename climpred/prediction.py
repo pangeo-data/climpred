@@ -141,29 +141,6 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
     return metric, comparison, dim
 
 
-def _preprocess_hindcast(
-    hind, verif, hist=None, metric=None, comparison=None, alignment=None, dim=None
-):
-    metric, comparison, dim = _get_metric_comparison_dim(
-        metric, comparison, dim, kind='hindcast'
-    )
-    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
-    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
-    if hist is not None:
-        hist = convert_to_cftime_index(hist, 'time', 'hist[time]')
-    has_valid_lead_units(hind)
-
-    forecast, verif = comparison.function(hind, verif, metric=metric)
-
-    # think in real time dimension: real time = init + lag
-    forecast = forecast.rename({'init': 'time'})
-
-    inits, verif_dates = return_inits_and_verif_dates(
-        forecast, verif, alignment=alignment
-    )
-    return forecast, verif, hist, inits, verif_dates, metric, comparison, dim
-
-
 @is_xarray([0, 1])
 def verify_perfect_model(
     init_pm,
@@ -279,17 +256,20 @@ def verify_hindcast(
         result (xarray object):
             Verification metric over ``lead`` reduced by dimension(s) ``dim``.
     """
-    (
-        forecast,
-        verif,
-        hist,
-        inits,
-        verif_dates,
-        metric,
-        comparison,
-        dim,
-    ) = _preprocess_hindcast(
-        hind, verif, metric=metric, comparison=comparison, alignment=alignment, dim=dim
+    metric, comparison, dim = _get_metric_comparison_dim(
+        metric, comparison, dim, kind='hindcast'
+    )
+    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
+    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
+    has_valid_lead_units(hind)
+
+    forecast, verif = comparison.function(hind, verif, metric=metric)
+
+    # think in real time dimension: real time = init + lag
+    forecast = forecast.rename({'init': 'time'})
+
+    inits, verif_dates = return_inits_and_verif_dates(
+        forecast, verif, alignment=alignment
     )
 
     log_compute_hindcast_header(metric, comparison, dim, alignment)
@@ -345,17 +325,24 @@ def reference_forecast(
     **metric_kwargs,
 ):
     """Work in progress on a generic reference forecast function."""
-    (
-        forecast,
-        verif,
-        hist,
-        inits,
-        verif_dates,
-        metric,
-        comparison,
-        dim,
-    ) = _preprocess_hindcast(
-        hind, verif, metric=metric, comparison=comparison, alignment=alignment, dim=dim
+    metric, comparison, dim = _get_metric_comparison_dim(
+        metric, comparison, dim, kind='hindcast'
+    )
+    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
+    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
+    if hist is not None:
+        hist = convert_to_cftime_index(hist, 'time', 'hist[time]')
+    has_valid_lead_units(hind)
+
+    forecast, verif = comparison.function(hind, verif, metric=metric)
+
+    # Need something here to take mean of uninitialized if it has member dimension.
+
+    # think in real time dimension: real time = init + lag
+    forecast = forecast.rename({'init': 'time'})
+
+    inits, verif_dates = return_inits_and_verif_dates(
+        forecast, verif, alignment=alignment
     )
 
     if (metric.probabilistic) and (reference == 'persistence'):

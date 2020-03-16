@@ -6,7 +6,7 @@ from .exceptions import CoordinateError
 from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 
 
-def return_inits_and_verif_dates(forecast, verif, alignment):
+def return_inits_and_verif_dates(forecast, verif, alignment, reference=None):
     """Returns initializations and verification dates for an arbitrary number of leads
     per a given alignment strategy.
 
@@ -37,16 +37,16 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
     # `init` renamed to `time` in compute functions.
     all_inits = forecast['time']
     all_verifs = verif['time']
-    union_with_verifs = all_inits.isin(all_verifs)
 
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
     init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
-    # Currently enforce a union between `inits` and observations in the verification
-    # data. This is because persistence forecasts with the verification data need to
-    # have the same initializations for consistency. This behavior should be changed
-    # as alternative reference forecasts are introduced.
-    init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
+    # A union between `inits` and observations in the verification data is required
+    # for persistence, since the persistence forecast is based off a common set of
+    # initializations.
+    if reference == 'persistence':
+        union_with_verifs = all_inits.isin(all_verifs)
+        init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
     valid_inits = init_lead_matrix['time']
 
     if 'same_init' in alignment:

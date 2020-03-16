@@ -835,15 +835,21 @@ class HindcastEnsemble(PredictionEnsemble):
         ):
             """Interior verify func to be passed to apply func.
 
-            Cases to consider.
+            Cases to consider:
+            (0) Can you return skill + ref when you have multiple verifs. I.e. dealing
+            with the dictionary output approach. -- This just works. Returns dict
+            of tuples. I think `add_attrs` will handle any confusion.
 
             (1) `reference`=None. In this case, I would say you don't impose the
-            union with obs restriction.
+            union with obs restriction. -- Addressed in `return_inits_and_verif_dates`
+
             (2) `reference`='persistence'. In this case, enforce the union with
-            obs restriction.
+            obs restriction. -- Addressed in `return_inits_and_verif_dates`.
+
             (3) `reference`='uninitialized'. In this case also consider the historical
             run when aligning. But don't need union with verif for inits, since it
             just aligns in verif_dates.
+
             (4) `reference`=['uninitialized', 'persistence']. In this case, need
             union with obs for persistence but also need uninitialized union.
             """
@@ -853,7 +859,7 @@ class HindcastEnsemble(PredictionEnsemble):
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({'init': 'time'})
             inits, verif_dates = return_inits_and_verif_dates(
-                forecast, verif, alignment=alignment
+                forecast, verif, alignment, reference=reference
             )
             metric_over_leads = [
                 _apply_metric_at_given_lead(
@@ -863,7 +869,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     hind=forecast,
                     hist=hist,
                     inits=inits,
-                    reference=reference,
+                    reference=None,
                     metric=metric,
                     comparison=comparison,
                     dim=dim,
@@ -871,9 +877,31 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast['lead'].data
             ]
-            result = xr.concat(metric_over_leads, dim='lead')
-            result['lead'] = forecast['lead']
-            return result
+            skill = xr.concat(metric_over_leads, dim='lead')
+            skill['lead'] = forecast['lead']
+
+            if reference is not None:
+                metric_over_leads = [
+                    _apply_metric_at_given_lead(
+                        verif,
+                        verif_dates,
+                        lead,
+                        hind=forecast,
+                        hist=hist,
+                        inits=inits,
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        **metric_kwargs,
+                    )
+                    for lead in forecast['lead'].data
+                ]
+                ref = xr.concat(metric_over_leads, dim='lead')
+                ref['lead'] = forecast['lead']
+                return skill, ref
+            else:
+                return skill
 
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'

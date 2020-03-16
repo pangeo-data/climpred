@@ -13,7 +13,7 @@ from .comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR_STR
-from .logging import log_compute_hindcast_header
+from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .reference import historical, persistence
 from .utils import (
@@ -63,6 +63,7 @@ def _apply_metric_at_given_lead(
     if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
         a, b = xr.broadcast(a, b)
     result = metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
+    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result
 
 

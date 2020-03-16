@@ -857,19 +857,19 @@ class HindcastEnsemble(PredictionEnsemble):
             )
             metric_over_leads = [
                 _apply_metric_at_given_lead(
-                    forecast,
                     verif,
-                    inits,
                     verif_dates,
-                    i,
-                    reference=reference,
+                    lead,
+                    hind=forecast,
                     hist=hist,
+                    inits=inits,
+                    reference=reference,
                     metric=metric,
                     comparison=comparison,
                     dim=dim,
                     **metric_kwargs,
                 )
-                for i in forecast['lead'].data
+                for lead in forecast['lead'].data
             ]
             result = xr.concat(metric_over_leads, dim='lead')
             result['lead'] = forecast['lead']

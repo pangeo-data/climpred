@@ -204,29 +204,29 @@ class PredictionEnsemble:
         return obj
 
     def _get_metric_comparison_dim(self, metric, comparison, dim):
-        kind = self.kind
-
         if dim is None:
-            dim = 'init' if kind == 'hindcast' else ['init', 'member']
+            dim = 'init' if self.kind == 'hindcast' else ['init', 'member']
 
-        if kind == 'hindcast':
+        if self.kind == 'hindcast':
             is_in_list(dim, ['member', 'init'], 'dim')
-        elif kind == 'perfect':
+        elif self.kind == 'perfect':
             is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
 
         # get metric and comparison strings incorporating alias
         metric = METRIC_ALIASES.get(metric, metric)
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
 
-        METRICS = HINDCAST_METRICS if kind == 'hindcast' else PM_METRICS
-        COMPARISONS = HINDCAST_COMPARISONS if kind == 'hindcast' else PM_COMPARISONS
+        METRICS = HINDCAST_METRICS if self.kind == 'hindcast' else PM_METRICS
+        COMPARISONS = (
+            HINDCAST_COMPARISONS if self.kind == 'hindcast' else PM_COMPARISONS
+        )
         metric = get_metric_class(metric, METRICS)
         comparison = get_comparison_class(comparison, COMPARISONS)
 
         # check whether combination of metric and comparison works
         PROBABILISTIC_COMPARISONS = (
             PROBABILISTIC_HINDCAST_COMPARISONS
-            if kind == 'hindcast'
+            if self.kind == 'hindcast'
             else PROBABILISTIC_PM_COMPARISONS
         )
         if metric.probabilistic:
@@ -244,11 +244,11 @@ class PredictionEnsemble:
                 )
                 dim = 'member'
         else:  # determinstic metric
-            if kind == 'hindcast':
+            if self.kind == 'hindcast':
                 if dim == 'init':
                     # for thinking in real time # verify_hindcast renames init to time
                     dim = 'time'
-            elif kind == 'perfect':
+            elif self.kind == 'perfect':
                 # prevent comparison e2c and member in dim
                 if (comparison.name == 'e2c') and (
                     set(dim) == set(['init', 'member']) or dim == 'member'
@@ -665,30 +665,30 @@ class HindcastEnsemble(PredictionEnsemble):
                 * name: name of verification data to target.
                 * init: bool of whether or not it's the initialized ensemble.
         """
-        ensemble = input_dict['ensemble']
-        observations = input_dict['observations']
+        hind = self._datasets['initialized']
+        verif = self._datasets['observations']
         name = input_dict['name']
         init = input_dict['init']
 
         # Apply only to specific observations.
         if name is not None:
             drop_init, drop_obs = self._vars_to_drop(name, init=init)
-            ensemble = ensemble.drop_vars(drop_init)
-            observations = observations[name].drop_vars(drop_obs)
-            return func(ensemble, observations, **kwargs)
+            hind = hind.drop_vars(drop_init)
+            verif = verif[name].drop_vars(drop_obs)
+            return func(hind, verif, **kwargs)
         else:
             # If only one observational product, just apply to that one.
-            if len(observations) == 1:
-                name = list(observations.keys())[0]
+            if len(verif) == 1:
+                name = list(verif.keys())[0]
                 drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                return func(ensemble, observations[name], **kwargs)
-            # Loop through observations, apply function, and store in dictionary.
+                return func(hind, verif[name], **kwargs)
+            # Loop through verif, apply function, and store in dictionary.
             # TODO: Parallelize this process.
             else:
                 result = {}
-                for name in observations.keys():
+                for name in verif.keys():
                     drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                    result[name] = func(ensemble, observations[name], **kwargs)
+                    result[name] = func(hind, verif[name], **kwargs)
                 return result
 
     def _vars_to_drop(self, name, init=True):
@@ -791,6 +791,7 @@ class HindcastEnsemble(PredictionEnsemble):
         metric='pearson_r',
         comparison='e2o',
         alignment='same_verifs',
+        dim='init',
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -871,8 +872,6 @@ class HindcastEnsemble(PredictionEnsemble):
             )
 
         input_dict = {
-            'ensemble': self._datasets['initialized'],
-            'observations': self._datasets['observations'],
             'name': name,
             'init': True,
         }

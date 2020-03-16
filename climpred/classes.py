@@ -23,6 +23,7 @@ from .comparisons import (
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_PM_COMPARISONS,
 )
+from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .prediction import _apply_metric_at_given_lead, verify_perfect_model
@@ -840,12 +841,6 @@ class HindcastEnsemble(PredictionEnsemble):
             with the dictionary output approach. -- This just works. Returns dict
             of tuples. I think `add_attrs` will handle any confusion.
 
-            (1) `reference`=None. In this case, I would say you don't impose the
-            union with obs restriction. -- Addressed in `return_inits_and_verif_dates`
-
-            (2) `reference`='persistence'. In this case, enforce the union with
-            obs restriction. -- Addressed in `return_inits_and_verif_dates`.
-
             (3) `reference`='uninitialized'. In this case also consider the historical
             run when aligning. But don't need union with verif for inits, since it
             just aligns in verif_dates.
@@ -869,6 +864,8 @@ class HindcastEnsemble(PredictionEnsemble):
                     hind=forecast,
                     hist=hist,
                     inits=inits,
+                    # Ensure apply metric function returns skill and not reference
+                    # results.
                     reference=None,
                     metric=metric,
                     comparison=comparison,
@@ -877,7 +874,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast['lead'].data
             ]
-            skill = xr.concat(metric_over_leads, dim='lead')
+            skill = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
             skill['lead'] = forecast['lead']
 
             if reference is not None:
@@ -897,7 +894,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     )
                     for lead in forecast['lead'].data
                 ]
-                ref = xr.concat(metric_over_leads, dim='lead')
+                ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
                 ref['lead'] = forecast['lead']
                 return skill, ref
             else:

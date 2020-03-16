@@ -833,7 +833,20 @@ class HindcastEnsemble(PredictionEnsemble):
             dim,
             **metric_kwargs,
         ):
-            """Interior verify func to be passed to apply func."""
+            """Interior verify func to be passed to apply func.
+
+            Cases to consider.
+
+            (1) `reference`=None. In this case, I would say you don't impose the
+            union with obs restriction.
+            (2) `reference`='persistence'. In this case, enforce the union with
+            obs restriction.
+            (3) `reference`='uninitialized'. In this case also consider the historical
+            run when aligning. But don't need union with verif for inits, since it
+            just aligns in verif_dates.
+            (4) `reference`=['uninitialized', 'persistence']. In this case, need
+            union with obs for persistence but also need uninitialized union.
+            """
             metric, comparison, dim = self._get_metric_comparison_dim(
                 metric, comparison, dim
             )
@@ -872,6 +885,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 'compute an uninitialized reference forecast',
             )
 
+        # TODO: Get rid of this somehow. Might use attributes.
         input_dict = {
             'name': name,
             'init': True,

@@ -833,6 +833,7 @@ class HindcastEnsemble(PredictionEnsemble):
             dim,
             **metric_kwargs,
         ):
+            """Interior verify func to be passed to apply func."""
             metric, comparison, dim = self._get_metric_comparison_dim(
                 metric, comparison, dim
             )
@@ -881,7 +882,7 @@ class HindcastEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             alignment=alignment,
-            dim='init',
+            dim=dim,
             hist=self._datasets['uninitialized'],
             reference=reference,
         )

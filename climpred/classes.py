@@ -854,7 +854,7 @@ class HindcastEnsemble(PredictionEnsemble):
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({'init': 'time'})
             inits, verif_dates = return_inits_and_verif_dates(
-                forecast, verif, alignment, reference=reference
+                forecast, verif, alignment, reference=reference, hist=hist,
             )
             metric_over_leads = [
                 _apply_metric_at_given_lead(
@@ -911,6 +911,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 'uninitialized',
                 'compute an uninitialized reference forecast',
             )
+            hist = self._datasets['uninitialized']
+        else:
+            hist = None
 
         # TODO: Get rid of this somehow. Might use attributes.
         input_dict = {
@@ -924,6 +927,6 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
             alignment=alignment,
             dim=dim,
-            hist=self._datasets['uninitialized'],
+            hist=hist,
             reference=reference,
         )

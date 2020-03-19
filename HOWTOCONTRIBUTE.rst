@@ -50,7 +50,7 @@ If you are reporting a bug, please include:
   version.
 * Detailed steps to reproduce the bug.
 
-If you can write a demonstration test that currently fails but should passm
+If you can write a demonstration test that currently fails but should pass,
 that is a very useful commit to make as well, even if you cannot fix the bug itself.
 
 

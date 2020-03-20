@@ -26,7 +26,7 @@ from .comparisons import (
 from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
-from .prediction import _apply_metric_at_given_lead, verify_perfect_model
+from .prediction import _apply_metric_at_given_lead, compute_perfect_model
 from .reference import compute_persistence
 from .smoothing import (
     smooth_goddard_2013,
@@ -496,7 +496,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'init': True,
         }
         return self._apply_climpred_function(
-            verify_perfect_model,
+            compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
@@ -527,7 +527,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'init': False,
         }
         return self._apply_climpred_function(
-            verify_perfect_model,
+            compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,

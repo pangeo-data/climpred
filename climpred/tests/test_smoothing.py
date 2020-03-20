@@ -1,6 +1,6 @@
 import pytest
 
-from climpred.prediction import verify_perfect_model
+from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
@@ -127,9 +127,9 @@ def test_smooth_goddard_2013(PM_da_control_3d_full):
 def test_compute_after_smooth_goddard_2013(
     PM_da_initialized_3d_full, PM_da_control_3d_full
 ):
-    """Test verify_perfect_model works after smoothings."""
+    """Test compute_perfect_model works after smoothings."""
     PM_da_control_3d_full = smooth_goddard_2013(PM_da_control_3d_full)
     PM_da_initialized_3d_full = smooth_goddard_2013(PM_da_initialized_3d_full)
-    actual = verify_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
+    actual = compute_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()

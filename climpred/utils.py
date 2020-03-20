@@ -216,7 +216,7 @@ def get_metric_class(metric, list_):
 
     Currently compatable with functions:
     * compute_persistence()
-    * verify_perfect_model()
+    * compute_perfect_model()
     * compute_hindcast()
 
     Args:

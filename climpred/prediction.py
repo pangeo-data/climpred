@@ -140,7 +140,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
 
 
 @is_xarray([0, 1])
-def verify_perfect_model(
+def compute_perfect_model(
     init_pm,
     control,
     metric='pearson_r',

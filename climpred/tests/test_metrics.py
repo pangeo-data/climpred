@@ -7,7 +7,7 @@ from xarray.testing import assert_allclose
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS
 from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
-from climpred.prediction import compute_hindcast, verify_perfect_model
+from climpred.prediction import compute_hindcast, compute_perfect_model
 
 
 def my_mse_function(forecast, reference, dim=None, **metric_kwargs):
@@ -29,12 +29,12 @@ my_mse = Metric(
 def test_custom_metric_passed_to_compute(
     PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
-    """Test custom metric in verify_perfect_model."""
-    actual = verify_perfect_model(
+    """Test custom metric in compute_perfect_model."""
+    actual = compute_perfect_model(
         PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric=my_mse,
     )
 
-    expected = verify_perfect_model(
+    expected = compute_perfect_model(
         PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric='mse',
     )
 
@@ -73,12 +73,12 @@ def test_custom_metric_passed_to_bootstrap_compute(
 
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
-    """Test skipna in verify_perfect_model."""
+    """Test skipna in compute_perfect_model."""
     PM_da_initialized_3d = PM_da_initialized_3d.copy()
     # manipulating data
     PM_da_initialized_3d.values[1:3, 1:4, 1:4, 4:6, 4:6] = np.nan
 
-    base = verify_perfect_model(
+    base = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         metric=metric,
@@ -86,7 +86,7 @@ def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
         dim='init',
         comparison='m2e',
     ).mean('member')
-    skipping = verify_perfect_model(
+    skipping = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         metric=metric,
@@ -102,9 +102,9 @@ def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ('e2c', 'm2c'))
 def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, metric):
-    """Test init weights in verify_perfect_model."""
+    """Test init weights in compute_perfect_model."""
     dim = 'init'
-    base = verify_perfect_model(
+    base = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         dim=dim,
@@ -112,7 +112,7 @@ def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, m
         comparison=comparison,
     )
     weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
-    weighted = verify_perfect_model(
+    weighted = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         dim=dim,
@@ -131,10 +131,10 @@ def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, m
 def test_pm_metric_weights_m2x(
     PM_da_initialized_3d, PM_da_control_3d, comparison, metric
 ):
-    """Test init weights in verify_perfect_model."""
+    """Test init weights in compute_perfect_model."""
     # distribute weights on initializations
     dim = 'init'
-    base = verify_perfect_model(
+    base = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         dim=dim,
@@ -149,7 +149,7 @@ def test_pm_metric_weights_m2x(
         dims='init',
     )
 
-    weighted = verify_perfect_model(
+    weighted = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         dim=dim,

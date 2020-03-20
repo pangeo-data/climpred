@@ -70,7 +70,7 @@ class Comparison:
             name (str): name of comparison.
             function (function): comparison function.
             hindcast (bool): Can comparison be used in `compute_hindcast`?
-                `False` means `verify_perfect_model`
+                `False` means `compute_perfect_model`
             probabilistic (bool): Can this comparison be used for probabilistic
                 metrics also? Probabilistic metrics require multiple forecasts.
                 `False` means that comparison is only deterministic.

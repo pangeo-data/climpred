@@ -4,7 +4,7 @@ import pytest
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import CLIMPRED_DIMS
 from climpred.metrics import DETERMINISTIC_PM_METRICS
-from climpred.prediction import verify_perfect_model
+from climpred.prediction import compute_perfect_model
 from climpred.reference import compute_persistence
 
 # uacc is sqrt(MSSS), fails when MSSS negative
@@ -101,14 +101,14 @@ def test_compute_persistence_lead0_lead1(
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
-def test_verify_perfect_model_da1d_not_nan(
+def test_compute_perfect_model_da1d_not_nan(
     PM_da_initialized_1d, PM_da_control_1d, comparison, metric
 ):
     """
     Checks that there are no NaNs on perfect model metrics of 1D time series.
     """
     actual = (
-        verify_perfect_model(
+        compute_perfect_model(
             PM_da_initialized_1d,
             PM_da_control_1d,
             comparison=comparison,
@@ -122,7 +122,7 @@ def test_verify_perfect_model_da1d_not_nan(
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
-def test_verify_perfect_model_lead0_lead1(
+def test_compute_perfect_model_lead0_lead1(
     PM_da_initialized_1d,
     PM_da_initialized_1d_lead0,
     PM_da_control_1d,
@@ -132,10 +132,10 @@ def test_verify_perfect_model_lead0_lead1(
     """
     Checks that metric results are identical for a lead 0 and lead 1 setup.
     """
-    res1 = verify_perfect_model(
+    res1 = compute_perfect_model(
         PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric=metric,
     )
-    res2 = verify_perfect_model(
+    res2 = compute_perfect_model(
         PM_da_initialized_1d_lead0,
         PM_da_control_1d,
         comparison=comparison,
@@ -184,28 +184,28 @@ def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_initialized_1d, PM_ds_contro
 
 
 @pytest.mark.parametrize('metric', ('AnomCorr', 'test', 'None'))
-def test_verify_perfect_model_metric_keyerrors(
+def test_compute_perfect_model_metric_keyerrors(
     PM_da_initialized_1d, PM_da_control_1d, metric
 ):
     """
     Checks that wrong metric names get caught.
     """
     with pytest.raises(KeyError) as excinfo:
-        verify_perfect_model(
+        compute_perfect_model(
             PM_da_initialized_1d, PM_da_control_1d, comparison='e2c', metric=metric,
         )
     assert 'Specify metric from' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
-def test_verify_perfect_model_comparison_keyerrors(
+def test_compute_perfect_model_comparison_keyerrors(
     PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
     """
     Checks that wrong comparison names get caught.
     """
     with pytest.raises(KeyError) as excinfo:
-        verify_perfect_model(
+        compute_perfect_model(
             PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric='mse',
         )
     assert 'Specify comparison from' in str(excinfo.value)
@@ -221,7 +221,7 @@ def test_compute_pm_dask_spatial(
     for dim in PM_ds_initialized_3d.dims:
         if dim in PM_ds_control_3d.dims:
             step = 5
-            res_chunked = verify_perfect_model(
+            res_chunked = compute_perfect_model(
                 PM_ds_initialized_3d.chunk({dim: step}),
                 PM_ds_control_3d.chunk({dim: step}),
                 comparison=comparison,
@@ -245,7 +245,7 @@ def test_compute_pm_dask_climpred_dims(
             PM_ds_initialized_3d = PM_ds_initialized_3d.chunk({dim: step})
         if dim in PM_ds_control_3d.dims:
             PM_ds_control_3d = PM_ds_control_3d.chunk({dim: step})
-        res_chunked = verify_perfect_model(
+        res_chunked = compute_perfect_model(
             PM_ds_initialized_3d,
             PM_ds_control_3d,
             comparison=comparison,

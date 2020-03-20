@@ -27,7 +27,7 @@ install:
   - python setup.py install --user
 
 script:
-  - coverage run --source climpred setup.py test 
+  - coverage run --source climpred setup.py py.test 
   - coverage report
   - pushd docs
   - nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/subseasonal/*.ipynb

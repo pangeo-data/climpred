@@ -104,7 +104,7 @@ def copy_coords_from_to(xro_from, xro_to):
     return xro_to
 
 
-def convert_to_cftime_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
+def convert_to_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
     """Returns xarray object with time index converted to ``xr.CFTimeIndex``.
 
     Args:

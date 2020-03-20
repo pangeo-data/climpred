@@ -18,7 +18,7 @@ from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .reference import historical, persistence
 from .utils import (
     assign_attrs,
-    convert_to_cftime_index,
+    convert_to_time_index,
     copy_coords_from_to,
     get_comparison_class,
     get_metric_class,
@@ -172,7 +172,7 @@ def compute_perfect_model(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    init_pm = convert_to_cftime_index(
+    init_pm = convert_to_time_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
 
@@ -257,8 +257,8 @@ def compute_hindcast(
     metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )
-    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
-    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
+    hind = convert_to_time_index(hind, 'init', 'hind[init]')
+    verif = convert_to_time_index(verif, 'time', 'verif[time]')
     has_valid_lead_units(hind)
 
     forecast, verif = comparison.function(hind, verif, metric=metric)
@@ -326,10 +326,10 @@ def reference_forecast(
     metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='hindcast'
     )
-    hind = convert_to_cftime_index(hind, 'init', 'hind[init]')
-    verif = convert_to_cftime_index(verif, 'time', 'verif[time]')
+    hind = convert_to_time_index(hind, 'init', 'hind[init]')
+    verif = convert_to_time_index(verif, 'time', 'verif[time]')
     if hist is not None:
-        hist = convert_to_cftime_index(hist, 'time', 'hist[time]')
+        hist = convert_to_time_index(hist, 'time', 'hist[time]')
     has_valid_lead_units(hind)
 
     forecast, verif = comparison.function(hind, verif, metric=metric)

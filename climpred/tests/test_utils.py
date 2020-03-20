@@ -11,7 +11,7 @@ from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
-    convert_to_cftime_index,
+    convert_to_time_index,
     copy_coords_from_to,
     find_start_dates_for_given_init,
     get_comparison_class,
@@ -184,7 +184,7 @@ def test_cftime_index_unchanged():
     """Tests that a CFTime index going through convert time is unchanged."""
     inits = xr.cftime_range('1990', '2000', freq='Y', calendar='noleap')
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
-    new_inits = convert_to_cftime_index(da, 'init', '')
+    new_inits = convert_to_time_index(da, 'init', '')
     assert_allclose(new_inits.init, da.init)
 
 
@@ -192,7 +192,7 @@ def test_pandas_datetime_converted_to_cftime():
     """Tests that a pd.DatetimeIndex is converted to xr.CFTimeIndex."""
     inits = pd.date_range('1990', '2000', freq='YS')
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
-    new_inits = convert_to_cftime_index(da, 'init', '')
+    new_inits = convert_to_time_index(da, 'init', '')
     assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
 
 
@@ -200,7 +200,7 @@ def test_int64_converted_to_cftime():
     """Tests the xr.Int64Index is converted to xr.CFTimeIndex."""
     inits = np.arange(1990, 2000)
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
-    new_inits = convert_to_cftime_index(da, 'init', '')
+    new_inits = convert_to_time_index(da, 'init', '')
     assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
 
 
@@ -208,7 +208,7 @@ def test_float64_converted_to_cftime():
     """Tests the xr.Float64Index is converted to xr.CFTimeIndex."""
     inits = np.arange(1990, 2000) * 1.0
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
-    new_inits = convert_to_cftime_index(da, 'init', '')
+    new_inits = convert_to_time_index(da, 'init', '')
     assert isinstance(new_inits['init'].to_index(), xr.CFTimeIndex)
 
 
@@ -227,8 +227,8 @@ def test_numeric_index_auto_appends_lead_attrs():
         dims=['init', 'lead'],
         coords=[float_inits, lead],
     )
-    new_int_da = convert_to_cftime_index(int_da, 'init', '')
-    new_float_da = convert_to_cftime_index(float_da, 'init', '')
+    new_int_da = convert_to_time_index(int_da, 'init', '')
+    new_float_da = convert_to_time_index(float_da, 'init', '')
     assert new_int_da.lead.attrs['units'] == 'years'
     assert new_float_da.lead.attrs['units'] == 'years'
 
@@ -237,7 +237,7 @@ def test_convert_time_index_does_not_overwrite():
     """Tests that `convert_time_index` does not overwrite the original index."""
     inits = np.arange(1990, 2000)
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
-    new_inits = convert_to_cftime_index(da, 'init', '')
+    new_inits = convert_to_time_index(da, 'init', '')
     assert isinstance(da.init.to_index(), pd.Int64Index)
     assert isinstance(new_inits.init.to_index(), xr.CFTimeIndex)
 
@@ -247,7 +247,7 @@ def test_irregular_initialization_dates():
     inits = np.arange(1990, 2010)
     inits = np.delete(inits, [3, 5, 8, 12, 15])
     da = xr.DataArray(np.random.rand(len(inits)), dims='init', coords=[inits])
-    new_inits = convert_to_cftime_index(da, 'init', '')
+    new_inits = convert_to_time_index(da, 'init', '')
     assert (new_inits['init'].to_index().year == inits).all()
 
 

@@ -34,7 +34,7 @@ from .smoothing import (
     spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
-from .utils import convert_to_cftime_index, get_comparison_class, get_metric_class
+from .utils import convert_to_time_index, get_comparison_class, get_metric_class
 
 
 def _display_metadata(self):
@@ -106,7 +106,7 @@ class PredictionEnsemble:
         has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_to_cftime_index(xobj, 'init', 'xobj[init]')
+        xobj = convert_to_time_index(xobj, 'init', 'xobj[init]')
         # Put this after `convert_time_index` since it assigns 'years' attribute if the
         # `init` dimension is a `float` or `int`.
         has_valid_lead_units(xobj)
@@ -450,7 +450,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets['initialized'], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_to_cftime_index(xobj, 'time', 'xobj[init]')
+        xobj = convert_to_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
         return self._construct_direct(datasets, kind='perfect')
@@ -737,7 +737,7 @@ class HindcastEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets['initialized'], xobj)
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_to_cftime_index(xobj, 'time', 'xobj[init]')
+        xobj = convert_to_time_index(xobj, 'time', 'xobj[init]')
         # For some reason, I could only get the non-inplace method to work
         # by updating the nested dictionaries separately.
         datasets_obs = self._datasets['observations'].copy()
@@ -760,7 +760,7 @@ class HindcastEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets['initialized'], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_to_cftime_index(xobj, 'time', 'xobj[init]')
+        xobj = convert_to_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets, kind='hindcast')

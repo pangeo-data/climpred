@@ -274,17 +274,17 @@ def compute_hindcast(
 
     metric_over_leads = [
         _apply_metric_at_given_lead(
-            forecast,
             verif,
-            inits,
             verif_dates,
-            i,
+            l,
+            hind=forecast,
+            inits=inits,
             metric=metric,
             comparison=comparison,
             dim=dim,
             **metric_kwargs,
         )
-        for i in forecast['lead'].data
+        for l in forecast['lead'].data
     ]
     result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
     result['lead'] = forecast['lead']

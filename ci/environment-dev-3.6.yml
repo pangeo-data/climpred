@@ -33,7 +33,7 @@ dependencies:
   - isort
   - pre-commit
   - pylint
-  - pytest
+  - pytest<5.4.0
   - pytest-cov
   - pytest-sugar
   # Performance

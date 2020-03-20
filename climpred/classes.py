@@ -1,6 +1,5 @@
 import warnings
 
-import numpy as np
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -267,17 +266,6 @@ class PredictionEnsemble:
     def get_uninitialized(self):
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets['uninitialized']
-
-    def resample(self, resample_dim):
-        """Resample with replacement in dimension ``resample_dim``."""
-        initialized = self._datasets['initialized']
-        to_be_resampled = initialized[resample_dim].data
-        sample = np.random.choice(to_be_resampled, len(to_be_resampled))
-        resampled = initialized.sel({resample_dim: sample})
-        # ignore because then inits should keep their labels
-        if resample_dim != 'init':
-            resampled[resample_dim] = initialized[resample_dim].data
-        return resampled
 
     def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be

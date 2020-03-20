@@ -247,7 +247,7 @@ class PredictionEnsemble:
         else:  # determinstic metric
             if self.kind == 'hindcast':
                 if dim == 'init':
-                    # for thinking in real time # verify_hindcast renames init to time
+                    # for thinking in real time # compute_hindcast renames init to time
                     dim = 'time'
             elif self.kind == 'perfect':
                 # prevent comparison e2c and member in dim

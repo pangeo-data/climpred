@@ -5,7 +5,7 @@ import pytest
 import xskillscore as xs
 
 from climpred.exceptions import CoordinateError
-from climpred.prediction import verify_hindcast
+from climpred.prediction import compute_hindcast
 
 
 def test_same_inits_initializations(
@@ -13,7 +13,7 @@ def test_same_inits_initializations(
 ):
     """Tests that inits are identical at all leads for `same_inits` alignment."""
     with caplog.at_level(logging.INFO):
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d_cftime,
             reconstruction_ds_1d_cftime,
             alignment='same_inits',
@@ -31,7 +31,7 @@ def test_same_inits_verification_dates(
     alignment."""
     with caplog.at_level(logging.INFO):
         FIRST_INIT, LAST_INIT = 1954, 2007
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d_cftime,
             reconstruction_ds_1d_cftime,
             alignment='same_inits',
@@ -54,7 +54,7 @@ def test_same_inits_disjoint_verif_time(
     data, i.e., non-continuous time sampling to verify against."""
     hind = small_initialized_da
     verif = small_verif_da.drop_sel(time=1992)
-    actual = verify_hindcast(hind, verif, alignment=alignment, metric='mse')
+    actual = compute_hindcast(hind, verif, alignment=alignment, metric='mse')
     assert actual.notnull().all()
     # hindcast inits: [1990, 1991, 1992, 1993]
     # verif times: [1990, 1991, 1993, 1994]
@@ -71,7 +71,7 @@ def test_same_inits_disjoint_inits(small_initialized_da, small_verif_da, alignme
     data, i.e., non-continuous initializing to verify with."""
     hind = small_initialized_da.drop_sel(init=1991)
     verif = small_verif_da
-    actual = verify_hindcast(hind, verif, alignment=alignment, metric='mse')
+    actual = compute_hindcast(hind, verif, alignment=alignment, metric='mse')
     assert actual.notnull().all()
     # hindcast inits: [1990, 1992, 1993]
     # verif times: [1990, 1991, 1992, 1993, 1994]
@@ -87,7 +87,7 @@ def test_same_verifs_verification_dates(
 ):
     """Tests that verifs are identical at all leads for `same_verifs` alignment."""
     with caplog.at_level(logging.INFO):
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d_cftime,
             reconstruction_ds_1d_cftime,
             alignment='same_verifs',
@@ -105,7 +105,7 @@ def test_same_verifs_initializations(
     alignment."""
     with caplog.at_level(logging.INFO):
         FIRST_INIT, LAST_INIT = 1964, 2017
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d_cftime,
             reconstruction_ds_1d_cftime,
             alignment='same_verifs',
@@ -127,7 +127,7 @@ def test_same_verifs_raises_error_when_not_possible(
     cannot be found with the supplied initializations."""
     hind = hind_ds_initialized_1d_cftime.isel(lead=slice(0, 3), init=[1, 3, 5, 7, 9])
     with pytest.raises(CoordinateError):
-        verify_hindcast(hind, reconstruction_ds_1d_cftime, alignment='same_verifs')
+        compute_hindcast(hind, reconstruction_ds_1d_cftime, alignment='same_verifs')
 
 
 def test_maximize_alignment_inits(
@@ -135,7 +135,7 @@ def test_maximize_alignment_inits(
 ):
     """Tests that appropriate inits are selected for `maximize` alignment."""
     with caplog.at_level(logging.INFO):
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d_cftime,
             reconstruction_ds_1d_cftime,
             alignment='maximize',
@@ -157,7 +157,7 @@ def test_maximize_alignment_verifs(
 ):
     """Tests that appropriate verifs are selected for `maximize` alignment."""
     with caplog.at_level(logging.INFO):
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d_cftime,
             reconstruction_ds_1d_cftime,
             alignment='maximize',

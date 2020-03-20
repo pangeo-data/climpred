@@ -8,7 +8,7 @@ from xarray.testing import assert_allclose
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS, __m2c
 from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
-from climpred.prediction import verify_hindcast, verify_perfect_model
+from climpred.prediction import compute_hindcast, verify_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
     convert_to_cftime_index,
@@ -132,17 +132,17 @@ def test_bootstrap_pm_assign_attrs():
 
 
 def test_hindcast_assign_attrs():
-    """Test assigning attrs for verify_hindcast."""
+    """Test assigning attrs for compute_hindcast."""
     metric = 'pearson_r'
     comparison = 'e2o'
     da = load_dataset('CESM-DP-SST')
     control = load_dataset('ERSST')
-    actual = verify_hindcast(da, control, metric=metric, comparison=comparison).attrs
+    actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
         assert actual['units'] == 'None'
-    assert actual['skill_calculated_by_function'] == 'verify_hindcast'
+    assert actual['skill_calculated_by_function'] == 'compute_hindcast'
 
 
 def test_copy_coords_from_to_ds(PM_ds_control_3d):

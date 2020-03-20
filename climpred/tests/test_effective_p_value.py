@@ -1,7 +1,7 @@
 import pytest
 
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
-from climpred.prediction import verify_hindcast, verify_perfect_model
+from climpred.prediction import compute_hindcast, verify_perfect_model
 
 
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
@@ -11,7 +11,7 @@ def test_eff_sample_size_smaller_than_n_hind_da_initialized_1d(
     """Tests that effective sample size is less than or equal to the actual sample size
     of the data."""
     N = hind_da_initialized_1d.mean('member').count('init')
-    eff_N = verify_hindcast(
+    eff_N = compute_hindcast(
         hind_da_initialized_1d, reconstruction_da_1d, metric='eff_n',
     )
     assert (eff_N <= N).all()
@@ -41,13 +41,13 @@ def test_eff_pearson_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
 ):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
-    normal_p = verify_hindcast(
+    normal_p = compute_hindcast(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='pearson_r_p_value',
         comparison=comparison,
     )
-    eff_p = verify_hindcast(
+    eff_p = compute_hindcast(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='pearson_r_eff_p_value',
@@ -83,13 +83,13 @@ def test_eff_spearman_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
 ):
     """Tests that the Pearson effective p value (more conservative) is greater than or
     equal to the standard p value."""
-    normal_p = verify_hindcast(
+    normal_p = compute_hindcast(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='spearman_r_p_value',
         comparison=comparison,
     )
-    eff_p = verify_hindcast(
+    eff_p = compute_hindcast(
         hind_da_initialized_1d,
         reconstruction_da_1d,
         metric='spearman_r_eff_p_value',

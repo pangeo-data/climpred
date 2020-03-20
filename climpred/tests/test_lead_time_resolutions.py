@@ -3,7 +3,7 @@ import pandas as pd
 import pytest
 import xarray as xr
 
-from climpred.prediction import verify_hindcast, verify_perfect_model
+from climpred.prediction import compute_hindcast, verify_perfect_model
 
 
 @pytest.fixture()
@@ -45,7 +45,7 @@ def monthly_obs():
 def test_daily_resolution_hindcast(daily_initialized, daily_obs):
     """Tests that daily resolution hindcast predictions work."""
     daily_initialized.lead.attrs['units'] = 'days'
-    assert verify_hindcast(daily_initialized, daily_obs).all()
+    assert compute_hindcast(daily_initialized, daily_obs).all()
 
 
 def test_daily_resolution_perfect_model(daily_initialized, daily_obs):
@@ -59,7 +59,7 @@ def test_pentadal_resolution_hindcast(daily_initialized, daily_obs):
     pentadal_hindcast = daily_initialized.resample(init='5D').mean()
     pentadal_obs = daily_obs.resample(time='5D').mean()
     pentadal_hindcast.lead.attrs['units'] = 'pentads'
-    assert verify_hindcast(pentadal_hindcast, pentadal_obs).all()
+    assert compute_hindcast(pentadal_hindcast, pentadal_obs).all()
 
 
 def test_pentadal_resolution_perfect_model(daily_initialized, daily_obs):
@@ -67,7 +67,7 @@ def test_pentadal_resolution_perfect_model(daily_initialized, daily_obs):
     pentadal_pm = daily_initialized.resample(init='5D').mean()
     pentadal_obs = daily_obs.resample(time='5D').mean()
     pentadal_pm.lead.attrs['units'] = 'pentads'
-    assert verify_hindcast(pentadal_pm, pentadal_obs).all()
+    assert compute_hindcast(pentadal_pm, pentadal_obs).all()
 
 
 def test_weekly_resolution_hindcast(daily_initialized, daily_obs):
@@ -75,7 +75,7 @@ def test_weekly_resolution_hindcast(daily_initialized, daily_obs):
     weekly_hindcast = daily_initialized.resample(init='W').mean()
     weekly_obs = daily_obs.resample(time='W').mean()
     weekly_hindcast.lead.attrs['units'] = 'weeks'
-    assert verify_hindcast(weekly_hindcast, weekly_obs).all()
+    assert compute_hindcast(weekly_hindcast, weekly_obs).all()
 
 
 def test_weekly_resolution_perfect_model(daily_initialized, daily_obs):
@@ -83,13 +83,13 @@ def test_weekly_resolution_perfect_model(daily_initialized, daily_obs):
     weekly_pm = daily_initialized.resample(init='W').mean()
     weekly_obs = daily_obs.resample(time='W').mean()
     weekly_pm.lead.attrs['units'] = 'weeks'
-    assert verify_hindcast(weekly_pm, weekly_obs).all()
+    assert compute_hindcast(weekly_pm, weekly_obs).all()
 
 
 def test_monthly_resolution_hindcast(monthly_initialized, monthly_obs):
     """Tests that monthly resolution hindcast predictions work."""
     monthly_initialized.lead.attrs['units'] = 'months'
-    assert verify_hindcast(monthly_initialized, monthly_obs).all()
+    assert compute_hindcast(monthly_initialized, monthly_obs).all()
 
 
 def test_monthly_resolution_perfect_model(monthly_initialized, monthly_obs):
@@ -106,7 +106,7 @@ def test_seasonal_resolution_hindcast(monthly_initialized, monthly_obs):
     seasonal_hindcast = seasonal_hindcast.isel(lead=slice(0, None, 3))
     seasonal_obs = monthly_obs.rolling(time=3, center=True).mean().dropna(dim='time')
     seasonal_hindcast.lead.attrs['units'] = 'seasons'
-    assert verify_hindcast(seasonal_hindcast, seasonal_obs).all()
+    assert compute_hindcast(seasonal_hindcast, seasonal_obs).all()
 
 
 def test_seasonal_resolution_perfect_model(monthly_initialized, monthly_obs):
@@ -126,7 +126,7 @@ def test_yearly_resolution_hindcast(monthly_initialized, monthly_obs):
     )
     yearly_obs = monthly_obs.resample(time='YS').mean()
     yearly_hindcast.lead.attrs['units'] = 'years'
-    assert verify_hindcast(yearly_hindcast, yearly_obs).all()
+    assert compute_hindcast(yearly_hindcast, yearly_obs).all()
 
 
 def test_yearly_resolution_perfect_model(monthly_initialized, monthly_obs):

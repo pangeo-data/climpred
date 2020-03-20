@@ -2131,7 +2131,7 @@ def _crpss_es(forecast, verif, **metric_kwargs):
     # inside verify_perfect_model
     if 'init' in forecast.dims:
         dim2 = 'init'
-    # inside verify_hindcast
+    # inside compute_hindcast
     elif 'time' in forecast.dims:
         dim2 = 'time'
     else:
@@ -2218,7 +2218,7 @@ DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
 POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
 PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
 
-# Combined allowed metrics for verify_hindcast and verify_perfect_model
+# Combined allowed metrics for compute_hindcast and verify_perfect_model
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
 ALL_METRICS = [m.name for m in __ALL_METRICS__]

@@ -7,7 +7,7 @@ from xarray.testing import assert_allclose
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS
 from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
-from climpred.prediction import verify_hindcast, verify_perfect_model
+from climpred.prediction import compute_hindcast, verify_perfect_model
 
 
 def my_mse_function(forecast, reference, dim=None, **metric_kwargs):
@@ -167,7 +167,7 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
     """Test skipna argument in hindcast_metric."""
     # manipulating data with nans
     hind_da_initialized_3d[0, 2, 0, 2] = np.nan
-    base = verify_hindcast(
+    base = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         metric=metric,
@@ -175,7 +175,7 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
         dim='init',
         alignment='same_inits',
     )
-    skipping = verify_hindcast(
+    skipping = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         metric=metric,
@@ -192,9 +192,9 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
 def test_hindcast_metric_weights(
     hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
 ):
-    """Test time=lead weights in verify_hindcast."""
+    """Test time=lead weights in compute_hindcast."""
     dim = 'init'
-    base = verify_hindcast(
+    base = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         dim=dim,
@@ -207,7 +207,7 @@ def test_hindcast_metric_weights(
         ),
         dims='time',
     )
-    weighted = verify_hindcast(
+    weighted = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         dim=dim,
@@ -225,9 +225,9 @@ def test_hindcast_metric_weights(
 def test_hindcast_metric_weights_x2r(
     hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
 ):
-    """Test init weights in verify_hindcast."""
+    """Test init weights in compute_hindcast."""
     dim = 'init'
-    base = verify_hindcast(
+    base = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         dim=dim,
@@ -244,7 +244,7 @@ def test_hindcast_metric_weights_x2r(
         dims='init',
     )
 
-    weighted = verify_hindcast(
+    weighted = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         dim=dim,

@@ -5,7 +5,7 @@ from climpred.bootstrap import bootstrap_hindcast
 from climpred.comparisons import HINDCAST_COMPARISONS
 from climpred.constants import CLIMPRED_DIMS
 from climpred.metrics import DETERMINISTIC_HINDCAST_METRICS
-from climpred.prediction import verify_hindcast
+from climpred.prediction import compute_hindcast
 from climpred.reference import compute_persistence
 
 # uacc is sqrt(MSSS), fails when MSSS negative
@@ -14,10 +14,10 @@ DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
 
 @pytest.mark.skip(reason='less not properly implemented')
-def test_verify_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
+def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
     """Test LESS m2o runs through"""
     actual = (
-        verify_hindcast(
+        compute_hindcast(
             hind_da_initialized_1d,
             reconstruction_da_1d,
             metric='less',
@@ -31,14 +31,14 @@ def test_verify_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
 
 @pytest.mark.parametrize('metric', DETERMINISTIC_HINDCAST_METRICS)
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
-def test_verify_hindcast(
+def test_compute_hindcast(
     hind_ds_initialized_1d, reconstruction_ds_1d, metric, comparison
 ):
     """
     Checks that compute hindcast works without breaking.
     """
     res = (
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d,
             reconstruction_ds_1d,
             metric=metric,
@@ -51,17 +51,17 @@ def test_verify_hindcast(
         assert not res[var]
 
 
-def test_verify_hindcast_lead0_lead1(
+def test_compute_hindcast_lead0_lead1(
     hind_ds_initialized_1d, hind_ds_initialized_1d_lead0, reconstruction_ds_1d
 ):
     """
     Checks that compute hindcast returns the same results with a lead-0 and lead-1
     framework.
     """
-    res1 = verify_hindcast(
+    res1 = compute_hindcast(
         hind_ds_initialized_1d, reconstruction_ds_1d, metric='rmse', comparison='e2o',
     )
-    res2 = verify_hindcast(
+    res2 = compute_hindcast(
         hind_ds_initialized_1d_lead0,
         reconstruction_ds_1d,
         metric='rmse',
@@ -123,14 +123,14 @@ def test_bootstrap_hindcast_da1d_not_nan(
 
 
 @pytest.mark.parametrize('metric', ('AnomCorr', 'test', 'None'))
-def test_verify_hindcast_metric_keyerrors(
+def test_compute_hindcast_metric_keyerrors(
     hind_ds_initialized_1d, reconstruction_ds_1d, metric
 ):
     """
     Checks that wrong metric names get caught.
     """
     with pytest.raises(KeyError) as excinfo:
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d,
             reconstruction_ds_1d,
             comparison='e2o',
@@ -140,14 +140,14 @@ def test_verify_hindcast_metric_keyerrors(
 
 
 @pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
-def test_verify_hindcast_comparison_keyerrors(
+def test_compute_hindcast_comparison_keyerrors(
     hind_ds_initialized_1d, reconstruction_ds_1d, comparison
 ):
     """
     Checks that wrong comparison names get caught.
     """
     with pytest.raises(KeyError) as excinfo:
-        verify_hindcast(
+        compute_hindcast(
             hind_ds_initialized_1d,
             reconstruction_ds_1d,
             comparison=comparison,
@@ -157,7 +157,7 @@ def test_verify_hindcast_comparison_keyerrors(
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
-def test_verify_hindcast_dask_spatial(
+def test_compute_hindcast_dask_spatial(
     hind_da_initialized_3d, reconstruction_da_3d, metric
 ):
     """Chunking along spatial dims."""
@@ -165,7 +165,7 @@ def test_verify_hindcast_dask_spatial(
     for dim in hind_da_initialized_3d.dims:
         if dim in reconstruction_da_3d.dims:
             step = 5
-            res_chunked = verify_hindcast(
+            res_chunked = compute_hindcast(
                 hind_da_initialized_3d.chunk({dim: step}),
                 reconstruction_da_3d.chunk({dim: step}),
                 comparison='e2o',
@@ -178,7 +178,7 @@ def test_verify_hindcast_dask_spatial(
 
 @pytest.mark.skip(reason='not yet implemented')
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
-def test_verify_hindcast_dask_climpred_dims(
+def test_compute_hindcast_dask_climpred_dims(
     hind_da_initialized_3d, reconstruction_da_3d, metric
 ):
     """Chunking along climpred dims if available."""
@@ -188,7 +188,7 @@ def test_verify_hindcast_dask_climpred_dims(
             hind_da_initialized_3d = hind_da_initialized_3d.chunk({dim: step})
         if dim in reconstruction_da_3d.dims:
             reconstruction_da_3d = reconstruction_da_3d.chunk({dim: step})
-        res_chunked = verify_hindcast(
+        res_chunked = compute_hindcast(
             hind_da_initialized_3d,
             reconstruction_da_3d,
             comparison='e2o',
@@ -199,11 +199,11 @@ def test_verify_hindcast_dask_climpred_dims(
         assert res_chunked.chunks is not None
 
 
-def test_verify_hindcast_CESM_3D_keep_coords(
+def test_compute_hindcast_CESM_3D_keep_coords(
     hind_da_initialized_3d, reconstruction_da_3d
 ):
-    """Test that no coords are lost in verify_hindcast with the CESM sample data."""
-    s = verify_hindcast(hind_da_initialized_3d, reconstruction_da_3d)
+    """Test that no coords are lost in compute_hindcast with the CESM sample data."""
+    s = compute_hindcast(hind_da_initialized_3d, reconstruction_da_3d)
     for c in hind_da_initialized_3d.drop('init').coords:
         assert c in s.coords
 

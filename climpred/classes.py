@@ -822,6 +822,10 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to
             observations/verification data short name.
         """
+        if isinstance(reference, str):
+            reference = [reference]
+        elif reference is None:
+            reference = []
 
         def _verify(
             hind,
@@ -834,20 +838,8 @@ class HindcastEnsemble(PredictionEnsemble):
             dim,
             **metric_kwargs,
         ):
-            """Interior verify func to be passed to apply func.
-
-            Cases to consider:
-            (0) Can you return skill + ref when you have multiple verifs. I.e. dealing
-            with the dictionary output approach. -- This just works. Returns dict
-            of tuples. I think `add_attrs` will handle any confusion.
-
-            (3) `reference`='uninitialized'. In this case also consider the historical
-            run when aligning. But don't need union with verif for inits, since it
-            just aligns in verif_dates.
-
-            (4) `reference`=['uninitialized', 'persistence']. In this case, need
-            union with obs for persistence but also need uninitialized union.
-            """
+            """Interior verify func to be passed to apply func."""
+            result = {}
             metric, comparison, dim = self._get_metric_comparison_dim(
                 metric, comparison, dim
             )
@@ -876,36 +868,37 @@ class HindcastEnsemble(PredictionEnsemble):
             ]
             skill = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
             skill['lead'] = forecast['lead']
+            result['skill'] = skill
 
             if reference is not None:
-                if reference == 'historical':
+                if 'historical' in reference:
                     hist, _ = comparison.function(hist, verif, metric=metric)
-                metric_over_leads = [
-                    _apply_metric_at_given_lead(
-                        verif,
-                        verif_dates,
-                        lead,
-                        hind=forecast,
-                        hist=hist,
-                        inits=inits,
-                        reference=reference,
-                        metric=metric,
-                        comparison=comparison,
-                        dim=dim,
-                        **metric_kwargs,
-                    )
-                    for lead in forecast['lead'].data
-                ]
-                ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
-                ref['lead'] = forecast['lead']
-                return skill, ref
-            else:
-                return skill
+                for r in reference:
+                    metric_over_leads = [
+                        _apply_metric_at_given_lead(
+                            verif,
+                            verif_dates,
+                            lead,
+                            hind=forecast,
+                            hist=hist,
+                            inits=inits,
+                            reference=r,
+                            metric=metric,
+                            comparison=comparison,
+                            dim=dim,
+                            **metric_kwargs,
+                        )
+                        for lead in forecast['lead'].data
+                    ]
+                    ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+                    ref['lead'] = forecast['lead']
+                    result[r] = ref
+            return result
 
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'
         )
-        if reference == 'historical':
+        if 'historical' in reference:
             has_dataset(
                 self._datasets['uninitialized'],
                 'uninitialized',

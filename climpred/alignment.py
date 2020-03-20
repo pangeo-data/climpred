@@ -32,12 +32,19 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
         verif_dates (dict): Keys are the lead time integer, values are an
             ``xr.CFTimeIndex`` of verification dates.
     """
+    if isinstance(reference, str):
+        reference = [reference]
+    elif reference is None:
+        reference = []
+
     is_in_list(alignment, VALID_ALIGNMENTS, 'alignment')
     units = forecast['lead'].attrs['units']
     leads = forecast['lead'].values
+
     # `init` renamed to `time` in compute functions.
     all_inits = forecast['time']
     all_verifs = verif['time']
+
     # If aligning historical reference, need to account for potential differences in its
     # temporal coverage. Note that the historical reference only aligns verification
     # dates and doesn't care about inits.
@@ -48,10 +55,11 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
     init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
+
     # A union between `inits` and observations in the verification data is required
     # for persistence, since the persistence forecast is based off a common set of
     # initializations.
-    if reference == 'persistence':
+    if 'persistence' in reference:
         union_with_verifs = all_inits.isin(all_verifs)
         init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
     valid_inits = init_lead_matrix['time']

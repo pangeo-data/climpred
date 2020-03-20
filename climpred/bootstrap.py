@@ -20,7 +20,7 @@ from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
     assign_attrs,
-    convert_to_time_index,
+    convert_time_index,
     find_start_dates_for_given_init,
     get_comparison_class,
     get_lead_cftime_shift_args,
@@ -782,9 +782,9 @@ def bootstrap_hindcast(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_to_time_index(hind, 'init', 'hind[init]')
-    hist = convert_to_time_index(hist, 'time', 'uninitialized[time]')
-    verif = convert_to_time_index(verif, 'time', 'verif[time]')
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    hist = convert_time_index(hist, 'time', 'uninitialized[time]')
+    verif = convert_time_index(verif, 'time', 'verif[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
@@ -897,10 +897,10 @@ def bootstrap_perfect_model(
     if dim is None:
         dim = ['init', 'member']
     # Check init & time is int, cftime, or datetime; convert ints or cftime to datetime.
-    init_pm = convert_to_time_index(
+    init_pm = convert_time_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
-    control = convert_to_time_index(
+    control = convert_time_index(
         control, 'time', 'control[time]', calendar=PM_CALENDAR_STR
     )
     lead_units_equal_control_time_stride(init_pm, control)

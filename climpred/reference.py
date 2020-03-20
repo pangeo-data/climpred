@@ -9,7 +9,7 @@ from .constants import CLIMPRED_DIMS
 from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES
 from .utils import (
     assign_attrs,
-    convert_to_time_index,
+    convert_time_index,
     copy_coords_from_to,
     get_comparison_class,
     get_lead_cftime_shift_args,
@@ -67,8 +67,8 @@ def compute_persistence(
           Oxford University Press, 2007.
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_to_time_index(hind, 'init', 'hind[init]')
-    verif = convert_to_time_index(verif, 'time', 'verif[time]')
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    verif = convert_time_index(verif, 'time', 'verif[time]')
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
@@ -165,9 +165,9 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_to_time_index(hind, 'init', 'hind[init]')
-    uninit = convert_to_time_index(uninit, 'time', 'uninit[time]')
-    verif = convert_to_time_index(verif, 'time', 'verif[time]')
+    hind = convert_time_index(hind, 'init', 'hind[init]')
+    uninit = convert_time_index(uninit, 'time', 'uninit[time]')
+    verif = convert_time_index(verif, 'time', 'verif[time]')
     has_valid_lead_units(hind)
 
     # get metric/comparison function name, not the alias

@@ -25,11 +25,6 @@ install:
   - which python
   - pip install .
   - python setup.py install --user
-  - pip install pytest-cov
-  - pip install coveralls
-  - pip install black
-  - pip install flake8
-  - pip install isort
 
 script:
   - coverage run --source climpred -m py.test

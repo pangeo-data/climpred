@@ -47,9 +47,7 @@ def test_same_inits_verification_dates(
 
 
 @pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs'])
-def test_same_inits_disjoint_verif_time(
-    small_initialized_da, small_verif_da, alignment
-):
+def test_disjoint_verif_time(small_initialized_da, small_verif_da, alignment):
     """Tests that alignment works with disjoint time in the verification
     data, i.e., non-continuous time sampling to verify against."""
     hind = small_initialized_da
@@ -58,15 +56,15 @@ def test_same_inits_disjoint_verif_time(
     assert actual.notnull().all()
     # hindcast inits: [1990, 1991, 1992, 1993]
     # verif times: [1990, 1991, 1993, 1994]
-    a = hind.sel(init=[1990, 1993]).rename({'init': 'time'})
-    b = verif.sel(time=[1991, 1994])
+    a = hind.sel(init=[1990, 1992, 1993]).rename({'init': 'time'})
+    b = verif.sel(time=[1991, 1993, 1994])
     a['time'] = b['time']
     expected = xs.mse(a, b, 'time')
     assert actual == expected
 
 
 @pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs'])
-def test_same_inits_disjoint_inits(small_initialized_da, small_verif_da, alignment):
+def test_disjoint_inits(small_initialized_da, small_verif_da, alignment):
     """Tests that alignment works with disjoint inits in the verification
     data, i.e., non-continuous initializing to verify with."""
     hind = small_initialized_da.drop_sel(init=1991)

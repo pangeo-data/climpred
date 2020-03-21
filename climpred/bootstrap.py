@@ -719,6 +719,15 @@ def bootstrap_hindcast(
             'resample over initializations.'
         )
 
+    # Kludge for now. Since we're computing persistence here we need to ensure that
+    # all products have a union in their time axis.
+    times = np.sort(
+        list(set(hind.init.data) & set(hist.time.data) & set(verif.time.data))
+    )
+    hind = hind.sel(init=times)
+    hist = hist.sel(time=times)
+    verif = verif.sel(time=times)
+
     return bootstrap_compute(
         hind,
         verif,

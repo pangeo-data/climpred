@@ -16,37 +16,10 @@ def test_hindcastEnsemble_init_da(hind_da_initialized_1d):
     assert hindcast
 
 
-def test_add_reference(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Test to see if a reference can be added to the HindcastEnsemble"""
-    # TODO: This should be removed once `add_reference` is deprecated.
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_reference(reconstruction_ds_1d, 'reconstruction')
-    # Will fail if this comes back empty.
-    assert hindcast.get_reference()
-
-
-def test_add_reference_da(hind_ds_initialized_1d, observations_da_1d):
-    """Test to see if a reference can be added to the HindcastEnsemble as a da"""
-    # TODO: This should be removed once `add_reference` is deprecated.
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_reference(observations_da_1d, 'observations')
-    assert hindcast.get_reference()
-
-
-def test_add_reference_deprecated(hind_ds_initialized_1d, observations_da_1d):
-    """Tests that deprecation warning is thrown for add_reference method."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    with pytest.warns(PendingDeprecationWarning) as record:
-        hindcast = hindcast.add_reference(observations_da_1d, 'observations')
-    assert 'deprecated' in record[0].message.args[0]
-
-
 def test_add_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test to see if observations can be added to the HindcastEnsemble"""
-    # NOTE: This should be removed once `add_reference` is deprecated.
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    # Will fail if this comes back empty.
     assert hindcast.get_observations()
 
 
@@ -226,27 +199,6 @@ def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
     hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     uninit = hindcast.get_uninitialized()
     assert uninit == hindcast._datasets['uninitialized']
-
-
-def test_get_reference(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Tests whether get_reference method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_reference(reconstruction_ds_1d, 'FOSI')
-    # Without name keyword.
-    ref = hindcast.get_reference()
-    assert ref == hindcast._datasets['observations']['FOSI']
-    # With name keyword.
-    ref = hindcast.get_reference('FOSI')
-    assert ref == hindcast._datasets['observations']['FOSI']
-
-
-def test_get_reference_deprecated(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Tests that deprecation warning is thrown for get_reference method."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_reference(reconstruction_ds_1d, 'FOSI')
-    with pytest.warns(PendingDeprecationWarning) as record:
-        hindcast = hindcast.get_reference()
-    assert 'deprecated' in record[0].message.args[0]
 
 
 def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):

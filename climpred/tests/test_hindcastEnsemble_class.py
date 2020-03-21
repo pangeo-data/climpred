@@ -66,39 +66,6 @@ def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast.verify()
 
 
-@pytest.mark.skip(reason='will be addressed when refactoring hindcast stuff.')
-def test_compute_uninitialized(
-    hind_ds_initialized_1d,
-    hist_ds_uninitialized_1d,
-    reconstruction_ds_1d,
-    observations_ds_1d,
-):
-    """Test to see if compute_uninitialized can be frun from the HindcastEnsemble"""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
-    # single observations, no declaration of name.
-    hindcast.compute_uninitialized()
-    hindcast = hindcast.add_observations(observations_ds_1d, 'observations')
-    # multiple observations, no name declaration.
-    hindcast.compute_uninitialized()
-    # multiple observations, call one.
-    hindcast.compute_uninitialized('reconstruction')
-    hindcast.compute_uninitialized(metric='rmse', comparison='m2o')
-
-
-def test_compute_persistence(
-    hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d
-):
-    """Test to see if compute_persistence can be run from the HindcastEnsemble"""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast = hindcast.add_observations(observations_ds_1d, 'observations')
-    hindcast.compute_persistence()
-    hindcast.compute_persistence('observations')
-    hindcast.compute_persistence(metric='rmse')
-
-
 def test_smooth_goddard(reconstruction_ds_3d, hind_ds_initialized_3d):
     """Test whether goddard smoothing function reduces ntime."""
     hindcast = HindcastEnsemble(hind_ds_initialized_3d.isel(nlat=slice(1, None)))

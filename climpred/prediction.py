@@ -40,9 +40,28 @@ def _apply_metric_at_given_lead(
 ):
     """Applies a metric between two time series at a given lead.
 
-    Handles reference forecasts.
+    .. note::
 
-    TODO: Finish docstring.
+        This will be moved to a method of the `Scoring()` class in the next PR.
+
+    Args:
+        verif (xr object): Verification data.
+        verif_dates (dict): Lead-dependent verification dates for alignment.
+        lead (int): Given lead to score.
+        hind (xr object): Initialized hindcast. Not required in a persistence forecast.
+        hist (xr object): Historical simulation. Required when
+            ``reference='historical'``.
+        inits (dict): Lead-dependent initialization dates for alignment.
+        reference (str): If not ``None``, return score for this reference forecast.
+            * 'persistence'
+            * 'historical'
+        metric (Metric): Metric class for scoring.
+        comparison (Comparison): Comparison class.
+        dim (str): Dimension to apply metric over.
+
+    Returns:
+        result (xr object): Metric results for the given lead for the initialized
+            forecast or reference forecast.
     """
     if reference is None:
         # Use `.where()` instead of `.sel()` to account for resampled inits when

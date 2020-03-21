@@ -281,7 +281,7 @@ class PredictionEnsemble:
             if self._datasets['control']:
                 datasets['control'] = smooth_fct(self._datasets['control'], smooth_kws)
         # if type(self).__name__ == 'HindcastEnsemble':
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind=self.kind)
 
 
 class PerfectModelEnsemble(PredictionEnsemble):

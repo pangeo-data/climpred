@@ -44,41 +44,6 @@ def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitiali
     assert hindcast.get_uninitialized()
 
 
-def test_compute_metric(
-    hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d
-):
-    """Test to see if compute_metric can be run from the HindcastEnsemble"""
-    # TODO: Remove this test after deprecating `compute_metric()`
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast = hindcast.add_observations(observations_ds_1d, 'observations')
-    # Don't need to check for NaNs, etc. since that's handled in the prediction
-    # module testing.
-    hindcast.compute_metric()  # compute over all observations
-    # compute over single observation
-    hindcast.compute_metric('reconstruction')
-    # test all keywords
-    hindcast.compute_metric(metric='rmse', comparison='m2o')
-
-
-def test_compute_metric_single(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Test to see if compute_metric automatically works with a single observational
-    product."""
-    # TODO: Remove this test after deprecating `compute_metric()`
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast.compute_metric()
-
-
-def test_compute_metric_deprecated(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Tests that deprecation warning is thrown for compute_metric method."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    with pytest.warns(PendingDeprecationWarning) as record:
-        hindcast = hindcast.compute_metric()
-    assert 'deprecated' in record[0].message.args[0]
-
-
 @pytest.mark.slow
 def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d):
     """Test to see if verify can be run from the HindcastEnsemble"""

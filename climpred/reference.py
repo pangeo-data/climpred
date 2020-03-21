@@ -30,6 +30,7 @@ def historical(hist, verif, verif_dates, lead):
     return a, b
 
 
+# LEGACY CODE BELOW -- WILL BE DELETED DURING INHERITANCE REFACTORING #
 @is_xarray([0, 1])
 def compute_persistence(
     hind,

@@ -1,5 +1,18 @@
 from pkg_resources import DistributionNotFound, get_distribution
 
+from . import (
+    bootstrap,
+    comparisons,
+    constants,
+    exceptions,
+    graphics,
+    metrics,
+    prediction,
+    relative_entropy,
+    smoothing,
+    stats,
+    tutorial,
+)
 from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .preprocessing import mpi, shared
 from .versioning.print_versions import show_versions

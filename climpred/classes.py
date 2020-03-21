@@ -1,5 +1,3 @@
-import warnings
-
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -11,22 +9,17 @@ from .checks import (
     has_dataset,
     has_dims,
     has_valid_lead_units,
-    is_in_list,
     is_xarray,
     match_initialized_dims,
     match_initialized_vars,
 )
-from .comparisons import (
-    COMPARISON_ALIASES,
-    HINDCAST_COMPARISONS,
-    PM_COMPARISONS,
-    PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_PM_COMPARISONS,
-)
 from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError
-from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
-from .prediction import _apply_metric_at_given_lead, compute_perfect_model
+from .prediction import (
+    _apply_metric_at_given_lead,
+    _get_metric_comparison_dim,
+    compute_perfect_model,
+)
 from .reference import compute_persistence
 from .smoothing import (
     smooth_goddard_2013,
@@ -34,7 +27,7 @@ from .smoothing import (
     spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
-from .utils import convert_time_index, get_comparison_class, get_metric_class
+from .utils import convert_time_index
 
 
 def _display_metadata(self):
@@ -200,64 +193,6 @@ class PredictionEnsemble:
         obj._datasets = datasets
         obj.kind = kind
         return obj
-
-    def _get_metric_comparison_dim(self, metric, comparison, dim):
-        if dim is None:
-            dim = 'init' if self.kind == 'hindcast' else ['init', 'member']
-
-        if self.kind == 'hindcast':
-            is_in_list(dim, ['member', 'init'], 'dim')
-        elif self.kind == 'perfect':
-            is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
-
-        # get metric and comparison strings incorporating alias
-        metric = METRIC_ALIASES.get(metric, metric)
-        comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
-        METRICS = HINDCAST_METRICS if self.kind == 'hindcast' else PM_METRICS
-        COMPARISONS = (
-            HINDCAST_COMPARISONS if self.kind == 'hindcast' else PM_COMPARISONS
-        )
-        metric = get_metric_class(metric, METRICS)
-        comparison = get_comparison_class(comparison, COMPARISONS)
-
-        # check whether combination of metric and comparison works
-        PROBABILISTIC_COMPARISONS = (
-            PROBABILISTIC_HINDCAST_COMPARISONS
-            if self.kind == 'hindcast'
-            else PROBABILISTIC_PM_COMPARISONS
-        )
-        if metric.probabilistic:
-            if not comparison.probabilistic:
-                raise ValueError(
-                    f'Probabilistic metric `{metric.name}` requires comparison '
-                    f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
-                    f'found `{comparison.name}`.'
-                )
-            if dim != 'member':
-                warnings.warn(
-                    f'Probabilistic metric {metric.name} requires to be '
-                    f'computed over dimension `dim="member"`. '
-                    f'Set automatically.'
-                )
-                dim = 'member'
-        else:  # determinstic metric
-            if self.kind == 'hindcast':
-                if dim == 'init':
-                    # for thinking in real time # compute_hindcast renames init to time
-                    dim = 'time'
-            elif self.kind == 'perfect':
-                # prevent comparison e2c and member in dim
-                if (comparison.name == 'e2c') and (
-                    set(dim) == set(['init', 'member']) or dim == 'member'
-                ):
-                    warnings.warn(
-                        f'comparison `{comparison.name}` does not work on `member` '
-                        f'in dims,'
-                        f' found {dim}, automatically changed to dim=`init`.'
-                    )
-                    dim = 'init'
-        return metric, comparison, dim
 
     def get_initialized(self):
         """Returns the xarray dataset for the initialized ensemble."""
@@ -831,8 +766,8 @@ class HindcastEnsemble(PredictionEnsemble):
         ):
             """Interior verify func to be passed to apply func."""
             result = {}
-            metric, comparison, dim = self._get_metric_comparison_dim(
-                metric, comparison, dim
+            metric, comparison, dim = _get_metric_comparison_dim(
+                metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({'init': 'time'})

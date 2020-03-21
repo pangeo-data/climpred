@@ -105,7 +105,7 @@ def copy_coords_from_to(xro_from, xro_to):
 
 
 def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
-    """Returns xarray object with time index converted to ``xr.CFTimeIndex``.
+    """Converts incoming time index to a standard xr.CFTimeIndex.
 
     Args:
         xobj (xarray object): Dataset or DataArray with a time dimension to convert.

@@ -1,7 +1,6 @@
-import warnings
-
 import xarray as xr
 
+from .alignment import return_inits_and_verif_dates
 from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
@@ -14,13 +13,14 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
 )
+from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError
 from .prediction import (
-    compute_hindcast,
+    _apply_metric_at_given_lead,
+    _get_metric_comparison_dim,
     compute_perfect_model,
-    compute_persistence,
-    compute_uninitialized,
 )
+from .reference import compute_persistence
 from .smoothing import (
     smooth_goddard_2013,
     spatial_smoothing_xesmf,
@@ -30,9 +30,6 @@ from .smoothing import (
 from .utils import convert_time_index
 
 
-# ----------
-# Aesthetics
-# ----------
 def _display_metadata(self):
     """
     This is called in the following case:
@@ -87,9 +84,6 @@ def _display_metadata(self):
     return summary
 
 
-# -----------------
-# CLASS DEFINITIONS
-# -----------------
 class PredictionEnsemble:
     """
     The main object. This is the super of both `PerfectModelEnsemble` and
@@ -97,9 +91,6 @@ class PredictionEnsemble:
     should house functions that both ensemble types can use.
     """
 
-    # -------------
-    # Magic Methods
-    # -------------
     @is_xarray(1)
     def __init__(self, xobj):
         if isinstance(xobj, xr.DataArray):
@@ -115,6 +106,7 @@ class PredictionEnsemble:
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}
+        self.kind = 'prediction'
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
@@ -127,6 +119,7 @@ class PredictionEnsemble:
         Args:
             * name: Function, e.g., .isel() or .sum().
         """
+        kind = self.kind
 
         def wrapper(*args, **kwargs):
             """Applies arbitrary function to all datasets in the PredictionEnsemble
@@ -184,15 +177,12 @@ class PredictionEnsemble:
                         )
                     datasets.update({outer_k: temporary_dataset})
             # Instantiates new object with the modified datasets.
-            return self._construct_direct(datasets)
+            return self._construct_direct(datasets, kind=kind)
 
         return wrapper
 
-    # ----------------
-    # Helper Functions
-    # ----------------
     @classmethod
-    def _construct_direct(cls, datasets):
+    def _construct_direct(cls, datasets, kind):
         """Shortcut around __init__ for internal use to avoid inplace
         operations.
 
@@ -201,11 +191,9 @@ class PredictionEnsemble:
         """
         obj = object.__new__(cls)
         obj._datasets = datasets
+        obj.kind = kind
         return obj
 
-    # -----------------
-    # Getters & Setters
-    # -----------------
     def get_initialized(self):
         """Returns the xarray dataset for the initialized ensemble."""
         return self._datasets['initialized']
@@ -214,9 +202,6 @@ class PredictionEnsemble:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets['uninitialized']
 
-    # ------------------
-    # Analysis Functions
-    # ------------------
     def smooth(self, smooth_kws='goddard2013'):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
@@ -296,7 +281,7 @@ class PredictionEnsemble:
             if self._datasets['control']:
                 datasets['control'] = smooth_fct(self._datasets['control'], smooth_kws)
         # if type(self).__name__ == 'HindcastEnsemble':
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind=self.kind)
 
 
 class PerfectModelEnsemble(PredictionEnsemble):
@@ -310,9 +295,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    # -------------
-    # Magic Methods
-    # -------------
     def __init__(self, xobj):
         """Create a `PerfectModelEnsemble` object by inputting output from the
         control run in `xarray` format.
@@ -331,10 +313,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         super().__init__(xobj)
         # Reserve sub-dictionary for the control simulation.
         self._datasets.update({'control': {}})
+        self.kind = 'perfect'
 
-    # ----------------
-    # Helper Functions
-    # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary climpred
         function.
@@ -381,9 +361,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
         return init_vars_to_drop, ctrl_vars_to_drop
 
-    # ---------------
-    # Object Builders
-    # ---------------
     @is_xarray(1)
     def add_control(self, xobj):
         """Add the control run that initialized the climate prediction
@@ -402,7 +379,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='perfect')
 
     def generate_uninitialized(self):
         """Generate an uninitialized ensemble by bootstrapping the
@@ -420,18 +397,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': uninit})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='perfect')
 
-    # -----------------
-    # Getters & Setters
-    # -----------------
     def get_control(self):
         """Returns the control as an xarray dataset."""
         return self._datasets['control']
 
-    # ------------------
-    # Analysis Functions
-    # ------------------
     def compute_metric(self, metric='pearson_r', comparison='m2m'):
         """Compares the initialized ensemble to the control run.
 
@@ -590,9 +561,6 @@ class HindcastEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    # -------------
-    # Magic Methods
-    # -------------
     def __init__(self, xobj):
         """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
@@ -609,10 +577,8 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         super().__init__(xobj)
         self._datasets.update({'observations': {}})
+        self.kind = 'hindcast'
 
-    # ----------------
-    # Helper Functions
-    # ----------------
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
@@ -626,30 +592,30 @@ class HindcastEnsemble(PredictionEnsemble):
                 * name: name of verification data to target.
                 * init: bool of whether or not it's the initialized ensemble.
         """
-        ensemble = input_dict['ensemble']
-        observations = input_dict['observations']
+        hind = self._datasets['initialized']
+        verif = self._datasets['observations']
         name = input_dict['name']
         init = input_dict['init']
 
         # Apply only to specific observations.
         if name is not None:
             drop_init, drop_obs = self._vars_to_drop(name, init=init)
-            ensemble = ensemble.drop_vars(drop_init)
-            observations = observations[name].drop_vars(drop_obs)
-            return func(ensemble, observations, **kwargs)
+            hind = hind.drop_vars(drop_init)
+            verif = verif[name].drop_vars(drop_obs)
+            return func(hind, verif, **kwargs)
         else:
             # If only one observational product, just apply to that one.
-            if len(observations) == 1:
-                name = list(observations.keys())[0]
+            if len(verif) == 1:
+                name = list(verif.keys())[0]
                 drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                return func(ensemble, observations[name], **kwargs)
-            # Loop through observations, apply function, and store in dictionary.
+                return func(hind, verif[name], **kwargs)
+            # Loop through verif, apply function, and store in dictionary.
             # TODO: Parallelize this process.
             else:
                 result = {}
-                for name in observations.keys():
+                for name in verif.keys():
                     drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                    result[name] = func(ensemble, observations[name], **kwargs)
+                    result[name] = func(hind, verif[name], **kwargs)
                 return result
 
     def _vars_to_drop(self, name, init=True):
@@ -682,9 +648,6 @@ class HindcastEnsemble(PredictionEnsemble):
         obs_vars_to_drop = list(set(obs_vars) - set(init_vars))
         return init_vars_to_drop, obs_vars_to_drop
 
-    # ---------------
-    # Object Builders
-    # ---------------
     @is_xarray(1)
     def add_observations(self, xobj, name):
         """Add a verification data with which to verify the initialized ensemble.
@@ -707,23 +670,7 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets = self._datasets.copy()
         datasets_obs.update({name: xobj})
         datasets.update({'observations': datasets_obs})
-        return self._construct_direct(datasets)
-
-    @is_xarray(1)
-    def add_reference(self, xobj, name):
-        """Add an observational product with which to verify the initialized ensemble.
-
-        Args:
-            xobj (xarray object): Dataset/DataArray to append to the
-                                  `HindcastEnsemble` object.
-            name (str): Short name for referencing the verification data.
-        """
-        warnings.warn(
-            '`HindcastEnsemble.add_reference()` will be deprecated. '
-            'Using `HindcastEnsemble.add_observations()` is encouraged.',
-            PendingDeprecationWarning,
-        )
-        return self.add_observations(xobj, name)
+        return self._construct_direct(datasets, kind='hindcast')
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
@@ -742,11 +689,8 @@ class HindcastEnsemble(PredictionEnsemble):
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
-        return self._construct_direct(datasets)
+        return self._construct_direct(datasets, kind='hindcast')
 
-    # -----------------
-    # Getters & Setters
-    # -----------------
     def get_observations(self, name=None):
         """Returns xarray Datasets of the observations/verification data.
 
@@ -767,29 +711,14 @@ class HindcastEnsemble(PredictionEnsemble):
         else:
             return self._datasets['observations'][name]
 
-    def get_reference(self, name=None):
-        """Returns xarray Datasets of the observations/verification data.
-
-        Args:
-            name (str, optional): Name of the observations/verification data to return.
-                If ``None``, return dictionary of all observations/verification data.
-
-        Returns:
-            Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
-            ``xarray`` Dataset.
-        """
-        warnings.warn(
-            '`HindcastEnsemble.get_reference()` will be deprecated. '
-            'Using `HindcastEnsemble.get_observations()` is encouraged.',
-            PendingDeprecationWarning,
-        )
-        return self.get_observations(name=name)
-
-    # ------------------
-    # Analysis Functions
-    # ------------------
     def verify(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
+        self,
+        name=None,
+        reference=None,
+        metric='pearson_r',
+        comparison='e2o',
+        alignment='same_verifs',
+        dim='init',
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -819,164 +748,104 @@ class HindcastEnsemble(PredictionEnsemble):
             or dictionary of Datasets with keys corresponding to
             observations/verification data short name.
         """
+        if isinstance(reference, str):
+            reference = [reference]
+        elif reference is None:
+            reference = []
+
+        def _verify(
+            hind,
+            verif,
+            hist,
+            reference,
+            metric,
+            comparison,
+            alignment,
+            dim,
+            **metric_kwargs,
+        ):
+            """Interior verify func to be passed to apply func."""
+            metric, comparison, dim = _get_metric_comparison_dim(
+                metric, comparison, dim, kind=self.kind
+            )
+            forecast, verif = comparison.function(hind, verif, metric=metric)
+            forecast = forecast.rename({'init': 'time'})
+            inits, verif_dates = return_inits_and_verif_dates(
+                forecast, verif, alignment, reference=reference, hist=hist,
+            )
+            metric_over_leads = [
+                _apply_metric_at_given_lead(
+                    verif,
+                    verif_dates,
+                    lead,
+                    hind=forecast,
+                    hist=hist,
+                    inits=inits,
+                    # Ensure apply metric function returns skill and not reference
+                    # results.
+                    reference=None,
+                    metric=metric,
+                    comparison=comparison,
+                    dim=dim,
+                    **metric_kwargs,
+                )
+                for lead in forecast['lead'].data
+            ]
+            result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+            result['lead'] = forecast['lead']
+
+            if reference is not None:
+                if 'historical' in reference:
+                    hist, _ = comparison.function(hist, verif, metric=metric)
+                for r in reference:
+                    metric_over_leads = [
+                        _apply_metric_at_given_lead(
+                            verif,
+                            verif_dates,
+                            lead,
+                            hind=forecast,
+                            hist=hist,
+                            inits=inits,
+                            reference=r,
+                            metric=metric,
+                            comparison=comparison,
+                            dim=dim,
+                            **metric_kwargs,
+                        )
+                        for lead in forecast['lead'].data
+                    ]
+                    ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+                    ref['lead'] = forecast['lead']
+                    result = xr.concat([result, ref], dim='skill', **CONCAT_KWARGS)
+            # Add dimension/coordinate for different references.
+            result = result.assign_coords(skill=['init'] + reference)
+            return result
+
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'
         )
+        if 'historical' in reference:
+            has_dataset(
+                self._datasets['uninitialized'],
+                'uninitialized',
+                'compute an uninitialized reference forecast',
+            )
+            hist = self._datasets['uninitialized']
+        else:
+            hist = None
+
+        # TODO: Get rid of this somehow. Might use attributes.
         input_dict = {
-            'ensemble': self._datasets['initialized'],
-            'observations': self._datasets['observations'],
             'name': name,
             'init': True,
         }
         return self._apply_climpred_function(
-            compute_hindcast,
+            _verify,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
             alignment=alignment,
-        )
-
-    def compute_metric(
-        self, name=None, metric='pearson_r', comparison='e2o', alignment='same_verifs'
-    ):
-        """Verifies the initialized ensemble against observations/verification data.
-
-        This will automatically verify against all shared variables
-        between the initialized ensemble and observations/verification data.
-
-        Args:
-            name (str): Short name of observations/verification data to compare to.
-                If ``None``, compare to all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the
-                observations/verification data. ('e2o'
-                for ensemble mean to observations/verification data.
-                'm2o' for each individual member to observations/verification data).
-            alignment (str): which inits or verification times should be aligned?
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
-
-        Returns:
-            Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to observations short
-            name.
-        """
-        warnings.warn(
-            '`HindcastEnsemble.compute_metric()` will be deprecated. '
-            'Using `HindcastEnsemble.verify()` is encouraged.',
-            PendingDeprecationWarning,
-        )
-        return self.verify(
-            name=name, metric=metric, comparison=comparison, alignment=alignment
-        )
-
-    def compute_uninitialized(self, name=None, metric='pearson_r', comparison='e2o'):
-        """Verifies the uninitialized ensemble against observations/verification data.
-
-        This will automatically verify against all shared variables
-        between the uninitialized ensemble and observations/verification data.
-
-        Args:
-            name (str): Short name of observations/verification data to compare to.
-                If ``None``, compare to all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the
-                observations/verification data. ('e2o' for ensemble mean to
-                observations/verification data. 'm2o' for each individual member to
-                observations/verification data).
-            alignment (str): which inits or verification times should be aligned?
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
-
-        Returns:
-            Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to
-            observations/verification data short name.
-        """
-        has_dataset(
-            self._datasets['uninitialized'],
-            'uninitialized',
-            'compute an uninitialized metric',
-        )
-        input_dict = {
-            'ensemble': self._datasets['uninitialized'],
-            'observations': self._datasets['observations'],
-            'name': name,
-            'init': False,
-        }
-        return self._apply_climpred_function(
-            compute_uninitialized,
-            input_dict=input_dict,
-            metric=metric,
-            comparison=comparison,
-        )
-
-    def compute_persistence(
-        self, name=None, metric='pearson_r', alignment='same_verifs'
-    ):
-        """Verify against a persistence forecast of the observations/verification data.
-
-        This simply applies some metric between the observational product and itself out
-        to some lag (e.g., an ACF in the case of 'pearson_r').
-
-        .. note::
-
-            The persistence forecast is computed starting from the initialization date
-            and moving forward one time step. Some protocols suggest that the "lead one"
-            persistence forecast is actually from the time step prior to initialization.
-            This will be implemented as an option in a future version of ``climpred``.
-
-        Args:
-            name (str, default None): Short name of observations/verification data
-                with which to compute the persistence forecast. If ``None``, compute
-                for all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            alignment (str): which inits or verification times should be aligned?
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
-
-        Returns:
-            Dataset of persistence forecast results (if ``name`` is not ``None``),
-            or dictionary of Datasets with keys corresponding to
-            observations/verification data short name.
-
-        Reference:
-            * Chapter 8 (Short-Term Climate Prediction) in
-              Van den Dool, Huug. Empirical methods in short-term climate
-              prediction. Oxford University Press, 2007.
-        """
-        has_dataset(
-            self._datasets['observations'],
-            'observational',
-            'compute a persistence forecast',
-        )
-        input_dict = {
-            'ensemble': self._datasets['initialized'],
-            'observations': self._datasets['observations'],
-            'name': name,
-            'init': True,
-        }
-        return self._apply_climpred_function(
-            compute_persistence,
-            input_dict=input_dict,
-            metric=metric,
-            alignment=alignment,
+            dim=dim,
+            hist=hist,
+            reference=reference,
         )

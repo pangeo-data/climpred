@@ -33,6 +33,9 @@ dependencies:
   - isort
   - pre-commit
   - pylint
+  # Currently 5.4.0 or greater breaks pytest-sugar. It looks like this will be fixed
+  # soon and we can revert back to the newest pytest.
+  # https://github.com/Teemu/pytest-sugar/issues/187
   - pytest<5.4.0
   - pytest-cov
   - pytest-sugar

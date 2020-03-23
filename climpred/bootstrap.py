@@ -14,7 +14,8 @@ from .checks import (
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
-from .prediction import compute_hindcast, compute_perfect_model, compute_persistence
+from .prediction import compute_hindcast, compute_perfect_model
+from .reference import compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -717,6 +718,15 @@ def bootstrap_hindcast(
             "common verification alignment or `alignment` to 'same_inits' to "
             'resample over initializations.'
         )
+
+    # Kludge for now. Since we're computing persistence here we need to ensure that
+    # all products have a union in their time axis.
+    times = np.sort(
+        list(set(hind.init.data) & set(hist.time.data) & set(verif.time.data))
+    )
+    hind = hind.sel(init=times)
+    hist = hist.sel(time=times)
+    verif = verif.sel(time=times)
 
     return bootstrap_compute(
         hind,

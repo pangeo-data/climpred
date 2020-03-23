@@ -1,3 +1,4 @@
+import numpy as np
 import xarray as xr
 
 from .checks import is_in_list
@@ -6,7 +7,7 @@ from .exceptions import CoordinateError
 from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 
 
-def return_inits_and_verif_dates(forecast, verif, alignment):
+def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, hist=None):
     """Returns initializations and verification dates for an arbitrary number of leads
     per a given alignment strategy.
 
@@ -31,22 +32,36 @@ def return_inits_and_verif_dates(forecast, verif, alignment):
         verif_dates (dict): Keys are the lead time integer, values are an
             ``xr.CFTimeIndex`` of verification dates.
     """
+    if isinstance(reference, str):
+        reference = [reference]
+    elif reference is None:
+        reference = []
+
     is_in_list(alignment, VALID_ALIGNMENTS, 'alignment')
     units = forecast['lead'].attrs['units']
     leads = forecast['lead'].values
+
     # `init` renamed to `time` in compute functions.
     all_inits = forecast['time']
     all_verifs = verif['time']
-    union_with_verifs = all_inits.isin(all_verifs)
+
+    # If aligning historical reference, need to account for potential differences in its
+    # temporal coverage. Note that the historical reference only aligns verification
+    # dates and doesn't care about inits.
+    if hist is not None:
+        all_verifs = np.sort(list(set(all_verifs.data) & set(hist['time'].data)))
+        all_verifs = xr.DataArray(all_verifs, dims=['time'], coords=[all_verifs])
 
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
     init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
-    # Currently enforce a union between `inits` and observations in the verification
-    # data. This is because persistence forecasts with the verification data need to
-    # have the same initializations for consistency. This behavior should be changed
-    # as alternative reference forecasts are introduced.
-    init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
+
+    # A union between `inits` and observations in the verification data is required
+    # for persistence, since the persistence forecast is based off a common set of
+    # initializations.
+    if 'persistence' in reference:
+        union_with_verifs = all_inits.isin(all_verifs)
+        init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
     valid_inits = init_lead_matrix['time']
 
     if 'same_init' in alignment:

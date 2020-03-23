@@ -2,12 +2,16 @@
 What's New
 ==========
 
-climpred v2.0.1 (2020-01-##)
+climpred v2.1.0 (2020-04-##)
 ============================
 
 New Features
 ------------
 
+- Union with observations only enforced if ``reference='persistence'``. (:pr:`341`)
+  `Riley X. Brady`_.
+- ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. (:pr:`341`)
+  `Riley X. Brady`_.
 - compute_perfect_model now accepts inits as cftime and integer. Implemented cftime
   into bootstrap_uninit function, which requires a Leap or NoLeap calendar.
   (:pr:`332`) `Aaron Spring`_.
@@ -35,6 +39,10 @@ New Features
       should be based on the same set of verification dates. (:pr:`331`)
       `Riley X. Brady`_.
 
+Bug Fixes
+---------
+- Alignment options now account for differences in the historical time series if
+  ``reference='historical'``. (:pr:`341`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------

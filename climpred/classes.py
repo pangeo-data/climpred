@@ -765,7 +765,6 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs,
         ):
             """Interior verify func to be passed to apply func."""
-            result = {}
             metric, comparison, dim = _get_metric_comparison_dim(
                 metric, comparison, dim, kind=self.kind
             )
@@ -792,9 +791,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast['lead'].data
             ]
-            skill = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
-            skill['lead'] = forecast['lead']
-            result['skill'] = skill
+            result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
+            result['lead'] = forecast['lead']
 
             if reference is not None:
                 if 'historical' in reference:
@@ -818,7 +816,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     ]
                     ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
                     ref['lead'] = forecast['lead']
-                    result[r] = ref
+                    result = xr.concat([result, ref], dim='skill', **CONCAT_KWARGS)
+            # Add dimension/coordinate for different references.
+            result = result.assign_coords(skill=['init'] + reference)
             return result
 
         has_dataset(

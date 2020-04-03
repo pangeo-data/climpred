@@ -30,8 +30,8 @@ def PM_da_initialized_1d_lead0(PM_da_initialized_1d):
     framework."""
     da = PM_da_initialized_1d
     # Convert to lead zero for testing
-    da['lead'] -= 1
-    da['init'] += 1
+    da['lead'] = da['lead'] + 1
+    da['init'] = da['init'] - 1
     return da
 
 
@@ -132,8 +132,8 @@ def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     framework."""
     da = hind_ds_initialized_1d
     # Change to a lead-0 framework
-    da['init'] += 1
-    da['lead'] -= 1
+    da['init'] = da['init'] + 1
+    da['lead'] = da['lead'] - 1
     return da
 
 

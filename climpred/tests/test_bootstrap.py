@@ -118,7 +118,7 @@ def test_bootstrap_hindcast_lazy(
 @pytest.mark.slow
 @pytest.mark.parametrize('resample_dim', ['member', 'init'])
 def test_bootstrap_hindcast_resample_dim(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim,
 ):
     """Test bootstrap_hindcast when resampling member or init and alignment
     same_inits."""
@@ -291,7 +291,7 @@ def test_bootstrap_by_stacking_chunked(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
     res_chunked = _bootstrap_by_stacking(
-        PM_ds_initialized_1d_ym_cftime.chunk(), PM_ds_control_1d_ym_cftime.chunk()
+        PM_ds_initialized_1d_ym_cftime.chunk(), PM_ds_control_1d_ym_cftime.chunk(),
     )
     assert dask.is_dask_collection(res_chunked)
     res_chunked = res_chunked.compute()
@@ -327,7 +327,7 @@ def test_bootstrap_by_stacking_two_var_dataset(
 @pytest.mark.slow
 @pytest.mark.parametrize('alignment', VALID_ALIGNMENTS)
 def test_bootstrap_hindcast_alignment(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment,
 ):
     """Test bootstrap_hindcast for all alginments when resampling member."""
     bootstrap_hindcast(

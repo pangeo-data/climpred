@@ -59,6 +59,9 @@ Internals/Minor Fixes
   (:pr:`330`) `Aaron Spring`_.
 - Refactoring :py:func:`~climpred.prediction.compute_hindcast` and
   :py:func:`~climpred.prediction.compute_perfect_model`. (:pr:`330`) `Aaron Spring`_.
+- Changed lead0 coordinate modifications to be compliant with xarray=0.15.1 in
+  :py:func:`~climpred.reference.compute_persistence`. (:pr:`348`) `Aaron Spring`_.
+- Exchanged my_quantile with xr.quantile(skipna=False). (:pr:`348`) `Aaron Spring`_.
 
 
 Documentation

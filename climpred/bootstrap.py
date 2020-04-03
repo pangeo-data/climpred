@@ -26,6 +26,7 @@ from .utils import (
     get_lead_cftime_shift_args,
     get_metric_class,
     lead_units_equal_control_time_stride,
+    rechunk_to_single_chunk_if_more_than_one_chunk_along_dim,
     shift_cftime_singular,
 )
 
@@ -50,35 +51,6 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
-def my_quantile(ds, q=0.95, dim='bootstrap'):
-    """Compute quantile `q` faster than `xr.quantile` and allows lazy computation."""
-    # dim='bootstrap' doesnt lead anywhere, but want to keep xr.quantile API
-    # concat_dim is always first, therefore axis=0 implementation works in compute
-
-    def _dask_percentile(arr, axis=0, q=95):
-        """Daskified np.percentile."""
-        if len(arr.chunks[axis]) > 1:
-            arr = arr.rechunk({axis: -1})
-        return dask.array.map_blocks(np.percentile, arr, axis=axis, q=q, drop_axis=axis)
-
-    def _percentile(arr, axis=0, q=95):
-        """percentile function for chunked and non-chunked `arr`."""
-        if dask.is_dask_collection(arr):
-            return _dask_percentile(arr, axis=axis, q=q)
-        else:
-            return np.percentile(arr, axis=axis, q=q)
-
-    axis = 0
-    if not isinstance(q, list):
-        q = [q]
-    quantile = []
-    for qi in q:
-        quantile.append(ds.reduce(_percentile, q=qi * 100, axis=axis))
-    quantile = xr.concat(quantile, 'quantile')
-    quantile['quantile'] = q
-    return quantile.squeeze()
-
-
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     """Get confidence intervals from bootstrapped distribution.
 
@@ -93,8 +65,8 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
-    # TODO: re-implement xr.quantile once fast
-    return my_quantile(ds, q=[ci_low, ci_high], dim='bootstrap')
+    ds = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim)
+    return ds.quantile(q=[ci_low, ci_high], dim=dim, skipna=False)
 
 
 def _pvalue_from_distributions(simple_fct, init, metric=None):
@@ -325,8 +297,10 @@ def _bootstrap_func(
         smp_init_pm = _resample(ds, resample_dim)
         bootstraped_results.append(func(smp_init_pm, *func_args, **func_kwargs))
     sig_level = xr.concat(bootstraped_results, dim='bootstrap', **CONCAT_KWARGS)
-    # TODO: reimplement xr.quantile once fast
-    sig_level = my_quantile(sig_level, dim='bootstrap', q=psig)
+    sig_level = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
+        sig_level, dim='bootstrap'
+    )
+    sig_level = sig_level.quantile(dim='bootstrap', q=psig, skipna=False)
     return sig_level
 
 

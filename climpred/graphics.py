@@ -174,6 +174,8 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
                 fontsize=fontsize,
                 color=c_uninit,
             )
+        uninit_skill = uninit_skill.dropna('lead').squeeze()
+        uninit_ci = uninit_ci.dropna('lead').squeeze()
         if 'lead' not in uninit_skill.dims:
             yerr = [
                 [uninit_skill - uninit_ci.isel(quantile=0)],

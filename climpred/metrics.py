@@ -9,22 +9,23 @@ from xskillscore import (
     crps_ensemble,
     crps_gaussian,
     crps_quadrature,
+    effective_sample_size,
     mae,
     mape,
     median_absolute_error,
     mse,
     pearson_r,
     pearson_r_p_value,
+    pearson_r_eff_p_value,
     rmse,
     smape,
     spearman_r,
     spearman_r_p_value,
+    spearman_r_eff_p_value,
     threshold_brier_score,
 )
 
 from .constants import CLIMPRED_DIMS
-from .np_metrics import _effective_sample_size as ess, _spearman_r_eff_p_value as srepv
-
 
 def _get_norm_factor(comparison):
     """Get normalization factor for normalizing distance metrics.
@@ -340,23 +341,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     skipna = metric_kwargs.get('skipna', False)
-    dim = _preprocess_dims(dim)
-    if len(dim) > 1:
-        new_dim = '_'.join(dim)
-        forecast = forecast.stack(**{new_dim: dim})
-        verif = verif.stack(**{new_dim: dim})
-    else:
-        new_dim = dim[0]
-
-    return xr.apply_ufunc(
-        ess,
-        forecast,
-        verif,
-        input_core_dims=[[new_dim], [new_dim]],
-        kwargs={'axis': -1, 'skipna': skipna},
-        dask='parallelized',
-        output_dtypes=[float],
-    )
+    return effective_sample_size(forecast, verif, dim=dim, skipna=skipna)
 
 
 __effective_sample_size = Metric(
@@ -427,19 +412,14 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     skipna = metric_kwargs.get('skipna', False)
-
-    # compute t-statistic
-    r = pearson_r(forecast, verif, dim=dim, skipna=skipna)
-    dof = _effective_sample_size(forecast, verif, dim, skipna=skipna) - 2
-    t_squared = r ** 2 * (dof / ((1.0 - r) * (1.0 + r)))
-    _x = dof / (dof + t_squared)
-    _x = _x.where(_x < 1.0, 1.0)
-    _a = 0.5 * dof
-    _b = 0.5
-    res = special.betainc(_a, _b, _x)
-    # reset masked values to nan
-    res = res.where(r.notnull(), np.nan)
-    return res
+    # p value returns a runtime error when working with NaNs, such as on a climate
+    # model grid. We can avoid this annoying output by specifically suppressing
+    # warning here.
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return pearson_r_p_value(
+            forecast, verif, dim=dim, skipna=skipna,
+        )
 
 
 __pearson_r_eff_p_value = Metric(
@@ -640,23 +620,14 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     skipna = metric_kwargs.get('skipna', False)
-    dim = _preprocess_dims(dim)
-    if len(dim) > 1:
-        new_dim = '_'.join(dim)
-        forecast = forecast.stack(**{new_dim: dim})
-        verif = verif.stack(**{new_dim: dim})
-    else:
-        new_dim = dim[0]
-
-    return xr.apply_ufunc(
-        srepv,
-        forecast,
-        verif,
-        input_core_dims=[[new_dim], [new_dim]],
-        kwargs={'axis': -1, 'skipna': skipna},
-        dask='parallelized',
-        output_dtypes=[float],
-    )
+    # p value returns a runtime error when working with NaNs, such as on a climate
+    # model grid. We can avoid this annoying output by specifically suppressing
+    # warning here.
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return spearman_r_p_value(
+            forecast, verif, dim=dim, skipna=skipna
+        )
 
 
 __spearman_r_eff_p_value = Metric(

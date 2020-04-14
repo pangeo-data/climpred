@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from scipy import special
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
@@ -15,17 +14,18 @@ from xskillscore import (
     median_absolute_error,
     mse,
     pearson_r,
-    pearson_r_p_value,
     pearson_r_eff_p_value,
+    pearson_r_p_value,
     rmse,
     smape,
     spearman_r,
-    spearman_r_p_value,
     spearman_r_eff_p_value,
+    spearman_r_p_value,
     threshold_brier_score,
 )
 
 from .constants import CLIMPRED_DIMS
+
 
 def _get_norm_factor(comparison):
     """Get normalization factor for normalizing distance metrics.
@@ -417,9 +417,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return pearson_r_p_value(
-            forecast, verif, dim=dim, skipna=skipna,
-        )
+        return pearson_r_eff_p_value(forecast, verif, dim=dim, skipna=skipna,)
 
 
 __pearson_r_eff_p_value = Metric(
@@ -625,9 +623,7 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return spearman_r_p_value(
-            forecast, verif, dim=dim, skipna=skipna
-        )
+        return spearman_r_eff_p_value(forecast, verif, dim=dim, skipna=skipna)
 
 
 __spearman_r_eff_p_value = Metric(

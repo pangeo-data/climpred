@@ -1,17 +1,13 @@
-import time
-
 import dask
 import numpy as np
 import pytest
 import xarray as xr
-from xarray.testing import assert_allclose
 
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
     bootstrap_hindcast,
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
-    my_quantile,
 )
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.constants import CONCAT_KWARGS, VALID_ALIGNMENTS
@@ -19,45 +15,6 @@ from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
 
 BOOTSTRAP = 2
-
-
-@pytest.mark.skip(reason='xr.quantile now faster')
-@pytest.mark.parametrize('chunk', [True, False])
-def test_dask_percentile_implemented_faster_xr_quantile(PM_da_control_3d, chunk):
-    """Test my_quantile faster than xr.quantile.
-
-    TODO: Remove after xr=0.15.1 and add skipna=False.
-    """
-    chunk_dim, dim = 'x', 'time'
-    if chunk:
-        chunks = {chunk_dim: 24}
-        PM_da_control_3d = PM_da_control_3d.chunk(chunks).persist()
-    start_time = time.time()
-    actual = my_quantile(PM_da_control_3d, q=0.95, dim=dim)
-    elapsed_time_my_quantile = time.time() - start_time
-
-    start_time = time.time()
-    expected = PM_da_control_3d.compute().quantile(q=0.95, dim=dim)
-    elapsed_time_xr_quantile = time.time() - start_time
-    if chunk:
-        assert dask.is_dask_collection(actual)
-        assert not dask.is_dask_collection(expected)
-        start_time = time.time()
-        actual = actual.compute()
-        elapsed_time_my_quantile = elapsed_time_my_quantile + time.time() - start_time
-    else:
-        assert not dask.is_dask_collection(actual)
-        assert not dask.is_dask_collection(expected)
-    assert actual.shape == expected.shape
-    assert_allclose(actual, expected)
-    print(
-        elapsed_time_my_quantile,
-        elapsed_time_xr_quantile,
-        'my_quantile is',
-        elapsed_time_xr_quantile / elapsed_time_my_quantile,
-        'times faster than xr.quantile',
-    )
-    assert elapsed_time_xr_quantile > elapsed_time_my_quantile
 
 
 @pytest.mark.slow
@@ -118,7 +75,7 @@ def test_bootstrap_hindcast_lazy(
 @pytest.mark.slow
 @pytest.mark.parametrize('resample_dim', ['member', 'init'])
 def test_bootstrap_hindcast_resample_dim(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, resample_dim,
 ):
     """Test bootstrap_hindcast when resampling member or init and alignment
     same_inits."""
@@ -291,7 +248,7 @@ def test_bootstrap_by_stacking_chunked(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
     res_chunked = _bootstrap_by_stacking(
-        PM_ds_initialized_1d_ym_cftime.chunk(), PM_ds_control_1d_ym_cftime.chunk()
+        PM_ds_initialized_1d_ym_cftime.chunk(), PM_ds_control_1d_ym_cftime.chunk(),
     )
     assert dask.is_dask_collection(res_chunked)
     res_chunked = res_chunked.compute()
@@ -327,7 +284,7 @@ def test_bootstrap_by_stacking_two_var_dataset(
 @pytest.mark.slow
 @pytest.mark.parametrize('alignment', VALID_ALIGNMENTS)
 def test_bootstrap_hindcast_alignment(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d, alignment,
 ):
     """Test bootstrap_hindcast for all alginments when resampling member."""
     bootstrap_hindcast(

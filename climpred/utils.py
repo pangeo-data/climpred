@@ -370,6 +370,18 @@ def _load_into_memory(res):
     return res
 
 
+def rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim):
+    """Rechunk an xarray object more than one chunk along dim."""
+    if dask.is_dask_collection(ds):
+        if isinstance(ds, xr.Dataset):
+            nchunks = len(ds.chunks[dim])
+        elif isinstance(ds, xr.DataArray):
+            nchunks = len(ds.chunks[ds.get_axis_num(dim)])
+        if nchunks > 1:
+            ds = ds.chunk({dim: -1})
+    return ds
+
+
 def shift_cftime_index(xobj, time_string, n, freq):
     """Shifts a ``CFTimeIndex`` over a specified number of time steps at a given
     temporal frequency.

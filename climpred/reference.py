@@ -89,7 +89,8 @@ def compute_persistence(
     # at lead 0 is == 1.
     if [0] in hind.lead.values:
         hind = hind.copy()
-        hind['lead'] += 1
+        with xr.set_options(keep_attrs=True):  # keeps lead.attrs['units']
+            hind['lead'] = hind['lead'] + 1
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
         # Shift backwards shift for lead zero.
         hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)

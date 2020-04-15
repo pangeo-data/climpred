@@ -62,6 +62,10 @@ Internals/Minor Fixes
 - Changed lead0 coordinate modifications to be compliant with xarray=0.15.1 in
   :py:func:`~climpred.reference.compute_persistence`. (:pr:`348`) `Aaron Spring`_.
 - Exchanged my_quantile with xr.quantile(skipna=False). (:pr:`348`) `Aaron Spring`_.
+- Remove ``sig`` from
+  :py:func:`~climpred.graphics.plot_bootstrapped_skill_over_leadyear`.
+  (:pr:`351`) `Aaron Spring`_.
+
 
 
 Documentation

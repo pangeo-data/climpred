@@ -591,6 +591,7 @@ def bootstrap_compute(
     )
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
+    results['lead'] = hind['lead']
     if 'units' in hind['lead'].attrs and 'units' not in results['lead'].attrs:
         results['lead'].attrs['units'] = hind['lead'].attrs['units']
     return results

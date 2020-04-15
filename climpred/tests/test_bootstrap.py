@@ -17,6 +17,22 @@ from climpred.utils import _transpose_and_rechunk_to
 BOOTSTRAP = 2
 
 
+def test_bootstrap_PM_keep_lead_attrs(
+    PM_da_initialized_3d, PM_da_control_3d,
+):
+    """Test bootstrap_perfect_model works lazily."""
+    PM_da_initialized_3d.lead.attrs['units'] = 'years'
+    s = bootstrap_perfect_model(
+        PM_da_initialized_3d,
+        PM_da_control_3d,
+        bootstrap=BOOTSTRAP,
+        comparison='m2c',
+        metric='mse',
+    )
+    assert 'units' in s.lead.attrs
+    assert s.lead.attrs['units'] == PM_da_initialized_3d.lead.attrs['units']
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('chunk', [True, False])

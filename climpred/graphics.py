@@ -2,6 +2,7 @@ from collections import OrderedDict
 
 import matplotlib.pyplot as plt
 import numpy as np
+import xarray as xr
 
 from .metrics import PROBABILISTIC_METRICS
 
@@ -62,22 +63,19 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     return ax
 
 
-def plot_bootstrapped_skill_over_leadyear(
-    bootstrapped, sig, plot_persistence=True, ax=None
-):
+def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, ax=None):
     """
     Plot Ensemble Prediction skill as in Li et al. 2016 Fig.3a-c.
 
     Args:
-        bootstrapped (xr.Dataset): from bootstrap_perfect_model or
-                                   bootstrap_hindcast
-        contains:
+        bootstrapped (xr.DataArray or xr.Dataset with one variable):
+            from bootstrap_perfect_model or bootstrap_hindcast
+
+            containing:
         init_skill (xr.Dataset): skill of initialized
         init_ci (xr.Dataset): confidence levels of init_skill
         uninit_skill (xr.Dataset): skill of uninitialized
         uninit_ci (xr.Dataset): confidence levels of uninit_skill
-        sig (int): Significance level for uninitialized and
-                   initialized skill.
         p_uninit_over_init (xr.Dataset): p value of the hypothesis that the
                                          difference of skill between the
                                          initialized and uninitialized
@@ -86,7 +84,6 @@ def plot_bootstrapped_skill_over_leadyear(
                                          replacement. Defaults to None.
         pers_skill (xr.Dataset): skill of persistence
         pers_ci (xr.Dataset): confidence levels of pers_skill
-        pers_sig (int): Significance level for persistence forecast.
         p_pers_over_init (xr.Dataset): p value of the hypothesis that the
                                        difference of skill between the
                                        initialized and persistence simulations
@@ -95,7 +92,7 @@ def plot_bootstrapped_skill_over_leadyear(
         ax (plt.axes): plot on ax. Defaults to None.
 
     Returns:
-        None
+        ax
 
     Reference:
       * Li, Hongmei, Tatiana Ilyina, Wolfgang A. Müller, and Frank
@@ -104,6 +101,22 @@ def plot_bootstrapped_skill_over_leadyear(
             https://doi.org/10/f8wkrs.
 
     """
+    if isinstance(bootstrapped, xr.Dataset):
+        var = list(bootstrapped.data_vars)
+        if len(var) > 1:
+            raise ValueError(
+                'Please provide only xr.Dataset with one variable or xr.DataArray.'
+            )
+        elif len(var) == 1:
+            var = var[0]
+            attrs = bootstrapped.attrs
+            bootstrapped = bootstrapped[var]
+            bootstrapped.attrs = attrs
+
+    assert isinstance(bootstrapped, xr.DataArray)
+
+    sig = bootstrapped.attrs['confidence_interval_levels'].split('-')
+    sig = int(100 * (float(sig[0]) - float(sig[1])))
     pers_sig = sig
 
     if 'metric' in bootstrapped.attrs:
@@ -114,11 +127,9 @@ def plot_bootstrapped_skill_over_leadyear(
     init_ci = bootstrapped.sel(kind='init', results=['low_ci', 'high_ci']).rename(
         {'results': 'quantile'}
     )
-    uninit_skill = bootstrapped.sel(kind='uninit', results='skill').isel(lead=0)
-    uninit_ci = (
-        bootstrapped.sel(kind='uninit', results=['low_ci', 'high_ci'])
-        .rename({'results': 'quantile'})
-        .isel(lead=0)
+    uninit_skill = bootstrapped.sel(kind='uninit', results='skill')
+    uninit_ci = bootstrapped.sel(kind='uninit', results=['low_ci', 'high_ci']).rename(
+        {'results': 'quantile'}
     )
     pers_skill = bootstrapped.sel(kind='pers', results='skill')
     pers_ci = bootstrapped.sel(kind='pers', results=['low_ci', 'high_ci']).rename(
@@ -163,13 +174,25 @@ def plot_bootstrapped_skill_over_leadyear(
                 fontsize=fontsize,
                 color=c_uninit,
             )
-        ax.errorbar(
-            0,
-            uninit_skill,
-            yerr=[
+        uninit_skill = uninit_skill.dropna('lead').squeeze()
+        uninit_ci = uninit_ci.dropna('lead').squeeze()
+        if 'lead' not in uninit_skill.dims:
+            yerr = [
                 [uninit_skill - uninit_ci.isel(quantile=0)],
                 [uninit_ci.isel(quantile=1) - uninit_skill],
-            ],
+            ]
+            ax.axhline(y=uninit_skill, c='steelblue', ls=':')
+            x = 0
+        else:
+            yerr = [
+                uninit_skill - uninit_ci.isel(quantile=0),
+                uninit_ci.isel(quantile=1) - uninit_skill,
+            ]
+            x = uninit_skill.lead
+        ax.errorbar(
+            x,
+            uninit_skill,
+            yerr=yerr,
             fmt='--o',
             capsize=capsize,
             c=c_init,
@@ -177,7 +200,6 @@ def plot_bootstrapped_skill_over_leadyear(
                 ['uninitialized with', str(sig) + '%', 'confidence interval']
             ),
         )
-        ax.axhline(y=uninit_skill, c='steelblue', ls=':')
     # persistence
     if plot_persistence:
         if pers_skill is not None and pers_ci is not None:

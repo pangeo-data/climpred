@@ -345,13 +345,12 @@ def test_resample_1_size(PM_da_initialized_1d):
 
 
 def test_resample_size(PM_da_initialized_1d):
-    bootstrap = 10
     dim = 'member'
     expected = xr.concat(
-        [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(bootstrap)],
+        [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(BOOTSTRAP)],
         'bootstrap',
     )
-    actual = _resample2(PM_da_initialized_1d, bootstrap, dim=dim)
+    actual = _resample2(PM_da_initialized_1d, BOOTSTRAP, dim=dim)
     print(actual.shape, expected.shape)
     print(actual.dims, expected.dims)
     assert expected.size == actual.size

@@ -65,7 +65,8 @@ Internals/Minor Fixes
 - Remove ``sig`` from
   :py:func:`~climpred.graphics.plot_bootstrapped_skill_over_leadyear`.
   (:pr:`351`) `Aaron Spring`_.
-
+- Faster bootstrapping without replacement used in threshold functions of
+  climpred.stats (:pr:`35x`) `Aaron Spring`_.
 
 
 Documentation

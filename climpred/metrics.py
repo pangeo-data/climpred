@@ -2179,12 +2179,18 @@ DETERMINISTIC_METRICS = [m.name for m in __ALL_METRICS__ if not m.probabilistic]
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS.copy()
 # Metrics to be used in compute_perfect_model.
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
+# Effective sample size does not make much sense in this framework.
+DETERMINISTIC_PM_METRICS = [
+    e
+    for e in DETERMINISTIC_PM_METRICS
+    if e
+    not in ('effective_sample_size', 'pearson_r_eff_p_value', 'spearman_r_eff_p_value',)
+]
 # Used to set attrs['units'] to None.
 DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
 # More positive skill is better than more negative.
 POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
 PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
-
 # Combined allowed metrics for compute_hindcast and compute_perfect_model
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS

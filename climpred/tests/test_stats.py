@@ -16,6 +16,8 @@ from climpred.stats import (
     varweighted_mean_period,
 )
 
+BOOTSTRAP = 5
+
 
 def test_rm_trend_missing_dim():
     with pytest.raises(DimensionError) as excinfo:
@@ -86,8 +88,7 @@ def test_rm_trend_3d_dataset_dim_order(multi_dim_ds):
 @pytest.mark.parametrize('chunk', (True, False))
 def test_dpp(PM_da_control_3d, chunk):
     """Check for positive diagnostic potential predictability in NA SST."""
-    control = PM_da_control_3d
-    res = dpp(control, chunk=chunk)
+    res = dpp(PM_da_control_3d, chunk=chunk)
     assert res.mean() > 0
 
 
@@ -96,9 +97,8 @@ def test_dpp(PM_da_control_3d, chunk):
 )
 def test_potential_predictability_likely(PM_da_control_3d, func):
     """Check for positive diagnostic potential predictability in NA SST."""
-    control = PM_da_control_3d
-    print(control.dims)
-    res = func(control)
+    print(PM_da_control_3d.dims)
+    res = func(PM_da_control_3d)
     assert res.mean() > 0
 
 
@@ -120,30 +120,26 @@ def test_corr(PM_da_control_3d):
 
 
 def test_bootstrap_dpp_sig50_similar_dpp(PM_da_control_3d):
-    ds = PM_da_control_3d
-    bootstrap = 5
     sig = 50
-    actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig).drop_vars('quantile')
-    expected = dpp(ds)
+    actual = dpp_threshold(PM_da_control_3d, bootstrap=BOOTSTRAP, sig=sig).drop_vars(
+        'quantile'
+    )
+    expected = dpp(PM_da_control_3d)
     xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
 
 
 def test_bootstrap_vwmp_sig50_similar_vwmp(PM_da_control_3d):
-    ds = PM_da_control_3d
-    bootstrap = 5
     sig = 50
     actual = varweighted_mean_period_threshold(
-        ds, bootstrap=bootstrap, sig=sig
+        PM_da_control_3d, bootstrap=BOOTSTRAP, sig=sig
     ).drop_vars('quantile')
-    expected = varweighted_mean_period(ds)
+    expected = varweighted_mean_period(PM_da_control_3d)
     xr.testing.assert_allclose(actual, expected, atol=2, rtol=0.5)
 
 
 def test_bootstrap_func_multiple_sig_levels(PM_da_control_3d):
-    ds = PM_da_control_3d
-    bootstrap = 5
     sig = [5, 95]
-    actual = dpp_threshold(ds, bootstrap=bootstrap, sig=sig)
+    actual = dpp_threshold(PM_da_control_3d, bootstrap=BOOTSTRAP, sig=sig)
     assert actual['quantile'].size == len(sig)
     assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()
 

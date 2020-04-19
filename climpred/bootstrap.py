@@ -51,6 +51,44 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
+def _resample2(init, bootstrap, dim='member', replace=True):
+    """Resample bootstrap times over dim."""
+
+    def xr_broadcast(x, idx):
+        return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
+
+    # I get errors if I have a 0 in dim
+    if 0 in init[dim].values:
+        init[dim] = np.arange(1, 1 + init[dim].size)
+    # resample with or without replacement
+    if replace:
+        idx = np.random.randint(0, init[dim].size, (bootstrap, init[dim].size))
+    elif not replace:
+        # create 2d np.arange()
+        idx = np.linspace(
+            (np.arange(init[dim].size)),
+            (np.arange(init[dim].size)),
+            bootstrap,
+            dtype='int',
+        )
+        # shuffle each line
+        for ndx in np.arange(bootstrap):
+            np.random.shuffle(idx[ndx])
+    idx_da = xr.DataArray(
+        idx,
+        dims=('bootstrap', dim),
+        coords=({'bootstrap': range(bootstrap), dim: init[dim]}),
+    )
+
+    return xr.apply_ufunc(
+        xr_broadcast,
+        init.transpose(dim, ...),
+        idx_da,
+        dask='parallelized',
+        output_dtypes=[float],
+    )
+
+
 def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
     """Get confidence intervals from bootstrapped distribution.
 
@@ -292,15 +330,12 @@ def _bootstrap_func(
     else:
         psig = sig / 100
 
-    bootstraped_results = []
-    for _ in range(bootstrap):
-        smp_init_pm = _resample(ds, resample_dim)
-        bootstraped_results.append(func(smp_init_pm, *func_args, **func_kwargs))
-    sig_level = xr.concat(bootstraped_results, dim='bootstrap', **CONCAT_KWARGS)
-    sig_level = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
-        sig_level, dim='bootstrap'
+    bootstraped_ds = _resample2(ds, bootstrap, dim=resample_dim, replace=False)
+    bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
+    bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
+        bootstraped_results, dim='bootstrap'
     )
-    sig_level = sig_level.quantile(dim='bootstrap', q=psig, skipna=False)
+    sig_level = bootstraped_results.quantile(dim='bootstrap', q=psig, skipna=False)
     return sig_level
 
 

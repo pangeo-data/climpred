@@ -66,7 +66,7 @@ Internals/Minor Fixes
   :py:func:`~climpred.graphics.plot_bootstrapped_skill_over_leadyear`.
   (:pr:`351`) `Aaron Spring`_.
 - Faster bootstrapping without replacement used in threshold functions of
-  climpred.stats (:pr:`35x`) `Aaron Spring`_.
+  climpred.stats (:pr:`354`) `Aaron Spring`_.
 
 
 Documentation

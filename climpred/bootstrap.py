@@ -51,7 +51,7 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
-def _resample2(init, bootstrap, dim='member', replace=True):
+def _resample_idx(init, bootstrap, dim='member', replace=True):
     """Resample bootstrap times over dim."""
 
     def xr_broadcast(x, idx):
@@ -330,7 +330,7 @@ def _bootstrap_func(
     else:
         psig = sig / 100
 
-    bootstraped_ds = _resample2(ds, bootstrap, dim=resample_dim, replace=False)
+    bootstraped_ds = _resample_idx(ds, bootstrap, dim=resample_dim, replace=False)
     bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
     bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
         bootstraped_results, dim='bootstrap'

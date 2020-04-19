@@ -6,7 +6,7 @@ import xarray as xr
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
     _resample,
-    _resample2,
+    _resample_idx,
     bootstrap_hindcast,
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
@@ -339,7 +339,7 @@ def test_resample_1_size(PM_da_initialized_1d):
     dim = 'member'
     expected = _resample(PM_da_initialized_1d, resample_dim=dim)
     # 1 somehow fails
-    actual = _resample2(PM_da_initialized_1d, 2, dim=dim).isel(bootstrap=0)
+    actual = _resample_idx(PM_da_initialized_1d, 2, dim=dim).isel(bootstrap=0)
     assert expected.size == actual.size
     assert expected[dim].size == actual[dim].size
 
@@ -350,7 +350,7 @@ def test_resample_size(PM_da_initialized_1d):
         [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(BOOTSTRAP)],
         'bootstrap',
     )
-    actual = _resample2(PM_da_initialized_1d, BOOTSTRAP, dim=dim)
+    actual = _resample_idx(PM_da_initialized_1d, BOOTSTRAP, dim=dim)
     print(actual.shape, expected.shape)
     print(actual.dims, expected.dims)
     assert expected.size == actual.size

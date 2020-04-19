@@ -2,28 +2,29 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from scipy import special
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
     crps_ensemble,
     crps_gaussian,
     crps_quadrature,
+    effective_sample_size,
     mae,
     mape,
     median_absolute_error,
     mse,
     pearson_r,
+    pearson_r_eff_p_value,
     pearson_r_p_value,
     rmse,
     smape,
     spearman_r,
+    spearman_r_eff_p_value,
     spearman_r_p_value,
     threshold_brier_score,
 )
 
 from .constants import CLIMPRED_DIMS
-from .np_metrics import _effective_sample_size as ess, _spearman_r_eff_p_value as srepv
 
 
 def _get_norm_factor(comparison):
@@ -300,6 +301,9 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
     .. note::
         Weights are not included here due to the dependence on temporal autocorrelation.
 
+    .. note::
+        This metric can only be used for hindcast-type simulations.
+
     The effective sample size extracts the number of independent samples
     between two time series being correlated. This is derived by assessing
     the magnitude of the lag-1 autocorrelation coefficient in each of the time series
@@ -340,23 +344,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     skipna = metric_kwargs.get('skipna', False)
-    dim = _preprocess_dims(dim)
-    if len(dim) > 1:
-        new_dim = '_'.join(dim)
-        forecast = forecast.stack(**{new_dim: dim})
-        verif = verif.stack(**{new_dim: dim})
-    else:
-        new_dim = dim[0]
-
-    return xr.apply_ufunc(
-        ess,
-        forecast,
-        verif,
-        input_core_dims=[[new_dim], [new_dim]],
-        kwargs={'axis': -1, 'skipna': skipna},
-        dask='parallelized',
-        output_dtypes=[float],
-    )
+    return effective_sample_size(forecast, verif, dim=dim, skipna=skipna)
 
 
 __effective_sample_size = Metric(
@@ -378,6 +366,9 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
 
     .. note::
         Weights are not included here due to the dependence on temporal autocorrelation.
+
+    .. note::
+        This metric can only be used for hindcast-type simulations.
 
     The effective p value is computed by replacing the sample size :math:`N` in the
     t-statistic with the effective sample size, :math:`N_{eff}`. The same Pearson
@@ -427,19 +418,12 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     skipna = metric_kwargs.get('skipna', False)
-
-    # compute t-statistic
-    r = pearson_r(forecast, verif, dim=dim, skipna=skipna)
-    dof = _effective_sample_size(forecast, verif, dim, skipna=skipna) - 2
-    t_squared = r ** 2 * (dof / ((1.0 - r) * (1.0 + r)))
-    _x = dof / (dof + t_squared)
-    _x = _x.where(_x < 1.0, 1.0)
-    _a = 0.5 * dof
-    _b = 0.5
-    res = special.betainc(_a, _b, _x)
-    # reset masked values to nan
-    res = res.where(r.notnull(), np.nan)
-    return res
+    # p value returns a runtime error when working with NaNs, such as on a climate
+    # model grid. We can avoid this annoying output by specifically suppressing
+    # warning here.
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return pearson_r_eff_p_value(forecast, verif, dim=dim, skipna=skipna,)
 
 
 __pearson_r_eff_p_value = Metric(
@@ -592,6 +576,9 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     .. note::
         Weights are not included here due to the dependence on temporal autocorrelation.
 
+    .. note::
+        This metric can only be used for hindcast-type simulations.
+
     The effective p value is computed by replacing the sample size :math:`N` in the
     t-statistic with the effective sample size, :math:`N_{eff}`. The same Spearman's
     rank correlation coefficient :math:`r` is used as when computing the standard p
@@ -640,23 +627,12 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     skipna = metric_kwargs.get('skipna', False)
-    dim = _preprocess_dims(dim)
-    if len(dim) > 1:
-        new_dim = '_'.join(dim)
-        forecast = forecast.stack(**{new_dim: dim})
-        verif = verif.stack(**{new_dim: dim})
-    else:
-        new_dim = dim[0]
-
-    return xr.apply_ufunc(
-        srepv,
-        forecast,
-        verif,
-        input_core_dims=[[new_dim], [new_dim]],
-        kwargs={'axis': -1, 'skipna': skipna},
-        dask='parallelized',
-        output_dtypes=[float],
-    )
+    # p value returns a runtime error when working with NaNs, such as on a climate
+    # model grid. We can avoid this annoying output by specifically suppressing
+    # warning here.
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore')
+        return spearman_r_eff_p_value(forecast, verif, dim=dim, skipna=skipna)
 
 
 __spearman_r_eff_p_value = Metric(
@@ -2212,12 +2188,18 @@ DETERMINISTIC_METRICS = [m.name for m in __ALL_METRICS__ if not m.probabilistic]
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS.copy()
 # Metrics to be used in compute_perfect_model.
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
+# Effective sample size does not make much sense in this framework.
+DETERMINISTIC_PM_METRICS = [
+    e
+    for e in DETERMINISTIC_PM_METRICS
+    if e
+    not in ('effective_sample_size', 'pearson_r_eff_p_value', 'spearman_r_eff_p_value',)
+]
 # Used to set attrs['units'] to None.
 DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
 # More positive skill is better than more negative.
 POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
 PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
-
 # Combined allowed metrics for compute_hindcast and compute_perfect_model
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS

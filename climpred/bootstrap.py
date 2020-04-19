@@ -1,4 +1,5 @@
 import inspect
+import warnings
 
 import dask
 import numpy as np
@@ -426,9 +427,8 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    init = []
-    uninit = []
-    pers = []
+    bootstrapped_hind = []
+    bootstrapped_uninit = []
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -440,15 +440,108 @@ def bootstrap_compute(
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
     # Perfect Model requires `same_inits` setup.
-    isHindcast = True if comparison in HINDCAST_COMPARISONS else False
+    isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
 
-    for i in range(bootstrap):
-        # resample with replacement
-        smp_hind = _resample(hind, resample_dim)
-        # compute init skill
-        init_skill = compute(
-            smp_hind,
+    if resample_dim == 'init' and isHindcast:
+        warnings.warn(
+            f'isHindcast; resample_dim is not member, found {resample_dim}.'
+            'This will be slower than resample_dim=`member`.'
+        )
+        pers_skill = []
+        bootstrapped_init_skill = []
+        bootstrapped_uninit_skill = []
+        # reset inits when probabilistic, otherwise tests fail
+        for i in range(bootstrap):
+            # resample with replacement
+            smp_hind = _resample(hind, resample_dim)
+            # compute init skill
+            init_skill = compute(
+                smp_hind,
+                verif,
+                metric=metric,
+                comparison=comparison,
+                alignment=alignment,
+                add_attrs=False,
+                dim=dim,
+                **metric_kwargs,
+            )
+            # reset inits when probabilistic, otherwise tests fail
+            if (
+                resample_dim == 'init'
+                and metric.probabilistic
+                and 'init' in init_skill.coords
+            ):
+                init_skill['init'] = hind.init.values
+            print(type(bootstrapped_init_skill))
+            bootstrapped_init_skill.append(init_skill)
+            # generate uninitialized ensemble from hist
+            if hist is None:  # PM path, use verif = control
+                hist = verif
+            uninit_hind = resample_uninit(hind, hist)
+            # compute uninit skill
+            bootstrapped_uninit_skill.append(
+                compute(
+                    uninit_hind,
+                    verif,
+                    alignment=alignment,
+                    metric=metric,
+                    comparison=comparison,
+                    dim=dim,
+                    add_attrs=False,
+                    **metric_kwargs,
+                )
+            )
+            # compute persistence skill
+            # impossible for probabilistic
+            if not metric.probabilistic:
+                pers_skill.append(
+                    reference_compute(
+                        smp_hind,
+                        verif,
+                        metric=metric,
+                        alignment=reference_alignment,
+                        add_attrs=False,
+                        **metric_kwargs,
+                    )
+                )
+        bootstrapped_init_skill = xr.concat(
+            bootstrapped_init_skill, dim='bootstrap', **CONCAT_KWARGS
+        )
+        bootstrapped_uninit_skill = xr.concat(
+            bootstrapped_uninit_skill, dim='bootstrap', **CONCAT_KWARGS
+        )
+        if pers_skill != []:
+            bootstrapped_pers_skill = xr.concat(
+                pers_skill, dim='bootstrap', **CONCAT_KWARGS
+            )
+            pers_output = True
+        else:
+            pers_output = False
+
+    elif resample_dim == 'member':
+        # will be replaced with _resample_idx
+        for i in range(bootstrap):
+            # resample with replacement
+            smp_hind = _resample(hind, resample_dim)
+            # compute init skill
+            bootstrapped_hind.append(smp_hind)
+            # generate uninitialized ensemble from hist
+            if hist is None:  # PM path, use verif = control
+                hist = verif
+            uninit_hind = resample_uninit(hind, hist)
+            # compute uninit skill
+            bootstrapped_uninit.append(uninit_hind)
+        bootstrapped_hind = xr.concat(
+            bootstrapped_hind, dim='bootstrap', **CONCAT_KWARGS
+        )
+        bootstrapped_uninit = xr.concat(
+            bootstrapped_uninit, dim='bootstrap', **CONCAT_KWARGS
+        )
+
+        # bs skill
+        bootstrapped_init_skill = compute(
+            bootstrapped_hind,
             verif,
             metric=metric,
             comparison=comparison,
@@ -457,70 +550,33 @@ def bootstrap_compute(
             dim=dim,
             **metric_kwargs,
         )
-        # reset inits when probabilistic, otherwise tests fail
-        if (
-            resample_dim == 'init'
-            and metric.probabilistic
-            and 'init' in init_skill.coords
-        ):
-            init_skill['init'] = hind.init.values
-        init.append(init_skill)
-        # generate uninitialized ensemble from hist
-        if hist is None:  # PM path, use verif = control
-            hist = verif
-        uninit_hind = resample_uninit(hind, hist)
-        # compute uninit skill
-        uninit.append(
-            compute(
-                uninit_hind,
+
+        bootstrapped_uninit_skill = compute(
+            bootstrapped_uninit,
+            verif,
+            alignment=alignment,
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            add_attrs=False,
+            **metric_kwargs,
+        )
+
+        if not metric.probabilistic:
+            pers_skill = reference_compute(
+                hind,
                 verif,
-                alignment=alignment,
                 metric=metric,
-                comparison=comparison,
-                dim=dim,
-                add_attrs=False,
+                alignment=reference_alignment,
                 **metric_kwargs,
             )
-        )
-        # compute persistence skill
-        # impossible for probabilistic
-        if not metric.probabilistic:
-            pers.append(
-                reference_compute(
-                    smp_hind,
-                    verif,
-                    metric=metric,
-                    alignment=reference_alignment,
-                    add_attrs=False,
-                    **metric_kwargs,
-                )
+            pers_output = True
+            bootstrapped_pers_skill = pers_skill.expand_dims('bootstrap').isel(
+                bootstrap=[0] * bootstrap
             )
-    init = xr.concat(init, dim='bootstrap', **CONCAT_KWARGS)
-    uninit = xr.concat(uninit, dim='bootstrap', **CONCAT_KWARGS)
-    # when persistence is not computed set flag
-    if pers != []:
-        pers = xr.concat(pers, dim='bootstrap', **CONCAT_KWARGS)
-        pers_output = True
-    else:
-        pers_output = False
-
-    # get confidence intervals CI
-    init_ci = _distribution_to_ci(init, ci_low, ci_high)
-    uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-    # probabilistic metrics wont have persistence forecast
-    # therefore only get CI if persistence was computed
-    if pers_output:
-        if set(pers.coords) != set(init.coords):
-            init, pers = xr.broadcast(init, pers)
-        pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-    else:
-        # otherwise set all persistence outputs to false
-        pers = init.isnull()
-        pers_ci = init_ci == -999
-
-    # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
-    p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
+        else:
+            bootstrapped_pers_skill = init_skill.isnull()
+            pers_output = False
 
     # calc mean skill without any resampling
     init_skill = compute(
@@ -534,17 +590,48 @@ def bootstrap_compute(
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
+
     # uninit skill as mean resampled uninit skill
-    uninit_skill = uninit.mean('bootstrap')
+    uninit_skill = bootstrapped_uninit_skill.mean('bootstrap')
+
     if not metric.probabilistic:
         pers_skill = reference_compute(
             hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
         )
+        pers_output = True
     else:
-        pers_skill = init_skill.isnull()
+        pers_output = False
+
     # align to prepare for concat
-    if set(pers_skill.coords) != set(init_skill.coords):
-        init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)
+    if set(bootstrapped_pers_skill.coords) != set(bootstrapped_init_skill.coords):
+        bootstrapped_init_skill, bootstrapped_pers_skill = xr.broadcast(
+            bootstrapped_init_skill, bootstrapped_pers_skill
+        )
+
+    # get confidence intervals CI
+    init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
+    uninit_ci = _distribution_to_ci(bootstrapped_uninit_skill, ci_low, ci_high)
+
+    # probabilistic metrics wont have persistence forecast
+    # therefore only get CI if persistence was computed
+    if pers_output:
+        # if set(pers.coords) != set(init.coords):
+        #    init, pers = xr.broadcast(init, pers)
+        pers_ci = _distribution_to_ci(
+            bootstrapped_pers_skill, ci_low_pers, ci_high_pers
+        )
+    else:
+        # otherwise set all persistence outputs to false
+        # pers = init_skill.isnull()
+        pers_ci = init_ci == -999
+
+    # pvalue whether uninit or pers better than init forecast
+    p_uninit_over_init = _pvalue_from_distributions(
+        bootstrapped_uninit_skill, bootstrapped_init_skill, metric=metric
+    )
+    p_pers_over_init = _pvalue_from_distributions(
+        bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
+    )
 
     # wrap results together in one dataarray
     skill = xr.concat(

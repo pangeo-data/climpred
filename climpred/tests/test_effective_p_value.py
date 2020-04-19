@@ -1,6 +1,7 @@
 import pytest
 
 from climpred.comparisons import HINDCAST_COMPARISONS
+from climpred.metrics import PM_METRICS
 from climpred.prediction import compute_hindcast
 
 
@@ -57,3 +58,10 @@ def test_eff_spearman_p_greater_or_equal_to_normal_p_hind_da_initialized_1d(
         comparison=comparison,
     )
     assert (normal_p <= eff_p).all()
+
+
+def test_effective_metrics_not_in_PM():
+    """Checks that the effective p value metrics are not included in PM."""
+    assert 'effective_sample_size' not in PM_METRICS
+    assert 'pearson_r_eff_p_value' not in PM_METRICS
+    assert 'spearman_r_eff_p_value' not in PM_METRICS

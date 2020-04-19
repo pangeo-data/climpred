@@ -301,6 +301,9 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
     .. note::
         Weights are not included here due to the dependence on temporal autocorrelation.
 
+    .. note::
+        This metric can only be used for hindcast-type simulations.
+
     The effective sample size extracts the number of independent samples
     between two time series being correlated. This is derived by assessing
     the magnitude of the lag-1 autocorrelation coefficient in each of the time series
@@ -363,6 +366,9 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
 
     .. note::
         Weights are not included here due to the dependence on temporal autocorrelation.
+
+    .. note::
+        This metric can only be used for hindcast-type simulations.
 
     The effective p value is computed by replacing the sample size :math:`N` in the
     t-statistic with the effective sample size, :math:`N_{eff}`. The same Pearson
@@ -569,6 +575,9 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
 
     .. note::
         Weights are not included here due to the dependence on temporal autocorrelation.
+
+    .. note::
+        This metric can only be used for hindcast-type simulations.
 
     The effective p value is computed by replacing the sample size :math:`N` in the
     t-statistic with the effective sample size, :math:`N_{eff}`. The same Spearman's

@@ -11,7 +11,7 @@ from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
 
-BOOTSTRAP = 3
+ITERATIONS = 3
 
 
 @pytest.mark.parametrize('metric', ['crps', 'mse'])
@@ -99,7 +99,7 @@ def test_bootstrap_pm_dim(PM_da_initialized_1d, PM_da_control_1d):
         metric='rmse',
         dim='member',
         comparison='m2c',
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         resample_dim='member',
     )
     assert 'init' in actual.dims
@@ -123,7 +123,7 @@ def test_bootstrap_hindcast_dim(
         metric='rmse',
         dim='member',
         comparison='m2o',
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         resample_dim='member',
     )
     assert 'init' in actual.dims

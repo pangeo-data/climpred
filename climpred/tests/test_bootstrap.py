@@ -16,7 +16,7 @@ from climpred.constants import CONCAT_KWARGS, VALID_ALIGNMENTS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
 
-BOOTSTRAP = 2
+ITERATIONS = 2
 
 
 def test_bootstrap_PM_keep_lead_attrs(
@@ -27,7 +27,7 @@ def test_bootstrap_PM_keep_lead_attrs(
     s = bootstrap_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         comparison='m2c',
         metric='mse',
     )
@@ -51,7 +51,7 @@ def test_bootstrap_PM_lazy_results(
     s = bootstrap_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         comparison=comparison,
         metric='mse',
     )
@@ -83,7 +83,7 @@ def test_bootstrap_hindcast_lazy(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         observations_da_1d,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         comparison=comparison,
         metric='mse',
     )
@@ -101,7 +101,7 @@ def test_bootstrap_hindcast_resample_dim(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         observations_da_1d,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         comparison='e2o',
         metric='mse',
         resample_dim=resample_dim,
@@ -309,7 +309,7 @@ def test_bootstrap_hindcast_alignment(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         observations_da_1d,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         comparison='e2o',
         metric='mse',
         resample_dim='member',
@@ -327,7 +327,7 @@ def test_bootstrap_hindcast_raises_error(
             hind_da_initialized_1d,
             hist_da_uninitialized_1d,
             observations_da_1d,
-            bootstrap=BOOTSTRAP,
+            iterations=ITERATIONS,
             comparison='e2o',
             metric='mse',
             resample_dim='init',
@@ -349,9 +349,9 @@ def test_resample_1_size(PM_da_initialized_1d):
 def test_resample_size(PM_da_initialized_1d):
     dim = 'member'
     expected = xr.concat(
-        [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(BOOTSTRAP)],
+        [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(ITERATIONS)],
         'iteration',
     )
-    actual = _resample_iterations_idx(PM_da_initialized_1d, BOOTSTRAP, dim=dim)
+    actual = _resample_iterations_idx(PM_da_initialized_1d, ITERATIONS, dim=dim)
     assert expected.size == actual.size
     assert expected[dim].size == actual[dim].size

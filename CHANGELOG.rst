@@ -5,6 +5,12 @@ What's New
 climpred v2.1.0 (2020-04-##)
 ============================
 
+Breaking change
+---------------
+
+- replace keyword `bootstrap` with `iterations` (:pr:`354`) `Aaron Spring`_.
+
+
 New Features
 ------------
 

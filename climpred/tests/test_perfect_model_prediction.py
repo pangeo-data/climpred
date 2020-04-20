@@ -14,7 +14,7 @@ DETERMINISTIC_PM_METRICS_LUACC.remove('uacc')
 # run less tests
 PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 
-BOOTSTRAP = 2
+ITERATIONS = 2
 
 
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
@@ -26,7 +26,7 @@ def test_pvalue_from_bootstrapping(PM_da_initialized_1d, PM_da_control_1d, metri
             PM_da_initialized_1d,
             PM_da_control_1d,
             metric=metric,
-            bootstrap=BOOTSTRAP,
+            iterations=ITERATIONS,
             comparison='e2c',
             sig=sig,
             dim='init',
@@ -154,7 +154,7 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_initialized_1d, PM_da_contro
         metric='rmse',
         comparison='e2c',
         sig=50,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
     )
     actual_init_skill = actual.sel(kind='init', results='skill').isnull().any()
     assert not actual_init_skill
@@ -173,7 +173,7 @@ def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_initialized_1d, PM_ds_contro
         metric='rmse',
         comparison='e2c',
         sig=50,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
     )
     for var in actual.data_vars:
         actual_init_skill = actual[var].sel(kind='init', results='skill').isnull().any()
@@ -268,7 +268,7 @@ def test_bootstrap_perfect_model_keeps_lead_units(
         PM_da_initialized_1d,
         PM_da_control_1d,
         metric='mse',
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         comparison='e2c',
         sig=sig,
         dim='init',

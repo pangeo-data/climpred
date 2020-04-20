@@ -98,7 +98,7 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
     )
 
 
-def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
+def _distribution_to_ci(ds, ci_low, ci_high, dim='iteration'):
     """Get confidence intervals from bootstrapped distribution.
 
     Needed for bootstrapping confidence intervals and p_values of a metric.
@@ -107,7 +107,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim='bootstrap'):
         ds (xarray object): distribution.
         ci_low (float): low confidence interval.
         ci_high (float): high confidence interval.
-        dim (str): dimension to apply xr.quantile to. Default: 'bootstrap'
+        dim (str): dimension to apply xr.quantile to. Default: 'iteration'
 
     Returns:
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
@@ -135,7 +135,7 @@ def _pvalue_from_distributions(simple_fct, init, metric=None):
         pv (xarray object): probability that simple forecast performs better
                             than initialized forecast.
     """
-    pv = ((simple_fct - init) > 0).sum('bootstrap') / init.bootstrap.size
+    pv = ((simple_fct - init) > 0).sum('iteration') / init.iteration.size
     if not metric.positive:
         pv = 1 - pv
     return pv
@@ -306,9 +306,9 @@ def _bootstrap_by_stacking(init_pm, control):
 
 
 def _bootstrap_func(
-    func, ds, resample_dim, sig=95, bootstrap=500, *func_args, **func_kwargs,
+    func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
 ):
-    """Sig percent threshold of function based on resampling with replacement.
+    """Sig% threshold of function based on iterations resampling with replacement.
 
     Reference:
     * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
@@ -323,7 +323,7 @@ def _bootstrap_func(
             CPUs available.
         resample_dim (str): dimension to resample from.
         sig (int,float,list): significance levels to return. Defaults to 95.
-        bootstrap (int): number of resample iterations. Defaults to 500.
+        iterations (int): number of resample iterations. Defaults to 500.
         *func_args (type): `*func_args`.
         **func_kwargs (type): `**func_kwargs`.
 
@@ -340,17 +340,17 @@ def _bootstrap_func(
         psig = sig / 100
 
     bootstraped_ds = _resample_iterations_idx(
-        ds, bootstrap, dim=resample_dim, replace=False
+        ds, iterations, dim=resample_dim, replace=False
     )
     bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
     bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
-        bootstraped_results, dim='bootstrap'
+        bootstraped_results, dim='iteration'
     )
-    sig_level = bootstraped_results.quantile(dim='bootstrap', q=psig, skipna=False)
+    sig_level = bootstraped_results.quantile(dim='iteration', q=psig, skipna=False)
     return sig_level
 
 
-def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
+def dpp_threshold(control, sig=95, iterations=500, dim='time', **dpp_kwargs):
     """Calc DPP significance levels from re-sampled dataset.
 
     Reference:
@@ -364,11 +364,11 @@ def dpp_threshold(control, sig=95, bootstrap=500, dim='time', **dpp_kwargs):
         * climpred.stats.dpp
     """
     return _bootstrap_func(
-        dpp, control, dim, sig=sig, bootstrap=bootstrap, **dpp_kwargs
+        dpp, control, dim, sig=sig, iterations=iterations, **dpp_kwargs
     )
 
 
-def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='time'):
+def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim='time'):
     """Calc the variance-weighted mean period significance levels from re-sampled
     dataset.
 
@@ -377,7 +377,7 @@ def varweighted_mean_period_threshold(control, sig=95, bootstrap=500, time_dim='
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, bootstrap=bootstrap,
+        varweighted_mean_period, control, time_dim, sig=sig, iterations=iterations,
     )
 
 
@@ -391,7 +391,7 @@ def bootstrap_compute(
     dim='init',
     resample_dim='member',
     sig=95,
-    bootstrap=500,
+    iterations=500,
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
@@ -416,7 +416,7 @@ def bootstrap_compute(
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
                         Defaults to sig.
-        bootstrap (int): number of resampling iterations (bootstrap
+        iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
         compute (func): function to compute skill.
                         Choose from
@@ -489,7 +489,7 @@ def bootstrap_compute(
     isHindcast = True if comparison in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
 
-    for i in range(bootstrap):
+    for i in range(iterations):
         # resample with replacement
         smp_hind = _resample(hind, resample_dim)
         # compute init skill
@@ -541,11 +541,11 @@ def bootstrap_compute(
                     **metric_kwargs,
                 )
             )
-    init = xr.concat(init, dim='bootstrap', **CONCAT_KWARGS)
-    uninit = xr.concat(uninit, dim='bootstrap', **CONCAT_KWARGS)
+    init = xr.concat(init, dim='iteration', **CONCAT_KWARGS)
+    uninit = xr.concat(uninit, dim='iteration', **CONCAT_KWARGS)
     # when persistence is not computed set flag
     if pers != []:
-        pers = xr.concat(pers, dim='bootstrap', **CONCAT_KWARGS)
+        pers = xr.concat(pers, dim='iteration', **CONCAT_KWARGS)
         pers_output = True
     else:
         pers_output = False
@@ -581,7 +581,7 @@ def bootstrap_compute(
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
     # uninit skill as mean resampled uninit skill
-    uninit_skill = uninit.mean('bootstrap')
+    uninit_skill = uninit.mean('iteration')
     if not metric.probabilistic:
         pers_skill = reference_compute(
             hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
@@ -620,7 +620,7 @@ def bootstrap_compute(
     # Attach climpred compute information to skill
     metadata_dict = {
         'confidence_interval_levels': f'{ci_high}-{ci_low}',
-        'bootstrap_iterations': bootstrap,
+        'bootstrap_iterations': iterations,
         'p': 'probability that uninitialized ensemble performs better than initialized',
         'reference_compute': reference_compute.__name__,
     }
@@ -653,7 +653,7 @@ def bootstrap_hindcast(
     dim='init',
     resample_dim='member',
     sig=95,
-    bootstrap=500,
+    iterations=500,
     pers_sig=None,
     reference_compute=compute_persistence,
     **metric_kwargs,
@@ -677,7 +677,7 @@ def bootstrap_hindcast(
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
                         Defaults to sig.
-        bootstrap (int): number of resampling iterations (bootstrap
+        iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
         reference_compute (func): function to compute a reference forecast skill with.
                         Default: :py:func:`climpred.prediction.compute_persistence`.
@@ -759,7 +759,7 @@ def bootstrap_hindcast(
         dim=dim,
         resample_dim=resample_dim,
         sig=sig,
-        bootstrap=bootstrap,
+        iterations=iterations,
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
@@ -776,7 +776,7 @@ def bootstrap_perfect_model(
     dim=None,
     resample_dim='member',
     sig=95,
-    bootstrap=500,
+    iterations=500,
     pers_sig=None,
     reference_compute=compute_persistence,
     **metric_kwargs,
@@ -800,7 +800,7 @@ def bootstrap_perfect_model(
                    initialized skill. Defaults to 95.
         pers_sig (int): Significance level for persistence skill confidence levels.
                         Defaults to sig.
-        bootstrap (int): number of resampling iterations (bootstrap
+        iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
         reference_compute (func): function to compute a reference forecast skill with.
                         Default: :py:func:`climpred.prediction.compute_persistence`.
@@ -865,7 +865,7 @@ def bootstrap_perfect_model(
         dim=dim,
         resample_dim=resample_dim,
         sig=sig,
-        bootstrap=bootstrap,
+        iterations=iterations,
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,

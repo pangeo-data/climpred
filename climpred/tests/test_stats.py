@@ -97,7 +97,6 @@ def test_dpp(PM_da_control_3d, chunk):
 )
 def test_potential_predictability_likely(PM_da_control_3d, func):
     """Check for positive diagnostic potential predictability in NA SST."""
-    print(PM_da_control_3d.dims)
     res = func(PM_da_control_3d)
     assert res.mean() > 0
 
@@ -218,5 +217,4 @@ def test_corr_autocorr(PM_da_control_3d):
     res1 = corr(PM_da_control_3d, PM_da_control_3d, lag=1, return_p=True)
     res2 = autocorr(PM_da_control_3d, return_p=True)
     for i in [0, 1]:
-        print(res1[i] - res2[i])
         assert_allclose(res1[i], res2[i])

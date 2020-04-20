@@ -51,37 +51,46 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
-def _resample_idx(init, bootstrap, dim='member', replace=True):
-    """Resample bootstrap times over dim."""
+def _resample_iterations_idx(init, iterations, dim='member', replace=True):
+    """Resample over dim by index iterations times.
 
-    def xr_broadcast(x, idx):
+    Args:
+        init (xr.DataArray, xr.Dataset): input data.
+        iterations (int): Number of bootstrapping iterations.
+        dim (str): Dimension name to bootstrap over. Defaults to 'member'.
+        replace (bool): Bootstrapping with or without replacement. Defaults to True.
+
+    Returns:
+        xr.DataArray, xr.Dataset: bootstrapped data with additional dim `iteration`
+
+    """
+
+    def select_bootstrap_indices_ufunc(x, idx):
+        """Selects indices `idx` of bootstrapped dimension over all iterations."""
         return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
 
-    # I get errors if I have a 0 in dim
-    if 0 in init[dim].values:
-        init[dim] = np.arange(1, 1 + init[dim].size)
     # resample with or without replacement
     if replace:
-        idx = np.random.randint(0, init[dim].size, (bootstrap, init[dim].size))
+        idx = np.random.randint(0, init[dim].size, (iterations, init[dim].size))
     elif not replace:
         # create 2d np.arange()
         idx = np.linspace(
             (np.arange(init[dim].size)),
             (np.arange(init[dim].size)),
-            bootstrap,
+            iterations,
             dtype='int',
         )
         # shuffle each line
-        for ndx in np.arange(bootstrap):
+        for ndx in np.arange(iterations):
             np.random.shuffle(idx[ndx])
     idx_da = xr.DataArray(
         idx,
-        dims=('bootstrap', dim),
-        coords=({'bootstrap': range(bootstrap), dim: init[dim]}),
+        dims=('iteration', dim),
+        coords=({'iteration': range(iterations), dim: init[dim]}),
     )
 
     return xr.apply_ufunc(
-        xr_broadcast,
+        select_bootstrap_indices_ufunc,
         init.transpose(dim, ...),
         idx_da,
         dask='parallelized',
@@ -330,7 +339,9 @@ def _bootstrap_func(
     else:
         psig = sig / 100
 
-    bootstraped_ds = _resample_idx(ds, bootstrap, dim=resample_dim, replace=False)
+    bootstraped_ds = _resample_iterations_idx(
+        ds, bootstrap, dim=resample_dim, replace=False
+    )
     bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
     bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
         bootstraped_results, dim='bootstrap'

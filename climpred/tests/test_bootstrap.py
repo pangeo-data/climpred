@@ -336,6 +336,7 @@ def test_bootstrap_hindcast_raises_error(
 
 
 def test_resample_1_size(PM_da_initialized_1d):
+    """Tests that the resampled dimensions are appropriate for a single iteration."""
     dim = 'member'
     expected = _resample(PM_da_initialized_1d, resample_dim=dim)
     # 1 somehow fails
@@ -347,6 +348,7 @@ def test_resample_1_size(PM_da_initialized_1d):
 
 
 def test_resample_size(PM_da_initialized_1d):
+    """Tests that the resampled dimensions are appropriate for many iterations."""
     dim = 'member'
     expected = xr.concat(
         [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(ITERATIONS)],

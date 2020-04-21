@@ -52,21 +52,33 @@ def _resample(hind, resample_dim):
 
 
 def _resample_iterations_idx(init, iterations, dim='member', replace=True):
-    """Resample over dim by index iterations times.
+    """Resample over ``dim`` by index ``iterations`` times.
+
+    .. note::
+        This is a much faster way to bootstrap than resampling each iteration
+        individually and applying the function to it. However, this will create a
+        DataArray with dimension ``iteration`` of size ``iterations``. It is probably
+        best to do this out-of-memory with ``dask`` if you are doing a large number
+        of iterations or using spatial output (i.e., not time series data).
 
     Args:
-        init (xr.DataArray, xr.Dataset): input data.
+        init (xr.DataArray, xr.Dataset): Initialized prediction ensemble.
         iterations (int): Number of bootstrapping iterations.
-        dim (str): Dimension name to bootstrap over. Defaults to 'member'.
-        replace (bool): Bootstrapping with or without replacement. Defaults to True.
+        dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
+        replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
 
     Returns:
-        xr.DataArray, xr.Dataset: bootstrapped data with additional dim `iteration`
+        xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
 
     """
 
     def select_bootstrap_indices_ufunc(x, idx):
-        """Selects indices `idx` of bootstrapped dimension over all iterations."""
+        """Selects multi-level indices ``idx`` from xarray object ``x`` for all
+        iterations."""
+        # `apply_ufunc` sometimes adds a singleton dimension on the end, so we squeeze
+        # it out here. This leverages multi-level indexing from numpy, so we can
+        # select a different set of, e.g., ensemble members for each iteration and
+        # construct one large DataArray with ``iterations`` as a dimension.
         return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
 
     # resample with or without replacement
@@ -308,7 +320,7 @@ def _bootstrap_by_stacking(init_pm, control):
 def _bootstrap_func(
     func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
 ):
-    """Sig% threshold of function based on iterations resampling with replacement.
+    """Sig % threshold of function based on iterations resampling with replacement.
 
     Reference:
     * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence

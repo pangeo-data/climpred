@@ -11,7 +11,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 PM_COMPARISONS = ['m2m', 'm2c']
 
-BOOTSTRAP = 8
+ITERATIONS = 8
 
 
 class Generate:
@@ -118,7 +118,7 @@ class Compute(Generate):
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                bootstrap=BOOTSTRAP,
+                iterations=ITERATIONS,
             )
         )
 
@@ -131,7 +131,7 @@ class Compute(Generate):
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                bootstrap=BOOTSTRAP,
+                iterations=ITERATIONS,
             )
         )
 
@@ -146,5 +146,5 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds['var'].chunk({'lon': self.nx // BOOTSTRAP})
-        self.control = self.control['var'].chunk({'lon': self.nx // BOOTSTRAP})
+        self.ds = self.ds['var'].chunk({'lon': self.nx // ITERATIONS})
+        self.control = self.control['var'].chunk({'lon': self.nx // ITERATIONS})

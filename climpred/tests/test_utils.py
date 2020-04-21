@@ -115,16 +115,21 @@ def test_bootstrap_pm_assign_attrs():
     v = 'tos'
     metric = 'pearson_r'
     comparison = 'm2e'
-    bootstrap = 3
+    ITERATIONS = 3
     sig = 95
     da = load_dataset('MPI-PM-DP-1D')[v].isel(area=1, period=-1)
     control = load_dataset('MPI-control-1D')[v].isel(area=1, period=-1)
     actual = bootstrap_perfect_model(
-        da, control, metric=metric, comparison=comparison, bootstrap=bootstrap, sig=sig,
+        da,
+        control,
+        metric=metric,
+        comparison=comparison,
+        iterations=ITERATIONS,
+        sig=sig,
     ).attrs
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
-    assert actual['bootstrap_iterations'] == bootstrap
+    assert actual['bootstrap_iterations'] == ITERATIONS
     assert str(round((1 - sig / 100) / 2, 3)) in actual['confidence_interval_levels']
     if metric == 'pearson_r':
         assert actual['units'] == 'None'

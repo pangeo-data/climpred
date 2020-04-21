@@ -12,6 +12,8 @@ from climpred.reference import compute_persistence
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
+ITERATIONS = 2
+
 
 @pytest.mark.skip(reason='less not properly implemented')
 def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
@@ -114,7 +116,7 @@ def test_bootstrap_hindcast_da1d_not_nan(
         metric='rmse',
         comparison='e2o',
         sig=50,
-        bootstrap=2,
+        iterations=ITERATIONS,
     )
     actual_init_skill = actual.sel(kind='init', results='skill').isnull().any()
     assert not actual_init_skill
@@ -220,7 +222,7 @@ def test_bootstrap_hindcast_keeps_lead_units(
         hist_da_uninitialized_1d,
         observations_da_1d,
         metric='mse',
-        bootstrap=2,
+        iterations=ITERATIONS,
         comparison='e2o',
         sig=sig,
         dim='init',

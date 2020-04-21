@@ -160,3 +160,19 @@ class ComputeDask(Compute):
             {'lon': self.nx // ITERATIONS}
         )
         self.uninit = self.uninit['var'].chunk({'lon': self.nx // ITERATIONS})
+
+
+class ComputeSmall(Compute):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_hindcast` and
+        `bootstrap_hindcast`. This executes the same tests as `Compute` but on 1D
+        data."""
+        requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        # chunk along a spatial dimension to enable embarrasingly parallel computation
+        spatial_dims = ['lon', 'lat']
+        self.hind = self.hind.mean(spatial_dims)
+        self.observations = self.observations.mean(spatial_dims)
+        self.uninit = self.uninit.mean(spatial_dims)

@@ -138,9 +138,9 @@ class Compute(Generate):
 
 class ComputeDask(Compute):
     def setup(self, *args, **kwargs):
-        """Benchmark time and peak memory of `compute_hindcast` and
-        `bootstrap_hindcast`. This executes the same tests as `Compute` but on chunked
-        data."""
+        """Benchmark time and peak memory of `compute_perfect_model` and
+        `bootstrap_perfect_model`. This executes the same tests as `Compute` but
+        on chunked data."""
         requires_dask()
         # magic taken from
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
@@ -148,3 +148,17 @@ class ComputeDask(Compute):
         # chunk along a spatial dimension to enable embarrasingly parallel computation
         self.ds = self.ds['var'].chunk({'lon': self.nx // ITERATIONS})
         self.control = self.control['var'].chunk({'lon': self.nx // ITERATIONS})
+
+
+class ComputeSmall(Compute):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_perfect_model` and
+        `bootstrap_perfect_model`. This executes the same tests as `Compute`
+        but on 1D data."""
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        # chunk along a spatial dimension to enable embarrasingly parallel computation
+        spatial_dims = ['lon', 'lat']
+        self.ds = self.ds.mean(spatial_dims)
+        self.control = self.control.mean(spatial_dims)

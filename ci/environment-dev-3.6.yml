@@ -16,7 +16,6 @@ dependencies:
   # Input/Output
   - netcdf4
   # Miscellaneous
-  - cftime>=1.1.2 # Optimization changes to make cftime fast.
   - lxml
   - tqdm
   # Numerics
@@ -59,6 +58,7 @@ dependencies:
   - nc-time-axis
   - pip
   - pip:
+      - cftime>=1.1.2 # Optimization changes to make cftime fast.
       - pytest-tldr
       - pytest-lazy-fixture
       - git+https://github.com/bradyrx/esmtools

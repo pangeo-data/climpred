@@ -18,6 +18,6 @@ This should explain **why** the current behaviour is a problem and why the expec
 #### Output of `climpred.show_versions()`
 
 <details>
-# Paste the output here xr.show_versions() here
+# Paste the output here climpred.show_versions() here
 
 </details>

@@ -3,7 +3,7 @@ import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
-from .constants import M2M_MEMBER_DIM, CLIMPRED_DIMS
+from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
 from .exceptions import DimensionError
 
 
@@ -42,6 +42,16 @@ def _drop_members(ds, removed_member=None):
     else:
         raise DimensionError('select available members only')
     return ds.sel(member=member_list)
+
+
+def _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(forecast, verif):
+    """Broadcast missing non CLIMPRED_DIMS from forecast to verif."""
+    for d in forecast.dims:
+        if d not in CLIMPRED_DIMS and d in forecast.dims and d not in verif.dims:
+            verif = verif.expand_dims(d)
+            verif = verif.isel({d: [0] * forecast[d].size})
+            verif[d] = forecast[d]
+    return forecast, verif
 
 
 def _display_comparison_metadata(self):
@@ -278,6 +288,9 @@ def _e2o(hind, verif, metric=None):
         forecast = hind.mean('member')
     else:
         forecast = hind
+    forecast, verif = _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(
+        forecast, verif
+    )
     return forecast, verif
 
 
@@ -308,13 +321,7 @@ def _m2o(hind, verif, metric=None):
     # check that this contains more than one member
     has_dims(hind, 'member', 'decadal prediction ensemble')
     has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
-    forecast = hind
-    # broadcast non CLIMPRED dims like iteration
-    for d in forecast.dims:
-        if d not in CLIMPRED_DIMS and d in forecast.dims and d not in verif.dims:
-            verif = verif.expand_dims(d)
-            verif = verif.isel({d: [0] * forecast[d].size})
-            verif[d] = forecast[d]
+    forecast, verif = _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(hind, verif)
     if not metric.probabilistic:
         verif = verif.expand_dims('member')
         nMember = forecast.member.size

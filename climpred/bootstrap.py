@@ -579,15 +579,17 @@ def bootstrap_compute(
             pers_output = False
 
     # faster
-    else: #if resample_dim == 'member':
-        print('faster _resample_iterations_idx track')
+    else:  # if resample_dim == 'member':
+        # print('faster _resample_iterations_idx track')
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
         # uninit
         # TODO: make more members first
         if hist is None:  # PM path, use verif = control
             hist = verif
         uninit_hind = resample_uninit(hind, hist)
-        bootstrapped_uninit = _resample_iterations_idx(uninit_hind, iterations, resample_dim)
+        bootstrapped_uninit = _resample_iterations_idx(
+            uninit_hind, iterations, resample_dim
+        )
 
         # bs skill
         bootstrapped_init_skill = compute(
@@ -614,11 +616,7 @@ def bootstrap_compute(
 
     if not metric.probabilistic:
         pers_skill = reference_compute(
-            hind,
-            verif,
-            metric=metric,
-            alignment=reference_alignment,
-            **metric_kwargs,
+            hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs,
         )
         pers_output = True
         bootstrapped_pers_skill = pers_skill.expand_dims('iteration').isel(

@@ -133,7 +133,7 @@ Bootstrap
     bootstrap_compute
     bootstrap_hindcast
     bootstrap_perfect_model
-    bootstrap_uninit_pm_ensemble_from_control
+    bootstrap_uninit_pm_ensemble_from_control_cftime
     bootstrap_uninitialized_ensemble
     dpp_threshold
     varweighted_mean_period_threshold
@@ -147,6 +147,15 @@ Prediction
 
     compute_hindcast
     compute_perfect_model
+
+
+Reference
+~~~~~~~~~
+.. currentmodule:: climpred.reference
+
+.. autosummary::
+    :toctree: api/
+
     compute_persistence
     compute_uninitialized
 

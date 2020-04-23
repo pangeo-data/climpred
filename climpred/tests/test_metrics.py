@@ -24,6 +24,8 @@ my_mse = Metric(
     aliases=['mSe', '<<<SE'],
 )
 
+ITERATIONS = 2
+
 
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 def test_custom_metric_passed_to_compute(
@@ -47,7 +49,6 @@ def test_custom_metric_passed_to_bootstrap_compute(
 ):
     """Test custom metric in bootstrap_perfect_model."""
     comparison = 'e2c'
-    BOOTSTRAP = 2
     dim = 'init'
     np.random.seed(42)
     actual = bootstrap_perfect_model(
@@ -55,7 +56,7 @@ def test_custom_metric_passed_to_bootstrap_compute(
         PM_da_control_1d,
         comparison=comparison,
         metric=my_mse,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         dim=dim,
     )
 
@@ -64,7 +65,7 @@ def test_custom_metric_passed_to_bootstrap_compute(
         PM_da_control_1d,
         comparison=comparison,
         metric='mse',
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         dim=dim,
     )
 

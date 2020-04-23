@@ -492,7 +492,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
 
     def bootstrap(
-        self, metric='pearson_r', comparison='m2e', sig=95, bootstrap=500, pers_sig=None
+        self,
+        metric='pearson_r',
+        comparison='m2e',
+        sig=95,
+        iterations=500,
+        pers_sig=None,
     ):
         """Bootstrap ensemble simulations with replacement.
 
@@ -504,7 +509,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             sig (int, default 95):
                 Significance level for uninitialized and initialized
                 comparison.
-            bootstrap (int, default 500): Number of resampling iterations for
+            iterations (int, default 500): Number of resampling iterations for
                 bootstrapping with replacement.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
@@ -532,7 +537,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
-        has_dataset(self._datasets['control'], 'control', 'bootstrap')
+        has_dataset(self._datasets['control'], 'control', 'iteration')
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
@@ -544,7 +549,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             sig=sig,
-            bootstrap=bootstrap,
+            iterations=iterations,
             pers_sig=pers_sig,
         )
 

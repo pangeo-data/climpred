@@ -10,7 +10,7 @@ from climpred.comparisons import (
 from climpred.metrics import METRIC_ALIASES, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 
-BOOTSTRAP = 3
+ITERATIONS = 2
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
@@ -114,7 +114,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         threshold=threshold,
         gaussian=True,
         func=func,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         dim='member',
         resample_dim='member',
     )
@@ -162,7 +162,7 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         threshold=threshold,
         gaussian=True,
         func=func,
-        bootstrap=BOOTSTRAP,
+        iterations=ITERATIONS,
         dim='member',
         resample_dim='member',
     )

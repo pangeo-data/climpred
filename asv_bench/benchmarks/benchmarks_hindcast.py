@@ -11,7 +11,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 HINDCAST_COMPARISONS = ['m2o']
 
-BOOTSTRAP = 8
+ITERATIONS = 8
 
 
 class Generate:
@@ -78,15 +78,8 @@ class Generate:
         )
 
         self.uninit['var'] = xr.DataArray(
-            randn(
-                (self.ninit, self.nx, self.ny, self.nmember), frac_nan=FRAC_NAN
-            ),
-            coords={
-                'lon': lons,
-                'lat': lats,
-                'time': inits,
-                'member': members,
-            },
+            randn((self.ninit, self.nx, self.ny, self.nmember), frac_nan=FRAC_NAN),
+            coords={'lon': lons, 'lat': lats, 'time': inits, 'member': members},
             dims=('time', 'lon', 'lat', 'member'),
             name='var',
             attrs={'units': 'var units', 'description': 'a description'},
@@ -108,10 +101,7 @@ class Compute(Generate):
         """Take time for `compute_hindcast`."""
         ensure_loaded(
             compute_hindcast(
-                self.hind,
-                self.observations,
-                metric=metric,
-                comparison=comparison,
+                self.hind, self.observations, metric=metric, comparison=comparison,
             )
         )
 
@@ -120,10 +110,7 @@ class Compute(Generate):
         """Take memory peak for `compute_hindcast`."""
         ensure_loaded(
             compute_hindcast(
-                self.hind,
-                self.observations,
-                metric=metric,
-                comparison=comparison,
+                self.hind, self.observations, metric=metric, comparison=comparison,
             )
         )
 
@@ -137,7 +124,7 @@ class Compute(Generate):
                 self.observations,
                 metric=metric,
                 comparison=comparison,
-                bootstrap=BOOTSTRAP,
+                iterations=ITERATIONS,
                 dim='member',
             )
         )
@@ -152,7 +139,7 @@ class Compute(Generate):
                 self.observations,
                 metric=metric,
                 comparison=comparison,
-                bootstrap=BOOTSTRAP,
+                iterations=ITERATIONS,
                 dim='member',
             )
         )
@@ -168,8 +155,24 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.hind = self.hind['var'].chunk({'lon': self.nx // BOOTSTRAP})
+        self.hind = self.hind['var'].chunk({'lon': self.nx // ITERATIONS})
         self.observations = self.observations['var'].chunk(
-            {'lon': self.nx // BOOTSTRAP}
+            {'lon': self.nx // ITERATIONS}
         )
-        self.uninit = self.uninit['var'].chunk({'lon': self.nx // BOOTSTRAP})
+        self.uninit = self.uninit['var'].chunk({'lon': self.nx // ITERATIONS})
+
+
+class ComputeSmall(Compute):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_hindcast` and
+        `bootstrap_hindcast`. This executes the same tests as `Compute` but on 1D
+        data."""
+        requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        # chunk along a spatial dimension to enable embarrasingly parallel computation
+        spatial_dims = ['lon', 'lat']
+        self.hind = self.hind.mean(spatial_dims)
+        self.observations = self.observations.mean(spatial_dims)
+        self.uninit = self.uninit.mean(spatial_dims)

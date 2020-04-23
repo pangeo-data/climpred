@@ -3,7 +3,7 @@ import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
-from .constants import M2M_MEMBER_DIM
+from .constants import M2M_MEMBER_DIM, CLIMPRED_DIMS
 from .exceptions import DimensionError
 
 
@@ -309,6 +309,12 @@ def _m2o(hind, verif, metric=None):
     has_dims(hind, 'member', 'decadal prediction ensemble')
     has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
     forecast = hind
+    # broadcast non CLIMPRED dims like iteration
+    for d in forecast.dims:
+        if d not in CLIMPRED_DIMS and d in forecast.dims and d not in verif.dims:
+            verif = verif.expand_dims(d)
+            verif = verif.isel({d: [0] * forecast[d].size})
+            verif[d] = forecast[d]
     if not metric.probabilistic:
         verif = verif.expand_dims('member')
         nMember = forecast.member.size

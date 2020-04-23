@@ -5,6 +5,12 @@ What's New
 climpred v2.1.0 (2020-04-##)
 ============================
 
+Breaking change
+---------------
+
+- replace keyword `bootstrap` with `iterations` (:pr:`354`) `Aaron Spring`_.
+
+
 New Features
 ------------
 
@@ -65,6 +71,10 @@ Internals/Minor Fixes
 - Remove ``sig`` from
   :py:func:`~climpred.graphics.plot_bootstrapped_skill_over_leadyear`.
   (:pr:`351`) `Aaron Spring`_.
+- Require ``xskillscore v0.0.15`` and use their functions for effective sample
+  size-based metrics. (:pr: `353`) `Riley X. Brady`_.
+- Faster bootstrapping without replacement used in threshold functions of
+  climpred.stats (:pr:`354`) `Aaron Spring`_.
 
 
 

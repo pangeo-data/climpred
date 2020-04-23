@@ -75,7 +75,8 @@ Internals/Minor Fixes
   size-based metrics. (:pr: `353`) `Riley X. Brady`_.
 - Faster bootstrapping without replacement used in threshold functions of
   climpred.stats (:pr:`354`) `Aaron Spring`_.
-
+- Require ``cftime v1.1.2``, which modifies their object handling to create 200-400x
+  speedups in some basic operations. (:pr:`356`) `Riley X. Brady`_.
 
 
 Documentation

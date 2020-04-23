@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 
 from climpred.bootstrap import bootstrap_hindcast
+from climpred.metrics import PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast
 
 from . import ensure_loaded, parameterized, randn, requires_dask
@@ -39,7 +40,9 @@ class Generate:
 
         FRAC_NAN = 0.0
 
-        inits = np.arange(self.init_start, self.init_end)
+        inits = xr.cftime_range(
+            start=str(self.init_start), end=str(self.init_end - 1), freq='YS'
+        )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
 
@@ -86,6 +89,9 @@ class Generate:
         )
 
         self.hind.attrs = {'history': 'created for xarray benchmarking'}
+        self.hind.lead.attrs['units'] = 'years'
+        self.uninit.time.attrs['units'] = 'years'
+        self.observations.time.attrs['units'] = 'years'
 
 
 class Compute(Generate):
@@ -99,24 +105,35 @@ class Compute(Generate):
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def time_compute_hindcast(self, metric, comparison):
         """Take time for `compute_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             compute_hindcast(
-                self.hind, self.observations, metric=metric, comparison=comparison,
+                self.hind,
+                self.observations,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def peakmem_compute_hindcast(self, metric, comparison):
         """Take memory peak for `compute_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             compute_hindcast(
-                self.hind, self.observations, metric=metric, comparison=comparison,
+                self.hind,
+                self.observations,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def time_bootstrap_hindcast(self, metric, comparison):
         """Take time for `bootstrap_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             bootstrap_hindcast(
                 self.hind,
@@ -125,7 +142,7 @@ class Compute(Generate):
                 metric=metric,
                 comparison=comparison,
                 iterations=ITERATIONS,
-                dim='member',
+                dim=dim,
             )
         )
 

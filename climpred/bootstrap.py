@@ -501,6 +501,9 @@ def bootstrap_compute(
     isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
 
+    if hist is None:  # PM path, use verif = control
+        hist = verif
+
     # slower path for hindcast and resample_dim init
     if resample_dim == 'init' and isHindcast:
         warnings.warn(
@@ -535,8 +538,6 @@ def bootstrap_compute(
                 init_skill['init'] = hind.init.values
             bootstrapped_init_skill.append(init_skill)
             # generate uninitialized ensemble from hist
-            if hist is None:  # PM path, use verif = control
-                hist = verif
             uninit_hind = resample_uninit(hind, hist)
             # compute uninit skill
             bootstrapped_uninit_skill.append(
@@ -578,18 +579,19 @@ def bootstrap_compute(
         else:
             pers_output = False
 
-    # faster
     else:  # if resample_dim == 'member':
         # print('faster _resample_iterations_idx track')
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
         # uninit
-        # TODO: make more members first
-        if hist is None:  # PM path, use verif = control
-            hist = verif
-        uninit_hind = resample_uninit(hind, hist)
+        # create more members than needed
+        uninit_hind = xr.concat(
+            [resample_uninit(hind, hist) for i in range(4)], dim='member'
+        )
+        uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
+        # resample from those and select only hind.member.size
         bootstrapped_uninit = _resample_iterations_idx(
             uninit_hind, iterations, resample_dim
-        )
+        ).isel(member=slice(None, hind.member.size))
 
         # bs skill
         bootstrapped_init_skill = compute(

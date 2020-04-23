@@ -2,6 +2,7 @@ import numpy as np
 import xarray as xr
 
 from climpred.bootstrap import bootstrap_perfect_model
+from climpred.metrics import PROBABILISTIC_METRICS
 from climpred.prediction import compute_perfect_model
 
 from . import ensure_loaded, parameterized, randn, requires_dask
@@ -33,16 +34,23 @@ class Generate:
         self.ny = 64
         self.control_start = 3000
         self.control_end = 3300
-        self.ntime = 300
+        self.ntime = self.control_end - self.control_start
 
         FRAC_NAN = 0.0
 
-        times = np.arange(self.control_start, self.control_end)
+        times = xr.cftime_range(
+            start=str(self.control_start),
+            periods=self.ntime,
+            freq='YS',
+            calendar='noleap',
+        )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
-        inits = (
-            np.random.choice(self.control_end - self.control_start, self.ninit)
-            + self.control_start
+        inits = xr.cftime_range(
+            start=str(self.control_start),
+            periods=self.ninit,
+            freq='10YS',
+            calendar='noleap',
         )
 
         lons = xr.DataArray(
@@ -80,6 +88,8 @@ class Generate:
         )
 
         self.ds.attrs = {'history': 'created for xarray benchmarking'}
+        self.ds.lead.attrs['units'] = 'years'
+        self.control.time.attrs['units'] = 'years'
 
 
 class Compute(Generate):
@@ -94,24 +104,27 @@ class Compute(Generate):
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_compute_perfect_model(self, metric, comparison):
         """Take time for `compute_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             compute_perfect_model(
-                self.ds, self.control, metric=metric, comparison=comparison
+                self.ds, self.control, metric=metric, comparison=comparison, dim=dim
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_compute_perfect_model(self, metric, comparison):
         """Take memory peak for `compute_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             compute_perfect_model(
-                self.ds, self.control, metric=metric, comparison=comparison
+                self.ds, self.control, metric=metric, comparison=comparison, dim=dim
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_bootstrap_perfect_model(self, metric, comparison):
         """Take time for `bootstrap_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
@@ -119,12 +132,14 @@ class Compute(Generate):
                 metric=metric,
                 comparison=comparison,
                 iterations=ITERATIONS,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_bootstrap_perfect_model(self, metric, comparison):
         """Take memory peak for `bootstrap_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
@@ -132,6 +147,7 @@ class Compute(Generate):
                 metric=metric,
                 comparison=comparison,
                 iterations=ITERATIONS,
+                dim=dim,
             )
         )
 

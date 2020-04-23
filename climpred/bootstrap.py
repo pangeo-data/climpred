@@ -510,7 +510,6 @@ def bootstrap_compute(
             f'isHindcast; resample_dim is not member, found {resample_dim}.'
             'This will be slower than resample_dim=`member`.'
         )
-        print('isHindcast resample_init')
         pers_skill = []
         bootstrapped_init_skill = []
         bootstrapped_uninit_skill = []
@@ -579,19 +578,24 @@ def bootstrap_compute(
         else:
             pers_output = False
 
-    else:  # if resample_dim == 'member':
-        # print('faster _resample_iterations_idx track')
+    else:
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
         # uninit
-        # create more members than needed
-        uninit_hind = xr.concat(
-            [resample_uninit(hind, hist) for i in range(4)], dim='member'
-        )
-        uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
-        # resample from those and select only hind.member.size
-        bootstrapped_uninit = _resample_iterations_idx(
-            uninit_hind, iterations, resample_dim
-        ).isel(member=slice(None, hind.member.size))
+        # create more members than needed in PM
+        if not isHindcast:
+            uninit_hind = xr.concat(
+                [resample_uninit(hind, hist) for i in range(3)], dim='member'
+            )
+            uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
+            # resample from those and select only hind.member.size
+            bootstrapped_uninit = _resample_iterations_idx(
+                uninit_hind, iterations, resample_dim
+            ).isel(member=slice(None, hind.member.size))
+        else:
+            uninit_hind = resample_uninit(hind, hist)
+            bootstrapped_uninit = _resample_iterations_idx(
+                uninit_hind, iterations, resample_dim
+            )
 
         # bs skill
         bootstrapped_init_skill = compute(

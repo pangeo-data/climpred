@@ -510,7 +510,6 @@ def bootstrap_compute(
             f'isHindcast; resample_dim is not member, found {resample_dim}.'
             'This will be slower than resample_dim=`member`.'
         )
-        print('isHindcast resample_init')
         pers_skill = []
         bootstrapped_init_skill = []
         bootstrapped_uninit_skill = []
@@ -579,8 +578,7 @@ def bootstrap_compute(
         else:
             pers_output = False
 
-    else:  # if resample_dim == 'member':
-        # print('faster _resample_iterations_idx track')
+    else:
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
         # uninit
         # create more members than needed

@@ -1234,7 +1234,7 @@ __msess = Metric(
 def _mape(forecast, verif, dim=None, **metric_kwargs):
     """Mean Absolute Percentage Error (MAPE).
 
-    Mean absolute error (``mae``) expressed as a percentage error relative to the
+    Mean absolute error (``mae``) expressed as the fractional error relative to the
     verification data.
 
     .. math::
@@ -1254,7 +1254,7 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
         +-----------------+-----------+
         | **minimum**     | 0.0       |
         +-----------------+-----------+
-        | **maximum**     | 1.0       |
+        | **maximum**     | ∞         |
         +-----------------+-----------+
         | **perfect**     | 0.0       |
         +-----------------+-----------+

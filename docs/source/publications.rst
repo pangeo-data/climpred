@@ -9,9 +9,12 @@ citable DOI, so this can be referenced in the future.
 
 Feel free to open a `Pull Request <contributing.html>`_ to add your publication to the list!
 
-2019
+2020
 ####
 
-* Brady, R. X., Lovenduski, N. S., Yeager, S. G., Long, M. C., & Lindsay, K. (2019, October 10).
-  Skillful multiyear predictions of ocean acidification in the California Current System.
-  https://doi.org/10.31223/osf.io/3m2h7
+* Brady, R.X., Lovenduski, N.S., Yeager, S.G., Long, M.C., Lindsay, K (2020). Skillful multiyear
+  predictions of ocean acidification in the California Current System. *Nature Communications*,
+  11, 2166. https://doi.org/10.1038/s41467-020-15722-x
+* Spring, A., Ilyina, T. (2020). Predictability horizons in theglobal carbon cycle inferred
+  from a perfect-model framework. *Geophysical Research Letters*, 47, e2019GL085311.
+  https://doi.org/10.1029/2019GL085311

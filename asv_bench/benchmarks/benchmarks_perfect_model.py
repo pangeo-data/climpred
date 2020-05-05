@@ -30,6 +30,7 @@ class Generate:
         self.nmember = 3
         self.ninit = 4
         self.nlead = 3
+        self.iterations = ITERATIONS
         self.nx = 64
         self.ny = 64
         self.control_start = 3000
@@ -131,7 +132,7 @@ class Compute(Generate):
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
+                iterations=self.iterations,
                 dim=dim,
             )
         )
@@ -146,7 +147,7 @@ class Compute(Generate):
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
+                iterations=self.iterations,
                 dim=dim,
             )
         )
@@ -178,3 +179,4 @@ class ComputeSmall(Compute):
         spatial_dims = ['lon', 'lat']
         self.ds = self.ds.mean(spatial_dims)
         self.control = self.control.mean(spatial_dims)
+        self.iterations = 500

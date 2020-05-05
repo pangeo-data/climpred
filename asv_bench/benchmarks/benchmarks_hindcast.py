@@ -34,6 +34,7 @@ class Generate:
         self.nlead = 3
         self.nx = 64
         self.ny = 64
+        self.iterations = ITERATIONS
         self.init_start = 1960
         self.init_end = 2000
         self.ninit = self.init_end - self.init_start
@@ -141,7 +142,7 @@ class Compute(Generate):
                 self.observations,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
+                iterations=self.iterations,
                 dim=dim,
             )
         )
@@ -156,7 +157,7 @@ class Compute(Generate):
                 self.observations,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
+                iterations=self.iterations,
                 dim='member',
             )
         )
@@ -193,3 +194,4 @@ class ComputeSmall(Compute):
         self.hind = self.hind.mean(spatial_dims)
         self.observations = self.observations.mean(spatial_dims)
         self.uninit = self.uninit.mean(spatial_dims)
+        self.iterations = 500

@@ -359,3 +359,23 @@ def test_resample_size(PM_da_initialized_1d):
     actual = _resample_iterations_idx(PM_da_initialized_1d, ITERATIONS, dim=dim)
     assert expected.size == actual.size
     assert expected[dim].size == actual[dim].size
+
+
+def test_bootstrap_hindcast_init_resample_dim_warning(
+    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
+):
+    """Test that warning is raised when user tries to resample hindcast over init."""
+    with pytest.warns(UserWarning) as record:
+        bootstrap_hindcast(
+            hind_da_initialized_1d,
+            hist_da_uninitialized_1d,
+            observations_da_1d,
+            iterations=ITERATIONS,
+            comparison='e2o',
+            metric='mse',
+            resample_dim='init',
+            alignment='same_inits',
+        )
+        expected = 'resample_dim=`init` will be slower than resample_dim=`member`.'
+        # one of the last records
+        assert expected == record[-2].message.args[0]

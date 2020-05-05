@@ -590,7 +590,7 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    # Perfect Model requires `same_inits` setup.
+    # Perfect Model requires `same_inits` setup
     isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
 
@@ -599,10 +599,7 @@ def bootstrap_compute(
 
     # slower path for hindcast and resample_dim init
     if resample_dim == 'init' and isHindcast:
-        warnings.warn(
-            f'isHindcast; resample_dim is not member, found {resample_dim}.'
-            'This will be slower than resample_dim=`member`.'
-        )
+        warnings.warn(f'resample_dim=`init` will be slower than resample_dim=`member`.')
         (
             bootstrapped_init_skill,
             bootstrapped_uninit_skill,

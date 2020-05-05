@@ -394,6 +394,99 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
     )
 
 
+def _bootstrap_hindcast_over_init_dim(
+    hind,
+    hist,
+    verif,
+    dim,
+    resample_dim,
+    iterations,
+    metric,
+    comparison,
+    alignment,
+    compute,
+    reference_compute,
+    resample_uninit,
+    reference_alignment,
+    **metric_kwargs,
+):
+    """Helper function for looping bootstrap skill.
+    Needed for hindcast when resampling over init dimension."""
+    pers_skill = []
+    bootstrapped_init_skill = []
+    bootstrapped_uninit_skill = []
+    # reset inits when probabilistic, otherwise tests fail
+    for i in range(iterations):
+        # resample with replacement
+        smp_hind = _resample(hind, resample_dim)
+        # compute init skill
+        init_skill = compute(
+            smp_hind,
+            verif,
+            metric=metric,
+            comparison=comparison,
+            alignment=alignment,
+            add_attrs=False,
+            dim=dim,
+            **metric_kwargs,
+        )
+        # reset inits when probabilistic, otherwise tests fail
+        if (
+            resample_dim == 'init'
+            and metric.probabilistic
+            and 'init' in init_skill.coords
+        ):
+            init_skill['init'] = hind.init.values
+        bootstrapped_init_skill.append(init_skill)
+        # generate uninitialized ensemble from hist
+        uninit_hind = resample_uninit(hind, hist)
+        # compute uninit skill
+        bootstrapped_uninit_skill.append(
+            compute(
+                uninit_hind,
+                verif,
+                alignment=alignment,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
+                add_attrs=False,
+                **metric_kwargs,
+            )
+        )
+        # compute persistence skill
+        # impossible for probabilistic
+        if not metric.probabilistic:
+            pers_skill.append(
+                reference_compute(
+                    smp_hind,
+                    verif,
+                    metric=metric,
+                    alignment=reference_alignment,
+                    add_attrs=False,
+                    **metric_kwargs,
+                )
+            )
+    bootstrapped_init_skill = xr.concat(
+        bootstrapped_init_skill, dim='iteration', **CONCAT_KWARGS
+    )
+    bootstrapped_uninit_skill = xr.concat(
+        bootstrapped_uninit_skill, dim='iteration', **CONCAT_KWARGS
+    )
+    if pers_skill != []:
+        bootstrapped_pers_skill = xr.concat(
+            pers_skill, dim='iteration', **CONCAT_KWARGS
+        )
+        pers_output = True
+    else:
+        pers_output = False
+    return (
+        bootstrapped_init_skill,
+        bootstrapped_uninit_skill,
+        bootstrapped_pers_skill,
+        pers_output,
+    )
+
+
 def bootstrap_compute(
     hind,
     verif,
@@ -510,78 +603,31 @@ def bootstrap_compute(
             f'isHindcast; resample_dim is not member, found {resample_dim}.'
             'This will be slower than resample_dim=`member`.'
         )
-        pers_skill = []
-        bootstrapped_init_skill = []
-        bootstrapped_uninit_skill = []
-        # reset inits when probabilistic, otherwise tests fail
-        for i in range(iterations):
-            # resample with replacement
-            smp_hind = _resample(hind, resample_dim)
-            # compute init skill
-            init_skill = compute(
-                smp_hind,
-                verif,
-                metric=metric,
-                comparison=comparison,
-                alignment=alignment,
-                add_attrs=False,
-                dim=dim,
-                **metric_kwargs,
-            )
-            # reset inits when probabilistic, otherwise tests fail
-            if (
-                resample_dim == 'init'
-                and metric.probabilistic
-                and 'init' in init_skill.coords
-            ):
-                init_skill['init'] = hind.init.values
-            bootstrapped_init_skill.append(init_skill)
-            # generate uninitialized ensemble from hist
-            uninit_hind = resample_uninit(hind, hist)
-            # compute uninit skill
-            bootstrapped_uninit_skill.append(
-                compute(
-                    uninit_hind,
-                    verif,
-                    alignment=alignment,
-                    metric=metric,
-                    comparison=comparison,
-                    dim=dim,
-                    add_attrs=False,
-                    **metric_kwargs,
-                )
-            )
-            # compute persistence skill
-            # impossible for probabilistic
-            if not metric.probabilistic:
-                pers_skill.append(
-                    reference_compute(
-                        smp_hind,
-                        verif,
-                        metric=metric,
-                        alignment=reference_alignment,
-                        add_attrs=False,
-                        **metric_kwargs,
-                    )
-                )
-        bootstrapped_init_skill = xr.concat(
-            bootstrapped_init_skill, dim='iteration', **CONCAT_KWARGS
+        (
+            bootstrapped_init_skill,
+            bootstrapped_uninit_skill,
+            bootstrapped_pers_skill,
+            pers_output,
+        ) = _bootstrap_hindcast_over_init_dim(
+            hind,
+            hist,
+            verif,
+            dim,
+            resample_dim,
+            iterations,
+            metric,
+            comparison,
+            alignment,
+            compute,
+            reference_compute,
+            resample_uninit,
+            reference_alignment,
+            **metric_kwargs,
         )
-        bootstrapped_uninit_skill = xr.concat(
-            bootstrapped_uninit_skill, dim='iteration', **CONCAT_KWARGS
-        )
-        if pers_skill != []:
-            bootstrapped_pers_skill = xr.concat(
-                pers_skill, dim='iteration', **CONCAT_KWARGS
-            )
-            pers_output = True
-        else:
-            pers_output = False
-
     else:
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
-        # uninit
-        # create more members than needed in PM
+        # create more members than needed in PM to make the uninitialized distribution
+        # more robust
         if not isHindcast:
             uninit_hind = xr.concat(
                 [resample_uninit(hind, hist) for i in range(3)], dim='member'
@@ -591,7 +637,7 @@ def bootstrap_compute(
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
             ).isel(member=slice(None, hind.member.size))
-        else:
+        else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim

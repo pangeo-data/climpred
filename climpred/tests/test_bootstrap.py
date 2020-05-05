@@ -56,6 +56,7 @@ def test_bootstrap_PM_lazy_results(
         metric='mse',
     )
     assert dask.is_dask_collection(s) == chunk
+    assert not s.sel(results='skill', kind='init').compute().isnull().any()
 
 
 @pytest.mark.slow
@@ -88,6 +89,7 @@ def test_bootstrap_hindcast_lazy(
         metric='mse',
     )
     assert dask.is_dask_collection(s) == chunk
+    assert not s.sel(results='skill', kind='init').compute().isnull().any()
 
 
 @pytest.mark.slow

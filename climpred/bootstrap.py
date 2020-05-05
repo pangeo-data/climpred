@@ -104,7 +104,7 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
 
     return xr.apply_ufunc(
         select_bootstrap_indices_ufunc,
-        init.transpose(dim, ...),
+        init.transpose(dim, ..., transpose_coords=False),
         idx_da,
         dask='parallelized',
         output_dtypes=[float],
@@ -308,7 +308,7 @@ def _bootstrap_by_stacking(init_pm, control):
     larger = control.isel(time=new_time)
     fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
     # exchange values
-    larger = larger.transpose(*fake_init.dims)
+    larger = larger.transpose(*fake_init.dims, transpose_coords=False)
     fake_init.data = larger.data
     fake_uninit = fake_init.unstack()
     if init_was_dataset:
@@ -626,15 +626,19 @@ def bootstrap_compute(
         # create more members than needed in PM to make the uninitialized distribution
         # more robust
         if not isHindcast:
+            repeat = 4
             uninit_hind = xr.concat(
-                [resample_uninit(hind, hist) for i in range(3)], dim='member'
+                [resample_uninit(hind, hist) for i in range(repeat)], dim='member'
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             print(uninit_hind.coords)
             # resample from those and select only hind.member.size
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
-            ).isel(member=slice(None, hind.member.size))
+            )
+            bootstrapped_uninit = bootstrapped_uninit.isel(
+                member=slice(None, hind.member.size)
+            )
         else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             bootstrapped_uninit = _resample_iterations_idx(

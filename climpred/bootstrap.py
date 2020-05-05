@@ -624,26 +624,13 @@ def bootstrap_compute(
             reference_alignment,
             **metric_kwargs,
         )
-    else:
+    else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
-        # create more members than needed in PM to make the uninitialized distribution
-        # more robust
-        if not isHindcast:
-            uninit_hind = xr.concat(
-                [resample_uninit(hind, hist) for i in range(3)], dim='member'
-            )
-            uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
-            # resample from those and select only hind.member.size
-            bootstrapped_uninit = _resample_iterations_idx(
-                uninit_hind, iterations, resample_dim
-            ).isel(member=slice(None, hind.member.size))
-        else:  # hindcast
-            uninit_hind = resample_uninit(hind, hist)
-            bootstrapped_uninit = _resample_iterations_idx(
-                uninit_hind, iterations, resample_dim
-            )
+        uninit_hind = resample_uninit(hind, hist)
+        bootstrapped_uninit = _resample_iterations_idx(
+            uninit_hind, iterations, resample_dim
+        )
 
-        # bs skill
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
             verif,

@@ -104,7 +104,7 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
 
     return xr.apply_ufunc(
         select_bootstrap_indices_ufunc,
-        init.transpose(dim, ..., transpose_coords=False),
+        init.transpose(dim, ...),
         idx_da,
         dask='parallelized',
         output_dtypes=[float],

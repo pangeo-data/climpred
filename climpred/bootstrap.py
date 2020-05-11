@@ -634,9 +634,7 @@ def bootstrap_compute(
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             # fix dask _resample_iterations_idx issue: rechunk to one member chunk
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = uninit_hind.chunk(
-                    {'member': -1, 'lead': 'auto', 'init': ' auto'}
-                )
+                uninit_hind = uninit_hind.chunk({'member': -1})
             # resample uninit always over member those and select only hind.member.size
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, 'member', replace=False

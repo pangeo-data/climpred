@@ -626,7 +626,7 @@ def bootstrap_compute(
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
-            members_to_sample_from = 50
+            members_to_sample_from = 100
             repeat = members_to_sample_from // hind.member.size + 1
             uninit_hind = xr.concat(
                 [resample_uninit(hind, hist) for i in range(repeat)], dim='member'

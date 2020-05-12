@@ -496,14 +496,13 @@ def _bootstrap_hindcast_over_init_dim(
     )
 
 
-def _maybe_auto_chunk(ds, chunking_dim):
+def _maybe_auto_chunk(ds, dims):
     """Auto-chunk on dimension lead and maybe chunking_dim."""
-    if dask.is_dask_collection(ds):
-        chunks = (
-            {'lead': 'auto'}
-            if chunking_dim is None
-            else {'lead': 'auto', chunking_dim: 'auto'}
-        )
+    if dask.is_dask_collection(ds) and dims is not None:
+        if isinstance(dims, str):
+            dims = [dims]
+        chunks = [d for d in dims if d in ds.dims]
+        chunks = {key: 'auto' for key in chunks}
         ds = ds.chunk(chunks)
     return ds
 
@@ -650,6 +649,7 @@ def bootstrap_compute(
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
         bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
+        bootstrapped_hind = _maybe_auto_chunk(bootstrapped_hind, chunking_dim)
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
@@ -662,8 +662,7 @@ def bootstrap_compute(
             # fix dask _resample_iterations_idx issue: rechunk to one member chunk
             if dask.is_dask_collection(uninit_hind):
                 uninit_hind = _maybe_auto_chunk(
-                    uninit_hind.persist().chunk({'member': -1}),
-                    chunking_dim=chunking_dim,
+                    uninit_hind.persist().chunk({'member': -1}), chunking_dim,
                 )
             # resample uninit always over member those and select only hind.member.size
             bootstrapped_uninit = _resample_iterations_idx(
@@ -674,16 +673,14 @@ def bootstrap_compute(
             )
             if dask.is_dask_collection(bootstrapped_uninit):
                 bootstrapped_uninit = _maybe_auto_chunk(
-                    bootstrapped_uninit.chunk({'member': -1}), chunking_dim=chunking_dim
+                    bootstrapped_uninit.chunk({'member': -1}), chunking_dim
                 )
         else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
             )
-            bootstrapped_uninit = _maybe_auto_chunk(
-                bootstrapped_uninit, chunking_dim=chunking_dim
-            )
+            bootstrapped_uninit = _maybe_auto_chunk(bootstrapped_uninit, chunking_dim)
 
         bootstrapped_init_skill = compute(
             bootstrapped_hind,

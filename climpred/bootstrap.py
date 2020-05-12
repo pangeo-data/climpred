@@ -410,12 +410,21 @@ def _bootstrap_hindcast_over_init_dim(
     reference_alignment,
     **metric_kwargs,
 ):
-    """Helper function for looping bootstrap skill.
-    Needed for hindcast when resampling over init dimension."""
+    """Bootstrap hindcast skill over the ``init`` dimension.
+
+    When bootstrapping over the ``member`` dimension, an additional dimension
+    ``iteration`` can be added and skill can be computing over that entire
+    dimension in parallel, since all members are being aligned the same way.
+    However, to our knowledge, when bootstrapping over the ``init`` dimension,
+    one must evaluate each iteration independently. I.e., in a looped fashion,
+    since alignment of initializations and target dates is unique to each
+    iteration.
+
+    See ``bootstrap_compute`` for explanation of inputs.
+    """
     pers_skill = []
     bootstrapped_init_skill = []
     bootstrapped_uninit_skill = []
-    # reset inits when probabilistic, otherwise tests fail
     for i in range(iterations):
         # resample with replacement
         smp_hind = _resample(hind, resample_dim)
@@ -485,6 +494,18 @@ def _bootstrap_hindcast_over_init_dim(
         bootstrapped_pers_skill,
         pers_output,
     )
+
+
+def _maybe_auto_chunk(ds, chunking_dim):
+    """Auto-chunk on dimension lead and maybe chunking_dim."""
+    if dask.is_dask_collection(ds):
+        chunks = (
+            {'lead': 'auto'}
+            if chunking_dim is None
+            else {'lead': 'auto', chunking_dim: 'auto'}
+        )
+        ds = ds.chunk(chunks)
+    return ds
 
 
 def bootstrap_compute(
@@ -594,6 +615,12 @@ def bootstrap_compute(
     isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
 
+    # dimension in which chunking is allowed
+    try:
+        chunking_dim = [d for d in hind.dims if d not in CLIMPRED_DIMS][0]
+    except IndexError:
+        chunking_dim = None
+
     if hist is None:  # PM path, use verif = control
         hist = verif
 
@@ -634,7 +661,10 @@ def bootstrap_compute(
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             # fix dask _resample_iterations_idx issue: rechunk to one member chunk
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = uninit_hind.chunk({'member': -1})
+                uninit_hind = _maybe_auto_chunk(
+                    uninit_hind.persist().chunk({'member': -1}),
+                    chunking_dim=chunking_dim,
+                )
             # resample uninit always over member those and select only hind.member.size
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, 'member', replace=False
@@ -642,10 +672,17 @@ def bootstrap_compute(
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
             )
+            if dask.is_dask_collection(bootstrapped_uninit):
+                bootstrapped_uninit = _maybe_auto_chunk(
+                    bootstrapped_uninit.chunk({'member': -1}), chunking_dim=chunking_dim
+                )
         else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
+            )
+            bootstrapped_uninit = _maybe_auto_chunk(
+                bootstrapped_uninit, chunking_dim=chunking_dim
             )
 
         bootstrapped_init_skill = compute(
@@ -719,14 +756,11 @@ def bootstrap_compute(
     # probabilistic metrics wont have persistence forecast
     # therefore only get CI if persistence was computed
     if pers_output:
-        # if set(pers.coords) != set(init.coords):
-        #    init, pers = xr.broadcast(init, pers)
         pers_ci = _distribution_to_ci(
             bootstrapped_pers_skill, ci_low_pers, ci_high_pers
         )
     else:
         # otherwise set all persistence outputs to false
-        # pers = init_skill.isnull()
         pers_ci = init_ci == -999
 
     # pvalue whether uninit or pers better than init forecast

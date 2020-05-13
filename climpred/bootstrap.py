@@ -84,7 +84,8 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
 
     # resample with or without replacement
     if replace:
-        idx = np.random.randint(0, init[dim].size, (iterations, init[dim].size))
+        idx = np.random.randint(
+            0, init[dim].size, (iterations, init[dim].size))
     elif not replace:
         # create 2d np.arange()
         idx = np.linspace(
@@ -178,7 +179,8 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     # find range for bootstrapping
     first_init = max(hist.time.min(), hind['init'].min())
 
-    n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], hind.lead.size)
+    n, freq = get_lead_cftime_shift_args(
+        hind.lead.attrs['units'], hind.lead.size)
     hist_last = shift_cftime_singular(hist.time.max(), -1 * n, freq)
     last_init = min(hist_last, hind['init'].max())
 
@@ -199,7 +201,8 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
+        uninit_at_one_init_year['member'] = np.arange(
+            1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
@@ -237,7 +240,8 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
         return _bootstrap_by_stacking(init_pm, control)
 
     block_length = init_pm.lead.size
-    freq = get_lead_cftime_shift_args(init_pm.lead.attrs['units'], block_length)[1]
+    freq = get_lead_cftime_shift_args(
+        init_pm.lead.attrs['units'], block_length)[1]
     nmember = init_pm.member.size
     # start and end years possible to resample the actual uninitialized ensembles from
     c_start_year = control.time.min().dt.year.astype('int')
@@ -245,8 +249,8 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     c_end_year = (
         shift_cftime_singular(control.time.max(), -block_length, freq).dt.year.astype(
             'int'
-        )
-        - 1
+        ) -
+        1
     )
 
     def sel_time(start_year_int, suitable_start_dates):
@@ -300,13 +304,15 @@ def _bootstrap_by_stacking(init_pm, control):
     init_size = init_pm.init.size * init_pm.member.size * init_pm.lead.size
     # select random start points
     new_time = np.random.randint(
-        0, control.time.size - init_pm.lead.size, init_size // (init_pm.lead.size)
+        0, control.time.size -
+        init_pm.lead.size, init_size // (init_pm.lead.size)
     )
     new_time = np.array(
         [np.arange(s, s + init_pm.lead.size) for s in new_time]
     ).flatten()[:init_size]
     larger = control.isel(time=new_time)
-    fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
+    fake_init = init_pm.stack(time=tuple(
+        d for d in init_pm.dims if d in CLIMPRED_DIMS))
     # exchange values
     larger = larger.transpose(*fake_init.dims, transpose_coords=False)
     fake_init.data = larger.data
@@ -345,7 +351,8 @@ def _bootstrap_func(
                    dimensions of init_pm and len(sig) if sig is list
     """
     if not callable(func):
-        raise ValueError(f'Please provide func as a function, found {type(func)}')
+        raise ValueError(
+            f'Please provide func as a function, found {type(func)}')
     warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
@@ -359,7 +366,8 @@ def _bootstrap_func(
     bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
         bootstraped_results, dim='iteration'
     )
-    sig_level = bootstraped_results.quantile(dim='iteration', q=psig, skipna=False)
+    sig_level = bootstraped_results.quantile(
+        dim='iteration', q=psig, skipna=False)
     return sig_level
 
 
@@ -625,7 +633,8 @@ def bootstrap_compute(
 
     # slower path for hindcast and resample_dim init
     if resample_dim == 'init' and isHindcast:
-        warnings.warn(f'resample_dim=`init` will be slower than resample_dim=`member`.')
+        warnings.warn(
+            f'resample_dim=`init` will be slower than resample_dim=`member`.')
         (
             bootstrapped_init_skill,
             bootstrapped_uninit_skill,
@@ -648,12 +657,13 @@ def bootstrap_compute(
             **metric_kwargs,
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
-        bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
+        bootstrapped_hind = _resample_iterations_idx(
+            hind, iterations, resample_dim)
         bootstrapped_hind = _maybe_auto_chunk(bootstrapped_hind, chunking_dim)
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
-            members_to_sample_from = 100
+            members_to_sample_from = 50
             repeat = members_to_sample_from // hind.member.size + 1
             uninit_hind = xr.concat(
                 [resample_uninit(hind, hist) for i in range(repeat)], dim='member'
@@ -680,7 +690,8 @@ def bootstrap_compute(
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
             )
-            bootstrapped_uninit = _maybe_auto_chunk(bootstrapped_uninit, chunking_dim)
+            bootstrapped_uninit = _maybe_auto_chunk(
+                bootstrapped_uninit, chunking_dim)
 
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
@@ -775,7 +786,8 @@ def bootstrap_compute(
     skill['kind'] = ['init', 'uninit', 'pers']
 
     # probability that i beats init
-    p = xr.concat([p_uninit_over_init, p_pers_over_init], dim='kind', **CONCAT_KWARGS)
+    p = xr.concat([p_uninit_over_init, p_pers_over_init],
+                  dim='kind', **CONCAT_KWARGS)
     p['kind'] = ['uninit', 'pers']
 
     # ci for each skill

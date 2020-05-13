@@ -504,6 +504,7 @@ def _bootstrap_hindcast_over_init_dim(
     )
 
 
+
 def _maybe_auto_chunk(ds, dims):
     """Auto-chunk on dimension lead and maybe chunking_dim."""
     if dask.is_dask_collection(ds) and dims is not None:

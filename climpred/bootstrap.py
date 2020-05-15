@@ -543,7 +543,10 @@ def _chunk_before_resample_iteration_idx(ds, iterations, chunking_dims):
     # convert number of chunks to chunksize
     chunks = dict()
     for i, d in enumerate(chunking_dims):
-        chunks[d] = ds[d].size // cdim[i]
+        chunksize = ds[d].size // cdim[i]
+        if chunksize < 1:
+            chunksize = 1
+        chunks[d] = chunksize
     ds = ds.chunk(chunks)
     return ds
 
@@ -702,7 +705,7 @@ def bootstrap_compute(
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = uninit_hind.persist()
+                uninit_hind = uninit_hind.compute().chunk()
                 uninit_hind = _chunk_before_resample_iteration_idx(
                     uninit_hind, iterations, chunking_dims
                 )

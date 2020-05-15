@@ -500,7 +500,7 @@ def _bootstrap_hindcast_over_init_dim(
 
 def _maybe_auto_chunk(ds, dims):
     """Auto-chunk on dimension lead and maybe chunking_dims."""
-    if dask.is_dask_collection(ds) and dims is not None:
+    if dask.is_dask_collection(ds) and dims is not []:
         if isinstance(dims, str):
             dims = [dims]
         chunks = [d for d in dims if d in ds.dims]
@@ -642,8 +642,8 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    bootstrapped_hind = []
-    bootstrapped_uninit = []
+    # bootstrapped_hind = []
+    # bootstrapped_uninit = []
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -659,10 +659,7 @@ def bootstrap_compute(
     reference_alignment = alignment if isHindcast else 'same_inits'
 
     # dimension in which chunking is allowed
-    try:
-        chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
-    except IndexError:
-        chunking_dims = None
+    chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
     if hist is None:  # PM path, use verif = control
         hist = verif
@@ -748,17 +745,32 @@ def bootstrap_compute(
             **metric_kwargs,
         )
 
-    if not metric.probabilistic:
-        pers_skill = reference_compute(
-            hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs,
-        )
-        pers_output = True
-        bootstrapped_pers_skill = pers_skill.expand_dims('iteration').isel(
-            iteration=[0] * iterations
-        )
-    else:
-        bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
-        pers_output = False
+        if not metric.probabilistic:
+            pers_skill = reference_compute(
+                hind,
+                verif,
+                metric=metric,
+                alignment=reference_alignment,
+                **metric_kwargs,
+            )
+            pers_output = True
+            # bootstrap pers
+            if resample_dim == 'init':
+                print(type(bootstrapped_hind), type(verif))
+                bootstrapped_pers_skill = reference_compute(
+                    bootstrapped_hind,
+                    verif,
+                    metric=metric,
+                    alignment=reference_alignment,
+                    **metric_kwargs,
+                )
+            else:  # member
+                bootstrapped_pers_skill = pers_skill.expand_dims('iteration').isel(
+                    iteration=[0] * iterations
+                )
+        else:
+            bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
+            pers_output = False
 
     # calc mean skill without any resampling
     init_skill = compute(

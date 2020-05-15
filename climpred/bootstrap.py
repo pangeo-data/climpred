@@ -756,7 +756,6 @@ def bootstrap_compute(
             pers_output = True
             # bootstrap pers
             if resample_dim == 'init':
-                print(type(bootstrapped_hind), type(verif))
                 bootstrapped_pers_skill = reference_compute(
                     bootstrapped_hind,
                     verif,

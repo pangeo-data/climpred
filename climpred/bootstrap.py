@@ -72,6 +72,8 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
 
     """
+    if dask.is_dask_collection(init):
+        init = init.chunk({'lead': -1, 'member': -1})
 
     def select_bootstrap_indices_ufunc(x, idx):
         """Selects multi-level indices ``idx`` from xarray object ``x`` for all
@@ -346,7 +348,7 @@ def _bootstrap_func(
     """
     if not callable(func):
         raise ValueError(f'Please provide func as a function, found {type(func)}')
-    warn_if_chunking_would_increase_performance(ds)
+    # warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
     else:
@@ -496,15 +498,56 @@ def _bootstrap_hindcast_over_init_dim(
     )
 
 
-def _maybe_auto_chunk(ds, chunking_dim):
-    """Auto-chunk on dimension lead and maybe chunking_dim."""
-    if dask.is_dask_collection(ds):
-        chunks = (
-            {'lead': 'auto'}
-            if chunking_dim is None
-            else {'lead': 'auto', chunking_dim: 'auto'}
-        )
+def _maybe_auto_chunk(ds, dims):
+    """Auto-chunk on dimension lead and maybe chunking_dims."""
+    if dask.is_dask_collection(ds) and dims is not []:
+        if isinstance(dims, str):
+            dims = [dims]
+        chunks = [d for d in dims if d in ds.dims]
+        chunks = {key: 'auto' for key in chunks}
         ds = ds.chunk(chunks)
+    return ds
+
+
+def _chunk_before_resample_iteration_idx(ds, iterations, chunking_dims):
+    """Chunk ds so small that after _resample_iteration_idx chunks have optimal size."""
+    # how many times larger than recommended chunksize of 100MB
+    optimal_blocksize = 100000000
+    # size of CLIMPRED_DIMS
+    climpred_dim_chunksize = 8 * np.product(
+        np.array([ds[d].size for d in CLIMPRED_DIMS if d in ds.dims])
+    )
+    # remaining blocksize for remaining dims considering iteration
+    spatial_dim_blocksize = optimal_blocksize / (climpred_dim_chunksize * iterations)
+    # size of remaining dims
+    chunking_dims_size = np.product(
+        np.array([ds[d].size for d in ds.dims if d not in CLIMPRED_DIMS])
+    )  # ds.lat.size*ds.lon.size
+    # chunks needed to get to optimal blocksize
+    chunks_needed = chunking_dims_size / spatial_dim_blocksize
+    # get size clon, clat for spatial chunks
+    cdim = [1 for i in chunking_dims]
+    nchunks = np.product(cdim)
+    stepsize = 1
+    counter = 0
+    while nchunks < chunks_needed:
+        for i, d in enumerate(chunking_dims):
+            c = cdim[i]
+            if c <= ds[d].size:
+                c = c + stepsize
+                cdim[i] = c
+            nchunks = np.product(cdim)
+        counter += 1
+        if counter == 100:
+            break
+    # convert number of chunks to chunksize
+    chunks = dict()
+    for i, d in enumerate(chunking_dims):
+        chunksize = ds[d].size // cdim[i]
+        if chunksize < 1:
+            chunksize = 1
+        chunks[d] = chunksize
+    ds = ds.chunk(chunks)
     return ds
 
 
@@ -599,9 +642,6 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    bootstrapped_hind = []
-    bootstrapped_uninit = []
-
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     comparison = COMPARISON_ALIASES.get(comparison, comparison)
@@ -616,10 +656,7 @@ def bootstrap_compute(
     reference_alignment = alignment if isHindcast else 'same_inits'
 
     # dimension in which chunking is allowed
-    try:
-        chunking_dim = [d for d in hind.dims if d not in CLIMPRED_DIMS][0]
-    except IndexError:
-        chunking_dim = None
+    chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
     if hist is None:  # PM path, use verif = control
         hist = verif
@@ -649,52 +686,42 @@ def bootstrap_compute(
             **metric_kwargs,
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
-        bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
+        # uninit
+        if dask.is_dask_collection(hind):
+            hind2 = hind.copy(deep=True).compute().chunk()
+        else:
+            hind2 = hind
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
-            members_to_sample_from = 100
+            members_to_sample_from = 50
             repeat = members_to_sample_from // hind.member.size + 1
             uninit_hind = xr.concat(
-                [resample_uninit(hind, hist) for i in range(repeat)], dim='member'
+                [resample_uninit(hind2, hist) for i in range(repeat)], dim='member'
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
-            # fix dask _resample_iterations_idx issue: rechunk to one member chunk
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = _maybe_auto_chunk(
-                    uninit_hind.persist().chunk({'member': -1}),
-                    chunking_dim=chunking_dim,
+                uninit_hind = uninit_hind.compute().chunk()
+                uninit_hind = _chunk_before_resample_iteration_idx(
+                    uninit_hind, iterations, chunking_dims
                 )
             # resample uninit always over member those and select only hind.member.size
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, 'member', replace=False
             )
             bootstrapped_uninit = bootstrapped_uninit.isel(
-                member=slice(None, hind.member.size)
+                member=slice(None, hind2.member.size)
             )
-            if dask.is_dask_collection(bootstrapped_uninit):
-                bootstrapped_uninit = _maybe_auto_chunk(
-                    bootstrapped_uninit.chunk({'member': -1}), chunking_dim=chunking_dim
-                )
         else:  # hindcast
-            uninit_hind = resample_uninit(hind, hist)
+            uninit_hind = resample_uninit(hind2, hist)
+            if dask.is_dask_collection(uninit_hind):
+                uninit_hind = uninit_hind.compute().chunk()
+                uninit_hind = _chunk_before_resample_iteration_idx(
+                    uninit_hind, iterations, chunking_dims
+                )
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
             )
-            bootstrapped_uninit = _maybe_auto_chunk(
-                bootstrapped_uninit, chunking_dim=chunking_dim
-            )
-
-        bootstrapped_init_skill = compute(
-            bootstrapped_hind,
-            verif,
-            metric=metric,
-            comparison=comparison,
-            alignment=alignment,
-            add_attrs=False,
-            dim=dim,
-            **metric_kwargs,
-        )
 
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,
@@ -707,17 +734,47 @@ def bootstrap_compute(
             **metric_kwargs,
         )
 
-    if not metric.probabilistic:
-        pers_skill = reference_compute(
-            hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs,
+        # bootstrap hind
+        if dask.is_dask_collection(hind):
+            hind = _chunk_before_resample_iteration_idx(hind, iterations, chunking_dims)
+        bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
+
+        bootstrapped_init_skill = compute(
+            bootstrapped_hind,
+            verif,
+            metric=metric,
+            comparison=comparison,
+            alignment=alignment,
+            add_attrs=False,
+            dim=dim,
+            **metric_kwargs,
         )
-        pers_output = True
-        bootstrapped_pers_skill = pers_skill.expand_dims('iteration').isel(
-            iteration=[0] * iterations
-        )
-    else:
-        bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
-        pers_output = False
+
+        if not metric.probabilistic:
+            pers_skill = reference_compute(
+                hind,
+                verif,
+                metric=metric,
+                alignment=reference_alignment,
+                **metric_kwargs,
+            )
+            pers_output = True
+            # bootstrap pers
+            if resample_dim == 'init':
+                bootstrapped_pers_skill = reference_compute(
+                    bootstrapped_hind,
+                    verif,
+                    metric=metric,
+                    alignment=reference_alignment,
+                    **metric_kwargs,
+                )
+            else:  # member
+                bootstrapped_pers_skill = pers_skill.expand_dims('iteration').isel(
+                    iteration=[0] * iterations
+                )
+        else:
+            bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
+            pers_output = False
 
     # calc mean skill without any resampling
     init_skill = compute(

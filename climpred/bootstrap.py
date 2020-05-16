@@ -348,7 +348,7 @@ def _bootstrap_func(
     """
     if not callable(func):
         raise ValueError(f'Please provide func as a function, found {type(func)}')
-    warn_if_chunking_would_increase_performance(ds)
+    # warn_if_chunking_would_increase_performance(ds)
     if isinstance(sig, list):
         psig = [i / 100 for i in sig]
     else:
@@ -689,16 +689,15 @@ def bootstrap_compute(
             **metric_kwargs,
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
-        if dask.is_dask_collection(hind):
-            hind = _chunk_before_resample_iteration_idx(hind, iterations, chunking_dims)
-        bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
+        # uninit
+        hind2 = hind.copy(deep=True)
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
             members_to_sample_from = 50
             repeat = members_to_sample_from // hind.member.size + 1
             uninit_hind = xr.concat(
-                [resample_uninit(hind, hist) for i in range(repeat)], dim='member'
+                [resample_uninit(hind2, hist) for i in range(repeat)], dim='member'
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             if dask.is_dask_collection(uninit_hind):
@@ -711,17 +710,22 @@ def bootstrap_compute(
                 uninit_hind, iterations, 'member', replace=False
             )
             bootstrapped_uninit = bootstrapped_uninit.isel(
-                member=slice(None, hind.member.size)
+                member=slice(None, hind2.member.size)
             )
         else:  # hindcast
-            uninit_hind = resample_uninit(hind, hist)
-            if dask.is_dask_collection(hind):
+            uninit_hind = resample_uninit(hind2, hist)
+            if dask.is_dask_collection(uninit_hind):
                 uninit_hind = _chunk_before_resample_iteration_idx(
                     uninit_hind, iterations, chunking_dims
                 )
             bootstrapped_uninit = _resample_iterations_idx(
                 uninit_hind, iterations, resample_dim
             )
+
+        # bootstrap hind
+        if dask.is_dask_collection(hind):
+            hind = _chunk_before_resample_iteration_idx(hind, iterations, chunking_dims)
+        bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
 
         bootstrapped_init_skill = compute(
             bootstrapped_hind,

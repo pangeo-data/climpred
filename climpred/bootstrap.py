@@ -686,7 +686,6 @@ def bootstrap_compute(
             **metric_kwargs,
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
-        # uninit
         if dask.is_dask_collection(hind):
             hind2 = hind.copy(deep=True).compute().chunk()
         else:

@@ -715,6 +715,7 @@ def bootstrap_compute(
         else:  # hindcast
             uninit_hind = resample_uninit(hind2, hist)
             if dask.is_dask_collection(uninit_hind):
+                uninit_hind = uninit_hind.compute().chunk()
                 uninit_hind = _chunk_before_resample_iteration_idx(
                     uninit_hind, iterations, chunking_dims
                 )

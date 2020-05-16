@@ -89,11 +89,12 @@ def _maximize_alignment(init_lead_matrix, all_verifs, leads):
     # Probably a way to do this more efficiently since we're doing essentially
     # the same thing at each step.
     verif_dates = {
-        l: lead_dependent_verif_dates.sel(lead=l).dropna('time').to_index()
-        for l in leads
+        lead: lead_dependent_verif_dates.sel(lead=lead).dropna('time').to_index()
+        for lead in leads
     }
     inits = {
-        l: lead_dependent_verif_dates.sel(lead=l).dropna('time')['time'] for l in leads
+        lead: lead_dependent_verif_dates.sel(lead=lead).dropna('time')['time']
+        for lead in leads
     }
     return inits, verif_dates
 
@@ -108,7 +109,8 @@ def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, f
     inits = valid_inits.where(verifies_at_all_leads, drop=True)
     inits = {l: inits for l in leads}
     verif_dates = {
-        l: shift_cftime_index(inits[l], 'time', n, freq) for (l, n) in zip(leads, n)
+        lead: shift_cftime_index(inits[lead], 'time', n, freq)
+        for (lead, n) in zip(leads, n)
     }
     return inits, verif_dates
 
@@ -132,10 +134,12 @@ def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, 
     verif_dates = xr.concat(common_set_of_verifs, 'time').to_index()
     inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
     inits = {
-        l: valid_inits.where(inits_that_verify_with_verif_dates.sel(lead=l), drop=True)
-        for l in leads
+        lead: valid_inits.where(
+            inits_that_verify_with_verif_dates.sel(lead=lead), drop=True
+        )
+        for lead in leads
     }
-    verif_dates = {l: verif_dates for l in leads}
+    verif_dates = {lead: verif_dates for lead in leads}
     return inits, verif_dates
 
 

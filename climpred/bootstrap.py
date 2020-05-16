@@ -663,7 +663,7 @@ def bootstrap_compute(
 
     # slower path for hindcast and resample_dim init
     if resample_dim == 'init' and isHindcast:
-        warnings.warn(f'resample_dim=`init` will be slower than resample_dim=`member`.')
+        warnings.warn('resample_dim=`init` will be slower than resample_dim=`member`.')
         (
             bootstrapped_init_skill,
             bootstrapped_uninit_skill,

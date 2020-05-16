@@ -211,8 +211,8 @@ def warn_if_chunking_would_increase_performance(ds):
     if not dask.is_dask_collection(ds):
         if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
             warnings.warn(
-                f'Consider chunking input `ds` along other dimensions than '
-                f'needed by algorithm, e.g. spatial dimensions, for parallelized '
+                'Consider chunking input `ds` along other dimensions than '
+                'needed by algorithm, e.g. spatial dimensions, for parallelized '
                 'performance increase.'
             )
     else:

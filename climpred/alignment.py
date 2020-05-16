@@ -107,7 +107,7 @@ def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, f
     """
     verifies_at_all_leads = init_lead_matrix.isin(all_verifs).all('lead')
     inits = valid_inits.where(verifies_at_all_leads, drop=True)
-    inits = {l: inits for l in leads}
+    inits = {lead: inits for lead in leads}
     verif_dates = {
         lead: shift_cftime_index(inits[lead], 'time', n, freq)
         for (lead, n) in zip(leads, n)

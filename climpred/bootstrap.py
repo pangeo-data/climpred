@@ -642,9 +642,6 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    # bootstrapped_hind = []
-    # bootstrapped_uninit = []
-
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     comparison = COMPARISON_ALIASES.get(comparison, comparison)
@@ -690,7 +687,10 @@ def bootstrap_compute(
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
         # uninit
-        hind2 = hind.copy(deep=True)
+        if dask.is_dask_collection(hind):
+            hind2 = hind.copy(deep=True).compute().chunk()
+        else:
+            hind2 = hind
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
@@ -723,6 +723,17 @@ def bootstrap_compute(
                 uninit_hind, iterations, resample_dim
             )
 
+        bootstrapped_uninit_skill = compute(
+            bootstrapped_uninit,
+            verif,
+            alignment=alignment,
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            add_attrs=False,
+            **metric_kwargs,
+        )
+
         # bootstrap hind
         if dask.is_dask_collection(hind):
             hind = _chunk_before_resample_iteration_idx(hind, iterations, chunking_dims)
@@ -736,17 +747,6 @@ def bootstrap_compute(
             alignment=alignment,
             add_attrs=False,
             dim=dim,
-            **metric_kwargs,
-        )
-
-        bootstrapped_uninit_skill = compute(
-            bootstrapped_uninit,
-            verif,
-            alignment=alignment,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            add_attrs=False,
             **metric_kwargs,
         )
 

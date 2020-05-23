@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+from dask.distributed import Client
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.metrics import PROBABILISTIC_METRICS
@@ -12,7 +13,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 PM_COMPARISONS = ['m2m', 'm2c']
 
-ITERATIONS = 8
+ITERATIONS = 16
 
 
 class Generate:
@@ -27,15 +28,16 @@ class Generate:
         perfect-model experiment."""
         self.ds = xr.Dataset()
         self.control = xr.Dataset()
-        self.nmember = 3
-        self.ninit = 4
-        self.nlead = 3
+        self.nmember = 5
+        self.ninit = 6
+        self.nlead = 10
         self.iterations = ITERATIONS
-        self.nx = 64
-        self.ny = 64
+        self.nx = 72
+        self.ny = 36
         self.control_start = 3000
         self.control_end = 3300
         self.ntime = self.control_end - self.control_start
+        self.client = None
 
         FRAC_NAN = 0.0
 
@@ -163,8 +165,23 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds['var'].chunk({'lon': self.nx // ITERATIONS})
-        self.control = self.control['var'].chunk({'lon': self.nx // ITERATIONS})
+        self.ds = self.ds['var'].chunk()
+        self.control = self.control['var'].chunk()
+
+
+class ComputeDaskDistributed(ComputeDask):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_perfect_model` and
+        `bootstrap_perfect_model`. This executes the same tests as `Compute` but
+        on chunked data with dask.distributed.Client."""
+        requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        self.client = Client()
+
+    def cleanup(self):
+        self.client.shutdown()
 
 
 class ComputeSmall(Compute):
@@ -175,7 +192,6 @@ class ComputeSmall(Compute):
         # magic taken from
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
-        # chunk along a spatial dimension to enable embarrasingly parallel computation
         spatial_dims = ['lon', 'lat']
         self.ds = self.ds.mean(spatial_dims)
         self.control = self.control.mean(spatial_dims)

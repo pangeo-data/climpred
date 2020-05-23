@@ -77,6 +77,9 @@ Internals/Minor Fixes
   climpred.stats (:pr:`354`) `Aaron Spring`_.
 - Require ``cftime v1.1.2``, which modifies their object handling to create 200-400x
   speedups in some basic operations. (:pr:`356`) `Riley X. Brady`_.
+- Resample first and then calculate skill in
+  :py:func:`~climpred.bootstrap.bootstrap_perfect_model` and
+  :py:func:`~climpred.bootstrap.bootstrap_hindcast` (:pr:`355`) `Aaron Spring`_.
 
 
 Documentation

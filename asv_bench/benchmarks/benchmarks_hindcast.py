@@ -1,5 +1,6 @@
 import numpy as np
 import xarray as xr
+from dask.distributed import Client
 
 from climpred.bootstrap import bootstrap_hindcast
 from climpred.metrics import PROBABILISTIC_METRICS
@@ -12,7 +13,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 HINDCAST_COMPARISONS = ['m2o']
 
-ITERATIONS = 8
+ITERATIONS = 16
 
 
 class Generate:
@@ -38,6 +39,7 @@ class Generate:
         self.init_start = 1960
         self.init_end = 2000
         self.ninit = self.init_end - self.init_start
+        self.client = None
 
         FRAC_NAN = 0.0
 
@@ -173,11 +175,24 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.hind = self.hind['var'].chunk({'lon': self.nx // ITERATIONS})
-        self.observations = self.observations['var'].chunk(
-            {'lon': self.nx // ITERATIONS}
-        )
-        self.uninit = self.uninit['var'].chunk({'lon': self.nx // ITERATIONS})
+        self.hind = self.hind['var'].chunk()
+        self.observations = self.observations['var'].chunk()
+        self.uninit = self.uninit['var'].chunk()
+
+
+class ComputeDaskDistributed(ComputeDask):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_hindcast` and
+        `bootstrap_hindcast`. This executes the same tests as `Compute` but
+        on chunked data with dask.distributed.Client."""
+        requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        self.client = Client()
+
+    def cleanup(self):
+        self.client.shutdown()
 
 
 class ComputeSmall(Compute):

@@ -1,4 +1,3 @@
-import multiprocessing
 import warnings
 from functools import wraps
 
@@ -8,7 +7,7 @@ import xarray as xr
 from .constants import VALID_LEAD_UNITS
 from .exceptions import DatasetError, DimensionError, VariableError
 
-NCPU = multiprocessing.cpu_count()
+NCPU = dask.system.CPU_COUNT
 
 
 def dec_args_kwargs(wrapper):
@@ -196,7 +195,7 @@ def match_initialized_vars(init, verif):
     return True
 
 
-def warn_if_chunking_would_increase_performance(ds):
+def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
     """Warn when chunking might make sense.
 
     Criteria for potential performance increase:
@@ -206,7 +205,6 @@ def warn_if_chunking_would_increase_performance(ds):
     - there should be several CPU available for the computation, like on a
      cluster or multi-core computer
     """
-    crit_size_in_MB = 100  # rough heuristic
     nbytes_in_MB = ds.nbytes / (1024 ** 2)
     if not dask.is_dask_collection(ds):
         if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:

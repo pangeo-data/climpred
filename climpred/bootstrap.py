@@ -7,9 +7,10 @@ import xarray as xr
 
 from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS, PM_CALENDAR_STR
 
-from .checks import (  # warn_if_chunking_would_increase_performance,
+from .checks import (
     has_dims,
     has_valid_lead_units,
+    warn_if_chunking_would_increase_performance,
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
@@ -260,7 +261,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         )
         uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
-    uninit_hind = xr.concat(uninit_hind, 'init')
+    uninit_hind = xr.concat(uninit_hind, 'init', **CONCAT_KWARGS)
     uninit_hind['init'] = hind['init'].values
     uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return (
@@ -380,101 +381,6 @@ def _bootstrap_by_stacking(init_pm, control):
     return fake_uninit
 
 
-def _get_resample_func(ds):
-    """Decide for resample function based on input `ds`.
-
-    .. note::
-      `_resample_iterations`: if big and chunked `ds`
-      `_resample_iterations_idx`: else (if small and eager `ds`)
-    """
-    resample_func = (
-        _resample_iterations
-        if (
-            dask.is_dask_collection(ds)
-            and len(ds.dims) > 3
-            # > 2MB
-            and ds.nbytes > 2000000
-        )
-        else _resample_iterations_idx
-    )
-    return resample_func
-
-
-def _bootstrap_func(
-    func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
-):
-    """Sig % threshold of function based on iterations resampling with replacement.
-
-    Reference:
-    * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
-     Intervals for the Correlation Coefficient in Climatology.” Theoretical and
-      Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
-      https://doi.org/10/b6fnsv.
-
-    Args:
-        func (function): function to be bootstrapped.
-        ds (xr.object): first input argument of func. `chunk` ds on `dim` other
-            than `resample_dim` for potential performance increase when multiple
-            CPUs available.
-        resample_dim (str): dimension to resample from.
-        sig (int,float,list): significance levels to return. Defaults to 95.
-        iterations (int): number of resample iterations. Defaults to 500.
-        *func_args (type): `*func_args`.
-        **func_kwargs (type): `**func_kwargs`.
-
-    Returns:
-        sig_level: bootstrapped significance levels with
-                   dimensions of init_pm and len(sig) if sig is list
-    """
-    if not callable(func):
-        raise ValueError(f'Please provide func as a function, found {type(func)}')
-    # warn_if_chunking_would_increase_performance(ds)
-    if isinstance(sig, list):
-        psig = [i / 100 for i in sig]
-    else:
-        psig = sig / 100
-
-    resample_func = _get_resample_func(ds)
-    bootstraped_ds = resample_func(ds, iterations, dim=resample_dim, replace=False)
-    bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
-    bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
-        bootstraped_results, dim='iteration'
-    )
-    sig_level = bootstraped_results.quantile(dim='iteration', q=psig, skipna=False)
-    return sig_level
-
-
-def dpp_threshold(control, sig=95, iterations=500, dim='time', **dpp_kwargs):
-    """Calc DPP significance levels from re-sampled dataset.
-
-    Reference:
-        * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
-          Potential Predictability of Global Temperature and Precipitation.”
-          Geophysical Research Letters 38, no. 7 (2011).
-          https://doi.org/10/ft272w.
-
-    See also:
-        * climpred.bootstrap._bootstrap_func
-        * climpred.stats.dpp
-    """
-    return _bootstrap_func(
-        dpp, control, dim, sig=sig, iterations=iterations, **dpp_kwargs
-    )
-
-
-def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim='time'):
-    """Calc the variance-weighted mean period significance levels from re-sampled
-    dataset.
-
-    See also:
-        * climpred.bootstrap._bootstrap_func
-        * climpred.stats.varweighted_mean_period
-    """
-    return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, iterations=iterations,
-    )
-
-
 def _bootstrap_hindcast_over_init_dim(
     hind,
     hist,
@@ -573,8 +479,37 @@ def _bootstrap_hindcast_over_init_dim(
     )
 
 
+def _get_resample_func(ds):
+    """Decide for resample function based on input `ds`.
+
+    Returns:
+      callable: `_resample_iterations`: if big and chunked `ds`
+                `_resample_iterations_idx`: else (if small and eager `ds`)
+    """
+    resample_func = (
+        _resample_iterations
+        if (
+            dask.is_dask_collection(ds)
+            and len(ds.dims) > 3
+            # > 2MB
+            and ds.nbytes > 2000000
+        )
+        else _resample_iterations_idx
+    )
+    return resample_func
+
+
 def _maybe_auto_chunk(ds, dims):
-    """Auto-chunk on dimension lead and maybe chunking_dims."""
+    """Auto-chunk on dimension `dims`.
+
+    Args:
+        ds (xr.object): input data.
+        dims (list of str or str): Dimensions to auto-chunk in.
+
+    Returns:
+        xr.object: auto-chunked along `dims`
+
+    """
     if dask.is_dask_collection(ds) and dims is not []:
         if isinstance(dims, str):
             dims = [dims]
@@ -584,10 +519,25 @@ def _maybe_auto_chunk(ds, dims):
     return ds
 
 
-def _chunk_before_resample_iterations_idx(ds, iterations, chunking_dims):
-    """Chunk ds so small that after _resample_iteration_idx chunks have optimal size."""
-    # how many times larger than recommended chunksize of 100MB
-    optimal_blocksize = 100000000
+def _chunk_before_resample_iterations_idx(
+    ds, iterations, chunking_dims, optimal_blocksize=100000000
+):
+    """Chunk ds so small that after _resample_iteration_idx chunks have optimal size
+    `optimal_blocksize`.
+
+    Args:
+        ds (xr.obejct): input data`.
+        iterations (int): number of bootstrap iterations in `_resample_iterations_idx`.
+        chunking_dims (list of str or str): Dimension(s) to chunking in.
+        optimal_blocksize (int): dask blocksize to aim at in bytes.
+            Defaults to 100000000.
+
+    Returns:
+        xr.object: chunked to have blocksize: optimal_blocksize/iterations.
+
+    """
+    if isinstance(chunking_dims, str):
+        chunking_dims = [chunking_dims]
     # size of CLIMPRED_DIMS
     climpred_dim_chunksize = 8 * np.product(
         np.array([ds[d].size for d in CLIMPRED_DIMS if d in ds.dims])
@@ -706,8 +656,7 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
-    # TODO: warn if many CPUs and no chunking, or small data and chunked
-    # warn_if_chunking_would_increase_performance(hind)
+    warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
 
@@ -741,7 +690,6 @@ def bootstrap_compute(
             bootstrapped_init_skill,
             bootstrapped_uninit_skill,
             bootstrapped_pers_skill,
-            # pers_output,
         ) = _bootstrap_hindcast_over_init_dim(
             hind,
             hist,
@@ -758,8 +706,7 @@ def bootstrap_compute(
             reference_alignment,
             **metric_kwargs,
         )
-    else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
-        # use _resample_iterations_idx only for small data
+    else:  # faster: first _resample_iterations_idx, then compute skill
         resample_func = _get_resample_func(hind)
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
@@ -767,7 +714,9 @@ def bootstrap_compute(
             members_to_sample_from = 50
             repeat = members_to_sample_from // hind.member.size + 1
             uninit_hind = xr.concat(
-                [resample_uninit(hind, hist) for i in range(repeat)], dim='member'
+                [resample_uninit(hind, hist) for i in range(repeat)],
+                dim='member',
+                **CONCAT_KWARGS,
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             if dask.is_dask_collection(uninit_hind):
@@ -1168,4 +1117,79 @@ def bootstrap_perfect_model(
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
         reference_compute=reference_compute,
         **metric_kwargs,
+    )
+
+
+def _bootstrap_func(
+    func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
+):
+    """Sig % threshold of function based on iterations resampling with replacement.
+
+    Reference:
+    * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
+     Intervals for the Correlation Coefficient in Climatology.” Theoretical and
+      Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
+      https://doi.org/10/b6fnsv.
+
+    Args:
+        func (function): function to be bootstrapped.
+        ds (xr.object): first input argument of func. `chunk` ds on `dim` other
+            than `resample_dim` for potential performance increase when multiple
+            CPUs available.
+        resample_dim (str): dimension to resample from.
+        sig (int,float,list): significance levels to return. Defaults to 95.
+        iterations (int): number of resample iterations. Defaults to 500.
+        *func_args (type): `*func_args`.
+        **func_kwargs (type): `**func_kwargs`.
+
+    Returns:
+        sig_level: bootstrapped significance levels with
+                   dimensions of init_pm and len(sig) if sig is list
+    """
+    if not callable(func):
+        raise ValueError(f'Please provide func as a function, found {type(func)}')
+    warn_if_chunking_would_increase_performance(ds)
+    if isinstance(sig, list):
+        psig = [i / 100 for i in sig]
+    else:
+        psig = sig / 100
+
+    resample_func = _get_resample_func(ds)
+    bootstraped_ds = resample_func(ds, iterations, dim=resample_dim, replace=False)
+    bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
+    bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
+        bootstraped_results, dim='iteration'
+    )
+    sig_level = bootstraped_results.quantile(dim='iteration', q=psig, skipna=False)
+    return sig_level
+
+
+def dpp_threshold(control, sig=95, iterations=500, dim='time', **dpp_kwargs):
+    """Calc DPP significance levels from re-sampled dataset.
+
+    Reference:
+        * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
+          Potential Predictability of Global Temperature and Precipitation.”
+          Geophysical Research Letters 38, no. 7 (2011).
+          https://doi.org/10/ft272w.
+
+    See also:
+        * climpred.bootstrap._bootstrap_func
+        * climpred.stats.dpp
+    """
+    return _bootstrap_func(
+        dpp, control, dim, sig=sig, iterations=iterations, **dpp_kwargs
+    )
+
+
+def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim='time'):
+    """Calc the variance-weighted mean period significance levels from re-sampled
+    dataset.
+
+    See also:
+        * climpred.bootstrap._bootstrap_func
+        * climpred.stats.varweighted_mean_period
+    """
+    return _bootstrap_func(
+        varweighted_mean_period, control, time_dim, sig=sig, iterations=iterations,
     )

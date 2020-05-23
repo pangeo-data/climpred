@@ -380,6 +380,26 @@ def _bootstrap_by_stacking(init_pm, control):
     return fake_uninit
 
 
+def _get_resample_func(ds):
+    """Decide for resample function based on input `ds`.
+
+    .. note::
+      `_resample_iterations`: if big and chunked `ds`
+      `_resample_iterations_idx`: else (if small and eager `ds`)
+    """
+    resample_func = (
+        _resample_iterations
+        if (
+            dask.is_dask_collection(ds)
+            and len(ds.dims) > 3
+            # > 2MB
+            and ds.nbytes > 2000000
+        )
+        else _resample_iterations_idx
+    )
+    return resample_func
+
+
 def _bootstrap_func(
     func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
 ):
@@ -414,15 +434,7 @@ def _bootstrap_func(
     else:
         psig = sig / 100
 
-    big_chunked_data = (
-        True
-        if (dask.is_dask_collection(ds) and len(ds.dims) > 3 and ds.nbytes > 2000000)
-        else False
-    )
-    resample_func = (
-        _resample_iterations if big_chunked_data else _resample_iterations_idx
-    )
-    # alternatively use _resample_iterations
+    resample_func = _get_resample_func(ds)
     bootstraped_ds = resample_func(ds, iterations, dim=resample_dim, replace=False)
     bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
     bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
@@ -554,14 +566,14 @@ def _bootstrap_hindcast_over_init_dim(
         bootstrapped_pers_skill = xr.concat(
             pers_skill, dim='iteration', **CONCAT_KWARGS
         )
-        pers_output = True
-    else:
-        pers_output = False
+        # pers_output = True
+    # else:
+    # pers_output = False
     return (
         bootstrapped_init_skill,
         bootstrapped_uninit_skill,
         bootstrapped_pers_skill,
-        pers_output,
+        # pers_output,
     )
 
 
@@ -733,7 +745,7 @@ def bootstrap_compute(
             bootstrapped_init_skill,
             bootstrapped_uninit_skill,
             bootstrapped_pers_skill,
-            pers_output,
+            # pers_output,
         ) = _bootstrap_hindcast_over_init_dim(
             hind,
             hist,
@@ -752,22 +764,7 @@ def bootstrap_compute(
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
         # use _resample_iterations_idx only for small data
-        big_chunked_data = (
-            True
-            if (
-                dask.is_dask_collection(hind)
-                and len(hind.dims) > 3
-                and hind.nbytes > 2000000
-            )
-            else False
-        )
-        resample_func = (
-            _resample_iterations if big_chunked_data else _resample_iterations_idx
-        )
-        # if dask.is_dask_collection(hind):
-        #    hind2 = hind.copy(deep=True).compute().chunk()
-        # else:
-        #    hind2 = hind
+        resample_func = _get_resample_func(hind)
         if not isHindcast:
             # create more members than needed in PM to make the uninitialized
             # distribution more robust
@@ -778,7 +775,7 @@ def bootstrap_compute(
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = uninit_hind.chunk({'member': hind.member.size})
+                uninit_hind = uninit_hind.chunk({'member': -1})
             # resample uninit always over member those and select only hind.member.size
             bootstrapped_uninit = resample_func(
                 uninit_hind, iterations, 'member', replace=False
@@ -786,6 +783,8 @@ def bootstrap_compute(
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
             )
+            if dask.is_dask_collection(bootstrapped_uninit):
+                bootstrapped_uninit = bootstrapped_uninit.chunk({'member': -1})
         else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             if dask.is_dask_collection(uninit_hind):
@@ -803,8 +802,9 @@ def bootstrap_compute(
             **metric_kwargs,
         )
 
-        # bootstrap hind
         bootstrapped_hind = resample_func(hind, iterations, resample_dim)
+        if dask.is_dask_collection(bootstrapped_hind):
+            bootstrapped_hind = bootstrapped_hind.chunk({'member': -1})
 
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
@@ -825,7 +825,7 @@ def bootstrap_compute(
                 alignment=reference_alignment,
                 **metric_kwargs,
             )
-            pers_output = True
+            # pers_output = True
             # bootstrap pers
             if resample_dim == 'init':
                 bootstrapped_pers_skill = reference_compute(
@@ -841,7 +841,7 @@ def bootstrap_compute(
                 )
         else:
             bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
-            pers_output = False
+            # pers_output = False
 
     # calc mean skill without any resampling
     init_skill = compute(
@@ -862,9 +862,9 @@ def bootstrap_compute(
         pers_skill = reference_compute(
             hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
         )
-        pers_output = True
+        # pers_output = True
     else:
-        pers_output = False
+        # pers_output = False
         pers_skill = init_skill.isnull()
 
     # align to prepare for concat
@@ -879,7 +879,7 @@ def bootstrap_compute(
 
     # probabilistic metrics wont have persistence forecast
     # therefore only get CI if persistence was computed
-    if pers_output:
+    if 'iteration' in bootstrapped_pers_skill.dims:
         pers_ci = _distribution_to_ci(
             bootstrapped_pers_skill, ci_low_pers, ci_high_pers
         )

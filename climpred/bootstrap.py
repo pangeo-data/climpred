@@ -7,10 +7,9 @@ import xarray as xr
 
 from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS, PM_CALENDAR_STR
 
-from .checks import (
+from .checks import (  # warn_if_chunking_would_increase_performance,
     has_dims,
     has_valid_lead_units,
-    warn_if_chunking_would_increase_performance,
 )
 from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
 from .exceptions import KeywordError
@@ -52,7 +51,55 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
-def _resample_iterations_idx(init, iterations, dim='member', replace=True):
+def _resample_iterations(init, iterations, dim='member', replace=True):
+    """Resample over ``dim`` by index ``iterations`` times.
+
+    .. note::
+        This gives the same result as `_resample_iterations_idx`. When using dask, the
+        number of tasks in `_resample_iterations` will scale with iterations but
+        constant chunksize, whereas the tasks in `_resample_iterations_idx` will stay
+        constant with increasing chunksize.
+
+    Args:
+        init (xr.DataArray, xr.Dataset): Initialized prediction ensemble.
+        iterations (int): Number of bootstrapping iterations.
+        dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
+        replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
+
+    Returns:
+        xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
+
+    """
+    if replace:
+        idx = np.random.randint(0, init[dim].size, (iterations, init[dim].size))
+    elif not replace:
+        # create 2d np.arange()
+        idx = np.linspace(
+            (np.arange(init[dim].size)),
+            (np.arange(init[dim].size)),
+            iterations,
+            dtype='int',
+        )
+        # shuffle each line
+        for ndx in np.arange(iterations):
+            np.random.shuffle(idx[ndx])
+    idx_da = xr.DataArray(
+        idx,
+        dims=('iteration', dim),
+        coords=({'iteration': range(iterations), dim: init[dim]}),
+    )
+    init_smp = []
+    for i in np.arange(iterations):
+        idx = idx_da.sel(iteration=i).data
+        init_smp2 = init.isel({dim: idx}).assign_coords({dim: init[dim].data})
+        init_smp.append(init_smp2)
+    init_smp = xr.concat(init_smp, dim='iteration', **CONCAT_KWARGS)
+    return init_smp
+
+
+def _resample_iterations_idx(
+    init, iterations, dim='member', replace=True, chunking_dims=None
+):
     """Resample over ``dim`` by index ``iterations`` times.
 
     .. note::
@@ -67,6 +114,8 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         iterations (int): Number of bootstrapping iterations.
         dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
         replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
+        chunking_dims: (list, str): Auto-chunk along these dims for optimal chunksize
+            after `_resample_iterations_idx`
 
     Returns:
         xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
@@ -74,6 +123,7 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
     """
     if dask.is_dask_collection(init):
         init = init.chunk({'lead': -1, 'member': -1})
+        init = init.copy(deep=True)
 
     def select_bootstrap_indices_ufunc(x, idx):
         """Selects multi-level indices ``idx`` from xarray object ``x`` for all
@@ -83,6 +133,11 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         # select a different set of, e.g., ensemble members for each iteration and
         # construct one large DataArray with ``iterations`` as a dimension.
         return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
+
+    if dask.is_dask_collection(init):
+        if chunking_dims is None:
+            chunking_dims = [d for d in init.dims if d not in CLIMPRED_DIMS]
+        init = _chunk_before_resample_iterations_idx(init, iterations, chunking_dims)
 
     # resample with or without replacement
     if replace:
@@ -359,7 +414,20 @@ def _bootstrap_func(
     else:
         psig = sig / 100
 
-    bootstraped_ds = _resample_iterations_idx(
+    big_chunked_data = (
+        True
+        if (
+            dask.is_dask_collection(ds)
+            and len(ds.dims) > 3
+            and ds.nbytes > 2000000
+        )
+        else False
+    )
+    resample_func = (
+        _resample_iterations if big_chunked_data else _resample_iterations_idx
+    )
+    # alternatively use _resample_iterations
+    bootstraped_ds = resample_func(
         ds, iterations, dim=resample_dim, replace=False
     )
     bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
@@ -514,7 +582,7 @@ def _maybe_auto_chunk(ds, dims):
     return ds
 
 
-def _chunk_before_resample_iteration_idx(ds, iterations, chunking_dims):
+def _chunk_before_resample_iterations_idx(ds, iterations, chunking_dims):
     """Chunk ds so small that after _resample_iteration_idx chunks have optimal size."""
     # how many times larger than recommended chunksize of 100MB
     optimal_blocksize = 100000000
@@ -636,7 +704,8 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
-    warn_if_chunking_would_increase_performance(hind)
+    # TODO: warn if many CPUs and no chunking, or small data and chunked
+    # warn_if_chunking_would_increase_performance(hind)
     if pers_sig is None:
         pers_sig = sig
 
@@ -659,9 +728,6 @@ def bootstrap_compute(
     # Perfect Model requires `same_inits` setup
     isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
-
-    # dimension in which chunking is allowed
-    chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
     if hist is None:  # PM path, use verif = control
         hist = verif
@@ -691,6 +757,19 @@ def bootstrap_compute(
             **metric_kwargs,
         )
     else:  # faster resampling skill: first _resample_iterations_idx, then compute skill
+        # use _resample_iterations_idx only for small data
+        big_chunked_data = (
+            True
+            if (
+                dask.is_dask_collection(hind)
+                and len(hind.dims) > 3
+                and hind.nbytes > 2000000
+            )
+            else False
+        )
+        resample_func = (
+            _resample_iterations if big_chunked_data else _resample_iterations_idx
+        )
         if dask.is_dask_collection(hind):
             hind2 = hind.copy(deep=True).compute().chunk()
         else:
@@ -706,11 +785,8 @@ def bootstrap_compute(
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             if dask.is_dask_collection(uninit_hind):
                 uninit_hind = uninit_hind.compute().chunk()
-                uninit_hind = _chunk_before_resample_iteration_idx(
-                    uninit_hind, iterations, chunking_dims
-                )
             # resample uninit always over member those and select only hind.member.size
-            bootstrapped_uninit = _resample_iterations_idx(
+            bootstrapped_uninit = resample_func(
                 uninit_hind, iterations, 'member', replace=False
             )
             bootstrapped_uninit = bootstrapped_uninit.isel(
@@ -720,12 +796,7 @@ def bootstrap_compute(
             uninit_hind = resample_uninit(hind2, hist)
             if dask.is_dask_collection(uninit_hind):
                 uninit_hind = uninit_hind.compute().chunk()
-                uninit_hind = _chunk_before_resample_iteration_idx(
-                    uninit_hind, iterations, chunking_dims
-                )
-            bootstrapped_uninit = _resample_iterations_idx(
-                uninit_hind, iterations, resample_dim
-            )
+            bootstrapped_uninit = resample_func(uninit_hind, iterations, resample_dim)
 
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,
@@ -739,9 +810,7 @@ def bootstrap_compute(
         )
 
         # bootstrap hind
-        if dask.is_dask_collection(hind):
-            hind = _chunk_before_resample_iteration_idx(hind, iterations, chunking_dims)
-        bootstrapped_hind = _resample_iterations_idx(hind, iterations, resample_dim)
+        bootstrapped_hind = resample_func(hind, iterations, resample_dim)
 
         bootstrapped_init_skill = compute(
             bootstrapped_hind,

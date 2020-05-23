@@ -84,6 +84,12 @@ def _display_metadata(self):
     return summary
 
 
+def _display_metadata_xr(self):
+    from xarray.core.formatting_html import dataset_repr
+    return dataset_repr(self._datasets['initialized'])
+
+
+
 class PredictionEnsemble:
     """
     The main object. This is the super of both `PerfectModelEnsemble` and
@@ -111,7 +117,7 @@ class PredictionEnsemble:
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
-        return _display_metadata(self)
+        return _display_metadata_xr(self)
 
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.

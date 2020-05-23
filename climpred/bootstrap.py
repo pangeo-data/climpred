@@ -501,7 +501,18 @@ def bootstrap_compute(
     isHindcast = True if comparison in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
 
-    for i in range(iterations):
+    if dask.is_dask_collection(hind):
+        from dask.diagnostics import ProgressBar
+        pbar = ProgressBar()
+        pbar.register()
+        range_call=range
+    else:
+        #from tqdm.auto import tqdm
+        import tqdm
+        #pbar = tqdm()
+        #pbar.reset(total=iterations)
+        range_call=tqdm.trange
+    for i in range_call(iterations):
         # resample with replacement
         smp_hind = _resample(hind, resample_dim)
         # compute init skill

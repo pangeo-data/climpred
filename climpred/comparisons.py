@@ -12,8 +12,10 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
     # supposed to be in .utils but circular imports therefore here
-    # transpose_coords=False as was when xarray implemented this at first
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims, transpose_coords=False).chunk(
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(new_chunk_ds, xr.DataArray) else {}
+    )
+    return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks
     )
 

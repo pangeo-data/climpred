@@ -103,10 +103,12 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         dims=('iteration', dim),
         coords=({'iteration': range(iterations), dim: init[dim]}),
     )
-
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(init, xr.DataArray) else {}
+    )
     return xr.apply_ufunc(
         select_bootstrap_indices_ufunc,
-        init.transpose(dim, ...),
+        init.transpose(dim, ..., **transpose_kwargs),
         idx_da,
         dask='parallelized',
         output_dtypes=[float],
@@ -310,7 +312,10 @@ def _bootstrap_by_stacking(init_pm, control):
     larger = control.isel(time=new_time)
     fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
     # exchange values
-    larger = larger.transpose(*fake_init.dims, transpose_coords=False)
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(init_pm, xr.DataArray) else {}
+    )
+    larger = larger.transpose(*fake_init.dims, **transpose_kwargs)
     fake_init.data = larger.data
     fake_uninit = fake_init.unstack()
     if init_was_dataset:

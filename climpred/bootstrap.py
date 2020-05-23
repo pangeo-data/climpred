@@ -566,14 +566,10 @@ def _bootstrap_hindcast_over_init_dim(
         bootstrapped_pers_skill = xr.concat(
             pers_skill, dim='iteration', **CONCAT_KWARGS
         )
-        # pers_output = True
-    # else:
-    # pers_output = False
     return (
         bootstrapped_init_skill,
         bootstrapped_uninit_skill,
         bootstrapped_pers_skill,
-        # pers_output,
     )
 
 
@@ -825,7 +821,6 @@ def bootstrap_compute(
                 alignment=reference_alignment,
                 **metric_kwargs,
             )
-            # pers_output = True
             # bootstrap pers
             if resample_dim == 'init':
                 bootstrapped_pers_skill = reference_compute(
@@ -841,7 +836,6 @@ def bootstrap_compute(
                 )
         else:
             bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
-            # pers_output = False
 
     # calc mean skill without any resampling
     init_skill = compute(

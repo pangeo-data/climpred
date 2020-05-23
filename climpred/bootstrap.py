@@ -95,6 +95,7 @@ def _resample_iterations(init, iterations, dim='member', replace=True):
         init_smp2 = init.isel({dim: idx}).assign_coords({dim: init[dim].data})
         init_smp.append(init_smp2)
     init_smp = xr.concat(init_smp, dim='iteration', **CONCAT_KWARGS)
+    init_smp['iteration'] = np.arange(1, 1 + iterations)
     return init_smp
 
 
@@ -261,7 +262,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         )
         uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
-    uninit_hind = xr.concat(uninit_hind, 'init', **CONCAT_KWARGS)
+    uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
     uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return (
@@ -733,7 +734,7 @@ def bootstrap_compute(
         else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = uninit_hind.persist()
+                uninit_hind = uninit_hind.compute().chunk()
             bootstrapped_uninit = resample_func(uninit_hind, iterations, resample_dim)
 
         bootstrapped_uninit_skill = compute(

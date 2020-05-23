@@ -32,9 +32,9 @@ class Generate:
         self.uninit = xr.Dataset()
 
         self.nmember = 3
-        self.nlead = 3
-        self.nx = 64
-        self.ny = 64
+        self.nlead = 5
+        self.nx = 72
+        self.ny = 36
         self.iterations = ITERATIONS
         self.init_start = 1960
         self.init_end = 2000
@@ -152,6 +152,7 @@ class Compute(Generate):
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def peakmem_bootstrap_hindcast(self, metric, comparison):
         """Take memory peak for `bootstrap_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             bootstrap_hindcast(
                 self.hind,
@@ -160,7 +161,7 @@ class Compute(Generate):
                 metric=metric,
                 comparison=comparison,
                 iterations=self.iterations,
-                dim='member',
+                dim=dim,
             )
         )
 

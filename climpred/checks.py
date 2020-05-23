@@ -213,8 +213,12 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
                 f'Chunking might not bring parallelized performance increase, '
                 f'because only few CPUs available, found {NCPU} CPUs.'
             )
-        number_of_chunks = ds.data.npartitions
-        if number_of_chunks > NCPU:
+        number_of_chunks = (
+            ds.data.npartitions
+            if isinstance(ds, xr.DataArray)
+            else ds.to_array().data.npartitions
+        )
+        if number_of_chunks > 16 * NCPU:
             # much larger than nworkers, warn smaller chunks
             warnings.warn(
                 f'Chunking might not bring parallelized performance increase, '

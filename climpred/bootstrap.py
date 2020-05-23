@@ -247,7 +247,6 @@ def bootstrap_uninitialized_ensemble(hind, hist):
 
     uninit_hind = []
     for init in hind.init.values:
-        random_members = np.random.choice(hist.member.values, hind.member.size)
         # take random uninitialized members from hist at init forcing
         # (Goddard et al. allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
@@ -255,18 +254,18 @@ def bootstrap_uninitialized_ensemble(hind, hist):
                 shift_cftime_singular(init, 1, freq),
                 shift_cftime_singular(init, n, freq),
             ),
-            member=random_members,
         ).rename({'time': 'lead'})
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
     uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
     return (
-        _transpose_and_rechunk_to(uninit_hind, hind)
+        _transpose_and_rechunk_to(
+            uninit_hind, hind.isel(member=[0] * uninit_hind.member.size)
+        )
         if dask.is_dask_collection(uninit_hind)
         else uninit_hind
     )
@@ -736,6 +735,9 @@ def bootstrap_compute(
             if dask.is_dask_collection(uninit_hind):
                 uninit_hind = uninit_hind.compute().chunk()
             bootstrapped_uninit = resample_func(uninit_hind, iterations, resample_dim)
+            bootstrapped_uninit = bootstrapped_uninit.isel(
+                member=slice(None, hind.member.size)
+            )
 
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,
@@ -806,9 +808,7 @@ def bootstrap_compute(
         pers_skill = reference_compute(
             hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
         )
-        # pers_output = True
     else:
-        # pers_output = False
         pers_skill = init_skill.isnull()
 
     # align to prepare for concat

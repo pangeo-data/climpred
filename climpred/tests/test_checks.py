@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from climpred.checks import (
-    get_chunksize,
     has_dataset,
     has_dims,
     has_min_len,
@@ -238,17 +237,3 @@ def test_nonplural_lead_units_works(da_lead, lead_units):
         has_valid_lead_units(da_lead)
     expected = f'The letter "s" was appended to the lead units; now {lead_units}.'
     assert record[0].message.args[0] == expected
-
-
-@pytest.mark.parametrize('chunks', ({'x': 1}, {'y': 1}))
-def test_get_chunksize(da1, chunks):
-    chunked_da = da1.chunk(chunks)
-    actual = get_chunksize(chunked_da)
-    expected = 1
-    print(chunked_da)
-    for key, values in chunks.items():
-        print('chunking in dim', key)
-        expected *= chunked_da[key].size // values
-        print(key, values, expected)
-    print('actual:', actual, 'expected', expected)
-    assert actual == expected

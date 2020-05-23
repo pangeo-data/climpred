@@ -21,18 +21,6 @@ def dec_args_kwargs(wrapper):
 # --------------------------------------#
 # CHECKS
 # --------------------------------------#
-def get_chunksize(da):
-    """Sum of the total number of chunks in a chunked xr.object."""
-    n = 1
-    if not dask.is_dask_collection(da):
-        raise ValueError('Please provide a chunked xr.object')
-    if isinstance(da, xr.Dataset):
-        da = da.to_array()
-    for i, c in enumerate(da.chunks):
-        n *= da.shape[i] // c[0]
-    return n
-
-
 def has_dataset(obj, kind, what):
     """Checks that the PredictionEnsemble has a specific dataset in it."""
     if len(obj) == 0:
@@ -225,7 +213,7 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
                 f'Chunking might not bring parallelized performance increase, '
                 f'because only few CPUs available, found {NCPU} CPUs.'
             )
-        number_of_chunks = get_chunksize(ds)
+        number_of_chunks = ds.data.npartitions
         if number_of_chunks > NCPU:
             # much larger than nworkers, warn smaller chunks
             warnings.warn(

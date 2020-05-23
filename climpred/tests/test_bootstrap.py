@@ -5,7 +5,10 @@ import xarray as xr
 
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
+    _chunk_before_resample_iterations_idx,
+    _get_resample_func,
     _resample,
+    _resample_iterations,
     _resample_iterations_idx,
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -379,3 +382,32 @@ def test_bootstrap_hindcast_init_resample_dim_warning(
         expected = 'resample_dim=`init` will be slower than resample_dim=`member`.'
         # one of the last records
         assert expected == record[-2].message.args[0]
+
+
+def test_get_resample_func_3D_chunk(PM_ds_initialized_3d_full):
+    assert _get_resample_func(PM_ds_initialized_3d_full.chunk()) == _resample_iterations
+
+
+def test_get_resample_func_3D(PM_ds_initialized_3d_full):
+    assert _get_resample_func(PM_ds_initialized_3d_full) == _resample_iterations_idx
+
+
+def test_get_resample_func_1D(PM_ds_initialized_1d):
+    assert _get_resample_func(PM_ds_initialized_1d) == _resample_iterations_idx
+
+
+def test_get_resample_func_1D_chunk(PM_ds_initialized_1d):
+    assert _get_resample_func(PM_ds_initialized_1d.chunk()) == _resample_iterations_idx
+
+
+def test_chunk_before_resample_iterations_idx(PM_da_initialized_3d_full):
+    ds = PM_da_initialized_3d_full.chunk().expand_dims('model')
+    ds = ds.isel(model=[0] * 10)
+    optimal_blocksize = 100000000
+    iterations = 5
+    ds_chunked = _chunk_before_resample_iterations_idx(
+        ds, iterations, ['x', 'y'], optimal_blocksize=optimal_blocksize
+    )
+    chunksize = ds_chunked.nbytes // ds_chunked.data.npartitions
+    # compare chunksize after resample_iterations_idx
+    assert chunksize * iterations < 2 * optimal_blocksize

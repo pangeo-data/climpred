@@ -5,8 +5,6 @@ import xarray as xr
 
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
-    _chunk_before_resample_iterations_idx,
-    _get_resample_func,
     _resample,
     _resample_iterations,
     _resample_iterations_idx,
@@ -59,7 +57,6 @@ def test_bootstrap_PM_lazy_results(
         metric='mse',
     )
     assert dask.is_dask_collection(s) == chunk
-    assert not s.sel(results='skill', kind='init').compute().isnull().any()
 
 
 @pytest.mark.slow
@@ -92,7 +89,6 @@ def test_bootstrap_hindcast_lazy(
         metric='mse',
     )
     assert dask.is_dask_collection(s) == chunk
-    assert not s.sel(results='skill', kind='init').compute().isnull().any()
 
 
 @pytest.mark.slow
@@ -364,50 +360,15 @@ def test_resample_size(PM_da_initialized_1d):
     assert expected[dim].size == actual[dim].size
 
 
-def test_bootstrap_hindcast_init_resample_dim_warning(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
-):
-    """Test that warning is raised when user tries to resample hindcast over init."""
-    with pytest.warns(UserWarning) as record:
-        bootstrap_hindcast(
-            hind_da_initialized_1d,
-            hist_da_uninitialized_1d,
-            observations_da_1d,
-            iterations=ITERATIONS,
-            comparison='e2o',
-            metric='mse',
-            resample_dim='init',
-            alignment='same_inits',
-        )
-        expected = 'resample_dim=`init` will be slower than resample_dim=`member`.'
-        # one of the last records
-        assert expected == record[-2].message.args[0]
-
-
-def test_get_resample_func_3D_chunk(PM_ds_initialized_3d_full):
-    assert _get_resample_func(PM_ds_initialized_3d_full.chunk()) == _resample_iterations
-
-
-def test_get_resample_func_3D(PM_ds_initialized_3d_full):
-    assert _get_resample_func(PM_ds_initialized_3d_full) == _resample_iterations_idx
-
-
-def test_get_resample_func_1D(PM_ds_initialized_1d):
-    assert _get_resample_func(PM_ds_initialized_1d) == _resample_iterations_idx
-
-
-def test_get_resample_func_1D_chunk(PM_ds_initialized_1d):
-    assert _get_resample_func(PM_ds_initialized_1d.chunk()) == _resample_iterations_idx
-
-
-def test_chunk_before_resample_iterations_idx(PM_da_initialized_3d_full):
-    ds = PM_da_initialized_3d_full.chunk().expand_dims('model')
-    ds = ds.isel(model=[0] * 10)
-    optimal_blocksize = 100000000
-    iterations = 5
-    ds_chunked = _chunk_before_resample_iterations_idx(
-        ds, iterations, ['x', 'y'], optimal_blocksize=optimal_blocksize
-    )
-    chunksize = ds_chunked.nbytes // ds_chunked.data.npartitions
-    # compare chunksize after resample_iterations_idx
-    assert chunksize * iterations < 2 * optimal_blocksize
+@pytest.mark.parametrize('chunk', [True, False])
+@pytest.mark.parametrize('replace', [True, False])
+def test_resample_iterations_same(PM_da_initialized_1d, chunk, replace):
+    """Test that both `resample_iterations` functions yield same result shape."""
+    ds = PM_da_initialized_1d
+    if chunk:
+        ds = ds.chunk()
+    ds_r_idx = _resample_iterations_idx(ds, ITERATIONS, 'member', replace=replace)
+    ds_r = _resample_iterations(ds, ITERATIONS, 'member', replace=replace)
+    for d in ds.dims:
+        xr.testing.assert_identical(ds_r[d], ds_r_idx[d])
+        assert ds_r.size == ds_r_idx.size

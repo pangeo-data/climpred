@@ -372,3 +372,22 @@ def test_resample_iterations_same(PM_da_initialized_1d, chunk, replace):
     for d in ds.dims:
         xr.testing.assert_identical(ds_r[d], ds_r_idx[d])
         assert ds_r.size == ds_r_idx.size
+
+
+@pytest.mark.parametrize('chunk', [True, False])
+@pytest.mark.parametrize('replace', [True, False])
+def test_resample_iterations_dim_max(PM_da_initialized_1d, chunk, replace):
+    """Test that both `resample_iterations(dim_max=n)` gives n members."""
+    ds = PM_da_initialized_1d.copy()
+    ds = ds.sel(member=list(ds.member.values) * 2)
+    ds['member'] = np.arange(1, 1 + ds.member.size)
+    if chunk:
+        ds = ds.chunk()
+    ds_r = _resample_iterations(
+        ds,
+        ITERATIONS,
+        'member',
+        replace=replace,
+        dim_max=PM_da_initialized_1d.member.size,
+    )
+    assert (ds_r['member'] == PM_da_initialized_1d.member).all()

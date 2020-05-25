@@ -52,7 +52,7 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
-def _resample_iterations(init, iterations, dim='member', replace=True):
+def _resample_iterations(init, iterations, dim='member', dim_max=None, replace=True):
     """Resample over ``dim`` by index ``iterations`` times.
 
     .. note::
@@ -65,19 +65,28 @@ def _resample_iterations(init, iterations, dim='member', replace=True):
         init (xr.DataArray, xr.Dataset): Initialized prediction ensemble.
         iterations (int): Number of bootstrapping iterations.
         dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
+        dim_max (int): Number of items to select in `dim`.
         replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
 
     Returns:
         xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
 
     """
+    if dim_max is not None and dim_max <= init[dim].size:
+        # select only dim_max items
+        select_dim_items = dim_max
+        new_dim = init[dim].isel({dim: slice(None, dim_max)})
+    else:
+        select_dim_items = init[dim].size
+        new_dim = init[dim]
+
     if replace:
-        idx = np.random.randint(0, init[dim].size, (iterations, init[dim].size))
+        idx = np.random.randint(0, init[dim].size, (iterations, select_dim_items))
     elif not replace:
         # create 2d np.arange()
         idx = np.linspace(
-            (np.arange(init[dim].size)),
-            (np.arange(init[dim].size)),
+            (np.arange(select_dim_items)),
+            (np.arange(select_dim_items)),
             iterations,
             dtype='int',
         )
@@ -87,12 +96,12 @@ def _resample_iterations(init, iterations, dim='member', replace=True):
     idx_da = xr.DataArray(
         idx,
         dims=('iteration', dim),
-        coords=({'iteration': range(iterations), dim: init[dim]}),
+        coords=({'iteration': range(iterations), dim: new_dim}),
     )
     init_smp = []
     for i in np.arange(iterations):
         idx = idx_da.sel(iteration=i).data
-        init_smp2 = init.isel({dim: idx}).assign_coords({dim: init[dim].data})
+        init_smp2 = init.isel({dim: idx}).assign_coords({dim: new_dim})
         init_smp.append(init_smp2)
     init_smp = xr.concat(init_smp, dim='iteration', **CONCAT_KWARGS)
     init_smp['iteration'] = np.arange(1, 1 + iterations)
@@ -100,7 +109,7 @@ def _resample_iterations(init, iterations, dim='member', replace=True):
 
 
 def _resample_iterations_idx(
-    init, iterations, dim='member', replace=True, chunking_dims=None
+    init, iterations, dim='member', replace=True, chunk=True, dim_max=None
 ):
     """Resample over ``dim`` by index ``iterations`` times.
 
@@ -116,8 +125,8 @@ def _resample_iterations_idx(
         iterations (int): Number of bootstrapping iterations.
         dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
         replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
-        chunking_dims: (list, str): Auto-chunk along these dims for optimal chunksize
-            after `_resample_iterations_idx`
+        chunk: (bool): Auto-chunk along chunking_dims to get optimal blocksize
+        dim_max (int): Number of indices from `dim` to return. Not implemented.
 
     Returns:
         xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
@@ -137,9 +146,11 @@ def _resample_iterations_idx(
         return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
 
     if dask.is_dask_collection(init):
-        if chunking_dims is None:
+        if chunk:
             chunking_dims = [d for d in init.dims if d not in CLIMPRED_DIMS]
-        init = _chunk_before_resample_iterations_idx(init, iterations, chunking_dims)
+            init = _chunk_before_resample_iterations_idx(
+                init, iterations, chunking_dims
+            )
 
     # resample with or without replacement
     if replace:
@@ -247,7 +258,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
 
     uninit_hind = []
     for init in hind.init.values:
-        # take random uninitialized members from hist at init forcing
+        # take uninitialized members from hist at init forcing
         # (Goddard et al. allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
             time=slice(
@@ -262,6 +273,7 @@ def bootstrap_uninitialized_ensemble(hind, hist):
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
     uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
+    uninit_hind['member'] = hist['member'].values
     return (
         _transpose_and_rechunk_to(
             uninit_hind, hind.isel(member=[0] * uninit_hind.member.size)
@@ -336,7 +348,10 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     uninit['member'] = init_pm.member.values
     uninit['lead'] = init_pm.lead
     # chunk to same dims
-    uninit = uninit.transpose(*init_pm.dims)
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(init_pm, xr.DataArray) else {}
+    )
+    uninit = uninit.transpose(*init_pm.dims, **transpose_kwargs)
     return (
         _transpose_and_rechunk_to(uninit, init_pm)
         if dask.is_dask_collection(uninit)
@@ -679,6 +694,7 @@ def bootstrap_compute(
     # Perfect Model requires `same_inits` setup
     isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
+    chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
     if hist is None:  # PM path, use verif = control
         hist = verif
@@ -720,24 +736,41 @@ def bootstrap_compute(
             )
             uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
             if dask.is_dask_collection(uninit_hind):
-                uninit_hind = uninit_hind.chunk({'member': -1})
+                # too minimize tasks: ensure uninit_hind get pre-computed
+                # alternativly .chunk({'member':-1})
+                uninit_hind = uninit_hind.compute().chunk()
             # resample uninit always over member those and select only hind.member.size
             bootstrapped_uninit = resample_func(
-                uninit_hind, iterations, 'member', replace=False
+                uninit_hind,
+                iterations,
+                'member',
+                replace=False,
+                dim_max=hind['member'].size,
             )
+            # effectively only when _resample_iteration_idx which doesnt use dim_max
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
             )
             if dask.is_dask_collection(bootstrapped_uninit):
                 bootstrapped_uninit = bootstrapped_uninit.chunk({'member': -1})
+                bootstrapped_uninit = _maybe_auto_chunk(
+                    bootstrapped_uninit, ['iteration'] + chunking_dims
+                )
         else:  # hindcast
             uninit_hind = resample_uninit(hind, hist)
             if dask.is_dask_collection(uninit_hind):
+                # too minimize tasks: ensure uninit_hind get pre-computed
+                # maybe not needed
                 uninit_hind = uninit_hind.compute().chunk()
             bootstrapped_uninit = resample_func(uninit_hind, iterations, resample_dim)
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
             )
+            if dask.is_dask_collection(bootstrapped_uninit):
+                bootstrapped_uninit = _maybe_auto_chunk(
+                    bootstrapped_uninit.chunk({'lead': 1}),
+                    ['iteration'] + chunking_dims,
+                )
 
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,

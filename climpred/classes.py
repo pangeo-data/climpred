@@ -1,4 +1,7 @@
 import xarray as xr
+from IPython.display import display_html
+from xarray.core.formatting_html import dataset_repr
+from xarray.core.options import OPTIONS as XR_OPTIONS
 
 from .alignment import return_inits_and_verif_dates
 from .bootstrap import (
@@ -84,10 +87,38 @@ def _display_metadata(self):
     return summary
 
 
-def _display_metadata_xr(self):
-    from xarray.core.formatting_html import dataset_repr
-    return dataset_repr(self._datasets['initialized'])
+def _display_metadata_html(self):
+    header = f'<h4>climpred.{type(self).__name__}</h4>'
+    display_html(header, raw=True)
+    init_repr_str = dataset_repr(self._datasets['initialized'])
+    init_repr_str = init_repr_str.replace(
+        'xarray.Dataset', 'climpred Initialized : xarray.Dataset'
+    )
+    display_html(init_repr_str, raw=True)
 
+    if isinstance(self, HindcastEnsemble):
+        if any(self._datasets['observations']):
+            for key in self._datasets['observations']:
+                obs_repr_str = dataset_repr(self._datasets['observations'][key])
+                obs_repr_str = obs_repr_str.replace(
+                    'xarray.Dataset', f'climpred Verification {key} : xarray.Dataset'
+                )
+                display_html(obs_repr_str, raw=True)
+    elif isinstance(self, PerfectModelEnsemble):
+        if any(self._datasets['control']):
+            control_repr_str = dataset_repr(self._datasets['control'])
+            control_repr_str = control_repr_str.replace(
+                'xarray.Dataset', f'climpred Control : xarray.Dataset'
+            )
+            display_html(control_repr_str, raw=True)
+
+    if any(self._datasets['uninitialized']):
+        uninit_repr_str = dataset_repr(self._datasets['uninitialized'])
+        uninit_repr_str = uninit_repr_str.replace(
+            'xarray.Dataset', 'climpred Uninitialized : xarray.Dataset'
+        )
+        display_html(uninit_repr_str, raw=True)
+    return ''
 
 
 class PredictionEnsemble:
@@ -117,7 +148,10 @@ class PredictionEnsemble:
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
-        return _display_metadata_xr(self)
+        if XR_OPTIONS['display_style'] == 'html':
+            return _display_metadata_html(self)
+        else:
+            return _display_metadata(self)
 
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.

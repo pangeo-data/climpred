@@ -5,6 +5,7 @@ import xarray as xr
 
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
+    _chunk_before_resample_iterations_idx,
     _resample,
     _resample_iterations,
     _resample_iterations_idx,
@@ -372,6 +373,27 @@ def test_resample_iterations_same(PM_da_initialized_1d, chunk, replace):
     for d in ds.dims:
         xr.testing.assert_identical(ds_r[d], ds_r_idx[d])
         assert ds_r.size == ds_r_idx.size
+
+
+def test_chunk_before_resample_iterations_idx(PM_da_initialized_3d_full):
+    """Test that chunksize after `_resample_iteration_idx` is lower than
+    `optimal_blocksize`."""
+    chunking_dims = ['x', 'y']
+    iterations = 50
+    optimal_blocksize = 100000000
+    ds_chunked = _chunk_before_resample_iterations_idx(
+        PM_da_initialized_3d_full.chunk(),
+        iterations,
+        chunking_dims,
+        optimal_blocksize=optimal_blocksize,
+    )
+    ds_chunked_chunksize = ds_chunked.data.nbytes / ds_chunked.data.npartitions
+    print(
+        dask.utils.format_bytes(ds_chunked_chunksize * iterations),
+        '<',
+        dask.utils.format_bytes(1.5 * optimal_blocksize),
+    )
+    assert ds_chunked_chunksize * iterations < 1.5 * optimal_blocksize
 
 
 @pytest.mark.parametrize('chunk', [True, False])

@@ -118,6 +118,9 @@ def _display_metadata_html(self):
             'xarray.Dataset', 'climpred Uninitialized : xarray.Dataset'
         )
         display_html(uninit_repr_str, raw=True)
+    # better would be to aggregate repr_strs and then all return but this fails
+    # TypeError: __repr__ returned non-string (type NoneType)
+    # workaround return empty string
     return ''
 
 

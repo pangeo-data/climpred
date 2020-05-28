@@ -1,7 +1,9 @@
 import numpy as np
 import xarray as xr
+from dask.distributed import Client
 
 from climpred.bootstrap import bootstrap_hindcast
+from climpred.metrics import PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast
 
 from . import ensure_loaded, parameterized, randn, requires_dask
@@ -11,7 +13,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 HINDCAST_COMPARISONS = ['m2o']
 
-ITERATIONS = 8
+ITERATIONS = 16
 
 
 class Generate:
@@ -30,16 +32,20 @@ class Generate:
         self.uninit = xr.Dataset()
 
         self.nmember = 3
-        self.nlead = 3
-        self.nx = 64
-        self.ny = 64
+        self.nlead = 5
+        self.nx = 72
+        self.ny = 36
+        self.iterations = ITERATIONS
         self.init_start = 1960
         self.init_end = 2000
         self.ninit = self.init_end - self.init_start
+        self.client = None
 
         FRAC_NAN = 0.0
 
-        inits = np.arange(self.init_start, self.init_end)
+        inits = xr.cftime_range(
+            start=str(self.init_start), end=str(self.init_end - 1), freq='YS'
+        )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
 
@@ -86,6 +92,9 @@ class Generate:
         )
 
         self.hind.attrs = {'history': 'created for xarray benchmarking'}
+        self.hind.lead.attrs['units'] = 'years'
+        self.uninit.time.attrs['units'] = 'years'
+        self.observations.time.attrs['units'] = 'years'
 
 
 class Compute(Generate):
@@ -99,24 +108,35 @@ class Compute(Generate):
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def time_compute_hindcast(self, metric, comparison):
         """Take time for `compute_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             compute_hindcast(
-                self.hind, self.observations, metric=metric, comparison=comparison,
+                self.hind,
+                self.observations,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def peakmem_compute_hindcast(self, metric, comparison):
         """Take memory peak for `compute_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             compute_hindcast(
-                self.hind, self.observations, metric=metric, comparison=comparison,
+                self.hind,
+                self.observations,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def time_bootstrap_hindcast(self, metric, comparison):
         """Take time for `bootstrap_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             bootstrap_hindcast(
                 self.hind,
@@ -124,14 +144,15 @@ class Compute(Generate):
                 self.observations,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
-                dim='member',
+                iterations=self.iterations,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
     def peakmem_bootstrap_hindcast(self, metric, comparison):
         """Take memory peak for `bootstrap_hindcast`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
         ensure_loaded(
             bootstrap_hindcast(
                 self.hind,
@@ -139,8 +160,8 @@ class Compute(Generate):
                 self.observations,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
-                dim='member',
+                iterations=self.iterations,
+                dim=dim,
             )
         )
 
@@ -155,11 +176,24 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.hind = self.hind['var'].chunk({'lon': self.nx // ITERATIONS})
-        self.observations = self.observations['var'].chunk(
-            {'lon': self.nx // ITERATIONS}
-        )
-        self.uninit = self.uninit['var'].chunk({'lon': self.nx // ITERATIONS})
+        self.hind = self.hind['var'].chunk()
+        self.observations = self.observations['var'].chunk()
+        self.uninit = self.uninit['var'].chunk()
+
+
+class ComputeDaskDistributed(ComputeDask):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_hindcast` and
+        `bootstrap_hindcast`. This executes the same tests as `Compute` but
+        on chunked data with dask.distributed.Client."""
+        requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        self.client = Client()
+
+    def cleanup(self):
+        self.client.shutdown()
 
 
 class ComputeSmall(Compute):
@@ -176,3 +210,4 @@ class ComputeSmall(Compute):
         self.hind = self.hind.mean(spatial_dims)
         self.observations = self.observations.mean(spatial_dims)
         self.uninit = self.uninit.mean(spatial_dims)
+        self.iterations = 500

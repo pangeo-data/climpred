@@ -203,10 +203,12 @@ def compute_relative_entropy(
     # DoTo: parallelize this double loop
     for init in inits:  # loop over inits
         rl, sl, dl = ([] for _ in range(3))  # lists to store results in
-        for l in leads:  # loop over lead time
+        for lead in leads:  # loop over lead time
             # P_b base distribution # eofs require time
             pc_b = solver.projectField(
-                anom_b.sel(init=init, lead=l).drop('lead').rename({'member': 'time'}),
+                anom_b.sel(init=init, lead=lead)
+                .drop('lead')
+                .rename({'member': 'time'}),
                 neofs=neofs,
                 eofscaling=0,
                 weighted=False,
@@ -217,7 +219,9 @@ def compute_relative_entropy(
 
             # P_x init distribution
             pc_x = solver.projectField(
-                anom_x.sel(init=init, lead=l).drop('lead').rename({'member': 'time'}),
+                anom_x.sel(init=init, lead=lead)
+                .drop('lead')
+                .rename({'member': 'time'}),
                 neofs=neofs,
                 eofscaling=0,
                 weighted=False,

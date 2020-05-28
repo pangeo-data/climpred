@@ -18,7 +18,7 @@ try:
     for node in ['mlogin', 'mistralpp']:
         if node in host:
             on_mistral = True
-            from climpred.preprocessing.shared import get_path
+            from climpred.preprocessing.mpi import get_path
 except KeyError:
     pass
 

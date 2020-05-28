@@ -108,7 +108,7 @@ def _display_metadata_html(self):
         if any(self._datasets['control']):
             control_repr_str = dataset_repr(self._datasets['control'])
             control_repr_str = control_repr_str.replace(
-                'xarray.Dataset', f'climpred Control : xarray.Dataset'
+                'xarray.Dataset', 'climpred Control : xarray.Dataset'
             )
             display_html(control_repr_str, raw=True)
 

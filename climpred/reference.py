@@ -41,6 +41,7 @@ def compute_persistence(
     **metric_kwargs,
 ):
     """Computes the skill of a persistence forecast from a simulation.
+
     Args:
         hind (xarray object): The initialized ensemble.
         verif (xarray object): Verification data.
@@ -59,13 +60,16 @@ def compute_persistence(
             default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
+
     Returns:
         pers (xarray object): Results of persistence forecast with the input metric
-        applied.
+            applied.
+
     Reference:
         * Chapter 8 (Short-Term Climate Prediction) in Van den Dool, Huug.
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
+
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
@@ -140,9 +144,11 @@ def compute_uninitialized(
     **metric_kwargs,
 ):
     """Verify an uninitialized ensemble against verification data.
+
     .. note::
         Based on Decadal Prediction protocol, this should only be computed for the
         first lag and then projected out to any further lags being analyzed.
+
     Args:
         hind (xarray object): Initialized ensemble.
         uninit (xarray object): Uninitialized ensemble.
@@ -166,8 +172,10 @@ def compute_uninitialized(
             should be based on the same set of verification dates.
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
+
     Returns:
         u (xarray object): Results from comparison at the first lag.
+
     """
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')

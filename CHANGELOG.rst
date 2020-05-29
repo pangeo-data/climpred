@@ -9,6 +9,9 @@ Breaking change
 ---------------
 
 - replace keyword `bootstrap` with `iterations` (:pr:`354`) `Aaron Spring`_.
+- HTML ``__repr__`` for :py:class:`~climpred.classes.HindcastEnsemble` and
+  :py:class:`~climpred.classes.PerfectModelEnsemble` following
+  `xarray.core.options.OPTIONS` (:pr:`371`) `Aaron Spring`_.
 
 
 New Features

@@ -116,6 +116,8 @@ def compute_persistence(
     pers['lead'] = hind.lead.values
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
+    if 'iteration' in hind.dims:
+        drop_dims += ['iteration']
     pers = copy_coords_from_to(hind.drop_vars(drop_dims), pers)
     if add_attrs:
         pers = assign_attrs(

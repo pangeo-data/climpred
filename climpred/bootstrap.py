@@ -1,4 +1,5 @@
 import inspect
+import warnings
 
 import dask
 import numpy as np
@@ -51,7 +52,65 @@ def _resample(hind, resample_dim):
     return smp_hind
 
 
-def _resample_iterations_idx(init, iterations, dim='member', replace=True):
+def _resample_iterations(init, iterations, dim='member', dim_max=None, replace=True):
+    """Resample over ``dim`` by index ``iterations`` times.
+
+    .. note::
+        This gives the same result as `_resample_iterations_idx`. When using dask, the
+        number of tasks in `_resample_iterations` will scale with iterations but
+        constant chunksize, whereas the tasks in `_resample_iterations_idx` will stay
+        constant with increasing chunksize.
+
+    Args:
+        init (xr.DataArray, xr.Dataset): Initialized prediction ensemble.
+        iterations (int): Number of bootstrapping iterations.
+        dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
+        dim_max (int): Number of items to select in `dim`.
+        replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
+
+    Returns:
+        xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
+
+    """
+    if dim_max is not None and dim_max <= init[dim].size:
+        # select only dim_max items
+        select_dim_items = dim_max
+        new_dim = init[dim].isel({dim: slice(None, dim_max)})
+    else:
+        select_dim_items = init[dim].size
+        new_dim = init[dim]
+
+    if replace:
+        idx = np.random.randint(0, init[dim].size, (iterations, select_dim_items))
+    elif not replace:
+        # create 2d np.arange()
+        idx = np.linspace(
+            (np.arange(select_dim_items)),
+            (np.arange(select_dim_items)),
+            iterations,
+            dtype='int',
+        )
+        # shuffle each line
+        for ndx in np.arange(iterations):
+            np.random.shuffle(idx[ndx])
+    idx_da = xr.DataArray(
+        idx,
+        dims=('iteration', dim),
+        coords=({'iteration': range(iterations), dim: new_dim}),
+    )
+    init_smp = []
+    for i in np.arange(iterations):
+        idx = idx_da.sel(iteration=i).data
+        init_smp2 = init.isel({dim: idx}).assign_coords({dim: new_dim})
+        init_smp.append(init_smp2)
+    init_smp = xr.concat(init_smp, dim='iteration', **CONCAT_KWARGS)
+    init_smp['iteration'] = np.arange(1, 1 + iterations)
+    return init_smp
+
+
+def _resample_iterations_idx(
+    init, iterations, dim='member', replace=True, chunk=True, dim_max=None
+):
     """Resample over ``dim`` by index ``iterations`` times.
 
     .. note::
@@ -66,11 +125,16 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         iterations (int): Number of bootstrapping iterations.
         dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
         replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
+        chunk: (bool): Auto-chunk along chunking_dims to get optimal blocksize
+        dim_max (int): Number of indices from `dim` to return. Not implemented.
 
     Returns:
         xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
 
     """
+    if dask.is_dask_collection(init):
+        init = init.chunk({'lead': -1, 'member': -1})
+        init = init.copy(deep=True)
 
     def select_bootstrap_indices_ufunc(x, idx):
         """Selects multi-level indices ``idx`` from xarray object ``x`` for all
@@ -80,6 +144,13 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         # select a different set of, e.g., ensemble members for each iteration and
         # construct one large DataArray with ``iterations`` as a dimension.
         return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
+
+    if dask.is_dask_collection(init):
+        if chunk:
+            chunking_dims = [d for d in init.dims if d not in CLIMPRED_DIMS]
+            init = _chunk_before_resample_iterations_idx(
+                init, iterations, chunking_dims
+            )
 
     # resample with or without replacement
     if replace:
@@ -100,10 +171,12 @@ def _resample_iterations_idx(init, iterations, dim='member', replace=True):
         dims=('iteration', dim),
         coords=({'iteration': range(iterations), dim: init[dim]}),
     )
-
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(init, xr.DataArray) else {}
+    )
     return xr.apply_ufunc(
         select_bootstrap_indices_ufunc,
-        init.transpose(dim, ...),
+        init.transpose(dim, ..., **transpose_kwargs),
         idx_da,
         dask='parallelized',
         output_dtypes=[float],
@@ -185,26 +258,26 @@ def bootstrap_uninitialized_ensemble(hind, hist):
 
     uninit_hind = []
     for init in hind.init.values:
-        random_members = np.random.choice(hist.member.values, hind.member.size)
-        # take random uninitialized members from hist at init forcing
+        # take uninitialized members from hist at init forcing
         # (Goddard et al. allows 5 year forcing range here)
         uninit_at_one_init_year = hist.sel(
             time=slice(
                 shift_cftime_singular(init, 1, freq),
                 shift_cftime_singular(init, n, freq),
             ),
-            member=random_members,
         ).rename({'time': 'lead'})
         uninit_at_one_init_year['lead'] = np.arange(
             1, 1 + uninit_at_one_init_year['lead'].size
         )
-        uninit_at_one_init_year['member'] = np.arange(1, 1 + len(random_members))
         uninit_hind.append(uninit_at_one_init_year)
     uninit_hind = xr.concat(uninit_hind, 'init')
     uninit_hind['init'] = hind['init'].values
     uninit_hind.lead.attrs['units'] = hind.lead.attrs['units']
+    uninit_hind['member'] = hist['member'].values
     return (
-        _transpose_and_rechunk_to(uninit_hind, hind)
+        _transpose_and_rechunk_to(
+            uninit_hind, hind.isel(member=[0] * uninit_hind.member.size)
+        )
         if dask.is_dask_collection(uninit_hind)
         else uninit_hind
     )
@@ -275,7 +348,10 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     uninit['member'] = init_pm.member.values
     uninit['lead'] = init_pm.lead
     # chunk to same dims
-    uninit = uninit.transpose(*init_pm.dims)
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(init_pm, xr.DataArray) else {}
+    )
+    uninit = uninit.transpose(*init_pm.dims, **transpose_kwargs)
     return (
         _transpose_and_rechunk_to(uninit, init_pm)
         if dask.is_dask_collection(uninit)
@@ -307,7 +383,10 @@ def _bootstrap_by_stacking(init_pm, control):
     larger = control.isel(time=new_time)
     fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
     # exchange values
-    larger = larger.transpose(*fake_init.dims)
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(init_pm, xr.DataArray) else {}
+    )
+    larger = larger.transpose(*fake_init.dims, **transpose_kwargs)
     fake_init.data = larger.data
     fake_uninit = fake_init.unstack()
     if init_was_dataset:
@@ -317,80 +396,199 @@ def _bootstrap_by_stacking(init_pm, control):
     return fake_uninit
 
 
-def _bootstrap_func(
-    func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
+def _bootstrap_hindcast_over_init_dim(
+    hind,
+    hist,
+    verif,
+    dim,
+    resample_dim,
+    iterations,
+    metric,
+    comparison,
+    alignment,
+    compute,
+    reference_compute,
+    resample_uninit,
+    reference_alignment,
+    **metric_kwargs,
 ):
-    """Sig % threshold of function based on iterations resampling with replacement.
+    """Bootstrap hindcast skill over the ``init`` dimension.
 
-    Reference:
-    * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
-     Intervals for the Correlation Coefficient in Climatology.” Theoretical and
-      Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
-      https://doi.org/10/b6fnsv.
+    When bootstrapping over the ``member`` dimension, an additional dimension
+    ``iteration`` can be added and skill can be computing over that entire
+    dimension in parallel, since all members are being aligned the same way.
+    However, to our knowledge, when bootstrapping over the ``init`` dimension,
+    one must evaluate each iteration independently. I.e., in a looped fashion,
+    since alignment of initializations and target dates is unique to each
+    iteration.
 
-    Args:
-        func (function): function to be bootstrapped.
-        ds (xr.object): first input argument of func. `chunk` ds on `dim` other
-            than `resample_dim` for potential performance increase when multiple
-            CPUs available.
-        resample_dim (str): dimension to resample from.
-        sig (int,float,list): significance levels to return. Defaults to 95.
-        iterations (int): number of resample iterations. Defaults to 500.
-        *func_args (type): `*func_args`.
-        **func_kwargs (type): `**func_kwargs`.
+    See ``bootstrap_compute`` for explanation of inputs.
+    """
+    pers_skill = []
+    bootstrapped_init_skill = []
+    bootstrapped_uninit_skill = []
+    for i in range(iterations):
+        # resample with replacement
+        smp_hind = _resample(hind, resample_dim)
+        # compute init skill
+        init_skill = compute(
+            smp_hind,
+            verif,
+            metric=metric,
+            comparison=comparison,
+            alignment=alignment,
+            add_attrs=False,
+            dim=dim,
+            **metric_kwargs,
+        )
+        # reset inits when probabilistic, otherwise tests fail
+        if (
+            resample_dim == 'init'
+            and metric.probabilistic
+            and 'init' in init_skill.coords
+        ):
+            init_skill['init'] = hind.init.values
+        bootstrapped_init_skill.append(init_skill)
+        # generate uninitialized ensemble from hist
+        uninit_hind = resample_uninit(hind, hist)
+        # compute uninit skill
+        bootstrapped_uninit_skill.append(
+            compute(
+                uninit_hind,
+                verif,
+                alignment=alignment,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
+                add_attrs=False,
+                **metric_kwargs,
+            )
+        )
+        # compute persistence skill
+        # impossible for probabilistic
+        if not metric.probabilistic:
+            pers_skill.append(
+                reference_compute(
+                    smp_hind,
+                    verif,
+                    metric=metric,
+                    alignment=reference_alignment,
+                    add_attrs=False,
+                    **metric_kwargs,
+                )
+            )
+    bootstrapped_init_skill = xr.concat(
+        bootstrapped_init_skill, dim='iteration', **CONCAT_KWARGS
+    )
+    bootstrapped_uninit_skill = xr.concat(
+        bootstrapped_uninit_skill, dim='iteration', **CONCAT_KWARGS
+    )
+    if pers_skill != []:
+        bootstrapped_pers_skill = xr.concat(
+            pers_skill, dim='iteration', **CONCAT_KWARGS
+        )
+    return (
+        bootstrapped_init_skill,
+        bootstrapped_uninit_skill,
+        bootstrapped_pers_skill,
+    )
+
+
+def _get_resample_func(ds):
+    """Decide for resample function based on input `ds`.
 
     Returns:
-        sig_level: bootstrapped significance levels with
-                   dimensions of init_pm and len(sig) if sig is list
+      callable: `_resample_iterations`: if big and chunked `ds`
+                `_resample_iterations_idx`: else (if small and eager `ds`)
     """
-    if not callable(func):
-        raise ValueError(f'Please provide func as a function, found {type(func)}')
-    warn_if_chunking_would_increase_performance(ds)
-    if isinstance(sig, list):
-        psig = [i / 100 for i in sig]
-    else:
-        psig = sig / 100
-
-    bootstraped_ds = _resample_iterations_idx(
-        ds, iterations, dim=resample_dim, replace=False
+    resample_func = (
+        _resample_iterations
+        if (
+            dask.is_dask_collection(ds)
+            and len(ds.dims) > 3
+            # > 2MB
+            and ds.nbytes > 2000000
+        )
+        else _resample_iterations_idx
     )
-    bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
-    bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
-        bootstraped_results, dim='iteration'
-    )
-    sig_level = bootstraped_results.quantile(dim='iteration', q=psig, skipna=False)
-    return sig_level
+    return resample_func
 
 
-def dpp_threshold(control, sig=95, iterations=500, dim='time', **dpp_kwargs):
-    """Calc DPP significance levels from re-sampled dataset.
+def _maybe_auto_chunk(ds, dims):
+    """Auto-chunk on dimension `dims`.
 
-    Reference:
-        * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
-          Potential Predictability of Global Temperature and Precipitation.”
-          Geophysical Research Letters 38, no. 7 (2011).
-          https://doi.org/10/ft272w.
+    Args:
+        ds (xr.object): input data.
+        dims (list of str or str): Dimensions to auto-chunk in.
 
-    See also:
-        * climpred.bootstrap._bootstrap_func
-        * climpred.stats.dpp
+    Returns:
+        xr.object: auto-chunked along `dims`
+
     """
-    return _bootstrap_func(
-        dpp, control, dim, sig=sig, iterations=iterations, **dpp_kwargs
-    )
+    if dask.is_dask_collection(ds) and dims is not []:
+        if isinstance(dims, str):
+            dims = [dims]
+        chunks = [d for d in dims if d in ds.dims]
+        chunks = {key: 'auto' for key in chunks}
+        ds = ds.chunk(chunks)
+    return ds
 
 
-def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim='time'):
-    """Calc the variance-weighted mean period significance levels from re-sampled
-    dataset.
+def _chunk_before_resample_iterations_idx(
+    ds, iterations, chunking_dims, optimal_blocksize=100000000
+):
+    """Chunk ds so small that after _resample_iteration_idx chunks have optimal size
+    `optimal_blocksize`.
 
-    See also:
-        * climpred.bootstrap._bootstrap_func
-        * climpred.stats.varweighted_mean_period
+    Args:
+        ds (xr.obejct): input data`.
+        iterations (int): number of bootstrap iterations in `_resample_iterations_idx`.
+        chunking_dims (list of str or str): Dimension(s) to chunking in.
+        optimal_blocksize (int): dask blocksize to aim at in bytes.
+            Defaults to 100000000.
+
+    Returns:
+        xr.object: chunked to have blocksize: optimal_blocksize/iterations.
+
     """
-    return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, iterations=iterations,
+    if isinstance(chunking_dims, str):
+        chunking_dims = [chunking_dims]
+    # size of CLIMPRED_DIMS
+    climpred_dim_chunksize = 8 * np.product(
+        np.array([ds[d].size for d in CLIMPRED_DIMS if d in ds.dims])
     )
+    # remaining blocksize for remaining dims considering iteration
+    spatial_dim_blocksize = optimal_blocksize / (climpred_dim_chunksize * iterations)
+    # size of remaining dims
+    chunking_dims_size = np.product(
+        np.array([ds[d].size for d in ds.dims if d not in CLIMPRED_DIMS])
+    )  # ds.lat.size*ds.lon.size
+    # chunks needed to get to optimal blocksize
+    chunks_needed = chunking_dims_size / spatial_dim_blocksize
+    # get size clon, clat for spatial chunks
+    cdim = [1 for i in chunking_dims]
+    nchunks = np.product(cdim)
+    stepsize = 1
+    counter = 0
+    while nchunks < chunks_needed:
+        for i, d in enumerate(chunking_dims):
+            c = cdim[i]
+            if c <= ds[d].size:
+                c = c + stepsize
+                cdim[i] = c
+            nchunks = np.product(cdim)
+        counter += 1
+        if counter == 100:
+            break
+    # convert number of chunks to chunksize
+    chunks = dict()
+    for i, d in enumerate(chunking_dims):
+        chunksize = ds[d].size // cdim[i]
+        if chunksize < 1:
+            chunksize = 1
+        chunks[d] = chunksize
+    ds = ds.chunk(chunks)
+    return ds
 
 
 def bootstrap_compute(
@@ -473,7 +671,7 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
-    warn_if_chunking_would_increase_performance(hind)
+    warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
 
@@ -484,10 +682,6 @@ def bootstrap_compute(
     ci_low_pers = p_pers / 2
     ci_high_pers = 1 - p_pers / 2
 
-    init = []
-    uninit = []
-    pers = []
-
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     comparison = COMPARISON_ALIASES.get(comparison, comparison)
@@ -497,16 +691,104 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    # Perfect Model requires `same_inits` setup.
-    isHindcast = True if comparison in HINDCAST_COMPARISONS else False
+    # Perfect Model requires `same_inits` setup
+    isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
     reference_alignment = alignment if isHindcast else 'same_inits'
+    chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
-    for i in range(iterations):
-        # resample with replacement
-        smp_hind = _resample(hind, resample_dim)
-        # compute init skill
-        init_skill = compute(
-            smp_hind,
+    if hist is None:  # PM path, use verif = control
+        hist = verif
+
+    # slower path for hindcast and resample_dim init
+    if resample_dim == 'init' and isHindcast:
+        warnings.warn('resample_dim=`init` will be slower than resample_dim=`member`.')
+        (
+            bootstrapped_init_skill,
+            bootstrapped_uninit_skill,
+            bootstrapped_pers_skill,
+        ) = _bootstrap_hindcast_over_init_dim(
+            hind,
+            hist,
+            verif,
+            dim,
+            resample_dim,
+            iterations,
+            metric,
+            comparison,
+            alignment,
+            compute,
+            reference_compute,
+            resample_uninit,
+            reference_alignment,
+            **metric_kwargs,
+        )
+    else:  # faster: first _resample_iterations_idx, then compute skill
+        resample_func = _get_resample_func(hind)
+        if not isHindcast:
+            # create more members than needed in PM to make the uninitialized
+            # distribution more robust
+            members_to_sample_from = 50
+            repeat = members_to_sample_from // hind.member.size + 1
+            uninit_hind = xr.concat(
+                [resample_uninit(hind, hist) for i in range(repeat)],
+                dim='member',
+                **CONCAT_KWARGS,
+            )
+            uninit_hind['member'] = np.arange(1, 1 + uninit_hind.member.size)
+            if dask.is_dask_collection(uninit_hind):
+                # too minimize tasks: ensure uninit_hind get pre-computed
+                # alternativly .chunk({'member':-1})
+                uninit_hind = uninit_hind.compute().chunk()
+            # resample uninit always over member those and select only hind.member.size
+            bootstrapped_uninit = resample_func(
+                uninit_hind,
+                iterations,
+                'member',
+                replace=False,
+                dim_max=hind['member'].size,
+            )
+            # effectively only when _resample_iteration_idx which doesnt use dim_max
+            bootstrapped_uninit = bootstrapped_uninit.isel(
+                member=slice(None, hind.member.size)
+            )
+            if dask.is_dask_collection(bootstrapped_uninit):
+                bootstrapped_uninit = bootstrapped_uninit.chunk({'member': -1})
+                bootstrapped_uninit = _maybe_auto_chunk(
+                    bootstrapped_uninit, ['iteration'] + chunking_dims
+                )
+        else:  # hindcast
+            uninit_hind = resample_uninit(hind, hist)
+            if dask.is_dask_collection(uninit_hind):
+                # too minimize tasks: ensure uninit_hind get pre-computed
+                # maybe not needed
+                uninit_hind = uninit_hind.compute().chunk()
+            bootstrapped_uninit = resample_func(uninit_hind, iterations, resample_dim)
+            bootstrapped_uninit = bootstrapped_uninit.isel(
+                member=slice(None, hind.member.size)
+            )
+            if dask.is_dask_collection(bootstrapped_uninit):
+                bootstrapped_uninit = _maybe_auto_chunk(
+                    bootstrapped_uninit.chunk({'lead': 1}),
+                    ['iteration'] + chunking_dims,
+                )
+
+        bootstrapped_uninit_skill = compute(
+            bootstrapped_uninit,
+            verif,
+            alignment=alignment,
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            add_attrs=False,
+            **metric_kwargs,
+        )
+
+        bootstrapped_hind = resample_func(hind, iterations, resample_dim)
+        if dask.is_dask_collection(bootstrapped_hind):
+            bootstrapped_hind = bootstrapped_hind.chunk({'member': -1})
+
+        bootstrapped_init_skill = compute(
+            bootstrapped_hind,
             verif,
             metric=metric,
             comparison=comparison,
@@ -515,70 +797,30 @@ def bootstrap_compute(
             dim=dim,
             **metric_kwargs,
         )
-        # reset inits when probabilistic, otherwise tests fail
-        if (
-            resample_dim == 'init'
-            and metric.probabilistic
-            and 'init' in init_skill.coords
-        ):
-            init_skill['init'] = hind.init.values
-        init.append(init_skill)
-        # generate uninitialized ensemble from hist
-        if hist is None:  # PM path, use verif = control
-            hist = verif
-        uninit_hind = resample_uninit(hind, hist)
-        # compute uninit skill
-        uninit.append(
-            compute(
-                uninit_hind,
+
+        if not metric.probabilistic:
+            pers_skill = reference_compute(
+                hind,
                 verif,
-                alignment=alignment,
                 metric=metric,
-                comparison=comparison,
-                dim=dim,
-                add_attrs=False,
+                alignment=reference_alignment,
                 **metric_kwargs,
             )
-        )
-        # compute persistence skill
-        # impossible for probabilistic
-        if not metric.probabilistic:
-            pers.append(
-                reference_compute(
-                    smp_hind,
+            # bootstrap pers
+            if resample_dim == 'init':
+                bootstrapped_pers_skill = reference_compute(
+                    bootstrapped_hind,
                     verif,
                     metric=metric,
                     alignment=reference_alignment,
-                    add_attrs=False,
                     **metric_kwargs,
                 )
-            )
-    init = xr.concat(init, dim='iteration', **CONCAT_KWARGS)
-    uninit = xr.concat(uninit, dim='iteration', **CONCAT_KWARGS)
-    # when persistence is not computed set flag
-    if pers != []:
-        pers = xr.concat(pers, dim='iteration', **CONCAT_KWARGS)
-        pers_output = True
-    else:
-        pers_output = False
-
-    # get confidence intervals CI
-    init_ci = _distribution_to_ci(init, ci_low, ci_high)
-    uninit_ci = _distribution_to_ci(uninit, ci_low, ci_high)
-    # probabilistic metrics wont have persistence forecast
-    # therefore only get CI if persistence was computed
-    if pers_output:
-        if set(pers.coords) != set(init.coords):
-            init, pers = xr.broadcast(init, pers)
-        pers_ci = _distribution_to_ci(pers, ci_low_pers, ci_high_pers)
-    else:
-        # otherwise set all persistence outputs to false
-        pers = init.isnull()
-        pers_ci = init_ci == -999
-
-    # pvalue whether uninit or pers better than init forecast
-    p_uninit_over_init = _pvalue_from_distributions(uninit, init, metric=metric)
-    p_pers_over_init = _pvalue_from_distributions(pers, init, metric=metric)
+            else:  # member
+                bootstrapped_pers_skill = pers_skill.expand_dims('iteration').isel(
+                    iteration=[0] * iterations
+                )
+        else:
+            bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
 
     # calc mean skill without any resampling
     init_skill = compute(
@@ -592,17 +834,43 @@ def bootstrap_compute(
     )
     if 'init' in init_skill:
         init_skill = init_skill.mean('init')
+
     # uninit skill as mean resampled uninit skill
-    uninit_skill = uninit.mean('iteration')
+    uninit_skill = bootstrapped_uninit_skill.mean('iteration')
     if not metric.probabilistic:
         pers_skill = reference_compute(
             hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
         )
     else:
         pers_skill = init_skill.isnull()
+
     # align to prepare for concat
-    if set(pers_skill.coords) != set(init_skill.coords):
-        init_skill, pers_skill = xr.broadcast(init_skill, pers_skill)
+    if set(bootstrapped_pers_skill.coords) != set(bootstrapped_init_skill.coords):
+        bootstrapped_init_skill, bootstrapped_pers_skill = xr.broadcast(
+            bootstrapped_init_skill, bootstrapped_pers_skill
+        )
+
+    # get confidence intervals CI
+    init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
+    uninit_ci = _distribution_to_ci(bootstrapped_uninit_skill, ci_low, ci_high)
+
+    # probabilistic metrics wont have persistence forecast
+    # therefore only get CI if persistence was computed
+    if 'iteration' in bootstrapped_pers_skill.dims:
+        pers_ci = _distribution_to_ci(
+            bootstrapped_pers_skill, ci_low_pers, ci_high_pers
+        )
+    else:
+        # otherwise set all persistence outputs to false
+        pers_ci = init_ci == -999
+
+    # pvalue whether uninit or pers better than init forecast
+    p_uninit_over_init = _pvalue_from_distributions(
+        bootstrapped_uninit_skill, bootstrapped_init_skill, metric=metric
+    )
+    p_pers_over_init = _pvalue_from_distributions(
+        bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
+    )
 
     # wrap results together in one dataarray
     skill = xr.concat(
@@ -883,4 +1151,79 @@ def bootstrap_perfect_model(
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
         reference_compute=reference_compute,
         **metric_kwargs,
+    )
+
+
+def _bootstrap_func(
+    func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
+):
+    """Sig % threshold of function based on iterations resampling with replacement.
+
+    Reference:
+    * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
+     Intervals for the Correlation Coefficient in Climatology.” Theoretical and
+      Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
+      https://doi.org/10/b6fnsv.
+
+    Args:
+        func (function): function to be bootstrapped.
+        ds (xr.object): first input argument of func. `chunk` ds on `dim` other
+            than `resample_dim` for potential performance increase when multiple
+            CPUs available.
+        resample_dim (str): dimension to resample from.
+        sig (int,float,list): significance levels to return. Defaults to 95.
+        iterations (int): number of resample iterations. Defaults to 500.
+        *func_args (type): `*func_args`.
+        **func_kwargs (type): `**func_kwargs`.
+
+    Returns:
+        sig_level: bootstrapped significance levels with
+                   dimensions of init_pm and len(sig) if sig is list
+    """
+    if not callable(func):
+        raise ValueError(f'Please provide func as a function, found {type(func)}')
+    warn_if_chunking_would_increase_performance(ds)
+    if isinstance(sig, list):
+        psig = [i / 100 for i in sig]
+    else:
+        psig = sig / 100
+
+    resample_func = _get_resample_func(ds)
+    bootstraped_ds = resample_func(ds, iterations, dim=resample_dim, replace=False)
+    bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
+    bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
+        bootstraped_results, dim='iteration'
+    )
+    sig_level = bootstraped_results.quantile(dim='iteration', q=psig, skipna=False)
+    return sig_level
+
+
+def dpp_threshold(control, sig=95, iterations=500, dim='time', **dpp_kwargs):
+    """Calc DPP significance levels from re-sampled dataset.
+
+    Reference:
+        * Feng, X., T. DelSole, and P. Houser. “Bootstrap Estimated Seasonal
+          Potential Predictability of Global Temperature and Precipitation.”
+          Geophysical Research Letters 38, no. 7 (2011).
+          https://doi.org/10/ft272w.
+
+    See also:
+        * climpred.bootstrap._bootstrap_func
+        * climpred.stats.dpp
+    """
+    return _bootstrap_func(
+        dpp, control, dim, sig=sig, iterations=iterations, **dpp_kwargs
+    )
+
+
+def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim='time'):
+    """Calc the variance-weighted mean period significance levels from re-sampled
+    dataset.
+
+    See also:
+        * climpred.bootstrap._bootstrap_func
+        * climpred.stats.varweighted_mean_period
+    """
+    return _bootstrap_func(
+        varweighted_mean_period, control, time_dim, sig=sig, iterations=iterations,
     )

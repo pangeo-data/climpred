@@ -1,7 +1,9 @@
 import numpy as np
 import xarray as xr
+from dask.distributed import Client
 
 from climpred.bootstrap import bootstrap_perfect_model
+from climpred.metrics import PROBABILISTIC_METRICS
 from climpred.prediction import compute_perfect_model
 
 from . import ensure_loaded, parameterized, randn, requires_dask
@@ -11,7 +13,7 @@ METRICS = ['rmse', 'pearson_r', 'crpss']
 # only take comparisons compatible with probabilistic metrics
 PM_COMPARISONS = ['m2m', 'm2c']
 
-ITERATIONS = 8
+ITERATIONS = 16
 
 
 class Generate:
@@ -26,23 +28,32 @@ class Generate:
         perfect-model experiment."""
         self.ds = xr.Dataset()
         self.control = xr.Dataset()
-        self.nmember = 3
-        self.ninit = 4
-        self.nlead = 3
-        self.nx = 64
-        self.ny = 64
+        self.nmember = 5
+        self.ninit = 6
+        self.nlead = 10
+        self.iterations = ITERATIONS
+        self.nx = 72
+        self.ny = 36
         self.control_start = 3000
         self.control_end = 3300
-        self.ntime = 300
+        self.ntime = self.control_end - self.control_start
+        self.client = None
 
         FRAC_NAN = 0.0
 
-        times = np.arange(self.control_start, self.control_end)
+        times = xr.cftime_range(
+            start=str(self.control_start),
+            periods=self.ntime,
+            freq='YS',
+            calendar='noleap',
+        )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
-        inits = (
-            np.random.choice(self.control_end - self.control_start, self.ninit)
-            + self.control_start
+        inits = xr.cftime_range(
+            start=str(self.control_start),
+            periods=self.ninit,
+            freq='10YS',
+            calendar='noleap',
         )
 
         lons = xr.DataArray(
@@ -80,6 +91,8 @@ class Generate:
         )
 
         self.ds.attrs = {'history': 'created for xarray benchmarking'}
+        self.ds.lead.attrs['units'] = 'years'
+        self.control.time.attrs['units'] = 'years'
 
 
 class Compute(Generate):
@@ -94,44 +107,50 @@ class Compute(Generate):
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_compute_perfect_model(self, metric, comparison):
         """Take time for `compute_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             compute_perfect_model(
-                self.ds, self.control, metric=metric, comparison=comparison
+                self.ds, self.control, metric=metric, comparison=comparison, dim=dim
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_compute_perfect_model(self, metric, comparison):
         """Take memory peak for `compute_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             compute_perfect_model(
-                self.ds, self.control, metric=metric, comparison=comparison
+                self.ds, self.control, metric=metric, comparison=comparison, dim=dim
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def time_bootstrap_perfect_model(self, metric, comparison):
         """Take time for `bootstrap_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
+                iterations=self.iterations,
+                dim=dim,
             )
         )
 
     @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
     def peakmem_bootstrap_perfect_model(self, metric, comparison):
         """Take memory peak for `bootstrap_perfect_model`."""
+        dim = 'member' if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
                 self.control,
                 metric=metric,
                 comparison=comparison,
-                iterations=ITERATIONS,
+                iterations=self.iterations,
+                dim=dim,
             )
         )
 
@@ -146,8 +165,23 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds['var'].chunk({'lon': self.nx // ITERATIONS})
-        self.control = self.control['var'].chunk({'lon': self.nx // ITERATIONS})
+        self.ds = self.ds['var'].chunk()
+        self.control = self.control['var'].chunk()
+
+
+class ComputeDaskDistributed(ComputeDask):
+    def setup(self, *args, **kwargs):
+        """Benchmark time and peak memory of `compute_perfect_model` and
+        `bootstrap_perfect_model`. This executes the same tests as `Compute` but
+        on chunked data with dask.distributed.Client."""
+        requires_dask()
+        # magic taken from
+        # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
+        super().setup(**kwargs)
+        self.client = Client()
+
+    def cleanup(self):
+        self.client.shutdown()
 
 
 class ComputeSmall(Compute):
@@ -158,7 +192,7 @@ class ComputeSmall(Compute):
         # magic taken from
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
-        # chunk along a spatial dimension to enable embarrasingly parallel computation
         spatial_dims = ['lon', 'lat']
         self.ds = self.ds.mean(spatial_dims)
         self.control = self.control.mean(spatial_dims)
+        self.iterations = 500

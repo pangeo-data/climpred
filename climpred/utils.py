@@ -46,7 +46,7 @@ def assign_attrs(
     # climpred info
     skill.attrs[
         'prediction_skill'
-    ] = f'calculated by climpred https://climpred.readthedocs.io/'
+    ] = 'calculated by climpred https://climpred.readthedocs.io/'
     skill.attrs['skill_calculated_by_function'] = function_name
     if 'init' in ds.coords:
         skill.attrs['number_of_initializations'] = ds.init.size
@@ -98,7 +98,7 @@ def copy_coords_from_to(xro_from, xro_to):
         xro_to = xro_to.assign_coords(**xro_from.coords)
     else:
         raise ValueError(
-            f'xro_from and xro_to must be both either xr.DataArray or',
+            'xro_from and xro_to must be both either xr.DataArray or',
             f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
         )
     return xro_to
@@ -326,7 +326,7 @@ def get_multiple_lead_cftime_shift_args(units, leads):
         freq (str): Pandas frequency alias. ``str`` for
             ``CFTimeIndex.shift(value, str)``.
     """
-    n_freq_tuples = [get_lead_cftime_shift_args(units, l) for l in leads]
+    n_freq_tuples = [get_lead_cftime_shift_args(units, lead) for lead in leads]
     n, freq = list(zip(*n_freq_tuples))
     return n, freq[0]
 
@@ -431,7 +431,9 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
-    # transpose_coords=False as was when xarray implemented this at first
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims, transpose_coords=False).chunk(
+    transpose_kwargs = (
+        {'transpose_coords': False} if isinstance(new_chunk_ds, xr.DataArray) else {}
+    )
+    return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks
     )

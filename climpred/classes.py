@@ -91,9 +91,7 @@ def _display_metadata_html(self):
     header = f'<h4>climpred.{type(self).__name__}</h4>'
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets['initialized'])
-    init_repr_str = init_repr_str.replace(
-        'xarray.Dataset', 'climpred Initialized : xarray.Dataset'
-    )
+    init_repr_str = init_repr_str.replace('xarray.Dataset', 'Initialized Ensemble')
     display_html(init_repr_str, raw=True)
 
     if isinstance(self, HindcastEnsemble):
@@ -101,22 +99,20 @@ def _display_metadata_html(self):
             for key in self._datasets['observations']:
                 obs_repr_str = dataset_repr(self._datasets['observations'][key])
                 obs_repr_str = obs_repr_str.replace(
-                    'xarray.Dataset', f'climpred Verification {key} : xarray.Dataset'
+                    'xarray.Dataset', f'Verification Data {key}'
                 )
                 display_html(obs_repr_str, raw=True)
     elif isinstance(self, PerfectModelEnsemble):
         if any(self._datasets['control']):
             control_repr_str = dataset_repr(self._datasets['control'])
             control_repr_str = control_repr_str.replace(
-                'xarray.Dataset', 'climpred Control : xarray.Dataset'
+                'xarray.Dataset', 'Control Simulation'
             )
             display_html(control_repr_str, raw=True)
 
     if any(self._datasets['uninitialized']):
         uninit_repr_str = dataset_repr(self._datasets['uninitialized'])
-        uninit_repr_str = uninit_repr_str.replace(
-            'xarray.Dataset', 'climpred Uninitialized : xarray.Dataset'
-        )
+        uninit_repr_str = uninit_repr_str.replace('xarray.Dataset', 'Uninitialized')
         display_html(uninit_repr_str, raw=True)
     # better would be to aggregate repr_strs and then all return but this fails
     # TypeError: __repr__ returned non-string (type NoneType)

@@ -15,17 +15,19 @@ Breaking Changes
 New Features
 ------------
 
-- :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble`
-  now use an HTML representation, following the more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
-- ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. Current options are ``'persistence'`` for
-  a persistence forecast of the observations and ``'historical'`` for some historical reference, such as an
-  uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
-- We now only enforce a union of the initialization dates with observations if ``reference='persistence'`` for
-  :py:class:`~climpred.classes.HindcastEnsemble`. This is to ensure that the same set of initializations is used
+- :py:class:`~climpred.classes.HindcastEnsemble` and
+  :py:class:`~climpred.classes.PerfectModelEnsemble` now use an HTML representation, following the
+  more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
+- ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. Current options are
+  ``'persistence'`` for a persistence forecast of the observations and ``'historical'`` for some
+  historical reference, such as an uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
+- We now only enforce a union of the initialization dates with observations if
+  ``reference='persistence'`` for :py:class:`~climpred.classes.HindcastEnsemble`. This is to ensure
+  that the same set of initializations is used
   by the observations to construct a persistence forecast. (:pr:`341`) `Riley X. Brady`_.
-- :py:func:`~climpred.prediction.compute_perfect_model` now accepts initialization (``init``) as ``cftime`` and
-  ``int``. ``cftime`` is now implemented into the bootstrap uninitialized functions for the perfect model
-  configuration. (:pr:`332`) `Aaron Spring`_.
+- :py:func:`~climpred.prediction.compute_perfect_model` now accepts initialization (``init``) as
+  ``cftime`` and ``int``. ``cftime`` is now implemented into the bootstrap uninitialized functions
+  for the perfect model configuration. (:pr:`332`) `Aaron Spring`_.
 - New explicit keywords in bootstrap functions for ``resampling_dim`` and
   ``reference_compute`` (:pr:`320`) `Aaron Spring`_.
 - Logging now included for ``compute_hindcast`` which displays the ``inits`` and
@@ -44,19 +46,20 @@ New Features
       should be based on the same set of verification dates. (:pr:`331`)
       `Riley X. Brady`_.
 
-
 Performance
 -----------
 
-The major change for this release is a dramatic speedup in bootstrapping functions, led by `Aaron Spring`_. We
-focused on scalability with ``dask`` and found many places we could compute skill simultaneously over all
-bootstrapped ensemble members rather than at each iteration.
+The major change for this release is a dramatic speedup in bootstrapping functions, led by
+`Aaron Spring`_. We focused on scalability with ``dask`` and found many places we could compute
+skill simultaneously over all bootstrapped ensemble members rather than at each iteration.
 
-- Bootstrapping uninitialized skill in the perfect model framework is now sped up significantly for annual lead
-  resolution. (:pr:`332`) `Aaron Spring`_.
+- Bootstrapping uninitialized skill in the perfect model framework is now sped up significantly for
+  annual lead resolution. (:pr:`332`) `Aaron Spring`_.
 - General speedup in :py:func:`~climpred.bootstrap.bootstrap_hindcast` and
   :py:func:`~climpred.bootstrap.bootstrap_perfect_model`: (:pr:`285`) `Aaron Spring`_.
+
     * Properly implemented handling for lazy results when inputs are chunked.
+
     * User gets warned when chunking potentially unnecessarily and/or inefficiently.
 
 Bug Fixes
@@ -94,7 +97,6 @@ Internals/Minor Fixes
 - Resample first and then calculate skill in
   :py:func:`~climpred.bootstrap.bootstrap_perfect_model` and
   :py:func:`~climpred.bootstrap.bootstrap_hindcast` (:pr:`355`) `Aaron Spring`_.
-
 
 Documentation
 -------------

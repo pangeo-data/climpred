@@ -2,41 +2,37 @@
 What's New
 ==========
 
-climpred v2.1.0 (2020-04-##)
+climpred v2.1.0 (2020-06-08)
 ============================
 
-Breaking change
----------------
+Breaking Changes
+----------------
 
-- replace keyword `bootstrap` with `iterations` (:pr:`354`) `Aaron Spring`_.
-- HTML ``__repr__`` for :py:class:`~climpred.classes.HindcastEnsemble` and
-  :py:class:`~climpred.classes.PerfectModelEnsemble` following
-  `xarray.core.options.OPTIONS` (:pr:`371`) `Aaron Spring`_.
-
+- Keyword ``bootstrap`` has been replaced with ``iterations``. We feel that this more accurately
+  describes the argument, since "bootstrap" is really the process as a whole.
+  (:pr:`354`) `Aaron Spring`_.
 
 New Features
 ------------
 
-- Union with observations only enforced if ``reference='persistence'``. (:pr:`341`)
-  `Riley X. Brady`_.
-- ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. (:pr:`341`)
-  `Riley X. Brady`_.
-- compute_perfect_model now accepts inits as cftime and integer. Implemented cftime
-  into bootstrap_uninit function, which requires a Leap or NoLeap calendar.
-  (:pr:`332`) `Aaron Spring`_.
-- speed-up in bootstrapping uninitialized skill in perfect-model for annual leads by
-  reshaping. (:pr:`332`) `Aaron Spring`_.
-- speed-up in bootstrap functions: (:pr:`285`) `Aaron Spring`_.
-    *  ``xr.quantile`` exchanged for ``dask.map_blocks(np.percentile)``
-    *  properly implemented handling for lazy results when chunked inputs
-    *  user gets warned when chunking potentially (un)-necessary
-- new explicit keywords in bootstrap functions for ``resampling_dim`` and
+- :py:class:`~climpred.classes.HindcastEnsemble` and :py:class:`~climpred.classes.PerfectModelEnsemble`
+  now use an HTML representation, following the more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
+- ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. Current options are ``'persistence'`` for
+  a persistence forecast of the observations and ``'historical'`` for some historical reference, such as an
+  uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
+- We now only enforce a union of the initialization dates with observations if ``reference='persistence'`` for
+  :py:class:`~climpred.classes.HindcastEnsemble`. This is to ensure that the same set of initializations is used
+  by the observations to construct a persistence forecast. (:pr:`341`) `Riley X. Brady`_.
+- :py:func:`~climpred.prediction.compute_perfect_model` now accepts initialization (``init``) as ``cftime`` and
+  ``int``. ``cftime`` is now implemented into the bootstrap uninitialized functions for the perfect model
+  configuration. (:pr:`332`) `Aaron Spring`_.
+- New explicit keywords in bootstrap functions for ``resampling_dim`` and
   ``reference_compute`` (:pr:`320`) `Aaron Spring`_.
-- Logging now included for ``compute_hindcast`` which displays the inits and
+- Logging now included for ``compute_hindcast`` which displays the ``inits`` and
   verification dates used at each lead (:pr:`324`) `Aaron Spring`_,
-  (:pr:`338`) `Riley X. Brady`_..
-- new explicit keywords added for ``alignment`` of verification dates and
-  initializations. (:pr:`324`) `Aaron Spring`_.
+  (:pr:`338`) `Riley X. Brady`_. See (`logging <alignment.html#Logging>`__).
+- New explicit keywords added for ``alignment`` of verification dates and
+  initializations. (:pr:`324`) `Aaron Spring`_. See (`alignment <alignment.html>`__)
 
     * ``'maximize'``: Maximize the degrees of freedom by slicing ``hind`` and
       ``verif`` to a common time frame at each lead. (:pr:`338`) `Riley X. Brady`_.
@@ -48,6 +44,21 @@ New Features
       should be based on the same set of verification dates. (:pr:`331`)
       `Riley X. Brady`_.
 
+
+Performance
+-----------
+
+The major change for this release is a dramatic speedup in bootstrapping functions, led by `Aaron Spring`_. We
+focused on scalability with ``dask`` and found many places we could compute skill simultaneously over all
+bootstrapped ensemble members rather than at each iteration.
+
+- Bootstrapping uninitialized skill in the perfect model framework is now sped up significantly for annual lead
+  resolution. (:pr:`332`) `Aaron Spring`_.
+- General speedup in :py:func:`~climpred.bootstrap.bootstrap_hindcast` and
+  :py:func:`~climpred.bootstrap.bootstrap_perfect_model`: (:pr:`285`) `Aaron Spring`_.
+    * Properly implemented handling for lazy results when inputs are chunked.
+    * User gets warned when chunking potentially unnecessarily and/or inefficiently.
+
 Bug Fixes
 ---------
 - Alignment options now account for differences in the historical time series if
@@ -55,29 +66,29 @@ Bug Fixes
 
 Internals/Minor Fixes
 ---------------------
-- Added our `Code of Conduct <code_of_conduct.html>`__ (:pr:`285`) `Aaron Spring`_.
+- Added a `Code of Conduct <code_of_conduct.html>`__ (:pr:`285`) `Aaron Spring`_.
 - Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
-- ``asv`` benchmarks for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
-- ignore irrelevant warnings in ``pytest`` and mark slow tests
+- ``asv`` benchmarks added for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
+- Ignore irrelevant warnings in ``pytest`` and mark slow tests
   (:pr:`333`) `Aaron Spring`_.
-- default ``CONCAT_KWARGS`` now in all ``xr.concat`` to speed up bootstrapping.
+- Default ``CONCAT_KWARGS`` now in all ``xr.concat`` to speed up bootstrapping.
   (:pr:`330`) `Aaron Spring`_.
 - Remove ``member`` coords for ``m2c`` comparison for probabilistic metrics.
   (:pr:`330`) `Aaron Spring`_.
-- Refactoring :py:func:`~climpred.prediction.compute_hindcast` and
+- Refactored :py:func:`~climpred.prediction.compute_hindcast` and
   :py:func:`~climpred.prediction.compute_perfect_model`. (:pr:`330`) `Aaron Spring`_.
-- Changed lead0 coordinate modifications to be compliant with xarray=0.15.1 in
+- Changed lead0 coordinate modifications to be compliant with ``xarray=0.15.1`` in
   :py:func:`~climpred.reference.compute_persistence`. (:pr:`348`) `Aaron Spring`_.
-- Exchanged my_quantile with xr.quantile(skipna=False). (:pr:`348`) `Aaron Spring`_.
+- Exchanged ``my_quantile`` with ``xr.quantile(skipna=False)``. (:pr:`348`) `Aaron Spring`_.
 - Remove ``sig`` from
   :py:func:`~climpred.graphics.plot_bootstrapped_skill_over_leadyear`.
   (:pr:`351`) `Aaron Spring`_.
 - Require ``xskillscore v0.0.15`` and use their functions for effective sample
   size-based metrics. (:pr: `353`) `Riley X. Brady`_.
 - Faster bootstrapping without replacement used in threshold functions of
-  climpred.stats (:pr:`354`) `Aaron Spring`_.
+  ``climpred.stats`` (:pr:`354`) `Aaron Spring`_.
 - Require ``cftime v1.1.2``, which modifies their object handling to create 200-400x
   speedups in some basic operations. (:pr:`356`) `Riley X. Brady`_.
 - Resample first and then calculate skill in
@@ -87,11 +98,13 @@ Internals/Minor Fixes
 
 Documentation
 -------------
-- Demo and wrapper to setup your own raw model output compliant to ``climpred``
-  (:pr:`296`) `Aaron Spring`_.
-- Demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
-- Add `Verification Alignment <alignment.html>`_ page explaining how initializations
+- Added demo to setup your own raw model output compliant to ``climpred``
+  (:pr:`296`) `Aaron Spring`_. See (`here <examples/preprocessing/setup_your_own_data.html>`__).
+- Added demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
+  See (`here <examples/preprocessing/setup_your_own_data.html#intake-esm-for-cmorized-output>`__).
+- Added `Verification Alignment <alignment.html>`_ page explaining how initializations
   are selected and aligned with verification data. (:pr:`328`) `Riley X. Brady`_.
+  See (`here <alignment.html>`__).
 
 
 climpred v2.0.0 (2020-01-22)

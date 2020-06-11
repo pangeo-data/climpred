@@ -5,6 +5,16 @@ What's New
 climpred v2.1.0 (2020-06-08)
 ============================
 
+New Features
+------------
+
+- Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
+  and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
+
+
+climpred v2.1.0 (2020-06-08)
+============================
+
 Breaking Changes
 ----------------
 

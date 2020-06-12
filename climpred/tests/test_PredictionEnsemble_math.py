@@ -1,10 +1,11 @@
 import numpy as np
 import pytest
 import xarray as xr
-from xarray.testing import assert_equal
+from xarray.testing import assert_allclose, assert_equal
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.classes import PredictionEnsemble
+from climpred.constants import CLIMPRED_DIMS
 from climpred.exceptions import VariableError
 
 ALLOWED_TYPES_FOR_MATH_OPERATORS = [
@@ -66,25 +67,33 @@ def div(a, b):
     return a / b
 
 
-def assert_equal_PredictionEnsemble(he, he2):
+def assert_PredictionEnsemble(he, he2, how='equal', **assert_how_kwargs):
     # check for same non-empty datasets
     def non_empty_datasets(he):
         return [k for k in he._datasets.keys() if he._datasets[k]]
 
     assert non_empty_datasets(he) == non_empty_datasets(he2)
     # check all datasets
+    if how == 'allclose':
+        assert_func = assert_equal
+    elif how == 'allclose':
+        assert_func = assert_allclose
+
     for dataset in he._datasets:
         if he._datasets[dataset]:
             if dataset == 'observations':
                 for obs_dataset in he._datasets['observations']:
                     print('check observations', obs_dataset)
-                    assert_equal(
+                    assert_func(
                         he2._datasets['observations'][obs_dataset],
                         he2._datasets['observations'][obs_dataset],
+                        **assert_how_kwargs,
                     )
             else:
                 print('check', dataset)
-                assert_equal(he2._datasets[dataset], he._datasets[dataset])
+                assert_func(
+                    he2._datasets[dataset], he._datasets[dataset], **assert_how_kwargs
+                )
 
 
 def check_dataset_dims_and_data_vars(before, after, dataset):
@@ -215,7 +224,23 @@ def test_hindcastEnsemble_plus_broadcast(hind_ds_initialized_3d, operator):
         he, xr.ones_like(hind_ds_initialized_3d.isel(init=1, lead=1, drop=True))
     )
     he3 = operator(he, 1)
-    assert_equal_PredictionEnsemble(he2, he3)
+    assert_PredictionEnsemble(he2, he3)
+
+
+def test_HindcastEnsemble_area_weighted_mean(hind_ds_initialized_3d):
+    """Test area weighted mean HindcastEnsemble."""
+    he = HindcastEnsemble(hind_ds_initialized_3d)
+    # fake area
+    area = hind_ds_initialized_3d['TAREA']
+    spatial_dims = [d for d in hind_ds_initialized_3d.dims if d not in CLIMPRED_DIMS]
+    # PredictionEnsemble doesnt like other data_vars
+    he_self_spatial_mean = (he * area).sum(spatial_dims) / area.sum()
+    # weighted requires Dataset
+    area = area.to_dataset(name='area')
+    he_xr_spatial_mean = he.weighted(area).mean(spatial_dims)
+    assert_PredictionEnsemble(
+        he_self_spatial_mean, he_xr_spatial_mean, how='allclose', rtol=0.03, atol=0.05
+    )
 
 
 # basically all copied
@@ -304,4 +329,20 @@ def test_PerfectModelEnsemble_plus_broadcast(PM_ds_initialized_3d, operator):
         he, xr.ones_like(PM_ds_initialized_3d.isel(init=1, lead=1, drop=True))
     )
     he3 = operator(he, 1)
-    assert_equal_PredictionEnsemble(he2, he3)
+    assert_PredictionEnsemble(he2, he3)
+
+
+def test_PerfectModelEnsemble_area_weighted_mean(PM_ds_initialized_3d):
+    """Test area weighted mean PerfectModelEnsemble."""
+    he = PerfectModelEnsemble(PM_ds_initialized_3d)
+    # fake area
+    area = np.cos(PM_ds_initialized_3d.lat) + 1
+    spatial_dims = [d for d in PM_ds_initialized_3d.dims if d not in CLIMPRED_DIMS]
+    # PredictionEnsemble doesnt like other data_vars
+    he_self_spatial_mean = (he * area).sum(spatial_dims) / area.sum()
+    # weighted requires Dataset
+    area = area.to_dataset(name='area')
+    he_xr_spatial_mean = he.weighted(area).mean(spatial_dims)
+    assert_PredictionEnsemble(
+        he_self_spatial_mean, he_xr_spatial_mean, how='allclose', rtol=0.03, atol=0.05
+    )

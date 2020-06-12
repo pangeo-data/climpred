@@ -17,7 +17,7 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
 )
-from .constants import CLIMPRED_DIMS, CONCAT_KWARGS
+from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError, VariableError
 from .prediction import (
     _apply_metric_at_given_lead,
@@ -202,12 +202,8 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            all_dims = set(
-                [d for d in list(self._datasets['initialized'].dims)] + CLIMPRED_DIMS
-            )
-            for dim in other.dims:
-                if dim not in all_dims:
-                    raise DimensionError(f'{error_str} containing new dimensions.')
+            if not set(other.dims).issubset(self._datasets['initialized'].dims):
+                raise DimensionError(f'{error_str} containing new dimensions.')
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
             if list(other.data_vars) != list(self._datasets['initialized'].data_vars):

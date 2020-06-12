@@ -74,7 +74,7 @@ def assert_PredictionEnsemble(he, he2, how='equal', **assert_how_kwargs):
 
     assert non_empty_datasets(he) == non_empty_datasets(he2)
     # check all datasets
-    if how == 'allclose':
+    if how == 'equal':
         assert_func = assert_equal
     elif how == 'allclose':
         assert_func = assert_allclose
@@ -108,7 +108,14 @@ def check_dataset_dims_and_data_vars(before, after, dataset):
 
 
 def gen_error_str(he, operator, other):
-    return f'Cannot use {type(he)} {operator.__name__} {type(other)}'
+    print(type(operator))
+    OPERATOR_STR = {
+        'add': '+',
+        'sub': '-',
+        'mul': '*',
+        'div': '/',
+    }
+    return f'Cannot use {type(he)} {OPERATOR_STR[operator]} {type(other)}'
 
 
 # HindcastEnsemble
@@ -190,8 +197,8 @@ def test_hindcastEnsemble_plus_not_defined(hind_ds_initialized_1d, other, operat
     """Test that HindcastEnsemble math operator (+-*/) other raises error for
     non-defined others."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
-    operator = eval(operator)
     error_str = gen_error_str(he, operator, other)
+    operator = eval(operator)
     with pytest.raises(TypeError) as excinfo:
         operator(he, other)
     assert f'{error_str} because type {type(other)} not supported' in str(excinfo.value)
@@ -206,8 +213,8 @@ def test_hindcastEnsemble_plus_Dataset_different_name(
     non-defined others."""
 
     he = HindcastEnsemble(hind_ds_initialized_1d)
-    operator = eval(operator)
     error_str = gen_error_str(he, operator, other)
+    operator = eval(operator)
     with pytest.raises(VariableError) as excinfo:
         operator(he, other)
     assert f'{error_str} with new `data_vars`' in str(excinfo.value)
@@ -291,10 +298,9 @@ def test_PerfectModelEnsemble_plus_PerfectModelEnsemble(
 def test_PerfectModelEnsemble_plus_not_defined(PM_ds_initialized_1d, other, operator):
     """Test that PerfectModelEnsemble math operator (+-*/) other raises error for
     non-defined others."""
-
     he = PerfectModelEnsemble(PM_ds_initialized_1d)
-    operator = eval(operator)
     error_str = gen_error_str(he, operator, other)
+    operator = eval(operator)
     with pytest.raises(TypeError) as excinfo:
         operator(he, other)
     assert f'{error_str} because type {type(other)} not supported' in str(excinfo.value)
@@ -309,10 +315,9 @@ def test_PerfectModelEnsemble_plus_Dataset_different_name(
 ):
     """Test that PerfectModelEnsemble math operator (+-*/) other raises error for
     Dataset with other dims and/or variables."""
-
     he = PerfectModelEnsemble(PM_ds_initialized_1d)
-    operator = eval(operator)
     error_str = gen_error_str(he, operator, other)
+    operator = eval(operator)
     with pytest.raises(VariableError) as excinfo:
         operator(he, other)
     assert f'{error_str} with new `data_vars`' in str(excinfo.value)

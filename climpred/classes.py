@@ -186,8 +186,21 @@ class PredictionEnsemble:
             xr.Dataset,
             type(self),
         ]
+        OPERATOR_STR = {
+            'add': '+',
+            'sub': '-',
+            'mul': '*',
+            'div': '/',
+        }
+        error_str = f'Cannot use {type(self)} {OPERATOR_STR[operator]} {type(other)}'
+
+        # catch undefined types for other
+        if not isinstance(other, tuple(ALLOWED_TYPES_FOR_MATH_OPERATORS)):
+            raise TypeError(
+                f'{error_str} because type {type(other)} not supported. '
+                f'Please choose from {ALLOWED_TYPES_FOR_MATH_OPERATORS}.'
+            )
         # catch other dimensions in other
-        error_str = f'Cannot use {type(self)} {operator} {type(other)}'
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
             all_dims = set(
                 [d for d in list(self._datasets['initialized'].dims)] + CLIMPRED_DIMS
@@ -205,12 +218,6 @@ class PredictionEnsemble:
                     f' {list(self._datasets["initialized"].data_vars)} vs. '
                     f'other.data_vars = { list(other.data_vars)}.'
                 )
-        # catch undefined types for other
-        if not isinstance(other, tuple(ALLOWED_TYPES_FOR_MATH_OPERATORS)):
-            raise TypeError(
-                f'{error_str} because type {type(other)} not supported. '
-                f'Please choose from {ALLOWED_TYPES_FOR_MATH_OPERATORS}.'
-            )
 
         operator = eval(operator)
 
@@ -221,7 +228,9 @@ class PredictionEnsemble:
                 other_dataset = other._datasets[dataset]
             else:
                 other_dataset = other
+            # Some pre-allocated entries might be empty, such as 'uninitialized'
             if self._datasets[dataset]:
+                # Loop through observations if there are multiple
                 if dataset == 'observations' and isinstance(
                     self._datasets[dataset], dict
                 ):

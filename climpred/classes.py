@@ -1,3 +1,4 @@
+import numpy as np
 import xarray as xr
 from IPython.display import display_html
 from xarray.core.formatting_html import dataset_repr
@@ -17,7 +18,7 @@ from .checks import (
     match_initialized_vars,
 )
 from .constants import CONCAT_KWARGS
-from .exceptions import DimensionError
+from .exceptions import DimensionError, VariableError
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -151,6 +152,118 @@ class PredictionEnsemble:
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
+
+    def _math(self, other, operator):
+        """Helper function for __add__, __sub__, __mul__, __truediv__.
+
+        Allows math operations with type:
+            - int
+            - float
+            - np.ndarray
+            - xr.DataArray without new dimensions
+            - xr.Dataset without new dimensions or variables
+
+        """
+        assert isinstance(operator, str)
+
+        def add(a, b):
+            return a + b
+
+        def sub(a, b):
+            return a - b
+
+        def mul(a, b):
+            return a * b
+
+        def div(a, b):
+            return a / b
+
+        ALLOWED_TYPES_FOR_MATH_OPERATORS = [
+            int,
+            float,
+            np.ndarray,
+            xr.DataArray,
+            xr.Dataset,
+            type(self),
+        ]
+        OPERATOR_STR = {
+            'add': '+',
+            'sub': '-',
+            'mul': '*',
+            'div': '/',
+        }
+        error_str = f'Cannot use {type(self)} {OPERATOR_STR[operator]} {type(other)}'
+
+        # catch undefined types for other
+        if not isinstance(other, tuple(ALLOWED_TYPES_FOR_MATH_OPERATORS)):
+            raise TypeError(
+                f'{error_str} because type {type(other)} not supported. '
+                f'Please choose from {ALLOWED_TYPES_FOR_MATH_OPERATORS}.'
+            )
+        # catch other dimensions in other
+        if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
+            if not set(other.dims).issubset(self._datasets['initialized'].dims):
+                raise DimensionError(f'{error_str} containing new dimensions.')
+        # catch xr.Dataset with different data_vars
+        if isinstance(other, xr.Dataset):
+            if list(other.data_vars) != list(self._datasets['initialized'].data_vars):
+                raise VariableError(
+                    f'{error_str} with new `data_vars`. Please use {type(self)} '
+                    f'{operator} {type(other)} only with same `data_vars`. Found '
+                    f'initialized.data_vars = '
+                    f' {list(self._datasets["initialized"].data_vars)} vs. '
+                    f'other.data_vars = { list(other.data_vars)}.'
+                )
+
+        operator = eval(operator)
+
+        # Create temporary copy to modify to avoid inplace operation.
+        datasets = self._datasets.copy()
+        for dataset in datasets:
+            if isinstance(other, PredictionEnsemble):
+                other_dataset = other._datasets[dataset]
+            else:
+                other_dataset = other
+            # Some pre-allocated entries might be empty, such as 'uninitialized'
+            if self._datasets[dataset]:
+                # Loop through observations if there are multiple
+                if dataset == 'observations' and isinstance(
+                    self._datasets[dataset], dict
+                ):
+                    obs_datasets = self._datasets['observations'].copy()
+                    for obs_dataset in obs_datasets:
+                        if isinstance(other, PredictionEnsemble):
+                            other_obs_dataset = other._datasets['observations'][
+                                obs_dataset
+                            ]
+                        else:
+                            other_obs_dataset = other
+                        obs_datasets.update(
+                            {
+                                obs_dataset: operator(
+                                    obs_datasets[obs_dataset], other_obs_dataset
+                                )
+                            }
+                        )
+                        datasets.update({'observations': obs_datasets})
+                else:
+                    if datasets[dataset]:
+                        datasets.update(
+                            {dataset: operator(datasets[dataset], other_dataset)}
+                        )
+        return self._construct_direct(datasets, kind=self.kind)
+
+    def __add__(self, other):
+        return self._math(other, operator='add')
+
+    def __sub__(self, other):
+        return self._math(other, operator='sub')
+
+    def __mul__(self, other):
+        return self._math(other, operator='mul')
+
+    def __truediv__(self, other):
+        return self._math(other, operator='div')
 
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.

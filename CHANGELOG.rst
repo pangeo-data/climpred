@@ -11,6 +11,12 @@ New Features
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
 
+Documentation
+-------------
+
+- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
+  (:pr:`378`) `Riley X. Brady`_.
+
 
 climpred v2.1.0 (2020-06-08)
 ============================

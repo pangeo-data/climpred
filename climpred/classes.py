@@ -31,7 +31,7 @@ from .smoothing import (
     spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
-from .utils import add_missing_coords, convert_time_index
+from .utils import add_coords_from_other_ds, add_missing_coords, convert_time_index
 
 
 def _display_metadata(self):
@@ -142,7 +142,7 @@ class PredictionEnsemble:
         has_valid_lead_units(xobj)
         # Add coordinates to any spatial dims that don't have them. This helps avoid
         # xarray errors during computation.
-        xobj = add_missing_coords(xobj, except_dims=('init', 'lead', 'memmber'))
+        add_missing_coords(xobj, exclude_dims=('init', 'lead', 'memmber'))
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}
@@ -532,6 +532,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        # Adds coords to xobj from initialized dataset if missing. This helps avoid
+        # errors in xarray computation.
+        add_coords_from_other_ds(
+            xobj, self._datasets['initialized'], exclude_dims=['time']
+        )
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
         return self._construct_direct(datasets, kind='perfect')
@@ -824,6 +829,11 @@ class HindcastEnsemble(PredictionEnsemble):
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        # Adds coords to xobj from initialized dataset if missing. This helps avoid
+        # errors in xarray computation.
+        add_coords_from_other_ds(
+            xobj, self._datasets['initialized'], exclude_dims=['time']
+        )
         # For some reason, I could only get the non-inplace method to work
         # by updating the nested dictionaries separately.
         datasets_obs = self._datasets['observations'].copy()
@@ -847,6 +857,11 @@ class HindcastEnsemble(PredictionEnsemble):
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        # Adds coords to xobj from initialized dataset if missing. This helps avoid
+        # errors in xarray computation.
+        add_coords_from_other_ds(
+            xobj, self._datasets['initialized'], exclude_dims=['time']
+        )
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets, kind='hindcast')

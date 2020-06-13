@@ -15,31 +15,58 @@ from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .metrics import METRIC_ALIASES
 
 
-def add_missing_coords(ds, except_dims=None):
+def add_coords_from_other_ds(ds_add_to, ds_add_from, exclude_dims=None):
+    """Adds missing coordinates on one xarray object from the coordinates for the same
+    dim on another xarray object.
+
+    Args:
+        ds_add_to (xarray object): xr.Dataset or xr.DataArray to add coords to.
+        ds_add_from (xarray object): xr.Dataset or xr.DataArray to get coordinate
+            labels from.
+        exclude-dims (tuple or list, optional): Dimensions to ignore. I.e., add
+            coordinates to any dims that exist outside this list and are missing
+            coordinates.
+    """
+    assert type(exclude_dims) in [
+        None,
+        list,
+        tuple,
+    ], 'exclude_dims must be of type list or tuple.'
+    if exclude_dims is None:
+        check_dims = [dim for dim in ds_add_to.dims]
+    else:
+        check_dims = [dim for dim in ds_add_to.dims if dim not in exclude_dims]
+    for dim in check_dims:
+        if dim not in ds_add_to.coords:
+            ds_add_to.coords[dim] = ds_add_from.coords[dim]
+
+
+def add_missing_coords(ds, exclude_dims=None):
     """Adds index coordinates to specified dims that are missing coordinates.
 
     Args:
         ds (xarray object): Dataset to add coordinates to.
-        except_dims (tuple or list): Dimensions to ignore. I.e., add coordinates to
-            any dims that exist outside this list and are missing coordinates.
+        exclude_dims (tuple or list, optional): Dimensions to ignore. I.e., add
+            coordinates to any dims that exist outside this list and are missing
+            coordinates.
 
     Returns;
         ds (xarray object): Original ``xr.Dataset`` or ``xr.DataArray`` with new
             coords appended to it.
     """
-    assert type(except_dims) in [
+    assert type(exclude_dims) in [
+        None,
         list,
         tuple,
-    ], 'except_dims must be of type list or tuple.'
-    if except_dims is None:
+    ], 'exclude_dims must be of type list or tuple.'
+    if exclude_dims is None:
         check_dims = [dim for dim in ds.dims]
     else:
-        check_dims = [dim for dim in ds.dims if dim not in except_dims]
+        check_dims = [dim for dim in ds.dims if dim not in exclude_dims]
 
     for dim in check_dims:
         if dim not in ds.coords:
             ds.coords[dim] = np.arange(ds[dim].size)
-    return ds
 
 
 def assign_attrs(

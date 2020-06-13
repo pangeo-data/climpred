@@ -31,7 +31,7 @@ from .smoothing import (
     spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
-from .utils import convert_time_index
+from .utils import add_missing_coords, convert_time_index
 
 
 def _display_metadata(self):
@@ -140,6 +140,9 @@ class PredictionEnsemble:
         # Put this after `convert_time_index` since it assigns 'years' attribute if the
         # `init` dimension is a `float` or `int`.
         has_valid_lead_units(xobj)
+        # Add coordinates to any spatial dims that don't have them. This helps avoid
+        # xarray errors during computation.
+        xobj = add_missing_coords(xobj, except_dims=('init', 'lead', 'memmber'))
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}

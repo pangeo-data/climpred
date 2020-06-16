@@ -78,7 +78,7 @@ def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     pm = PerfectModelEnsemble(PM_ds_initialized_3d)
     with pytest.raises(DimensionError) as excinfo:
         pm.plot()
-    assert f'does not allow dimensions other' in str(excinfo.value)
+    assert 'does not allow dimensions other' in str(excinfo.value)
 
 
 @pytest.mark.parametrize('cmap', ['tab10', 'jet'])

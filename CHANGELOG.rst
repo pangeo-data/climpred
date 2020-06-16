@@ -10,6 +10,8 @@ New Features
 
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
+- `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
+  and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 
 Documentation
 -------------

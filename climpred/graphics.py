@@ -250,8 +250,22 @@ def check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, show_members=False, cmap='jet', ax=None, alignment=None
+    he, variable=None, ax=None, show_members=False, cmap='jet'
 ):
+    """Plot datasets from HindcastEnsemble.
+
+    Args:
+        he (PredictionEnsemble): PredictionEnsemble.
+        variable (str or None): `variable` to plot. Defaults to the first in data_vars.
+        ax (plt.axes): axis to plot to. Defaults to False. Creates new.
+        show_members (bool): whether to display all members individually.
+            Defaults to True.
+        cmap (str): Name of plt colorbar. Defaults to 'tab10'.
+
+    Returns:
+        ax: plt.axes
+
+    """
     check_only_climpred_dims(he)
     if not variable:
         variable = list(he._datasets['initialized'].data_vars)[0]
@@ -311,11 +325,6 @@ def plot_lead_timeseries_hindcast(
                 zorder=hind.lead.size + 1,
             )
 
-    if alignment:
-        # implement a light shading over verification times for 'same_verif'
-        # implement lower alphas over inits not take for 'same' inits
-        pass
-
     # show only one item per label in legend
     handles, labels = ax.get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
@@ -329,11 +338,21 @@ def plot_lead_timeseries_hindcast(
 def plot_ensemble_perfect_model(
     pm, variable=None, ax=False, show_members=True, cmap='tab10'
 ):
-    """Plot an ensemble timeseries. Ignore a list of ensembles.
-    Args
-        ds, control : xr.Dataset
-        varname : str
+    """Plot datasets from PerfectModelEnsemble.
+
+    Args:
+        pm (PredictionEnsemble): PredictionEnsemble.
+        variable (str or None): `variable` to plot. Defaults to the first in data_vars.
+        ax (plt.axes): axis to plot to. Defaults to False. Creates new.
+        show_members (bool): whether to display all members individually.
+            Defaults to True.
+        cmap (str): Name of plt colorbar. Defaults to 'tab10'.
+
+    Returns:
+        ax: plt.axes
+
     """
+
     check_only_climpred_dims(pm)
     if not variable:
         variable = list(pm._datasets['initialized'].data_vars)[0]

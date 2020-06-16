@@ -154,11 +154,33 @@ class PredictionEnsemble:
         else:
             return _display_metadata(self)
 
-    def plot(self, **kwargs):
+    def plot(self, variable=None, ax=None, show_members=False, cmap=None):
+        """Plot datasets from HindcastEnsemble.
+
+        Args:
+            he (PredictionEnsemble): PredictionEnsemble.
+            variable (str or None): `variable` to show. Defaults to first in data_vars.
+            ax (plt.axes): axis to plot to. Defaults to False. Creates new.
+            show_members (bool): whether to display all members individually.
+                Defaults to True.
+            cmap (str): Name of plt colorbar. Defaults to default.
+
+        Returns:
+            ax: plt.axes
+
+        """
         if self.kind == 'hindcast':
-            return plot_lead_timeseries_hindcast(self, **kwargs)
+            if cmap is None:
+                cmap = 'jet'
+            return plot_lead_timeseries_hindcast(
+                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+            )
         elif self.kind == 'perfect':
-            return plot_ensemble_perfect_model(self, **kwargs)
+            if cmap is None:
+                cmap = 'tab10'
+            return plot_ensemble_perfect_model(
+                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+            )
 
     def _math(self, other, operator):
         """Helper function for __add__, __sub__, __mul__, __truediv__.

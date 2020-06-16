@@ -17,7 +17,12 @@ Documentation
 -------------
 
 - Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
-  (:pr:`378`) `Riley X. Brady`_.
+  (:pr:`378`, :pr:`383`) `Riley X. Brady`_ and `Aaron Spring`_.
+
+Bug Fixes
+---------
+- ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
+  (:pr:`383`) `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)

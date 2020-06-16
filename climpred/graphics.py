@@ -1,8 +1,14 @@
 from collections import OrderedDict
 
+import matplotlib as mpl
 import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
+from xarray.coding.times import infer_calendar_name
+
+from climpred.checks import DimensionError
+from climpred.constants import CLIMPRED_DIMS
+from climpred.utils import get_lead_cftime_shift_args, shift_cftime_index
 
 from .metrics import PROBABILISTIC_METRICS
 
@@ -229,4 +235,176 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
     ax.xaxis.set_ticks(np.arange(init_skill.lead.size + 1))
     ax.legend(frameon=False)
     ax.set_xlabel('Lead time [years]')
+    return ax
+
+
+def check_only_climpred_dims(pe):
+    additional_dims = set(pe._datasets['initialized'].dims) - set(CLIMPRED_DIMS)
+    if len(additional_dims) != 0:
+        raise DimensionError(
+            f'{type(pe)}.plot() does not allow dimensions other '
+            f'than {CLIMPRED_DIMS}, found {additional_dims}. '
+            f'Please use .mean({additional_dims}) '
+            f'or .isel() before plot.'
+        )
+
+
+def plot_lead_timeseries_hindcast(
+    he, variable=None, show_members=False, cmap='jet', ax=None, alignment=None
+):
+    check_only_climpred_dims(he)
+    if not variable:
+        variable = list(he._datasets['initialized'].data_vars)[0]
+    hind = he._datasets['initialized'][variable]
+    lead_freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)[1]
+    hist = he._datasets['uninitialized']
+    if isinstance(hist, xr.Dataset):
+        hist = hist[variable]
+    obs = he._datasets['observations']
+
+    cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
+    if not ax:
+        _, ax = plt.subplots(figsize=(10, 4))
+    if isinstance(hist, xr.DataArray):
+        if 'member' in hist.dims and not show_members:
+            hist = hist.mean('member')
+            member_alpha = 1
+            lw = 2
+        else:
+            member_alpha = 0.5
+            lw = 1
+        hist.plot(
+            ax=ax,
+            lw=lw,
+            hue='member',
+            color='gray',
+            alpha=member_alpha,
+            label='uninitialized',
+        )
+
+    for i, lead in enumerate(hind.lead.values):
+        h = hind.sel(lead=lead).rename({'init': 'time'})
+        if not show_members and 'member' in h.dims:
+            h = h.mean('member')
+            lead_alpha = 1
+        else:
+            lead_alpha = 0.5
+        h['time'] = shift_cftime_index(h.time, 'time', int(lead), lead_freq)
+        h.plot(
+            ax=ax,
+            hue='member',
+            color=cmap(i),
+            label=f'initialized: lead={lead}',
+            alpha=lead_alpha,
+            zorder=hind.lead.size - i,
+        )
+
+    linestyles = ['-', ':', '-.', '--']
+    if len(obs) > 0:
+        for i, (obs_name, obs_item) in enumerate(obs.items()):
+            obs_item[variable].plot(
+                ax=ax,
+                color='k',
+                lw=3,
+                ls=linestyles[i],
+                label=f'reference: {obs_name}',
+                zorder=hind.lead.size + 1,
+            )
+
+    if alignment:
+        # implement a light shading over verification times for 'same_verif'
+        # implement lower alphas over inits not take for 'same' inits
+        pass
+
+    # show only one item per label in legend
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels, handles))
+    ax.legend(
+        by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1, 0.5)
+    )
+    ax.set_title('')
+    return ax
+
+
+def plot_ensemble_perfect_model(
+    pm, variable=None, ax=False, show_members=True, cmap='tab10'
+):
+    """Plot an ensemble timeseries. Ignore a list of ensembles.
+    Args
+        ds, control : xr.Dataset
+        varname : str
+    """
+    check_only_climpred_dims(pm)
+    if not variable:
+        variable = list(pm._datasets['initialized'].data_vars)[0]
+    initialized = pm._datasets['initialized'][variable]
+    control = pm._datasets['control']
+    if isinstance(control, xr.Dataset):
+        control = control[variable]
+    calendar = infer_calendar_name(initialized.init)
+    lead_freq = get_lead_cftime_shift_args(initialized.lead.attrs['units'], 1)[1]
+
+    if not ax:
+        _, ax = plt.subplots(figsize=(10, 4))
+
+    cmap = mpl.cm.get_cmap(cmap, initialized.init.size)
+
+    for ii, i in enumerate(initialized.init.values):
+        dsi = initialized.sel(init=i).rename({'lead': 'time'})
+        # convert lead time into cftime
+        start_str = i.strftime()[:10]
+        # yi,mi,di = i.strftime().split(' ')[0].split('-')
+        # i_cfdatetime = cftime.datetime(int(yi),int(mi), int(di))
+        # try to plot vertical bars for each init
+        # now fails todo: how to axvline(cftime)?
+        # ax.axvline(x=i_cfdatetime,calendar='noleap')
+        # ax.axvline(x=int(init.init.isel(init=[i]).dt.year.values))
+        if initialized.lead.min() == 0:
+            dsi['time'] = xr.cftime_range(
+                start=start_str,
+                freq=lead_freq,
+                periods=dsi.time.size,
+                calendar=calendar,
+            )
+        elif initialized.lead.min() == 1:
+            dsi['time'] = xr.cftime_range(
+                start=start_str,
+                freq=lead_freq,
+                periods=dsi.time.size,
+                calendar=calendar,
+            )
+            # need to align with discussion about init times:
+            # I propose: initialization: as the exact date of the start of the forecast
+            #            observation/hist time: as the middle of time spanned
+            #            lead: as ints but when converted to real time as middle of time
+            dsi['time'] = shift_cftime_index(dsi.time, 'time', 1, lead_freq)
+        if not show_members:
+            dsi = dsi.mean('member')
+            member_alpha = 1
+            lw = 2
+            labelstr = 'ensemble mean'
+        else:
+            member_alpha = 0.5
+            lw = 1
+            labelstr = 'members'
+            # plot ensemble mean, first white then color to highlight ensemble mean
+            dsi.mean('member').plot(ax=ax, color='white', lw=3, zorder=10)
+            dsi.mean('member').plot(ax=ax, color=cmap(ii), lw=2, zorder=11)
+        dsi.plot(
+            ax=ax,
+            hue='member',
+            color=cmap(ii),
+            alpha=member_alpha,
+            lw=lw,
+            label=labelstr,
+        )
+
+    if isinstance(control, xr.DataArray):
+        control.plot(ax=ax, color='gray', label='control')
+
+    # show only one item per label in legend
+    handles, labels = ax.get_legend_handles_labels()
+    by_label = OrderedDict(zip(labels, handles))
+    ax.legend(by_label.values(), by_label.keys())
+    ax.set_title(' ')
     return ax

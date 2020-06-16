@@ -19,6 +19,7 @@ from .checks import (
 )
 from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError, VariableError
+from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -152,6 +153,12 @@ class PredictionEnsemble:
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
+
+    def plot(self, **kwargs):
+        if self.kind == 'hindcast':
+            return plot_lead_timeseries_hindcast(self, **kwargs)
+        elif self.kind == 'perfect':
+            return plot_ensemble_perfect_model(self, **kwargs)
 
     def _math(self, other, operator):
         """Helper function for __add__, __sub__, __mul__, __truediv__.

@@ -205,6 +205,9 @@ def rm_poly(ds, order, dim='time'):
         # revert the other dimensions to its original form and ordering
         da = da.unstack('other_dims').transpose(*da_dims_orig)
 
+    if 'lead' in ds.dims and 'units' in ds.lead.attrs:
+        da.lead.attrs['units'] = ds.lead.attrs['units']
+
     if return_ds:
         # revert back into a dataset
         return xr.merge(

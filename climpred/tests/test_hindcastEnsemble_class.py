@@ -162,3 +162,17 @@ def test_inplace(
     hindcast.sum('init')
     summed = hindcast.sum('init')
     assert hindcast != summed
+
+
+def test_mean_reduce_bias(hindcast_hist_obs_1d):
+    how = 'mean'
+    metric = 'rmse'
+    hindcast = hindcast_hist_obs_1d
+    biased_skill = hindcast.verify(metric=metric)
+    bias_reduced_skill = hindcast.reduce_bias(how=how, slow=False).verify(metric=metric)
+    bias_reduced_skill_properly = hindcast.reduce_bias(how=how, slow=True).verify(
+        metric=metric
+    )
+    assert biased_skill > bias_reduced_skill
+    assert biased_skill > bias_reduced_skill_properly
+    assert bias_reduced_skill_properly >= bias_reduced_skill

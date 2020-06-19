@@ -5,6 +5,7 @@ from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 
 from .alignment import return_inits_and_verif_dates
+from .bias_reduction import mean_bias_reduction
 from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
@@ -1006,3 +1007,15 @@ class HindcastEnsemble(PredictionEnsemble):
             hist=hist,
             reference=reference,
         )
+
+    def reduce_bias(hindcast, how='mean', **kwargs):
+        if isinstance(how, str):
+            how = [how]
+        for h in how:
+            if h == 'mean':
+                func = mean_bias_reduction
+            else:
+                raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
+
+            hindcast = func(hindcast, **kwargs)
+        return hindcast

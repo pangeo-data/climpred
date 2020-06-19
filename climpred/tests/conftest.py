@@ -2,7 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from climpred import PerfectModelEnsemble
+from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.constants import HINDCAST_CALENDAR_STR, PM_CALENDAR_STR
 from climpred.tutorial import load_dataset
 from climpred.utils import convert_time_index
@@ -235,6 +235,20 @@ def observations_da_1d(observations_ds_1d):
     """Historical timeseries from observations matching `hind_da_initialized_1d` and
     `hind_da_uninitialized_1d` mean removed xr.DataArray."""
     return observations_ds_1d['SST']
+
+
+@pytest.fixture
+def hindcast_hist_obs_1d(
+    hind_ds_initialized_1d, hist_ds_uninitialized_1d, observations_ds_1d
+):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
+    hindcast = hindcast.add_observations(observations_ds_1d, 'obs')
+    hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
+        init=slice('1964', '2014')
+    ).mean('init')
+    return hindcast
 
 
 @pytest.fixture

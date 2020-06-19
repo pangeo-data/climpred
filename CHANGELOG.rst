@@ -17,6 +17,14 @@ Documentation
 - Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
   (:pr:`378`) `Riley X. Brady`_.
 
+Internals/Minor Fixes
+---------------------
+- ``PerfectModelEnsemble.verify()`` replaces depreciated
+  ``PerfectModelEnsemble.compute_metric()``. (:pr:`387`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify()``, ``PerfectModelEnsemble.compute_uninitialized()`` and
+  ``PerfectModelEnsemble.bootstrap()`` now accepts ``metric_kwargs``. (:pr:`387`)
+  `Aaron Spring`_.
+
 
 climpred v2.1.0 (2020-06-08)
 ============================

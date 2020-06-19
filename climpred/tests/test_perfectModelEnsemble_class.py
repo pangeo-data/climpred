@@ -89,3 +89,56 @@ def test_inplace(PM_ds_initialized_1d, PM_ds_control_1d):
     pm.sum('init')
     summed = pm.sum('init')
     assert pm != summed
+
+
+def test_verify(perfectModelEnsemble_initialized_control):
+    """Test that verify works."""
+    assert perfectModelEnsemble_initialized_control.verify(
+        metric='mse', comparison='m2e'
+    )
+
+
+def test_warning_compute_metric(perfectModelEnsemble_initialized_control):
+    """Test that verify works."""
+    with pytest.warns(UserWarning) as record:
+        assert perfectModelEnsemble_initialized_control.compute_metric(
+            metric='mse', comparison='m2e'
+        )
+        if not record:
+            pytest.fail('Expected a warning.')
+
+
+def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that verify with metric_kwargs works."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    assert pm.verify(metric='threshold_brier_score', comparison='m2c', threshold=0.5)
+
+
+def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that verify without metric_kwargs fails."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    with pytest.raises(ValueError) as excinfo:
+        pm.verify(metric='threshold_brier_score', comparison='m2c')
+    assert 'Please provide threshold.' == str(excinfo.value)
+
+
+def test_compute_uninitialized_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that verify with metric_kwargs works."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    pm = pm.generate_uninitialized()
+    assert pm.compute_uninitialized(
+        metric='threshold_brier_score', comparison='m2c', threshold=0.5
+    )
+
+
+def test_bootstrap_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that bootstrap with metric_kwargs works."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    pm = pm.generate_uninitialized()
+    assert pm.bootstrap(
+        metric='threshold_brier_score', comparison='m2c', threshold=0.5, iterations=3
+    )

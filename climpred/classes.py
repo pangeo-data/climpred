@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import xarray as xr
 from IPython.display import display_html
@@ -555,14 +557,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Returns the control as an xarray dataset."""
         return self._datasets['control']
 
-    def compute_metric(self, metric='pearson_r', comparison='m2m'):
+    def verify(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
         """Compares the initialized ensemble to the control run.
 
         Args:
-            metric (str, default 'pearson_r'):
+            metric (str, default 'pearson_r' or Metric):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
               How to compare the climate prediction ensemble to the control.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Result of the comparison as a Dataset.
@@ -578,9 +581,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            **metric_kwargs,
         )
 
-    def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
+    def compute_metric(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
+        warnings.warn('compute_metric() is depreciated. Please use verify().')
+        return self.verify(metric=metric, comparison=comparison, **metric_kwargs)
+
+    def compute_uninitialized(
+        self, metric='pearson_r', comparison='m2e', **metric_kwargs
+    ):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
@@ -590,6 +600,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               How to compare to the control run.
             running (int, default None):
               Size of the running window for variance smoothing.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Result of the comparison as a Dataset.
@@ -609,6 +620,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            **metric_kwargs,
         )
 
     def compute_persistence(self, metric='pearson_r'):
@@ -650,6 +662,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         sig=95,
         iterations=500,
         pers_sig=None,
+        **metric_kwargs,
     ):
         """Bootstrap ensemble simulations with replacement.
 
@@ -665,6 +678,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 bootstrapping with replacement.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Dictionary of Datasets for each variable applied to with the
@@ -703,6 +717,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
+            **metric_kwargs,
         )
 
 
@@ -876,6 +891,7 @@ class HindcastEnsemble(PredictionEnsemble):
         comparison='e2o',
         alignment='same_verifs',
         dim='init',
+        **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -899,6 +915,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 - same_verif: slice to a common/consistent verification time frame prior
                 to computing metric. This philosophy follows the thought that each lead
                 should be based on the same set of verification dates.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),
@@ -1005,4 +1022,5 @@ class HindcastEnsemble(PredictionEnsemble):
             dim=dim,
             hist=hist,
             reference=reference,
+            **metric_kwargs,
         )

@@ -18,6 +18,13 @@ Documentation
   (:pr:`378`) `Riley X. Brady`_.
 
 
+Internals/Minor Fixes
+---------------------
+- Test all metrics against synthetic data. (:pr:`388`) `Aaron Spring`_.
+- metric ``threshold_brier_score`` now requires ``logical`` instead of ``func`` as
+  ``metric_kwargs``. (:pr:`388`) `Aaron Spring`_.
+
+
 climpred v2.1.0 (2020-06-08)
 ============================
 

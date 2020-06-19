@@ -1008,7 +1008,18 @@ class HindcastEnsemble(PredictionEnsemble):
             reference=reference,
         )
 
-    def reduce_bias(hindcast, how='mean', **kwargs):
+    def reduce_bias(self, how='mean', **kwargs):
+        """Short summary.
+
+        Args:
+            how (str or list of str): what kind of bias reduction to perform.
+                Defaults to 'mean'.
+            **kwargs (kwargs): **kwargs to pass to mean_bias_reduction.
+
+        Returns:
+            type: Description of returned object.
+
+        """
         if isinstance(how, str):
             how = [how]
         for h in how:
@@ -1017,5 +1028,5 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
 
-            hindcast = func(hindcast, **kwargs)
-        return hindcast
+            self = func(self, **kwargs)
+        return self

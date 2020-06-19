@@ -10,6 +10,8 @@ New Features
 
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
+- Bias reduction py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`
+  see (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
 
 Documentation
 -------------

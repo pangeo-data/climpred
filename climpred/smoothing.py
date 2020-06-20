@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 
 from .checks import is_xarray
@@ -132,56 +130,6 @@ def spatial_smoothing_xesmf(
 
 
 @is_xarray(0)
-def spatial_smoothing_xrcoarsen(ds, coarsen_kws=None, how='mean'):
-    """Apply spatial smoothing by regridding to `boxsize` grid.
-
-    Reference:
-      * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
-            Gonzalez, V. Kharin, et al. “A Verification Framework for
-            Interannual-to-Decadal Predictions Experiments.” Climate
-            Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-            https://doi.org/10/f4jjvf.
-
-    Args:
-        ds (xr.object): input. xr.DataArray prefered.
-        coarsen_kws (dict): coarsen spatial latitudes.
-        how (str): aggregation type for coarsening. default: 'mean'
-
-    Returns:
-        ds_smoothed (xr.object): boxsize-regridded input
-
-    """
-    if coarsen_kws is None:
-        # guess spatial dims
-        spatial_dims_to_smooth = list(ds.dims)
-        for dim in ['time', 'lead', 'member', 'init']:
-            if dim in ds.dims:
-                spatial_dims_to_smooth.remove(dim)
-        # write coarsen to dict to coarsen similar to 5x5 degree
-        coarsen_kws = dict()
-        step = 2
-        for dim in spatial_dims_to_smooth:
-            coarsen_kws[dim] = step
-        warnings.warn(
-            f'no coarsen_kws given. created for dims \
-            {spatial_dims_to_smooth} with step {step}'
-        )
-    # check whether coarsen dims are possible
-    for dim in coarsen_kws:
-        if dim not in ds.dims:
-            raise ValueError(f'{dim} not in ds')
-        else:
-            if ds[dim].size % coarsen_kws[dim] != 0:
-                raise ValueError(
-                    f'{coarsen_kws[dim]} does not divide',
-                    f'evenly {ds[dim].size} in {dim}',
-                )
-    # equivalent of doing ds.mean() if how == 'mean'
-    ds_out = getattr(ds.coarsen(coarsen_kws), how)()
-    return ds_out
-
-
-@is_xarray(0)
 def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
@@ -303,17 +251,7 @@ def smooth_goddard_2013(
     """
     # first temporal smoothing
     ds_smoothed = temporal_smoothing(ds, smooth_kws=smooth_kws)
-    try:  # xesmf has priority
-        ds_smoothed_regridded = spatial_smoothing_xesmf(
-            ds_smoothed, d_lon_lat_kws=d_lon_lat_kws
-        )
-    except Exception as e:  # otherwise use coarsen
-        ds_smoothed_regridded = spatial_smoothing_xrcoarsen(
-            ds_smoothed, coarsen_kws=coarsen_kws, how=how
-        )
-        print(
-            f'spatial xesmf smoothing didnt work. \
-            tried spatial_smoothing_xesmf and got {e}.\
-            then spatial_smoothing_xrcoarsen'
-        )
+    ds_smoothed_regridded = spatial_smoothing_xesmf(
+        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws
+    )
     return ds_smoothed_regridded

@@ -29,7 +29,6 @@ from .smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
     spatial_smoothing_xesmf,
-    spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
 from .utils import convert_time_index
@@ -390,7 +389,7 @@ class PredictionEnsemble:
                     'Please provide from list of available smoothings: \
                      ["goddard2013"]'
                 )
-        ## TODO: make independent of lon and lat
+        # TODO: make independent of lon and lat
         elif isinstance(smooth_kws, dict):
             non_time_dims = [
                 dim for dim in smooth_kws.keys() if dim not in ['time', 'lead']

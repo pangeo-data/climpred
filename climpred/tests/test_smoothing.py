@@ -5,7 +5,6 @@ from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
-    spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
 
@@ -49,44 +48,6 @@ def test_temporal_smoothing_reduce_length(PM_da_control_3d_full):
     actual = temporal_smoothing(PM_da_control_3d_full, smooth_kws=smooth_kws).time.size
     expected = PM_da_control_3d_full.time.size - smooth + 1
     assert actual == expected
-
-
-def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims(PM_da_control_3d_full,):
-    """Test whether spatial dimsizes are properly reduced."""
-    da = PM_da_control_3d_full
-    coarsen_kws = {'x': 4, 'y': 2}
-    actual = spatial_smoothing_xrcoarsen(da, coarsen_kws)
-    for dim in coarsen_kws:
-        actual_x = actual[dim].size
-        expected_x = PM_da_control_3d_full[dim].size // coarsen_kws[dim]
-        assert actual_x == expected_x
-
-
-def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_no_coarsen_kws(
-    PM_da_control_3d_full,
-):
-    """Test whether spatial dimsizes are properly reduced if no coarsen_kws
-    given."""
-    da = PM_da_control_3d_full
-    coarsen_kws = {'x': 2, 'y': 2}
-    actual = spatial_smoothing_xrcoarsen(da, coarsen_kws=None)
-    for dim in coarsen_kws:
-        actual_dim_size = actual[dim].size
-        expected_dim_size = PM_da_control_3d_full[dim].size // coarsen_kws[dim]
-        assert actual_dim_size == expected_dim_size
-
-
-def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_CESM(
-    reconstruction_ds_3d_full,
-):
-    """Test whether spatial dimsizes are properly reduced."""
-    da = reconstruction_ds_3d_full.isel(nlon=slice(0, 24), nlat=slice(0, 36))
-    coarsen_kws = {'nlon': 4, 'nlat': 4}
-    actual = spatial_smoothing_xrcoarsen(da, coarsen_kws)
-    for dim in coarsen_kws:
-        actual_x = actual[dim].size
-        expected_x = da[dim].size // coarsen_kws[dim]
-        assert actual_x == expected_x
 
 
 @pytest.mark.skipif(not xesmf_loaded, reason='xesmf not installed')

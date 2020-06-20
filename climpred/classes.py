@@ -26,6 +26,7 @@ from .prediction import (
 )
 from .reference import compute_persistence
 from .smoothing import (
+    _reset_temporal_axis,
     smooth_goddard_2013,
     spatial_smoothing_xesmf,
     spatial_smoothing_xrcoarsen,
@@ -377,13 +378,19 @@ class PredictionEnsemble:
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if 'goddard' in smooth_kws:
-                smooth_fct = smooth_goddard_2013
-                smooth_kws = {'lead': 4}  # default
+                if self._datasets['initialized'].lead.attrs['units'] == 'years':
+                    smooth_fct = smooth_goddard_2013
+                    smooth_kws = {'lead': 4}  # default
+                else:
+                    raise ValueError(
+                        '`goddard2013` smoothing only available for annual leads.'
+                    )
             else:
                 raise ValueError(
                     'Please provide from list of available smoothings: \
                      ["goddard2013"]'
                 )
+        ## TODO: make independent of lon and lat
         elif isinstance(smooth_kws, dict):
             non_time_dims = [
                 dim for dim in smooth_kws.keys() if dim not in ['time', 'lead']
@@ -408,32 +415,22 @@ class PredictionEnsemble:
                 smooth_fct = spatial_smoothing_xesmf
             elif 'lead' in smooth_kws:
                 smooth_fct = temporal_smoothing
-            elif non_time_dims in list(self._datasets['initialized'].dims):
-                smooth_fct = spatial_smoothing_xrcoarsen
             else:
                 raise ValueError(
                     'Please provide kwargs to fulfill functions: \
-                     ["spatial_smoothing_xesmf", "temporal_smoothing", \
-                     "spatial_smoothing_xrcoarsen"].'
+                     ["spatial_smoothing_xesmf", "temporal_smoothing"].'
                 )
         else:
             raise ValueError(
                 'Please provide kwargs as str or dict and not', type(smooth_kws)
             )
-        # Apply throughout the dataset
-        # TODO: Parallelize
-        datasets = self._datasets.copy()
-        datasets['initialized'] = smooth_fct(self._datasets['initialized'], smooth_kws)
-        # Apply if uninitialized, control, observations exist.
-        if self._datasets['uninitialized']:
-            datasets['uninitialized'] = smooth_fct(
-                self._datasets['uninitialized'], smooth_kws
-            )
-        if isinstance(self, PerfectModelEnsemble):
-            if self._datasets['control']:
-                datasets['control'] = smooth_fct(self._datasets['control'], smooth_kws)
-        # if type(self).__name__ == 'HindcastEnsemble':
-        return self._construct_direct(datasets, kind=self.kind)
+        if isinstance(self, HindcastEnsemble):
+            rename_dim = False
+        else:
+            rename_dim = True
+        self = self.apply(smooth_fct, smooth_kws=smooth_kws, rename_dim=rename_dim)
+        self.temporally_smoothed = smooth_kws
+        return self
 
 
 class PerfectModelEnsemble(PredictionEnsemble):
@@ -996,7 +993,7 @@ class HindcastEnsemble(PredictionEnsemble):
             'name': name,
             'init': True,
         }
-        return self._apply_climpred_function(
+        res = self._apply_climpred_function(
             _verify,
             input_dict=input_dict,
             metric=metric,
@@ -1006,3 +1003,6 @@ class HindcastEnsemble(PredictionEnsemble):
             hist=hist,
             reference=reference,
         )
+        if isinstance(self.temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self.temporally_smoothed)
+        return res

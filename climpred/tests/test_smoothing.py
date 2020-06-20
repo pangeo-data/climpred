@@ -1,5 +1,6 @@
 import pytest
 
+from climpred import HindcastEnsemble
 from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
@@ -133,3 +134,24 @@ def test_compute_after_smooth_goddard_2013(
     actual = compute_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()
+
+
+@pytest.fixture
+def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_3d)
+    hindcast = hindcast.add_observations(reconstruction_ds_3d, 'recon')
+    hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
+        init=slice('1964', '2014')
+    ).mean('init')
+    return hindcast
+
+
+@pytest.mark.parametrize('smooth_kws', [{'lead': 2}, {'lead': 4}])
+def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, smooth_kws):
+    he = hindcast_recon_3d
+    dim = list(smooth_kws.keys())[0]
+    he = he.smooth(smooth_kws=smooth_kws)
+    assert he._datasets['initialized'].lead.attrs['units']
+    skill = he.verify(metric='acc')
+    assert skill.lead[0] == f'1-{1+smooth_kws[dim]-1}'

@@ -16,6 +16,7 @@ def spatial_smoothing_xesmf(
     periodic=False,
     filename=None,
     reuse_weights=True,
+    **kwargs,
 ):
     """
     Quick regridding function. Adapted from
@@ -130,7 +131,7 @@ def spatial_smoothing_xesmf(
 
 
 @is_xarray(0)
-def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True):
+def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True, **kwargs):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
     Reference:
@@ -201,11 +202,11 @@ def _reset_temporal_axis(ds_smoothed, smooth_kws=None, dim=None):
         raise ValueError('smooth_kws doesnt contain a time dimension.', smooth_kws)
     smooth = list(smooth_kws.values())[0]
     dim = list(smooth_kws.keys())[0]
-    try:
-        # TODO: This assumes that smoothing is only done in years. Is this fair?
-        composite_values = ds_smoothed[dim].to_index().year
-    except AttributeError:
-        composite_values = ds_smoothed[dim].values
+    # try:
+    #    # TODO: This assumes that smoothing is only done in years. Is this fair?
+    # composite_values = ds_smoothed[dim].to_index().year
+    # except AttributeError:
+    composite_values = ds_smoothed[dim].values
     new_time = [f'{t}-{t + smooth - 1}' for t in composite_values]
     ds_smoothed[dim] = new_time
     return ds_smoothed
@@ -216,7 +217,6 @@ def smooth_goddard_2013(
     ds,
     smooth_kws={'lead': 4},
     d_lon_lat_kws={'lon': 5, 'lat': 5},
-    coarsen_kws=None,
     how='mean',
     rename_dim=True,
 ):
@@ -238,8 +238,6 @@ def smooth_goddard_2013(
                           Default: {'time': 4} (see Goddard et al. 2013).
         d_lon_lat_kws (dict): target grid for regridding.
                               Default: {'lon':5 , 'lat': 5}
-        coarsen_kws (dict): grid coarsening steps in case xesmf regridding
-                            fails. default: None.
         how(str): aggregation type for smoothing. default: 'mean'
         rename_dim(bool): Whether labels should be changed to
                           `'1-(smooth-1)', '...', ...`. default: True.
@@ -250,7 +248,7 @@ def smooth_goddard_2013(
 
     """
     # first temporal smoothing
-    ds_smoothed = temporal_smoothing(ds, smooth_kws=smooth_kws)
+    ds_smoothed = temporal_smoothing(ds, smooth_kws=smooth_kws, rename_dim=rename_dim)
     ds_smoothed_regridded = spatial_smoothing_xesmf(
         ds_smoothed, d_lon_lat_kws=d_lon_lat_kws
     )

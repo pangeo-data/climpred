@@ -1,6 +1,5 @@
 import pytest
 
-from climpred import HindcastEnsemble
 from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
@@ -97,18 +96,7 @@ def test_compute_after_smooth_goddard_2013(
     assert not north_atlantic.isnull().any()
 
 
-@pytest.fixture
-def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
-    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_3d)
-    hindcast = hindcast.add_observations(reconstruction_ds_3d, 'recon')
-    hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
-        init=slice('1964', '2014')
-    ).mean('init')
-    return hindcast
-
-
-@pytest.mark.parametrize('smooth_kws', [{'lead': 2}, {'lead': 4}])
+@pytest.mark.parametrize('smooth_kws', [{'lead': 2}, {'lead': 4}])  # ,{'time': 4}])
 def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, smooth_kws):
     he = hindcast_recon_3d
     dim = list(smooth_kws.keys())[0]
@@ -116,3 +104,58 @@ def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, smooth_kw
     assert he._datasets['initialized'].lead.attrs['units']
     skill = he.verify(metric='acc')
     assert skill.lead[0] == f'1-{1+smooth_kws[dim]-1}'
+
+
+@pytest.mark.parametrize('smooth', [2, 4])
+@pytest.mark.parametrize(
+    'pm',
+    [
+        pytest.lazy_fixture('perfectModelEnsemble_initialized_control_1d_ym_cftime'),
+        pytest.lazy_fixture('perfectModelEnsemble_initialized_control_1d_mm_cftime'),
+        pytest.lazy_fixture('perfectModelEnsemble_initialized_control_1d_dm_cftime'),
+    ],
+)
+def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
+    """Test that PredictionEnsemble.smooth({'lead': int}) aggregates lead."""
+    he_smoothed = pm.smooth({'lead': smooth})
+    assert (
+        he_smoothed.get_initialized().lead.size
+        == pm.get_initialized().lead.size - smooth + 1
+    )
+    skill = he_smoothed.compute_metric(metric='acc', comparison='m2e')
+    assert skill.lead.size == pm.get_initialized().lead.size - smooth + 1
+    assert skill.lead[0] == f'1-{1+smooth-1}'
+
+
+@pytest.mark.parametrize('smooth', [2, 4])
+@pytest.mark.parametrize(
+    'he',
+    [
+        pytest.lazy_fixture('hindcast_recon_1d_ym'),
+        pytest.lazy_fixture('hindcast_recon_1d_mm'),
+        pytest.lazy_fixture('hindcast_recon_1d_dm'),
+    ],
+)
+def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth):
+    """Test that PredictionEnsemble.smooth({'lead': int}) aggregates lead."""
+    he_smoothed = he.smooth({'lead': smooth})
+    assert (
+        he_smoothed.get_initialized().lead.size
+        == he.get_initialized().lead.size - smooth + 1
+    )
+    skill = he_smoothed.verify(metric='acc', comparison='e2o', alignment='maximize')
+    assert skill.lead.size == he.get_initialized().lead.size - smooth + 1
+    assert skill.lead[0] == f'1-{1+smooth-1}'
+
+
+@pytest.mark.parametrize('step', [1, 2])
+@pytest.mark.parametrize('dim', [['lon'], ['lat'], ['lon', 'lat']])
+def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim, step):
+    """Test that PredictionEnsemble.smooth({dim: int}) aggregates dim."""
+    he = hindcast_recon_3d
+    smooth_kws = {key: step for key in dim}
+    he_smoothed = he.smooth(smooth_kws)
+    for d in dim:
+        assert he_smoothed.get_initialized()[d].any()
+        assert he_smoothed.get_observations('recon')[d].any()
+    assert he_smoothed.verify(metric='acc', comparison='e2o').any()

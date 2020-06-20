@@ -359,18 +359,14 @@ class PredictionEnsemble:
         able to still calculate prediction skill afterwards.
 
         Args:
-          xobj (xarray object):
-            decadal prediction ensemble output.
-
-        Attributes:
-            smooth_kws (dict or str): Dictionary to specify the dims to
-                smooth compatible with `spatial_smoothing_xesmf`,
-                `temporal_smoothing` or `spatial_smoothing_xrcoarsen`.
+          smooth_kws (dict or str): Dictionary to specify the dims to
+                smooth compatible with `spatial_smoothing_xesmf` or
+                `temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
                 'goddard2013'
 
         Example:
-        >>> PredictionEnsemble.smooth(smooth_kws={'time': 2,
+        >>> PredictionEnsemble.smooth(smooth_kws={'lead': 2,
             'lat': 5, 'lon': 4'})
         >>> PredictionEnsemble.smooth(smooth_kws='goddard2013')
         """
@@ -380,6 +376,7 @@ class PredictionEnsemble:
                 if self._datasets['initialized'].lead.attrs['units'] == 'years':
                     smooth_fct = smooth_goddard_2013
                     smooth_kws = {'lead': 4}  # default
+                    d_lon_lat_kws = {'lon': 5, 'lat': 5}  # default
                 else:
                     raise ValueError(
                         '`goddard2013` smoothing only available for annual leads.'
@@ -401,19 +398,20 @@ class PredictionEnsemble:
                 'lead' in smooth_kws or 'time' in smooth_kws
             ):
                 smooth_fct = smooth_goddard_2013
-            # fail goddard and fall back to xrcoarsen when
-            # coarsen dim and time_dim provided
-            elif (
-                (non_time_dims is not [])
-                and (non_time_dims in list(self._datasets['initialized'].dims))
-                and ('lead' in smooth_kws or 'time' in smooth_kws)
-            ):
-                smooth_fct = smooth_goddard_2013
+                # separate lon, lat keywords into d_lon_lat_kws
+                d_lon_lat_kws = dict()
+                for c in ['lon', 'lat']:
+                    if c in smooth_kws:
+                        d_lon_lat_kws[c] = smooth_kws[c]
+                        del smooth_kws[c]
             # else only one smoothing operation
             elif 'lon' in smooth_kws or 'lat' in smooth_kws:
                 smooth_fct = spatial_smoothing_xesmf
-            elif 'lead' in smooth_kws:
+                d_lon_lat_kws = smooth_kws
+                smooth_kws = None
+            elif 'lead' in smooth_kws or 'time' in smooth_kws:
                 smooth_fct = temporal_smoothing
+                d_lon_lat_kws = None
             else:
                 raise ValueError(
                     'Please provide kwargs to fulfill functions: \
@@ -426,9 +424,15 @@ class PredictionEnsemble:
         if isinstance(self, HindcastEnsemble):
             rename_dim = False
         else:
-            rename_dim = True
-        self = self.apply(smooth_fct, smooth_kws=smooth_kws, rename_dim=rename_dim)
-        self.temporally_smoothed = smooth_kws
+            rename_dim = False
+        self = self.apply(
+            smooth_fct,
+            smooth_kws=smooth_kws,
+            d_lon_lat_kws=d_lon_lat_kws,
+            rename_dim=rename_dim,
+        )
+        if smooth_fct == smooth_goddard_2013 or smooth_fct == temporal_smoothing:
+            self.temporally_smoothed = smooth_kws
         return self
 
 
@@ -569,12 +573,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'control': self._datasets['control'],
             'init': True,
         }
-        return self._apply_climpred_function(
+        res = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
         )
+        if isinstance(self.temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
+        return res
 
     def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
         """Compares the bootstrapped uninitialized run to the control run.
@@ -1003,5 +1010,5 @@ class HindcastEnsemble(PredictionEnsemble):
             reference=reference,
         )
         if isinstance(self.temporally_smoothed, dict):
-            res = _reset_temporal_axis(res, self.temporally_smoothed)
+            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
         return res

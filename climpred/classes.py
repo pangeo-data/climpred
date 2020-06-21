@@ -360,13 +360,15 @@ class PredictionEnsemble:
 
         Args:
             smooth_kws (dict or str): Dictionary to specify the dims to
-                smooth compatible with `spatial_smoothing_xesmf` or
-                `temporal_smoothing`.
+                smooth compatible with
+                :py:func:`~climpred.smoothing.spatial_smoothing_xesmf` or
+                :py:func:`~climpred.smoothing.temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
                 'goddard2013'. Defaults to None.
             how (str): how to smooth temporally. From ['mean','sum']. Defaults to
                 'mean'.
-            **xesmf_kwargs (args): kwargs passed to `spatial_smoothing_xesmf`
+            **xesmf_kwargs (args): kwargs passed to
+                :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
         Examples:
             >>> PredictionEnsemble.smooth({'lead': 2, 'lat': 5, 'lon': 4'})

@@ -31,28 +31,28 @@ def spatial_smoothing_xesmf(
             Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
             or 2D (Ny, Nx) for general curvilinear grids.
             Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
-         d_lon_lat_kws (dict): optional
+        d_lon_lat_kws (dict): optional
             Longitude/Latitude step size (grid resolution); if not provided,
             lon will equal 5 and lat will equal lon
             (optional)
-         method (str): Regridding method. Options are:
+        method (str): Regridding method. Options are:
             - 'bilinear'
             - 'conservative', **need grid corner information**
             - 'patch'
             - 'nearest_s2d'
             - 'nearest_d2s'
-         periodic (bool): Periodic in longitude? Default to False. optional
+        periodic (bool): Periodic in longitude? Default to False. optional
             Only useful for global grids with non-conservative regridding.
             Will be forced to False for conservative regridding.
-         filename (str): Name for the weight file. (optional)
+        filename (str): Name for the weight file. (optional)
             The default naming scheme is:
-                 {method}_{Ny_in}x{Nx_in}_{Ny_out}x{Nx_out}.nc
-                 e.g. bilinear_400x600_300x400.nc
-         reuse_weights (bool) Whether to read existing weight file to save
+                {method}_{Ny_in}x{Nx_in}_{Ny_out}x{Nx_out}.nc
+                e.g. bilinear_400x600_300x400.nc
+        reuse_weights (bool) Whether to read existing weight file to save
             computing time. False by default. (optional)
-         tsmooth_kws (None): leads nowhere but consistent with `temporal_smoothing`.
-         rename_dim (None): leads nowhere but consistent with `temporal_smoothing`.
-         how (None): leads nowhere but consistent with `temporal_smoothing`.
+        tsmooth_kws (None): leads nowhere but consistent with `temporal_smoothing`.
+        rename_dim (None): leads nowhere but consistent with `temporal_smoothing`.
+        how (None): leads nowhere but consistent with `temporal_smoothing`.
 
         Returns:
             ds (xarray.object) regridded

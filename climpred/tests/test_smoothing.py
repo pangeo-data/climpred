@@ -189,3 +189,17 @@ def test_set_center_coord():
     actual = _set_center_coord(da).lead_center.values
     expected = [2.0, 3.0]
     assert (actual == expected).all()
+
+
+def test_PredictionEnsemble_goddard(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    assert pm.smooth({'lead': 4, 'lon': 5, 'lat': 5})
+
+
+def test_PredictionEnsemble_smooth_None(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    assert pm.smooth(None)

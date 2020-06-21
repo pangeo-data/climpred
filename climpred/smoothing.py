@@ -18,6 +18,7 @@ def spatial_smoothing_xesmf(
     reuse_weights=True,
     tsmooth_kws=None,
     rename_dim=None,
+    how=None,
 ):
     """
     Quick regridding function. Adapted from

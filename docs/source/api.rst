@@ -51,8 +51,6 @@ Analysis Functions
     :toctree: api/
 
     HindcastEnsemble.verify
-    HindcastEnsemble.compute_persistence
-    HindcastEnsemble.compute_uninitialized
 
 --------------
 Pre-Processing
@@ -109,6 +107,15 @@ Generate Data
     :toctree: api/
 
     PerfectModelEnsemble.generate_uninitialized
+
+--------------
+Pre-Processing
+--------------
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble.smooth
 
 
 Direct Function Calls
@@ -219,3 +226,14 @@ Preprocessing
     :toctree: api/
 
     get_path
+
+Smoothing
+~~~~~~~~~
+.. currentmodule:: climpred.smoothing
+
+.. autosummary::
+    :toctree: api/
+
+    temporal_smoothing
+    spatial_smoothing_xesmf
+    _reset_temporal_axis

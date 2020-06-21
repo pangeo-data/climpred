@@ -354,24 +354,28 @@ class PredictionEnsemble:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets['uninitialized']
 
-    def smooth(self, smooth_kws='goddard2013', how='mean', **xesmf_kwargs):
+    def smooth(self, smooth_kws=None, how='mean', **xesmf_kwargs):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
         Args:
-          smooth_kws (dict or str): Dictionary to specify the dims to
+            smooth_kws (dict or str): Dictionary to specify the dims to
                 smooth compatible with `spatial_smoothing_xesmf` or
                 `temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
-                'goddard2013'
-          how (str): how to smooth temporally. From ['mean','sum']. Defaults to 'mean'.
-          **xesmf_kwargs (args): kwargs passed to spatial_smoothing_xesmf
+                'goddard2013'. Defaults to None.
+            how (str): how to smooth temporally. From ['mean','sum']. Defaults to
+                'mean'.
+            **xesmf_kwargs (args): kwargs passed to `spatial_smoothing_xesmf`
 
-        Example:
-        >>> PredictionEnsemble.smooth(smooth_kws={'lead': 2,
-            'lat': 5, 'lon': 4'})
-        >>> PredictionEnsemble.smooth(smooth_kws='goddard2013')
+        Examples:
+            >>> PredictionEnsemble.smooth({'lead': 2, 'lat': 5, 'lon': 4'})
+            >>> PredictionEnsemble.smooth('goddard2013')
+            >>> PredictionEnsemble.smooth({'lon':1, 'lat':1}, method='patch')
+            >>> PredictionEnsemble.smooth({'lead':2}, how='sum')
         """
+        if not smooth_kws:
+            return self
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if 'goddard' in smooth_kws:

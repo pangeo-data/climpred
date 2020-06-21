@@ -17,6 +17,10 @@ Documentation
 - Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
   (:pr:`378`) `Riley X. Brady`_.
 
+Bug Fixes
+---------
+- Spatial and temporal smoothing ``PredictionEnsemble.smooth()`` now work as expected
+  and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
 
 climpred v2.1.0 (2020-06-08)
 ============================

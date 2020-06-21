@@ -354,7 +354,7 @@ class PredictionEnsemble:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets['uninitialized']
 
-    def smooth(self, smooth_kws='goddard2013'):
+    def smooth(self, smooth_kws='goddard2013', how='mean', **xesmf_kwargs):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
@@ -364,6 +364,8 @@ class PredictionEnsemble:
                 `temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
                 'goddard2013'
+          how (str): how to smooth temporally. From ['mean','sum']. Defaults to 'mean'.
+          **xesmf_kwargs (args): kwargs passed to spatial_smoothing_xesmf
 
         Example:
         >>> PredictionEnsemble.smooth(smooth_kws={'lead': 2,
@@ -375,7 +377,7 @@ class PredictionEnsemble:
             if 'goddard' in smooth_kws:
                 if self._datasets['initialized'].lead.attrs['units'] == 'years':
                     smooth_fct = smooth_goddard_2013
-                    smooth_kws = {'lead': 4}  # default
+                    tsmooth_kws = {'lead': 4}  # default
                     d_lon_lat_kws = {'lon': 5, 'lat': 5}  # default
                 else:
                     raise ValueError(
@@ -400,18 +402,21 @@ class PredictionEnsemble:
                 smooth_fct = smooth_goddard_2013
                 # separate lon, lat keywords into d_lon_lat_kws
                 d_lon_lat_kws = dict()
+                tsmooth_kws = dict()
                 for c in ['lon', 'lat']:
                     if c in smooth_kws:
                         d_lon_lat_kws[c] = smooth_kws[c]
-                        del smooth_kws[c]
+                    else:
+                        tsmooth_kws[c] = smooth_kws[c]
             # else only one smoothing operation
             elif 'lon' in smooth_kws or 'lat' in smooth_kws:
                 smooth_fct = spatial_smoothing_xesmf
                 d_lon_lat_kws = smooth_kws
-                smooth_kws = None
+                tsmooth_kws = None
             elif 'lead' in smooth_kws or 'time' in smooth_kws:
                 smooth_fct = temporal_smoothing
                 d_lon_lat_kws = None
+                tsmooth_kws = smooth_kws
             else:
                 raise ValueError(
                     'Please provide kwargs to fulfill functions: \
@@ -419,20 +424,19 @@ class PredictionEnsemble:
                 )
         else:
             raise ValueError(
-                'Please provide kwargs as str or dict and not', type(smooth_kws)
+                'Please provide kwargs as dict or str and not', type(smooth_kws)
             )
-        if isinstance(self, HindcastEnsemble):
-            rename_dim = False
-        else:
-            rename_dim = False
+        rename_dim = False
         self = self.apply(
             smooth_fct,
-            smooth_kws=smooth_kws,
+            tsmooth_kws=tsmooth_kws,
             d_lon_lat_kws=d_lon_lat_kws,
             rename_dim=rename_dim,
+            how=how,
+            **xesmf_kwargs,
         )
         if smooth_fct == smooth_goddard_2013 or smooth_fct == temporal_smoothing:
-            self.temporally_smoothed = smooth_kws
+            self.temporally_smoothed = tsmooth_kws
         return self
 
 
@@ -607,12 +611,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'control': self._datasets['control'],
             'init': False,
         }
-        return self._apply_climpred_function(
+        res = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
         )
+        if isinstance(self.temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
+        return res
 
     def compute_persistence(self, metric='pearson_r'):
         """Compute a simple persistence forecast for the control run.
@@ -639,12 +646,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'control': self._datasets['control'],
             'init': True,
         }
-        return self._apply_climpred_function(
+        res = self._apply_climpred_function(
             compute_persistence,
             input_dict=input_dict,
             metric=metric,
             alignment='same_inits',
         )
+        if isinstance(self.temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
+        return res
 
     def bootstrap(
         self,

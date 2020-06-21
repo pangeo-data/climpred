@@ -66,48 +66,6 @@ def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast.verify()
 
 
-def test_smooth_goddard(reconstruction_ds_3d, hind_ds_initialized_3d):
-    """Test whether goddard smoothing function reduces ntime."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_3d.isel(nlat=slice(1, None)))
-    hindcast = hindcast.add_observations(
-        reconstruction_ds_3d.isel(nlat=slice(1, None)), 'reconstruction'
-    )
-    hindcast = hindcast.add_uninitialized(
-        reconstruction_ds_3d.isel(nlat=slice(1, None))
-    )
-    initialized_before = hindcast._datasets['initialized']
-    hindcast = hindcast.smooth(smooth_kws='goddard2013')
-    actual_initialized = hindcast._datasets['initialized']
-    dim = 'lead'
-    assert actual_initialized[dim].size < initialized_before[dim].size
-    for dim in ['nlon', 'nlat']:
-        assert actual_initialized[dim[1:]].size < initialized_before[dim].size
-
-
-def test_smooth_coarsen(reconstruction_ds_3d, hind_ds_initialized_3d):
-    """Test whether coarsening reduces dim.size."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_3d)
-    hindcast = hindcast.add_observations(reconstruction_ds_3d, 'reconstruction')
-    hindcast = hindcast.add_uninitialized(reconstruction_ds_3d)
-    initialized_before = hindcast._datasets['initialized']
-    dim = 'nlon'
-    hindcast = hindcast.smooth(smooth_kws={dim: 2})
-    actual_initialized = hindcast._datasets['initialized']
-    assert initialized_before[dim].size // 2 == actual_initialized[dim].size
-
-
-def test_smooth_temporal(reconstruction_ds_3d, hind_ds_initialized_3d):
-    """Test whether coarsening reduces dim.size."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_3d)
-    hindcast = hindcast.add_observations(reconstruction_ds_3d, 'reconstruction')
-    hindcast = hindcast.add_uninitialized(reconstruction_ds_3d)
-    initialized_before = hindcast._datasets['initialized']
-    dim = 'lead'
-    hindcast = hindcast.smooth(smooth_kws={dim: 4})
-    actual_initialized = hindcast._datasets['initialized']
-    assert initialized_before[dim].size > actual_initialized[dim].size
-
-
 def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test whether applying isel to the objects works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)

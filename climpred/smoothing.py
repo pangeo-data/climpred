@@ -16,7 +16,8 @@ def spatial_smoothing_xesmf(
     periodic=False,
     filename=None,
     reuse_weights=True,
-    **kwargs,
+    tsmooth_kws=None,
+    rename_dim=None,
 ):
     """
     Quick regridding function. Adapted from
@@ -48,6 +49,9 @@ def spatial_smoothing_xesmf(
                  e.g. bilinear_400x600_300x400.nc
          reuse_weights (bool) Whether to read existing weight file to save
             computing time. False by default. (optional)
+         tsmooth_kws (None): leads nowhere but consistent with `temporal_smoothing`.
+         rename_dim (None): leads nowhere but consistent with `temporal_smoothing`.
+         how (None): leads nowhere but consistent with `temporal_smoothing`.
 
         Returns:
             ds (xarray.object) regridded
@@ -131,7 +135,9 @@ def spatial_smoothing_xesmf(
 
 
 @is_xarray(0)
-def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True, **kwargs):
+def temporal_smoothing(
+    ds, tsmooth_kws=None, how='mean', rename_dim=True, d_lon_lat_kws=None
+):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
     Reference:
@@ -139,86 +145,83 @@ def temporal_smoothing(ds, smooth_kws=None, how='mean', rename_dim=True, **kwarg
      Gonzalez, V. Kharin, et al. “A Verification Framework for
      Interannual - to - Decadal Predictions Experiments.” Climate
      Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-     https: // doi.org / 10 / f4jjvf.
+     https://doi.org/10/f4jjvf.
 
     Args:
         ds(xr.object): input.
-        smooth_kws(dict): length of smoothing of timesteps.
-                          Defaults to {'time': 4} (see Goddard et al. 2013).
+        tsmooth_kws(dict): length of smoothing of timesteps.
+            Defaults to {'time': 4} (see Goddard et al. 2013).
         how(str): aggregation type for smoothing. default: 'mean'
         rename_dim(bool): Whether labels should be changed to
-                          `'1-(smooth-1)', '...', ...`. default: True.
+            `'1-(smooth-1)', '...', ...`. default: True.
+        d_lon_lat_kws (None): leads nowhere but consistent with
+            `spatial_smoothing_xesmf`.
 
     Returns:
         ds_smoothed(xr.object): input with `smooth` timesteps less
-        and labeling '1-(smooth-1)', '...', ... .
+            and labeling '1-(smooth-1)', '...', ... .
 
     """
     # unpack dict
-    if not isinstance(smooth_kws, dict):
-        raise ValueError('Please provide smooth_kws as dict, found ', type(smooth_kws))
-    if not ('time' in smooth_kws or 'lead' in smooth_kws):
+    if not isinstance(tsmooth_kws, dict):
         raise ValueError(
-            'smooth_kws doesnt contain a time dimension \
-            (either "lead" or "time").',
-            smooth_kws,
+            'Please provide tsmooth_kws as dict, found ', type(tsmooth_kws)
         )
-    smooth = list(smooth_kws.values())[0]
-    dim = list(smooth_kws.keys())[0]
+    if not ('time' in tsmooth_kws or 'lead' in tsmooth_kws):
+        raise ValueError(
+            'tsmooth_kws doesnt contain a time dimension \
+            (either "lead" or "time").',
+            tsmooth_kws,
+        )
+    smooth = list(tsmooth_kws.values())[0]
+    dim = list(tsmooth_kws.keys())[0]
     # fix to smooth either lead or time depending
     time_dims = ['time', 'lead']
     if dim not in ds.dims:
         time_dims.remove(dim)
         dim = time_dims[0]
-        smooth_kws = {dim: smooth}
+        tsmooth_kws = {dim: smooth}
     # aggreate based on how
-    ds_smoothed = getattr(ds.rolling(smooth_kws, center=False), how)()
+    ds_smoothed = getattr(ds.rolling(tsmooth_kws, center=False), how)()
     # remove first all-nans
     ds_smoothed = ds_smoothed.isel({dim: slice(smooth - 1, None)})
     ds_smoothed[dim] = ds.isel({dim: slice(None, -smooth + 1)})[dim]
     if rename_dim:
-        ds_smoothed = _reset_temporal_axis(ds_smoothed, smooth_kws=smooth_kws, dim=dim)
+        ds_smoothed = _reset_temporal_axis(
+            ds_smoothed, tsmooth_kws=tsmooth_kws, dim=dim
+        )
     return ds_smoothed
 
 
 @is_xarray(0)
-def _reset_temporal_axis(ds_smoothed, smooth_kws=None, dim=None):
-    """Reduce and reset temporal axis. See temporal_smoothing(). Might be
+def _reset_temporal_axis(ds_smoothed, tsmooth_kws=None, dim='lead'):
+    """Reduce and reset temporal axis. See temporal_smoothing(). Should be
     used after calculation of skill to maintain readable labels for skill
     computation.
 
     Args:
         ds_smoothed (xarray object): Smoothed dataset.
-        smooth_kws (dict): Keywords smoothing is performed over.
-            Default is {'time': 4.
-        dim (str): Dimension smoothing is performed over ('time' or 'lead').
+        tsmooth_kws (dict): Keywords smoothing is performed over.
+        dim (str): Dimension smoothing is performed over. Defaults to 'lead'.
 
     Returns:
         Smoothed Dataset with updated labels for smoothed temporal dimension.
     """
-    if smooth_kws is None:
-        smooth_kws = {'time': 4}
-    if not ('time' in smooth_kws or 'lead' in smooth_kws):
-        raise ValueError('smooth_kws doesnt contain a time dimension.', smooth_kws)
-    smooth = list(smooth_kws.values())[0]
-    dim = list(smooth_kws.keys())[0]
-    # try:
-    #    # TODO: This assumes that smoothing is only done in years. Is this fair?
-    # composite_values = ds_smoothed[dim].to_index().year
-    # except AttributeError:
-    composite_values = ds_smoothed[dim].values
-    new_time = [f'{t}-{t + smooth - 1}' for t in composite_values]
-    ds_smoothed[dim] = new_time
+    if not ('time' in tsmooth_kws or 'lead' in tsmooth_kws):
+        raise ValueError('tsmooth_kws does not contain a time dimension.', tsmooth_kws)
+    smooth = list(tsmooth_kws.values())[0]
+    ds_smoothed[dim] = [f'{t}-{t + smooth - 1}' for t in ds_smoothed[dim].values]
     return ds_smoothed
 
 
 @is_xarray(0)
 def smooth_goddard_2013(
     ds,
-    smooth_kws={'lead': 4},
+    tsmooth_kws={'lead': 4},
     d_lon_lat_kws={'lon': 5, 'lat': 5},
     how='mean',
     rename_dim=True,
+    **xesmf_kwargs,
 ):
     """Wrapper to smooth as suggested by Goddard et al. 2013:
         - 4-year composites
@@ -233,7 +236,7 @@ def smooth_goddard_2013(
 
     Args:
         ds(xr.object): input.
-        smooth_kws(dict): length of smoothing of timesteps (applies to ``lead``
+        tsmooth_kws(dict): length of smoothing of timesteps (applies to ``lead``
                           in forecast and ``time`` in verification data).
                           Default: {'time': 4} (see Goddard et al. 2013).
         d_lon_lat_kws (dict): target grid for regridding.
@@ -241,6 +244,7 @@ def smooth_goddard_2013(
         how(str): aggregation type for smoothing. default: 'mean'
         rename_dim(bool): Whether labels should be changed to
                           `'1-(smooth-1)', '...', ...`. default: True.
+        **xesmf_kwargs (kwargs): kwargs passed to `spatial_smoothing_xesmf`.
 
     Returns:
         ds_smoothed_regridded (xr.object): input with `smooth` timesteps less
@@ -248,8 +252,8 @@ def smooth_goddard_2013(
 
     """
     # first temporal smoothing
-    ds_smoothed = temporal_smoothing(ds, smooth_kws=smooth_kws, rename_dim=rename_dim)
+    ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws, rename_dim=rename_dim)
     ds_smoothed_regridded = spatial_smoothing_xesmf(
-        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws
+        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs
     )
     return ds_smoothed_regridded

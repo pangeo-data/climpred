@@ -18,10 +18,10 @@ except ImportError:
 def test_reset_temporal_axis(PM_da_control_3d_full):
     """Test whether correct new labels are set."""
     smooth = 10
-    smooth_kws = {'time': smooth}
+    tsmooth_kws = {'time': smooth}
     first_ori = PM_da_control_3d_full.time[0].values
     first_actual = _reset_temporal_axis(
-        PM_da_control_3d_full, smooth_kws=smooth_kws
+        PM_da_control_3d_full, tsmooth_kws=tsmooth_kws, dim='time'
     ).time.values[0]
     first_expected = f'{first_ori}-{first_ori+smooth*1-1}'
     assert first_actual == first_expected
@@ -31,10 +31,10 @@ def test_reset_temporal_axis_lead(PM_da_initialized_3d_full):
     """Test whether correct new labels are set."""
     smooth = 10
     dim = 'lead'
-    smooth_kws = {dim: smooth}
+    tsmooth_kws = {dim: smooth}
     first_ori = PM_da_initialized_3d_full.lead[0].values
     first_actual = _reset_temporal_axis(
-        PM_da_initialized_3d_full, smooth_kws=smooth_kws
+        PM_da_initialized_3d_full, tsmooth_kws=tsmooth_kws
     )[dim].values[0]
     first_expected = f'{first_ori}-{first_ori+smooth*1-1}'
     assert first_actual == first_expected
@@ -43,8 +43,10 @@ def test_reset_temporal_axis_lead(PM_da_initialized_3d_full):
 def test_temporal_smoothing_reduce_length(PM_da_control_3d_full):
     """Test whether dimsize is reduced properly."""
     smooth = 10
-    smooth_kws = {'time': smooth}
-    actual = temporal_smoothing(PM_da_control_3d_full, smooth_kws=smooth_kws).time.size
+    tsmooth_kws = {'time': smooth}
+    actual = temporal_smoothing(
+        PM_da_control_3d_full, tsmooth_kws=tsmooth_kws
+    ).time.size
     expected = PM_da_control_3d_full.time.size - smooth + 1
     assert actual == expected
 
@@ -96,14 +98,14 @@ def test_compute_after_smooth_goddard_2013(
     assert not north_atlantic.isnull().any()
 
 
-@pytest.mark.parametrize('smooth_kws', [{'lead': 2}, {'lead': 4}])  # ,{'time': 4}])
-def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, smooth_kws):
+@pytest.mark.parametrize('tsmooth_kws', [{'lead': 2}, {'lead': 4}, {'time': 4}])
+def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, tsmooth_kws):
     he = hindcast_recon_3d
-    dim = list(smooth_kws.keys())[0]
-    he = he.smooth(smooth_kws=smooth_kws)
+    dim = list(tsmooth_kws.keys())[0]
+    he = he.smooth(smooth_kws=tsmooth_kws)
     assert he._datasets['initialized'].lead.attrs['units']
     skill = he.verify(metric='acc')
-    assert skill.lead[0] == f'1-{1+smooth_kws[dim]-1}'
+    assert skill.lead[0] == f'1-{1+tsmooth_kws[dim]-1}'
 
 
 @pytest.mark.parametrize('smooth', [2, 4])
@@ -117,6 +119,7 @@ def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, smooth_kw
 )
 def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
     """Test that PredictionEnsemble.smooth({'lead': int}) aggregates lead."""
+    pm = pm.isel(lead=range(6))
     he_smoothed = pm.smooth({'lead': smooth})
     assert (
         he_smoothed.get_initialized().lead.size
@@ -159,3 +162,20 @@ def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim
         assert he_smoothed.get_initialized()[d].any()
         assert he_smoothed.get_observations('recon')[d].any()
     assert he_smoothed.verify(metric='acc', comparison='e2o').any()
+
+
+def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_cftime):
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    pm_smoothed_mean = pm.smooth({'lead': 4}, how='mean')
+    pm_smoothed_sum = pm.smooth({'lead': 4}, how='sum')
+    assert (
+        pm_smoothed_sum.get_initialized().mean()
+        > pm_smoothed_mean.get_initialized().mean() * 2
+    )
+
+
+def test_spatial_smoothing_xesmf(hindcast_recon_3d):
+    he = hindcast_recon_3d
+    he_bil = he.smooth('goddard', method='bilinear')
+    he_patch = he.smooth('goddard', method='patch')
+    assert he_bil.get_initialized().mean() != he_patch.get_initialized().mean()

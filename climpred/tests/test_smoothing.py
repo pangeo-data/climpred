@@ -1,8 +1,11 @@
+import numpy as np
 import pytest
+import xarray as xr
 
 from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
+    _set_center_coord,
     smooth_goddard_2013,
     temporal_smoothing,
 )
@@ -179,3 +182,10 @@ def test_spatial_smoothing_xesmf(hindcast_recon_3d):
     he_bil = he.smooth('goddard', method='bilinear')
     he_patch = he.smooth('goddard', method='patch')
     assert he_bil.get_initialized().mean() != he_patch.get_initialized().mean()
+
+
+def test_set_center_coord():
+    da = xr.DataArray(np.arange(2), dims='lead', coords={'lead': ['1-3', '2-4']})
+    actual = _set_center_coord(da).lead_center.values
+    expected = [2.0, 3.0]
+    assert (actual == expected).all()

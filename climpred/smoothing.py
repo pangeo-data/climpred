@@ -195,7 +195,9 @@ def temporal_smoothing(
 
 
 @is_xarray(0)
-def _reset_temporal_axis(ds_smoothed, tsmooth_kws=None, dim='lead'):
+def _reset_temporal_axis(
+    ds_smoothed, tsmooth_kws=None, dim='lead', set_lead_center=True
+):
     """Reduce and reset temporal axis. See temporal_smoothing(). Should be
     used after calculation of skill to maintain readable labels for skill
     computation.
@@ -204,6 +206,8 @@ def _reset_temporal_axis(ds_smoothed, tsmooth_kws=None, dim='lead'):
         ds_smoothed (xarray object): Smoothed dataset.
         tsmooth_kws (dict): Keywords smoothing is performed over.
         dim (str): Dimension smoothing is performed over. Defaults to 'lead'.
+        set_center (bool): Whether to set new coord `{dim}_center`.
+            Defaults to True.
 
     Returns:
         Smoothed Dataset with updated labels for smoothed temporal dimension.
@@ -212,7 +216,20 @@ def _reset_temporal_axis(ds_smoothed, tsmooth_kws=None, dim='lead'):
         raise ValueError('tsmooth_kws does not contain a time dimension.', tsmooth_kws)
     smooth = list(tsmooth_kws.values())[0]
     ds_smoothed[dim] = [f'{t}-{t + smooth - 1}' for t in ds_smoothed[dim].values]
+    if set_lead_center:
+        _set_center_coord(ds_smoothed, dim)
     return ds_smoothed
+
+
+def _set_center_coord(ds, dim='lead'):
+    """Set lead_center as a new coordinate."""
+    new_dim = []
+    old_dim = ds[dim].values
+    for i in old_dim:
+        new_dim.append(eval(i.replace('-', '+')) / 2)
+    new_dim = np.array(new_dim)
+    ds.coords[f'{dim}_center'] = (dim, new_dim)
+    return ds
 
 
 @is_xarray(0)

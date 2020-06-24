@@ -20,7 +20,8 @@ Documentation
 Internals/Minor Fixes
 ---------------------
 - ``PerfectModelEnsemble.verify()`` replaces depreciated
-  ``PerfectModelEnsemble.compute_metric()``. (:pr:`387`) `Aaron Spring`_.
+  ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
+  (:pr:`387`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify()``, ``PerfectModelEnsemble.compute_uninitialized()`` and
   ``PerfectModelEnsemble.bootstrap()`` now accepts ``metric_kwargs``. (:pr:`387`)
   `Aaron Spring`_.

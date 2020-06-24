@@ -115,6 +115,24 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
     assert pm.verify(metric='threshold_brier_score', comparison='m2c', threshold=0.5)
 
 
+@pytest.mark.parametrize(
+    'reference',
+    ['historical', ['historical'], 'persistence', None, ['historical', 'persistence']],
+)
+def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
+    """Test that verify works with references given."""
+    pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
+    skill = pm.verify(metric='rmse', comparison='m2e', reference=reference)
+    if isinstance(reference, str):
+        reference = [reference]
+    elif reference is None:
+        reference = []
+    if len(reference) == 0:
+        assert 'skill' not in skill.dims
+    else:
+        assert skill.skill.size == len(reference) + 1
+
+
 def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_control):
     """Test that verify without metric_kwargs fails."""
     pm = perfectModelEnsemble_initialized_control

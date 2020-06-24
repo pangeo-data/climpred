@@ -557,7 +557,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Returns the control as an xarray dataset."""
         return self._datasets['control']
 
-    def verify(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
+    def verify(
+        self, metric='pearson_r', comparison='m2e', reference=None, **metric_kwargs
+    ):
         """Compares the initialized ensemble to the control run.
 
         Args:
@@ -565,10 +567,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
               How to compare the climate prediction ensemble to the control.
+            reference (str, list of str): reference forecasts to compare against.
             **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
-            Result of the comparison as a Dataset.
+            Dataset of comparison results with `skill` dimension for difference
+                references compared against.
         """
         has_dataset(self._datasets['control'], 'control', 'compute a metric')
         input_dict = {
@@ -576,16 +580,41 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'control': self._datasets['control'],
             'init': True,
         }
-        return self._apply_climpred_function(
+        init_skill = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
             **metric_kwargs,
         )
+        if isinstance(reference, str):
+            reference = [reference]
+        elif reference is None:
+            return init_skill
+        skill_labels = ['init']
+        if 'historical' in reference or 'uninitialzed' in reference:
+            uninit_skill = self.compute_uninitialized(
+                metric=metric, comparison=comparison, **metric_kwargs
+            )
+            skill_labels.append('historical')
+        else:
+            uninit_skill = None
+        if 'persistence' in reference:
+            persistence_skill = self.compute_persistence(metric=metric)
+            skill_labels.append('persistence')
+        else:
+            persistence_skill = None
+        all_skills = xr.concat(
+            [s for s in [init_skill, uninit_skill, persistence_skill] if s is not None],
+            dim='skill',
+        )
+        all_skills['skill'] = skill_labels
+        return all_skills.squeeze()
 
     def compute_metric(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
-        warnings.warn('compute_metric() is depreciated. Please use verify().')
+        warnings.warn(
+            'compute_metric() is depreciated. Please use verify(reference=None).'
+        )
         return self.verify(metric=metric, comparison=comparison, **metric_kwargs)
 
     def compute_uninitialized(

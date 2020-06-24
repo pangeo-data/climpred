@@ -253,9 +253,23 @@ def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
 
 @pytest.fixture
 def hindcast_recon_1d_ym(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `recon`."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d, 'recon')
+    hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
+        init=slice('1964', '2014')
+    ).mean('init')
+    return hindcast
+
+
+@pytest.fixture
+def hindcast_hist_obs_1d(
+    hind_ds_initialized_1d, hist_ds_uninitialized_1d, observations_ds_1d
+):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
+    hindcast = hindcast.add_observations(observations_ds_1d, 'obs')
     hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
         init=slice('1964', '2014')
     ).mean('init')

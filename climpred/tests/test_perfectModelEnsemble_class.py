@@ -99,7 +99,7 @@ def test_verify(perfectModelEnsemble_initialized_control):
 
 
 def test_warning_compute_metric(perfectModelEnsemble_initialized_control):
-    """Test that verify works."""
+    """Test that compute_metric throws warning."""
     with pytest.warns(UserWarning) as record:
         assert perfectModelEnsemble_initialized_control.compute_metric(
             metric='mse', comparison='m2e'
@@ -143,7 +143,7 @@ def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_co
 
 
 def test_compute_uninitialized_metric_kwargs(perfectModelEnsemble_initialized_control):
-    """Test that verify with metric_kwargs works."""
+    'Test that compute_uninitialized with metric_kwargs works'
     pm = perfectModelEnsemble_initialized_control
     pm = pm - pm.mean('time').mean('init')
     pm = pm.generate_uninitialized()

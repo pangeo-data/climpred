@@ -172,3 +172,11 @@ def test_verify_metric_kwargs(hindcast_hist_obs_1d):
         threshold=0.5,
         reference='historical',
     )
+
+
+def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
+    """Test that HindcastEnsemble fails when metric_kwargs expected but not given."""
+    hindcast = hindcast_hist_obs_1d
+    with pytest.raises(ValueError) as excinfo:
+        hindcast.verify(metric='threshold_brier_score', comparison='m2o')
+    assert 'Please provide threshold.' == str(excinfo.value)

@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.1.0 (2020-06-08)
+climpred v2.x.x (2020-06-xx)
 ============================
 
 New Features
@@ -12,6 +12,15 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
 - `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
+
+Bug Fixes
+---------
+
+- ``PredictionEnsemble.verify()``, ``PerfectModelEnsemble.compute_uninitialized()`` and
+  ``PerfectModelEnsemble.bootstrap()`` now accept ``metric_kwargs``. (:pr:`387`)
+  `Aaron Spring`_.
+- ``HindcastEnsemble.verify()`` now accepts ``metric_kwargs``. (:pr:`387`)
+  `Aaron Spring`_.
 
 Documentation
 -------------
@@ -23,6 +32,12 @@ Bug Fixes
 ---------
 - ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
   (:pr:`383`) `Aaron Spring`_.
+
+Internals/Minor Fixes
+---------------------
+- ``PerfectModelEnsemble.verify()`` replaces deprecated
+  ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
+  (:pr:`387`) `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)

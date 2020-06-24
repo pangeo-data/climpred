@@ -444,7 +444,7 @@ class PredictionEnsemble:
             **xesmf_kwargs,
         )
         if smooth_fct == smooth_goddard_2013 or smooth_fct == temporal_smoothing:
-            self.temporally_smoothed = tsmooth_kws
+            self._temporally_smoothed = tsmooth_kws
         return self
 
 
@@ -597,6 +597,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison=comparison,
             **metric_kwargs,
         )
+        if isinstance(self._temporally_smoothed, dict):
+            init_skill = _reset_temporal_axis(
+                init_skill, self._temporally_smoothed, dim='lead'
+            )
         if isinstance(reference, str):
             reference = [reference]
         elif reference is None:
@@ -619,10 +623,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             dim='skill',
         )
         all_skills['skill'] = skill_labels
-        if isinstance(self.temporally_smoothed, dict):
-            all_skills = _reset_temporal_axis(all_skills, self.temporally_smoothed, dim='lead')
         return all_skills.squeeze()
-
 
     def compute_metric(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
         warnings.warn(
@@ -664,8 +665,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison=comparison,
             **metric_kwargs,
         )
-        if isinstance(self.temporally_smoothed, dict):
-            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
+        if isinstance(self._temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
     def compute_persistence(self, metric='pearson_r'):
@@ -699,8 +700,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             alignment='same_inits',
         )
-        if isinstance(self.temporally_smoothed, dict):
-            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
+        if isinstance(self._temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
     def bootstrap(
@@ -1072,6 +1073,6 @@ class HindcastEnsemble(PredictionEnsemble):
             reference=reference,
             **metric_kwargs,
         )
-        if isinstance(self.temporally_smoothed, dict):
-            res = _reset_temporal_axis(res, self.temporally_smoothed, dim='lead')
+        if isinstance(self._temporally_smoothed, dict):
+            res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res

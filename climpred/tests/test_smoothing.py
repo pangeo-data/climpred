@@ -128,7 +128,8 @@ def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
         he_smoothed.get_initialized().lead.size
         == pm.get_initialized().lead.size - smooth + 1
     )
-    skill = he_smoothed.compute_metric(metric='acc', comparison='m2e')
+    assert isinstance(he_smoothed._temporally_smoothed, dict)
+    skill = he_smoothed.verify(metric='acc', comparison='m2e')
     assert skill.lead.size == pm.get_initialized().lead.size - smooth + 1
     assert skill.lead[0] == f'1-{1+smooth-1}'
 

@@ -565,7 +565,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Args:
             metric (str, default 'pearson_r' or Metric):
               Metric to apply in the comparison.
-            comparison (str, default 'm2m'):
+            comparison (str, default 'm2e'):
               How to compare the climate prediction ensemble to the control.
             reference (str, list of str): reference forecasts to compare against.
             **metric_kwargs (optional): arguments passed to `metric`.

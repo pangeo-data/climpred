@@ -10,6 +10,8 @@ New Features
 
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
+- `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
+  and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 
 Bug Fixes
 ---------
@@ -19,18 +21,20 @@ Bug Fixes
   `Aaron Spring`_.
 - ``HindcastEnsemble.verify()`` now accepts ``metric_kwargs``. (:pr:`387`)
   `Aaron Spring`_.
-
-Documentation
--------------
-
-- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
-  (:pr:`378`) `Riley X. Brady`_.
+- ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
+  (:pr:`383`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
 - ``PerfectModelEnsemble.verify()`` replaces deprecated
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
+
+Documentation
+-------------
+
+- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
+  (:pr:`378`, :pr:`383`) `Riley X. Brady`_ and `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)

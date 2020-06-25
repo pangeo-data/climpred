@@ -323,13 +323,13 @@ def plot_lead_timeseries_hindcast(
             if isinstance(obs_item, xr.Dataset):
                 obs_item = obs_item[variable]
             obs_item.plot(
-                    ax=ax,
-                    color='k',
-                    lw=3,
-                    ls=linestyles[i],
-                    label=f'reference: {obs_name}',
-                    zorder=hind.lead.size + 2,
-                )
+                ax=ax,
+                color='k',
+                lw=3,
+                ls=linestyles[i],
+                label=f'reference: {obs_name}',
+                zorder=hind.lead.size + 2,
+            )
 
     # show only one item per label in legend
     handles, labels = ax.get_legend_handles_labels()

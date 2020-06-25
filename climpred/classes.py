@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import xarray as xr
 from IPython.display import display_html
@@ -20,6 +22,7 @@ from .checks import (
 )
 from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError, VariableError
+from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -153,6 +156,34 @@ class PredictionEnsemble:
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
+
+    def plot(self, variable=None, ax=None, show_members=False, cmap=None):
+        """Plot datasets from PredictionEnsemble.
+
+        Args:
+            variable (str or None): `variable` to show. Defaults to first in data_vars.
+            ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
+            show_members (bool): whether to display all members individually.
+                Defaults to False.
+            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `jet` for
+                `HindcastEnsemble` and `tab10` for `PerfectModelEnsemble`.
+
+        Returns:
+            ax: plt.axes
+
+        """
+        if self.kind == 'hindcast':
+            if cmap is None:
+                cmap = 'jet'
+            return plot_lead_timeseries_hindcast(
+                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+            )
+        elif self.kind == 'perfect':
+            if cmap is None:
+                cmap = 'tab10'
+            return plot_ensemble_perfect_model(
+                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+            )
 
     def _math(self, other, operator):
         """Helper function for __add__, __sub__, __mul__, __truediv__.
@@ -556,17 +587,22 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Returns the control as an xarray dataset."""
         return self._datasets['control']
 
-    def compute_metric(self, metric='pearson_r', comparison='m2m'):
+    def verify(
+        self, metric='pearson_r', comparison='m2e', reference=None, **metric_kwargs
+    ):
         """Compares the initialized ensemble to the control run.
 
         Args:
-            metric (str, default 'pearson_r'):
+            metric (str, default 'pearson_r' or Metric):
               Metric to apply in the comparison.
-            comparison (str, default 'm2m'):
+            comparison (str, default 'm2e'):
               How to compare the climate prediction ensemble to the control.
+            reference (str, list of str): reference forecasts to compare against.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
-            Result of the comparison as a Dataset.
+            Dataset of comparison results with `skill` dimension for difference
+                references compared against.
         """
         has_dataset(self._datasets['control'], 'control', 'compute a metric')
         input_dict = {
@@ -574,14 +610,46 @@ class PerfectModelEnsemble(PredictionEnsemble):
             'control': self._datasets['control'],
             'init': True,
         }
-        return self._apply_climpred_function(
+        init_skill = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            **metric_kwargs,
         )
+        if isinstance(reference, str):
+            reference = [reference]
+        elif reference is None:
+            return init_skill
+        skill_labels = ['init']
+        if 'historical' in reference or 'uninitialzed' in reference:
+            uninit_skill = self.compute_uninitialized(
+                metric=metric, comparison=comparison, **metric_kwargs
+            )
+            skill_labels.append('historical')
+        else:
+            uninit_skill = None
+        if 'persistence' in reference:
+            persistence_skill = self.compute_persistence(metric=metric)
+            skill_labels.append('persistence')
+        else:
+            persistence_skill = None
+        all_skills = xr.concat(
+            [s for s in [init_skill, uninit_skill, persistence_skill] if s is not None],
+            dim='skill',
+        )
+        all_skills['skill'] = skill_labels
+        return all_skills.squeeze()
 
-    def compute_uninitialized(self, metric='pearson_r', comparison='m2e'):
+    def compute_metric(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
+        warnings.warn(
+            'compute_metric() is depreciated. Please use verify(reference=None).'
+        )
+        return self.verify(metric=metric, comparison=comparison, **metric_kwargs)
+
+    def compute_uninitialized(
+        self, metric='pearson_r', comparison='m2e', **metric_kwargs
+    ):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
@@ -591,6 +659,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               How to compare to the control run.
             running (int, default None):
               Size of the running window for variance smoothing.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Result of the comparison as a Dataset.
@@ -610,6 +679,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            **metric_kwargs,
         )
 
     def compute_persistence(self, metric='pearson_r'):
@@ -651,6 +721,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         sig=95,
         iterations=500,
         pers_sig=None,
+        **metric_kwargs,
     ):
         """Bootstrap ensemble simulations with replacement.
 
@@ -666,6 +737,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 bootstrapping with replacement.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Dictionary of Datasets for each variable applied to with the
@@ -704,6 +776,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
+            **metric_kwargs,
         )
 
 
@@ -877,6 +950,7 @@ class HindcastEnsemble(PredictionEnsemble):
         comparison='e2o',
         alignment='same_verifs',
         dim='init',
+        **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations/verification data.
 
@@ -900,6 +974,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 - same_verif: slice to a common/consistent verification time frame prior
                 to computing metric. This philosophy follows the thought that each lead
                 should be based on the same set of verification dates.
+            **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
             Dataset of comparison results (if comparing to one observational product),
@@ -1006,6 +1081,7 @@ class HindcastEnsemble(PredictionEnsemble):
             dim=dim,
             hist=hist,
             reference=reference,
+            **metric_kwargs,
         )
 
     def reduce_bias(self, how='mean', **kwargs):

@@ -268,7 +268,7 @@ def plot_lead_timeseries_hindcast(
 
     """
     _check_only_climpred_dims(he)
-    if variable is not None:
+    if variable is None:
         variable = list(he.get_initialized().data_vars)[0]
     hind = he.get_initialized()[variable]
     lead_freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)[1]
@@ -278,7 +278,7 @@ def plot_lead_timeseries_hindcast(
     obs = he._datasets['observations']
 
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
-    if ax is not None:
+    if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
     if isinstance(hist, xr.DataArray):
         if 'member' in hist.dims and not show_members:
@@ -360,7 +360,7 @@ def plot_ensemble_perfect_model(
     """
 
     _check_only_climpred_dims(pm)
-    if variable is not None:
+    if variable is None:
         variable = list(pm.get_initialized().data_vars)[0]
     initialized = pm.get_initialized()[variable]
     uninitialized = pm.get_uninitialized()
@@ -377,7 +377,7 @@ def plot_ensemble_perfect_model(
 
     control_color = 'gray'
 
-    if ax is not None:
+    if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
 
     cmap = mpl.cm.get_cmap(cmap, initialized.init.size)

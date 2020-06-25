@@ -260,7 +260,7 @@ def plot_lead_timeseries_hindcast(
         variable (str or None): `variable` to plot. Defaults to the first in data_vars.
         ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
         show_members (bool): whether to display all members individually.
-            Defaults to True.
+            Defaults to False.
         cmap (str): Name of matplotlib-recognized colorbar. Defaults to 'jet'.
 
     Returns:
@@ -268,7 +268,7 @@ def plot_lead_timeseries_hindcast(
 
     """
     _check_only_climpred_dims(he)
-    if not variable:
+    if variable is not None:
         variable = list(he.get_initialized().data_vars)[0]
     hind = he.get_initialized()[variable]
     lead_freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)[1]
@@ -278,7 +278,7 @@ def plot_lead_timeseries_hindcast(
     obs = he._datasets['observations']
 
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
-    if not ax:
+    if ax is not None:
         _, ax = plt.subplots(figsize=(10, 4))
     if isinstance(hist, xr.DataArray):
         if 'member' in hist.dims and not show_members:
@@ -317,7 +317,7 @@ def plot_lead_timeseries_hindcast(
 
     linestyles = ['-', ':', '-.', '--']
     if len(obs) > len(linestyles):
-        raise ValueError(f'Please provide fewer than {len(linestyles)} observations.')
+        raise ValueError(f'Please provide fewer than {len(linestyles)+1} observations.')
     if len(obs) > 0:
         for i, (obs_name, obs_item) in enumerate(obs.items()):
             if isinstance(obs_item, xr.Dataset):
@@ -342,7 +342,7 @@ def plot_lead_timeseries_hindcast(
 
 
 def plot_ensemble_perfect_model(
-    pm, variable=None, ax=False, show_members=True, cmap='tab10'
+    pm, variable=None, ax=None, show_members=False, cmap='tab10'
 ):
     """Plot datasets from PerfectModelEnsemble.
 
@@ -351,8 +351,8 @@ def plot_ensemble_perfect_model(
         variable (str or None): `variable` to plot. Defaults to the first in data_vars.
         ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
         show_members (bool): whether to display all members individually.
-            Defaults to True.
-        cmap (str): Name of matplotlib-recognized colorbar.. Defaults to 'tab10'.
+            Defaults to False.
+        cmap (str): Name of matplotlib-recognized colorbar. Defaults to 'tab10'.
 
     Returns:
         ax: plt.axes
@@ -360,7 +360,7 @@ def plot_ensemble_perfect_model(
     """
 
     _check_only_climpred_dims(pm)
-    if not variable:
+    if variable is not None:
         variable = list(pm.get_initialized().data_vars)[0]
     initialized = pm.get_initialized()[variable]
     uninitialized = pm.get_uninitialized()
@@ -377,7 +377,7 @@ def plot_ensemble_perfect_model(
 
     control_color = 'gray'
 
-    if not ax:
+    if ax is not None:
         _, ax = plt.subplots(figsize=(10, 4))
 
     cmap = mpl.cm.get_cmap(cmap, initialized.init.size)

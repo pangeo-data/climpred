@@ -275,7 +275,7 @@ def plot_lead_timeseries_hindcast(
     hist = he.get_uninitialized()
     if isinstance(hist, xr.Dataset):
         hist = hist[variable]
-    obs = he.get_observations()
+    obs = he._datasets['observations']
 
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
     if not ax:
@@ -321,13 +321,14 @@ def plot_lead_timeseries_hindcast(
     if len(obs) > 0:
         for i, (obs_name, obs_item) in enumerate(obs.items()):
             if isinstance(obs_item, xr.Dataset):
-                obs_item[variable].plot(
+                obs_item = obs_item[variable]
+            obs_item.plot(
                     ax=ax,
                     color='k',
                     lw=3,
                     ls=linestyles[i],
                     label=f'reference: {obs_name}',
-                    zorder=hind.lead.size + 1,
+                    zorder=hind.lead.size + 2,
                 )
 
     # show only one item per label in legend
@@ -387,12 +388,6 @@ def plot_ensemble_perfect_model(
             dsu = uninitialized.sel(init=i).rename({'lead': 'time'})
         # convert lead time into cftime
         start_str = i.strftime()[:10]
-        # yi,mi,di = i.strftime().split(' ')[0].split('-')
-        # i_cfdatetime = cftime.datetime(int(yi),int(mi), int(di))
-        # try to plot vertical bars for each init
-        # now fails todo: how to axvline(cftime)?
-        # ax.axvline(x=i_cfdatetime,calendar='noleap')
-        # ax.axvline(x=int(init.init.isel(init=[i]).dt.year.values))
         if initialized.lead.min() == 0:
             dsi['time'] = xr.cftime_range(
                 start=start_str,
@@ -407,10 +402,6 @@ def plot_ensemble_perfect_model(
                 periods=dsi.time.size,
                 calendar=calendar,
             )
-            # need to align with discussion about init times:
-            # I propose: initialization: as the exact date of the start of the forecast
-            #            observation/hist time: as the middle of time spanned
-            #            lead: as ints but when converted to real time as middle of time
             dsi['time'] = shift_cftime_index(dsi.time, 'time', 1, lead_freq)
         if uninitialized_present:
             dsu['time'] = dsi['time']

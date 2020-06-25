@@ -155,15 +155,15 @@ class PredictionEnsemble:
             return _display_metadata(self)
 
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
-        """Plot datasets from HindcastEnsemble.
+        """Plot datasets from PredictionEnsemble.
 
         Args:
-            he (PredictionEnsemble): PredictionEnsemble.
             variable (str or None): `variable` to show. Defaults to first in data_vars.
-            ax (plt.axes): axis to plot to. Defaults to False. Creates new.
+            ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
             show_members (bool): whether to display all members individually.
-                Defaults to True.
-            cmap (str): Name of plt colorbar. Defaults to default.
+                Defaults to False.
+            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `jet` for
+                `HindcastEnsemble` and `tab10` for `PerfectModelEnsemble`.
 
         Returns:
             ax: plt.axes

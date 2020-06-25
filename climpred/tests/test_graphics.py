@@ -71,6 +71,8 @@ def test_PerfectModelEnsemble_plot(
     pm.plot(**kws)
     pm = pm.add_control(PM_ds_control_1d)
     pm.plot(**kws)
+    pm = pm.generate_uninitialized()
+    pm.plot(**kws)
 
 
 def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):

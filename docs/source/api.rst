@@ -51,8 +51,6 @@ Analysis Functions
     :toctree: api/
 
     HindcastEnsemble.verify
-    HindcastEnsemble.compute_persistence
-    HindcastEnsemble.compute_uninitialized
 
 --------------
 Pre-Processing
@@ -185,12 +183,8 @@ Statistics
 .. autosummary::
     :toctree: api/
 
-    autocorr
-    corr
     decorrelation_time
     dpp
-    rm_poly
-    rm_trend
     varweighted_mean_period
 
 Tutorial

@@ -1,5 +1,6 @@
 cftime>=1.1.2
 eofs
+esmtools>=1.1.2
 matplotlib
 numpy
 pandas

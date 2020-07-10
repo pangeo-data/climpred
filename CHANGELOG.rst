@@ -23,12 +23,16 @@ Bug Fixes
   `Aaron Spring`_.
 - ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
   (:pr:`383`) `Aaron Spring`_.
+- ``PerfectModelEnsemble.verify()`` now accepts ``'uninitialized'`` as a reference.
+  (:pr:`395`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
 - ``PerfectModelEnsemble.verify()`` replaces deprecated
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
+- Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
+  ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 
 Documentation
 -------------

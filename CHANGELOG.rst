@@ -15,6 +15,12 @@ New Features
 - Assertion functions for ``PredictionEnsemble``:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
 
+Deprecated
+----------
+
+- ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
+
+
 Bug Fixes
 ---------
 
@@ -40,11 +46,6 @@ Internals/Minor Fixes
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
 
-Documentation
--------------
-
-- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
-  (:pr:`378`, :pr:`383`) `Riley X. Brady`_ and `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)

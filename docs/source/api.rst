@@ -128,7 +128,7 @@ well as a verification product. Our object
 :py:class:`~climpred.classes.HindcastEnsemble` and
 :py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the
 analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will
-likely depreciate the ability to call them directly.
+likely deprecate the ability to call them directly.
 
 Bootstrap
 ~~~~~~~~~
@@ -236,4 +236,3 @@ Smoothing
 
     temporal_smoothing
     spatial_smoothing_xesmf
-    _reset_temporal_axis

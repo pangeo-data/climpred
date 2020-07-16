@@ -286,9 +286,8 @@ def bootstrap_uninitialized_ensemble(hind, hist):
 def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     """Create a pseudo-ensemble from control run.
 
-    Bootstrap random numbers for years to
-    construct an uninitialized ensemble from. This assumes a continous control
-    simulation without gaps.
+    Bootstrap random numbers for years to construct an uninitialized ensemble from.
+    This assumes a continous control simulation without gaps.
 
     Note:
         Needed for block bootstrapping  a metric in perfect-model framework. Takes

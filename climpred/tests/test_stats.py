@@ -218,3 +218,11 @@ def test_corr_autocorr(PM_da_control_3d):
     res2 = autocorr(PM_da_control_3d, return_p=True)
     for i in [0, 1]:
         assert_allclose(res1[i], res2[i])
+
+
+def test_rm_trend_carries_lead_attrs(
+    hind_ds_initialized_1d, hist_ds_uninitialized_1d, observations_ds_1d
+):
+    hind_ds_initialized_1d.lead.attrs['units'] = 'years'
+    detrended = rm_trend(hind_ds_initialized_1d, 'init')
+    assert 'units' in detrended.lead.attrs

@@ -21,6 +21,7 @@ from .checks import (
 )
 from .constants import CONCAT_KWARGS
 from .exceptions import DimensionError, VariableError
+from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -156,6 +157,34 @@ class PredictionEnsemble:
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
+
+    def plot(self, variable=None, ax=None, show_members=False, cmap=None):
+        """Plot datasets from PredictionEnsemble.
+
+        Args:
+            variable (str or None): `variable` to show. Defaults to first in data_vars.
+            ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
+            show_members (bool): whether to display all members individually.
+                Defaults to False.
+            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `jet` for
+                `HindcastEnsemble` and `tab10` for `PerfectModelEnsemble`.
+
+        Returns:
+            ax: plt.axes
+
+        """
+        if self.kind == 'hindcast':
+            if cmap is None:
+                cmap = 'jet'
+            return plot_lead_timeseries_hindcast(
+                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+            )
+        elif self.kind == 'perfect':
+            if cmap is None:
+                cmap = 'tab10'
+            return plot_ensemble_perfect_model(
+                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+            )
 
     def _math(self, other, operator):
         """Helper function for __add__, __sub__, __mul__, __truediv__.

@@ -5,6 +5,12 @@ What's New
 climpred v2.x.x (2020-06-xx)
 ============================
 
+Breaking changes
+----------------
+
+- metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
+  instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+
 New Features
 ------------
 

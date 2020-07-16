@@ -13,11 +13,14 @@ from climpred.utils import get_metric_class
 def test_PerfectModelEnsemble_constant_forecasts(
     perfectModelEnsemble_initialized_control, metric, comparison, how
 ):
-    """Test PerfectModelEnsemble.verify() with perfect forecasts."""
+    """Test that PerfectModelEnsemble.verify() returns a perfect score for a perfectly
+    identical forecasts."""
     pe = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
-    if how == 'constant':
+    if how == 'constant':  # replaces the variable with all 1's
         pe = pe.apply(xr.ones_like)
-    elif how == 'increasing_by_lead':
+    elif (
+        how == 'increasing_by_lead'
+    ):  # sets variable values to cftime index in days to have increase over time.
         pe = pe.apply(xr.zeros_like)
         pe._datasets['initialized'] = (
             pe._datasets['initialized'] + pe._datasets['initialized'].lead
@@ -43,36 +46,40 @@ def test_PerfectModelEnsemble_constant_forecasts(
     assert skill == perfect_skill
 
 
+@pytest.mark.parametrize('alignment', ['same_inits', 'same_verif', 'maximize'])
 @pytest.mark.parametrize('how', ['constant', 'increasing_by_lead'])
 @pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
 @pytest.mark.parametrize('metric', HINDCAST_METRICS)
 def test_HindcastEnsemble_constant_forecasts(
-    hindcast_hist_obs_1d, metric, comparison, how
+    hindcast_hist_obs_1d, metric, comparison, how, alignment
 ):
-    """Test PerfectModelEnsemble.verify() with perfect forecasts."""
-    pe = hindcast_hist_obs_1d.isel(lead=[0, 1, 2])
-    if how == 'constant':
-        pe = pe.apply(xr.ones_like)
-    elif how == 'increasing_by_lead':
-        pe = pe.apply(xr.ones_like)
+    """Test that HindcastEnsemble.verify() returns a perfect score for a perfectly
+    identical forecasts."""
+    he = hindcast_hist_obs_1d.isel(lead=[0, 1, 2])
+    if how == 'constant':  # replaces the variable with all 1's
+        he = he.apply(xr.ones_like)
+    elif (
+        how == 'increasing_by_lead'
+    ):  # sets variable values to cftime index in days to have increase over time.
+        he = he.apply(xr.ones_like)
         # set initialized values to init in cftime days
         units = 'days since 1900-01-01'
-        pe._datasets['initialized'] = pe._datasets['initialized'] * xr.DataArray(
-            cftime.date2num(pe._datasets['initialized'].init, units), dims=['init']
+        he._datasets['initialized'] = he._datasets['initialized'] * xr.DataArray(
+            cftime.date2num(he._datasets['initialized'].init, units), dims=['init']
         )
         # add initialized leads
-        pe._datasets['initialized'] = (
-            pe._datasets['initialized'] + pe._datasets['initialized'].lead
+        he._datasets['initialized'] = (
+            he._datasets['initialized'] + he._datasets['initialized'].lead
         )
         # set uninitialized values to init in cftime days
-        pe._datasets['uninitialized'] = pe._datasets['uninitialized'] * xr.DataArray(
-            cftime.date2num(pe._datasets['uninitialized'].time, units), dims=['time']
+        he._datasets['uninitialized'] = he._datasets['uninitialized'] * xr.DataArray(
+            cftime.date2num(he._datasets['uninitialized'].time, units), dims=['time']
         )
         # set obs values to init in cftime days
-        pe._datasets['observations']['obs'] = pe._datasets['observations'][
+        he._datasets['observations']['obs'] = he._datasets['observations'][
             'obs'
         ] * xr.DataArray(
-            cftime.date2num(pe._datasets['observations']['obs'].time, units),
+            cftime.date2num(he._datasets['observations']['obs'].time, units),
             dims=['time'],
         )
     # get metric and comparison strings incorporating alias
@@ -89,8 +96,12 @@ def test_HindcastEnsemble_constant_forecasts(
     else:
         metric_kwargs = {'useless_kwargs': 'to_ignore'}
     if Metric.probabilistic:
-        skill = pe.verify(metric=metric, comparison='m2o', **metric_kwargs)
+        skill = he.verify(
+            metric=metric, comparison='m2o', alignment=alignment, **metric_kwargs
+        )
     else:
-        skill = pe.verify(metric=metric, comparison=comparison, **metric_kwargs)
+        skill = he.verify(
+            metric=metric, comparison=comparison, alignment=alignment, **metric_kwargs
+        )
     perfect_skill = Metric.perfect
     assert skill == perfect_skill

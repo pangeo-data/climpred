@@ -146,6 +146,8 @@ class PredictionEnsemble:
         # run.
         self._datasets = {'initialized': xobj, 'uninitialized': {}}
         self.kind = 'prediction'
+        self._temporally_smoothed = None
+        self._is_annual_lead = None
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
@@ -383,7 +385,7 @@ class PredictionEnsemble:
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if 'goddard' in smooth_kws:
-                if self._datasets['initialized'].lead.attrs['units'] == 'years':
+                if self._is_annual_lead:
                     smooth_fct = smooth_goddard_2013
                     tsmooth_kws = {'lead': 4}  # default
                     d_lon_lat_kws = {'lon': 5, 'lat': 5}  # default
@@ -396,7 +398,9 @@ class PredictionEnsemble:
                     'Please provide from list of available smoothings: \
                      ["goddard2013"]'
                 )
-        # TODO: make independent of lon and lat
+        # TODO: actively searches for lot and lat in dims. Maybe this part of the code
+        # could be more robust in how it finds these two spatial dimensions regardless
+        # of name. Optional work in progress comment.
         elif isinstance(smooth_kws, dict):
             non_time_dims = [
                 dim for dim in smooth_kws.keys() if dim not in ['time', 'lead']
@@ -434,12 +438,10 @@ class PredictionEnsemble:
             raise ValueError(
                 'Please provide kwargs as dict or str and not', type(smooth_kws)
             )
-        rename_dim = False
-        self = self.apply(
+        self = self.map(
             smooth_fct,
             tsmooth_kws=tsmooth_kws,
             d_lon_lat_kws=d_lon_lat_kws,
-            rename_dim=rename_dim,
             how=how,
             **xesmf_kwargs,
         )
@@ -597,7 +599,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison=comparison,
             **metric_kwargs,
         )
-        if isinstance(self._temporally_smoothed, dict):
+        if self._temporally_smoothed:
             init_skill = _reset_temporal_axis(
                 init_skill, self._temporally_smoothed, dim='lead'
             )

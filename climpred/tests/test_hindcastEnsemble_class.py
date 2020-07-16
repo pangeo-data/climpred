@@ -44,7 +44,6 @@ def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitiali
     assert hindcast.get_uninitialized()
 
 
-@pytest.mark.slow
 def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d):
     """Test to see if verify can be run from the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)

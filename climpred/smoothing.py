@@ -184,9 +184,7 @@ def temporal_smoothing(ds, tsmooth_kws=None, how='mean', d_lon_lat_kws=None):
     return ds_smoothed
 
 
-def _reset_temporal_axis(
-    ds_smoothed, tsmooth_kws=None, dim='lead', set_lead_center=True
-):
+def _reset_temporal_axis(ds_smoothed, tsmooth_kws, dim='lead', set_lead_center=True):
     """Reduce and reset temporal axis. See temporal_smoothing(). Should be
     used after calculation of skill to maintain readable labels for skill
     computation.
@@ -201,9 +199,14 @@ def _reset_temporal_axis(
     Returns:
         Smoothed Dataset with updated labels for smoothed temporal dimension.
     """
-    if not ('time' in tsmooth_kws or 'lead' in tsmooth_kws):
+    # bugfix: actually tsmooth_kws should only dict
+    if tsmooth_kws is None or callable(tsmooth_kws):
+        return ds_smoothed
+    if not ('time' in tsmooth_kws.keys() or 'lead' in tsmooth_kws.keys()):
         raise ValueError('tsmooth_kws does not contain a time dimension.', tsmooth_kws)
-    smooth = list(tsmooth_kws.values())[0]
+    for c in ['time', 'lead']:
+        if c in tsmooth_kws.keys():
+            smooth = tsmooth_kws[c]
     ds_smoothed[dim] = [f'{t}-{t + smooth - 1}' for t in ds_smoothed[dim].values]
     if set_lead_center:
         _set_center_coord(ds_smoothed, dim)

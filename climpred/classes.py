@@ -1104,8 +1104,10 @@ class HindcastEnsemble(PredictionEnsemble):
             reference=reference,
             **metric_kwargs,
         )
-        if self._temporally_smoothed:
-            if isinstance(res, dict):
+        print(res)
+        print(self._temporally_smoothed)
+        if self._temporally_smoothed and self._temporally_smoothed is not None:
+            if isinstance(res, dict) and not isinstance(res, xr.Dataset):
                 for res_key, res_item in res.items():
                     res[res_key] = _reset_temporal_axis(
                         res_item, self._temporally_smoothed, dim='lead'

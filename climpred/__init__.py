@@ -11,6 +11,7 @@ from . import (
     relative_entropy,
     smoothing,
     stats,
+    testing,
     tutorial,
 )
 from .classes import HindcastEnsemble, PerfectModelEnsemble

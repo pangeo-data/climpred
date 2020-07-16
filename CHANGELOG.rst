@@ -12,6 +12,8 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
 - `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
+- Assertion functions for ``PredictionEnsemble``:
+  ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
 
 Bug Fixes
 ---------

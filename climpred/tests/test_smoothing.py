@@ -9,6 +9,7 @@ from climpred.smoothing import (
     smooth_goddard_2013,
     temporal_smoothing,
 )
+from climpred.testing import assert_PredictionEnsemble
 
 try:
     from climpred.smoothing import spatial_smoothing_xesmf
@@ -101,16 +102,6 @@ def test_compute_after_smooth_goddard_2013(
     assert not north_atlantic.isnull().any()
 
 
-@pytest.mark.parametrize('tsmooth_kws', [{'lead': 2}, {'lead': 4}, {'time': 4}])
-def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, tsmooth_kws):
-    he = hindcast_recon_3d
-    dim = list(tsmooth_kws.keys())[0]
-    he = he.smooth(smooth_kws=tsmooth_kws)
-    assert he._datasets['initialized'].lead.attrs['units']
-    skill = he.verify(metric='acc')
-    assert skill.lead[0] == f'1-{1+tsmooth_kws[dim]-1}'
-
-
 @pytest.mark.parametrize('smooth', [2, 4])
 @pytest.mark.parametrize(
     'pm',
@@ -123,17 +114,18 @@ def test_HindcastEnsemble_temproal_smooth_leadrange(hindcast_recon_3d, tsmooth_k
 def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
     """Test that PredictionEnsemble.smooth({'lead': int}) aggregates lead."""
     pm = pm.isel(lead=range(6))
-    he_smoothed = pm.smooth({'lead': smooth})
+    pm_smoothed = pm.smooth({'lead': smooth})
     assert (
-        he_smoothed.get_initialized().lead.size
+        pm_smoothed.get_initialized().lead.size
         == pm.get_initialized().lead.size - smooth + 1
     )
-    assert isinstance(he_smoothed._temporally_smoothed, dict)
-    skill = he_smoothed.verify(metric='acc', comparison='m2e')
+    assert pm_smoothed._temporally_smoothed
+    skill = pm_smoothed.verify(metric='acc', comparison='m2e')
     assert skill.lead.size == pm.get_initialized().lead.size - smooth + 1
     assert skill.lead[0] == f'1-{1+smooth-1}'
 
 
+@pytest.mark.parametrize('dim', ['time', 'lead'])
 @pytest.mark.parametrize('smooth', [2, 4])
 @pytest.mark.parametrize(
     'he',
@@ -143,9 +135,10 @@ def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
         pytest.lazy_fixture('hindcast_recon_1d_dm'),
     ],
 )
-def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth):
-    """Test that PredictionEnsemble.smooth({'lead': int}) aggregates lead."""
-    he_smoothed = he.smooth({'lead': smooth})
+def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth, dim):
+    """Test that HindcastEnsemble.smooth({dim: int}) aggregates lead regardless whether
+    time or lead is given as dim."""
+    he_smoothed = he.smooth({dim: smooth})
     assert (
         he_smoothed.get_initialized().lead.size
         == he.get_initialized().lead.size - smooth + 1
@@ -158,7 +151,7 @@ def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth):
 @pytest.mark.parametrize('step', [1, 2])
 @pytest.mark.parametrize('dim', [['lon'], ['lat'], ['lon', 'lat']])
 def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim, step):
-    """Test that PredictionEnsemble.smooth({dim: int}) aggregates dim."""
+    """Test that HindcastEnsemble.smooth({dim: int}) aggregates dim."""
     he = hindcast_recon_3d
     smooth_kws = {key: step for key in dim}
     he_smoothed = he.smooth(smooth_kws)
@@ -169,6 +162,7 @@ def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim
 
 
 def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_cftime):
+    """Test that PerfectModelEnsemble can smooth by mean and sum aggregation."""
     pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
     pm_smoothed_mean = pm.smooth({'lead': 4}, how='mean')
     pm_smoothed_sum = pm.smooth({'lead': 4}, how='sum')
@@ -179,6 +173,8 @@ def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_c
 
 
 def test_spatial_smoothing_xesmf(hindcast_recon_3d):
+    """Test different regridding methods from xesmf.regrid kwargs yield different
+    results."""
     he = hindcast_recon_3d
     he_bil = he.smooth('goddard', method='bilinear')
     he_patch = he.smooth('goddard', method='patch')
@@ -186,21 +182,29 @@ def test_spatial_smoothing_xesmf(hindcast_recon_3d):
 
 
 def test_set_center_coord():
+    """Test that center coords are set to the middle of the lead range."""
     da = xr.DataArray(np.arange(2), dims='lead', coords={'lead': ['1-3', '2-4']})
     actual = _set_center_coord(da).lead_center.values
     expected = [2.0, 3.0]
     assert (actual == expected).all()
 
 
+@pytest.mark.parametrize(
+    'smooth', [{'lead': 4, 'lon': 5, 'lat': 5}, 'goddard', 'goddard2013']
+)
 def test_PredictionEnsemble_goddard(
-    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+    perfectModelEnsemble_initialized_control_1d_ym_cftime, smooth
 ):
+    """Test that PredictionEnsemble.smooth() understands goodard keys and does multiple
+    smoothings in one call."""
     pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
-    assert pm.smooth({'lead': 4, 'lon': 5, 'lat': 5})
+    assert pm.smooth(smooth)
 
 
 def test_PredictionEnsemble_smooth_None(
     perfectModelEnsemble_initialized_control_1d_ym_cftime,
 ):
+    """Test that PredictionEnsemble.smooth(None) does nothing."""
     pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
-    assert pm.smooth(None)
+    pm_smoothed = pm.smooth(None)
+    assert_PredictionEnsemble(pm, pm_smoothed)

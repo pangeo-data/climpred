@@ -184,7 +184,6 @@ def temporal_smoothing(ds, tsmooth_kws=None, how='mean', d_lon_lat_kws=None):
     return ds_smoothed
 
 
-@is_xarray(0)
 def _reset_temporal_axis(
     ds_smoothed, tsmooth_kws=None, dim='lead', set_lead_center=True
 ):

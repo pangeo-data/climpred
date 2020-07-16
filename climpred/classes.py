@@ -696,7 +696,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison=comparison,
             **metric_kwargs,
         )
-        if isinstance(self._temporally_smoothed, dict):
+        if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
@@ -731,7 +731,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             alignment='same_inits',
         )
-        if isinstance(self._temporally_smoothed, dict):
+        if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
@@ -1104,6 +1104,12 @@ class HindcastEnsemble(PredictionEnsemble):
             reference=reference,
             **metric_kwargs,
         )
-        if isinstance(self._temporally_smoothed, dict):
-            res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
+        if self._temporally_smoothed:
+            if isinstance(res, dict):
+                for res_key, res_item in res.items():
+                    res[res_key] = _reset_temporal_axis(
+                        res_item, self._temporally_smoothed, dim='lead'
+                    )
+            else:
+                res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res

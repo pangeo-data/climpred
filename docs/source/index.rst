@@ -95,6 +95,7 @@ repository and running ``pip install . --upgrade`` in the main directory
     metrics
     comparisons
     significance
+    smoothing
     terminology
     reference_forecast
 

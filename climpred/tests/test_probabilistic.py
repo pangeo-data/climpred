@@ -42,7 +42,7 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
         metric=metric,
         threshold=threshold,
         gaussian=True,
-        func=func,
+        logical=func,
         dim='member',
     )
     actual = actual.isnull().any()
@@ -74,7 +74,7 @@ def test_compute_hindcast_probabilistic(
         metric=metric,
         comparison=comparison,
         threshold=threshold,
-        func=func,
+        logical=func,
         dim='member',
     )
     # mean init because skill has still coords for init lead
@@ -113,7 +113,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         metric=metric,
         threshold=threshold,
         gaussian=True,
-        func=func,
+        logical=func,
         iterations=ITERATIONS,
         dim='member',
         resample_dim='member',
@@ -161,7 +161,7 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         metric=metric,
         threshold=threshold,
         gaussian=True,
-        func=func,
+        logical=func,
         iterations=ITERATIONS,
         dim='member',
         resample_dim='member',

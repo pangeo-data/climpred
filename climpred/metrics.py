@@ -1701,9 +1701,9 @@ def _brier_score(forecast, verif, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
         verif (xr.object): Verification data without ``member`` dim.
-        func (function): Function to be applied to verification data and forecasts
-                         and then ``mean('member')`` to get forecasts and
-                         verification data in interval [0,1].
+        logical (callable): Function with bool result to be applied to verification
+            data and forecasts and then ``mean('member')`` to get forecasts and
+            verification data in interval [0,1].
 
     Details:
         +-----------------+-----------+
@@ -1729,17 +1729,19 @@ def _brier_score(forecast, verif, **metric_kwargs):
 
     Example:
         >>> def pos(x): return x > 0
-        >>> compute_perfect_model(ds, control, metric='brier_score', func=pos)
+        >>> compute_perfect_model(ds, control, metric='brier_score', logical=pos)
     """
-    if 'func' in metric_kwargs:
-        func = metric_kwargs['func']
+    if 'logical' in metric_kwargs:
+        logical = metric_kwargs['logical']
+        if not callable(logical):
+            raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
     else:
         raise ValueError(
-            'Please provide a function `func` to be applied to comparison and \
+            'Please provide a callable `logical` to be applied to comparison and \
              verification data to get values in  interval [0,1]; \
              see properscoring.brier_score.'
         )
-    return brier_score(func(verif), func(forecast).mean('member'))
+    return brier_score(logical(verif), logical(forecast).mean('member'))
 
 
 __brier_score = Metric(

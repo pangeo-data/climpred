@@ -5,6 +5,12 @@ What's New
 climpred v2.x.x (2020-06-xx)
 ============================
 
+Breaking changes
+----------------
+
+- metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
+  instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+
 New Features
 ------------
 
@@ -46,6 +52,13 @@ Internals/Minor Fixes
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
 
+
+
+Internals/Minor Fixes
+---------------------
+- Test all metrics against synthetic data. (:pr:`388`) `Aaron Spring`_.
+- metric ``threshold_brier_score`` now requires ``logical`` instead of ``func`` as
+  ``metric_kwargs``. (:pr:`388`) `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)

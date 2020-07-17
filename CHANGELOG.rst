@@ -10,6 +10,25 @@ New Features
 
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
+- `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
+  and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
+
+Bug Fixes
+---------
+
+- ``PredictionEnsemble.verify()``, ``PerfectModelEnsemble.compute_uninitialized()`` and
+  ``PerfectModelEnsemble.bootstrap()`` now accept ``metric_kwargs``. (:pr:`387`)
+  `Aaron Spring`_.
+- ``HindcastEnsemble.verify()`` now accepts ``metric_kwargs``. (:pr:`387`)
+  `Aaron Spring`_.
+- ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
+  (:pr:`383`) `Aaron Spring`_.
+
+Internals/Minor Fixes
+---------------------
+- ``PerfectModelEnsemble.verify()`` replaces deprecated
+  ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
+  (:pr:`387`) `Aaron Spring`_.
 - Implemented bias reduction
   py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`. `reduce_bias(how='mean')`
   reduces the mean bias of initialized hindcasts with respect to a observation.

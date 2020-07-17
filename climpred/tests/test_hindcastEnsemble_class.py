@@ -4,14 +4,14 @@ from climpred import HindcastEnsemble
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
-    """Test to see hindcast ensemble can be initialized"""
+    """Test to see hindcast ensemble can be initialized with xr.Dataset."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     print(hindcast)
     assert hindcast
 
 
 def test_hindcastEnsemble_init_da(hind_da_initialized_1d):
-    """Test to see hindcast ensemble can be initialized with da"""
+    """Test to see hindcast ensemble can be initialized with xr.DataArray."""
     hindcast = HindcastEnsemble(hind_da_initialized_1d)
     assert hindcast
 
@@ -176,3 +176,21 @@ def test_mean_reduce_bias(hindcast_hist_obs_1d):
     assert biased_skill > bias_reduced_skill
     assert biased_skill > bias_reduced_skill_properly
     assert bias_reduced_skill_properly >= bias_reduced_skill
+
+
+def test_verify_metric_kwargs(hindcast_hist_obs_1d):
+    """Test that HindcastEnsemble works with metrics using metric_kwargs."""
+    assert hindcast_hist_obs_1d.verify(
+        metric='threshold_brier_score',
+        comparison='m2o',
+        threshold=0.5,
+        reference='historical',
+    )
+
+
+def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
+    """Test that HindcastEnsemble fails when metric_kwargs expected but not given."""
+    hindcast = hindcast_hist_obs_1d
+    with pytest.raises(ValueError) as excinfo:
+        hindcast.verify(metric='threshold_brier_score', comparison='m2o')
+    assert 'Please provide threshold.' == str(excinfo.value)

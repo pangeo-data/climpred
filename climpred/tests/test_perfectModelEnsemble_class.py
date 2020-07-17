@@ -89,3 +89,74 @@ def test_inplace(PM_ds_initialized_1d, PM_ds_control_1d):
     pm.sum('init')
     summed = pm.sum('init')
     assert pm != summed
+
+
+def test_verify(perfectModelEnsemble_initialized_control):
+    """Test that verify works."""
+    assert perfectModelEnsemble_initialized_control.verify(
+        metric='mse', comparison='m2e'
+    )
+
+
+def test_warning_compute_metric(perfectModelEnsemble_initialized_control):
+    """Test that compute_metric throws warning."""
+    with pytest.warns(UserWarning) as record:
+        assert perfectModelEnsemble_initialized_control.compute_metric(
+            metric='mse', comparison='m2e'
+        )
+        if not record:
+            pytest.fail('Expected a warning.')
+
+
+def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that verify with metric_kwargs works."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    assert pm.verify(metric='threshold_brier_score', comparison='m2c', threshold=0.5)
+
+
+@pytest.mark.parametrize(
+    'reference',
+    ['historical', ['historical'], 'persistence', None, ['historical', 'persistence']],
+)
+def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
+    """Test that verify works with references given."""
+    pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
+    skill = pm.verify(metric='rmse', comparison='m2e', reference=reference)
+    if isinstance(reference, str):
+        reference = [reference]
+    elif reference is None:
+        reference = []
+    if len(reference) == 0:
+        assert 'skill' not in skill.dims
+    else:
+        assert skill.skill.size == len(reference) + 1
+
+
+def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that verify without metric_kwargs fails."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    with pytest.raises(ValueError) as excinfo:
+        pm.verify(metric='threshold_brier_score', comparison='m2c')
+    assert 'Please provide threshold.' == str(excinfo.value)
+
+
+def test_compute_uninitialized_metric_kwargs(perfectModelEnsemble_initialized_control):
+    'Test that compute_uninitialized with metric_kwargs works'
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    pm = pm.generate_uninitialized()
+    assert pm.compute_uninitialized(
+        metric='threshold_brier_score', comparison='m2c', threshold=0.5
+    )
+
+
+def test_bootstrap_metric_kwargs(perfectModelEnsemble_initialized_control):
+    """Test that bootstrap with metric_kwargs works."""
+    pm = perfectModelEnsemble_initialized_control
+    pm = pm - pm.mean('time').mean('init')
+    pm = pm.generate_uninitialized()
+    assert pm.bootstrap(
+        metric='threshold_brier_score', comparison='m2c', threshold=0.5, iterations=3
+    )

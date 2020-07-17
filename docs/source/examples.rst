@@ -42,6 +42,5 @@ Decadal
    examples/decadal/perfect-model-predictability-demo.ipynb
    examples/decadal/tropical-pacific-ssts.ipynb
    examples/decadal/diagnose-potential-predictability.ipynb
-   examples/decadal/smoothing.ipynb
    examples/decadal/Significance.ipynb
    examples/decadal/bias_reduction.ipynb

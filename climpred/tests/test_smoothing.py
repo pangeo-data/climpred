@@ -1,12 +1,15 @@
+import numpy as np
 import pytest
+import xarray as xr
 
 from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
     _reset_temporal_axis,
+    _set_center_coord,
     smooth_goddard_2013,
-    spatial_smoothing_xrcoarsen,
     temporal_smoothing,
 )
+from climpred.testing import assert_PredictionEnsemble
 
 try:
     from climpred.smoothing import spatial_smoothing_xesmf
@@ -19,10 +22,10 @@ except ImportError:
 def test_reset_temporal_axis(PM_da_control_3d_full):
     """Test whether correct new labels are set."""
     smooth = 10
-    smooth_kws = {'time': smooth}
+    tsmooth_kws = {'time': smooth}
     first_ori = PM_da_control_3d_full.time[0].values
     first_actual = _reset_temporal_axis(
-        PM_da_control_3d_full, smooth_kws=smooth_kws
+        PM_da_control_3d_full, tsmooth_kws=tsmooth_kws, dim='time'
     ).time.values[0]
     first_expected = f'{first_ori}-{first_ori+smooth*1-1}'
     assert first_actual == first_expected
@@ -32,10 +35,10 @@ def test_reset_temporal_axis_lead(PM_da_initialized_3d_full):
     """Test whether correct new labels are set."""
     smooth = 10
     dim = 'lead'
-    smooth_kws = {dim: smooth}
+    tsmooth_kws = {dim: smooth}
     first_ori = PM_da_initialized_3d_full.lead[0].values
     first_actual = _reset_temporal_axis(
-        PM_da_initialized_3d_full, smooth_kws=smooth_kws
+        PM_da_initialized_3d_full, tsmooth_kws=tsmooth_kws
     )[dim].values[0]
     first_expected = f'{first_ori}-{first_ori+smooth*1-1}'
     assert first_actual == first_expected
@@ -44,48 +47,12 @@ def test_reset_temporal_axis_lead(PM_da_initialized_3d_full):
 def test_temporal_smoothing_reduce_length(PM_da_control_3d_full):
     """Test whether dimsize is reduced properly."""
     smooth = 10
-    smooth_kws = {'time': smooth}
-    actual = temporal_smoothing(PM_da_control_3d_full, smooth_kws=smooth_kws).time.size
+    tsmooth_kws = {'time': smooth}
+    actual = temporal_smoothing(
+        PM_da_control_3d_full, tsmooth_kws=tsmooth_kws
+    ).time.size
     expected = PM_da_control_3d_full.time.size - smooth + 1
     assert actual == expected
-
-
-def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims(PM_da_control_3d_full,):
-    """Test whether spatial dimsizes are properly reduced."""
-    da = PM_da_control_3d_full
-    coarsen_kws = {'x': 4, 'y': 2}
-    actual = spatial_smoothing_xrcoarsen(da, coarsen_kws)
-    for dim in coarsen_kws:
-        actual_x = actual[dim].size
-        expected_x = PM_da_control_3d_full[dim].size // coarsen_kws[dim]
-        assert actual_x == expected_x
-
-
-def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_no_coarsen_kws(
-    PM_da_control_3d_full,
-):
-    """Test whether spatial dimsizes are properly reduced if no coarsen_kws
-    given."""
-    da = PM_da_control_3d_full
-    coarsen_kws = {'x': 2, 'y': 2}
-    actual = spatial_smoothing_xrcoarsen(da, coarsen_kws=None)
-    for dim in coarsen_kws:
-        actual_dim_size = actual[dim].size
-        expected_dim_size = PM_da_control_3d_full[dim].size // coarsen_kws[dim]
-        assert actual_dim_size == expected_dim_size
-
-
-def test_spatial_smoothing_xrcoarsen_reduce_spatial_dims_CESM(
-    reconstruction_ds_3d_full,
-):
-    """Test whether spatial dimsizes are properly reduced."""
-    da = reconstruction_ds_3d_full.isel(nlon=slice(0, 24), nlat=slice(0, 36))
-    coarsen_kws = {'nlon': 4, 'nlat': 4}
-    actual = spatial_smoothing_xrcoarsen(da, coarsen_kws)
-    for dim in coarsen_kws:
-        actual_x = actual[dim].size
-        expected_x = da[dim].size // coarsen_kws[dim]
-        assert actual_x == expected_x
 
 
 @pytest.mark.skipif(not xesmf_loaded, reason='xesmf not installed')
@@ -133,3 +100,119 @@ def test_compute_after_smooth_goddard_2013(
     actual = compute_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()
+
+
+@pytest.mark.parametrize('smooth', [2, 4])
+@pytest.mark.parametrize(
+    'pm',
+    [
+        pytest.lazy_fixture('perfectModelEnsemble_initialized_control_1d_ym_cftime'),
+        pytest.lazy_fixture('perfectModelEnsemble_initialized_control_1d_mm_cftime'),
+        pytest.lazy_fixture('perfectModelEnsemble_initialized_control_1d_dm_cftime'),
+    ],
+)
+def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
+    """Test that PredictionEnsemble.smooth({'lead': int}) aggregates lead."""
+    pm = pm.isel(lead=range(6))
+    pm_smoothed = pm.smooth({'lead': smooth})
+    assert (
+        pm_smoothed.get_initialized().lead.size
+        == pm.get_initialized().lead.size - smooth + 1
+    )
+    assert pm_smoothed._temporally_smoothed
+    skill = pm_smoothed.verify(metric='acc', comparison='m2e')
+    assert skill.lead.size == pm.get_initialized().lead.size - smooth + 1
+    assert skill.lead[0] == f'1-{1+smooth-1}'
+
+
+@pytest.mark.parametrize('dim', ['time', 'lead'])
+@pytest.mark.parametrize('smooth', [2, 4])
+@pytest.mark.parametrize(
+    'he',
+    [
+        pytest.lazy_fixture('hindcast_recon_1d_ym'),
+        pytest.lazy_fixture('hindcast_recon_1d_mm'),
+        pytest.lazy_fixture('hindcast_recon_1d_dm'),
+    ],
+)
+def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth, dim):
+    """Test that HindcastEnsemble.smooth({dim: int}) aggregates lead regardless whether
+    time or lead is given as dim."""
+    he_smoothed = he.smooth({dim: smooth})
+    assert (
+        he_smoothed.get_initialized().lead.size
+        == he.get_initialized().lead.size - smooth + 1
+    )
+    skill = he_smoothed.verify(metric='acc', comparison='e2o', alignment='maximize')
+    assert skill.lead.size == he.get_initialized().lead.size - smooth + 1
+    assert skill.lead[0] == f'1-{1+smooth-1}'
+
+
+@pytest.mark.parametrize('step', [1, 2])
+@pytest.mark.parametrize('dim', [['lon'], ['lat'], ['lon', 'lat']])
+def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim, step):
+    """Test that HindcastEnsemble.smooth({dim: int}) aggregates dim."""
+    he = hindcast_recon_3d
+    smooth_kws = {key: step for key in dim}
+    he_smoothed = he.smooth(smooth_kws)
+    for d in dim:
+        assert he_smoothed.get_initialized()[d].any()
+        assert he_smoothed.get_observations('recon')[d].any()
+    assert he_smoothed.verify(metric='acc', comparison='e2o').any()
+
+
+def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_cftime):
+    """Test that PerfectModelEnsemble can smooth by mean and sum aggregation."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    pm_smoothed_mean = pm.smooth({'lead': 4}, how='mean')
+    pm_smoothed_sum = pm.smooth({'lead': 4}, how='sum')
+    assert (
+        pm_smoothed_sum.get_initialized().mean()
+        > pm_smoothed_mean.get_initialized().mean() * 2
+    )
+
+
+def test_spatial_smoothing_xesmf(hindcast_recon_3d):
+    """Test different regridding methods from xesmf.regrid kwargs yield different
+    results."""
+    he = hindcast_recon_3d
+    he_bil = he.smooth('goddard', method='bilinear')
+    he_patch = he.smooth('goddard', method='patch')
+    assert he_bil.get_initialized().mean() != he_patch.get_initialized().mean()
+
+
+def test_set_center_coord():
+    """Test that center coords are set to the middle of the lead range."""
+    da = xr.DataArray(np.arange(2), dims='lead', coords={'lead': ['1-3', '2-4']})
+    actual = _set_center_coord(da).lead_center.values
+    expected = [2.0, 3.0]
+    assert (actual == expected).all()
+
+
+@pytest.mark.parametrize(
+    'smooth', [{'lead': 4, 'lon': 5, 'lat': 5}, 'goddard', 'goddard2013']
+)
+def test_PredictionEnsemble_goddard(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime, smooth
+):
+    """Test that PredictionEnsemble.smooth() understands goodard keys and does multiple
+    smoothings in one call."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    assert pm.smooth(smooth)
+
+
+def test_PredictionEnsemble_smooth_None(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    """Test that PredictionEnsemble.smooth(None) does nothing."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    pm_smoothed = pm.smooth(None)
+    assert_PredictionEnsemble(pm, pm_smoothed)
+
+
+def test_HindcastEnsemble_temporal_smoothing_two_observations(hindcast_recon_1d_ym):
+    """Test HindcastEnsemble.smooth().verify() when more than observation present."""
+    he = hindcast_recon_1d_ym.add_observations(
+        hindcast_recon_1d_ym.get_observations('recon'), 'recon2'
+    )
+    assert he.smooth({'time': 2}).verify()

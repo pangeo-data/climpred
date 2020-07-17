@@ -238,6 +238,31 @@ def observations_da_1d(observations_ds_1d):
 
 
 @pytest.fixture
+def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
+    """HindcastEnsemble initialized with `initialized`, `reconstruction`(`recon`)."""
+    # fix to align coords
+    for c in ['TLAT', 'TLONG', 'TAREA']:
+        reconstruction_ds_3d[c] = hind_ds_initialized_3d[c]
+    hindcast = HindcastEnsemble(hind_ds_initialized_3d)
+    hindcast = hindcast.add_observations(reconstruction_ds_3d, 'recon')
+    hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
+        init=slice('1964', '2014')
+    ).mean('init')
+    return hindcast
+
+
+@pytest.fixture
+def hindcast_recon_1d_ym(hind_ds_initialized_1d, reconstruction_ds_1d):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `recon`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'recon')
+    hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
+        init=slice('1964', '2014')
+    ).mean('init')
+    return hindcast
+
+
+@pytest.fixture
 def hindcast_hist_obs_1d(
     hind_ds_initialized_1d, hist_ds_uninitialized_1d, observations_ds_1d
 ):
@@ -248,6 +273,34 @@ def hindcast_hist_obs_1d(
     hindcast = hindcast - hindcast.sel(time=slice('1964', '2014')).mean('time').sel(
         init=slice('1964', '2014')
     ).mean('init')
+    return hindcast
+
+
+@pytest.fixture
+def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
+    """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
+    time series (no grid)."""
+    hindcast = hindcast_recon_1d_ym.sel(time=slice('1964', '1970'))
+    hindcast._datasets['initialized'].lead.attrs['units'] = 'months'
+    hindcast._datasets['observations']['recon'] = (
+        hindcast._datasets['observations']['recon']
+        .resample(time='1MS')
+        .interpolate('linear')
+    )
+    return hindcast
+
+
+@pytest.fixture
+def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
+    """HindcastEnsemble with initialized and reconstruction (observations) as a daily
+    time series (no grid)."""
+    hindcast = hindcast_recon_1d_ym.sel(time=slice('1964', '1970'))
+    hindcast._datasets['initialized'].lead.attrs['units'] = 'days'
+    hindcast._datasets['observations']['recon'] = (
+        hindcast._datasets['observations']['recon']
+        .resample(time='1D')
+        .interpolate('linear')
+    )
     return hindcast
 
 
@@ -374,6 +427,17 @@ def PM_ds_control_1d_ym_cftime(PM_ds_control_1d):
 
 
 @pytest.fixture
+def perfectModelEnsemble_initialized_control_1d_ym_cftime(
+    PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
+):
+    """PerfectModelEnsemble with MPI Perfect-model-framework initialized and control
+    timeseries annual mean with cftime coords."""
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d_ym_cftime)
+    pm = pm.add_control(PM_ds_control_1d_ym_cftime)
+    return pm
+
+
+@pytest.fixture
 def PM_ds_initialized_1d_mm_cftime(PM_ds_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
     cftime faking all inits with monthly separation in one year and lead units to
@@ -396,6 +460,17 @@ def PM_ds_control_1d_mm_cftime(PM_ds_control_1d):
         start='3000', periods=PM_ds_control_1d.time.size, freq='MS', calendar=CALENDAR
     )
     return PM_ds_control_1d
+
+
+@pytest.fixture
+def perfectModelEnsemble_initialized_control_1d_mm_cftime(
+    PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
+):
+    """PerfectModelEnsemble with MPI Perfect-model-framework initialized and control
+    timeseries monthly mean with cftime coords."""
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d_mm_cftime)
+    pm = pm.add_control(PM_ds_control_1d_mm_cftime)
+    return pm
 
 
 @pytest.fixture
@@ -424,6 +499,17 @@ def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
         start='3000', periods=PM_ds_control_1d.time.size, freq='D', calendar=CALENDAR
     )
     return PM_ds_control_1d
+
+
+@pytest.fixture
+def perfectModelEnsemble_initialized_control_1d_dm_cftime(
+    PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
+):
+    """PerfectModelEnsemble with MPI Perfect-model-framework initialized and control
+    timeseries daily mean with cftime coords."""
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d_dm_cftime)
+    pm = pm.add_control(PM_ds_control_1d_dm_cftime)
+    return pm
 
 
 @pytest.fixture

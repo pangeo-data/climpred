@@ -1,4 +1,5 @@
 bottleneck
+esmtools>=1.1.3
 importlib_metadata
 jupyterlab
 matplotlib
@@ -11,4 +12,4 @@ sphinxcontrib-napoleon
 sphinx_rtd_theme
 toolz
 tqdm
-xarray>=0.14.1
+xarray>=0.16.0

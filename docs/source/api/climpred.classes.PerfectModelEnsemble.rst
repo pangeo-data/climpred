@@ -23,4 +23,6 @@ climpred.classes.PerfectModelEnsemble
       ~PerfectModelEnsemble.get_control
       ~PerfectModelEnsemble.get_initialized
       ~PerfectModelEnsemble.get_uninitialized
+      ~PerfectModelEnsemble.plot
       ~PerfectModelEnsemble.smooth
+      ~PerfectModelEnsemble.verify

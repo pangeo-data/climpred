@@ -192,12 +192,8 @@ Statistics
 .. autosummary::
     :toctree: api/
 
-    autocorr
-    corr
     decorrelation_time
     dpp
-    rm_poly
-    rm_trend
     varweighted_mean_period
 
 Tutorial

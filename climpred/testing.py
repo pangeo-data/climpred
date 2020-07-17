@@ -1,5 +1,6 @@
-from xarray.testing import assert_allclose, assert_equal, assert_identical
 import logging
+
+from xarray.testing import assert_allclose, assert_equal, assert_identical
 
 
 def assert_PredictionEnsemble(he, he2, how='equal', **assert_how_kwargs):

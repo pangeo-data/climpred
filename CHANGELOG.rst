@@ -5,6 +5,12 @@ What's New
 climpred v2.x.x (2020-06-xx)
 ============================
 
+Breaking changes
+----------------
+
+- metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
+  instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+
 New Features
 ------------
 
@@ -12,6 +18,14 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
 - `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
+- Assertion functions for ``PredictionEnsemble``:
+  ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
+
+Deprecated
+----------
+
+- ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
+
 
 Bug Fixes
 ---------
@@ -25,6 +39,14 @@ Bug Fixes
   (:pr:`383`) `Aaron Spring`_.
 - ``PerfectModelEnsemble.verify()`` now accepts ``'uninitialized'`` as a reference.
   (:pr:`395`) `Riley X. Brady`_.
+- Spatial and temporal smoothing ``PredictionEnsemble.smooth()`` now work as expected
+  and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
+
+Documentation
+-------------
+
+- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
+  (:pr:`378`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
@@ -34,11 +56,13 @@ Internals/Minor Fixes
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 
-Documentation
--------------
 
-- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
-  (:pr:`378`, :pr:`383`) `Riley X. Brady`_ and `Aaron Spring`_.
+
+Internals/Minor Fixes
+---------------------
+- Test all metrics against synthetic data. (:pr:`388`) `Aaron Spring`_.
+- metric ``threshold_brier_score`` now requires ``logical`` instead of ``func`` as
+  ``metric_kwargs``. (:pr:`388`) `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)

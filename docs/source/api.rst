@@ -108,6 +108,15 @@ Generate Data
 
     PerfectModelEnsemble.generate_uninitialized
 
+--------------
+Pre-Processing
+--------------
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble.smooth
+
 
 Direct Function Calls
 ---------------------
@@ -119,7 +128,7 @@ well as a verification product. Our object
 :py:class:`~climpred.classes.HindcastEnsemble` and
 :py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the
 analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will
-likely depricate the ability to call them directly.
+likely deprecate the ability to call them directly.
 
 Bootstrap
 ~~~~~~~~~
@@ -213,3 +222,13 @@ Preprocessing
     :toctree: api/
 
     get_path
+
+Smoothing
+~~~~~~~~~
+.. currentmodule:: climpred.smoothing
+
+.. autosummary::
+    :toctree: api/
+
+    temporal_smoothing
+    spatial_smoothing_xesmf

@@ -1084,16 +1084,25 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
 
-    def reduce_bias(self, how='mean', **kwargs):
-        """Short summary.
+    def reduce_bias(self, alignment, how='mean', **kwargs):
+        """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
         Args:
-            how (str or list of str): what kind of bias reduction to perform.
-                Defaults to 'mean'.
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+                ``verif`` to a common time frame at each lead.
+                - same_inits: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+            how (str or list of str): what kind of bias reduction to perform. Select
+                from ['mean']. Defaults to 'mean'.
             **kwargs (kwargs): **kwargs to pass to mean_bias_reduction.
 
         Returns:
-            type: Description of returned object.
+            HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
         if isinstance(how, str):
@@ -1104,5 +1113,5 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
 
-            self = func(self, **kwargs)
+            self = func(self, alignment=alignment, **kwargs)
         return self

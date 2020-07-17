@@ -331,11 +331,14 @@ class PredictionEnsemble:
                 try:
                     return getattr(v, name)(*args, **kwargs)
                 # ValueError : Cases such as .sum(dim='time'). This doesn't apply
-                # it to the given dataset if the dimension doesn't exist.
-                #
+                #              it to the given dataset if the dimension doesn't exist.
+                # KeyError : Cases where a function calls the index of a Dataset. Such
+                #            as ds[dim] and the dim doesn't exist as a key.
                 # DimensionError: This accounts for our custom error when applying
                 # some stats functions.
-                except (ValueError, DimensionError):
+                # NOTE: Remove the esmtools version once you remove those errors from
+                #       esmtools.
+                except (ValueError, KeyError, DimensionError):
                     return v
 
             # Create temporary copy to modify to avoid inplace operation.
@@ -638,11 +641,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
         elif reference is None:
             return init_skill
         skill_labels = ['init']
-        if 'historical' in reference or 'uninitialzed' in reference:
+        if 'historical' in reference:
             uninit_skill = self.compute_uninitialized(
                 metric=metric, comparison=comparison, **metric_kwargs
             )
             skill_labels.append('historical')
+        elif 'uninitialized' in reference:
+            uninit_skill = self.compute_uninitialized(
+                metric=metric, comparison=comparison, **metric_kwargs
+            )
+            skill_labels.append('uninitialized')
         else:
             uninit_skill = None
         if 'persistence' in reference:
@@ -1079,7 +1087,7 @@ class HindcastEnsemble(PredictionEnsemble):
         has_dataset(
             self._datasets['observations'], 'observational', 'verify a forecast'
         )
-        if 'historical' in reference:
+        if 'historical' in reference or 'uninitialized' in reference:
             has_dataset(
                 self._datasets['uninitialized'],
                 'uninitialized',

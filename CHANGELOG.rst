@@ -37,6 +37,8 @@ Bug Fixes
   `Aaron Spring`_.
 - ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
   (:pr:`383`) `Aaron Spring`_.
+- ``PerfectModelEnsemble.verify()`` now accepts ``'uninitialized'`` as a reference.
+  (:pr:`395`) `Riley X. Brady`_.
 - Spatial and temporal smoothing ``PredictionEnsemble.smooth()`` now work as expected
   and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
 
@@ -55,6 +57,9 @@ Internals/Minor Fixes
   py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`. `reduce_bias(how='mean')`
   reduces the mean bias of initialized hindcasts with respect to a observation.
   See (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
+- Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
+  ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
+
 
 
 

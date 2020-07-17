@@ -2,7 +2,6 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from esmtools.exceptions import DimensionError as esmtoolsDimensionError
 from IPython.display import display_html
 from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
@@ -338,7 +337,7 @@ class PredictionEnsemble:
                 # some stats functions.
                 # NOTE: Remove the esmtools version once you remove those errors from
                 #       esmtools.
-                except (ValueError, KeyError, DimensionError, esmtoolsDimensionError):
+                except (ValueError, KeyError, DimensionError):
                     return v
 
             # Create temporary copy to modify to avoid inplace operation.

@@ -1,4 +1,5 @@
 from xarray.testing import assert_allclose, assert_equal, assert_identical
+import logging
 
 
 def assert_PredictionEnsemble(he, he2, how='equal', **assert_how_kwargs):
@@ -21,14 +22,14 @@ def assert_PredictionEnsemble(he, he2, how='equal', **assert_how_kwargs):
         if he._datasets[dataset]:
             if dataset == 'observations':
                 for obs_dataset in he._datasets['observations']:
-                    print('check observations', obs_dataset)
+                    logging.info('check observations', obs_dataset)
                     assert_func(
                         he2._datasets['observations'][obs_dataset],
                         he2._datasets['observations'][obs_dataset],
                         **assert_how_kwargs,
                     )
             else:
-                print('check', dataset)
+                logging.info('check', dataset)
                 assert_func(
                     he2._datasets[dataset], he._datasets[dataset], **assert_how_kwargs
                 )

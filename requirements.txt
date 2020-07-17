@@ -1,11 +1,11 @@
 cftime>=1.1.2
 eofs
-esmtools>=1.1.2
+esmtools>=1.1.3
 matplotlib
 numpy
 pandas
 scipy
 tqdm
-xarray>=0.15.1
+xarray>=0.16.0
 xrft
 xskillscore>=0.0.15

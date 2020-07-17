@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.1.0 (2020-06-08)
+climpred v2.x.x (2020-xx-xx)
 ============================
 
 New Features
@@ -10,8 +10,10 @@ New Features
 
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
-- Bias reduction py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`
-  see (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
+- Implemented bias reduction
+  py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`. `reduce_bias(how='mean')`
+  reduces the mean bias of initialized hindcasts with respect to a observation.
+  See (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
 
 Documentation
 -------------

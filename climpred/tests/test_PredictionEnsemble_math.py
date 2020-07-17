@@ -1,12 +1,13 @@
 import numpy as np
 import pytest
 import xarray as xr
-from xarray.testing import assert_allclose, assert_equal
+from xarray.testing import assert_equal
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.classes import PredictionEnsemble
 from climpred.constants import CLIMPRED_DIMS
 from climpred.exceptions import VariableError
+from climpred.testing import assert_PredictionEnsemble, check_dataset_dims_and_data_vars
 
 ALLOWED_TYPES_FOR_MATH_OPERATORS = [
     int,
@@ -65,46 +66,6 @@ def mul(a, b):
 
 def div(a, b):
     return a / b
-
-
-def assert_PredictionEnsemble(he, he2, how='equal', **assert_how_kwargs):
-    # check for same non-empty datasets
-    def non_empty_datasets(he):
-        return [k for k in he._datasets.keys() if he._datasets[k]]
-
-    assert non_empty_datasets(he) == non_empty_datasets(he2)
-    # check all datasets
-    if how == 'equal':
-        assert_func = assert_equal
-    elif how == 'allclose':
-        assert_func = assert_allclose
-
-    for dataset in he._datasets:
-        if he._datasets[dataset]:
-            if dataset == 'observations':
-                for obs_dataset in he._datasets['observations']:
-                    print('check observations', obs_dataset)
-                    assert_func(
-                        he2._datasets['observations'][obs_dataset],
-                        he2._datasets['observations'][obs_dataset],
-                        **assert_how_kwargs,
-                    )
-            else:
-                print('check', dataset)
-                assert_func(
-                    he2._datasets[dataset], he._datasets[dataset], **assert_how_kwargs
-                )
-
-
-def check_dataset_dims_and_data_vars(before, after, dataset):
-    if dataset not in ['initialized', 'uninitialized', 'control']:
-        before = before._datasets['observations'][dataset]
-        after = after._datasets['observations'][dataset]
-    else:
-        before = before._datasets[dataset]
-        after = after._datasets[dataset]
-    assert before.dims == after.dims
-    assert list(before.data_vars) == list(after.data_vars)
 
 
 def gen_error_str(he, operator, other):

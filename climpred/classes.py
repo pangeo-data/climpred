@@ -1123,7 +1123,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
-    def reduce_bias(self, alignment, how='mean', **kwargs):
+    def reduce_bias(self, alignment, how='mean', cross_validate=True):
         """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
         Args:
@@ -1138,7 +1138,11 @@ class HindcastEnsemble(PredictionEnsemble):
                 should be based on the same set of verification dates.
             how (str or list of str): what kind of bias reduction to perform. Select
                 from ['mean']. Defaults to 'mean'.
-            **kwargs (kwargs): **kwargs to pass to mean_bias_reduction.
+            cross_validate (bool): Use properly defined mean bias reduction function.
+                This excludes the given initialization from the bias calculation.
+                With False, include the given initialization in the calculation, which
+                is much faster and but yields similar skill with a large N of
+                initializations. Defaults to True.
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
@@ -1152,5 +1156,5 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
 
-            self = func(self, alignment=alignment, **kwargs)
+            self = func(self, alignment=alignment, cross_validate=cross_validate)
         return self

@@ -78,7 +78,7 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True):
         cross_validate (bool): Use properly defined mean bias reduction function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
-            and but slightly improves skill with a large N of initializations.
+            and but yields similar skill with a large N of initializations.
             Defaults to True.
 
     Returns:

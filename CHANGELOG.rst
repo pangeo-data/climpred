@@ -53,8 +53,13 @@ Internals/Minor Fixes
 - ``PerfectModelEnsemble.verify()`` replaces deprecated
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
+- Implemented bias reduction
+  py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`. `reduce_bias(how='mean')`
+  reduces the mean bias of initialized hindcasts with respect to a observation.
+  See (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
+
 
 
 

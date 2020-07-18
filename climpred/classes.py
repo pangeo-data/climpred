@@ -7,6 +7,7 @@ from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 
 from .alignment import return_inits_and_verif_dates
+from .bias_reduction import mean_bias_reduction
 from .bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
@@ -1121,3 +1122,39 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
+
+    def reduce_bias(self, alignment, how='mean', cross_validate=True):
+        """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+
+        Args:
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+                ``verif`` to a common time frame at each lead.
+                - same_inits: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+            how (str or list of str): what kind of bias reduction to perform. Select
+                from ['mean']. Defaults to 'mean'.
+            cross_validate (bool): Use properly defined mean bias reduction function.
+                This excludes the given initialization from the bias calculation.
+                With False, include the given initialization in the calculation, which
+                is much faster and but yields similar skill with a large N of
+                initializations. Defaults to True.
+
+        Returns:
+            HindcastEnsemble: bias removed HindcastEnsemble.
+
+        """
+        if isinstance(how, str):
+            how = [how]
+        for h in how:
+            if h == 'mean':
+                func = mean_bias_reduction
+            else:
+                raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
+
+            self = func(self, alignment=alignment, cross_validate=cross_validate)
+        return self

@@ -80,6 +80,7 @@ repository and running ``pip install . --upgrade`` in the main directory
 * :doc:`metrics`
 * :doc:`comparisons`
 * :doc:`significance`
+* :doc:`bias_reduction`
 * :doc:`smoothing`
 * :doc:`terminology`
 * :doc:`reference_forecast`
@@ -95,6 +96,7 @@ repository and running ``pip install . --upgrade`` in the main directory
     metrics
     comparisons
     significance
+    bias_reduction
     smoothing
     terminology
     reference_forecast

@@ -1058,8 +1058,8 @@ class HindcastEnsemble(PredictionEnsemble):
             result['lead'] = forecast['lead']
 
             if reference is not None:
-                if 'historical' in reference:
-                    hist, _ = comparison.function(hist, verif, metric=metric)
+                if 'member' in verif.dims:  # if broadcasted before
+                    verif = verif.isel(member=0)
                 for r in reference:
                     metric_over_leads = [
                         _apply_metric_at_given_lead(

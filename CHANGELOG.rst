@@ -26,7 +26,6 @@ Deprecated
 
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
 
-
 Bug Fixes
 ---------
 
@@ -41,6 +40,8 @@ Bug Fixes
   (:pr:`395`) `Riley X. Brady`_.
 - Spatial and temporal smoothing ``PredictionEnsemble.smooth()`` now work as expected
   and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
+  'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
 
 Documentation
 -------------

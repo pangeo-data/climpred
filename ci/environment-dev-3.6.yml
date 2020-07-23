@@ -55,7 +55,7 @@ dependencies:
   - xskillscore>=0.0.15
   # Visualization
   - cartopy
-  - matplotlib
+  - matplotlib<3.3
   - nc-time-axis
   - pip
   - pip:

@@ -324,7 +324,7 @@ def _m2o(hind, verif, metric=None):
     has_dims(hind, 'member', 'decadal prediction ensemble')
     has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
     forecast, verif = _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(hind, verif)
-    if not metric.probabilistic:
+    if not metric.probabilistic and 'member' not in verif.dims:
         verif = verif.expand_dims('member')
         nMember = forecast.member.size
         verif = verif.isel(member=[0] * nMember)

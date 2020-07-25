@@ -154,3 +154,13 @@ def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
     with pytest.raises(ValueError) as excinfo:
         hindcast.verify(metric='threshold_brier_score', comparison='m2o')
     assert 'Please provide threshold.' == str(excinfo.value)
+
+
+def test_verify_m2o_reference(hindcast_hist_obs_1d):
+    """Test that m2o comparison in references work."""
+    hindcast = hindcast_hist_obs_1d
+    # determinstic
+    hindcast.verify(metric='mse', comparison='m2o', reference='historical')
+    hindcast.verify(metric='mse', comparison='m2o', reference='persistence')
+    # probabilistic
+    hindcast.verify(metric='crps', comparison='m2o', reference='historical')

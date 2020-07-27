@@ -62,4 +62,3 @@ dependencies:
       - cftime>=1.1.2 # Optimization changes to make cftime fast.
       - pytest-tldr
       - pytest-lazy-fixture
-      - git+https://github.com/aaronspring/doppyo.git@AS_for_climpred

@@ -60,7 +60,7 @@ Internals/Minor Fixes
   See (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
-
+- remove fixed pandas dependency from `pandas=0.25` to stable `pandas`. (:issue:`402`,:pr:`403`) `Aaron Spring`_.
 
 
 

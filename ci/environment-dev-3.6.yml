@@ -20,7 +20,7 @@ dependencies:
   - tqdm
   # Numerics
   - numpy
-  - pandas=0.25.3 # breaking features in pandas 1.0
+  - pandas
   - scipy
   - xarray>=0.16.0
   # Package Management

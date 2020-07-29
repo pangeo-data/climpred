@@ -105,11 +105,13 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
     # set default dim
     if dim is None:
         dim = 'init' if kind == 'hindcast' else ['init', 'member']
+    print(dim)
     # check allowed dims
-    if kind == 'hindcast':
-        is_in_list(dim, ['member', 'init'], 'dim')
-    elif kind == 'PM':
-        is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
+    # if kind == 'hindcast':
+    #    is_in_list(dim, ['member', 'init'], 'dim')
+    # elif kind == 'PM':
+    #    is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
+    # print(dim)
 
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -126,6 +128,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
         if kind == 'hindcast'
         else PROBABILISTIC_PM_COMPARISONS
     )
+    print(dim)
     if metric.probabilistic:
         if not comparison.probabilistic:
             raise ValueError(
@@ -139,7 +142,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
                 f'computed over dimension `dim="member"`. '
                 f'Set automatically.'
             )
-            dim = 'member'
+            # dim = 'member'
     else:  # determinstic metric
         if kind == 'hindcast':
             if dim == 'init':
@@ -155,6 +158,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
                     f' found {dim}, automatically changed to dim=`init`.'
                 )
                 dim = 'init'
+    print(dim)
     return metric, comparison, dim
 
 
@@ -194,11 +198,13 @@ def compute_perfect_model(
     init_pm = convert_time_index(
         init_pm, 'init', 'init_pm[init]', calendar=PM_CALENDAR_STR
     )
+    print(dim)
 
     # check args compatible with each other
     metric, comparison, dim = _get_metric_comparison_dim(
         metric, comparison, dim, kind='PM'
     )
+    print(dim)
 
     forecast, verif = comparison.function(init_pm, metric=metric)
 

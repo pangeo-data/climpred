@@ -102,7 +102,7 @@ def PM_da_control_3d(PM_ds_control_3d):
 
 
 @pytest.fixture
-def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control_1d):
+def perfectModelEnsemble_initialized_control_1d(PM_ds_initialized_1d, PM_ds_control_1d):
     """PerfectModelEnsemble initialized with `initialized` and `control` xr.Dataset."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     pm = pm.add_control(PM_ds_control_1d)

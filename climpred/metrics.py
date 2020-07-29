@@ -2,6 +2,14 @@ import warnings
 
 import numpy as np
 import xarray as xr
+from doppyo.skill import (
+    Brier_score,
+    Heidke_score,
+    contingency,
+    rank_histogram,
+    reliability,
+    roc,
+)
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
@@ -2146,6 +2154,114 @@ __crpss_es = Metric(
 )
 
 
+# doppyo metrics
+
+
+def _remove_metric_comparison_alignment(metric_kwargs):
+    for kw in ['comparison', 'alignment']:
+        if kw in metric_kwargs:
+            metric_kwargs.pop(kw)
+    return metric_kwargs
+
+
+def _extract_and_apply_logical(forecast, verif, metric_kwargs):
+    if 'logical' in metric_kwargs:
+        logical = metric_kwargs.pop('logical')
+        forecast = logical(forecast).mean('member')
+        verif = logical(verif)
+    return forecast, verif, metric_kwargs
+
+
+def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif['member']
+
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+
+    # TODO: pass over_dims
+    return rank_histogram(
+        forecast, verif, over_dims=dim, ensemble_dim='member', **metric_kwargs
+    )
+
+
+__rank_histogram = Metric(
+    name='rank_histogram',
+    function=_rank_histogram,
+    positive=True,  # None
+    probabilistic=True,
+    unit_power=0,
+    long_name='rank_histogram',
+    minimum=None,
+    maximum=None,
+    perfect=None,
+)
+
+
+def _contingency(forecast, verif, dim=None, **metric_kwargs):
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    return contingency(forecast, verif, over_dims=dim, **metric_kwargs)
+
+
+__contingency = Metric(
+    name='contingency',
+    function=_contingency,
+    positive=True,
+    probabilistic=False,
+    unit_power=0,
+    long_name='contingency',
+    minimum=0,
+    maximum=np.inf,
+    perfect=None,
+)
+
+
+def _Heidke_score(forecast, verif, dim=None, **metric_kwargs):
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    contingency_kwargs = dict()
+    for kw in ['category_edges_cmp', 'category_edges_ref']:
+        if kw in metric_kwargs:
+            contingency_kwargs[kw] = metric_kwargs.pop(kw)
+    return Heidke_score(
+        contingency(forecast, verif, over_dims=dim, **contingency_kwargs),
+        **metric_kwargs,
+    )
+
+
+__Heidke_score = Metric(
+    name='Heidke_score',
+    function=_Heidke_score,
+    positive=True,
+    probabilistic=False,
+    unit_power=0,
+    long_name='Heidke score',
+    minimum=0,
+    maximum=1,
+    perfect=1,
+)
+
+
+def _roc(forecast, verif, dim=None, **metric_kwargs):
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif['member']
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    forecast, verif, metric_kwargs = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs
+    )
+    return roc(forecast, verif, over_dims=dim)
+
+
+__roc = Metric(
+    name='roc',
+    function=_roc,
+    positive=True,
+    probabilistic=True,
+    unit_power=0,
+    long_name='Return Operating Characteristic',
+    minimum=None,
+    maximum=None,
+    perfect=None,
+)
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -2175,6 +2291,10 @@ __ALL_METRICS__ = [
     __nmae,
     __uacc,
     __std_ratio,
+    __contingency,
+    __rank_histogram,
+    __Heidke_score,
+    __roc,
 ]
 
 

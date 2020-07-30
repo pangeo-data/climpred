@@ -140,7 +140,7 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
             warnings.warn(
                 f'Probabilistic metric {metric.name} requires to be '
                 f'computed over dimension `dim="member"`. '
-                f'Set automatically.'
+                #f'Set automatically.'
             )
             # dim = 'member'
     else:  # determinstic metric

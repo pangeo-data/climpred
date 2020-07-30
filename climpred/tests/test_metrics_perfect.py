@@ -11,11 +11,11 @@ from climpred.utils import get_metric_class
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
 @pytest.mark.parametrize('metric', PM_METRICS)
 def test_PerfectModelEnsemble_constant_forecasts(
-    perfectModelEnsemble_initialized_control, metric, comparison, how
+    perfectModelEnsemble_initialized_control_1d, metric, comparison, how
 ):
     """Test that PerfectModelEnsemble.verify() returns a perfect score for a perfectly
     identical forecasts."""
-    pe = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
+    pe = perfectModelEnsemble_initialized_control_1d.isel(lead=[0, 1, 2])
     if how == 'constant':  # replaces the variable with all 1's
         pe = pe.apply(xr.ones_like)
     elif (

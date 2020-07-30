@@ -2167,14 +2167,18 @@ def _remove_metric_comparison_alignment(metric_kwargs):
     return metric_kwargs
 
 
-def _extract_and_apply_logical(forecast, verif, metric_kwargs):
+def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
     if 'logical' in metric_kwargs:
         logical = metric_kwargs.pop('logical')
         forecast = logical(forecast).mean('member')
         verif = logical(verif)
+        if isinstance(dim, list) and 'member' in dim:
+            dim.remove('member')
+        elif dim=='member':
+            dim=[]
     else:
         assert False
-    return forecast, verif, metric_kwargs
+    return forecast, verif, metric_kwargs,dim
 
 
 def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
@@ -2249,10 +2253,10 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
     if 'member' in verif.coords and 'member' not in verif.dims:
         del verif['member']
     metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
-    forecast, verif, metric_kwargs = _extract_and_apply_logical(
-        forecast, verif, metric_kwargs
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
     )
-    return roc(forecast, verif, over_dims=dim)
+    return roc(forecast, verif, over_dims=dim, **metric_kwargs)
 
 
 __roc = Metric(
@@ -2272,15 +2276,13 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
     if 'member' in verif.coords and 'member' not in verif.dims:
         del verif['member']
     metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
-    forecast, verif, metric_kwargs = _extract_and_apply_logical(
-        forecast, verif, metric_kwargs
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
     )
     if 'probability_bins' in metric_kwargs:
         probability_bins = metric_kwargs.pop('probability_bins')
     else:
         assert False
-    print(forecast)
-    print(verif)
     return discrimination(
         forecast, verif, over_dims=dim, probability_bins=probability_bins
     )
@@ -2303,8 +2305,8 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     if 'member' in verif.coords and 'member' not in verif.dims:
         del verif['member']
     metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
-    forecast, verif, metric_kwargs = _extract_and_apply_logical(
-        forecast, verif, metric_kwargs
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
     )
     return reliability(forecast, verif, over_dims=dim, **metric_kwargs)
 
@@ -2350,10 +2352,14 @@ def _Brier_score(forecast, verif, dim=None, **metric_kwargs):
     if 'member' in verif.coords and 'member' not in verif.dims:
         del verif['member']
     metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
-    forecast, verif, metric_kwargs = _extract_and_apply_logical(
-        forecast, verif, metric_kwargs
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
     )
-    return Brier_score(forecast, verif, over_dims=dim)
+    if 'probability_bins' in metric_kwargs:
+        probability_bins = metric_kwargs['probability_bins']
+    else:
+        probability_bins=None
+    return Brier_score(forecast, verif, over_dims=dim, probability_bins=probability_bins)
 
 
 __Brier_score = Metric(

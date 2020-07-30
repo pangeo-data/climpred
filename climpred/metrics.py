@@ -2,14 +2,6 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from doppyo.skill import (
-    Brier_score,
-    Heidke_score,
-    contingency,
-    rank_histogram,
-    reliability,
-    roc,
-)
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
@@ -30,6 +22,17 @@ from xskillscore import (
     spearman_r_eff_p_value,
     spearman_r_p_value,
     threshold_brier_score,
+)
+
+from doppyo.skill import (
+    Brier_score,
+    Heidke_score,
+    contingency,
+    discrimination,
+    rank_histogram,
+    reliability,
+    roc,
+    rps,
 )
 
 from .constants import CLIMPRED_DIMS
@@ -2169,6 +2172,8 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs):
         logical = metric_kwargs.pop('logical')
         forecast = logical(forecast).mean('member')
         verif = logical(verif)
+    else:
+        assert False
     return forecast, verif, metric_kwargs
 
 
@@ -2262,6 +2267,108 @@ __roc = Metric(
     perfect=None,
 )
 
+
+def _discrimination(forecast, verif, dim=None, **metric_kwargs):
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif['member']
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    forecast, verif, metric_kwargs = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs
+    )
+    if 'probability_bins' in metric_kwargs:
+        probability_bins = metric_kwargs.pop('probability_bins')
+    else:
+        assert False
+    print(forecast)
+    print(verif)
+    return discrimination(
+        forecast, verif, over_dims=dim, probability_bins=probability_bins
+    )
+
+
+__discrimination = Metric(
+    name='discrimination',
+    function=_discrimination,
+    positive=True,
+    probabilistic=True,
+    unit_power=0,
+    long_name='Discrimination',
+    minimum=None,
+    maximum=None,
+    perfect=None,
+)
+
+
+def _reliability(forecast, verif, dim=None, **metric_kwargs):
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif['member']
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    forecast, verif, metric_kwargs = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs
+    )
+    return reliability(forecast, verif, over_dims=dim, **metric_kwargs)
+
+
+__reliability = Metric(
+    name='reliability',
+    function=_reliability,
+    positive=True,
+    probabilistic=True,
+    unit_power=0,
+    long_name='reliability',
+    minimum=None,
+    maximum=None,
+    perfect=None,
+)
+
+
+def _rps(forecast, verif, dim=None, **metric_kwargs):
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif['member']
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    if 'bins' in metric_kwargs:
+        bins = metric_kwargs.pop('bins')
+    else:
+        assert False
+    return rps(forecast, verif, bins, over_dims=dim, ensemble_dim='member')
+
+
+__rps = Metric(
+    name='rps',
+    function=_rps,
+    positive=True,
+    probabilistic=True,
+    unit_power=0,
+    long_name='ranked probability score',
+    minimum=None,
+    maximum=None,
+    perfect=None,
+)
+
+
+def _Brier_score(forecast, verif, dim=None, **metric_kwargs):
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif['member']
+    metric_kwargs = _remove_metric_comparison_alignment(metric_kwargs)
+    forecast, verif, metric_kwargs = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs
+    )
+    return Brier_score(forecast, verif, over_dims=dim)
+
+
+__Brier_score = Metric(
+    name='Brier_score',
+    function=_Brier_score,
+    positive=True,
+    probabilistic=True,
+    unit_power=0,
+    long_name='Brier_score from doppyo including decomposition',
+    minimum=0,
+    maximum=1,
+    perfect=1,
+)
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -2295,6 +2402,10 @@ __ALL_METRICS__ = [
     __rank_histogram,
     __Heidke_score,
     __roc,
+    __Brier_score,
+    __reliability,
+    __discrimination,
+    __rps,
 ]
 
 

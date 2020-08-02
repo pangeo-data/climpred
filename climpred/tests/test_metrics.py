@@ -33,11 +33,19 @@ def test_custom_metric_passed_to_compute(
 ):
     """Test custom metric in compute_perfect_model."""
     actual = compute_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric=my_mse,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
+        comparison=comparison,
+        metric=my_mse,
+        dim='init',
     )
 
     expected = compute_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric='mse',
+        PM_da_initialized_1d,
+        PM_da_control_1d,
+        comparison=comparison,
+        metric='mse',
+        dim='init',
     )
 
     assert_allclose(actual, expected)

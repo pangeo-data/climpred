@@ -13,7 +13,7 @@ from climpred.bootstrap import (
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
-from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
+from climpred.comparisons import HINDCAST_COMPARISONS
 from climpred.constants import CONCAT_KWARGS, VALID_ALIGNMENTS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
@@ -38,15 +38,15 @@ def test_bootstrap_PM_keep_lead_attrs(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+@pytest.mark.parametrize('comparison', ['m2m', 'm2e', 'm2c'])
 @pytest.mark.parametrize('chunk', [True, False])
 def test_bootstrap_PM_lazy_results(
     PM_da_initialized_3d, PM_da_control_3d, chunk, comparison
 ):
     """Test bootstrap_perfect_model works lazily."""
     if chunk:
-        PM_da_initialized_3d = PM_da_initialized_3d.chunk({'lead': 2}).persist()
-        PM_da_control_3d = PM_da_control_3d.chunk({'time': -1}).persist()
+        PM_da_initialized_3d = PM_da_initialized_3d.chunk({'lead': 2})
+        PM_da_control_3d = PM_da_control_3d.chunk({'time': -1})
     else:
         PM_da_initialized_3d = PM_da_initialized_3d.compute()
         PM_da_control_3d = PM_da_control_3d.compute()
@@ -72,11 +72,9 @@ def test_bootstrap_hindcast_lazy(
 ):
     """Test bootstrap_hindcast works lazily."""
     if chunk:
-        hind_da_initialized_1d = hind_da_initialized_1d.chunk({'lead': 2}).persist()
-        hist_da_uninitialized_1d = hist_da_uninitialized_1d.chunk(
-            {'time': -1}
-        ).persist()
-        observations_da_1d = observations_da_1d.chunk({'time': -1}).persist()
+        hind_da_initialized_1d = hind_da_initialized_1d.chunk({'lead': 2})
+        hist_da_uninitialized_1d = hist_da_uninitialized_1d.chunk({'time': -1})
+        observations_da_1d = observations_da_1d.chunk({'time': -1})
     else:
         hind_da_initialized_1d = hind_da_initialized_1d.compute()
         hist_da_uninitialized_1d = hist_da_uninitialized_1d.compute()

@@ -1,4 +1,5 @@
 import pytest
+import xarray as xr
 from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_hindcast
@@ -8,7 +9,7 @@ from climpred.comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from climpred.exceptions import DimensionError
-from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
+from climpred.metrics import PM_METRICS
 from climpred.utils import get_comparison_class, get_metric_class
 
 # TODO: move to conftest.py
@@ -129,26 +130,32 @@ def test_bootstrap_hindcast_dim(
         assert not actualk
 
 
-@pytest.mark.parametrize('metric', ['rmse', 'crps'])
+@pytest.mark.parametrize('metric', ['rmse', 'pearson_r'])
 @pytest.mark.parametrize(
     'comparison,dim', comparison_dim_PM,
 )
 def test_compute_pm_dims(
     perfectModelEnsemble_initialized_control, dim, comparison, metric
 ):
-    """Test whether compute_pm calcs skill over all possible dims
+    """Test whether compute_pm calcs skill over many possible dims
     and comparisons and just reduces the result by dim."""
+    xr.set_options(display_style='text')
     pm = perfectModelEnsemble_initialized_control
-    actual = pm.verify(metric=metric, dim=dim, comparison=comparison)['tos']
-    # change dim as automatically in compute functions for probabilistic
-    if dim in ['init', ['init', 'member']] and metric in PROBABILISTIC_METRICS:
-        dim = ['member']
-    elif isinstance(dim, str):
+    actual = pm.verify(metric=metric, comparison=comparison, dim=dim)['tos']
+    if isinstance(dim, str):
         dim = [dim]
     # check whether only dim got reduced from coords
-    assert set(pm.get_initialized().dims) - set(actual.dims) == set(dim)
+    if comparison == 'e2c':
+        assert set(pm.get_initialized().dims) - set(['member']) - set(dim) == set(
+            actual.dims
+        ), print(pm.get_initialized().dims, '-', dim, '!=', actual.dims)
+    else:
+        assert set(pm.get_initialized().dims) - set(dim) == set(actual.dims), print(
+            pm.get_initialized().dims, '-', dim, '!=', actual.dims
+        )
     # check whether all nan
-    assert not actual.isnull().any()
+    if metric not in ['pearson_r']:
+        assert not actual.isnull().any()
 
 
 @pytest.mark.parametrize(

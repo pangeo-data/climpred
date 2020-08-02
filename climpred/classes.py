@@ -603,7 +603,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._datasets['control']
 
     def verify(
-        self, metric='pearson_r', comparison='m2e', reference=None, **metric_kwargs
+        self,
+        metric='pearson_r',
+        comparison='m2e',
+        dim=None,
+        reference=None,
+        **metric_kwargs,
     ):
         """Compares the initialized ensemble to the control run.
 
@@ -613,6 +618,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison (str, default 'm2e'):
               How to compare the climate prediction ensemble to the control.
             reference (str, list of str): reference forecasts to compare against.
+            dim (str, list of str): dimension(s) to apply metric over.
             **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
@@ -630,6 +636,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            dim=dim,
             **metric_kwargs,
         )
         if self._temporally_smoothed:
@@ -672,7 +679,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self.verify(metric=metric, comparison=comparison, **metric_kwargs)
 
     def compute_uninitialized(
-        self, metric='pearson_r', comparison='m2e', **metric_kwargs
+        self, metric='pearson_r', comparison='m2e', dim=None, **metric_kwargs
     ):
         """Compares the bootstrapped uninitialized run to the control run.
 
@@ -681,8 +688,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
               How to compare to the control run.
-            running (int, default None):
-              Size of the running window for variance smoothing.
+            dim (str, list of str): dimension(s) to apply metric over.
             **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
@@ -703,6 +709,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            dim=dim,
             **metric_kwargs,
         )
         if self._temporally_smoothed:
@@ -748,6 +755,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self,
         metric='pearson_r',
         comparison='m2e',
+        dim=None,
         sig=95,
         iterations=500,
         pers_sig=None,
@@ -760,6 +768,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 Metric to apply for bootstrapping.
             comparison (str, default 'm2e'):
                 Comparison style for bootstrapping.
+            dim (str, list of str): dimension(s) to apply metric over.
             sig (int, default 95):
                 Significance level for uninitialized and initialized
                 comparison.
@@ -803,6 +812,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            dim=dim,
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
@@ -978,8 +988,8 @@ class HindcastEnsemble(PredictionEnsemble):
         reference=None,
         metric='pearson_r',
         comparison='e2o',
-        alignment='same_verifs',
         dim='init',
+        alignment='same_verifs',
         **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations/verification data.
@@ -995,6 +1005,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
                 observations/verification data).
+            dim (str, list of str): dimension(s) to apply metric over.
             alignment (str): which inits or verification times should be aligned?
                 - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.

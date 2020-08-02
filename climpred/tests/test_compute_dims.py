@@ -7,6 +7,7 @@ from climpred.comparisons import (
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_PM_COMPARISONS,
 )
+from climpred.exceptions import DimensionError
 from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
@@ -135,9 +136,17 @@ def test_bootstrap_hindcast_dim(
         assert not actualk
 
 
-@pytest.mark.parametrize('metric', ('rmse', 'crpss'))
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
-@pytest.mark.parametrize('dim', ('init', 'member', ['init', 'member']))
+@pytest.mark.parametrize(
+    'metric,dim',
+    [
+        ('rmse', 'init'),
+        ('rmse', 'member'),
+        ('rmse', ['init', 'member']),
+        ('crpss', 'member'),
+        ('crpss', ['init', 'member']),
+    ],
+)
 def test_compute_pm_dims(
     PM_da_initialized_1d, PM_da_control_1d, dim, comparison, metric
 ):
@@ -158,13 +167,13 @@ def test_compute_pm_dims(
     # check whether only dim got reduced from coords
     assert set(PM_da_initialized_1d.dims) - set(actual.dims) == set(dim)
     # check whether all nan
-    print(actual.dims, actual.coords, actual)
     assert not actual.isnull().any()
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
-@pytest.mark.parametrize('metric', ('rmse', 'crpss', 'crpss_es'))
-@pytest.mark.parametrize('dim', ('init', 'member'))
+@pytest.mark.parametrize(
+    'metric,dim', [('rmse', 'init'), ('rmse', 'member'), ('crpss', 'member')]
+)
 def test_compute_hindcast_dims(
     hind_da_initialized_1d, observations_da_1d, dim, comparison, metric
 ):
@@ -186,3 +195,40 @@ def test_compute_hindcast_dims(
     if 'init' in actual.dims:
         actual = actual.mean('init')
     assert not actual.isnull().any()
+
+
+@pytest.mark.parametrize(
+    'dim',
+    ['init', 'member', None, ['init', 'member'], ['x', 'y'], ['x', 'y', 'member']],
+)
+def test_PM_multiple_dims(
+    perfectModelEnsemble_initialized_control_3d_North_Atlantic, dim
+):
+    """Test that PerfectModelEnsemble accepts dims as subset from initialized dims."""
+    pm = perfectModelEnsemble_initialized_control_3d_North_Atlantic
+    assert pm.verify(metric='rmse', comparison='m2e', dim=dim).any()
+
+
+def test_PM_multiple_dims_fail_if_not_in_initialized(
+    perfectModelEnsemble_initialized_control_3d_North_Atlantic,
+):
+    """Test that PerfectModelEnsemble.verify() for multiple dims fails when not subset
+    from initialized dims."""
+    pm = perfectModelEnsemble_initialized_control_3d_North_Atlantic.isel(x=4, y=4)
+    with pytest.raises(DimensionError) as excinfo:
+        pm.verify(metric='rmse', comparison='m2e', dim=['init', 'member', 'x'])
+    assert 'is expected to be a subset of `initialized.dims`' in str(excinfo.value)
+
+
+def test_PM_fails_probabilistic_member_not_in_dim(
+    perfectModelEnsemble_initialized_control_3d_North_Atlantic,
+):
+    """Test that PerfectModelEnsemble.verify() raises ValueError for `member` not in
+    dim if probabilistic metric."""
+    pm = perfectModelEnsemble_initialized_control_3d_North_Atlantic
+    with pytest.raises(ValueError) as excinfo:
+        pm.verify(metric='crps', comparison='m2c', dim=['init'])
+    assert (
+        'requires to be computed over dimension `member`, which is not found in'
+        in str(excinfo.value)
+    )

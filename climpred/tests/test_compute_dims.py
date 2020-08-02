@@ -205,3 +205,49 @@ def test_PM_fails_probabilistic_member_not_in_dim(
         'requires to be computed over dimension `member`, which is not found in'
         in str(excinfo.value)
     )
+
+
+def test_pm_metric_weights(perfectModelEnsemble_initialized_control_3d_North_Atlantic):
+    """Test PerfectModelEnsemble.verify() with weights yields different results."""
+    pm = perfectModelEnsemble_initialized_control_3d_North_Atlantic
+    skipna = True
+    metric = 'rmse'
+    comparison = 'm2e'
+    dim = ['x', 'y']
+    weights = pm.get_initialized()['lat']
+    s_no_weights = pm.verify(
+        metric=metric, comparison=comparison, dim=dim, skipna=skipna
+    )
+    s_weights = pm.verify(
+        metric=metric, comparison=comparison, dim=dim, skipna=skipna, weights=weights
+    )
+    # want to test for non equalness
+    assert ((s_no_weights['tos'] - s_weights['tos']) != 0).all()
+
+
+def test_hindcast_metric_weights(hindcast_recon_3d):
+    """Test HindcastEnsemble.verify() with weights yields different results."""
+    he = hindcast_recon_3d
+    skipna = True
+    metric = 'rmse'
+    comparison = 'e2o'
+    dim = ['nlat', 'nlon']
+    alignment = 'same_verifs'
+    weights = he.get_initialized()['TAREA']
+    s_no_weights = he.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        skipna=skipna,
+        alignment=alignment,
+    )
+    s_weights = he.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        skipna=skipna,
+        weights=weights,
+        alignment=alignment,
+    )
+    # want to test for non equalness
+    assert ((s_no_weights['SST'] - s_weights['SST']) != 0).all()

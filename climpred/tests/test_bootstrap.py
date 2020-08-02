@@ -10,7 +10,6 @@ from climpred.bootstrap import (
     _resample_iterations,
     _resample_iterations_idx,
     bootstrap_hindcast,
-    bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
 from climpred.comparisons import HINDCAST_COMPARISONS
@@ -35,42 +34,28 @@ comparison_dim_PM = [
 ]
 
 
-def test_bootstrap_PM_keep_lead_attrs(
-    PM_da_initialized_3d, PM_da_control_3d,
-):
+def test_bootstrap_PM_keep_lead_attrs(perfectModelEnsemble_initialized_control):
     """Test bootstrap_perfect_model works lazily."""
-    PM_da_initialized_3d.lead.attrs['units'] = 'years'
-    s = bootstrap_perfect_model(
-        PM_da_initialized_3d,
-        PM_da_control_3d,
-        iterations=ITERATIONS,
-        comparison='m2c',
-        metric='mse',
-    )
+    pm = perfectModelEnsemble_initialized_control
+    pm.get_initialized().lead.attrs['units'] = 'years'
+    s = pm.bootstrap(iterations=ITERATIONS, comparison='m2c', metric='mse',)
     assert 'units' in s.lead.attrs
-    assert s.lead.attrs['units'] == PM_da_initialized_3d.lead.attrs['units']
+    assert s.lead.attrs['units'] == pm.get_initialized().lead.attrs['units']
 
 
-@pytest.mark.slow
 @pytest.mark.parametrize('comparison,dim', comparison_dim_PM)
 @pytest.mark.parametrize('chunk', [True, False])
 def test_bootstrap_PM_lazy_results(
-    PM_da_initialized_3d, PM_da_control_3d, chunk, comparison, dim
+    perfectModelEnsemble_initialized_control, chunk, comparison, dim
 ):
     """Test bootstrap_perfect_model works lazily."""
+    pm = perfectModelEnsemble_initialized_control
     if chunk:
-        PM_da_initialized_3d = PM_da_initialized_3d.chunk({'lead': 2})
-        PM_da_control_3d = PM_da_control_3d.chunk({'time': -1})
+        pm = pm.chunk({'lead': 2}).chunk({'time': -1})
     else:
-        PM_da_initialized_3d = PM_da_initialized_3d.compute()
-        PM_da_control_3d = PM_da_control_3d.compute()
-    s = bootstrap_perfect_model(
-        PM_da_initialized_3d,
-        PM_da_control_3d,
-        iterations=ITERATIONS,
-        comparison=comparison,
-        metric='mse',
-        dim=dim,
+        pm = pm.compute()
+    s = pm.bootstrap(
+        iterations=ITERATIONS, comparison=comparison, metric='mse', dim=dim,
     )
     assert dask.is_dask_collection(s) == chunk
 

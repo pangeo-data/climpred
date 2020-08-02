@@ -108,33 +108,6 @@ def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
     assert not skipping.isel(lead=2, x=5, y=5).isnull()
 
 
-@pytest.mark.skip(reason='Need to implement weights properly')
-@pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ('e2c', 'm2c'))
-def test_pm_metric_weights(PM_da_initialized_3d, PM_da_control_3d, comparison, metric):
-    """Test init weights in compute_perfect_model."""
-    dim = 'init'
-    base = compute_perfect_model(
-        PM_da_initialized_3d,
-        PM_da_control_3d,
-        dim=dim,
-        metric=metric,
-        comparison=comparison,
-    )
-    weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
-    weighted = compute_perfect_model(
-        PM_da_initialized_3d,
-        PM_da_control_3d,
-        dim=dim,
-        comparison=comparison,
-        metric=metric,
-        weights=weights,
-    )
-    print((base / weighted).mean(['x', 'y']))
-    # test for difference
-    assert (xs.smape(base, weighted, ['x', 'y']) > 0.01).any()
-
-
 @pytest.mark.skip(reason='comparisons dont work here')
 @pytest.mark.parametrize('metric', ('rmse', 'mse'))
 @pytest.mark.parametrize('comparison', ['m2e', 'm2m'])
@@ -195,39 +168,6 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
     )
     div = base / skipping
     assert (div != 1).any()
-
-
-@pytest.mark.skip(reason='Need to implement weights properly')
-@pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ['e2o'])
-def test_hindcast_metric_weights(
-    hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
-):
-    """Test time=lead weights in compute_hindcast."""
-    dim = 'init'
-    base = compute_hindcast(
-        hind_da_initialized_3d,
-        reconstruction_da_3d,
-        dim=dim,
-        metric=metric,
-        comparison=comparison,
-    )
-    weights = xr.DataArray(
-        np.arange(
-            1, 1 + hind_da_initialized_3d[dim].size - hind_da_initialized_3d.lead.size,
-        ),
-        dims='time',
-    )
-    weighted = compute_hindcast(
-        hind_da_initialized_3d,
-        reconstruction_da_3d,
-        dim=dim,
-        comparison=comparison,
-        metric=metric,
-        weights=weights,
-    )
-    # test for difference
-    assert ((base / weighted).mean(['nlon', 'nlat']) != 1).any()
 
 
 @pytest.mark.skip(reason='comparisons dont work here')

@@ -1,7 +1,7 @@
 import pytest
 from xarray.testing import assert_allclose
 
-from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
+from climpred.bootstrap import bootstrap_hindcast
 from climpred.comparisons import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
@@ -9,7 +9,6 @@ from climpred.comparisons import (
 )
 from climpred.exceptions import DimensionError
 from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
-from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.utils import get_comparison_class, get_metric_class
 
 ITERATIONS = 3
@@ -34,16 +33,12 @@ def test_pm_comparison_stack_dims_when_deterministic(
 # cannot work for e2c, m2e comparison because only 1:1 comparison
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
 def test_compute_perfect_model_dim_over_member(
-    PM_da_initialized_1d, PM_da_control_1d, comparison
+    perfectModelEnsemble_initialized_control, comparison
 ):
     """Test deterministic metric calc skill over member dim."""
-    actual = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison=comparison,
-        metric='rmse',
-        dim='member',
-    )
+    actual = perfectModelEnsemble_initialized_control.verify(
+        comparison=comparison, metric='rmse', dim='member',
+    )['tos']
     assert 'init' in actual.dims
     assert not actual.isnull().any()
     # check that init is cftime object
@@ -52,57 +47,41 @@ def test_compute_perfect_model_dim_over_member(
 
 # cannot work for e2o comparison because only 1:1 comparison
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
-def test_compute_hindcast_dim_over_member(
-    hind_da_initialized_1d, observations_da_1d, comparison
-):
+def test_compute_hindcast_dim_over_member(hindcast_hist_obs_1d, comparison):
     """Test deterministic metric calc skill over member dim."""
-    actual = compute_hindcast(
-        hind_da_initialized_1d,
-        observations_da_1d,
-        comparison=comparison,
-        metric='rmse',
-        dim='member',
-    )
+    actual = hindcast_hist_obs_1d.verify(
+        comparison=comparison, metric='rmse', dim='member',
+    )['SST']
+    print(actual.dims)
     assert 'init' in actual.dims
     # mean init because skill has still coords for init lead
     assert not actual.mean('init').isnull().any()
 
 
 def test_compute_perfect_model_different_dims_quite_close(
-    PM_da_initialized_1d, PM_da_control_1d
+    perfectModelEnsemble_initialized_control,
 ):
-    """Test whether dim=['init','member'] and
-    dim='member' results."""
-    stack_dims_true = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison='m2c',
-        metric='rmse',
-        dim=['init', 'member'],
-    )
-    stack_dims_false = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison='m2c',
-        metric='rmse',
-        dim='member',
-    ).mean(['init'])
+    """Tests nearly equal dim=['init','member'] and dim='member'."""
+    stack_dims_true = perfectModelEnsemble_initialized_control.verify(
+        comparison='m2c', metric='rmse', dim=['init', 'member'],
+    )['tos']
+    stack_dims_false = perfectModelEnsemble_initialized_control.verify(
+        comparison='m2c', metric='rmse', dim='member',
+    ).mean(['init'])['tos']
     # no more than 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
 
 
-def test_bootstrap_pm_dim(PM_da_initialized_1d, PM_da_control_1d):
+def test_bootstrap_pm_dim(perfectModelEnsemble_initialized_control):
     """Test whether bootstrap_hindcast calcs skill over member dim and
     returns init dim."""
-    actual = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
+    actual = perfectModelEnsemble_initialized_control.bootstrap(
         metric='rmse',
         dim='member',
         comparison='m2c',
         iterations=ITERATIONS,
         resample_dim='member',
-    )
+    )['tos']
     assert 'init' in actual.dims
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
@@ -148,24 +127,19 @@ def test_bootstrap_hindcast_dim(
     ],
 )
 def test_compute_pm_dims(
-    PM_da_initialized_1d, PM_da_control_1d, dim, comparison, metric
+    perfectModelEnsemble_initialized_control, dim, comparison, metric
 ):
     """Test whether compute_pm calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
-    actual = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        metric=metric,
-        dim=dim,
-        comparison=comparison,
-    )
+    pm = perfectModelEnsemble_initialized_control
+    actual = pm.verify(metric=metric, dim=dim, comparison=comparison)['tos']
     # change dim as automatically in compute functions for probabilistic
     if dim in ['init', ['init', 'member']] and metric in PROBABILISTIC_METRICS:
         dim = ['member']
     elif isinstance(dim, str):
         dim = [dim]
     # check whether only dim got reduced from coords
-    assert set(PM_da_initialized_1d.dims) - set(actual.dims) == set(dim)
+    assert set(pm.get_initialized().dims) - set(actual.dims) == set(dim)
     # check whether all nan
     assert not actual.isnull().any()
 
@@ -174,23 +148,16 @@ def test_compute_pm_dims(
 @pytest.mark.parametrize(
     'metric,dim', [('rmse', 'init'), ('rmse', 'member'), ('crpss', 'member')]
 )
-def test_compute_hindcast_dims(
-    hind_da_initialized_1d, observations_da_1d, dim, comparison, metric
-):
+def test_compute_hindcast_dims(hindcast_hist_obs_1d, dim, comparison, metric):
     """Test whether compute_hindcast calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
-    actual = compute_hindcast(
-        hind_da_initialized_1d,
-        observations_da_1d,
-        metric=metric,
-        dim=dim,
-        comparison=comparison,
-    )
-    # change dim as automatically in compute functions for probabilistic
-    if dim == 'init' and metric in PROBABILISTIC_METRICS:
-        dim = 'member'
+    actual = hindcast_hist_obs_1d.verify(
+        metric=metric, dim=dim, comparison=comparison,
+    )['SST']
     # check whether only dim got reduced from coords
-    assert set(hind_da_initialized_1d.dims) - set(actual.dims) == set([dim])
+    assert set(hindcast_hist_obs_1d.get_initialized().dims) - set(actual.dims) == set(
+        [dim]
+    )
     # check whether all nan
     if 'init' in actual.dims:
         actual = actual.mean('init')

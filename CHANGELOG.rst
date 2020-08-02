@@ -22,8 +22,9 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for ``PredictionEnsemble``:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
-- ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``,
-  including spatial dimensions. (:issue:282, :pr:`407`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``.
+  For spatial dimensions to be used with ``skipna=True`` when masked input data.
+  (:issue:282, :pr:`407`) `Aaron Spring`_.
 
 Deprecated
 ----------

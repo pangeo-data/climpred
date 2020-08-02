@@ -1029,7 +1029,7 @@ class HindcastEnsemble(PredictionEnsemble):
         ):
             """Interior verify func to be passed to apply func."""
             metric, comparison, dim = _get_metric_comparison_dim(
-                metric, comparison, dim, kind=self.kind
+                hind, metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({'init': 'time'})
@@ -1080,6 +1080,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
                     ref['lead'] = forecast['lead']
                     result = xr.concat([result, ref], dim='skill', **CONCAT_KWARGS)
+            # rename back to 'init'
+            if 'time' in result.dims:
+                result = result.rename({'time': 'init'})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=['init'] + reference)
             return result

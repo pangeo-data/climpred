@@ -127,7 +127,8 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     # check that initialized contains all dims from dim
     if not set(dim).issubset(initialized.dims):
         raise DimensionError(
-            '`dim`={dim} is expected to be a subset of `initialized.dims`={initialized.dims}.'
+            f'`dim`={dim} is expected to be a subset of '
+            f'`initialized.dims`={initialized.dims}.'
         )
 
     # get metric and comparison strings incorporating alias
@@ -314,7 +315,7 @@ def compute_hindcast(
     result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
     result['lead'] = forecast['lead']
     # rename back to 'init'
-    if 'time' in result.dims:  # If dim is 'member'
+    if 'time' in result.dims:
         result = result.rename({'time': 'init'})
     # These computations sometimes drop coordinates along the way. This appends them
     # back onto the results of the metric.

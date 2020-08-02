@@ -1,5 +1,4 @@
 import inspect
-import warnings
 
 import xarray as xr
 
@@ -13,6 +12,7 @@ from .comparisons import (
     PROBABILISTIC_PM_COMPARISONS,
 )
 from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR_STR
+from .exceptions import DimensionError
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .reference import historical, persistence
@@ -86,10 +86,26 @@ def _apply_metric_at_given_lead(
     return result
 
 
-def _get_metric_comparison_dim(metric, comparison, dim, kind):
+def _sanitize(dim):
+    """Make dim to list if string, pass if None else raise ValueError."""
+    if isinstance(dim, str):
+        dim = [dim]
+    elif dim is None:
+        dim = dim
+    elif isinstance(dim, list):
+        dim = dim
+    else:
+        raise ValueError(
+            f'Expected `dim` as `str`, `list` or None, found {dim} as type {type(dim)}.'
+        )
+    return dim
+
+
+def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     """Returns `metric`, `comparison` and `dim` for compute functions.
 
     Args:
+        initialized (xr.object): initialized dataset: init_pm or hind
         metric (str): metric or alias string
         comparison (str): Description of parameter `comparison`.
         dim (list of str or str): dimension to apply metric to.
@@ -100,16 +116,19 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
         comparison (Comparison): comparison class.
         dim (list of str or str): corrected dimension to apply metric to.
     """
+    dim = _sanitize(dim)
+
     # check kind allowed
     is_in_list(kind, ['hindcast', 'PM'], 'kind')
-    # set default dim
+    # set default dim # TODO: should we still do this?
     if dim is None:
-        dim = 'init' if kind == 'hindcast' else ['init', 'member']
-    # check allowed dims
-    if kind == 'hindcast':
-        is_in_list(dim, ['member', 'init'], 'dim')
-    elif kind == 'PM':
-        is_in_list(dim, ['member', 'init', ['init', 'member']], 'dim')
+        dim = ['init'] if kind == 'hindcast' else ['init', 'member']
+
+    # check that initialized contains all dims from dim
+    if not set(dim).issubset(initialized.dims):
+        raise DimensionError(
+            '`dim`={dim} is expected to be a subset of `initialized.dims`={initialized.dims}.'
+        )
 
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -133,28 +152,15 @@ def _get_metric_comparison_dim(metric, comparison, dim, kind):
                 f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
                 f'found `{comparison.name}`.'
             )
-        if dim != 'member':
-            warnings.warn(
+        if 'member' not in dim:
+            raise ValueError(
                 f'Probabilistic metric {metric.name} requires to be '
-                f'computed over dimension `dim="member"`. '
-                f'Set automatically.'
+                f'computed over dimension `member`, which is not found in {dim}.'
             )
-            dim = 'member'
     else:  # determinstic metric
         if kind == 'hindcast':
-            if dim == 'init':
-                # for thinking in real time # compute_hindcast renames init to time
-                dim = 'time'
-        elif kind == 'PM':
-            # prevent comparison e2c and member in dim
-            if (comparison.name == 'e2c') and (
-                set(dim) == set(['init', 'member']) or dim == 'member'
-            ):
-                warnings.warn(
-                    f'comparison `{comparison.name}` does not work on `member` in dims,'
-                    f' found {dim}, automatically changed to dim=`init`.'
-                )
-                dim = 'init'
+            # for thinking in real time as compute_hindcast renames init to time
+            dim = ['time' if d == 'init' else d for d in dim]
     return metric, comparison, dim
 
 
@@ -197,7 +203,7 @@ def compute_perfect_model(
 
     # check args compatible with each other
     metric, comparison, dim = _get_metric_comparison_dim(
-        metric, comparison, dim, kind='PM'
+        init_pm, metric, comparison, dim, kind='PM'
     )
 
     forecast, verif = comparison.function(init_pm, metric=metric)
@@ -274,7 +280,7 @@ def compute_hindcast(
             Verification metric over ``lead`` reduced by dimension(s) ``dim``.
     """
     metric, comparison, dim = _get_metric_comparison_dim(
-        metric, comparison, dim, kind='hindcast'
+        hind, metric, comparison, dim, kind='hindcast'
     )
     hind = convert_time_index(hind, 'init', 'hind[init]')
     verif = convert_time_index(verif, 'time', 'verif[time]')

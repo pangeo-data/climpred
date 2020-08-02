@@ -11,7 +11,21 @@ from climpred.exceptions import DimensionError
 from climpred.metrics import PM_METRICS, PROBABILISTIC_METRICS
 from climpred.utils import get_comparison_class, get_metric_class
 
-ITERATIONS = 3
+# TODO: move to conftest.py
+ITERATIONS = 2
+
+comparison_dim_PM = [
+    ('m2m', 'init'),
+    ('m2m', 'member'),
+    ('m2m', ['init', 'member']),
+    ('m2e', 'init'),
+    ('m2e', 'member'),
+    ('m2e', ['init', 'member']),
+    ('m2c', 'init'),
+    ('m2c', 'member'),
+    ('m2c', ['init', 'member']),
+    ('e2c', 'init'),
+]
 
 
 @pytest.mark.parametrize('metric', ['crps', 'mse'])
@@ -115,16 +129,9 @@ def test_bootstrap_hindcast_dim(
         assert not actualk
 
 
-@pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
+@pytest.mark.parametrize('metric', ['rmse', 'crps'])
 @pytest.mark.parametrize(
-    'metric,dim',
-    [
-        ('rmse', 'init'),
-        ('rmse', 'member'),
-        ('rmse', ['init', 'member']),
-        ('crpss', 'member'),
-        ('crpss', ['init', 'member']),
-    ],
+    'comparison,dim', comparison_dim_PM,
 )
 def test_compute_pm_dims(
     perfectModelEnsemble_initialized_control, dim, comparison, metric
@@ -144,16 +151,15 @@ def test_compute_pm_dims(
     assert not actual.isnull().any()
 
 
-@pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 @pytest.mark.parametrize(
-    'metric,dim', [('rmse', 'init'), ('rmse', 'member'), ('crpss', 'member')]
+    'metric,dim', [('rmse', 'init'), ('rmse', 'member'), ('crps', 'member')]
 )
-def test_compute_hindcast_dims(hindcast_hist_obs_1d, dim, comparison, metric):
+def test_compute_hindcast_dims(hindcast_hist_obs_1d, dim, metric):
     """Test whether compute_hindcast calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
-    actual = hindcast_hist_obs_1d.verify(
-        metric=metric, dim=dim, comparison=comparison,
-    )['SST']
+    actual = hindcast_hist_obs_1d.verify(metric=metric, dim=dim, comparison='m2o',)[
+        'SST'
+    ]
     # check whether only dim got reduced from coords
     assert set(hindcast_hist_obs_1d.get_initialized().dims) - set(actual.dims) == set(
         [dim]

@@ -18,7 +18,21 @@ from climpred.constants import CONCAT_KWARGS, VALID_ALIGNMENTS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
 
+# TODO: move to conftest.py
 ITERATIONS = 2
+
+comparison_dim_PM = [
+    ('m2m', 'init'),
+    ('m2m', 'member'),
+    ('m2m', ['init', 'member']),
+    ('m2e', 'init'),
+    ('m2e', 'member'),
+    ('m2e', ['init', 'member']),
+    ('m2c', 'init'),
+    ('m2c', 'member'),
+    ('m2c', ['init', 'member']),
+    ('e2c', 'init'),
+]
 
 
 def test_bootstrap_PM_keep_lead_attrs(
@@ -38,10 +52,10 @@ def test_bootstrap_PM_keep_lead_attrs(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize('comparison', ['m2m', 'm2e', 'm2c'])
+@pytest.mark.parametrize('comparison,dim', comparison_dim_PM)
 @pytest.mark.parametrize('chunk', [True, False])
 def test_bootstrap_PM_lazy_results(
-    PM_da_initialized_3d, PM_da_control_3d, chunk, comparison
+    PM_da_initialized_3d, PM_da_control_3d, chunk, comparison, dim
 ):
     """Test bootstrap_perfect_model works lazily."""
     if chunk:
@@ -56,6 +70,7 @@ def test_bootstrap_PM_lazy_results(
         iterations=ITERATIONS,
         comparison=comparison,
         metric='mse',
+        dim=dim,
     )
     assert dask.is_dask_collection(s) == chunk
 

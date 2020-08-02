@@ -1738,7 +1738,7 @@ def _brier_score(forecast, verif, **metric_kwargs):
     else:
         raise ValueError(
             'Please provide a callable `logical` to be applied to comparison and \
-             verification data to get values in  interval [0,1]; \
+             verification data to get values in interval [0,1]; \
              see properscoring.brier_score.'
         )
     return brier_score(logical(verif), logical(forecast).mean('member'))

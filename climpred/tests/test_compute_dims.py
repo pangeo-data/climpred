@@ -145,7 +145,7 @@ def test_compute_pm_dims(
     if isinstance(dim, str):
         dim = [dim]
     # check whether only dim got reduced from coords
-    if comparison == 'e2c':
+    if comparison == 'e2c':  # dont expect member, remove manually
         assert set(pm.get_initialized().dims) - set(['member']) - set(dim) == set(
             actual.dims
         ), print(pm.get_initialized().dims, '-', dim, '!=', actual.dims)

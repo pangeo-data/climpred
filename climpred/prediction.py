@@ -86,13 +86,11 @@ def _apply_metric_at_given_lead(
     return result
 
 
-def _sanitize(dim):
+def _sanitize_str_to_list(dim):
     """Make dim to list if string, pass if None else raise ValueError."""
     if isinstance(dim, str):
         dim = [dim]
-    elif dim is None:
-        dim = dim
-    elif isinstance(dim, list):
+    elif isinstance(dim, list) or dim is None:
         dim = dim
     else:
         raise ValueError(
@@ -116,7 +114,7 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
         comparison (Comparison): comparison class.
         dim (list of str or str): corrected dimension to apply metric to.
     """
-    dim = _sanitize(dim)
+    dim = _sanitize_str_to_list(dim)
 
     # check kind allowed
     is_in_list(kind, ['hindcast', 'PM'], 'kind')

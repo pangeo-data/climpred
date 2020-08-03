@@ -1689,16 +1689,26 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         logical = metric_kwargs.pop('logical')
         if not callable(logical):
             raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
-        forecast = logical(forecast).mean('member')
-        verif = logical(verif)
         if isinstance(dim, list) and 'member' in dim:
+            dim = dim.copy()
             dim.remove('member')
+        else:
+            raise ValueError(
+                f'Expected `dim` to be a list, found {type(dim)}; and '
+                f'`member` to be in `dim`, found {dim}.'
+            )
+        if 'member' in forecast.dims:
+            forecast = logical(forecast).mean('member')
+            verif = logical(verif)
+        else:
+            raise ValueError(
+                f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
+            )
         return forecast, verif, metric_kwargs, dim
     else:
         raise ValueError(
             'Please provide a callable `logical` to be applied to comparison and \
-             verification data to get values in interval [0,1]; \
-             see properscoring.brier_score.'
+             verification data to get values in interval [0,1].'
         )
 
 

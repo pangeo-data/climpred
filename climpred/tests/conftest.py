@@ -18,9 +18,9 @@ def PM_ds3v_initialized_1d():
 
 
 @pytest.fixture
-def PM_ds_initialized_1d(PM_ds2v_initialized_1d):
+def PM_ds_initialized_1d(PM_ds3v_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset."""
-    return PM_ds2v_initialized_1d.drop_vars(['sos', 'AMO'])
+    return PM_ds3v_initialized_1d.drop_vars(['sos', 'AMO'])
 
 
 @pytest.fixture
@@ -74,9 +74,9 @@ def PM_ds3v_control_1d():
 
 
 @pytest.fixture
-def PM_ds_control_1d(PM_ds2v_control_1d):
+def PM_ds_control_1d(PM_ds3v_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset."""
-    return PM_ds2v_control_1d.drop_vars(['sos', 'AMO'])
+    return PM_ds3v_control_1d.drop_vars(['sos', 'AMO'])
 
 
 @pytest.fixture

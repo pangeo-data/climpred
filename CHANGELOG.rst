@@ -16,6 +16,8 @@ New Features
 
 - Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
+- Subselect data variables from ``PredictionEnsemble`` as from ``xr.Dataset``:
+  ``PredictionEnsemble[['var1','var3']]`` (:pr:`409`) `Aaron Spring`_.
 - `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for ``PredictionEnsemble``:

@@ -299,6 +299,29 @@ class PredictionEnsemble:
     def __truediv__(self, other):
         return self._math(other, operator='div')
 
+    def __getitem__(self, varlist):
+        """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
+
+        Args:
+            * varlist (list): list of name(s) of data variable(s) to subselect
+        """
+        if not isinstance(varlist, list):
+            raise ValueError(
+                'Please subset PredictionEnsemble as you would subset an xr.Dataset '
+                f'with a list of variable names, found {type(varlist)}.'
+            )
+        datasets = self._datasets.copy()
+        for outer_k, outer_v in datasets.items():
+            if outer_v is not {}:
+                if isinstance(outer_v, xr.Dataset):
+                    datasets.update({outer_k: outer_v[varlist]})
+                else:
+                    temporary_dataset = self._datasets[outer_k].copy()
+                    for inner_k, inner_v in temporary_dataset.items():
+                        temporary_dataset.update({inner_k: inner_v[varlist]})
+                    datasets.update({outer_k: temporary_dataset})
+        return self._construct_direct(datasets, kind=self.kind)
+
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.
 

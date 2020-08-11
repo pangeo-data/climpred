@@ -26,6 +26,9 @@ An xarray wrapper for analysis of ensemble forecast models for climate predictio
     :alt: license
     :target: LICENSE.txt
 
+.. image:: https://hackmd.io/pCuOUX-OTfChkfUl2qEi9g/badge
+    :target: https://hackmd.io/pCuOUX-OTfChkfUl2qEi9g
+
 Installation
 ============
 

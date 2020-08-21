@@ -331,3 +331,32 @@ def test_subset_getitem_datavariables(
     for var in all_datavars:
         if var not in varlist:
             assert var not in pm_subset.get_initialized().data_vars
+
+
+@pytest.mark.parametrize('equal', [True, False])
+def test_eq_ne(perfectModelEnsemble_3v_initialized_control_1d, equal):
+    xr.set_options(display_style='text')
+    pm = perfectModelEnsemble_3v_initialized_control_1d
+    if equal:
+        pm2 = pm
+        assert isinstance(pm2, PredictionEnsemble)
+        print(pm, pm2)
+        print('expect: True, False')
+        print(pm == pm2)
+        print(pm != pm2)
+        assert pm == pm2
+        assert isinstance(pm == pm2, bool)
+        assert not (pm != pm2)
+        assert isinstance(pm != pm2, bool)
+        # assert False
+    else:
+        pm2 = pm * 1.6
+        assert isinstance(pm2, PredictionEnsemble)
+        print(pm, pm2)
+        print('expect: True, False')
+        print(pm != pm2)
+        print(pm == pm2)
+        assert not (pm == pm2)
+        assert isinstance(pm == pm2, bool)
+        assert pm != pm2
+    assert isinstance(pm != pm2, bool)

@@ -12,7 +12,12 @@ from .checks import (
     has_valid_lead_units,
     warn_if_chunking_would_increase_performance,
 )
-from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
+from .comparisons import (
+    ALL_COMPARISONS,
+    COMPARISON_ALIASES,
+    HINDCAST_COMPARISONS,
+    __m2o,
+)
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model
@@ -770,17 +775,21 @@ def bootstrap_compute(
                     bootstrapped_uninit.chunk({'lead': 1}),
                     ['iteration'] + chunking_dims,
                 )
-
+        print(bootstrapped_uninit.coords, bootstrapped_uninit.dims)
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,
             verif,
             alignment=alignment,
             metric=metric,
-            comparison=comparison,
+            comparison='m2o' if isHindcast else comparison,
             dim=dim,
             add_attrs=False,
             **metric_kwargs,
         )
+        print(bootstrapped_uninit_skill.dims)
+        if isHindcast and comparison != __m2o:
+            bootstrapped_uninit_skill = bootstrapped_uninit_skill.mean('member')
+        print(bootstrapped_uninit_skill.dims)
 
         bootstrapped_hind = resample_func(hind, iterations, resample_dim)
         if dask.is_dask_collection(bootstrapped_hind):

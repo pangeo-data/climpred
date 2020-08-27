@@ -775,7 +775,7 @@ def bootstrap_compute(
                     bootstrapped_uninit.chunk({'lead': 1}),
                     ['iteration'] + chunking_dims,
                 )
-        print(bootstrapped_uninit.coords, bootstrapped_uninit.dims)
+
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,
             verif,
@@ -786,10 +786,9 @@ def bootstrap_compute(
             add_attrs=False,
             **metric_kwargs,
         )
-        print(bootstrapped_uninit_skill.dims)
+        # take mean if 'm2o' comparison forced before
         if isHindcast and comparison != __m2o:
             bootstrapped_uninit_skill = bootstrapped_uninit_skill.mean('member')
-        print(bootstrapped_uninit_skill.dims)
 
         bootstrapped_hind = resample_func(hind, iterations, resample_dim)
         if dask.is_dask_collection(bootstrapped_hind):

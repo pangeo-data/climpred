@@ -9,6 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from .alignment import return_inits_and_verif_dates
 from .bias_reduction import mean_bias_reduction
 from .bootstrap import (
+    bootstrap_hindcast,
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
@@ -748,12 +749,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self,
         metric='pearson_r',
         comparison='m2e',
+        dim=['dim', 'init'],
         sig=95,
         iterations=500,
         pers_sig=None,
         **metric_kwargs,
     ):
-        """Bootstrap ensemble simulations with replacement.
+        """Bootstrap ensemble PerfectModelEnsemble with replacement according to
+        Goddard et al. 2013.
 
         Args:
             metric (str, default 'pearson_r'):
@@ -806,6 +809,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
+            dim=dim,
             **metric_kwargs,
         )
 
@@ -1122,6 +1126,65 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
+
+    def bootstrap(
+        self,
+        metric='pearson_r',
+        comparison='e2o',
+        alignment='same_verifs',
+        sig=95,
+        dim='init',
+        resample_dim='member',
+        iterations=500,
+        pers_sig=None,
+        **metric_kwargs,
+    ):
+        """Bootstrap ensemble HindcastEnsemble with replacement according to
+        Goddard et al. 2013.
+
+        Args:
+            metric (str, default 'pearson_r'): Metric to apply for verification.
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o' for ensemble mean to
+                observations/verification data. 'm2o' for each individual member to
+                observations/verification data).
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+                ``verif`` to a common time frame at each lead.
+                - same_inits: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+            sig (int, default 95):
+                Significance level for uninitialized and initialized
+                comparison.
+            iterations (int, default 500): Number of resampling iterations for
+                bootstrapping with replacement.
+            pers_sig (int, default None):
+                If not None, the separate significance level for persistence.
+            **metric_kwargs (optional): arguments passed to `metric`.
+
+        Returns:
+            Dataset of comparison results (if comparing to one observational product),
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
+        """
+        # TODO: replace with more computationally efficient classes implementation
+        return bootstrap_hindcast(
+            self.get_initialized(),
+            self.get_uninitialized(),
+            self.get_observations(),
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            alignment=alignment,
+            resample_dim=resample_dim,
+            sig=sig,
+            iterations=iterations,
+            pers_sig=pers_sig,
+        )
 
     def reduce_bias(self, alignment, how='mean', cross_validate=True):
         """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.

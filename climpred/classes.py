@@ -749,7 +749,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self,
         metric='pearson_r',
         comparison='m2e',
-        dim=['dim', 'init'],
+        dim=['member', 'init'],
         sig=95,
         iterations=500,
         pers_sig=None,

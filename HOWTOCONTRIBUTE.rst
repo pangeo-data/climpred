@@ -129,7 +129,7 @@ Preparing Pull Requests
 
 #. Make an editable install of climpred by running::
 
-    $ pip install -e .
+    $ pip install --no-deps -e .
 
 #. Install `pre-commit <https://pre-commit.com>`_ and its hook on the ``climpred`` repo::
 

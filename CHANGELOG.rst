@@ -10,6 +10,8 @@ Breaking changes
 
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+- ``comparison`` is not applied to uninitialized skill in ``bootstrap_hindcast``.
+  (:issue:`352`, :pr:`418`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -20,6 +22,8 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for ``PredictionEnsemble``:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
+- ``HindcastEnsemble.bootstrap()`` analogous to ``PerfectModelEnsemble.bootstrap()``.
+  (:issue:`257`, :pr:`418`) `Aaron Spring`_.
 
 Deprecated
 ----------

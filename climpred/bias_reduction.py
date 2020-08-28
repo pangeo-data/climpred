@@ -100,7 +100,7 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True):
     else:
         mean_bias_func = _mean_bias_reduction_cross_validate
 
-    bias_reduced_hind = mean_bias_func(hindcast._datasets['initialized'], bias, 'time')
+    bias_reduced_hind = mean_bias_func(hindcast._datasets['initialized'], bias, 'init')
     hindcast_bias_reduced = hindcast.copy()
     hindcast_bias_reduced._datasets['initialized'] = bias_reduced_hind
     return hindcast_bias_reduced

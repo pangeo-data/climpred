@@ -293,28 +293,6 @@ def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
     assert f'Probabilistic metric `{metric}` requires comparison' in str(excinfo.value)
 
 
-@pytest.mark.parametrize('dim', ['init', ['init', 'member']])
-@pytest.mark.parametrize('metric', ['crps'])
-def test_compute_pm_probabilistic_metric_not_dim_member_warn(
-    PM_da_initialized_1d, PM_da_control_1d, metric, dim
-):
-    with pytest.warns(UserWarning) as record:
-        compute_perfect_model(
-            PM_da_initialized_1d,
-            PM_da_control_1d,
-            comparison='m2c',
-            metric=metric,
-            dim=dim,
-        )
-    expected = (
-        f'Probabilistic metric {metric} requires to be '
-        f'computed over dimension `dim="member"`. '
-        f'Set automatically.'
-    )
-    # get second warning here
-    assert record[1].message.args[0] == expected
-
-
 @pytest.mark.parametrize('metric', ['crps'])
 def test_compute_hindcast_probabilistic_metric_e2o_fails(
     hind_da_initialized_1d, observations_da_1d, metric
@@ -329,27 +307,3 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
             dim='member',
         )
     assert f'Probabilistic metric `{metric}` requires' in str(excinfo.value)
-
-
-@pytest.mark.parametrize('dim', ['init'])
-@pytest.mark.parametrize('metric', ['crps'])
-def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
-    hind_da_initialized_1d, observations_da_1d, metric, dim
-):
-    metric = METRIC_ALIASES.get(metric, metric)
-    with pytest.warns(UserWarning) as record:
-        compute_hindcast(
-            hind_da_initialized_1d,
-            observations_da_1d,
-            comparison='m2o',
-            metric=metric,
-            dim=dim,
-        )
-    expected = (
-        f'Probabilistic metric {metric} requires to be '
-        f'computed over dimension `dim="member"`. '
-        f'Set automatically.'
-    )
-    # Set this to the third message since the first two are about converting the integer
-    # time to annual `cftime`.
-    assert record[0].message.args[0] == expected

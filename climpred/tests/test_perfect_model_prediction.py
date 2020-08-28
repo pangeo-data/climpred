@@ -11,6 +11,19 @@ from climpred.reference import compute_persistence
 DETERMINISTIC_PM_METRICS_LUACC = DETERMINISTIC_PM_METRICS.copy()
 DETERMINISTIC_PM_METRICS_LUACC.remove('uacc')
 
+comparison_dim_PM = [
+    ('m2m', 'init'),
+    ('m2m', 'member'),
+    ('m2m', ['init', 'member']),
+    ('m2e', 'init'),
+    ('m2e', 'member'),
+    ('m2e', ['init', 'member']),
+    ('m2c', 'init'),
+    ('m2c', 'member'),
+    ('m2c', ['init', 'member']),
+    ('e2c', 'init'),
+]
+
 # run less tests
 PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 
@@ -99,47 +112,61 @@ def test_compute_persistence_lead0_lead1(
     assert (res1.values == res2.values).all()
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+@pytest.mark.parametrize('comparison,dim', comparison_dim_PM)
 @pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_perfect_model_da1d_not_nan(
-    PM_da_initialized_1d, PM_da_control_1d, comparison, metric
+    PM_da_initialized_1d, PM_da_control_1d, comparison, metric, dim
 ):
     """
     Checks that there are no NaNs on perfect model metrics of 1D time series.
     """
-    actual = (
-        compute_perfect_model(
-            PM_da_initialized_1d,
-            PM_da_control_1d,
-            comparison=comparison,
-            metric=metric,
-        )
-        .isnull()
-        .any()
+    # acc on dim member only is ill defined
+    if dim == 'member' and metric in [
+        'pearson_r',
+        'spearman_r',
+        'pearson_r_p_value',
+        'spearman_r_p_value',
+        'msess_murphy',
+        'bias_slope',
+        'conditional_bias',
+    ]:
+        dim = ['init', 'member']
+    actual = compute_perfect_model(
+        PM_da_initialized_1d,
+        PM_da_control_1d,
+        comparison=comparison,
+        metric=metric,
+        dim=dim,
     )
-    assert not actual
+    assert not actual.isnull().any()
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
-@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
+@pytest.mark.parametrize('comparison,dim', comparison_dim_PM)
+@pytest.mark.parametrize('metric', ['rmse', 'mae'])
 def test_compute_perfect_model_lead0_lead1(
     PM_da_initialized_1d,
     PM_da_initialized_1d_lead0,
     PM_da_control_1d,
     comparison,
     metric,
+    dim,
 ):
     """
     Checks that metric results are identical for a lead 0 and lead 1 setup.
     """
     res1 = compute_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric=metric,
+        PM_da_initialized_1d,
+        PM_da_control_1d,
+        comparison=comparison,
+        metric=metric,
+        dim=dim,
     )
     res2 = compute_perfect_model(
         PM_da_initialized_1d_lead0,
         PM_da_control_1d,
         comparison=comparison,
         metric=metric,
+        dim=dim,
     )
     assert (res1.values == res2.values).all()
 
@@ -153,6 +180,7 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_initialized_1d, PM_da_contro
         PM_da_control_1d,
         metric='rmse',
         comparison='e2c',
+        dim='init',
         sig=50,
         iterations=ITERATIONS,
     )
@@ -172,6 +200,7 @@ def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_initialized_1d, PM_ds_contro
         PM_ds_control_1d,
         metric='rmse',
         comparison='e2c',
+        dim='init',
         sig=50,
         iterations=ITERATIONS,
     )

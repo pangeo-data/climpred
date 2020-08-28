@@ -10,6 +10,8 @@ Breaking changes
 
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify()`` does not correct ``dim`` automatically to
+  ```member``. (:pr:`407`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -22,6 +24,9 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for ``PredictionEnsemble``:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``.
+  For spatial dimensions to be used with ``skipna=True`` when masked input data.
+  (:issue:282, :pr:`407`) `Aaron Spring`_.
 
 Deprecated
 ----------
@@ -64,6 +69,10 @@ Internals/Minor Fixes
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 - remove fixed pandas dependency from `pandas=0.25` to stable `pandas`.
   (:issue:`402`,:pr:`403`) `Aaron Spring`_.
+- ``dim`` is expected to be a list of strings in
+  :py:func:`~climpred.prediction.compute_perfect_model` and
+  :py:func:`~climpred.prediction.compute_hindcast`.
+  (:issue:282, :pr:`407`) `Aaron Spring`_.
 
 
 

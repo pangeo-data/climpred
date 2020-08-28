@@ -751,6 +751,7 @@ def bootstrap_compute(
                 replace=False,
                 dim_max=hind['member'].size,
             )
+            bootstrapped_uninit['lead'] = hind['lead']
             # effectively only when _resample_iteration_idx which doesnt use dim_max
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
@@ -770,6 +771,7 @@ def bootstrap_compute(
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
             )
+            bootstrapped_uninit['lead'] = hind['lead']
             if dask.is_dask_collection(bootstrapped_uninit):
                 bootstrapped_uninit = _maybe_auto_chunk(
                     bootstrapped_uninit.chunk({'lead': 1}),

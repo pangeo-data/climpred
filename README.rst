@@ -1,6 +1,6 @@
 .. image:: https://i.imgur.com/HPOdOsR.png
 
-An xarray wrapper for analysis of ensemble forecast models for climate prediction.
+Verification of weather and climate forecasts.
 
 .. image:: https://travis-ci.org/bradyrx/climpred.svg?branch=master
     :target: https://travis-ci.org/bradyrx/climpred

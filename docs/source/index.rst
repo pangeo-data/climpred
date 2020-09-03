@@ -1,5 +1,5 @@
-climpred: analysis of ensemble forecast models for climate prediction
-=====================================================================
+climpred: verification of weather and climate forecasts
+=======================================================
 
 .. image:: https://travis-ci.org/bradyrx/climpred.svg?branch=master
     :target: https://travis-ci.org/bradyrx/climpred

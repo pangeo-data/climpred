@@ -1,1 +1,1 @@
-.. include:: ../../HOWTOCONTRIBUTE.rst
+.. include:: ../../CONTRIBUTING.rst

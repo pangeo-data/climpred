@@ -39,11 +39,14 @@ def test_PerfectModelEnsemble_constant_forecasts(
     else:
         metric_kwargs = {'useless_kwargs': 'to_ignore'}
     if Metric.probabilistic:
-        skill = pe.verify(metric=metric, comparison='m2c', **metric_kwargs)
+        dim = ['init', 'member']
+        skill = pe.verify(metric=metric, comparison='m2c', dim=dim, **metric_kwargs)
     else:
-        skill = pe.verify(metric=metric, comparison=comparison, **metric_kwargs)
-    perfect_skill = Metric.perfect
-    assert skill == perfect_skill
+        dim = 'init' if comparison == 'e2c' else ['init', 'member']
+        skill = pe.verify(
+            metric=metric, comparison=comparison, dim=dim, **metric_kwargs
+        )
+    assert skill == Metric.perfect
 
 
 @pytest.mark.parametrize('alignment', ['same_inits', 'same_verif', 'maximize'])
@@ -97,11 +100,19 @@ def test_HindcastEnsemble_constant_forecasts(
         metric_kwargs = {'useless_kwargs': 'to_ignore'}
     if Metric.probabilistic:
         skill = he.verify(
-            metric=metric, comparison='m2o', alignment=alignment, **metric_kwargs
+            metric=metric,
+            comparison='m2o',
+            dim='member',
+            alignment=alignment,
+            **metric_kwargs
         )
     else:
+        dim = 'member' if comparison == 'm2r' else ['init']
         skill = he.verify(
-            metric=metric, comparison=comparison, alignment=alignment, **metric_kwargs
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            alignment=alignment,
+            **metric_kwargs
         )
-    perfect_skill = Metric.perfect
-    assert skill == perfect_skill
+    assert skill == Metric.perfect

@@ -1680,7 +1680,39 @@ __msess_murphy = Metric(
 #######################
 # PROBABILISTIC METRICS
 #######################
-def _brier_score(forecast, verif, **metric_kwargs):
+
+
+def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
+    """Extract callable `logical` from `metric_kwargs` and apply to `forecast` and
+    `verif`."""
+    if 'logical' in metric_kwargs:
+        logical = metric_kwargs.pop('logical')
+        if not callable(logical):
+            raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
+        if isinstance(dim, list) and 'member' in dim:
+            dim = dim.copy()
+            dim.remove('member')
+        else:
+            raise ValueError(
+                f'Expected `dim` to be a list, found {type(dim)}; and '
+                f'`member` to be in `dim`, found {dim}.'
+            )
+        if 'member' in forecast.dims:
+            forecast = logical(forecast).mean('member')
+            verif = logical(verif)
+        else:
+            raise ValueError(
+                f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
+            )
+        return forecast, verif, metric_kwargs, dim
+    else:
+        raise ValueError(
+            'Please provide a callable `logical` to be applied to comparison and \
+             verification data to get values in interval [0,1].'
+        )
+
+
+def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     """Brier Score.
 
     The Mean Square Error (``mse``) of probabilistic two-category forecasts where the
@@ -1731,17 +1763,11 @@ def _brier_score(forecast, verif, **metric_kwargs):
         >>> def pos(x): return x > 0
         >>> compute_perfect_model(ds, control, metric='brier_score', logical=pos)
     """
-    if 'logical' in metric_kwargs:
-        logical = metric_kwargs['logical']
-        if not callable(logical):
-            raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
-    else:
-        raise ValueError(
-            'Please provide a callable `logical` to be applied to comparison and \
-             verification data to get values in  interval [0,1]; \
-             see properscoring.brier_score.'
-        )
-    return brier_score(logical(verif), logical(forecast).mean('member'))
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
+    )
+    # mean dim because xs.brier_score doesnt take dim argument
+    return brier_score(verif, forecast).mean(dim)
 
 
 __brier_score = Metric(

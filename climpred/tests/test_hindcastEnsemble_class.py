@@ -164,7 +164,9 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
     hindcast.verify(metric='mse', comparison='m2o', dim='init', reference='historical')
     hindcast.verify(metric='mse', comparison='m2o', dim='init', reference='persistence')
     # probabilistic
-    hindcast.verify(metric='crps', comparison='m2o', reference='historical', dim='member')
+    hindcast.verify(
+        metric='crps', comparison='m2o', reference='historical', dim='member'
+    )
 
 
 def test_bootstrap(hindcast_hist_obs_1d):

@@ -50,7 +50,8 @@ Bug Fixes
 
 Documentation
 -------------
-
+- Updates ``climpred`` tagline to "Verification of weather and climate forecasts."
+  (:pr:`420`) `Riley X. Brady`_.
 - Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
   (:pr:`378`) `Riley X. Brady`_.
 

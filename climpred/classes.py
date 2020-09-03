@@ -818,7 +818,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
-            dim=dim,
             **metric_kwargs,
         )
 

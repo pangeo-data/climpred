@@ -4,6 +4,10 @@ Please include a summary of the change and which issue is fixed. Please also inc
 
 Closes #(issue)
 
+## To-Do List
+
+Feel free to add a checklist of steps to be performed while you are working through creating this PR.
+
 ## Type of change
 
 Please delete options that are not relevant.
@@ -13,7 +17,7 @@ Please delete options that are not relevant.
 -   [ ]  Breaking change (fix or feature that would cause existing functionality to not work as expected)
 -   [ ]  This change requires a documentation update
 -   [ ]  Performance (if you touched existing code run `asv` to detect performance changes)
--   [ ]  refactoring
+-   [ ]  Refactoring
 
 # How Has This Been Tested?
 
@@ -25,6 +29,8 @@ Please describe the tests that you ran to verify your changes. This could point 
 -   [ ]  I have commented my code, particularly in hard-to-understand areas
 -   [ ]  Tests added for `pytest`, if necessary.
 -   [ ]  I have updated the sphinx documentation, if necessary.
+-   [ ]  Any new functions are added to the API. (See contribution guide)
+-   [ ]  CHANGELOG is updated with reference to this PR.
 
 ## Pre-Merge Checklist (final steps)
 

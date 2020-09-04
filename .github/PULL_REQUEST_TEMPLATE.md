@@ -29,6 +29,8 @@ Please describe the tests that you ran to verify your changes. This could point 
 -   [ ]  I have commented my code, particularly in hard-to-understand areas
 -   [ ]  Tests added for `pytest`, if necessary.
 -   [ ]  I have updated the sphinx documentation, if necessary.
+-   [ ]  Any new functions are added to the API. (See contribution guide)
+-   [ ]  CHANGELOG is updated with reference to this PR.
 
 ## Pre-Merge Checklist (final steps)
 

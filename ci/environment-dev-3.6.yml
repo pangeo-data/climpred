@@ -25,7 +25,7 @@ dependencies:
   - xarray>=0.16.0
   # Package Management
   - asv
-  - black
+  - black==19.10b0
   - coveralls
   - dataclasses  # to get black to not error
   - doc8

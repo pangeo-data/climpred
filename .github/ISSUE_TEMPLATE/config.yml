@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: General Question
+    url: https://gitter.im/climpred/community
+    about: "If you have a simple question about how to leverage the package for your task, please post it in our gitter channel."

@@ -8,5 +8,4 @@ scipy
 tqdm
 xarray>=0.16.0
 xrft
-#xskillscore>=0.0.15
-git+git://github.com/raybellwaves/xskillscore.git
+xskillscore>=0.0.15

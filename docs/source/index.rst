@@ -108,12 +108,12 @@ repository and running ``pip install . --upgrade`` in the main directory
 
 * :doc:`api`
 * :doc:`changelog`
+* :doc:`code_of_conduct`
+* :doc:`contributing`
+* :doc:`contributors`
 * :doc:`helpful-links`
 * :doc:`publications`
-* :doc:`contributing`
-* :doc:`code_of_conduct`
 * :doc:`release_procedure`
-* :doc:`contributors`
 
 .. toctree::
     :maxdepth: 1
@@ -122,9 +122,9 @@ repository and running ``pip install . --upgrade`` in the main directory
 
     api
     changelog
+    code_of_conduct
+    contributing
+    contributors
     helpful-links
     publications
-    contributing
-    code_of_conduct
     release_procedure
-    contributors

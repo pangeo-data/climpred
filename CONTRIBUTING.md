@@ -174,7 +174,7 @@ If you need to add new functions to the API, run `sphinx-autogen -o api api.rst`
 
     will only run the `time_bootstrap_perfect_model` benchmark of class `Compute` defined in `benchmarks_perfect_model.py`.
 
-10. Create a new changelog entry in `CHANGELOG.rst`. The entry should be entered as:
+10. Create a new changelog entry in `CHANGELOG.rst`. The entry should be entered as
 
     ```shell
     <description> (``:pr:`#<pull request number>```) ```<author's names>`_``

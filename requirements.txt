@@ -9,4 +9,4 @@ tqdm
 xarray>=0.16.0
 xrft
 #xskillscore>=0.0.15
-git+https://github.com/raybellwaves/xskillscore.git
+git+git://github.com/raybellwaves/xskillscore.git

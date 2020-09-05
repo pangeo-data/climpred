@@ -1750,14 +1750,21 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
     .. note::
         The Brier Score requires that the observation is binary, i.e., can be described
-        as one (a "hit") or zero (a "miss").
+        as one (a "hit") or zero (a "miss"). So either provide a function with
+        with binary outcomes `logical` in `metric_kwargs` or create binary
+        verifs and probability forecasts by
+        `hindcast.map(logical).mean('member')`.
 
     Args:
-        forecast (xr.object): Forecast with ``member`` dim.
+        forecast (xr.object): Forecast with ``member`` dim if `logical` provided in
+            `metric_kwargs`.
         verif (xr.object): Verification data without ``member`` dim.
-        logical (callable): Function with bool result to be applied to verification
-            data and forecasts and then ``mean('member')`` to get forecasts and
-            verification data in interval [0,1].
+        dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
+            provided in `metric_kwargs`.
+        metric_kwargs (dict): including
+            logical (callable): Function with bool result to be applied to verification
+                data and forecasts and then ``mean('member')`` to get forecasts and
+                verification data in interval [0,1].
 
     Details:
         +-----------------+-----------+
@@ -1853,6 +1860,8 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
                 dim='member', threshold=.5)
+        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
+                dim='member', threshold=[.3, .7])
     """
     if 'threshold' not in metric_kwargs:
         raise ValueError('Please provide threshold.')
@@ -1935,16 +1944,21 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
+
+    Example:
+        >>> hindcast.verify(metric='crps', comparison='m2o', dim='member')
     """
     # delete member from dim to not pass as dim to xskillscore but as default member_dim
     if 'member' in dim:
         dim = dim.copy()
-        dim.remove('member')
+        member_dim = dim.pop('member')
     else:
         raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
-    return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
+    return crps_ensemble(
+        verif, forecast, dim=dim, member_dim=member_dim ** metric_kwargs
+    )
 
 
 __crps = Metric(
@@ -2061,9 +2075,9 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> hindcast.verify(metric='crpss', comparison='m2o',
                 alignment='same_verifs', dim='member')
-        >>> compute_perfect_model(ds, control, metric='crpss', gaussian=False,
-                                  cdf_or_dist=scipy.stats.norm, xminimum=-10,
-                                  xmaximum=10, tol=1e-6)
+        >>> perfect_model.verify(metric='crpss', comparison='m2m', dim='member',
+                gaussian=False, cdf_or_dist=scipy.stats.norm, xminimum=-10,
+                xmaximum=10, tol=1e-6)
 
     See also:
         * properscoring.crps_ensemble
@@ -2173,6 +2187,10 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
     Range:
         * perfect: 0
         * else: negative
+
+    Example:
+        >>> hindcast.verify(metric='crpss_es', comparison='m2o',
+                alignment='same_verifs', dim='member')
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # helper dim to calc mu

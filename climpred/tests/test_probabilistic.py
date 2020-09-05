@@ -22,29 +22,17 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on perfect model probabilistic metrics of 1D
     time series.
     """
+    metric_kwargs = {'comparison': comparison, 'metric': metric, 'dim': 'member'}
     if 'threshold' in metric:
-        threshold = 10.5
-    else:
-        threshold = None
-
+        metric_kwargs['threshold'] = 10.5
     if metric == 'brier_score':
 
         def func(x):
             return x > 0
 
-    else:
-        func = None
+        metric_kwargs['logical'] = func
 
-    actual = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison=comparison,
-        metric=metric,
-        threshold=threshold,
-        gaussian=True,
-        logical=func,
-        dim='member',
-    )
+    actual = compute_perfect_model(PM_da_initialized_1d, PM_da_control_1d)
     actual = actual.isnull().any()
     assert not actual
 
@@ -57,26 +45,16 @@ def test_compute_hindcast_probabilistic(
     """
     Checks that compute hindcast works without breaking.
     """
+    metric_kwargs = {'comparison': comparison, 'metric': metric, 'dim': 'member'}
     if 'threshold' in metric:
-        threshold = 0.5  # hind_da_initialized_1d.mean()
-    else:
-        threshold = None
+        metric_kwargs['threshold'] = 0.5
     if metric == 'brier_score':
 
         def func(x):
-            return x > 0.5
+            return x > 0
 
-    else:
-        func = None
-    res = compute_hindcast(
-        hind_da_initialized_1d,
-        observations_da_1d,
-        metric=metric,
-        comparison=comparison,
-        threshold=threshold,
-        logical=func,
-        dim='member',
-    )
+        metric_kwargs['logical'] = func
+    res = compute_hindcast(hind_da_initialized_1d, observations_da_1d, **metric_kwargs)
     # mean init because skill has still coords for init lead
     if 'init' in res.coords:
         res = res.mean('init')
@@ -93,30 +71,23 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on perfect model probabilistic metrics of 1D
     time series.
     """
+    metric_kwargs = {
+        'comparison': comparison,
+        'metric': metric,
+        'dim': 'member',
+        'iterations': ITERATIONS,
+    }
     if 'threshold' in metric:
-        threshold = 10.5
-    else:
-        threshold = None
-
+        metric_kwargs['threshold'] = 10.5
     if metric == 'brier_score':
 
         def func(x):
             return x > 0
 
-    else:
-        func = None
+        metric_kwargs['logical'] = func
 
     actual = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison=comparison,
-        metric=metric,
-        threshold=threshold,
-        gaussian=True,
-        logical=func,
-        iterations=ITERATIONS,
-        dim='member',
-        resample_dim='member',
+        PM_da_initialized_1d, PM_da_control_1d, resample_dim='member', **metric_kwargs
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
@@ -140,30 +111,26 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on hindcast probabilistic metrics of 1D
     time series.
     """
+    metric_kwargs = {
+        'comparison': comparison,
+        'metric': metric,
+        'dim': 'member',
+        'iterations': ITERATIONS,
+        'alignment': 'same_verif',
+    }
     if 'threshold' in metric:
-        threshold = 10.5
-    else:
-        threshold = None
-
+        metric_kwargs['threshold'] = 0.5
     if metric == 'brier_score':
 
         def func(x):
             return x > 0
 
-    else:
-        func = None
+        metric_kwargs['logical'] = func
 
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         observations_da_1d,
-        comparison=comparison,
-        metric=metric,
-        threshold=threshold,
-        gaussian=True,
-        logical=func,
-        iterations=ITERATIONS,
-        dim='member',
         resample_dim='member',
     )
     for kind in ['init', 'uninit']:

@@ -1685,6 +1685,9 @@ __msess_murphy = Metric(
 def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
     """Extract callable `logical` from `metric_kwargs` and apply to `forecast` and
     `verif`."""
+    if 'comparison' in metric_kwargs:
+        metric_kwargs = metric_kwargs.copy()
+        metric_kwargs.pop('comparison')
     if 'logical' in metric_kwargs:
         logical = metric_kwargs.pop('logical')
         if not callable(logical):
@@ -1772,7 +1775,8 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    return brier_score(verif, forecast, dim=dim)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs, keep=['keep_attrs', 'weights'])
+    return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 
 __brier_score = Metric(
@@ -1789,7 +1793,15 @@ __brier_score = Metric(
 )
 
 
-def _threshold_brier_score(forecast, verif, **metric_kwargs):
+def _sanitize_kwargs(kwargs, keep=[]):
+    kwargs2 = kwargs.copy()
+    for k, v in kwargs.items():
+        if k not in keep:
+            kwargs2.pop(k)
+    return kwargs2
+
+
+def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
     """Brier score of an ensemble for exceeding given thresholds.
 
     .. math::
@@ -1804,6 +1816,8 @@ def _threshold_brier_score(forecast, verif, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
         verif (xr.object): Verification data without ``member`` dim.
+        dim (list of str): Dimension to apply metric over. Expects at least
+            `member`. Other dimensions are passed to `xskillscore` and averaged.
         threshold (int, float, xr.object): Threshold to check exceedance, see
             properscoring.threshold_brier_score.
 
@@ -1828,15 +1842,24 @@ def _threshold_brier_score(forecast, verif, **metric_kwargs):
         * xskillscore.threshold_brier_score
 
     Example:
-        >>> compute_perfect_model(ds, control,
-                                  metric='threshold_brier_score', threshold=.5)
+        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
+                dim='member', threshold=.5)
     """
     if 'threshold' not in metric_kwargs:
         raise ValueError('Please provide threshold.')
     else:
-        threshold = metric_kwargs['threshold']
+        threshold = metric_kwargs.pop('threshold')
+    metric_kwargs = _sanitize_kwargs(
+        metric_kwargs, keep=['keep_attrs', 'weights', 'issorted']
+    )
+    # delete member from dim to not pass as dim to xskillscore but as default member_dim
+    if 'member' in dim:
+        dim = dim.copy()
+        dim.remove('member')
+    else:
+        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
     # switch args b/c xskillscore.threshold_brier_score(verif, forecasts)
-    return threshold_brier_score(verif, forecast, threshold)
+    return threshold_brier_score(verif, forecast, threshold, dim=dim, **metric_kwargs)
 
 
 __threshold_brier_score = Metric(
@@ -1853,7 +1876,7 @@ __threshold_brier_score = Metric(
 )
 
 
-def _crps(forecast, verif, **metric_kwargs):
+def _crps(forecast, verif, dim=None, **metric_kwargs):
     """Continuous Ranked Probability Score (CRPS).
 
     The CRPS can also be considered as the probabilistic Mean Absolute Error (``mae``).
@@ -1878,6 +1901,8 @@ def _crps(forecast, verif, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with `member` dim.
         verif (xr.object): Verification data without `member` dim.
+        dim (list of str): Dimension to apply metric over. Expects at least
+            `member`. Other dimensions are passed to `xskillscore` and averaged.
         metric_kwargs (xr.object): If provided, the CRPS is calculated exactly with the
             assigned probability weights to each forecast. Weights should be positive,
             but do not need to be normalized. By default, each forecast is weighted
@@ -1904,9 +1929,15 @@ def _crps(forecast, verif, **metric_kwargs):
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
     """
-    weights = metric_kwargs.get('weights', None)
+    # delete member from dim to not pass as dim to xskillscore but as default member_dim
+    if 'member' in dim:
+        dim = dim.copy()
+        dim.remove('member')
+    else:
+        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
+    metric_kwargs = _sanitize_kwargs(metric_kwargs, keep=['keep_attrs', 'weights'])
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
-    return crps_ensemble(verif, forecast, weights=weights)
+    return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
 
 __crps = Metric(
@@ -1938,12 +1969,10 @@ def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
         * properscoring.crps_gaussian
         * xskillscore.crps_gaussian
     """
-    return crps_gaussian(forecast, mu, sig)
+    return crps_gaussian(forecast, mu, sig, **metric_kwargs)
 
 
-def _crps_quadrature(
-    forecast, cdf_or_dist, xmin=None, xmax=None, tol=1e-6, **metric_kwargs
-):
+def _crps_quadrature(forecast, cdf_or_dist, **metric_kwargs):
     """Compute the continuously ranked probability score (CPRS) for a given
     forecast distribution (``cdf``) and observation (``o``) using numerical quadrature.
 
@@ -1957,21 +1986,16 @@ def _crps_quadrature(
         forecast (xr.object): Forecast with ``member`` dim.
         cdf_or_dist (callable or scipy.stats.distribution): Function which returns the
             cumulative density of the forecast distribution at value x.
-        xmin (float): Lower bounds for integration.
-        xmax (float): Upper bounds for integration.
-        tol (float, optional): The desired accuracy of the CRPS. Larger values will
-                               speed up integration. If ``tol`` is set to ``None``,
-                               bounds errors or integration tolerance errors will be
-                               ignored.
+        metric_kwargs (dict): see xskillscore.crps_quadrature
 
     See also:
         * properscoring.crps_quadrature
         * xskillscore.crps_quadrature
     """
-    return crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
+    return crps_quadrature(forecast, cdf_or_dist, **metric_kwargs)
 
 
-def _crpss(forecast, verif, **metric_kwargs):
+def _crpss(forecast, verif, dim=None, **metric_kwargs):
     """Continuous Ranked Probability Skill Score.
 
     This can be used to assess whether the ensemble spread is a useful measure for the
@@ -2028,7 +2052,8 @@ def _crpss(forecast, verif, **metric_kwargs):
           https://doi.org/10/c6758w.
 
     Example:
-        >>> compute_perfect_model(ds, control, metric='crpss')
+        >>> hindcast.verify(metric='crpss', comparison='m2o',
+                alignment='same_verifs', dim='member')
         >>> compute_perfect_model(ds, control, metric='crpss', gaussian=False,
                                   cdf_or_dist=scipy.stats.norm, xminimum=-10,
                                   xmaximum=10, tol=1e-6)
@@ -2037,6 +2062,18 @@ def _crpss(forecast, verif, **metric_kwargs):
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
     """
+    metric_kwargs = _sanitize_kwargs(
+        metric_kwargs,
+        keep=[
+            'keep_attrs',
+            'weights',
+            'gaussian',
+            'xmin',
+            'xmax',
+            'tol',
+            'cdf_or_dist',
+        ],
+    )
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
@@ -2044,37 +2081,39 @@ def _crpss(forecast, verif, **metric_kwargs):
 
     # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
     if 'gaussian' in metric_kwargs:
-        gaussian = metric_kwargs['gaussian']
+        gaussian = metric_kwargs.pop('gaussian')
     else:
         gaussian = True
 
     if gaussian:
-        ref_skill = _crps_gaussian(forecast, mu, sig)
+        ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim)
     # TODO: Add tests for this section.
     else:
         if 'cdf_or_dist' in metric_kwargs:
-            cdf_or_dist = metric_kwargs['cdf_or_dist']
+            cdf_or_dist = metric_kwargs.pop('cdf_or_dist')
         else:
             # Imported at top. This is `scipy.stats.norm`
             cdf_or_dist = norm
 
         if 'xmin' in metric_kwargs:
-            xmin = metric_kwargs['xmin']
+            xmin = metric_kwargs.pop('xmin')
         else:
             xmin = None
 
         if 'xmax' in metric_kwargs:
-            xmax = metric_kwargs['xmax']
+            xmax = metric_kwargs.pop('xmax')
         else:
             xmax = None
 
         if 'tol' in metric_kwargs:
-            tol = metric_kwargs['tol']
+            tol = metric_kwargs.pop('tol')
         else:
             tol = 1e-6
-        ref_skill = _crps_quadrature(forecast, cdf_or_dist, xmin, xmax, tol)
-    forecast_skill = __crps.function(forecast, verif, **metric_kwargs)
-    skill_score = 1 - forecast_skill / ref_skill.mean('member')
+        ref_skill = _crps_quadrature(
+            forecast, cdf_or_dist, dim=dim, xmin=xmin, xmax=xmax, tol=tol
+        )
+    forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
+    skill_score = 1 - forecast_skill / ref_skill
     return skill_score
 
 
@@ -2091,7 +2130,7 @@ __crpss = Metric(
 )
 
 
-def _crpss_es(forecast, verif, **metric_kwargs):
+def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
     """Continuous Ranked Probability Skill Score Ensemble Spread.
 
     If the ensemble variance is smaller than the observed ``mse``, the ensemble is
@@ -2135,8 +2174,11 @@ def _crpss_es(forecast, verif, **metric_kwargs):
         * perfect: 0
         * else: negative
     """
+    print('dim', dim)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs, keep=['keep_attrs', 'weights'])
     # helper dim to calc mu
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS + ['time']]
+    print(rdim)
     # inside compute_perfect_model
     if 'init' in forecast.dims:
         dim2 = 'init'
@@ -2149,13 +2191,9 @@ def _crpss_es(forecast, verif, **metric_kwargs):
     mu = verif.mean(rdim)
     forecast, ref2 = xr.broadcast(forecast, verif)
     mse_kwargs = metric_kwargs.copy()
-    if 'dim' in mse_kwargs:
-        del mse_kwargs['dim']
-    sig_r = __mse.function(forecast, ref2, dim='member', **mse_kwargs).mean(dim2)
-    sig_h = __mse.function(
-        forecast.mean(dim2), ref2.mean(dim2), dim='member', **mse_kwargs
-    )
-    crps_h = _crps_gaussian(forecast, mu, sig_h)
+    sig_r = __mse.function(forecast, ref2, dim=dim, **mse_kwargs).mean(dim2)
+    sig_h = __mse.function(forecast.mean(dim2), ref2.mean(dim2), dim=dim, **mse_kwargs)
+    crps_h = _crps_gaussian(forecast, mu, sig_h, dim=[])
     if 'member' in crps_h.dims:
         crps_h = crps_h.mean('member')
     crps_r = _crps_gaussian(forecast, mu, sig_r)

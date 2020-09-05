@@ -169,7 +169,7 @@ def compute_perfect_model(
     control,
     metric='pearson_r',
     comparison='m2e',
-    dim=None,
+    dim=['member', 'init'],
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -214,7 +214,7 @@ def compute_perfect_model(
     skill = metric.function(
         forecast, verif, dim=dim, comparison=comparison, **metric_kwargs
     )
-    if comparison.name == 'm2m':
+    if comparison.name == 'm2m' and M2M_MEMBER_DIM in skill.dims:
         skill = skill.mean(M2M_MEMBER_DIM)
     # Attach climpred compute information to skill
     if add_attrs:

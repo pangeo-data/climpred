@@ -90,6 +90,16 @@ def _preprocess_dims(dim):
     return dim
 
 
+def _sanitize_kwargs(kwargs, delete=['comparison', 'alignment']):
+    """Delete some keywords from kwargs."""
+    kwargs2 = kwargs.copy()
+    if delete is not []:
+        for k, v in kwargs.items():
+            if k in delete:
+                kwargs2.pop(k)
+    return kwargs2
+
+
 def _display_metric_metadata(self):
     summary = '----- Metric metadata -----\n'
     summary += f'Name: {self.name}\n'
@@ -191,12 +201,8 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.pearson_r
 
     Details:
         +-----------------+-----------+
@@ -215,9 +221,8 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r_p_value
         * climpred.pearson_r_eff_p_value
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return pearson_r(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r = Metric(
@@ -269,16 +274,13 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r
         * climpred.pearson_r_eff_p_value
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return pearson_r_p_value(
-            forecast, verif, dim=dim, weights=weights, skipna=skipna
-        )
+        return pearson_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r_p_value = Metric(
@@ -323,8 +325,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
+        dim (str): Dimension(s) to perform metric over.
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
@@ -343,8 +344,8 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-    skipna = metric_kwargs.get('skipna', False)
-    return effective_sample_size(forecast, verif, dim=dim, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __effective_sample_size = Metric(
@@ -393,8 +394,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
+        dim (str): Dimension(s) to perform metric over.
         skipna (bool, optional): If True, skip NaNs over dimension being applied to.
                                  Defaults to ``False``.
 
@@ -417,13 +417,13 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-    skipna = metric_kwargs.get('skipna', False)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return pearson_r_eff_p_value(forecast, verif, dim=dim, skipna=skipna,)
+        return pearson_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r_eff_p_value = Metric(
@@ -489,9 +489,8 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r_p_value
         * climpred.spearman_r_eff_p_value
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return spearman_r(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r = Metric(
@@ -543,16 +542,13 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r
         * climpred.spearman_r_eff_p_value
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return spearman_r_p_value(
-            forecast, verif, dim=dim, weights=weights, skipna=skipna
-        )
+        return spearman_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r_p_value = Metric(
@@ -626,13 +622,13 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-    skipna = metric_kwargs.get('skipna', False)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
         warnings.simplefilter('ignore')
-        return spearman_r_eff_p_value(forecast, verif, dim=dim, skipna=skipna)
+        return spearman_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r_eff_p_value = Metric(
@@ -698,9 +694,8 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
           Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mse(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return mse(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __mse = Metric(
@@ -749,9 +744,8 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.rmse
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return rmse(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return rmse(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __rmse = Metric(
@@ -807,9 +801,8 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
           Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mae(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return mae(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __mae = Metric(
@@ -856,8 +849,8 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.median_absolute_error
     """
-    skipna = metric_kwargs.get('skipna', False)
-    return median_absolute_error(forecast, verif, dim=dim, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return median_absolute_error(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __median_absolute_error = Metric(
@@ -1264,9 +1257,8 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.mape
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return mape(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return mape(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __mape = Metric(
@@ -1315,9 +1307,8 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.smape
     """
-    weights = metric_kwargs.get('weights', None)
-    skipna = metric_kwargs.get('skipna', False)
-    return smape(forecast, verif, dim=dim, weights=weights, skipna=skipna)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return smape(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __smape = Metric(
@@ -1444,8 +1435,8 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    ratio = forecast.std(dim) / verif.std(dim)
-    return ratio
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return forecast.std(dim=dim, **metric_kwargs) / verif.std(dim=dim, **metric_kwargs)
 
 
 __std_ratio = Metric(
@@ -1488,8 +1479,8 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www.cawcr.gov.au/projects/verification/
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    bias = (forecast - verif).mean(dim)
-    return bias
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
 
 __unconditional_bias = Metric(
@@ -1535,11 +1526,9 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
-    conditional_bias = acc - __std_ratio.function(
-        forecast, verif, dim=dim, **metric_kwargs
-    )
-    return conditional_bias
+    return acc - __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __conditional_bias = Metric(
@@ -1587,10 +1576,10 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     std_ratio = __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
-    b_s = std_ratio * acc
-    return b_s
+    return std_ratio * acc
 
 
 __bias_slope = Metric(
@@ -1652,15 +1641,15 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
         forecast, verif, dim=dim, **metric_kwargs
     )
     uncond_bias = __unconditional_bias.function(
         forecast, verif, dim=dim, **metric_kwargs
-    ) / verif.std(dim)
-    skill = acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
-    return skill
+    ) / verif.std(dim=dim, **metric_kwargs)
+    return acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
 
 
 __msess_murphy = Metric(
@@ -1722,16 +1711,6 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
             'Please provide a callable `logical` to be applied to comparison and \
              verification data to get values in interval [0,1].'
         )
-
-
-def _sanitize_kwargs(kwargs, delete=['comparison', 'alignment']):
-    """Delete some keywords from kwargs."""
-    kwargs2 = kwargs.copy()
-    if delete is not []:
-        for k, v in kwargs.items():
-            if k in delete:
-                kwargs2.pop(k)
-    return kwargs2
 
 
 def _brier_score(forecast, verif, dim=None, **metric_kwargs):

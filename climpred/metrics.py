@@ -1754,13 +1754,16 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         with binary outcomes `logical` in `metric_kwargs` or create binary
         verifs and probability forecasts by
         `hindcast.map(logical).mean('member')`.
+        This Brier Score is not the original formula given in Brier's 1950 paper.
 
     Args:
-        forecast (xr.object): Forecast with ``member`` dim if `logical` provided in
-            `metric_kwargs`.
-        verif (xr.object): Verification data without ``member`` dim.
+        forecast (xr.object): Raw forecasts with ``member`` dimension if `logical`
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
+            not provided.
+        verif (xr.object): Verification data without ``member`` dim. Raw verification if
+            `logical` provided, else binary verification.
         dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
-            provided in `metric_kwargs`.
+            provided in `metric_kwargs` to create probability forecasts.
         metric_kwargs (dict): including
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean('member')`` to get forecasts and
@@ -1778,9 +1781,6 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         +-----------------+-----------+
 
     Reference:
-        * Brier, Glenn W. Verification of forecasts expressed in terms of
-          probability.” Monthly Weather Review 78, no. 1 (1950).
-          https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
         * https://www.nws.noaa.gov/oh/rfcdev/docs/
           Glossary_Forecast_Verification_Metrics.pdf
         * https://en.wikipedia.org/wiki/Brier_score
@@ -1790,7 +1790,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.brier_score
 
     Example:
-        >>> def pos(x): return x > 0
+        >>> def pos(x): return x > 0  # checking binary outcomes
         >>> hindcast.verify(metric='brier_score', comparison='m2o', \
                 dim='member', alignment='same_verifs', logical=pos)
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score', \

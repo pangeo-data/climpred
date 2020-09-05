@@ -113,6 +113,7 @@ repository and running ``pip install . --upgrade`` in the main directory
 * :doc:`contributors`
 * :doc:`helpful-links`
 * :doc:`publications`
+* :doc:`related_packages`
 * :doc:`release_procedure`
 
 .. toctree::
@@ -127,4 +128,5 @@ repository and running ``pip install . --upgrade`` in the main directory
     contributors
     helpful-links
     publications
+    related-packages
     release_procedure

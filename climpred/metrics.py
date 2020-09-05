@@ -1687,7 +1687,7 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
     `verif`."""
     if 'comparison' in metric_kwargs:
         metric_kwargs = metric_kwargs.copy()
-        metric_kwargs.pop('comparison')
+        comparison = metric_kwargs.pop('comparison')
     if 'logical' in metric_kwargs:
         logical = metric_kwargs.pop('logical')
         if not callable(logical):
@@ -1713,6 +1713,10 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
             dim.remove('init')
             dim = dim + ['time']
         return forecast, verif, metric_kwargs, dim
+    elif (
+        comparison.name == 'e2o' and 'logical' not in metric_kwargs
+    ):  # allow e2o comparison without logical
+        return forecast, verif, metric_kwargs, dim
     else:
         raise ValueError(
             'Please provide a callable `logical` to be applied to comparison and \
@@ -1720,8 +1724,18 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         )
 
 
+def _sanitize_kwargs(kwargs, delete=['comparison', 'alignment']):
+    """Delete some keywords from kwargs."""
+    kwargs2 = kwargs.copy()
+    if delete is not []:
+        for k, v in kwargs.items():
+            if k in delete:
+                kwargs2.pop(k)
+    return kwargs2
+
+
 def _brier_score(forecast, verif, dim=None, **metric_kwargs):
-    """Brier Score.
+    """Brier Score for binary events.
 
     The Mean Square Error (``mse``) of probabilistic two-category forecasts where the
     verification data are either 0 (no occurrence) or 1 (occurrence) and forecast
@@ -1762,6 +1776,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
         * https://www.nws.noaa.gov/oh/rfcdev/docs/
           Glossary_Forecast_Verification_Metrics.pdf
+        * https://en.wikipedia.org/wiki/Brier_score
 
     See also:
         * properscoring.brier_score
@@ -1771,11 +1786,13 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         >>> def pos(x): return x > 0
         >>> hindcast.verify(metric='brier_score', comparison='m2o', \
                 dim='member', alignment='same_verifs', logical=pos)
+        >>> hindcast.map(pos).mean('member').verify(metric='brier_score', \
+                comparison='e2o', dim=[], alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs, keep=['keep_attrs', 'weights'])
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -1791,14 +1808,6 @@ __brier_score = Metric(
     maximum=1.0,
     perfect=0.0,
 )
-
-
-def _sanitize_kwargs(kwargs, keep=[]):
-    kwargs2 = kwargs.copy()
-    for k, v in kwargs.items():
-        if k not in keep:
-            kwargs2.pop(k)
-    return kwargs2
 
 
 def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
@@ -1849,9 +1858,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError('Please provide threshold.')
     else:
         threshold = metric_kwargs.pop('threshold')
-    metric_kwargs = _sanitize_kwargs(
-        metric_kwargs, keep=['keep_attrs', 'weights', 'issorted']
-    )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # delete member from dim to not pass as dim to xskillscore but as default member_dim
     if 'member' in dim:
         dim = dim.copy()
@@ -1935,7 +1942,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         dim.remove('member')
     else:
         raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
-    metric_kwargs = _sanitize_kwargs(metric_kwargs, keep=['keep_attrs', 'weights'])
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
     return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
@@ -2062,31 +2069,18 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
     """
-    metric_kwargs = _sanitize_kwargs(
-        metric_kwargs,
-        keep=[
-            'keep_attrs',
-            'weights',
-            'gaussian',
-            'xmin',
-            'xmax',
-            'tol',
-            'cdf_or_dist',
-        ],
-    )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
     sig = verif.std(rdim)
-
     # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
     if 'gaussian' in metric_kwargs:
         gaussian = metric_kwargs.pop('gaussian')
     else:
         gaussian = True
-
     if gaussian:
-        ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim)
+        ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim, **metric_kwargs)
     # TODO: Add tests for this section.
     else:
         if 'cdf_or_dist' in metric_kwargs:
@@ -2110,7 +2104,13 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         else:
             tol = 1e-6
         ref_skill = _crps_quadrature(
-            forecast, cdf_or_dist, dim=dim, xmin=xmin, xmax=xmax, tol=tol
+            forecast,
+            cdf_or_dist,
+            dim=dim,
+            xmin=xmin,
+            xmax=xmax,
+            tol=tol,
+            **metric_kwargs,
         )
     forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
     skill_score = 1 - forecast_skill / ref_skill
@@ -2174,31 +2174,27 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         * perfect: 0
         * else: negative
     """
-    print('dim', dim)
-    metric_kwargs = _sanitize_kwargs(metric_kwargs, keep=['keep_attrs', 'weights'])
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # helper dim to calc mu
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS + ['time']]
-    print(rdim)
-    # inside compute_perfect_model
-    if 'init' in forecast.dims:
-        dim2 = 'init'
-    # inside compute_hindcast
-    elif 'time' in forecast.dims:
-        dim2 = 'time'
-    else:
-        raise ValueError('dim2 not found automatically in ', forecast.dims)
-
     mu = verif.mean(rdim)
-    forecast, ref2 = xr.broadcast(forecast, verif)
-    mse_kwargs = metric_kwargs.copy()
-    sig_r = __mse.function(forecast, ref2, dim=dim, **mse_kwargs).mean(dim2)
-    sig_h = __mse.function(forecast.mean(dim2), ref2.mean(dim2), dim=dim, **mse_kwargs)
-    crps_h = _crps_gaussian(forecast, mu, sig_h, dim=[])
-    if 'member' in crps_h.dims:
-        crps_h = crps_h.mean('member')
-    crps_r = _crps_gaussian(forecast, mu, sig_r)
-    if 'member' in crps_r.dims:
-        crps_r = crps_r.mean('member')
+    # inside compute_perfect_model
+    if 'init' in forecast.dims and 'time' in dim:
+        dim = dim.copy()
+        dim.remove('time')
+        dim = dim + ['init']
+    # inside compute_hindcast
+    elif 'time' in forecast.dims and 'init' in dim:
+        dim = dim.copy()
+        dim.remove('init')
+        dim = dim + ['time']
+    forecast, verif_member = xr.broadcast(forecast, verif)
+    ensemble_spread = forecast.std('member').mean(
+        dim=[d for d in dim if d != 'member'], **metric_kwargs
+    )
+    mse_h = __mse.function(forecast, verif_member, dim=dim, **metric_kwargs)
+    crps_h = _crps_gaussian(forecast, mu, mse_h, dim=dim, **metric_kwargs)
+    crps_r = _crps_gaussian(forecast, mu, ensemble_spread, dim=dim, **metric_kwargs)
     return 1 - crps_h / crps_r
 
 

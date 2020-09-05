@@ -145,13 +145,14 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
         else PROBABILISTIC_PM_COMPARISONS
     )
     if metric.probabilistic:
-        if not comparison.probabilistic:
+        pass
+        if not comparison.probabilistic and 'member' in initialized.dims:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison '
                 f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
                 f'found `{comparison.name}`.'
             )
-        if 'member' not in dim:
+        if 'member' not in dim and 'member' in initialized.dims:
             raise ValueError(
                 f'Probabilistic metric {metric.name} requires to be '
                 f'computed over dimension `member`, which is not found in {dim}.'

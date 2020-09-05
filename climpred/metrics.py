@@ -1697,13 +1697,18 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
                 f'Expected `dim` to be a list, found {type(dim)}; and '
                 f'`member` to be in `dim`, found {dim}.'
             )
-        if 'member' in forecast.dims:
-            forecast = logical(forecast).mean('member')
-            verif = logical(verif)
+        if 'member' in forecast.dims:  # apply logical function to get
+            forecast = logical(forecast).mean('member')  # forecast probability
+            verif = logical(verif)  # binary outcome
         else:
             raise ValueError(
                 f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
             )
+        # rename dim to time if forecast and verif dims allow
+        if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
+            dim = dim.copy()
+            dim.remove('init')
+            dim = dim + ['time']
         return forecast, verif, metric_kwargs, dim
     else:
         raise ValueError(
@@ -1761,13 +1766,13 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> def pos(x): return x > 0
-        >>> compute_perfect_model(ds, control, metric='brier_score', logical=pos)
+        >>> hindcast.verify(metric='brier_score', comparison='m2o', \
+                dim='member', alignment='same_verifs', logical=pos)
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    # mean dim because xs.brier_score doesnt take dim argument
-    return brier_score(verif, forecast).mean(dim)
+    return brier_score(verif, forecast, dim=dim)
 
 
 __brier_score = Metric(

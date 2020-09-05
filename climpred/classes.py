@@ -1172,6 +1172,12 @@ class HindcastEnsemble(PredictionEnsemble):
             sig (int, default 95):
                 Significance level for uninitialized and initialized
                 comparison.
+            dim (str): dimension to apply metric over. default: 'init'.
+            resample_dim (str or list): dimension to resample from. default: 'member'.
+
+                - 'member': select a different set of members from hind
+                - 'init': select a different set of initializations from hind
+
             iterations (int, default 500): Number of resampling iterations for
                 bootstrapping with replacement.
             pers_sig (int, default None):

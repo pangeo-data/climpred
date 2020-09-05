@@ -15,7 +15,7 @@ domain that are not on the list.
 * `properscoring <https://github.com/TheClimateCorporation/properscoring>`_:
   Probabilistic forecast metrics in python.
   (We've since wrapped these functions in ``xskillscore``)
-* `pysteps <https://pysteps.github.io/>`_:
+* `pySTEPS <https://pysteps.github.io/>`_:
   Framework for short-term ensemble forecasting of precipitation.
 * `S2D Verification <https://cran.r-project.org/web/packages/s2dverification/s2dverification.pdf>`_:
   An R package for a common set of tools for forecast verification.

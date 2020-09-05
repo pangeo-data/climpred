@@ -1,1 +1,1 @@
-.. include:: ../../HOWTOCONTRIBUTE.rst
+.. mdinclude:: ../../CONTRIBUTING.md

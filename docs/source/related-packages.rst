@@ -11,7 +11,10 @@ domain that are not on the list.
 * `Microsoft forecasting <https://microsoft.github.io/forecasting/>`_:
   A collection of best practices for time series forecasting.
 * `MurCSS <https://github.com/illing2005/murcss>`_:
-  A tool for standardized evaluation of decadal hindcast systems.
+  A tool for standardized evaluation of decadal hindcast systems. See also
+  `this <https://www-miklip.dkrz.de/about/problems/>`__ and
+  `this <https://www-miklip.dkrz.de/about/murcss/>`__ page for additional resources
+  on scoring from MurCSS.
 * `properscoring <https://github.com/TheClimateCorporation/properscoring>`_:
   Probabilistic forecast metrics in python.
   (We've since wrapped these functions in ``xskillscore``)

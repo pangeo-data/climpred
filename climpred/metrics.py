@@ -1951,14 +1951,12 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
     # delete member from dim to not pass as dim to xskillscore but as default member_dim
     if 'member' in dim:
         dim = dim.copy()
-        member_dim = dim.pop('member')
+        dim.remove('member')
     else:
         raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
-    return crps_ensemble(
-        verif, forecast, dim=dim, member_dim=member_dim ** metric_kwargs
-    )
+    return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
 
 __crps = Metric(

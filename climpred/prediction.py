@@ -118,9 +118,11 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
 
     # check kind allowed
     is_in_list(kind, ['hindcast', 'PM'], 'kind')
-    # set default dim # TODO: should we still do this?
-    if dim is None:
-        dim = ['init'] if kind == 'hindcast' else ['init', 'member']
+
+    if dim is None:  # take all dimension from initialized except lead
+        dim = list(initialized.dims)
+        if 'lead' in dim:
+            dim.remove('lead')
 
     # check that initialized contains all dims from dim
     if not set(dim).issubset(initialized.dims):
@@ -185,7 +187,8 @@ def compute_perfect_model(
         comparison (str): `comparison` name defines what to take as forecast
             and verification (see
             :py:func:`climpred.utils.get_comparison_class` and :ref:`Comparisons`).
-        dim (str or list of str): dimension to apply metric over. default: ['member', 'init']
+        dim (str or list of str): dimension to apply metric over.
+            default: ['member', 'init']
         add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric.
             (see the arguments required for a given metric in metrics.py)

@@ -120,7 +120,7 @@ def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
         == pm.get_initialized().lead.size - smooth + 1
     )
     assert pm_smoothed._temporally_smoothed
-    skill = pm_smoothed.verify(metric='acc', comparison='m2e')
+    skill = pm_smoothed.verify(metric='acc', comparison='m2e', dim=['member', 'init'])
     assert skill.lead.size == pm.get_initialized().lead.size - smooth + 1
     assert skill.lead[0] == f'1-{1+smooth-1}'
 
@@ -143,7 +143,9 @@ def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth, dim):
         he_smoothed.get_initialized().lead.size
         == he.get_initialized().lead.size - smooth + 1
     )
-    skill = he_smoothed.verify(metric='acc', comparison='e2o', alignment='maximize')
+    skill = he_smoothed.verify(
+        metric='acc', comparison='e2o', alignment='maximize', dim='init'
+    )
     assert skill.lead.size == he.get_initialized().lead.size - smooth + 1
     assert skill.lead[0] == f'1-{1+smooth-1}'
 
@@ -158,7 +160,9 @@ def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim
     for d in dim:
         assert he_smoothed.get_initialized()[d].any()
         assert he_smoothed.get_observations('recon')[d].any()
-    assert he_smoothed.verify(metric='acc', comparison='e2o').any()
+    assert he_smoothed.verify(
+        metric='acc', comparison='e2o', alignment='same_verif', dim='init'
+    ).any()
 
 
 def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_cftime):
@@ -215,4 +219,6 @@ def test_HindcastEnsemble_temporal_smoothing_two_observations(hindcast_recon_1d_
     he = hindcast_recon_1d_ym.add_observations(
         hindcast_recon_1d_ym.get_observations('recon'), 'recon2'
     )
-    assert he.smooth({'time': 2}).verify()
+    assert he.smooth({'time': 2}).verify(
+        metric='acc', comparison='e2o', alignment='same_verif', dim='init'
+    )

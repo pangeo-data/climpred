@@ -6,7 +6,6 @@ from climpred import HindcastEnsemble
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
     """Test to see hindcast ensemble can be initialized with xr.Dataset."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    print(hindcast)
     assert hindcast
 
 
@@ -51,10 +50,16 @@ def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d
     hindcast = hindcast.add_observations(observations_ds_1d, 'observations')
     # Don't need to check for NaNs, etc. since that's handled in the prediction
     # module testing.
-    hindcast.verify()  # compute over all observations
-    hindcast.verify('reconstruction')  # compute over single observation
-    # test all keywords
-    hindcast.verify(metric='rmse', comparison='m2o')
+    hindcast.verify(
+        metric='acc', comparison='e2o', dim='init', alignment='same_verif'
+    )  # compute over all observations
+    hindcast.verify(
+        'reconstruction',
+        metric='acc',
+        comparison='e2o',
+        dim='init',
+        alignment='same_verif',
+    )  # compute over single observation
 
 
 def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
@@ -62,7 +67,7 @@ def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
     product."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast.verify()
+    hindcast.verify(metric='acc', comparison='e2o', dim='init', alignment='same_verif')
 
 
 def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
@@ -125,14 +130,18 @@ def test_inplace(
 def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
     how = 'mean'
     metric = 'rmse'
+    dim = 'init'
+    comparison = 'e2o'
     hindcast = hindcast_hist_obs_1d
-    biased_skill = hindcast.verify(metric=metric, alignment=alignment)
+    biased_skill = hindcast.verify(
+        metric=metric, alignment=alignment, dim=dim, comparison=comparison
+    )
     bias_reduced_skill = hindcast.reduce_bias(
         how=how, alignment=alignment, cross_validate=False
-    ).verify(metric=metric, alignment=alignment)
+    ).verify(metric=metric, alignment=alignment, dim=dim, comparison=comparison)
     bias_reduced_skill_properly = hindcast.reduce_bias(
         how=how, cross_validate=True, alignment=alignment
-    ).verify(metric=metric, alignment=alignment)
+    ).verify(metric=metric, alignment=alignment, dim=dim, comparison=comparison)
     assert biased_skill > bias_reduced_skill
     assert biased_skill > bias_reduced_skill_properly
     assert bias_reduced_skill_properly >= bias_reduced_skill
@@ -146,6 +155,7 @@ def test_verify_metric_kwargs(hindcast_hist_obs_1d):
         dim='member',
         threshold=0.5,
         reference='historical',
+        alignment='same_verifs',
     )
 
 
@@ -153,7 +163,12 @@ def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
     """Test that HindcastEnsemble fails when metric_kwargs expected but not given."""
     hindcast = hindcast_hist_obs_1d
     with pytest.raises(ValueError) as excinfo:
-        hindcast.verify(metric='threshold_brier_score', comparison='m2o', dim='member')
+        hindcast.verify(
+            metric='threshold_brier_score',
+            comparison='m2o',
+            dim='member',
+            alignment='same_verifs',
+        )
     assert 'Please provide threshold.' == str(excinfo.value)
 
 
@@ -161,11 +176,27 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
     """Test that m2o comparison in references work."""
     hindcast = hindcast_hist_obs_1d
     # determinstic
-    hindcast.verify(metric='mse', comparison='m2o', dim='init', reference='historical')
-    hindcast.verify(metric='mse', comparison='m2o', dim='init', reference='persistence')
+    hindcast.verify(
+        metric='mse',
+        comparison='m2o',
+        dim='init',
+        alignment='same_verif',
+        reference='historical',
+    )
+    hindcast.verify(
+        metric='mse',
+        comparison='m2o',
+        dim='init',
+        alignment='same_verif',
+        reference='persistence',
+    )
     # probabilistic
     hindcast.verify(
-        metric='crps', comparison='m2o', reference='historical', dim='member'
+        metric='crps',
+        comparison='m2o',
+        reference='historical',
+        dim='member',
+        alignment='same_verif',
     )
 
 

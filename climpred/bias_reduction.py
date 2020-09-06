@@ -96,8 +96,8 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
 
     bias = hindcast.verify(
         metric=bias_metric,
-        comparison='e2r',
-        dim=None,
+        comparison='e2o',
+        dim='init',
         alignment=alignment,
         **metric_kwargs,
     ).squeeze()

@@ -1742,7 +1742,8 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         verif (xr.object): Verification data without ``member`` dim. Raw verification if
             `logical` provided, else binary verification.
         dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
-            provided in `metric_kwargs` to create probability forecasts.
+            provided in `metric_kwargs` to create probability forecasts. If `logical`
+            not provided in `metric_kwargs`, should not include `member`.
         metric_kwargs (dict): including
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean('member')`` to get forecasts and

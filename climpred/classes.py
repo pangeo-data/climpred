@@ -1,5 +1,3 @@
-import warnings
-
 import numpy as np
 import xarray as xr
 from IPython.display import display_html
@@ -604,27 +602,21 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._datasets['control']
 
     def verify(
-        self,
-        metric='pearson_r',
-        comparison='m2e',
-        dim=None,
-        reference=None,
-        **metric_kwargs,
+        self, comparison=None, dim=None, metric=None, reference=None, **metric_kwargs,
     ):
-        """Compares the initialized ensemble to the control run.
+        """Verifies the initialized ensemble against the control run.
 
         Args:
-            metric (str, default 'pearson_r' or Metric):
-              Metric to apply in the comparison.
-            comparison (str, default 'm2e'):
-              How to compare the climate prediction ensemble to the control.
-            reference (str, list of str): reference forecasts to compare against.
+            comparison (str): How to compare the climate prediction ensemble to the
+                control.
             dim (str, list of str): dimension(s) to apply metric over.
-            **metric_kwargs (optional): arguments passed to `metric`.
+            metric (str or Metric): Metric to apply in the comparison.
+            reference (str, list of str): Reference forecasts to compute metric
+                with.
+            **metric_kwargs (optional): Arguments passed to `metric`.
 
-        Returns:
-            Dataset of comparison results with `skill` dimension for difference
-                references compared against.
+        Returns: Dataset of comparison results with `skill` dimension for difference
+            references compared against.
         """
         has_dataset(self._datasets['control'], 'control', 'compute a metric')
         input_dict = {
@@ -673,27 +665,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
         all_skills['skill'] = skill_labels
         return all_skills.squeeze()
 
-    def compute_metric(self, metric='pearson_r', comparison='m2e', **metric_kwargs):
-        warnings.warn(
-            'compute_metric() is depreciated. Please use verify(reference=None).'
-        )
-        return self.verify(metric=metric, comparison=comparison, **metric_kwargs)
-
     def compute_uninitialized(
-        self, metric='pearson_r', comparison='m2e', dim=None, **metric_kwargs
+        self, comparison=None, dim=None, metric=None, **metric_kwargs
     ):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
-            metric (str, default 'pearson_r'):
-              Metric to apply in the comparison.
-            comparison (str, default 'm2m'):
-              How to compare to the control run.
-            dim (str, list of str): dimension(s) to apply metric over.
-            **metric_kwargs (optional): arguments passed to `metric`.
+            comparison (str): How to compare to the control run.
+            dim (str, list of str): Dimension(s) to apply metric over.
+            metric (str): Metric to apply in the comparison.
+            **metric_kwargs (optional): Arguments passed to ``metric``.
 
-        Returns:
-            Result of the comparison as a Dataset.
+        Returns: Result of the comparison as a Dataset.
         """
         has_dataset(
             self._datasets['uninitialized'],
@@ -717,12 +700,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
-    def compute_persistence(self, metric='pearson_r'):
+    def compute_persistence(self, metric=None):
         """Compute a simple persistence forecast for the control run.
 
         Args:
-            metric (str, default 'pearson_r'):
-                Metric to apply to the persistence forecast.
+            metric (str): Metric to apply to the persistence forecast.
 
         Returns:
             Dataset of persistence forecast results (if ``refname`` is declared),
@@ -754,11 +736,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric='pearson_r',
-        comparison='m2e',
+        iterations,
+        comparison=None,
         dim=['init', 'member'],
+        metric=None,
         sig=95,
-        iterations=500,
         pers_sig=None,
         **metric_kwargs,
     ):
@@ -766,19 +748,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Goddard et al. 2013.
 
         Args:
-            metric (str, default 'pearson_r'):
-                Metric to apply for bootstrapping.
-            comparison (str, default 'm2e'):
-                Comparison style for bootstrapping.
-            dim (str, list of str): dimension(s) to apply metric over.
-            sig (int, default 95):
-                Significance level for uninitialized and initialized
-                comparison.
-            iterations (int, default 500): Number of resampling iterations for
-                bootstrapping with replacement.
-            pers_sig (int, default None):
-                If not None, the separate significance level for persistence.
-            **metric_kwargs (optional): arguments passed to `metric`.
+            iterations (int): Number of resampling iterations for bootstrapping
+                with replacement.
+            comparison (str): Comparison style for bootstrapping. One of ['m2c',
+                'm2m', 'e2c', 'm2e'].
+            dim (str, list of str, optional): Dimension(s) to apply metric over.
+                Defaults to ['init', 'member'].
+            metric (str): Metric to apply for bootstrapping.
+            sig (int, optional): Significance level for uninitialized and initialized
+                comparison. Defaults to 95.
+            pers_sig (int): If not ``None``, the separate significance level for
+                persistence. Defaults to ``None``, or the same significance as ``sig``.
+            **metric_kwargs (optional): Arguments passed to `metric`.
 
         Returns:
             Dictionary of Datasets for each variable applied to with the

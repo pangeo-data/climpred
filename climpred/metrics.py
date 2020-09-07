@@ -1621,7 +1621,7 @@ def _rename_dim(dim, forecast, verif):
     return dim
 
 
-def _remove_member_from_dim_or_warn(dim):
+def _remove_member_from_dim_or_raise(dim):
     """delete `member` from `dim` to not pass to `xskillscore` where expected as
     default `member_dim`."""
     if 'member' in dim:
@@ -1642,7 +1642,7 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         logical = metric_kwargs.pop('logical')
         if not callable(logical):
             raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
-        dim = _remove_member_from_dim_or_warn(dim)
+        dim = _remove_member_from_dim_or_raise(dim)
         if 'member' in forecast.dims:  # apply logical function to get
             forecast = logical(forecast).mean('member')  # forecast probability
             verif = logical(verif)  # binary outcome
@@ -1801,7 +1801,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
     else:
         threshold = metric_kwargs.pop('threshold')
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    dim = _remove_member_from_dim_or_warn(dim)
+    dim = _remove_member_from_dim_or_raise(dim)
     # switch args b/c xskillscore.threshold_brier_score(verif, forecasts)
     return threshold_brier_score(verif, forecast, threshold, dim=dim, **metric_kwargs)
 
@@ -1874,7 +1874,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         >>> hindcast.verify(metric='crps', comparison='m2o', dim='member')
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    dim = _remove_member_from_dim_or_warn(dim)
+    dim = _remove_member_from_dim_or_raise(dim)
     dim = _rename_dim(dim, forecast, verif)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
     return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)

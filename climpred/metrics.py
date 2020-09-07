@@ -250,12 +250,8 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.pearson_r_p_value
 
     Details:
         +-----------------+-----------+
@@ -326,8 +322,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        metric_kwargs (dict): see xskillscore.effective_sample_size
 
     Details:
         +-----------------+-----------------+
@@ -395,8 +390,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        metric_kwargs (dict): see xskillscore.pearson_r_eff_p_value
 
     Details:
         +-----------------+-----------+
@@ -465,12 +459,8 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.spearman_r
 
     Details:
         +-----------------+-----------+
@@ -518,12 +508,8 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.spearman_r_p_value
 
     Details:
         +-----------------+-----------+
@@ -598,10 +584,8 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.spearman_r_eff_p_value
 
     Details:
         +-----------------+-----------+
@@ -667,12 +651,8 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.mse
 
     Details:
         +-----------------+-----------+
@@ -723,12 +703,8 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.rmse
 
     Details:
         +-----------------+-----------+
@@ -774,12 +750,8 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.mae
 
     Details:
         +-----------------+-----------+
@@ -830,10 +802,8 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.median_absolute_error
 
     Details:
         +-----------------+-----------+
@@ -892,15 +862,11 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
+        metric_kwargs (dict): see xskillscore.mse
 
     Details:
         +----------------------------+-----------+
@@ -926,14 +892,14 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
-    var = verif.var(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
             'Comparison needed to normalize NMSE. Not found in', metric_kwargs
         )
+    mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
+    var = verif.var(dim)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
     return nmse_skill
@@ -977,15 +943,11 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
+        metric_kwargs (dict): see xskillscore.mae
 
     Details:
         +----------------------------+-----------+
@@ -1011,14 +973,14 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    mae_skill = __mae.function(forecast, verif, dim=dim, **metric_kwargs)
-    std = verif.std(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
             'Comparison needed to normalize NMSE. Not found in', metric_kwargs
         )
+    mae_skill = __mae.function(forecast, verif, dim=dim, **metric_kwargs)
+    std = verif.std(dim)
     fac = _get_norm_factor(comparison)
     nmae_skill = mae_skill / std / fac
     return nmae_skill
@@ -1063,15 +1025,11 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
+        metric_kwargs (dict): see xskillscore.rmse
 
     Details:
         +----------------------------+-----------+
@@ -1103,14 +1061,14 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         Review 116, no. 12 (December 1, 1988): 2417–24.
         https://doi.org/10/fc7mxd.
     """
-    rmse_skill = __rmse.function(forecast, verif, dim=dim, **metric_kwargs)
-    std = verif.std(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
             'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
         )
+    rmse_skill = __rmse.function(forecast, verif, dim=dim, **metric_kwargs)
+    std = verif.std(dim)
     fac = _get_norm_factor(comparison)
     nrmse_skill = rmse_skill / std / np.sqrt(fac)
     return nrmse_skill
@@ -1153,15 +1111,11 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
+        metric_kwargs (dict): see xskillscore.mse
 
     Details:
         +----------------------------+-----------+
@@ -1197,14 +1151,14 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
-    var = verif.var(dim)
     if 'comparison' in metric_kwargs:
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
             'Comparison needed to normalize MSSS. Not found in', metric_kwargs
         )
+    mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
+    var = verif.var(dim)
     fac = _get_norm_factor(comparison)
     msess_skill = 1 - mse_skill / var / fac
     return msess_skill
@@ -1236,12 +1190,8 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.mape
 
     Details:
         +-----------------+-----------+
@@ -1286,12 +1236,8 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.smape
 
     Details:
         +-----------------+-----------+
@@ -1330,12 +1276,12 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
     This is typically used in perfect model studies. Because the perfect model Anomaly
     Correlation Coefficient (ACC) is strongly state dependent, a standard ACC (e.g. one
     computed using ``pearson_r``) will be highly sensitive to the set of start dates
-    chosen for the perfect model study. The Mean Square Skill Score (``MSSS``) can be
-    related directly to the ACC as ``MSSS = ACC^(2)`` (see Murphy 1988 and
-    Bushuk et al. 2019), so the unbiased ACC can be derived as ``uACC = sqrt(MSSS)``.
+    chosen for the perfect model study. The Mean Square Skill Score (``MESSS``) can be
+    related directly to the ACC as ``MESSS = ACC^(2)`` (see Murphy 1988 and
+    Bushuk et al. 2019), so the unbiased ACC can be derived as ``uACC = sqrt(MESSS)``.
 
     .. math::
-        uACC = \\sqrt{MSSS}
+        uACC = \\sqrt{MSESS}
              = \\sqrt{1 - \\frac{\\overline{(f - o)^{2}}}{\\sigma^2_{ref} \\cdot fac}},
 
     where :math:`fac` is 1 when using comparisons involving the ensemble mean (``m2e``,
@@ -1344,21 +1290,17 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
     :py:func:`~climpred.metrics._get_norm_factor`.
 
     .. note::
-        Because of the square root involved, any negative ``MSSS`` values are
+        Because of the square root involved, any negative ``MSESS`` values are
         automatically converted to NaNs.
 
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
         comparison (str): Name comparison needed for normalization factor ``fac``, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
+        metric_kwargs (dict): see xskillscore.mse
 
     Details:
         +----------------------------+-----------+
@@ -1385,9 +1327,9 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
           Relationships to the Correlation Coefficient. Monthly Weather Review,
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
     """
-    msss_res = __msess.function(forecast, verif, dim=dim, **metric_kwargs)
+    messs_res = __msess.function(forecast, verif, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
-    uacc_res = msss_res ** 0.5
+    uacc_res = messs_res ** 0.5
     return uacc_res
 
 
@@ -1418,8 +1360,8 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   functions.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xarray.std
 
     Details:
         +-----------------+-----------+
@@ -1461,8 +1403,8 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   functions.
+        dim (str): Dimension(s) to perform metric over
+        metric_kwargs (dict): see xarray.mean
 
     Details:
         +-----------------+-----------+
@@ -1509,8 +1451,8 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   functions.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.pearson_r and xarray.std
 
     Details:
         +-----------------+-----------+
@@ -1559,8 +1501,8 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   functions.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.pearson_r and xarray.std
 
     Details:
         +-----------------+-----------+
@@ -1611,12 +1553,8 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
-        dim (str): Dimension(s) to perform metric over. Automatically set by compute
-                   function.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see xskillscore.pearson_r, xarray.mean and xarray.std
 
     Details:
         +-----------------+-----------+
@@ -1744,10 +1682,11 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
             provided in `metric_kwargs` to create probability forecasts. If `logical`
             not provided in `metric_kwargs`, should not include `member`.
-        metric_kwargs (dict): including
+        metric_kwargs (dict): optional
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean('member')`` to get forecasts and
                 verification data in interval [0,1].
+            see xskillscore.brier_score
 
     Details:
         +-----------------+-----------+
@@ -1816,6 +1755,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             `member`. Other dimensions are passed to `xskillscore` and averaged.
         threshold (int, float, xr.object): Threshold to check exceedance, see
             properscoring.threshold_brier_score.
+        metric_kwargs (dict): optional, see xskillscore.threshold_brier_score
 
     Details:
         +-----------------+-----------+
@@ -1899,10 +1839,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         verif (xr.object): Verification data without `member` dim.
         dim (list of str): Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs (xr.object): If provided, the CRPS is calculated exactly with the
-            assigned probability weights to each forecast. Weights should be positive,
-            but do not need to be normalized. By default, each forecast is weighted
-            equally.
+        metric_kwargs (dict): optional, see xskillscore.crps_ensemble
 
     Details:
         +-----------------+-----------+
@@ -1963,6 +1900,7 @@ def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
         forecast (xr.object): Forecast with ``member`` dim.
         mu (xr.object): The mean of the verification data.
         sig (xr.object): The standard deviation verification data.
+        metric_kwargs (dict): optional, see xskillscore.crps_gaussian
 
     See also:
         * properscoring.crps_gaussian
@@ -2012,19 +1950,11 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
         verif (xr.object): Verification data without ``member`` dim.
-        gaussian (bool, optional): If ``True``, assum Gaussian distribution for baseline
-                                   skill. Defaults to ``True``.
-        cdf_or_dist (scipy.stats): Function which returns the cumulative density of the
-                                   forecast at value x. This can also be an object with
-                                   a callable ``cdf()`` method such as a
-                                   ``scipy.stats.distribution`` object. Defaults to
-                                   ``scipy.stats.norm``.
-        xmin (float): Lower bounds for integration. Only use if not assuming Gaussian.
-        xmax (float) Upper bounds for integration. Only use if not assuming Gaussian.
-        tol (float, optional): The desired accuracy of the CRPS. Larger values will
-                               speed up integration. If ``tol`` is set to ``None``,
-                               bounds errors or integration tolerance errors will be
-                               ignored. Only use if not assuming Gaussian.
+        gaussian (bool, optional): If ``True``, assume Gaussian distribution for
+            baseline skill. Defaults to ``True``.
+        metric_kwargs (dict): optional
+            see xskillscore.crps_ensemble, xskillscore.crps_gaussian and
+            xskillscore.crps_quadrature
 
     Details:
         +----------------------------+-----------+
@@ -2073,7 +2003,6 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         gaussian = True
     if gaussian:
         ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim, **metric_kwargs)
-    # TODO: Add tests for this section.
     else:
         if 'cdf_or_dist' in metric_kwargs:
             cdf_or_dist = metric_kwargs.pop('cdf_or_dist')
@@ -2135,10 +2064,7 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
         verif (xr.object): Verification data without ``member`` dim.
-        weights (xarray object, optional): Weights to apply over dimension. Defaults to
-                                           ``None``.
-        skipna (bool, optional): If True, skip NaNs over dimension being applied to.
-                                 Defaults to ``False``.
+        metric_kwargs (dict): see xskillscore.crps_ensemble and xskillscore.mse
 
     Details:
         +----------------------------+-----------+

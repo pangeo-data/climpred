@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-import xarray as xr
 from scipy.stats import norm
 from xskillscore import (
     brier_score,
@@ -1609,6 +1608,30 @@ __msess_murphy = Metric(
 #######################
 
 
+def _rename_dim(dim, forecast, verif):
+    """rename dim to time if forecast and verif dims require."""
+    if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
+        dim = dim.copy()
+        dim.remove('init')
+        dim = dim + ['time']
+    elif 'time' in dim and 'init' in forecast.dims and 'init' in verif.dims:
+        dim = dim.copy()
+        dim.remove('time')
+        dim = dim + ['init']
+    return dim
+
+
+def _remove_member_from_dim_or_warn(dim):
+    """delete `member` from `dim` to not pass to `xskillscore` where expected as
+    default `member_dim`."""
+    if 'member' in dim:
+        dim = dim.copy()
+        dim.remove('member')
+    else:
+        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
+    return dim
+
+
 def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
     """Extract callable `logical` from `metric_kwargs` and apply to `forecast` and
     `verif`."""
@@ -1619,14 +1642,7 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         logical = metric_kwargs.pop('logical')
         if not callable(logical):
             raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
-        if isinstance(dim, list) and 'member' in dim:
-            dim = dim.copy()
-            dim.remove('member')
-        else:
-            raise ValueError(
-                f'Expected `dim` to be a list, found {type(dim)}; and '
-                f'`member` to be in `dim`, found {dim}.'
-            )
+        dim = _remove_member_from_dim_or_warn(dim)
         if 'member' in forecast.dims:  # apply logical function to get
             forecast = logical(forecast).mean('member')  # forecast probability
             verif = logical(verif)  # binary outcome
@@ -1635,10 +1651,7 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
                 f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
             )
         # rename dim to time if forecast and verif dims allow
-        if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
-            dim = dim.copy()
-            dim.remove('init')
-            dim = dim + ['time']
+        dim = _rename_dim(dim, forecast, verif)
         return forecast, verif, metric_kwargs, dim
     elif (
         comparison.name == 'e2o' and 'logical' not in metric_kwargs
@@ -1788,12 +1801,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
     else:
         threshold = metric_kwargs.pop('threshold')
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    # delete member from dim to not pass as dim to xskillscore but as default member_dim
-    if 'member' in dim:
-        dim = dim.copy()
-        dim.remove('member')
-    else:
-        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
+    dim = _remove_member_from_dim_or_warn(dim)
     # switch args b/c xskillscore.threshold_brier_score(verif, forecasts)
     return threshold_brier_score(verif, forecast, threshold, dim=dim, **metric_kwargs)
 
@@ -1865,13 +1873,9 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> hindcast.verify(metric='crps', comparison='m2o', dim='member')
     """
-    # delete member from dim to not pass as dim to xskillscore but as default member_dim
-    if 'member' in dim:
-        dim = dim.copy()
-        dim.remove('member')
-    else:
-        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _remove_member_from_dim_or_warn(dim)
+    dim = _rename_dim(dim, forecast, verif)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
     return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
@@ -1889,7 +1893,7 @@ __crps = Metric(
 )
 
 
-def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
+def _crps_gaussian(verification, mu, sig, **metric_kwargs):
     """Computes the CRPS of verification data ``o`` relative to normally distributed
     forecasts with mean ``mu`` and standard deviation ``sig``.
 
@@ -1909,10 +1913,10 @@ def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
     metric_kwargs = _sanitize_kwargs(
         metric_kwargs, delete=['dim', 'alignment', 'comparison']
     )
-    return crps_gaussian(forecast, mu, sig, **metric_kwargs)
+    return crps_gaussian(verification, mu, sig, **metric_kwargs)
 
 
-def _crps_quadrature(forecast, cdf_or_dist, **metric_kwargs):
+def _crps_quadrature(verification, cdf_or_dist, **metric_kwargs):
     """Compute the continuously ranked probability score (CPRS) for a given
     forecast distribution (``cdf``) and observation (``o``) using numerical quadrature.
 
@@ -1935,7 +1939,7 @@ def _crps_quadrature(forecast, cdf_or_dist, **metric_kwargs):
     metric_kwargs = _sanitize_kwargs(
         metric_kwargs, delete=['dim', 'alignment', 'comparison']
     )
-    return crps_quadrature(forecast, cdf_or_dist, **metric_kwargs)
+    return crps_quadrature(verification, cdf_or_dist, **metric_kwargs)
 
 
 def _crpss(forecast, verif, dim=None, **metric_kwargs):
@@ -2000,6 +2004,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.crps_ensemble
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
@@ -2010,7 +2015,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     else:
         gaussian = True
     if gaussian:
-        ref_skill = _crps_gaussian(forecast, mu, sig, dim=dim, **metric_kwargs)
+        ref_skill = _crps_gaussian(verif, mu, sig, dim=dim, **metric_kwargs)
     else:
         if 'cdf_or_dist' in metric_kwargs:
             cdf_or_dist = metric_kwargs.pop('cdf_or_dist')
@@ -2107,27 +2112,24 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
                 alignment='same_verifs', dim='member')
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     # helper dim to calc mu
-    rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS + ['time']]
+    rdim = [d for d in verif.dims if d in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
-    # inside compute_perfect_model
-    if 'init' in forecast.dims and 'time' in dim:
-        dim = dim.copy()
-        dim.remove('time')
-        dim = dim + ['init']
-    # inside compute_hindcast
-    elif 'time' in forecast.dims and 'init' in dim:
-        dim = dim.copy()
-        dim.remove('init')
-        dim = dim + ['time']
-    forecast, verif_member = xr.broadcast(forecast, verif)
-    ensemble_spread = forecast.std('member').mean(
-        dim=[d for d in dim if d != 'member'], **metric_kwargs
+    # forecast, verif_member = xr.broadcast(forecast, verif)
+    dim_no_member = [d for d in dim if d != 'member']
+    ensemble_spread = forecast.std('member').mean(dim=dim_no_member, **metric_kwargs)
+    mse_h = __mse.function(
+        forecast.mean('member'), verif, dim=dim_no_member, **metric_kwargs
     )
-    mse_h = __mse.function(forecast, verif_member, dim=dim, **metric_kwargs)
-    crps_h = _crps_gaussian(forecast, mu, mse_h, dim=dim, **metric_kwargs)
-    crps_r = _crps_gaussian(forecast, mu, ensemble_spread, dim=dim, **metric_kwargs)
-    return 1 - crps_h / crps_r
+    crps_h = crps_gaussian(verif, mu, mse_h, dim=dim_no_member, **metric_kwargs)
+    crps_r = crps_gaussian(
+        verif, mu, ensemble_spread, dim=dim_no_member, **metric_kwargs
+    )
+    res = 1 - crps_h / crps_r
+    if 'time' in res.dims:
+        res = res.rename({'time': 'init'})
+    return res
 
 
 __crpss_es = Metric(

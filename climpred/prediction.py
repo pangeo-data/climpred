@@ -211,7 +211,6 @@ def compute_perfect_model(
     # in case you want to compute deterministic skill over member dim
     if (forecast.dims != verif.dims) and not metric.probabilistic:
         forecast, verif = xr.broadcast(forecast, verif)
-
     skill = metric.function(
         forecast, verif, dim=dim, comparison=comparison, **metric_kwargs
     )

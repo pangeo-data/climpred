@@ -76,6 +76,7 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
         'metric': metric,
         'dim': 'member',
         'iterations': ITERATIONS,
+        'resample_dim': 'member',
     }
     if 'threshold' in metric:
         metric_kwargs['threshold'] = 10.5
@@ -86,12 +87,20 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
 
         metric_kwargs['logical'] = func
 
+    metric_kwargs2 = metric_kwargs.copy()
+    del metric_kwargs2['resample_dim']
+    del metric_kwargs2['iterations']
+    res = compute_perfect_model(
+        PM_da_initialized_1d, PM_da_control_1d, **metric_kwargs2
+    )
+    assert 'init' in res.dims
+
     actual = bootstrap_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, resample_dim='member', **metric_kwargs
+        PM_da_initialized_1d, PM_da_control_1d, **metric_kwargs
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
-        if 'init' in actualk.coords:
+        if 'init' in actualk.dims:
             actualk = actualk.mean('init')
         actualk = actualk.isnull().any()
         assert not actualk

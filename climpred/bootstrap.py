@@ -678,6 +678,8 @@ def bootstrap_compute(
     warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
+    if isinstance(dim, str):
+        dim = [dim]
 
     p = (100 - sig) / 100
     ci_low = p / 2

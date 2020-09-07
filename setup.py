@@ -25,7 +25,7 @@ CLASSIFIERS = [
 setup(
     maintainer='Riley X. Brady and Aaron Spring',
     maintainer_email='riley.brady@colorado.edu',
-    description='An xarray wrapper for analysis of ensemble forecast models for climate'
+    description='Verification of weather and climate forecasts.'
     + ' prediction.',
     install_requires=install_requires,
     python_requires='>=3.6',

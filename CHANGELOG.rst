@@ -10,8 +10,10 @@ Breaking changes
 
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+- ``comparison`` is not applied to uninitialized skill in ``bootstrap_hindcast``.
+  (:issue:`352`, :pr:`418`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify()`` does not correct ``dim`` automatically to
-  ```member``. (:pr:`407`) `Aaron Spring`_.
+  ```member`` for probabilistic metrics. (:pr:`407`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -24,9 +26,12 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for ``PredictionEnsemble``:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
+- ``HindcastEnsemble.bootstrap()`` analogous to ``PerfectModelEnsemble.bootstrap()``.
+  (:issue:`257`, :pr:`418`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``.
   For spatial dimensions to be used with ``skipna=True`` when masked input data.
   (:issue:282, :pr:`407`) `Aaron Spring`_.
+
 
 Deprecated
 ----------
@@ -52,9 +57,12 @@ Bug Fixes
 
 Documentation
 -------------
-
+- Updates ``climpred`` tagline to "Verification of weather and climate forecasts."
+  (:pr:`420`) `Riley X. Brady`_.
 - Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
   (:pr:`378`) `Riley X. Brady`_.
+- Add docs section for similar open-source forecasting packages.
+  (:pr:`432`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------

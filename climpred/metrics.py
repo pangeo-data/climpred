@@ -1906,6 +1906,9 @@ def _crps_gaussian(forecast, mu, sig, **metric_kwargs):
         * properscoring.crps_gaussian
         * xskillscore.crps_gaussian
     """
+    metric_kwargs = _sanitize_kwargs(
+        metric_kwargs, delete=['dim', 'alignment', 'comparison']
+    )
     return crps_gaussian(forecast, mu, sig, **metric_kwargs)
 
 
@@ -1929,6 +1932,9 @@ def _crps_quadrature(forecast, cdf_or_dist, **metric_kwargs):
         * properscoring.crps_quadrature
         * xskillscore.crps_quadrature
     """
+    metric_kwargs = _sanitize_kwargs(
+        metric_kwargs, delete=['dim', 'alignment', 'comparison']
+    )
     return crps_quadrature(forecast, cdf_or_dist, **metric_kwargs)
 
 

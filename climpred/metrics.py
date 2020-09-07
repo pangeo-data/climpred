@@ -1950,9 +1950,11 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
         verif (xr.object): Verification data without ``member`` dim.
-        gaussian (bool, optional): If ``True``, assume Gaussian distribution for
-            baseline skill. Defaults to ``True``.
+        dim (list of str): Dimension to apply metric over. Expects at least
+            `member`. Other dimensions are passed to `xskillscore` and averaged.
         metric_kwargs (dict): optional
+            gaussian (bool, optional): If ``True``, assume Gaussian distribution for
+                baseline skill. Defaults to ``True``.
             see xskillscore.crps_ensemble, xskillscore.crps_gaussian and
             xskillscore.crps_quadrature
 
@@ -2064,6 +2066,8 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
         verif (xr.object): Verification data without ``member`` dim.
+        dim (list of str): Dimension to apply metric over. Expects at least
+            `member`. Other dimensions are passed to `xskillscore` and averaged.
         metric_kwargs (dict): see xskillscore.crps_ensemble and xskillscore.mse
 
     Details:

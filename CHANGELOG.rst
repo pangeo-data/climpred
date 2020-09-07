@@ -14,6 +14,8 @@ Breaking changes
   (:issue:`352`, :pr:`418`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify()`` does not correct ``dim`` automatically to
   ```member`` for probabilistic metrics. (:pr:`407`) `Aaron Spring`_.
+- Simplified metric :py:class:`~climpred.metrics._brier_score`. (:pr:`431`)
+  `Aaron Spring`_.
 
 New Features
 ------------

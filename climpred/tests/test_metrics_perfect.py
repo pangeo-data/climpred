@@ -37,7 +37,7 @@ def test_PerfectModelEnsemble_constant_forecasts(
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
     else:
-        metric_kwargs = {'useless_kwargs': 'to_ignore'}
+        metric_kwargs = {}
     if Metric.probabilistic:
         dim = ['init', 'member']
         skill = pe.verify(metric=metric, comparison='m2c', dim=dim, **metric_kwargs)
@@ -97,7 +97,7 @@ def test_HindcastEnsemble_constant_forecasts(
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
     else:
-        metric_kwargs = {'useless_kwargs': 'to_ignore'}
+        metric_kwargs = {}
     if Metric.probabilistic:
         skill = he.verify(
             metric=metric,
@@ -107,7 +107,7 @@ def test_HindcastEnsemble_constant_forecasts(
             **metric_kwargs
         )
     else:
-        dim = 'member' if comparison == 'm2r' else ['init']
+        dim = 'member' if comparison == 'm2o' else 'init'
         skill = he.verify(
             metric=metric,
             comparison=comparison,

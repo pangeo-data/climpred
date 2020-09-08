@@ -1746,7 +1746,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
-        `comparison=e2o` and `dim=[]`:
+        ``comparison=e2o`` and ``dim=[]``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
                 comparison='e2o', dim=[], alignment='same_verifs')

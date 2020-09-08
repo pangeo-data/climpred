@@ -1064,7 +1064,7 @@ def bootstrap_perfect_model(
     control,
     metric='pearson_r',
     comparison='m2e',
-    dim=['member', 'init'],
+    dim=['init', 'member'],
     resample_dim='member',
     sig=95,
     iterations=500,

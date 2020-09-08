@@ -145,7 +145,6 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
         else PROBABILISTIC_PM_COMPARISONS
     )
     if metric.probabilistic:
-        pass
         if not comparison.probabilistic and 'member' in initialized.dims:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison '

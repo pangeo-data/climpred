@@ -289,20 +289,29 @@ def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):
     """Test that a probabilistic score requiring a binary observations and
     probability initialized inputs gives the same results whether passing logical
     as kwarg or mapping logical before for hindcast.verify()."""
+    he = hindcast_recon_1d_ym
 
     def logical(ds):
         return ds > 0.5
 
-    brier_logical_passed_as_kwarg = hindcast_recon_1d_ym.verify(
+    brier_logical_passed_as_kwarg = he.verify(
         metric='brier_score',
         comparison='m2o',
         logical=logical,
         dim='member',
         alignment='same_verif',
     )
-    brier_logical_mapped_before = (
-        hindcast_recon_1d_ym.map(logical)
+    brier_logical_mapped_before_and_member_mean = (
+        he.map(logical)
         .mean('member')
         .verify(metric='brier_score', comparison='e2o', dim=[], alignment='same_verif')
     )
-    assert (brier_logical_mapped_before == brier_logical_passed_as_kwarg).all()
+    brier_logical_mapped_before_no_member_mean = he.map(logical).verify(
+        metric='brier_score', comparison='m2o', dim='member', alignment='same_verif'
+    )
+    assert (
+        brier_logical_mapped_before_and_member_mean == brier_logical_passed_as_kwarg
+    ).all()
+    assert (
+        brier_logical_mapped_before_no_member_mean == brier_logical_passed_as_kwarg
+    ).all()

@@ -89,8 +89,10 @@ def _preprocess_dims(dim):
     return dim
 
 
-def _sanitize_kwargs(kwargs, delete=['comparison', 'alignment']):
+def _sanitize_kwargs(kwargs, delete=None):
     """Delete some keywords from kwargs."""
+    if delete is None:
+        delete = ['comparison', 'alignment']
     kwargs2 = kwargs.copy()
     if delete is not []:
         for k, v in kwargs.items():
@@ -1654,8 +1656,14 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         dim = _rename_dim(dim, forecast, verif)
         return forecast, verif, metric_kwargs, dim
     elif (
-        comparison.name == 'e2o' and 'logical' not in metric_kwargs
+        comparison.name == 'e2o'
+        and 'logical' not in metric_kwargs
+        and 'member' not in dim
     ):  # allow e2o comparison without logical
+        return forecast, verif, metric_kwargs, dim
+    elif (
+        comparison.name == 'm2o' and 'logical' not in metric_kwargs and 'member' in dim
+    ):  # allow m2o and member
         return forecast, verif, metric_kwargs, dim
     else:
         raise ValueError(
@@ -1722,9 +1730,24 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.brier_score
 
     Example:
+        Define a boolean/logical function for binary scoring:
+
         >>> def pos(x): return x > 0  # checking binary outcomes
+
+        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+
         >>> hindcast.verify(metric='brier_score', comparison='m2o', \
                 dim='member', alignment='same_verifs', logical=pos)
+
+        Option 2. Pre-process to generate a binary forecast and verification product:
+
+        >>> hindcast.map(pos).verify(metric='brier_score', \
+                comparison='m2o', dim='member', alignment='same_verifs')
+
+        Option 3. Pre-process to generate a probability forecast and binary
+        verification product. Because `member` no present in `hindcast`, use
+        `comparison=e2o` and `dim=[]`:
+
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score', \
                 comparison='e2o', dim=[], alignment='same_verifs')
     """

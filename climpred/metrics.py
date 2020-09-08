@@ -1736,19 +1736,19 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='brier_score', comparison='m2o', \
+        >>> hindcast.verify(metric='brier_score', comparison='m2o',
                 dim='member', alignment='same_verifs', logical=pos)
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='brier_score', \
+        >>> hindcast.map(pos).verify(metric='brier_score',
                 comparison='m2o', dim='member', alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         `comparison=e2o` and `dim=[]`:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='brier_score', \
+        >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
                 comparison='e2o', dim=[], alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(

@@ -166,16 +166,6 @@ Reference
     compute_persistence
     compute_uninitialized
 
-Metrics
-~~~~~~~
-.. currentmodule:: climpred.metrics
-
-.. autosummary::
-    :toctree: api/
-
-    Metric
-    _get_norm_factor
-
 Comparisons
 ~~~~~~~~~~~
 .. currentmodule:: climpred.comparisons
@@ -232,3 +222,45 @@ Smoothing
 
     temporal_smoothing
     spatial_smoothing_xesmf
+
+Metrics
+-------
+
+For a thorough look at our metrics library, please see the
+`metrics <metrics.html>`_ page.
+
+.. currentmodule:: climpred.metrics
+
+.. autosummary::
+    :toctree: api/
+
+    Metric
+    _get_norm_factor
+    _pearson_r
+    _pearson_r_p_value
+    _effective_sample_size
+    _pearson_r_eff_p_value
+    _spearman_r
+    _spearman_r_p_value
+    _spearman_r_eff_p_value
+    _mse
+    _rmse
+    _mae
+    _median_absolute_error
+    _nmse
+    _nmae
+    _nrmse
+    _msess
+    _mape
+    _smape
+    _uacc
+    _std_ratio
+    _conditional_bias
+    _unconditional_bias
+    _bias_slope
+    _msess_murphy
+    _crps
+    _crpss
+    _crpss_es
+    _brier_score
+    _threshold_brier_score

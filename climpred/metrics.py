@@ -1609,7 +1609,7 @@ __msess_murphy = Metric(
 
 
 def _rename_dim(dim, forecast, verif):
-    """rename dim to time if forecast and verif dims require."""
+    """rename `dim` to `time` or `init` if forecast and verif dims require."""
     if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
         dim = dim.copy()
         dim.remove('init')

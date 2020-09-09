@@ -381,6 +381,56 @@ Threshold Brier Score
 
 .. autofunction:: _threshold_brier_score
 
+Ranked Probability Score
+========================
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['rps']}")
+
+.. autofunction:: _rps
+
+Reliability
+===========
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['reliability']}")
+
+.. autofunction:: _reliability
+
+Discrimination
+==============
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['discrimination']}")
+
+.. autofunction:: _discrimination
+
+Rank Histogram
+==============
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['rank_histogram']}")
+
+.. autofunction:: _rank_histogram
+
+*************************
+Contingency-based metrics
+*************************
+
+All metric score from ``xskillscore`` are accessible via
+``.verify(metric='contingency', score='hit_rate')``.
+
+.. autofunction:: _contingency
+
+
 ********************
 User-defined metrics
 ********************

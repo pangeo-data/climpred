@@ -41,6 +41,7 @@ def test_PerfectModelEnsemble_constant_forecasts(
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
     Metric = get_metric_class(metric, PM_METRICS)
+    category_edges = np.array([0, 0.5, 1])
     if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
@@ -50,12 +51,13 @@ def test_PerfectModelEnsemble_constant_forecasts(
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
     elif metric == 'contingency':
-        category_edges = np.array([0, 0.5, 1])
         metric_kwargs = {
             'forecast_category_edges': category_edges,
             'observation_category_edges': category_edges,
             'score': 'accuracy',
         }
+    elif metric == 'rps':
+        metric_kwargs = {'category_edges': category_edges}
     else:
         metric_kwargs = {}
     if Metric.probabilistic:
@@ -115,7 +117,7 @@ def test_HindcastEnsemble_constant_forecasts(
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
     Metric = get_metric_class(metric, HINDCAST_METRICS)
-
+    category_edges = np.array([0, 0.5, 1])
     if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
@@ -125,12 +127,13 @@ def test_HindcastEnsemble_constant_forecasts(
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
     elif metric == 'contingency':
-        category_edges = np.array([0, 0.5, 1])
         metric_kwargs = {
             'forecast_category_edges': category_edges,
             'observation_category_edges': category_edges,
             'score': 'accuracy',
         }
+    elif metric == 'rps':
+        metric_kwargs = {'category_edges': category_edges}
     else:
         metric_kwargs = {}
     if Metric.probabilistic:

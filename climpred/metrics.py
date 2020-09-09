@@ -2131,10 +2131,6 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
           Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
           631–43. https://doi.org/10/f9jrhw.
 
-    Range:
-        * perfect: 0
-        * else: negative
-
     Example:
         >>> hindcast.verify(metric='crpss_es', comparison='m2o',
                 alignment='same_verifs', dim='member')
@@ -2175,7 +2171,6 @@ __crpss_es = Metric(
 
 def _discrimination(forecast, verif, dim=None, **metric_kwargs):
     """Discrimination.
-
 
     Args:
         forecast (xr.object): Raw forecasts with ``member`` dimension if `logical`
@@ -2329,7 +2324,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> hindcast.verify(metric='rank_histogram', comparison='m2o',
                 dim=['member','init'], alignment='same_verifs')
-        >>> perfect_model.verify(metric='rank_histogram', comparison='m2o',
+        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
                 dim=['member','init'])
 
     """
@@ -2349,6 +2344,59 @@ __rank_histogram = Metric(
 )
 
 
+def _rps(forecast, verif, dim=None, **metric_kwargs):
+    """Ranked Probability Score.
+
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension.
+        verif (xr.object): Verification data without ``member`` dim.
+        dim (list or str): Dimensions to aggregate. Requires to contain `member` and at
+            least one additional dimension..
+        metric_kwargs (dict):
+            category_edges (required)
+            see xskillscore.rps
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+    See also:
+        * xskillscore.rps
+
+    Example:
+        >>> hindcast.verify(metric='rps', comparison='m2o',
+                dim='member', alignment='same_verifs')
+        >>> perfect_model.verify(metric='rps', comparison='m2c',
+                dim='member')
+
+    """
+    dim = _remove_member_from_dim_or_raise(dim)
+    dim = _rename_dim(dim, forecast, verif)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return rps(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__rps = Metric(
+    name='rps',
+    function=_rps,
+    positive=None,
+    probabilistic=True,
+    unit_power=0,
+    long_name='rps',
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
 def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
     """Contingency table.
 
@@ -2360,8 +2408,8 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
             xskillscore.Contingency. Use ``score=table`` to return a contingency table
             or any other contingency score, e.g. ``score=hit_rate``.
         metric_kwargs (dict): including
-            observation_category_edges
-            forecast_category_edges
+            observation_category_edges  (required)
+            forecast_category_edges  (required)
             see xskillscore.Contingency
 
     See also:
@@ -2375,7 +2423,7 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
         >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
                 dim=[], alignment='same_verifs')
         >>> perfect_model.verify(metric='contingency', score='hit_rate',
-                comparison='m2o', dim=['member','init'])
+                comparison='m2c', dim=['member','init'])
 
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
@@ -2428,7 +2476,7 @@ __ALL_METRICS__ = [
     __rank_histogram,
     __discrimination,
     __reliability,
-    # __rps,
+    __rps,
 ]
 
 

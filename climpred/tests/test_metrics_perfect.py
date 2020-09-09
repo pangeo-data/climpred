@@ -6,7 +6,17 @@ from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from climpred.utils import get_metric_class
 
-metrics_requiring_logical = ['brier_score', 'discrimination']
+probabilistic_metrics_requiring_logical = [
+    'brier_score',
+    'discrimination',
+    'reliability',
+]
+
+probabilistic_metrics_requiring_more_than_member_dim = [
+    'rank_histogram',
+    'discrimination',
+    'reliability',
+]
 
 
 @pytest.mark.parametrize('how', ['constant', 'increasing_by_lead'])
@@ -30,7 +40,7 @@ def test_PerfectModelEnsemble_constant_forecasts(
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
     Metric = get_metric_class(metric, PM_METRICS)
-    if metric in metrics_requiring_logical:
+    if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
             return x > 0.5
@@ -41,7 +51,11 @@ def test_PerfectModelEnsemble_constant_forecasts(
     else:
         metric_kwargs = {}
     if Metric.probabilistic:
-        dim = ['init', 'member']
+        dim = (
+            ['member', 'init']
+            if metric in probabilistic_metrics_requiring_more_than_member_dim
+            else 'member'
+        )
         skill = pe.verify(metric=metric, comparison='m2c', dim=dim, **metric_kwargs)
     else:
         dim = 'init' if comparison == 'e2c' else ['init', 'member']
@@ -91,7 +105,7 @@ def test_HindcastEnsemble_constant_forecasts(
     metric = METRIC_ALIASES.get(metric, metric)
     Metric = get_metric_class(metric, HINDCAST_METRICS)
 
-    if metric in metrics_requiring_logical:
+    if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
             return x > 0.5
@@ -105,7 +119,9 @@ def test_HindcastEnsemble_constant_forecasts(
         skill = he.verify(
             metric=metric,
             comparison='m2o',
-            dim=['member', 'init'] if metric == 'discrimination' else 'member',
+            dim=['member', 'init']
+            if metric in probabilistic_metrics_requiring_more_than_member_dim
+            else 'member',
             alignment=alignment,
             **metric_kwargs
         )

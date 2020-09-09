@@ -2275,19 +2275,19 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
         >>> hindcast.verify(metric='reliability', comparison='m2o',
-                dim='member', alignment='same_verifs', logical=pos)
+                dim=['member','init'], alignment='same_verifs', logical=pos)
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
         >>> hindcast.map(pos).verify(metric='reliability',
-                comparison='m2o', dim='member', alignment='same_verifs')
+                comparison='m2o', dim=['member','init'], alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison=e2o`` and ``dim='init'``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='reliability',
-                comparison='e2o', dim=[], alignment='same_verifs')
+                comparison='e2o', dim='init', alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -2303,6 +2303,49 @@ __reliability = Metric(
     probabilistic=True,
     unit_power=0,
     long_name='Reliability',
+)
+
+
+def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
+    """rank_histogram.
+
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension.
+        verif (xr.object): Verification data without ``member`` dim.
+        dim (list or str): Dimensions to aggregate. Requires to contain `member` and at
+            least one additional dimension..
+        metric_kwargs (dict): optional
+            see xskillscore.rank_histogram
+
+    Details:
+        +-----------------+-------------------+
+        | **perfect**     | flat distribution |
+        +-----------------+-------------------+
+
+    See also:
+        * xskillscore.rank_histogram
+
+    Example:
+        >>> hindcast.verify(metric='rank_histogram', comparison='m2o',
+                dim=['member','init'], alignment='same_verifs')
+        >>> perfect_model.verify(metric='rank_histogram', comparison='m2o',
+                dim=['member','init'])
+
+    """
+    dim = _remove_member_from_dim_or_raise(dim)
+    dim = _rename_dim(dim, forecast, verif)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return rank_histogram(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__rank_histogram = Metric(
+    name='rank_histogram',
+    function=_rank_histogram,
+    positive=None,
+    probabilistic=True,
+    unit_power=0,
+    long_name='rank_histogram',
 )
 
 
@@ -2336,9 +2379,9 @@ __ALL_METRICS__ = [
     __uacc,
     __std_ratio,
     # __contingency,
-    # __rank_histogram,
+    __rank_histogram,
     __discrimination,
-    # __reliability,
+    __reliability,
     # __rps,
 ]
 

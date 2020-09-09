@@ -21,6 +21,11 @@ from xskillscore import (
     spearman_r_eff_p_value,
     spearman_r_p_value,
     threshold_brier_score,
+    Contingency,
+    rank_histogram,
+    discrimination,
+    reliability,
+    rps,
 )
 
 from .constants import CLIMPRED_DIMS
@@ -2168,6 +2173,74 @@ __crpss_es = Metric(
 )
 
 
+def _discrimination(forecast, verif, dim=None, **metric_kwargs):
+    """Discrimination.
+
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension if `logical`
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
+            not provided.
+        verif (xr.object): Verification data without ``member`` dim. Raw verification if
+            `logical` provided, else binary verification.
+        dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
+            provided in `metric_kwargs` to create probability forecasts. If `logical`
+            not provided in `metric_kwargs`, should not include `member`.
+        metric_kwargs (dict): optional
+            logical (callable): Function with bool result to be applied to verification
+                data and forecasts and then ``mean('member')`` to get forecasts and
+                verification data in interval [0,1].
+            see xskillscore.discrimination
+
+    Details:
+        +-----------------+------------------------+
+        | **perfect**     | distinct distributions |
+        +-----------------+------------------------+
+
+    See also:
+        * xskillscore.discrimination
+
+    Example:
+        Define a boolean/logical function for binary scoring:
+
+        >>> def pos(x): return x > 0  # checking binary outcomes
+
+        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+
+        >>> hindcast.verify(metric='discrimination', comparison='m2o',
+                dim='member', alignment='same_verifs', logical=pos)
+
+        Option 2. Pre-process to generate a binary forecast and verification product:
+
+        >>> hindcast.map(pos).verify(metric='discrimination',
+                comparison='m2o', dim='member', alignment='same_verifs')
+
+        Option 3. Pre-process to generate a probability forecast and binary
+        verification product. Because `member` no present in `hindcast`, use
+        ``comparison=e2o`` and ``dim=[]``:
+
+        >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
+                comparison='e2o', dim=[], alignment='same_verifs')
+    """
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
+    )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return discrimination(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__discrimination = Metric(
+    name='discrimination',
+    function=_discrimination,
+    positive=None,
+    probabilistic=True,
+    unit_power=0,
+    long_name='Discrimination',
+)
+
+
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -2197,6 +2270,11 @@ __ALL_METRICS__ = [
     __nmae,
     __uacc,
     __std_ratio,
+    #__contingency,
+    #__rank_histogram,
+    __discrimination,
+    #__reliability,
+    #__rps,
 ]
 
 

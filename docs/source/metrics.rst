@@ -425,7 +425,7 @@ Rank Histogram
 Contingency-based metrics
 *************************
 
-All metric score from ``xskillscore`` are accessible via
+All metric scores from ``xskillscore`` are accessible via
 ``.verify(metric='contingency', score='hit_rate')``.
 
 .. autofunction:: _contingency
@@ -462,7 +462,7 @@ Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
 
 Finally, compute skill based on your own metric::
 
-  skill = compute_perfect_model(ds, control, metric=_my_msle)
+  skill = hindcast(metric=_my_msle, comparison='e2o', alignment='same_verif', dim='init')
 
 Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see

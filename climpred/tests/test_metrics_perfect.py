@@ -1,4 +1,5 @@
 import cftime
+import numpy as np
 import pytest
 import xarray as xr
 
@@ -48,6 +49,13 @@ def test_PerfectModelEnsemble_constant_forecasts(
         metric_kwargs = {'logical': f}
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
+    elif metric == 'contingency':
+        category_edges = np.array([0, 0.5, 1])
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
     else:
         metric_kwargs = {}
     if Metric.probabilistic:
@@ -62,7 +70,10 @@ def test_PerfectModelEnsemble_constant_forecasts(
         skill = pe.verify(
             metric=metric, comparison=comparison, dim=dim, **metric_kwargs
         )
-    assert skill == Metric.perfect
+    if metric == 'contingency':
+        assert (skill == 1).all()  # checks Contingency.accuracy
+    else:
+        assert skill == Metric.perfect
 
 
 @pytest.mark.parametrize('alignment', ['same_inits', 'same_verif', 'maximize'])
@@ -113,6 +124,13 @@ def test_HindcastEnsemble_constant_forecasts(
         metric_kwargs = {'logical': f}
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
+    elif metric == 'contingency':
+        category_edges = np.array([0, 0.5, 1])
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
     else:
         metric_kwargs = {}
     if Metric.probabilistic:
@@ -134,4 +152,7 @@ def test_HindcastEnsemble_constant_forecasts(
             alignment=alignment,
             **metric_kwargs
         )
-    assert skill == Metric.perfect
+    if metric == 'contingency':
+        assert (skill == 1).all()  # checks Contingency.accuracy
+    else:
+        assert skill == Metric.perfect

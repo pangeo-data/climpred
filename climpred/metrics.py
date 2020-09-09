@@ -2349,6 +2349,52 @@ __rank_histogram = Metric(
 )
 
 
+def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
+    """Contingency table.
+
+    Args:
+        forecast (xr.object): Raw forecasts.
+        verif (xr.object): Verification data.
+        dim (list or str): Dimensions to aggregate.
+        score (str): Score derived from contingency table. Attribute from
+            xskillscore.Contingency. Use ``score=table`` to return a contingency table
+            or any other contingency score, e.g. ``score=hit_rate``.
+        metric_kwargs (dict): including
+            observation_category_edges
+            forecast_category_edges
+            see xskillscore.Contingency
+
+    See also:
+        * xskillscore.Contingency
+
+    References
+    ----------
+        * http://www.cawcr.gov.au/projects/verification/
+
+    Example:
+        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
+                dim=[], alignment='same_verifs')
+        >>> perfect_model.verify(metric='contingency', score='hit_rate',
+                comparison='m2o', dim=['member','init'])
+
+    """
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
+    if score == 'table':
+        return Contingency(verif, forecast, dim=dim, **metric_kwargs).table
+    else:
+        return getattr(Contingency(verif, forecast, dim=dim, **metric_kwargs), score)()
+
+
+__contingency = Metric(
+    name='contingency',
+    function=_contingency,
+    positive=None,
+    probabilistic=False,
+    unit_power=0,
+)
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -2378,7 +2424,7 @@ __ALL_METRICS__ = [
     __nmae,
     __uacc,
     __std_ratio,
-    # __contingency,
+    __contingency,
     __rank_histogram,
     __discrimination,
     __reliability,

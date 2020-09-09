@@ -6,7 +6,8 @@ from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from climpred.utils import get_metric_class
 
-metrics_requiring_logical = ['brier_score','discrimination']
+metrics_requiring_logical = ['brier_score', 'discrimination']
+
 
 @pytest.mark.parametrize('how', ['constant', 'increasing_by_lead'])
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)
@@ -104,7 +105,7 @@ def test_HindcastEnsemble_constant_forecasts(
         skill = he.verify(
             metric=metric,
             comparison='m2o',
-            dim=['member','init'] if metric == 'discrimination' else 'member',
+            dim=['member', 'init'] if metric == 'discrimination' else 'member',
             alignment=alignment,
             **metric_kwargs
         )

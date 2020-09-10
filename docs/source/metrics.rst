@@ -462,7 +462,7 @@ Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
 
 Finally, compute skill based on your own metric::
 
-  skill = hindcast(metric=_my_msle, comparison='e2o', alignment='same_verif', dim='init')
+  skill = hindcast.verify(metric=_my_msle, comparison='e2o', alignment='same_verif', dim='init')
 
 Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see

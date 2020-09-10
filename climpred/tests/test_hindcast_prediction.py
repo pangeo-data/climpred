@@ -1,4 +1,5 @@
 import dask
+import numpy as np
 import pytest
 
 from climpred.bootstrap import bootstrap_hindcast
@@ -13,6 +14,20 @@ DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
 
 ITERATIONS = 2
+
+category_edges = np.array([0, 0.5, 1])
+
+probabilistic_metrics_requiring_logical = [
+    'brier_score',
+    'discrimination',
+    'reliability',
+]
+
+probabilistic_metrics_requiring_more_than_member_dim = [
+    'rank_histogram',
+    'discrimination',
+    'reliability',
+]
 
 
 @pytest.mark.skip(reason='less not properly implemented')
@@ -39,12 +54,21 @@ def test_compute_hindcast(
     """
     Checks that compute hindcast works without breaking.
     """
+    if metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    else:
+        metric_kwargs = {}
     res = (
         compute_hindcast(
             hind_ds_initialized_1d,
             reconstruction_ds_1d,
             metric=metric,
             comparison=comparison,
+            **metric_kwargs
         )
         .isnull()
         .any()
@@ -77,8 +101,16 @@ def test_persistence(hind_da_initialized_1d, reconstruction_da_1d, metric):
     """
     Checks that compute persistence works without breaking.
     """
+    if metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    else:
+        metric_kwargs = {}
     res = compute_persistence(
-        hind_da_initialized_1d, reconstruction_da_1d, metric=metric
+        hind_da_initialized_1d, reconstruction_da_1d, metric=metric, **metric_kwargs
     )
     assert not res.isnull().any()
     # check persistence metadata

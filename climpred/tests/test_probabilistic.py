@@ -1,4 +1,6 @@
+import numpy as np
 import pytest
+import xarray as xr
 from scipy.stats import norm
 
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
@@ -11,6 +13,20 @@ from climpred.metrics import METRIC_ALIASES, PROBABILISTIC_METRICS
 from climpred.prediction import compute_hindcast, compute_perfect_model
 
 ITERATIONS = 2
+
+probabilistic_metrics_requiring_logical = [
+    'brier_score',
+    'discrimination',
+    'reliability',
+]
+
+probabilistic_metrics_requiring_more_than_member_dim = [
+    'rank_histogram',
+    'discrimination',
+    'reliability',
+]
+
+xr.set_options(display_style='text')
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
@@ -39,27 +55,38 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
 
 @pytest.mark.parametrize('metric', PROBABILISTIC_METRICS)
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
-def test_compute_hindcast_probabilistic(
-    hind_da_initialized_1d, observations_da_1d, metric, comparison
-):
+def test_compute_hindcast_probabilistic(hindcast_recon_1d_ym, metric, comparison):
     """
     Checks that compute hindcast works without breaking.
     """
-    metric_kwargs = {'comparison': comparison, 'metric': metric, 'dim': 'member'}
-    if 'threshold' in metric:
-        metric_kwargs['threshold'] = 0.5
-    if metric == 'brier_score':
+    category_edges = np.array([0, 0.5, 1])
+    if metric in probabilistic_metrics_requiring_logical:
 
-        def func(x):
-            return x > 0
+        def f(x):
+            return x > 0.5
 
-        metric_kwargs['logical'] = func
-    res = compute_hindcast(hind_da_initialized_1d, observations_da_1d, **metric_kwargs)
-    # mean init because skill has still coords for init lead
-    if 'init' in res.coords:
-        res = res.mean('init')
-    res = res.isnull().any()
-    assert not res
+        metric_kwargs = {'logical': f}
+    elif metric == 'threshold_brier_score':
+        metric_kwargs = {'threshold': 0.5}
+    elif metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    elif metric == 'rps':
+        metric_kwargs = {'category_edges': category_edges}
+    else:
+        metric_kwargs = {}
+    dim = (
+        ['member', 'init']
+        if metric in probabilistic_metrics_requiring_more_than_member_dim
+        else 'member'
+    )
+    res = hindcast_recon_1d_ym.verify(
+        comparison=comparison, metric=metric, dim=dim, **metric_kwargs
+    )['SST']
+    assert not res.isnull().all()
 
 
 @pytest.mark.parametrize('comparison', PROBABILISTIC_PM_COMPARISONS)
@@ -71,38 +98,44 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on perfect model probabilistic metrics of 1D
     time series.
     """
-    metric_kwargs = {
+    kwargs = {
         'comparison': comparison,
         'metric': metric,
-        'dim': 'member',
-        'iterations': ITERATIONS,
-        'resample_dim': 'member',
     }
-    if 'threshold' in metric:
-        metric_kwargs['threshold'] = 10.5
-    if metric == 'brier_score':
+    category_edges = np.array([0, 0.5, 1])
+    if metric in probabilistic_metrics_requiring_logical:
 
-        def func(x):
-            return x > 0
+        def f(x):
+            return x > 0.5
 
-        metric_kwargs['logical'] = func
-
-    metric_kwargs2 = metric_kwargs.copy()
-    del metric_kwargs2['resample_dim']
-    del metric_kwargs2['iterations']
-    res = compute_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, **metric_kwargs2
+        kwargs['logical'] = f
+    elif metric == 'threshold_brier_score':
+        kwargs['threshold'] = 0.5
+    elif metric == 'contingency':
+        kwargs['forecast_category_edges'] = category_edges
+        kwargs['observation_category_edges'] = category_edges
+        kwargs['score'] = 'accuracy'
+    elif metric == 'rps':
+        kwargs['category_edges'] = category_edges
+    dim = (
+        ['member', 'init']
+        if metric in probabilistic_metrics_requiring_more_than_member_dim
+        else 'member'
     )
-    assert 'init' in res.dims
+    kwargs['dim'] = dim
 
-    actual = bootstrap_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, **metric_kwargs
+    assert (
+        not compute_perfect_model(PM_da_initialized_1d, PM_da_control_1d, **kwargs)
+        .isnull()
+        .all()
     )
+
+    kwargs['iterations'] = ITERATIONS
+    kwargs['resample_dim'] = 'member'
+    actual = bootstrap_perfect_model(PM_da_initialized_1d, PM_da_control_1d, **kwargs)
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
-        if 'init' in actualk.dims:
-            actualk = actualk.mean('init')
-        actualk = actualk.isnull().any()
+        actualk = actualk.isnull().all()
         assert not actualk
 
 

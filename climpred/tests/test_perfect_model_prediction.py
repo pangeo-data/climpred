@@ -1,5 +1,7 @@
 import dask
+import numpy as np
 import pytest
+import xarray as xr
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.constants import CLIMPRED_DIMS
@@ -29,6 +31,10 @@ PM_COMPARISONS = {'m2c': '', 'e2c': ''}
 
 ITERATIONS = 2
 
+xr.set_options(display_style='text')
+
+category_edges = np.array([10.0, 10.5, 11.0])
+
 
 @pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
 def test_pvalue_from_bootstrapping(PM_da_initialized_1d, PM_da_control_1d, metric):
@@ -50,7 +56,7 @@ def test_pvalue_from_bootstrapping(PM_da_initialized_1d, PM_da_control_1d, metri
     assert actual.values < 2 * (1 - sig / 100)
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
+@pytest.mark.parametrize('metric', ['mse', 'pearson_r'])
 def test_compute_persistence_add_attrs(PM_ds_initialized_1d, PM_ds_control_1d, metric):
     """
     Checks that there are no NaNs on persistence forecast of 1D time series.
@@ -79,21 +85,32 @@ def test_compute_persistence_ds1d_not_nan(
     """
     Checks that there are no NaNs on persistence forecast of 1D time series.
     """
+    if metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    else:
+        metric_kwargs = {}
     actual = (
         compute_persistence(
             PM_ds_initialized_1d,
             PM_ds_control_1d,
             metric=metric,
             alignment='same_inits',
+            **metric_kwargs
         )
-        .isnull()
-        .any()
+        # .isnull()
+        # .any()
     )
+    print(actual.tos)
+    actual = actual.isnull().any()
     for var in actual.data_vars:
-        assert not actual[var]
+        assert not actual[var], actual[var]
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_PM_METRICS_LUACC)
+@pytest.mark.parametrize('metric', ['mse', 'pearson_r'])
 def test_compute_persistence_lead0_lead1(
     PM_da_initialized_1d, PM_da_initialized_1d_lead0, PM_da_control_1d, metric
 ):
@@ -120,6 +137,14 @@ def test_compute_perfect_model_da1d_not_nan(
     """
     Checks that there are no NaNs on perfect model metrics of 1D time series.
     """
+    if metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    else:
+        metric_kwargs = {}
     # acc on dim member only is ill defined
     if dim == 'member' and metric in [
         'pearson_r',
@@ -137,8 +162,12 @@ def test_compute_perfect_model_da1d_not_nan(
         comparison=comparison,
         metric=metric,
         dim=dim,
+        **metric_kwargs
     )
-    assert not actual.isnull().any()
+    if metric == 'contingency':
+        assert not actual.isnull().all()
+    else:
+        assert not actual.isnull().any()
 
 
 @pytest.mark.parametrize('comparison,dim', comparison_dim_PM)

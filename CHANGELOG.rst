@@ -34,7 +34,7 @@ New Features
   (:issue:282, :pr:`407`) `Aaron Spring`_.
 - Allow binary verif and (un)init forecasts as probabilities in ``hindcast.verify()``
   without providing ``logical``, so
-  ``hindcast.map(logical).mean('member').verify(metric='brier_score', comparison='e2o',dim=[])==``
+  ``hindcast.map(logical).verify(metric='brier_score', comparison='m2o',dim=“member”==``
   ``hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)``.
   (:pr:`431`) `Aaron Spring`_.
 - Allow to pass ``dim`` to functions from ``xskillscore``. (:pr:`431`) `Aaron Spring`_.

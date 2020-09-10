@@ -38,6 +38,7 @@ def compute_persistence(
     metric='pearson_r',
     alignment='same_verifs',
     add_attrs=True,
+    dim='init',
     **metric_kwargs,
 ):
     """Computes the skill of a persistence forecast from a simulation.
@@ -56,6 +57,7 @@ def compute_persistence(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
+        dim
         add_attrs (bool): write climpred compute_persistence args to attrs.
             default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
@@ -71,6 +73,8 @@ def compute_persistence(
           Oxford University Press, 2007.
 
     """
+    if isinstance(dim, str):
+        dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     verif = convert_time_index(verif, 'time', 'verif[time]')
@@ -109,9 +113,8 @@ def compute_persistence(
         a = verif.sel(time=inits[i])
         b = verif.sel(time=verif_dates[i])
         a['time'] = b['time']
-        plag.append(
-            metric.function(a, b, dim='time', comparison=__e2c, **metric_kwargs)
-        )
+        # comparison expected for normalized metrics
+        plag.append(metric.function(a, b, dim=dim, comparison=__e2c, **metric_kwargs))
     pers = xr.concat(plag, 'lead')
     pers['lead'] = hind.lead.values
     # keep coords from hind
@@ -161,6 +164,7 @@ def compute_uninitialized(
             How to compare the uninitialized ensemble to the verification data:
                 * e2o : ensemble mean to verification data (Default)
                 * m2o : each member to the verification data
+        dim
         alignment (str): which inits or verification times should be aligned?
             - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
@@ -177,6 +181,8 @@ def compute_uninitialized(
         u (xarray object): Results from comparison at the first lag.
 
     """
+    if isinstance(dim, str):
+        dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
     hind = convert_time_index(hind, 'init', 'hind[init]')
     uninit = convert_time_index(uninit, 'time', 'uninit[time]')
@@ -206,8 +212,9 @@ def compute_uninitialized(
         a = forecast.sel(time=dates)
         b = verif.sel(time=dates)
         a['time'] = b['time']
+        # comparison expected for normalized metrics
         plag.append(
-            metric.function(a, b, dim='time', comparison=comparison, **metric_kwargs)
+            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs)
         )
     uninit_skill = xr.concat(plag, 'lead')
     uninit_skill['lead'] = hind.lead.values

@@ -2069,7 +2069,18 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         ref_skill = _crps_gaussian(verif, mu, sig, dim=dim, **metric_kwargs)
     else:
         cdf_or_dist = metric_kwargs.pop('cdf_or_dist', norm)
-        ref_skill = _crps_quadrature(forecast, cdf_or_dist, dim=dim, **metric_kwargs,)
+        xmin = metric_kwargs.pop('xmin', None)
+        xmax = metric_kwargs.pop('xmax', None)
+        tol = metric_kwargs.pop('tol', 1e-6)
+        ref_skill = _crps_quadrature(
+            forecast,
+            cdf_or_dist,
+            xmin=xmin,
+            xmax=xmax,
+            tol=tol,
+            dim=dim,
+            **metric_kwargs,
+        )
     forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
     skill_score = 1 - forecast_skill / ref_skill
     return skill_score

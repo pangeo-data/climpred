@@ -22,19 +22,19 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
 - plot all datasets in :py:class:`~climpred.classes.HindcastEnsemble` or
   :py:class:`~climpred.classes.PerfectModelEnsemble` by
-  :py:func:`~climpred.classes.PredictionEnsemble.plot` if no other spatial dimensions
+  :py:meth:`~climpred.classes.PredictionEnsemble.plot` if no other spatial dimensions
   are present. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for :py:class:`~climpred.classes.PerfectModelEnsemble`:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
-- :py:class:`~climpred.classes.HindcastEnsemble.bootstrap` analogous to
-  :py:class:`~climpred.classes.PerfectModelEnsemble.bootstrap`.
+- :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` analogous to
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`.
   (:issue:`257`, :pr:`418`) `Aaron Spring`_.
-- ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``.
+- :py:meth:`~climpred.HindcastEnsemble.verify` allows all dimensions from `initialized` as ``dim``.
   For spatial dimensions to be used with ``skipna=True`` when masked input data.
   (:issue:282, :pr:`407`) `Aaron Spring`_.
-- Allow binary verif and (un)init forecasts as probabilities in ``hindcast.verify()``
+- Allow binary verif and (un)init forecasts as probabilities in :py:meth:`~climpred.HindcastEnsemble.verify`
   without providing ``logical``, so
-  ``hindcast.map(logical).mean('member').verify(metric='brier_score', comparison='e2o',dim=[])==``
+  ``hindcast.map(logical).verify(metric='brier_score', comparison='m2o',dim=“member”==``
   ``hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)``.
   (:pr:`431`) `Aaron Spring`_.
 - Allow to pass ``dim`` to functions from ``xskillscore``. (:pr:`431`) `Aaron Spring`_.

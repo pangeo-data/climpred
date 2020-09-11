@@ -61,6 +61,7 @@ Pre-Processing
 
     HindcastEnsemble.smooth
 
+
 PerfectModelEnsemble
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -116,6 +117,15 @@ Pre-Processing
     :toctree: api/
 
     PerfectModelEnsemble.smooth
+
+-------------
+Visualization
+-------------
+
+.. autosummary::
+    :toctree: api/
+
+    PredictionEnsemble.plot
 
 
 Direct Function Calls

@@ -1058,7 +1058,7 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+            'Comparison needed to normalize NMAE. Not found in', metric_kwargs
         )
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
@@ -2064,42 +2064,12 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     mu = verif.mean(rdim)
     sig = verif.std(rdim)
     # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
-    if 'gaussian' in metric_kwargs:
-        gaussian = metric_kwargs.pop('gaussian')
-    else:
-        gaussian = True
+    gaussian = metric_kwargs.pop('gaussian', True)
     if gaussian:
         ref_skill = _crps_gaussian(verif, mu, sig, dim=dim, **metric_kwargs)
     else:
-        if 'cdf_or_dist' in metric_kwargs:
-            cdf_or_dist = metric_kwargs.pop('cdf_or_dist')
-        else:
-            # Imported at top. This is `scipy.stats.norm`
-            cdf_or_dist = norm
-
-        if 'xmin' in metric_kwargs:
-            xmin = metric_kwargs.pop('xmin')
-        else:
-            xmin = None
-
-        if 'xmax' in metric_kwargs:
-            xmax = metric_kwargs.pop('xmax')
-        else:
-            xmax = None
-
-        if 'tol' in metric_kwargs:
-            tol = metric_kwargs.pop('tol')
-        else:
-            tol = 1e-6
-        ref_skill = _crps_quadrature(
-            forecast,
-            cdf_or_dist,
-            dim=dim,
-            xmin=xmin,
-            xmax=xmax,
-            tol=tol,
-            **metric_kwargs,
-        )
+        cdf_or_dist = metric_kwargs.pop('cdf_or_dist', norm)
+        ref_skill = _crps_quadrature(forecast, cdf_or_dist, dim=dim, **metric_kwargs,)
     forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
     skill_score = 1 - forecast_skill / ref_skill
     return skill_score
@@ -2420,7 +2390,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 __rps = Metric(
     name='rps',
     function=_rps,
-    positive=None,
+    positive=False,
     probabilistic=True,
     unit_power=0,
     long_name='rps',

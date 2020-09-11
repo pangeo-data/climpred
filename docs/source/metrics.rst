@@ -443,11 +443,15 @@ class.
 First, write your own metric function, similar to the existing ones with required
 arguments ``forecast``, ``observations``, ``dim=None``, and ``**metric_kwargs``::
 
-  from climpred.metrics import Metric
+  from climpred.metrics import Metric, _sanitize_kwargs, _rename_dim
 
   def _my_msle(forecast, observations, dim=None, **metric_kwargs):
       """Mean squared logarithmic error (MSLE).
       https://peltarion.com/knowledge-center/documentation/modeling-view/build-an-ai-model/loss-functions/mean-squared-logarithmic-error."""
+      # process dim and metric_kwargs; many not be required
+      metric_kwargs = _sanitize_kwargs(metric_kwargs)
+      dim = _rename_dim(dim, forecast, verif)
+      # function
       return ( (np.log(forecast + 1) + np.log(observations + 1) ) ** 2).mean(dim)
 
 Then initialize this metric function with :py:class:`climpred.metrics.Metric`::

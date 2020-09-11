@@ -11,12 +11,16 @@ from climpred.metrics import (
     Metric,
     __pearson_r,
     _rename_dim,
+    _sanitize_kwargs,
 )
 from climpred.prediction import compute_hindcast, compute_perfect_model
 
 
 def my_mse_function(forecast, verif, dim=None, **metric_kwargs):
+    # process dim and metric_kwargs
     dim = _rename_dim(dim, forecast, verif)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    # function
     return ((forecast - verif) ** 2).mean(dim)
 
 

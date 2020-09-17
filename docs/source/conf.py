@@ -44,8 +44,8 @@ extensions = [
 ]
 
 extlinks = {
-    'issue': ('https://github.com/bradyrx/climpred/issues/%s', 'GH#'),
-    'pr': ('https://github.com/bradyrx/climpred/pull/%s', 'GH#'),
+    'issue': ('https://github.com/pangeo-data/climpred/issues/%s', 'GH#'),
+    'pr': ('https://github.com/pangeo-data/climpred/pull/%s', 'GH#'),
 }
 
 # Add any paths that contain templates here, relative to this directory.

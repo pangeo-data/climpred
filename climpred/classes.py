@@ -1242,6 +1242,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 self,
                 alignment=alignment,
                 cross_validate=cross_validate,
-                **metric_kwargs
+                **metric_kwargs,
             )
         return self

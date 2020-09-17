@@ -6,7 +6,7 @@ from climpred.metrics import Metric
 
 
 def _mean_bias_reduction_quick(hind, bias, dim):
-    """Quick reduction of mean bias over all initializations. 
+    """Quick reduction of mean bias over all initializations.
 
     Args:
         hind (xr.object): hindcast.
@@ -17,7 +17,9 @@ def _mean_bias_reduction_quick(hind, bias, dim):
         xr.object: bias reduced hind
 
     """
-    bias_reduced_hind = hind.groupby(f'{dim}.dayofyear') - bias.groupby(f'{dim}.dayofyear').mean()
+    bias_reduced_hind = (
+        hind.groupby(f'{dim}.dayofyear') - bias.groupby(f'{dim}.dayofyear').mean()
+    )
     return bias_reduced_hind
 
 
@@ -55,7 +57,8 @@ def _mean_bias_reduction_cross_validate(hind, bias, dim):
             f'{hind_drop_init_where_bias.max().values}'
         )
         bias_reduced_hind.append(
-            hind.sel(init=init) - bias.sel(init=hind_drop_init_where_bias).groupby(f'init.dayofyear').mean()
+            hind.sel(init=init)
+            - bias.sel(init=hind_drop_init_where_bias).groupby('init.dayofyear').mean()
         )
     bias_reduced_hind = xr.concat(bias_reduced_hind, 'init')
     return bias_reduced_hind
@@ -92,7 +95,11 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
     bias_metric = Metric('bias', bias_func, True, False, 1)
 
     bias = hindcast.verify(
-        metric=bias_metric, comparison='e2r', dim=None, alignment=alignment, **metric_kwargs
+        metric=bias_metric,
+        comparison='e2r',
+        dim=None,
+        alignment=alignment,
+        **metric_kwargs,
     ).squeeze()
 
     if cross_validate:

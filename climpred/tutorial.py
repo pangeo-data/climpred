@@ -103,7 +103,7 @@ def load_dataset(
     name=None,
     cache=True,
     cache_dir=_default_cache_dir,
-    github_url='https://github.com/bradyrx/climpred-data',
+    github_url='https://github.com/pangeo-data/climpred-data',
     branch='master',
     extension=None,
     proxy_dict=None,

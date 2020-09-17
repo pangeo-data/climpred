@@ -61,7 +61,7 @@ def _mean_bias_reduction_cross_validate(hind, bias, dim):
     return bias_reduced_hind
 
 
-def mean_bias_reduction(hindcast, alignment, cross_validate=True):
+def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwargs):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
     Args:
@@ -92,7 +92,7 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True):
     bias_metric = Metric('bias', bias_func, True, False, 1)
 
     bias = hindcast.verify(
-        metric=bias_metric, comparison='e2r', dim=None, alignment=alignment
+        metric=bias_metric, comparison='e2r', dim=None, alignment=alignment, **metric_kwargs
     ).squeeze()
 
     if cross_validate:

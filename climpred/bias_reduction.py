@@ -17,7 +17,7 @@ def _mean_bias_reduction_quick(hind, bias, dim):
         xr.object: bias reduced hind
 
     """
-    bias_reduced_hind = hind - bias.mean(dim)
+    bias_reduced_hind = hind.groupby(f'{dim}.dayofyear') - bias.groupby(f'{dim}.dayofyear').mean(dim)
     return bias_reduced_hind
 
 
@@ -55,7 +55,7 @@ def _mean_bias_reduction_cross_validate(hind, bias, dim):
             f'{hind_drop_init_where_bias.max().values}'
         )
         bias_reduced_hind.append(
-            hind.sel(init=init) - bias.sel(init=hind_drop_init_where_bias).mean('init')
+            hind.sel(init=init).groupby(f'init.dayofyear') - bias.sel(init=hind_drop_init_where_bias).groupby(f'init.dayofyear').mean('init')
         )
     bias_reduced_hind = xr.concat(bias_reduced_hind, 'init')
     return bias_reduced_hind

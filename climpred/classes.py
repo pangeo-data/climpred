@@ -1238,6 +1238,10 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
 
-            self = func(self, alignment=alignment, cross_validate=cross_validate,
-                        **metric_kwargs)
+            self = func(
+                self,
+                alignment=alignment,
+                cross_validate=cross_validate,
+                **metric_kwargs
+            )
         return self

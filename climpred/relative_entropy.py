@@ -22,12 +22,12 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
         signal (float): signal component
 
     References:
-        - Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
-            Decadal Predictability in a CGCM.” Journal of Climate 23, no. 23
-            (August 27, 2010): 6292–6311. https://doi.org/10/bwq92h.
-        - Kleeman, Richard. “Measuring Dynamical Prediction Utility Using
-            Relative Entropy.” Journal of the Atmospheric Sciences 59, no. 13
-            (July 1, 2002): 2057–72. https://doi.org/10/fqwxpk.
+        * Branstator, Grant, and Haiyan Teng. “Two Limits of Initial-Value
+          Decadal Predictability in a CGCM.” Journal of Climate 23, no. 23
+          (August 27, 2010): 6292–6311. https://doi.org/10/bwq92h.
+        * Kleeman, Richard. “Measuring Dynamical Prediction Utility Using
+          Relative Entropy.” Journal of the Atmospheric Sciences 59, no. 13
+          (July 1, 2002): 2057–72. https://doi.org/10/fqwxpk.
 
     """
     fac = 0.5
@@ -39,7 +39,9 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     # https://stackoverflow.com/questions/
     # 7160162/left-matrix-division-and-numpy-solve
     # (A.T\B)*A
-    x, _, _, _ = np.linalg.lstsq(sigma_b, mu_x - mu_b)  # sigma_b \ (mu_x - mu_b)
+    x, _, _, _ = np.linalg.lstsq(
+        sigma_b, mu_x - mu_b, rcond=None
+    )  # sigma_b \ (mu_x - mu_b)
     signal = fac * np.matmul((mu_x.values - mu_b.values), x)
     R = dispersion + signal
     return R, dispersion, signal

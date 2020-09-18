@@ -5,14 +5,14 @@ climpred.classes.PerfectModelEnsemble
 
 .. autoclass:: PerfectModelEnsemble
 
-
+   
    .. automethod:: __init__
 
-
+   
    .. rubric:: Methods
 
    .. autosummary::
-
+   
       ~PerfectModelEnsemble.__init__
       ~PerfectModelEnsemble.add_control
       ~PerfectModelEnsemble.bootstrap
@@ -26,3 +26,9 @@ climpred.classes.PerfectModelEnsemble
       ~PerfectModelEnsemble.plot
       ~PerfectModelEnsemble.smooth
       ~PerfectModelEnsemble.verify
+   
+   
+
+   
+   
+   

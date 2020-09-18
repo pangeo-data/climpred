@@ -71,6 +71,8 @@ Documentation
   (:pr:`378`) `Riley X. Brady`_.
 - Add docs section for similar open-source forecasting packages.
   (:pr:`432`) `Riley X. Brady`_.
+- Add all metrics to main API in addition to metrics page.
+  (:pr:`438`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------

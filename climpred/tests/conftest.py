@@ -120,9 +120,9 @@ def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control
 @pytest.fixture
 def hind_ds_initialized_1d():
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
-    da = load_dataset('CESM-DP-SST')
-    da['init'] = da.init.astype('int')
-    return da
+    ds = load_dataset('CESM-DP-SST')
+    ds['init'] = ds.init.astype('int')
+    return ds
 
 
 @pytest.fixture

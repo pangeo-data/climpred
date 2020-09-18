@@ -214,6 +214,42 @@ def test_PM_fails_probabilistic_member_not_in_dim(
     )
 
 
+@pytest.mark.parametrize('dim', [['member'], ['member', 'init']])
+@pytest.mark.parametrize('metric', ['crpss', 'crpss_es'])
+def test_hindcast_crpss(hindcast_recon_1d_ym, metric, dim):
+    """Test that CRPSS metrics reduce by dimension dim in HindcastEnsemble.verify()."""
+    he = hindcast_recon_1d_ym.isel(lead=[0, 1])
+    actual = he.verify(
+        dim=dim, metric=metric, alignment='same_verif', comparison='m2o'
+    ).squeeze()
+    before_dims = he.get_initialized().dims
+    debug_message = f'{before_dims} - {dim} != {actual.dims} but should be'
+    for d in before_dims:
+        if d not in dim:
+            assert d in actual.dims, debug_message
+        else:
+            assert d not in actual.dims, debug_message
+
+
+@pytest.mark.parametrize('comparison', ['m2m', 'm2c'])
+@pytest.mark.parametrize('dim', [['member'], ['member', 'init']])
+@pytest.mark.parametrize('metric', ['crpss', 'crpss_es'])
+def test_pm_crpss(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime, metric, dim, comparison
+):
+    """Test that CRPSS metrics reduce by dimension dim in
+    PerfectModelEnsemble.verify()."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    actual = pm.verify(dim=dim, metric=metric, comparison=comparison).squeeze()
+    before_dims = pm.get_initialized().dims
+    debug_message = f'{before_dims} - {dim} != {actual.dims} but should be'
+    for d in before_dims:
+        if d in dim:
+            assert d not in actual.dims, debug_message
+        else:
+            assert d in actual.dims, debug_message
+
+
 def test_pm_metric_weights(perfectModelEnsemble_initialized_control_3d_North_Atlantic):
     """Test PerfectModelEnsemble.verify() with weights yields different results."""
     pm = perfectModelEnsemble_initialized_control_3d_North_Atlantic

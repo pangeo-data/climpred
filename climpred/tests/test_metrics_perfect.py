@@ -6,6 +6,8 @@ from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from climpred.utils import get_metric_class
 
+xr.set_options(display_style='text')
+
 
 @pytest.mark.parametrize('how', ['constant', 'increasing_by_lead'])
 @pytest.mark.parametrize('comparison', PM_COMPARISONS)

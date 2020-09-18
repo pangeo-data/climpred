@@ -223,7 +223,9 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r_eff_p_value
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r = Metric(
@@ -276,7 +278,7 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter('ignore', category=(RuntimeWarning, DeprecationWarning))
         return pearson_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -341,7 +343,9 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __effective_sample_size = Metric(
@@ -417,7 +421,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter('ignore', category=(RuntimeWarning, DeprecationWarning))
         return pearson_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -481,7 +485,9 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r_eff_p_value
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
+    with warnings.catch_warnings():
+        warnings.simplefilter('ignore', category=RuntimeWarning)
+        return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r = Metric(
@@ -534,7 +540,7 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter('ignore', category=RuntimeWarning)
         return spearman_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -612,7 +618,7 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore')
+        warnings.simplefilter('ignore', category=(RuntimeWarning, DeprecationWarning))
         return spearman_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 

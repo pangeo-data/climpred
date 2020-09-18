@@ -2,7 +2,7 @@
 
 Contributions are highly welcomed and appreciated. Every little bit helps,
 so do not hesitate! You can make a high impact on `climpred` just by using it and
-reporting [issues](https://github.com/bradyrx/climpred/issues).
+reporting [issues](https://github.com/pangeo-data/climpred/issues).
 
 The following sections cover some general guidelines
 regarding development in `climpred` for maintainers and contributors.
@@ -19,14 +19,14 @@ Please also review our [Code of Conduct](code_of_conduct.html).
 
 We are eager to hear about your requests for new features and any suggestions about the
 API, infrastructure, and so on. Feel free to submit these as
-[issues](https://github.com/bradyrx/climpred/issues/new?assignees=&labels=feature+request&template=feature_request.md) with the label "feature request."
+[issues](https://github.com/pangeo-data/climpred/issues/new?assignees=&labels=feature+request&template=feature_request.md) with the label "feature request."
 
 Please make sure to explain in detail how the feature should work and keep the scope as
 narrow as possible. This will make it easier to implement in small PRs.
 
 ## Bug Reports
 
-Report bugs for `climpred` in the [issue tracker](https://github.com/bradyrx/climpred/issues/new?assignees=&labels=bug&template=bug_report.md)
+Report bugs for `climpred` in the [issue tracker](https://github.com/pangeo-data/climpred/issues/new?assignees=&labels=bug&template=bug_report.md)
 with the label "bug report."
 
 If you are reporting a bug, please include:
@@ -41,7 +41,7 @@ that is a very useful commit to make as well, even if you cannot fix the bug its
 
 ## Fix Bugs
 
-Look through the [GitHub issues for bugs](https://github.com/bradyrx/climpred/labels/bug),
+Look through the [GitHub issues for bugs](https://github.com/pangeo-data/climpred/labels/bug),
 or talk to the developers who can suggest specific bugs for you to help out with.
 
 ## Write Documentation
@@ -77,14 +77,14 @@ If you need to add new functions to the API, run `sphinx-autogen -o api api.rst`
 
 ## Preparing Pull Requests
 
-1. Fork the [climpred GitHub repository](https://github.com/bradyrx/climpred).  It's fine to use `climpred` as your fork repository name because it will live under your user.
+1. Fork the [climpred GitHub repository](https://github.com/pangeo-data/climpred).  It's fine to use `climpred` as your fork repository name because it will live under your user.
 
 2. Clone your fork locally using [git](https://git-scm.com/), connect your repository to the upstream (main project), and create a branch.
 
     ```shell
     $ git clone git@github.com:YOUR_GITHUB_USERNAME/climpred.git
     $ cd climpred
-    $ git remote add upstream git@github.com:bradyrx/climpred.git
+    $ git remote add upstream git@github.com:pangeo-data/climpred.git
     ```
 
 3. Now, to fix a bug or to add a feature, create your own branch off `master`
@@ -192,7 +192,7 @@ If you need to add new functions to the API, run `sphinx-autogen -o api api.rst`
     head-fork: YOUR_GITHUB_USERNAME/climpred
     compare: your-branch-name
 
-    base-fork: bradyrx/climpred
+    base-fork: pangeo-data/climpred
     base: master
     ```
 

@@ -145,13 +145,13 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
         else PROBABILISTIC_PM_COMPARISONS
     )
     if metric.probabilistic:
-        if not comparison.probabilistic:
+        if not comparison.probabilistic and 'member' in initialized.dims:
             raise ValueError(
                 f'Probabilistic metric `{metric.name}` requires comparison '
                 f'accepting multiple members e.g. `{PROBABILISTIC_COMPARISONS}`, '
                 f'found `{comparison.name}`.'
             )
-        if 'member' not in dim:
+        if 'member' not in dim and 'member' in initialized.dims:
             raise ValueError(
                 f'Probabilistic metric {metric.name} requires to be '
                 f'computed over dimension `member`, which is not found in {dim}.'
@@ -169,7 +169,7 @@ def compute_perfect_model(
     control,
     metric='pearson_r',
     comparison='m2e',
-    dim=None,
+    dim=['member', 'init'],
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -210,11 +210,10 @@ def compute_perfect_model(
     # in case you want to compute deterministic skill over member dim
     if (forecast.dims != verif.dims) and not metric.probabilistic:
         forecast, verif = xr.broadcast(forecast, verif)
-
     skill = metric.function(
         forecast, verif, dim=dim, comparison=comparison, **metric_kwargs
     )
-    if comparison.name == 'm2m':
+    if comparison.name == 'm2m' and M2M_MEMBER_DIM in skill.dims:
         skill = skill.mean(M2M_MEMBER_DIM)
     # Attach climpred compute information to skill
     if add_attrs:

@@ -25,7 +25,7 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
 
     """
     colors = ['royalblue', 'indianred', 'goldenrod']
-    fig, ax = plt.subplots(ncols=3, **kwargs)
+    _, ax = plt.subplots(ncols=3, **kwargs)
 
     for i, dim in enumerate(['R', 'S', 'D']):
         m = rel_ent[dim].median('init')
@@ -154,7 +154,7 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
         raise NotImplementedError('pers_sig != sig not implemented yet.')
 
     if ax is None:
-        fig, ax = plt.subplots(figsize=(10, 4))
+        _, ax = plt.subplots(figsize=(10, 4))
     ax.errorbar(
         init_skill.lead,
         init_skill,

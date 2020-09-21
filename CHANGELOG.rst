@@ -62,6 +62,8 @@ Bug Fixes
   and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
+- Reduce bias by ``dayofyear`` :py:class:`~climpred.HindcastEnsemble.reduce_bias`.
+  (:pr:`443`) `Aaron Spring`_.
 
 Documentation
 -------------
@@ -71,6 +73,8 @@ Documentation
   (:pr:`378`) `Riley X. Brady`_.
 - Add docs section for similar open-source forecasting packages.
   (:pr:`432`) `Riley X. Brady`_.
+- Add all metrics to main API in addition to metrics page.
+  (:pr:`438`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------

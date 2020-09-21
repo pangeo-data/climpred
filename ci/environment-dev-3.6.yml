@@ -28,7 +28,6 @@ dependencies:
   - black==19.10b0
   - coveralls
   - dataclasses  # to get black to not error
-  - doc8
   - flake8
   - importlib_metadata
   - isort

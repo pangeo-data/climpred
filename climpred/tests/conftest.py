@@ -11,11 +11,16 @@ CALENDAR = PM_CALENDAR_STR.strip('Datetime').lower()
 
 
 @pytest.fixture
-def PM_ds_initialized_1d():
+def PM_ds3v_initialized_1d():
+    """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
+    variables."""
+    return load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1)
+
+
+@pytest.fixture
+def PM_ds_initialized_1d(PM_ds3v_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset."""
-    return (
-        load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1).drop_vars(['sos', 'AMO'])
-    )
+    return PM_ds3v_initialized_1d.drop_vars(['sos', 'AMO'])
 
 
 @pytest.fixture
@@ -62,11 +67,16 @@ def PM_da_initialized_3d(PM_ds_initialized_3d):
 
 
 @pytest.fixture
-def PM_ds_control_1d():
+def PM_ds3v_control_1d():
+    """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
+    three variables."""
+    return load_dataset('MPI-control-1D').isel(area=1, period=-1)
+
+
+@pytest.fixture
+def PM_ds_control_1d(PM_ds3v_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset."""
-    return (
-        load_dataset('MPI-control-1D').isel(area=1, period=-1).drop_vars(['sos', 'AMO'])
-    )
+    return PM_ds3v_control_1d.drop_vars(['sos', 'AMO'])
 
 
 @pytest.fixture
@@ -115,6 +125,15 @@ def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     pm = pm.add_control(PM_ds_control_1d)
     return pm
+
+
+@pytest.fixture
+def perfectModelEnsemble_3v_initialized_control_1d(
+    PM_ds3v_initialized_1d, PM_ds3v_control_1d
+):
+    """PerfectModelEnsemble 1d initialized with `initialized` and `control` xr.Dataset
+    with three variables."""
+    return PerfectModelEnsemble(PM_ds3v_initialized_1d).add_control(PM_ds3v_control_1d)
 
 
 @pytest.fixture

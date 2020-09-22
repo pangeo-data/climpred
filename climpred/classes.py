@@ -297,44 +297,20 @@ class PredictionEnsemble:
     def __truediv__(self, other):
         return self._math(other, operator='div')
 
-    def __eq__(self, other):
-        """Check that two PredictionEnsemble are equal: `pe1 == pe2`."""
-        assert type(other) == type(self)
-        if isinstance(other, PredictionEnsemble):
-            if isinstance(other, HindcastEnsemble):
-                return self.get_initialized().equals(
-                    other.get_initialized()
-                ) and self.get_observations().equals(other.get_observations())
-            elif isinstance(other, PerfectModelEnsemble):
-                return self.get_initialized().equals(
-                    other.get_initialized()
-                ) and self.get_control().equals(other.get_control())
-        else:
-            raise ValueError(
-                f'Require `PredictionEnsemble` to perform == with, found {type(other)}'
-            )
-
-    def __ne__(self, other):
-        """Check that two PredictionEnsemble are not equal: `pe1 != pe2`."""
-        if isinstance(other, PredictionEnsemble):
-            return not (self == other)
-        else:
-            raise ValueError(
-                f'Require `PredictionEnsemble` to perform != with, found {type(other)}'
-            )
-
     def __getitem__(self, varlist):
         """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
 
         Args:
-            * varlist (list of str, str): list of names or name of data variable(s) to subselect
+            * varlist (list of str, str): list of names or name of data variable(s) to
+                subselect
         """
         if isinstance(varlist, str):
             varlist = [varlist]
         if not isinstance(varlist, list):
             raise ValueError(
                 'Please subset PredictionEnsemble as you would subset an xr.Dataset '
-                f'with a list or single string of variable name(s), found {type(varlist)}.'
+                'with a list or single string of variable name(s), found '
+                f'{type(varlist)}.'
             )
 
         def sel_vars(ds, varlist):

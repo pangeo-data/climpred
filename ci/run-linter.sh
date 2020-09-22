@@ -14,7 +14,3 @@ black --check -S climpred
 
 echo "[isort]"
 isort --recursive --check-only climpred
-
-echo "[doc8]"
-doc8 docs/source --ignore-path docs/source/setting-up-data.rst
-doc8 *.rst

@@ -7,7 +7,6 @@ from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from climpred.utils import get_metric_class
 
-
 probabilistic_metrics_requiring_logical = [
     'brier_score',
     'discrimination',
@@ -21,7 +20,6 @@ probabilistic_metrics_requiring_more_than_member_dim = [
 ]
 
 xr.set_options(display_style='text')
-
 
 
 @pytest.mark.parametrize('how', ['constant', 'increasing_by_lead'])

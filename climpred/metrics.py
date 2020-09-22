@@ -296,7 +296,6 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
-
 __pearson_r = Metric(
     name='pearson_r',
     function=_pearson_r,
@@ -417,7 +416,6 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
-
 
 
 __effective_sample_size = Metric(
@@ -562,7 +560,6 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
-
 
 
 __spearman_r = Metric(

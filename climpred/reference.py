@@ -57,7 +57,7 @@ def compute_persistence(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        dim
+        dim (str or list of str): dimension to apply metric over.
         add_attrs (bool): write climpred compute_persistence args to attrs.
             default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
@@ -164,7 +164,7 @@ def compute_uninitialized(
             How to compare the uninitialized ensemble to the verification data:
                 * e2o : ensemble mean to verification data (Default)
                 * m2o : each member to the verification data
-        dim
+        dim (str or list of str): dimension to apply metric over.
         alignment (str): which inits or verification times should be aligned?
             - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.

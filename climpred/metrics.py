@@ -2315,14 +2315,14 @@ __reliability = Metric(
 
 
 def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
-    """rank_histogram.
+    """Rank histogram or Talagrand diagram.
 
 
     Args:
         forecast (xr.object): Raw forecasts with ``member`` dimension.
         verif (xr.object): Verification data without ``member`` dim.
         dim (list or str): Dimensions to aggregate. Requires to contain `member` and at
-            least one additional dimension..
+            least one additional dimension.
         metric_kwargs (dict): optional
             see xskillscore.rank_histogram
 
@@ -2360,14 +2360,15 @@ __rank_histogram = Metric(
 def _rps(forecast, verif, dim=None, **metric_kwargs):
     """Ranked Probability Score.
 
+    .. math::
+        RPS(p, k) = 1/M \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} o_k)]^{2}
 
     Args:
         forecast (xr.object): Raw forecasts with ``member`` dimension.
         verif (xr.object): Verification data without ``member`` dim.
-        dim (list or str): Dimensions to aggregate. Requires to contain `member` and at
-            least one additional dimension..
-        metric_kwargs (dict):
-            category_edges (required)
+        dim (list or str): Dimensions to aggregate. Requires to contain `member`.
+        category_edges (array_like): Category bin edges used to compute the CDFs.
+            Bins include the left most edge, but not the right.
             see xskillscore.rps
 
     Details:
@@ -2385,22 +2386,22 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.rps
 
     Example:
-        >>> hindcast.verify(metric='rps', comparison='m2o',
-                dim='member', alignment='same_verifs')
+        >>> category_edges = [-.5, 0., .5 ,1.]
+        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member',
+                alignment='same_verifs', category_edges=category_edges)
         >>> perfect_model.verify(metric='rps', comparison='m2c',
-                dim='member')
+                dim='member', category_edges=category_edges)
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
     dim = _rename_dim(dim, forecast, verif)
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     if 'category_edges' in metric_kwargs:
-        category_edges = metric_kwargs['category_edges']
-        del metric_kwargs['category_edges']
+        category_edges = metric_kwargs.pop('category_edges')
     else:
         raise ValueError('require category_edges')
     if 'member' in verif.coords and 'member' not in verif.dims:
-        del verif.coords['member']
+        del verif.coords['member'] # TODO: cleanup in comparison
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 
@@ -2427,10 +2428,11 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
         score (str): Score derived from contingency table. Attribute from
             xskillscore.Contingency. Use ``score=table`` to return a contingency table
             or any other contingency score, e.g. ``score=hit_rate``.
-        metric_kwargs (dict): including
-            observation_category_edges  (required)
-            forecast_category_edges  (required)
-            see xskillscore.Contingency
+        observation_category_edges (array_like): Category bin edges used to compute
+            the observations CDFs. Bins include the left most edge, but not the right.
+        forecast_category_edges  (array_like): Category bin edges used to compute
+            the forecast CDFs. Bins include the left most edge, but not the right.
+        metric_kwargs (dict): see xskillscore.Contingency
 
     See also:
         * xskillscore.Contingency
@@ -2438,12 +2440,18 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
     References
     ----------
         * http://www.cawcr.gov.au/projects/verification/
+        * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics
 
     Example:
+        >>> category_edges = [-0.5, 0., .5, 1.]
         >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
-                dim=[], alignment='same_verifs')
+                dim=[], alignment='same_verifs',
+                observation_category_edges=category_edges,
+                forecast_category_edges=category_edges)
         >>> perfect_model.verify(metric='contingency', score='hit_rate',
-                comparison='m2c', dim=['member','init'])
+                comparison='m2c', dim=['member','init'],
+                observation_category_edges=category_edges,
+                forecast_category_edges=category_edges)
 
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)

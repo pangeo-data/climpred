@@ -1,5 +1,6 @@
-from setuptools import find_packages, setup
 from os.path import exists
+
+from setuptools import find_packages, setup
 
 if exists('README.rst'):
     with open('README.rst') as f:
@@ -25,8 +26,7 @@ CLASSIFIERS = [
 setup(
     maintainer='Riley X. Brady and Aaron Spring',
     maintainer_email='riley.brady@colorado.edu',
-    description='An xarray wrapper for analysis of ensemble forecast models for climate'
-    + ' prediction.',
+    description='Verification of weather and climate forecasts.' + ' prediction.',
     install_requires=install_requires,
     python_requires='>=3.6',
     license='MIT',
@@ -36,7 +36,7 @@ setup(
     packages=find_packages(),
     test_suite='climpred/tests',
     tests_require=test_requirements,
-    url='https://github.com/bradyrx/climpred',
+    url='https://github.com/pangeo-data/climpred',
     use_scm_version={'version_scheme': 'post-release', 'local_scheme': 'dirty-tag'},
     setup_requires=[
         'setuptools_scm',

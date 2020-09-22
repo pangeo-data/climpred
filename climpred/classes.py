@@ -9,6 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from .alignment import return_inits_and_verif_dates
 from .bias_reduction import mean_bias_reduction
 from .bootstrap import (
+    bootstrap_hindcast,
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
@@ -326,12 +327,14 @@ class PredictionEnsemble:
         """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
 
         Args:
-            * varlist (list): list of name(s) of data variable(s) to subselect
+            * varlist (list of str, str): list of names or name of data variable(s) to subselect
         """
+        if isinstance(varlist, str):
+            varlist = [varlist]
         if not isinstance(varlist, list):
             raise ValueError(
                 'Please subset PredictionEnsemble as you would subset an xr.Dataset '
-                f'with a list of variable names, found {type(varlist)}.'
+                f'with a list or single string of variable name(s), found {type(varlist)}.'
             )
 
         def sel_vars(ds, varlist):
@@ -640,7 +643,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._datasets['control']
 
     def verify(
-        self, metric='pearson_r', comparison='m2e', reference=None, **metric_kwargs
+        self,
+        metric='pearson_r',
+        comparison='m2e',
+        dim=None,
+        reference=None,
+        **metric_kwargs,
     ):
         """Compares the initialized ensemble to the control run.
 
@@ -650,6 +658,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             comparison (str, default 'm2e'):
               How to compare the climate prediction ensemble to the control.
             reference (str, list of str): reference forecasts to compare against.
+            dim (str, list of str): dimension(s) to apply metric over.
             **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
@@ -667,6 +676,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            dim=dim,
             **metric_kwargs,
         )
         if self._temporally_smoothed:
@@ -709,7 +719,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self.verify(metric=metric, comparison=comparison, **metric_kwargs)
 
     def compute_uninitialized(
-        self, metric='pearson_r', comparison='m2e', **metric_kwargs
+        self, metric='pearson_r', comparison='m2e', dim=None, **metric_kwargs
     ):
         """Compares the bootstrapped uninitialized run to the control run.
 
@@ -718,8 +728,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Metric to apply in the comparison.
             comparison (str, default 'm2m'):
               How to compare to the control run.
-            running (int, default None):
-              Size of the running window for variance smoothing.
+            dim (str, list of str): dimension(s) to apply metric over.
             **metric_kwargs (optional): arguments passed to `metric`.
 
         Returns:
@@ -740,6 +749,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            dim=dim,
             **metric_kwargs,
         )
         if self._temporally_smoothed:
@@ -785,18 +795,21 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self,
         metric='pearson_r',
         comparison='m2e',
+        dim=['init', 'member'],
         sig=95,
         iterations=500,
         pers_sig=None,
         **metric_kwargs,
     ):
-        """Bootstrap ensemble simulations with replacement.
+        """Bootstrap ensemble PerfectModelEnsemble with replacement according to
+        Goddard et al. 2013.
 
         Args:
             metric (str, default 'pearson_r'):
                 Metric to apply for bootstrapping.
             comparison (str, default 'm2e'):
                 Comparison style for bootstrapping.
+            dim (str, list of str): dimension(s) to apply metric over.
             sig (int, default 95):
                 Significance level for uninitialized and initialized
                 comparison.
@@ -840,6 +853,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
+            dim=dim,
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
@@ -1015,8 +1029,8 @@ class HindcastEnsemble(PredictionEnsemble):
         reference=None,
         metric='pearson_r',
         comparison='e2o',
-        alignment='same_verifs',
         dim='init',
+        alignment='same_verifs',
         **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations/verification data.
@@ -1032,6 +1046,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
                 observations/verification data).
+            dim (str, list of str): dimension(s) to apply metric over.
             alignment (str): which inits or verification times should be aligned?
                 - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
@@ -1066,7 +1081,7 @@ class HindcastEnsemble(PredictionEnsemble):
         ):
             """Interior verify func to be passed to apply func."""
             metric, comparison, dim = _get_metric_comparison_dim(
-                metric, comparison, dim, kind=self.kind
+                hind, metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({'init': 'time'})
@@ -1117,6 +1132,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
                     ref['lead'] = forecast['lead']
                     result = xr.concat([result, ref], dim='skill', **CONCAT_KWARGS)
+            # rename back to 'init'
+            if 'time' in result.dims:
+                result = result.rename({'time': 'init'})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=['init'] + reference)
             return result
@@ -1160,7 +1178,72 @@ class HindcastEnsemble(PredictionEnsemble):
                 res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
         return res
 
-    def reduce_bias(self, alignment, how='mean', cross_validate=True):
+    def bootstrap(
+        self,
+        metric='pearson_r',
+        comparison='e2o',
+        alignment='same_verifs',
+        sig=95,
+        dim='init',
+        resample_dim='member',
+        iterations=500,
+        pers_sig=None,
+        **metric_kwargs,
+    ):
+        """Bootstrap ensemble HindcastEnsemble with replacement according to
+        Goddard et al. 2013.
+
+        Args:
+            metric (str, default 'pearson_r'): Metric to apply for verification.
+            comparison (str, default 'e2o'): How to compare to the
+                observations/verification data. ('e2o' for ensemble mean to
+                observations/verification data. 'm2o' for each individual member to
+                observations/verification data).
+            alignment (str): which inits or verification times should be aligned?
+                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+                ``verif`` to a common time frame at each lead.
+                - same_inits: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+                - same_verif: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+            sig (int, default 95):
+                Significance level for uninitialized and initialized
+                comparison.
+            dim (str): dimension to apply metric over. default: 'init'.
+            resample_dim (str or list): dimension to resample from. default: 'member'.
+
+                - 'member': select a different set of members from hind
+                - 'init': select a different set of initializations from hind
+
+            iterations (int, default 500): Number of resampling iterations for
+                bootstrapping with replacement.
+            pers_sig (int, default None):
+                If not None, the separate significance level for persistence.
+            **metric_kwargs (optional): arguments passed to `metric`.
+
+        Returns:
+            Dataset of comparison results (if comparing to one observational product),
+            or dictionary of Datasets with keys corresponding to
+            observations/verification data short name.
+        """
+        # TODO: replace with more computationally efficient classes implementation
+        return bootstrap_hindcast(
+            self.get_initialized(),
+            self.get_uninitialized(),
+            self.get_observations(),
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            alignment=alignment,
+            resample_dim=resample_dim,
+            sig=sig,
+            iterations=iterations,
+            pers_sig=pers_sig,
+        )
+
+    def reduce_bias(self, alignment, how='mean', cross_validate=True, **metric_kwargs):
         """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
         Args:
@@ -1180,6 +1263,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 With False, include the given initialization in the calculation, which
                 is much faster and but yields similar skill with a large N of
                 initializations. Defaults to True.
+            metric_kwargs (dict): kwargs to be passed to bias.
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
@@ -1193,5 +1277,10 @@ class HindcastEnsemble(PredictionEnsemble):
             else:
                 raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
 
-            self = func(self, alignment=alignment, cross_validate=cross_validate)
+            self = func(
+                self,
+                alignment=alignment,
+                cross_validate=cross_validate,
+                **metric_kwargs,
+            )
         return self

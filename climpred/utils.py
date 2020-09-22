@@ -372,7 +372,7 @@ def _load_into_memory(res):
 
 def rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim):
     """Rechunk an xarray object more than one chunk along dim."""
-    if dask.is_dask_collection(ds):
+    if dask.is_dask_collection(ds) and dim in ds.chunks:
         if isinstance(ds, xr.Dataset):
             nchunks = len(ds.chunks[dim])
         elif isinstance(ds, xr.DataArray):

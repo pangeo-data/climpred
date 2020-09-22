@@ -1,29 +1,69 @@
-climpred: analysis of ensemble forecast models for climate prediction
-=====================================================================
+climpred: verification of weather and climate forecasts
+=======================================================
 
-.. image:: https://travis-ci.org/bradyrx/climpred.svg?branch=master
-    :target: https://travis-ci.org/bradyrx/climpred
+..
+    Table version of badges inspired by pySTEPS.
 
-.. image:: https://img.shields.io/pypi/v/climpred.svg
-   :target: https://pypi.python.org/pypi/climpred/
+.. list-table::
+    :stub-columns: 1
+    :widths: 10 90
 
-.. image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
-    :target: https://anaconda.org/conda-forge/climpred
-    :alt: Conda Version
+    * - docs
+      - |docs|
+    * - tests
+      - |travis| |requires| |codecov|
+    * - package
+      - |conda| |pypi|
+    * - license
+      - |license|
+    * - community
+      - |gitter| |contributors| |downloads|
+    * - tutorials
+      - |gallery| |tutorial|
 
-.. image:: https://coveralls.io/repos/github/bradyrx/climpred/badge.svg?branch=master
-    :target: https://coveralls.io/github/bradyrx/climpred?branch=master
-
-.. image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
+.. |docs| image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
     :target: https://climpred.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
 
-.. image:: https://badges.gitter.im/Join%20Chat.svg
-    :target: https://gitter.im/climpred
+.. |travis| image:: https://travis-ci.org/pangeo-data/climpred.svg?branch=master
+    :target: https://travis-ci.org/pangeo-data/climpred
 
-.. image:: https://img.shields.io/github/license/bradyrx/climpred.svg
+.. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=master
+     :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=master
+     :alt: Requirements Status
+
+.. |codecov| image:: https://coveralls.io/repos/github/pangeo-data/climpred/badge.svg?branch=master
+    :target: https://coveralls.io/github/pangeo-data/climpred?branch=master
+
+.. |conda| image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
+    :target: https://anaconda.org/conda-forge/climpred
+    :alt: Conda Version
+
+.. |pypi| image:: https://img.shields.io/pypi/v/climpred.svg
+   :target: https://pypi.python.org/pypi/climpred/
+
+.. |license| image:: https://img.shields.io/github/license/pangeo-data/climpred.svg
     :alt: license
     :target: ../../LICENSE.txt
+
+.. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
+    :target: https://gitter.im/climpred
+
+.. |contributors| image:: https://img.shields.io/github/contributors/pangeo-data/climpred
+    :alt: GitHub contributors
+    :target: https://github.com/pangeo-data/climpred/graphs/contributors
+
+.. |downloads| image:: https://img.shields.io/conda/dn/conda-forge/climpred
+    :alt: Conda downloads
+    :target: https://anaconda.org/conda-forge/climpred
+
+.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-F5A252.svg
+    :alt: climpred gallery
+    :target: https://climpred.readthedocs.io/en/stable/examples.html
+
+.. |tutorial| image:: https://img.shields.io/badge/climpred-tutorial-f5a252
+    :alt: climpred workshop
+    :target: https://mybinder.org/v2/gh/bradyrx/climpred_workshop/master
 
 Version 2.0.0 Release
 =====================
@@ -105,12 +145,13 @@ repository and running ``pip install . --upgrade`` in the main directory
 
 * :doc:`api`
 * :doc:`changelog`
+* :doc:`code_of_conduct`
+* :doc:`contributing`
+* :doc:`contributors`
 * :doc:`helpful-links`
 * :doc:`publications`
-* :doc:`contributing`
-* :doc:`code_of_conduct`
+* :doc:`related_packages`
 * :doc:`release_procedure`
-* :doc:`contributors`
 
 .. toctree::
     :maxdepth: 1
@@ -119,9 +160,10 @@ repository and running ``pip install . --upgrade`` in the main directory
 
     api
     changelog
+    code_of_conduct
+    contributing
+    contributors
     helpful-links
     publications
-    contributing
-    code_of_conduct
+    related-packages
     release_procedure
-    contributors

@@ -314,7 +314,7 @@ def test_PerfectModelEnsemble_area_weighted_mean(PM_ds_initialized_3d):
     )
 
 
-@pytest.mark.parametrize('varlist', [['tos', 'sos'], ['AMO']])
+@pytest.mark.parametrize('varlist', [['tos', 'sos'], ['AMO'], 'AMO'])
 def test_subset_getitem_datavariables(
     perfectModelEnsemble_3v_initialized_control_1d, varlist
 ):

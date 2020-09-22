@@ -12,7 +12,12 @@ from .checks import (
     has_valid_lead_units,
     warn_if_chunking_would_increase_performance,
 )
-from .comparisons import ALL_COMPARISONS, COMPARISON_ALIASES, HINDCAST_COMPARISONS
+from .comparisons import (
+    ALL_COMPARISONS,
+    COMPARISON_ALIASES,
+    HINDCAST_COMPARISONS,
+    __m2o,
+)
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model
@@ -673,6 +678,8 @@ def bootstrap_compute(
     warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
+    if isinstance(dim, str):
+        dim = [dim]
 
     p = (100 - sig) / 100
     ci_low = p / 2
@@ -746,6 +753,7 @@ def bootstrap_compute(
                 replace=False,
                 dim_max=hind['member'].size,
             )
+            bootstrapped_uninit['lead'] = hind['lead']
             # effectively only when _resample_iteration_idx which doesnt use dim_max
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
@@ -765,6 +773,7 @@ def bootstrap_compute(
             bootstrapped_uninit = bootstrapped_uninit.isel(
                 member=slice(None, hind.member.size)
             )
+            bootstrapped_uninit['lead'] = hind['lead']
             if dask.is_dask_collection(bootstrapped_uninit):
                 bootstrapped_uninit = _maybe_auto_chunk(
                     bootstrapped_uninit.chunk({'lead': 1}),
@@ -776,11 +785,14 @@ def bootstrap_compute(
             verif,
             alignment=alignment,
             metric=metric,
-            comparison=comparison,
+            comparison='m2o' if isHindcast else comparison,
             dim=dim,
             add_attrs=False,
             **metric_kwargs,
         )
+        # take mean if 'm2o' comparison forced before
+        if isHindcast and comparison != __m2o:
+            bootstrapped_uninit_skill = bootstrapped_uninit_skill.mean('member')
 
         bootstrapped_hind = resample_func(hind, iterations, resample_dim)
         if dask.is_dask_collection(bootstrapped_hind):
@@ -1052,7 +1064,7 @@ def bootstrap_perfect_model(
     control,
     metric='pearson_r',
     comparison='m2e',
-    dim=None,
+    dim=['init', 'member'],
     resample_dim='member',
     sig=95,
     iterations=500,

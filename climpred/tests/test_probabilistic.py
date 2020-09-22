@@ -22,29 +22,17 @@ def test_compute_perfect_model_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on perfect model probabilistic metrics of 1D
     time series.
     """
+    metric_kwargs = {'comparison': comparison, 'metric': metric, 'dim': 'member'}
     if 'threshold' in metric:
-        threshold = 10.5
-    else:
-        threshold = None
-
+        metric_kwargs['threshold'] = 10.5
     if metric == 'brier_score':
 
         def func(x):
             return x > 0
 
-    else:
-        func = None
+        metric_kwargs['logical'] = func
 
-    actual = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison=comparison,
-        metric=metric,
-        threshold=threshold,
-        gaussian=True,
-        logical=func,
-        dim='member',
-    )
+    actual = compute_perfect_model(PM_da_initialized_1d, PM_da_control_1d)
     actual = actual.isnull().any()
     assert not actual
 
@@ -57,26 +45,16 @@ def test_compute_hindcast_probabilistic(
     """
     Checks that compute hindcast works without breaking.
     """
+    metric_kwargs = {'comparison': comparison, 'metric': metric, 'dim': 'member'}
     if 'threshold' in metric:
-        threshold = 0.5  # hind_da_initialized_1d.mean()
-    else:
-        threshold = None
+        metric_kwargs['threshold'] = 0.5
     if metric == 'brier_score':
 
         def func(x):
-            return x > 0.5
+            return x > 0
 
-    else:
-        func = None
-    res = compute_hindcast(
-        hind_da_initialized_1d,
-        observations_da_1d,
-        metric=metric,
-        comparison=comparison,
-        threshold=threshold,
-        logical=func,
-        dim='member',
-    )
+        metric_kwargs['logical'] = func
+    res = compute_hindcast(hind_da_initialized_1d, observations_da_1d, **metric_kwargs)
     # mean init because skill has still coords for init lead
     if 'init' in res.coords:
         res = res.mean('init')
@@ -93,34 +71,36 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on perfect model probabilistic metrics of 1D
     time series.
     """
+    metric_kwargs = {
+        'comparison': comparison,
+        'metric': metric,
+        'dim': 'member',
+        'iterations': ITERATIONS,
+        'resample_dim': 'member',
+    }
     if 'threshold' in metric:
-        threshold = 10.5
-    else:
-        threshold = None
-
+        metric_kwargs['threshold'] = 10.5
     if metric == 'brier_score':
 
         def func(x):
             return x > 0
 
-    else:
-        func = None
+        metric_kwargs['logical'] = func
+
+    metric_kwargs2 = metric_kwargs.copy()
+    del metric_kwargs2['resample_dim']
+    del metric_kwargs2['iterations']
+    res = compute_perfect_model(
+        PM_da_initialized_1d, PM_da_control_1d, **metric_kwargs2
+    )
+    assert 'init' in res.dims
 
     actual = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison=comparison,
-        metric=metric,
-        threshold=threshold,
-        gaussian=True,
-        logical=func,
-        iterations=ITERATIONS,
-        dim='member',
-        resample_dim='member',
+        PM_da_initialized_1d, PM_da_control_1d, **metric_kwargs
     )
     for kind in ['init', 'uninit']:
         actualk = actual.sel(kind=kind, results='skill')
-        if 'init' in actualk.coords:
+        if 'init' in actualk.dims:
             actualk = actualk.mean('init')
         actualk = actualk.isnull().any()
         assert not actualk
@@ -140,30 +120,26 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
     Checks that there are no NaNs on hindcast probabilistic metrics of 1D
     time series.
     """
+    metric_kwargs = {
+        'comparison': comparison,
+        'metric': metric,
+        'dim': 'member',
+        'iterations': ITERATIONS,
+        'alignment': 'same_verif',
+    }
     if 'threshold' in metric:
-        threshold = 10.5
-    else:
-        threshold = None
-
+        metric_kwargs['threshold'] = 0.5
     if metric == 'brier_score':
 
         def func(x):
             return x > 0
 
-    else:
-        func = None
+        metric_kwargs['logical'] = func
 
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         observations_da_1d,
-        comparison=comparison,
-        metric=metric,
-        threshold=threshold,
-        gaussian=True,
-        logical=func,
-        iterations=ITERATIONS,
-        dim='member',
         resample_dim='member',
     )
     for kind in ['init', 'uninit']:
@@ -293,28 +269,6 @@ def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
     assert f'Probabilistic metric `{metric}` requires comparison' in str(excinfo.value)
 
 
-@pytest.mark.parametrize('dim', ['init', ['init', 'member']])
-@pytest.mark.parametrize('metric', ['crps'])
-def test_compute_pm_probabilistic_metric_not_dim_member_warn(
-    PM_da_initialized_1d, PM_da_control_1d, metric, dim
-):
-    with pytest.warns(UserWarning) as record:
-        compute_perfect_model(
-            PM_da_initialized_1d,
-            PM_da_control_1d,
-            comparison='m2c',
-            metric=metric,
-            dim=dim,
-        )
-    expected = (
-        f'Probabilistic metric {metric} requires to be '
-        f'computed over dimension `dim="member"`. '
-        f'Set automatically.'
-    )
-    # get second warning here
-    assert record[1].message.args[0] == expected
-
-
 @pytest.mark.parametrize('metric', ['crps'])
 def test_compute_hindcast_probabilistic_metric_e2o_fails(
     hind_da_initialized_1d, observations_da_1d, metric
@@ -331,25 +285,33 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
     assert f'Probabilistic metric `{metric}` requires' in str(excinfo.value)
 
 
-@pytest.mark.parametrize('dim', ['init'])
-@pytest.mark.parametrize('metric', ['crps'])
-def test_compute_hindcast_probabilistic_metric_not_dim_member_warn(
-    hind_da_initialized_1d, observations_da_1d, metric, dim
-):
-    metric = METRIC_ALIASES.get(metric, metric)
-    with pytest.warns(UserWarning) as record:
-        compute_hindcast(
-            hind_da_initialized_1d,
-            observations_da_1d,
-            comparison='m2o',
-            metric=metric,
-            dim=dim,
-        )
-    expected = (
-        f'Probabilistic metric {metric} requires to be '
-        f'computed over dimension `dim="member"`. '
-        f'Set automatically.'
+def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):
+    """Test that a probabilistic score requiring a binary observations and
+    probability initialized inputs gives the same results whether passing logical
+    as kwarg or mapping logical before for hindcast.verify()."""
+    he = hindcast_recon_1d_ym
+
+    def logical(ds):
+        return ds > 0.5
+
+    brier_logical_passed_as_kwarg = he.verify(
+        metric='brier_score',
+        comparison='m2o',
+        logical=logical,
+        dim='member',
+        alignment='same_verif',
     )
-    # Set this to the third message since the first two are about converting the integer
-    # time to annual `cftime`.
-    assert record[0].message.args[0] == expected
+    brier_logical_mapped_before_and_member_mean = (
+        he.map(logical)
+        .mean('member')
+        .verify(metric='brier_score', comparison='e2o', dim=[], alignment='same_verif')
+    )
+    brier_logical_mapped_before_no_member_mean = he.map(logical).verify(
+        metric='brier_score', comparison='m2o', dim='member', alignment='same_verif'
+    )
+    assert (
+        brier_logical_mapped_before_and_member_mean == brier_logical_passed_as_kwarg
+    ).all()
+    assert (
+        brier_logical_mapped_before_no_member_mean == brier_logical_passed_as_kwarg
+    ).all()

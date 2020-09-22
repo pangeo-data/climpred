@@ -22,12 +22,12 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - xarray>=0.16.0
+  - xarray=0.16.0
   # Package Management
   - asv
-  - black
+  - black==19.10b0
   - coveralls
-  - doc8
+  - dataclasses  # to get black to not error
   - flake8
   - importlib_metadata
   - isort
@@ -52,7 +52,7 @@ dependencies:
   - eofs
   - esmtools>=1.1.3
   - xrft
-  - xskillscore>=0.0.15
+  - xskillscore>=0.0.17
   # Visualization
   - cartopy
   - matplotlib

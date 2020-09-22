@@ -10,6 +10,12 @@ Breaking changes
 
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
+- ``comparison`` is not applied to uninitialized skill in ``bootstrap_hindcast``.
+  (:issue:`352`, :pr:`418`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify()`` does not correct ``dim`` automatically to
+  ```member`` for probabilistic metrics. (:pr:`407`) `Aaron Spring`_.
+- Simplified metric :py:class:`~climpred.metrics._brier_score`. (:pr:`431`)
+  `Aaron Spring`_.
 
 New Features
 ------------
@@ -22,6 +28,18 @@ New Features
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
 - Assertion functions for ``PredictionEnsemble``:
   ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
+- ``HindcastEnsemble.bootstrap()`` analogous to ``PerfectModelEnsemble.bootstrap()``.
+  (:issue:`257`, :pr:`418`) `Aaron Spring`_.
+- ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``.
+  For spatial dimensions to be used with ``skipna=True`` when masked input data.
+  (:issue:282, :pr:`407`) `Aaron Spring`_.
+- Allow binary verif and (un)init forecasts as probabilities in ``hindcast.verify()`
+  without providing ``logical``, so
+  `hindcast.map(logical).mean('member').verify(metric='brier_score', comparison='e2o',dim=[])==`
+  `hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)`.
+  (:pr:`431`) `Aaron Spring`_.
+- Allow to pass dim to functions from ``xskillscore``. (:pr:`431`) `Aaron Spring`_.
+
 
 Deprecated
 ----------
@@ -44,12 +62,19 @@ Bug Fixes
   and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
+- Reduce bias by ``dayofyear`` :py:class:`~climpred.HindcastEnsemble.reduce_bias`.
+  (:pr:`443`) `Aaron Spring`_.
 
 Documentation
 -------------
-
+- Updates ``climpred`` tagline to "Verification of weather and climate forecasts."
+  (:pr:`420`) `Riley X. Brady`_.
 - Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
   (:pr:`378`) `Riley X. Brady`_.
+- Add docs section for similar open-source forecasting packages.
+  (:pr:`432`) `Riley X. Brady`_.
+- Add all metrics to main API in addition to metrics page.
+  (:pr:`438`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
@@ -64,6 +89,10 @@ Internals/Minor Fixes
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 - remove fixed pandas dependency from `pandas=0.25` to stable `pandas`.
   (:issue:`402`,:pr:`403`) `Aaron Spring`_.
+- ``dim`` is expected to be a list of strings in
+  :py:func:`~climpred.prediction.compute_perfect_model` and
+  :py:func:`~climpred.prediction.compute_hindcast`.
+  (:issue:282, :pr:`407`) `Aaron Spring`_.
 
 
 

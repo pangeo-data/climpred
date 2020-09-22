@@ -274,3 +274,8 @@ For a thorough look at our metrics library, please see the
     _crpss_es
     _brier_score
     _threshold_brier_score
+    _rps
+    _discrimination
+    _reliability
+    _rank_histogram
+    _contingency

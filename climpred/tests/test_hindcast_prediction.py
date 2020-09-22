@@ -17,18 +17,6 @@ ITERATIONS = 2
 
 category_edges = np.array([0, 0.5, 1])
 
-probabilistic_metrics_requiring_logical = [
-    'brier_score',
-    'discrimination',
-    'reliability',
-]
-
-probabilistic_metrics_requiring_more_than_member_dim = [
-    'rank_histogram',
-    'discrimination',
-    'reliability',
-]
-
 
 @pytest.mark.skip(reason='less not properly implemented')
 def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):

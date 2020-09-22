@@ -2183,7 +2183,10 @@ __crpss_es = Metric(
 
 
 def _discrimination(forecast, verif, dim=None, **metric_kwargs):
-    """Discrimination.
+    """
+    Returns the data required to construct the discrimination diagram for an event. The
+    histogram of forecasts likelihood when observations indicate an event has occurred
+    and has not occurred.
 
     Args:
         forecast (xr.object): Raw forecasts with ``member`` dimension if `logical`
@@ -2195,11 +2198,19 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
             provided in `metric_kwargs` to create probability forecasts. If `logical`
             not provided in `metric_kwargs`, should not include `member`. At least one
             dimension other than `member` is required.
-        metric_kwargs (dict): optional
-            logical (callable): Function with bool result to be applied to verification
-                data and forecasts and then ``mean('member')`` to get forecasts and
-                verification data in interval [0,1].
-            see xskillscore.discrimination
+        logical (callable, optional): Function with bool result to be applied to
+            verification data and forecasts and then ``mean('member')`` to get
+            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        probability_bin_edges (array_like, optional): Probability bin edges used to
+            compute the histograms. Bins include the left most edge, but not the
+            right. Passed via metric_kwargs. Defaults to 6 equally spaced edges between
+            0 and 1+1e-8.
+
+
+    Returns:
+        Discrimination (xr.object) with added dimension "event" containing the
+        histograms of forecast probabilities when the event was observed and not
+        observed
 
     Details:
         +-----------------+------------------------+
@@ -2249,7 +2260,10 @@ __discrimination = Metric(
 
 
 def _reliability(forecast, verif, dim=None, **metric_kwargs):
-    """reliability.
+    """
+    Returns the data required to construct the reliability diagram for an event. The
+    the relative frequencies of occurrence of an event for a range of forecast
+    probability bins.
 
 
     Args:
@@ -2261,11 +2275,18 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
             provided in `metric_kwargs` to create probability forecasts. If `logical`
             not provided in `metric_kwargs`, should not include `member`.
-        metric_kwargs (dict): optional
-            logical (callable): Function with bool result to be applied to verification
-                data and forecasts and then ``mean('member')`` to get forecasts and
-                verification data in interval [0,1].
-            see xskillscore.reliability
+        logical (callable, optional): Function with bool result to be applied to
+            verification data and forecasts and then ``mean('member')`` to get
+            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        probability_bin_edges (array_like, optional): Probability bin edges used to
+            compute the reliability. Bins include the left most edge, but not the
+            right. Passed via metric_kwargs. Defaults to 6 equally spaced edges between
+            0 and 1+1e-8.
+
+    Returns:
+        reliability (xr.object): The relative frequency of occurrence for each
+            probability bin
+
 
     Details:
         +-----------------+-------------------+
@@ -2323,8 +2344,6 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         verif (xr.object): Verification data without ``member`` dim.
         dim (list or str): Dimensions to aggregate. Requires to contain `member` and at
             least one additional dimension.
-        metric_kwargs (dict): optional
-            see xskillscore.rank_histogram
 
     Details:
         +-----------------+-------------------+
@@ -2361,15 +2380,16 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     """Ranked Probability Score.
 
     .. math::
-        RPS(p, k) = 1/M \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} o_k)]^{2}
+        RPS(p, k) = 1/M \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} \
+            o_k)]^{2}
 
     Args:
         forecast (xr.object): Raw forecasts with ``member`` dimension.
         verif (xr.object): Verification data without ``member`` dim.
         dim (list or str): Dimensions to aggregate. Requires to contain `member`.
         category_edges (array_like): Category bin edges used to compute the CDFs.
-            Bins include the left most edge, but not the right.
-            see xskillscore.rps
+            Bins include the left most edge, but not the right. Passed via
+            metric_kwargs.
 
     Details:
         +-----------------+-----------+
@@ -2386,7 +2406,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.rps
 
     Example:
-        >>> category_edges = [-.5, 0., .5 ,1.]
+        >>> category_edges = np.array([-.5, 0., .5, 1.])
         >>> hindcast.verify(metric='rps', comparison='m2o', dim='member',
                 alignment='same_verifs', category_edges=category_edges)
         >>> perfect_model.verify(metric='rps', comparison='m2c',
@@ -2401,7 +2421,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     else:
         raise ValueError('require category_edges')
     if 'member' in verif.coords and 'member' not in verif.dims:
-        del verif.coords['member'] # TODO: cleanup in comparison
+        del verif.coords['member']  # TODO: cleanup in comparison
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 
@@ -2430,9 +2450,10 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
             or any other contingency score, e.g. ``score=hit_rate``.
         observation_category_edges (array_like): Category bin edges used to compute
             the observations CDFs. Bins include the left most edge, but not the right.
+            Passed via metric_kwargs.
         forecast_category_edges  (array_like): Category bin edges used to compute
             the forecast CDFs. Bins include the left most edge, but not the right.
-        metric_kwargs (dict): see xskillscore.Contingency
+            Passed via metric_kwargs
 
     See also:
         * xskillscore.Contingency
@@ -2440,10 +2461,10 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
     References
     ----------
         * http://www.cawcr.gov.au/projects/verification/
-        * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics
+        * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics # noqa
 
     Example:
-        >>> category_edges = [-0.5, 0., .5, 1.]
+        >>> category_edges = np.array([-0.5, 0., .5, 1.])
         >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
                 dim=[], alignment='same_verifs',
                 observation_category_edges=category_edges,

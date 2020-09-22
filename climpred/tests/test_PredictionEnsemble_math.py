@@ -319,11 +319,12 @@ def test_subset_getitem_datavariables(
     perfectModelEnsemble_3v_initialized_control_1d, varlist
 ):
     """Test variable subselection from __getitem__."""
-    assert isinstance(varlist, list)
     pm = perfectModelEnsemble_3v_initialized_control_1d
     xr.set_options(display_style='text')
     all_datavars = list(pm.get_initialized().data_vars)
     pm_subset = pm[varlist]
+    if isinstance(varlist, str):
+        varlist = [varlist]
     # test that varlist is present
     for var in varlist:
         assert var in pm_subset.get_initialized().data_vars

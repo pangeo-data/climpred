@@ -10,34 +10,48 @@ Breaking changes
 
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
-- ``comparison`` is not applied to uninitialized skill in ``bootstrap_hindcast``.
+- ``comparison`` is not applied to uninitialized skill in
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
   (:issue:`352`, :pr:`418`) `Aaron Spring`_.
-- ``PredictionEnsemble.verify()`` does not correct ``dim`` automatically to
-  ```member`` for probabilistic metrics. (:pr:`407`) `Aaron Spring`_.
-- Simplified metric :py:class:`~climpred.metrics._brier_score`. (:pr:`431`)
-  `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.verify` does not correct ``dim``
+  automatically to ``member`` for probabilistic metrics. (:pr:`407`) `Aaron Spring`_.
+- metric :py:func:`~climpred.metrics._threshold_brier_score` now requires ``logical``
+  instead of ``func`` as ``metric_kwargs``. (:pr:`388`) `Aaron Spring`_.
 
 New Features
 ------------
 
-- Use math operations like ``+-*/`` with py:class:`~climpred.classes.HindcastEnsemble`
+- Use math operations like ``+-*/`` with :py:class:`~climpred.classes.HindcastEnsemble`
   and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`377`) `Aaron Spring`_.
-- `.plot()` all datasets in py:class:`~climpred.classes.HindcastEnsemble`
-  and :py:class:`~climpred.classes.PerfectModelEnsemble`. (:pr:`383`) `Aaron Spring`_.
-- Assertion functions for ``PredictionEnsemble``:
-  ``climpred.testing.assert_PredictionEnsemble``. (:pr:`391`) `Aaron Spring`_.
-- ``HindcastEnsemble.bootstrap()`` analogous to ``PerfectModelEnsemble.bootstrap()``.
+- Subselect data variables from ``PredictionEnsemble`` as from ``xr.Dataset``:
+  ``PredictionEnsemble[['var1','var3']]`` (:pr:`409`) `Aaron Spring`_.
+- plot all datasets in :py:class:`~climpred.classes.HindcastEnsemble` or
+  :py:class:`~climpred.classes.PerfectModelEnsemble` by
+  :py:meth:`~climpred.classes.PredictionEnsemble.plot` if no other spatial dimensions
+  are present. (:pr:`383`) `Aaron Spring`_.
+- Assertion functions for :py:class:`~climpred.classes.PerfectModelEnsemble`:
+  :py:func:`~climpred.testing.assert_PredictionEnsemble`. (:pr:`391`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` analogous to
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`.
   (:issue:`257`, :pr:`418`) `Aaron Spring`_.
-- ``PredictionEnsemble.verify()`` allows all dimensions from `initialized` as ``dim``.
+- :py:meth:`~climpred.HindcastEnsemble.verify` allows all dimensions from `initialized` as ``dim``.
   For spatial dimensions to be used with ``skipna=True`` when masked input data.
-  (:issue:282, :pr:`407`) `Aaron Spring`_.
-- Allow binary verif and (un)init forecasts as probabilities in ``hindcast.verify()`
-  without providing ``logical``, so
-  `hindcast.map(logical).mean('member').verify(metric='brier_score', comparison='e2o',dim=[])==`
-  `hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)`.
+  (:issue:`282`, :pr:`407`) `Aaron Spring`_.
+- Allow binary verif and (un)init forecasts as probabilities in
+  :py:meth:`~climpred.HindcastEnsemble.verify` without providing ``logical``, so
+  ``hindcast.map(logical).verify(metric='brier_score', comparison='m2o',dim=“member”==``
+  ``hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)``.
   (:pr:`431`) `Aaron Spring`_.
-- Allow to pass dim to functions from ``xskillscore``. (:pr:`431`) `Aaron Spring`_.
+- Allow to pass ``dim`` to functions from ``xskillscore``. (:pr:`431`) `Aaron Spring`_.
+- Implement new metrics which have been ported over from
+  https://github.com/csiro-dcfp/doppyo/ to ``xskillscore`` by Dougie Squire.
+  (:pr:`439`) `Aaron Spring`_
 
+    * rank histogram :py:func:`~climpred.metrics._rank_histogram`
+    * discrimination :py:func:`~climpred.metrics._discrimination`
+    * reliability :py:func:`~climpred.metrics._reliability`
+    * ranked probability score :py:func:`~climpred.metrics._rps`
+    * contingency table and related scores :py:func:`~climpred.metrics._contingency`
 
 Deprecated
 ----------
@@ -47,17 +61,18 @@ Deprecated
 Bug Fixes
 ---------
 
-- ``PredictionEnsemble.verify()``, ``PerfectModelEnsemble.compute_uninitialized()`` and
-  ``PerfectModelEnsemble.bootstrap()`` now accept ``metric_kwargs``. (:pr:`387`)
-  `Aaron Spring`_.
-- ``HindcastEnsemble.verify()`` now accepts ``metric_kwargs``. (:pr:`387`)
+- :py:meth:`~climpred.PredictionEnsemble.verify` and
+  :py:meth:`~climpred.PredictionEnsemble.bootstrap` now accept ``metric_kwargs``.
+  (:pr:`387`) `Aaron Spring`_.
+- :py:meth:`~climpred.HindcastEnsemble.verify` now accepts ``metric_kwargs``. (:pr:`387`)
   `Aaron Spring`_.
 - ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
   (:pr:`383`) `Aaron Spring`_.
-- ``PerfectModelEnsemble.verify()`` now accepts ``'uninitialized'`` as a reference.
+- :py:meth:`~climpred.PerfectModelEnsemble.verify` now accepts ``'uninitialized'`` as a reference.
   (:pr:`395`) `Riley X. Brady`_.
-- Spatial and temporal smoothing ``PredictionEnsemble.smooth()`` now work as expected
-  and rename time dimensions after ``verify()``. (:pr:`391`) `Aaron Spring`_.
+- Spatial and temporal smoothing :py:meth:`~climpred.PredictionEnsemble.smooth` now
+  work as expected and rename time dimensions after
+  :py:meth:`~climpred.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
 - Reduce bias by ``dayofyear`` :py:class:`~climpred.HindcastEnsemble.reduce_bias`.
@@ -67,7 +82,7 @@ Documentation
 -------------
 - Updates ``climpred`` tagline to "Verification of weather and climate forecasts."
   (:pr:`420`) `Riley X. Brady`_.
-- Adds section on how to use arithmetic with ``PredictionEnsemble`` objects.
+- Adds section on how to use arithmetic with :py:class:`~climpred.HindcastEnsemble`.
   (:pr:`378`) `Riley X. Brady`_.
 - Add docs section for similar open-source forecasting packages.
   (:pr:`432`) `Riley X. Brady`_.
@@ -76,29 +91,27 @@ Documentation
 
 Internals/Minor Fixes
 ---------------------
-- ``PerfectModelEnsemble.verify()`` replaces deprecated
+- :py:meth:`~climpred.PredictionEnsemble.verify` replaces deprecated
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
 - Implemented bias reduction
-  py:class:`~climpred.classes.HindcastEnsemble.reduce_bias()`. `reduce_bias(how='mean')`
+  :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`. ``reduce_bias(how='mean')``
   reduces the mean bias of initialized hindcasts with respect to a observation.
-  See (`example <examples/decadal/bias_reduction.html>`__). (:pr:`389`) `Aaron Spring`_.
+  See `example <examples/decadal/bias_reduction.html>`__. (:pr:`389`) `Aaron Spring`_.
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
-- remove fixed pandas dependency from `pandas=0.25` to stable `pandas`.
+- remove fixed pandas dependency from ``pandas=0.25`` to stable `pandas`.
   (:issue:`402`,:pr:`403`) `Aaron Spring`_.
 - ``dim`` is expected to be a list of strings in
   :py:func:`~climpred.prediction.compute_perfect_model` and
   :py:func:`~climpred.prediction.compute_hindcast`.
-  (:issue:282, :pr:`407`) `Aaron Spring`_.
+  (:issue:`282`, :pr:`407`) `Aaron Spring`_.
 
 
 
 Internals/Minor Fixes
 ---------------------
 - Test all metrics against synthetic data. (:pr:`388`) `Aaron Spring`_.
-- metric ``threshold_brier_score`` now requires ``logical`` instead of ``func`` as
-  ``metric_kwargs``. (:pr:`388`) `Aaron Spring`_.
 
 
 climpred v2.1.0 (2020-06-08)
@@ -169,7 +182,7 @@ Bug Fixes
 Internals/Minor Fixes
 ---------------------
 - Added a `Code of Conduct <code_of_conduct.html>`__ (:pr:`285`) `Aaron Spring`_.
-- Gather all ``pytest.fixture``s in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
+- Gather ``pytest.fixture in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
 - ``asv`` benchmarks added for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
@@ -269,8 +282,8 @@ Internals/Minor Fixes
   ``stack_dims``. Therefore ``comparison`` now takes ``metric`` as argument instead.
   (:pr:`290`) `Aaron Spring`_.
 - ``assign_attrs`` now carries `dim` (:pr:`290`) `Aaron Spring`_.
-- "reference" changed to "verif" throughout hindcast compute functions. This is more
-  clear, since "reference" usually refers to a type of forecast, such as persistence.
+- ``reference`` changed to ``verif`` throughout hindcast compute functions. This is more
+  clear, since ``reference`` usually refers to a type of forecast, such as persistence.
   (:pr:`310`) `Riley X. Brady`_.
 - ``Comparison`` objects can now have aliases. (:pr:`310`) `Riley X. Brady`_.
 

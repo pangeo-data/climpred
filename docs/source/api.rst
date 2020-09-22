@@ -61,6 +61,16 @@ Pre-Processing
 
     HindcastEnsemble.smooth
 
+-------------
+Visualization
+-------------
+
+.. autosummary::
+    :toctree: api/
+
+    HindcastEnsemble.plot
+
+
 PerfectModelEnsemble
 ~~~~~~~~~~~~~~~~~~~~
 
@@ -116,6 +126,15 @@ Pre-Processing
     :toctree: api/
 
     PerfectModelEnsemble.smooth
+
+-------------
+Visualization
+-------------
+
+.. autosummary::
+    :toctree: api/
+
+    PerfectModelEnsemble.plot
 
 
 Direct Function Calls
@@ -264,3 +283,8 @@ For a thorough look at our metrics library, please see the
     _crpss_es
     _brier_score
     _threshold_brier_score
+    _rps
+    _discrimination
+    _reliability
+    _rank_histogram
+    _contingency

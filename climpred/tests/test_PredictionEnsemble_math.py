@@ -9,6 +9,8 @@ from climpred.constants import CLIMPRED_DIMS
 from climpred.exceptions import VariableError
 from climpred.testing import assert_PredictionEnsemble, check_dataset_dims_and_data_vars
 
+xr.set_options(display_style='text')
+
 ALLOWED_TYPES_FOR_MATH_OPERATORS = [
     int,
     float,
@@ -312,3 +314,21 @@ def test_PerfectModelEnsemble_area_weighted_mean(PM_ds_initialized_3d):
     assert_PredictionEnsemble(
         he_self_spatial_mean, he_xr_spatial_mean, how='allclose', rtol=0.03, atol=0.05
     )
+
+
+@pytest.mark.parametrize('varlist', [['tos', 'sos'], ['AMO']])
+def test_subset_getitem_datavariables(
+    perfectModelEnsemble_3v_initialized_control_1d, varlist
+):
+    """Test variable subselection from __getitem__."""
+    assert isinstance(varlist, list)
+    pm = perfectModelEnsemble_3v_initialized_control_1d
+    all_datavars = list(pm.get_initialized().data_vars)
+    pm_subset = pm[varlist]
+    # test that varlist is present
+    for var in varlist:
+        assert var in pm_subset.get_initialized().data_vars
+    # test that others are not present anymore
+    for var in all_datavars:
+        if var not in varlist:
+            assert var not in pm_subset.get_initialized().data_vars

@@ -22,7 +22,7 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - xarray>=0.16.0
+  - xarray=0.16.0
   # Package Management
   - asv
   - black==19.10b0
@@ -51,7 +51,7 @@ dependencies:
   # Statistics
   - eofs
   - esmtools>=1.1.3
-  - xrft
+  - xrft=0.2.0
   - xskillscore>=0.0.17
   # Visualization
   - cartopy

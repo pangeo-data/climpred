@@ -9,6 +9,8 @@ from climpred.constants import CLIMPRED_DIMS
 from climpred.exceptions import VariableError
 from climpred.testing import assert_PredictionEnsemble, check_dataset_dims_and_data_vars
 
+xr.set_options(display_style='text')
+
 ALLOWED_TYPES_FOR_MATH_OPERATORS = [
     int,
     float,
@@ -321,7 +323,6 @@ def test_subset_getitem_datavariables(
     """Test variable subselection from __getitem__."""
     assert isinstance(varlist, list)
     pm = perfectModelEnsemble_3v_initialized_control_1d
-    xr.set_options(display_style='text')
     all_datavars = list(pm.get_initialized().data_vars)
     pm_subset = pm[varlist]
     # test that varlist is present

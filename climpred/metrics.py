@@ -3,10 +3,12 @@ import warnings
 import numpy as np
 from scipy.stats import norm
 from xskillscore import (
+    Contingency,
     brier_score,
     crps_ensemble,
     crps_gaussian,
     crps_quadrature,
+    discrimination,
     effective_sample_size,
     mae,
     mape,
@@ -15,7 +17,10 @@ from xskillscore import (
     pearson_r,
     pearson_r_eff_p_value,
     pearson_r_p_value,
+    rank_histogram,
+    reliability,
     rmse,
+    rps,
     smape,
     spearman_r,
     spearman_r_eff_p_value,
@@ -99,6 +104,68 @@ def _sanitize_kwargs(kwargs, delete=None):
             if k in delete:
                 kwargs2.pop(k)
     return kwargs2
+
+
+def _rename_dim(dim, forecast, verif):
+    """rename `dim` to `time` or `init` if forecast and verif dims require."""
+    if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
+        dim = dim.copy()
+        dim.remove('init')
+        dim = dim + ['time']
+    elif 'time' in dim and 'init' in forecast.dims and 'init' in verif.dims:
+        dim = dim.copy()
+        dim.remove('time')
+        dim = dim + ['init']
+    return dim
+
+
+def _remove_member_from_dim_or_raise(dim):
+    """delete `member` from `dim` to not pass to `xskillscore` where expected as
+    default `member_dim`."""
+    if 'member' in dim:
+        dim = dim.copy()
+        dim.remove('member')
+    else:
+        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
+    return dim
+
+
+def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
+    """Extract callable `logical` from `metric_kwargs` and apply to `forecast` and
+    `verif`."""
+    if 'comparison' in metric_kwargs:
+        metric_kwargs = metric_kwargs.copy()
+        comparison = metric_kwargs.pop('comparison')
+    if 'logical' in metric_kwargs:
+        logical = metric_kwargs.pop('logical')
+        if not callable(logical):
+            raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
+        dim = _remove_member_from_dim_or_raise(dim)
+        if 'member' in forecast.dims:  # apply logical function to get
+            forecast = logical(forecast).mean('member')  # forecast probability
+            verif = logical(verif)  # binary outcome
+        else:
+            raise ValueError(
+                f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
+            )
+        # rename dim to time if forecast and verif dims allow
+        dim = _rename_dim(dim, forecast, verif)
+        return forecast, verif, metric_kwargs, dim
+    elif (
+        comparison.name == 'e2o'
+        and 'logical' not in metric_kwargs
+        and 'member' not in dim
+    ):  # allow e2o comparison without logical
+        return forecast, verif, metric_kwargs, dim
+    elif (
+        comparison.name == 'm2o' and 'logical' not in metric_kwargs and 'member' in dim
+    ):  # allow m2o and member
+        return forecast, verif, metric_kwargs, dim
+    else:
+        raise ValueError(
+            'Please provide a callable `logical` to be applied to comparison and \
+             verification data to get values in interval [0,1].'
+        )
 
 
 def _display_metric_metadata(self):
@@ -223,6 +290,7 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r_eff_p_value
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
@@ -274,6 +342,7 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r_eff_p_value
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -343,6 +412,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
@@ -417,6 +487,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -485,6 +556,7 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r_eff_p_value
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
@@ -536,6 +608,7 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r_eff_p_value
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -614,6 +687,7 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -682,6 +756,7 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return mse(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -728,6 +803,7 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.rmse
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return rmse(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -781,6 +857,7 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return mae(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -827,6 +904,7 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.median_absolute_error
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return median_absolute_error(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -905,6 +983,8 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize NMSE. Not found in', metric_kwargs
         )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
     fac = _get_norm_factor(comparison)
@@ -984,8 +1064,10 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         comparison = metric_kwargs['comparison']
     else:
         raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+            'Comparison needed to normalize NMAE. Not found in', metric_kwargs
         )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     mae_skill = __mae.function(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
@@ -1074,6 +1156,8 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
         )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     rmse_skill = __rmse.function(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
@@ -1164,6 +1248,7 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize MSSS. Not found in', metric_kwargs
         )
+    dim = _rename_dim(dim, forecast, verif)
     mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
     fac = _get_norm_factor(comparison)
@@ -1215,6 +1300,7 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.mape
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return mape(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -1261,6 +1347,7 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
         * xskillscore.smape
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return smape(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -1334,6 +1421,7 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
           Relationships to the Correlation Coefficient. Monthly Weather Review,
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
     """
+    dim = _rename_dim(dim, forecast, verif)
     messs_res = __msess.function(forecast, verif, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
     uacc_res = messs_res ** 0.5
@@ -1385,6 +1473,7 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return forecast.std(dim=dim, **metric_kwargs) / verif.std(dim=dim, **metric_kwargs)
 
 
@@ -1429,6 +1518,7 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
 
@@ -1476,6 +1566,7 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     return acc - __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1526,6 +1617,7 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     std_ratio = __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     return std_ratio * acc
@@ -1587,6 +1679,7 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
         forecast, verif, dim=dim, **metric_kwargs
@@ -1614,68 +1707,6 @@ __msess_murphy = Metric(
 #######################
 # PROBABILISTIC METRICS
 #######################
-
-
-def _rename_dim(dim, forecast, verif):
-    """rename `dim` to `time` or `init` if forecast and verif dims require."""
-    if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
-        dim = dim.copy()
-        dim.remove('init')
-        dim = dim + ['time']
-    elif 'time' in dim and 'init' in forecast.dims and 'init' in verif.dims:
-        dim = dim.copy()
-        dim.remove('time')
-        dim = dim + ['init']
-    return dim
-
-
-def _remove_member_from_dim_or_raise(dim):
-    """delete `member` from `dim` to not pass to `xskillscore` where expected as
-    default `member_dim`."""
-    if 'member' in dim:
-        dim = dim.copy()
-        dim.remove('member')
-    else:
-        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
-    return dim
-
-
-def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
-    """Extract callable `logical` from `metric_kwargs` and apply to `forecast` and
-    `verif`."""
-    if 'comparison' in metric_kwargs:
-        metric_kwargs = metric_kwargs.copy()
-        comparison = metric_kwargs.pop('comparison')
-    if 'logical' in metric_kwargs:
-        logical = metric_kwargs.pop('logical')
-        if not callable(logical):
-            raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
-        dim = _remove_member_from_dim_or_raise(dim)
-        if 'member' in forecast.dims:  # apply logical function to get
-            forecast = logical(forecast).mean('member')  # forecast probability
-            verif = logical(verif)  # binary outcome
-        else:
-            raise ValueError(
-                f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
-            )
-        # rename dim to time if forecast and verif dims allow
-        dim = _rename_dim(dim, forecast, verif)
-        return forecast, verif, metric_kwargs, dim
-    elif (
-        comparison.name == 'e2o'
-        and 'logical' not in metric_kwargs
-        and 'member' not in dim
-    ):  # allow e2o comparison without logical
-        return forecast, verif, metric_kwargs, dim
-    elif (
-        comparison.name == 'm2o' and 'logical' not in metric_kwargs and 'member' in dim
-    ):  # allow m2o and member
-        return forecast, verif, metric_kwargs, dim
-    else:
-        raise ValueError(
-            'Please provide a callable `logical` to be applied to comparison and \
-             verification data to get values in interval [0,1].'
-        )
 
 
 def _brier_score(forecast, verif, dim=None, **metric_kwargs):
@@ -1752,7 +1783,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
-        ``comparison=e2o`` and ``dim=[]``:
+        ``comparison='e2o'`` and ``dim=[]``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
                 comparison='e2o', dim=[], alignment='same_verifs')
@@ -2039,40 +2070,21 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     mu = verif.mean(rdim)
     sig = verif.std(rdim)
     # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
-    if 'gaussian' in metric_kwargs:
-        gaussian = metric_kwargs.pop('gaussian')
-    else:
-        gaussian = True
+    gaussian = metric_kwargs.pop('gaussian', True)
     if gaussian:
         ref_skill = _crps_gaussian(verif, mu, sig, dim=dim, **metric_kwargs)
     else:
-        if 'cdf_or_dist' in metric_kwargs:
-            cdf_or_dist = metric_kwargs.pop('cdf_or_dist')
-        else:
-            # Imported at top. This is `scipy.stats.norm`
-            cdf_or_dist = norm
-
-        if 'xmin' in metric_kwargs:
-            xmin = metric_kwargs.pop('xmin')
-        else:
-            xmin = None
-
-        if 'xmax' in metric_kwargs:
-            xmax = metric_kwargs.pop('xmax')
-        else:
-            xmax = None
-
-        if 'tol' in metric_kwargs:
-            tol = metric_kwargs.pop('tol')
-        else:
-            tol = 1e-6
+        cdf_or_dist = metric_kwargs.pop('cdf_or_dist', norm)
+        xmin = metric_kwargs.pop('xmin', None)
+        xmax = metric_kwargs.pop('xmax', None)
+        tol = metric_kwargs.pop('tol', 1e-6)
         ref_skill = _crps_quadrature(
             forecast,
             cdf_or_dist,
-            dim=dim,
             xmin=xmin,
             xmax=xmax,
             tol=tol,
+            dim=dim,
             **metric_kwargs,
         )
     forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
@@ -2132,10 +2144,6 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
           Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
           631–43. https://doi.org/10/f9jrhw.
 
-    Range:
-        * perfect: 0
-        * else: negative
-
     Example:
         >>> hindcast.verify(metric='crpss_es', comparison='m2o',
                 alignment='same_verifs', dim='member')
@@ -2174,6 +2182,316 @@ __crpss_es = Metric(
 )
 
 
+def _discrimination(forecast, verif, dim=None, **metric_kwargs):
+    """
+    Returns the data required to construct the discrimination diagram for an event. The
+    histogram of forecasts likelihood when observations indicate an event has occurred
+    and has not occurred.
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension if `logical`
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
+            not provided.
+        verif (xr.object): Verification data without ``member`` dim. Raw verification if
+            `logical` provided, else binary verification.
+        dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
+            provided in `metric_kwargs` to create probability forecasts. If `logical`
+            not provided in `metric_kwargs`, should not include `member`. At least one
+            dimension other than `member` is required.
+        logical (callable, optional): Function with bool result to be applied to
+            verification data and forecasts and then ``mean('member')`` to get
+            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        probability_bin_edges (array_like, optional): Probability bin edges used to
+            compute the histograms. Bins include the left most edge, but not the
+            right. Passed via metric_kwargs. Defaults to 6 equally spaced edges between
+            0 and 1+1e-8.
+
+
+    Returns:
+        Discrimination (xr.object) with added dimension "event" containing the
+        histograms of forecast probabilities when the event was observed and not
+        observed
+
+    Details:
+        +-----------------+------------------------+
+        | **perfect**     | distinct distributions |
+        +-----------------+------------------------+
+
+    See also:
+        * xskillscore.discrimination
+
+    Example:
+        Define a boolean/logical function for binary scoring:
+
+        >>> def pos(x): return x > 0  # checking binary outcomes
+
+        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+
+        >>> hindcast.verify(metric='discrimination', comparison='m2o',
+                dim=['member', 'init'], alignment='same_verifs', logical=pos)
+
+        Option 2. Pre-process to generate a binary forecast and verification product:
+
+        >>> hindcast.map(pos).verify(metric='discrimination',
+                comparison='m2o', dim=['member','init'], alignment='same_verifs')
+
+        Option 3. Pre-process to generate a probability forecast and binary
+        verification product. Because `member` no present in `hindcast`, use
+        ``comparison='e2o'`` and ``dim='init'``:
+
+        >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
+                comparison='e2o', dim='init', alignment='same_verifs')
+    """
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
+    )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return discrimination(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__discrimination = Metric(
+    name='discrimination',
+    function=_discrimination,
+    positive=None,
+    probabilistic=True,
+    unit_power=0,
+    long_name='Discrimination',
+)
+
+
+def _reliability(forecast, verif, dim=None, **metric_kwargs):
+    """
+    Returns the data required to construct the reliability diagram for an event. The
+    the relative frequencies of occurrence of an event for a range of forecast
+    probability bins.
+
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension if `logical`
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
+            not provided.
+        verif (xr.object): Verification data without ``member`` dim. Raw verification if
+            `logical` provided, else binary verification.
+        dim (list or str): Dimensions to aggregate. Requires `member` if `logical`
+            provided in `metric_kwargs` to create probability forecasts. If `logical`
+            not provided in `metric_kwargs`, should not include `member`.
+        logical (callable, optional): Function with bool result to be applied to
+            verification data and forecasts and then ``mean('member')`` to get
+            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        probability_bin_edges (array_like, optional): Probability bin edges used to
+            compute the reliability. Bins include the left most edge, but not the
+            right. Passed via metric_kwargs. Defaults to 6 equally spaced edges between
+            0 and 1+1e-8.
+
+    Returns:
+        reliability (xr.object): The relative frequency of occurrence for each
+            probability bin
+
+
+    Details:
+        +-----------------+-------------------+
+        | **perfect**     | flat distribution |
+        +-----------------+-------------------+
+
+    See also:
+        * xskillscore.reliability
+
+    Example:
+        Define a boolean/logical function for binary scoring:
+
+        >>> def pos(x): return x > 0  # checking binary outcomes
+
+        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+
+        >>> hindcast.verify(metric='reliability', comparison='m2o',
+                dim=['member','init'], alignment='same_verifs', logical=pos)
+
+        Option 2. Pre-process to generate a binary forecast and verification product:
+
+        >>> hindcast.map(pos).verify(metric='reliability',
+                comparison='m2o', dim=['member','init'], alignment='same_verifs')
+
+        Option 3. Pre-process to generate a probability forecast and binary
+        verification product. Because `member` no present in `hindcast`, use
+        ``comparison='e2o'`` and ``dim='init'``:
+
+        >>> hindcast.map(pos).mean('member').verify(metric='reliability',
+                comparison='e2o', dim='init', alignment='same_verifs')
+    """
+    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+        forecast, verif, metric_kwargs, dim
+    )
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return reliability(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__reliability = Metric(
+    name='reliability',
+    function=_reliability,
+    positive=None,
+    probabilistic=True,
+    unit_power=0,
+    long_name='Reliability',
+)
+
+
+def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
+    """Rank histogram or Talagrand diagram.
+
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension.
+        verif (xr.object): Verification data without ``member`` dim.
+        dim (list or str): Dimensions to aggregate. Requires to contain `member` and at
+            least one additional dimension.
+
+    Details:
+        +-----------------+-------------------+
+        | **perfect**     | flat distribution |
+        +-----------------+-------------------+
+
+    See also:
+        * xskillscore.rank_histogram
+
+    Example:
+        >>> hindcast.verify(metric='rank_histogram', comparison='m2o',
+                dim=['member','init'], alignment='same_verifs')
+        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
+                dim=['member','init'])
+
+    """
+    dim = _remove_member_from_dim_or_raise(dim)
+    dim = _rename_dim(dim, forecast, verif)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    return rank_histogram(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__rank_histogram = Metric(
+    name='rank_histogram',
+    function=_rank_histogram,
+    positive=None,
+    probabilistic=True,
+    unit_power=0,
+    long_name='rank_histogram',
+)
+
+
+def _rps(forecast, verif, dim=None, **metric_kwargs):
+    """Ranked Probability Score.
+
+    .. math::
+        RPS(p, k) = 1/M \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} \
+            o_k)]^{2}
+
+    Args:
+        forecast (xr.object): Raw forecasts with ``member`` dimension.
+        verif (xr.object): Verification data without ``member`` dim.
+        dim (list or str): Dimensions to aggregate. Requires to contain `member`.
+        category_edges (array_like): Category bin edges used to compute the CDFs.
+            Bins include the left most edge, but not the right. Passed via
+            metric_kwargs.
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+    See also:
+        * xskillscore.rps
+
+    Example:
+        >>> category_edges = np.array([-.5, 0., .5, 1.])
+        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member',
+                alignment='same_verifs', category_edges=category_edges)
+        >>> perfect_model.verify(metric='rps', comparison='m2c',
+                dim='member', category_edges=category_edges)
+
+    """
+    dim = _remove_member_from_dim_or_raise(dim)
+    dim = _rename_dim(dim, forecast, verif)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    if 'category_edges' in metric_kwargs:
+        category_edges = metric_kwargs.pop('category_edges')
+    else:
+        raise ValueError('require category_edges')
+    if 'member' in verif.coords and 'member' not in verif.dims:
+        del verif.coords['member']  # TODO: cleanup in comparison
+    return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
+
+
+__rps = Metric(
+    name='rps',
+    function=_rps,
+    positive=False,
+    probabilistic=True,
+    unit_power=0,
+    long_name='rps',
+    minimum=0.0,
+    maximum=1.0,
+    perfect=0.0,
+)
+
+
+def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
+    """Contingency table.
+
+    Args:
+        forecast (xr.object): Raw forecasts.
+        verif (xr.object): Verification data.
+        dim (list or str): Dimensions to aggregate.
+        score (str): Score derived from contingency table. Attribute from
+            xskillscore.Contingency. Use ``score=table`` to return a contingency table
+            or any other contingency score, e.g. ``score=hit_rate``.
+        observation_category_edges (array_like): Category bin edges used to compute
+            the observations CDFs. Bins include the left most edge, but not the right.
+            Passed via metric_kwargs.
+        forecast_category_edges  (array_like): Category bin edges used to compute
+            the forecast CDFs. Bins include the left most edge, but not the right.
+            Passed via metric_kwargs
+
+    See also:
+        * xskillscore.Contingency
+
+    References
+    ----------
+        * http://www.cawcr.gov.au/projects/verification/
+        * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics # noqa
+
+    Example:
+        >>> category_edges = np.array([-0.5, 0., .5, 1.])
+        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
+                dim=[], alignment='same_verifs',
+                observation_category_edges=category_edges,
+                forecast_category_edges=category_edges)
+        >>> perfect_model.verify(metric='contingency', score='hit_rate',
+                comparison='m2c', dim=['member','init'],
+                observation_category_edges=category_edges,
+                forecast_category_edges=category_edges)
+
+    """
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    dim = _rename_dim(dim, forecast, verif)
+    if score == 'table':
+        return Contingency(verif, forecast, dim=dim, **metric_kwargs).table
+    else:
+        return getattr(Contingency(verif, forecast, dim=dim, **metric_kwargs), score)()
+
+
+__contingency = Metric(
+    name='contingency',
+    function=_contingency,
+    positive=None,
+    probabilistic=False,
+    unit_power=0,
+)
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -2203,6 +2521,11 @@ __ALL_METRICS__ = [
     __nmae,
     __uacc,
     __std_ratio,
+    __contingency,
+    __rank_histogram,
+    __discrimination,
+    __reliability,
+    __rps,
 ]
 
 

@@ -9,6 +9,8 @@ from climpred.constants import CLIMPRED_DIMS
 from climpred.exceptions import VariableError
 from climpred.testing import assert_PredictionEnsemble, check_dataset_dims_and_data_vars
 
+xr.set_options(display_style='text')
+
 ALLOWED_TYPES_FOR_MATH_OPERATORS = [
     int,
     float,
@@ -314,13 +316,13 @@ def test_PerfectModelEnsemble_area_weighted_mean(PM_ds_initialized_3d):
     )
 
 
+
 @pytest.mark.parametrize('varlist', [['tos', 'sos'], ['AMO'], 'AMO'])
 def test_subset_getitem_datavariables(
     perfectModelEnsemble_3v_initialized_control_1d, varlist
 ):
     """Test variable subselection from __getitem__."""
     pm = perfectModelEnsemble_3v_initialized_control_1d
-    xr.set_options(display_style='text')
     all_datavars = list(pm.get_initialized().data_vars)
     pm_subset = pm[varlist]
     if isinstance(varlist, str):
@@ -332,6 +334,7 @@ def test_subset_getitem_datavariables(
     for var in all_datavars:
         if var not in varlist:
             assert var not in pm_subset.get_initialized().data_vars
+
 
 
 @pytest.mark.parametrize('equal', [True, False])

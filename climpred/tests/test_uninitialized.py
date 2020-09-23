@@ -1,3 +1,4 @@
+import numpy as np
 import pytest
 
 from climpred.comparisons import HINDCAST_COMPARISONS
@@ -22,6 +23,15 @@ def test_compute_uninitialized(
     """
     Checks that compute uninitialized works without breaking.
     """
+    category_edges = np.array([0.0, 0.5, 1.0])
+    if metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    else:
+        metric_kwargs = {}
     res = (
         compute_uninitialized(
             hind_ds_initialized_1d,
@@ -29,6 +39,7 @@ def test_compute_uninitialized(
             reconstruction_ds_1d,
             metric=metric,
             comparison=comparison,
+            **metric_kwargs
         )
         .isnull()
         .any()

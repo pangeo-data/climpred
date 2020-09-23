@@ -381,6 +381,55 @@ Threshold Brier Score
 
 .. autofunction:: _threshold_brier_score
 
+Ranked Probability Score
+========================
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['rps']}")
+
+.. autofunction:: _rps
+
+Reliability
+===========
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['reliability']}")
+
+.. autofunction:: _reliability
+
+Discrimination
+==============
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['discrimination']}")
+
+.. autofunction:: _discrimination
+
+Rank Histogram
+==============
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['rank_histogram']}")
+
+.. autofunction:: _rank_histogram
+
+*************************
+Contingency-based metrics
+*************************
+
+A number of metrics can be derived from a `contingency table <https://www.cawcr.gov.au/projects/verification/#Contingency_table>`_. To use this in ``climpred``, run ``.verify(metric='contingency', score=...)`` where score can be chosen from `xskillscore <https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics>`_.
+
+.. autofunction:: _contingency
+
+
 ********************
 User-defined metrics
 ********************
@@ -393,11 +442,15 @@ class.
 First, write your own metric function, similar to the existing ones with required
 arguments ``forecast``, ``observations``, ``dim=None``, and ``**metric_kwargs``::
 
-  from climpred.metrics import Metric
+  from climpred.metrics import Metric, _sanitize_kwargs, _rename_dim
 
   def _my_msle(forecast, observations, dim=None, **metric_kwargs):
       """Mean squared logarithmic error (MSLE).
       https://peltarion.com/knowledge-center/documentation/modeling-view/build-an-ai-model/loss-functions/mean-squared-logarithmic-error."""
+      # process dim and metric_kwargs; many not be required
+      metric_kwargs = _sanitize_kwargs(metric_kwargs)
+      dim = _rename_dim(dim, forecast, verif)
+      # function
       return ( (np.log(forecast + 1) + np.log(observations + 1) ) ** 2).mean(dim)
 
 Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
@@ -412,7 +465,7 @@ Then initialize this metric function with :py:class:`climpred.metrics.Metric`::
 
 Finally, compute skill based on your own metric::
 
-  skill = compute_perfect_model(ds, control, metric=_my_msle)
+  skill = hindcast.verify(metric=_my_msle, comparison='e2o', alignment='same_verif', dim='init')
 
 Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see

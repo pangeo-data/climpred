@@ -6,12 +6,22 @@ from xarray.testing import assert_allclose
 
 from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS
-from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
+from climpred.metrics import (
+    __ALL_METRICS__ as all_metrics,
+    Metric,
+    __pearson_r,
+    _rename_dim,
+    _sanitize_kwargs,
+)
 from climpred.prediction import compute_hindcast, compute_perfect_model
 
 
-def my_mse_function(forecast, reference, dim=None, **metric_kwargs):
-    return ((forecast - reference) ** 2).mean(dim)
+def my_mse_function(forecast, verif, dim=None, **metric_kwargs):
+    # process dim and metric_kwargs
+    dim = _rename_dim(dim, forecast, verif)
+    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+    # function
+    return ((forecast - verif) ** 2).mean(dim)
 
 
 my_mse = Metric(

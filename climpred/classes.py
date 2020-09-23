@@ -301,14 +301,16 @@ class PredictionEnsemble:
         """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
 
         Args:
-            * varlist (list of str, str): list of names or name of data variable(s) to subselect
+            * varlist (list of str, str): list of names or name of data variable(s) to
+                subselect
         """
         if isinstance(varlist, str):
             varlist = [varlist]
         if not isinstance(varlist, list):
             raise ValueError(
                 'Please subset PredictionEnsemble as you would subset an xr.Dataset '
-                f'with a list or single string of variable name(s), found {type(varlist)}.'
+                'with a list or single string of variable name(s), found '
+                f'{type(varlist)}.'
             )
 
         def sel_vars(ds, varlist):

@@ -34,11 +34,11 @@ New Features
 - :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` analogous to
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`.
   (:issue:`257`, :pr:`418`) `Aaron Spring`_.
-- :py:meth:`~climpred.HindcastEnsemble.verify` allows all dimensions from `initialized` as ``dim``.
+- :py:meth:`~climpred.classes.HindcastEnsemble.verify` allows all dimensions from `initialized` as ``dim``.
   For spatial dimensions to be used with ``skipna=True`` when masked input data.
   (:issue:`282`, :pr:`407`) `Aaron Spring`_.
 - Allow binary verif and (un)init forecasts as probabilities in
-  :py:meth:`~climpred.HindcastEnsemble.verify` without providing ``logical``, so
+  :py:meth:`~climpred.classes.HindcastEnsemble.verify` without providing ``logical``, so
   ``hindcast.map(logical).verify(metric='brier_score', comparison='m2o',dim=“member”==``
   ``hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)``.
   (:pr:`431`) `Aaron Spring`_.
@@ -61,28 +61,28 @@ Deprecated
 Bug Fixes
 ---------
 
-- :py:meth:`~climpred.PredictionEnsemble.verify` and
-  :py:meth:`~climpred.PredictionEnsemble.bootstrap` now accept ``metric_kwargs``.
+- :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
+  :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` now accept ``metric_kwargs``.
   (:pr:`387`) `Aaron Spring`_.
-- :py:meth:`~climpred.HindcastEnsemble.verify` now accepts ``metric_kwargs``. (:pr:`387`)
+- :py:meth:`~climpred.classes.HindcastEnsemble.verify` now accepts ``metric_kwargs``. (:pr:`387`)
   `Aaron Spring`_.
 - ``climpred.stats.rm_poly`` now carries ``lead.attrs['units']``.
   (:pr:`383`) `Aaron Spring`_.
-- :py:meth:`~climpred.PerfectModelEnsemble.verify` now accepts ``'uninitialized'`` as a reference.
-  (:pr:`395`) `Riley X. Brady`_.
-- Spatial and temporal smoothing :py:meth:`~climpred.PredictionEnsemble.smooth` now
+- :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` now accepts ``'uninitialized'``
+  as a reference. (:pr:`395`) `Riley X. Brady`_.
+- Spatial and temporal smoothing :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now
   work as expected and rename time dimensions after
-  :py:meth:`~climpred.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
+  :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
-- Reduce bias by ``dayofyear`` :py:class:`~climpred.HindcastEnsemble.reduce_bias`.
+- Reduce bias by ``dayofyear`` :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`.
   (:pr:`443`) `Aaron Spring`_.
 
 Documentation
 -------------
 - Updates ``climpred`` tagline to "Verification of weather and climate forecasts."
   (:pr:`420`) `Riley X. Brady`_.
-- Adds section on how to use arithmetic with :py:class:`~climpred.HindcastEnsemble`.
+- Adds section on how to use arithmetic with :py:class:`~climpred.classes.HindcastEnsemble`.
   (:pr:`378`) `Riley X. Brady`_.
 - Add docs section for similar open-source forecasting packages.
   (:pr:`432`) `Riley X. Brady`_.
@@ -91,7 +91,7 @@ Documentation
 
 Internals/Minor Fixes
 ---------------------
-- :py:meth:`~climpred.PredictionEnsemble.verify` replaces deprecated
+- :py:meth:`~climpred.classes.PredictionEnsemble.verify` replaces deprecated
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
 - Implemented bias reduction

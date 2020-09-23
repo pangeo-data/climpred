@@ -1,10 +1,23 @@
 import cftime
+import numpy as np
 import pytest
 import xarray as xr
 
 from climpred.comparisons import HINDCAST_COMPARISONS, PM_COMPARISONS
 from climpred.metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from climpred.utils import get_metric_class
+
+probabilistic_metrics_requiring_logical = [
+    'brier_score',
+    'discrimination',
+    'reliability',
+]
+
+probabilistic_metrics_requiring_more_than_member_dim = [
+    'rank_histogram',
+    'discrimination',
+    'reliability',
+]
 
 xr.set_options(display_style='text')
 
@@ -30,7 +43,8 @@ def test_PerfectModelEnsemble_constant_forecasts(
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
     Metric = get_metric_class(metric, PM_METRICS)
-    if metric == 'brier_score':
+    category_edges = np.array([0, 0.5, 1])
+    if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
             return x > 0.5
@@ -38,17 +52,32 @@ def test_PerfectModelEnsemble_constant_forecasts(
         metric_kwargs = {'logical': f}
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
+    elif metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    elif metric == 'rps':
+        metric_kwargs = {'category_edges': category_edges}
     else:
         metric_kwargs = {}
     if Metric.probabilistic:
-        dim = ['init', 'member']
+        dim = (
+            ['member', 'init']
+            if metric in probabilistic_metrics_requiring_more_than_member_dim
+            else 'member'
+        )
         skill = pe.verify(metric=metric, comparison='m2c', dim=dim, **metric_kwargs)
     else:
         dim = 'init' if comparison == 'e2c' else ['init', 'member']
         skill = pe.verify(
             metric=metric, comparison=comparison, dim=dim, **metric_kwargs
         )
-    assert skill == Metric.perfect
+    if metric == 'contingency':
+        assert (skill == 1).all()  # checks Contingency.accuracy
+    else:
+        assert skill == Metric.perfect
 
 
 @pytest.mark.parametrize('alignment', ['same_inits', 'same_verif', 'maximize'])
@@ -90,7 +119,8 @@ def test_HindcastEnsemble_constant_forecasts(
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)
     Metric = get_metric_class(metric, HINDCAST_METRICS)
-    if metric == 'brier_score':
+    category_edges = np.array([0, 0.5, 1])
+    if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
             return x > 0.5
@@ -98,13 +128,23 @@ def test_HindcastEnsemble_constant_forecasts(
         metric_kwargs = {'logical': f}
     elif metric == 'threshold_brier_score':
         metric_kwargs = {'threshold': 0.5}
+    elif metric == 'contingency':
+        metric_kwargs = {
+            'forecast_category_edges': category_edges,
+            'observation_category_edges': category_edges,
+            'score': 'accuracy',
+        }
+    elif metric == 'rps':
+        metric_kwargs = {'category_edges': category_edges}
     else:
         metric_kwargs = {}
     if Metric.probabilistic:
         skill = he.verify(
             metric=metric,
             comparison='m2o',
-            dim='member',
+            dim=['member', 'init']
+            if metric in probabilistic_metrics_requiring_more_than_member_dim
+            else 'member',
             alignment=alignment,
             **metric_kwargs
         )
@@ -117,4 +157,7 @@ def test_HindcastEnsemble_constant_forecasts(
             alignment=alignment,
             **metric_kwargs
         )
-    assert skill == Metric.perfect
+    if metric == 'contingency':
+        assert (skill == 1).all()  # checks Contingency.accuracy
+    else:
+        assert skill == Metric.perfect

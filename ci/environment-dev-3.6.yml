@@ -22,13 +22,12 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - xarray>=0.16.0
+  - xarray
   # Package Management
   - asv
   - black==19.10b0
   - coveralls
   - dataclasses  # to get black to not error
-  - doc8
   - flake8
   - importlib_metadata
   - isort
@@ -52,8 +51,8 @@ dependencies:
   # Statistics
   - eofs
   - esmtools>=1.1.3
-  - xrft
-  - xskillscore>=0.0.17
+  - xrft==0.2.0
+  # - xskillscore>=0.0.17
   # Visualization
   - cartopy
   - matplotlib
@@ -63,3 +62,4 @@ dependencies:
       - cftime>=1.1.2 # Optimization changes to make cftime fast.
       - pytest-tldr
       - pytest-lazy-fixture
+      - git+https://github.com/raybellwaves/xskillscore@master

@@ -33,6 +33,8 @@ comparison_dim_PM = [
     ('e2c', 'init'),
 ]
 
+xr.set_options(display_style='text')
+
 
 def test_bootstrap_PM_keep_lead_attrs(perfectModelEnsemble_initialized_control):
     """Test bootstrap_perfect_model works lazily."""

@@ -250,41 +250,38 @@ class PredictionEnsemble:
 
         operator = eval(operator)
 
-        # Create temporary copy to modify to avoid inplace operation.
-        datasets = self._datasets.copy()
-        for dataset in datasets:
-            if isinstance(other, PredictionEnsemble):
+        if isinstance(other, PredictionEnsemble):
+            # Create temporary copy to modify to avoid inplace operation.
+            datasets = self._datasets.copy()
+            for dataset in datasets:
                 other_dataset = other._datasets[dataset]
-            else:
-                other_dataset = other
-            # Some pre-allocated entries might be empty, such as 'uninitialized'
-            if self._datasets[dataset]:
-                # Loop through observations if there are multiple
-                if dataset == 'observations' and isinstance(
-                    self._datasets[dataset], dict
-                ):
-                    obs_datasets = self._datasets['observations'].copy()
-                    for obs_dataset in obs_datasets:
-                        if isinstance(other, PredictionEnsemble):
+                # Some pre-allocated entries might be empty, such as 'uninitialized'
+                if self._datasets[dataset]:
+                    # Loop through observations if there are multiple
+                    if dataset == 'observations' and isinstance(
+                        self._datasets[dataset], dict
+                    ):
+                        obs_datasets = self._datasets['observations'].copy()
+                        for obs_dataset in obs_datasets:
                             other_obs_dataset = other._datasets['observations'][
                                 obs_dataset
                             ]
-                        else:
-                            other_obs_dataset = other
-                        obs_datasets.update(
-                            {
-                                obs_dataset: operator(
-                                    obs_datasets[obs_dataset], other_obs_dataset
-                                )
-                            }
-                        )
-                        datasets.update({'observations': obs_datasets})
-                else:
-                    if datasets[dataset]:
-                        datasets.update(
-                            {dataset: operator(datasets[dataset], other_dataset)}
-                        )
-        return self._construct_direct(datasets, kind=self.kind)
+                            obs_datasets.update(
+                                {
+                                    obs_dataset: operator(
+                                        obs_datasets[obs_dataset], other_obs_dataset
+                                    )
+                                }
+                            )
+                            datasets.update({'observations': obs_datasets})
+                    else:
+                        if datasets[dataset]:
+                            datasets.update(
+                                {dataset: operator(datasets[dataset], other_dataset)}
+                            )
+            return self._construct_direct(datasets, kind=self.kind)
+        else:
+            return self._apply_func(operator, other)
 
     def __add__(self, other):
         return self._math(other, operator='add')
@@ -298,13 +295,33 @@ class PredictionEnsemble:
     def __truediv__(self, other):
         return self._math(other, operator='div')
 
+    def __getitem__(self, varlist):
+        """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
+
+        Args:
+            * varlist (list of str, str): list of names or name of data variable(s) to
+                subselect
+        """
+        if isinstance(varlist, str):
+            varlist = [varlist]
+        if not isinstance(varlist, list):
+            raise ValueError(
+                'Please subset PredictionEnsemble as you would subset an xr.Dataset '
+                'with a list or single string of variable name(s), found '
+                f'{type(varlist)}.'
+            )
+
+        def sel_vars(ds, varlist):
+            return ds[varlist]
+
+        return self._apply_func(sel_vars, varlist)
+
     def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.
 
         Args:
             * name: Function, e.g., .isel() or .sum().
         """
-        kind = self.kind
 
         def wrapper(*args, **kwargs):
             """Applies arbitrary function to all datasets in the PredictionEnsemble
@@ -314,7 +331,7 @@ class PredictionEnsemble:
             how-to-call-undefined-methods-sequentially-in-python-class
             """
 
-            def _apply_func(v, name, *args, **kwargs):
+            def _apply_xr_func(v, name, *args, **kwargs):
                 """Handles exceptions in our dictionary comprehension.
 
                 In other words, this will skip applying the arbitrary function
@@ -335,37 +352,10 @@ class PredictionEnsemble:
                 #            as ds[dim] and the dim doesn't exist as a key.
                 # DimensionError: This accounts for our custom error when applying
                 # some stats functions.
-                # NOTE: Remove the esmtools version once you remove those errors from
-                #       esmtools.
                 except (ValueError, KeyError, DimensionError):
                     return v
 
-            # Create temporary copy to modify to avoid inplace operation.
-            datasets = self._datasets.copy()
-
-            # More explicit than nested dictionary comprehension.
-            for outer_k, outer_v in datasets.items():
-                # If initialized, control, uninitialized and just a singular
-                # dataset, apply the function directly to it.
-                if isinstance(outer_v, xr.Dataset):
-                    datasets.update(
-                        {outer_k: _apply_func(outer_v, name, *args, **kwargs)}
-                    )
-                else:
-                    # If a nested dictionary is encountered (i.e., a set of
-                    # observations) apply to each individually.
-                    #
-                    # Similar to the ``add_observations`` method, this only seems to
-                    # avoid inplace operations by copying the nested dictionary
-                    # separately and then updating the main dictionary.
-                    temporary_dataset = self._datasets[outer_k].copy()
-                    for inner_k, inner_v in temporary_dataset.items():
-                        temporary_dataset.update(
-                            {inner_k: _apply_func(inner_v, name, *args, **kwargs)}
-                        )
-                    datasets.update({outer_k: temporary_dataset})
-            # Instantiates new object with the modified datasets.
-            return self._construct_direct(datasets, kind=kind)
+            return self._apply_func(_apply_xr_func, name, *args, **kwargs)
 
         return wrapper
 
@@ -381,6 +371,31 @@ class PredictionEnsemble:
         obj._datasets = datasets
         obj.kind = kind
         return obj
+
+    def _apply_func(self, func, *args, **kwargs):
+        """Apply a function to all datasets in a `PredictionEnsemble`."""
+        # Create temporary copy to modify to avoid inplace operation.
+        datasets = self._datasets.copy()
+
+        # More explicit than nested dictionary comprehension.
+        for outer_k, outer_v in datasets.items():
+            # If initialized, control, uninitialized and just a singular
+            # dataset, apply the function directly to it.
+            if isinstance(outer_v, xr.Dataset):
+                datasets.update({outer_k: func(outer_v, *args, **kwargs)})
+            else:
+                # If a nested dictionary is encountered (i.e., a set of
+                # observations) apply to each individually.
+                #
+                # Similar to the ``add_observations`` method, this only seems to
+                # avoid inplace operations by copying the nested dictionary
+                # separately and then updating the main dictionary.
+                temporary_dataset = self._datasets[outer_k].copy()
+                for inner_k, inner_v in temporary_dataset.items():
+                    temporary_dataset.update({inner_k: func(inner_v, *args, **kwargs)})
+                datasets.update({outer_k: temporary_dataset})
+        # Instantiates new object with the modified datasets.
+        return self._construct_direct(datasets, kind=self.kind)
 
     def get_initialized(self):
         """Returns the xarray dataset for the initialized ensemble."""

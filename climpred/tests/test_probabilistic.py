@@ -84,7 +84,11 @@ def test_compute_hindcast_probabilistic(hindcast_recon_1d_ym, metric, comparison
         else 'member'
     )
     res = hindcast_recon_1d_ym.verify(
-        comparison=comparison, metric=metric, dim=dim, **metric_kwargs
+        alignment='same_verif',
+        comparison=comparison,
+        metric=metric,
+        dim=dim,
+        **metric_kwargs,
     )['SST']
     assert not res.isnull().all()
 

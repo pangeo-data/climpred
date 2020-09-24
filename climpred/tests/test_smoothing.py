@@ -158,7 +158,9 @@ def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim
     for d in dim:
         assert he_smoothed.get_initialized()[d].any()
         assert he_smoothed.get_observations('recon')[d].any()
-    assert he_smoothed.verify(metric='acc', comparison='e2o').any()
+    assert he_smoothed.verify(
+        metric='acc', comparison='e2o', alignment='same_verif'
+    ).any()
 
 
 def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_cftime):
@@ -215,4 +217,6 @@ def test_HindcastEnsemble_temporal_smoothing_two_observations(hindcast_recon_1d_
     he = hindcast_recon_1d_ym.add_observations(
         hindcast_recon_1d_ym.get_observations('recon'), 'recon2'
     )
-    assert he.smooth({'time': 2}).verify()
+    assert he.smooth({'time': 2}).verify(
+        metric='acc', comparison='e2o', alignment='same_verif'
+    )

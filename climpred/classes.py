@@ -778,7 +778,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         metric=None,
         comparison=None,
         dim=None,
-        iterations=5,
+        iterations=None,
         sig=95,
         pers_sig=None,
         **metric_kwargs,
@@ -831,6 +831,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
+        if iterations is None:
+            raise ValueError('Designate number of bootstrapping `iterations`.')
         has_dataset(self._datasets['control'], 'control', 'iteration')
         input_dict = {
             'ensemble': self._datasets['initialized'],
@@ -1062,6 +1064,22 @@ class HindcastEnsemble(PredictionEnsemble):
             observations/verification data short name.
 
         """
+        # Have to do checks here since this doesn't call `compute_hindcast` directly.
+        # Will be refactored when `climpred` migrates to inheritance-based.
+        if dim is None:
+            viable_dims = dict(self._datasets['initialized'].dims)
+            viable_dims = list(viable_dims.keys())
+            if 'lead' in viable_dims:
+                viable_dims.remove('lead')
+            raise ValueError(
+                'Designate a dimension to reduce over when applying the '
+                f'metric. Got {dim}. Choose one or more of {viable_dims}'
+            )
+        if ('member' in dim) and comparison not in ['m2o', 'm2r']:
+            raise ValueError(
+                "Comparison must equal 'm2o' with dim='member'. "
+                f'Got comparison {comparison}.'
+            )
         if isinstance(reference, str):
             reference = [reference]
         elif reference is None:
@@ -1182,10 +1200,10 @@ class HindcastEnsemble(PredictionEnsemble):
         metric=None,
         comparison=None,
         alignment=None,
+        iterations=None,
         sig=95,
         dim=None,
         resample_dim='member',
-        iterations=5,
         pers_sig=None,
         **metric_kwargs,
     ):
@@ -1212,6 +1230,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 prior to computing metric. This philosophy follows the thought that
                 each lead should be based on the same set of verification dates
 
+            iterations (int): Number of resampling iterations for
+                bootstrapping with replacement. Recommended >=500.
             sig (int, default 95): Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             resample_dim (str or list): dimension to resample from. default: 'member'.
@@ -1219,8 +1239,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'member': select a different set of members from hind
                 - 'init': select a different set of initializations from hind
 
-            iterations (int, default 5): Number of resampling iterations for
-                bootstrapping with replacement. Recommended >=500.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
             **metric_kwargs (optional): arguments passed to ``metric``.
@@ -1245,6 +1263,8 @@ class HindcastEnsemble(PredictionEnsemble):
                     bootstrapping with replacement.
 
         """
+        if iterations is None:
+            raise ValueError('Designate number of bootstrapping `iterations`.')
         # TODO: replace with more computationally efficient classes implementation
         return bootstrap_hindcast(
             self.get_initialized(),

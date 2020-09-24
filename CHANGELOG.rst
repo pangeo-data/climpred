@@ -8,17 +8,14 @@ climpred v2.x.x (2020-06-xx)
 Breaking changes
 ----------------
 
-- Set iterations=5 as default in
+- User now has to designate number of iterations with ``iterations=...`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`. (:pr:`436`)
-  `Aaron Spring`_.
--  Make metric, comparison, dim and alignment required (default None) arguments for
+  `Aaron Spring`_ and `Riley X. Brady`_.
+-  Make metric, comparison, dim, and alignment required (default None) arguments for
   :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
-  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`. (:pr:`436`) `Aaron Spring`_.
-- Make metric, comparison and dim required (default None) arguments for
-  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
-  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`.
-  (:pr:`436`) `Aaron Spring`_.
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
+  (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
 - ``comparison`` is not applied to uninitialized skill in
@@ -69,7 +66,7 @@ Deprecated
 
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
 - ``compute_metric``. Use :py:meth:`~climpred.classes.PredictionEnsemble.verify`
-  instead. (:pr:`436`) `Riley Brady`_.
+  instead. (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Bug Fixes
 ---------

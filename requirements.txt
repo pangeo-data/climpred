@@ -6,6 +6,6 @@ numpy
 pandas
 scipy
 tqdm
-xarray>=0.16.0
+xarray>=0.16.1
 xrft==0.2.0
-xskillscore>=0.0.17
+xskillscore>=0.0.18

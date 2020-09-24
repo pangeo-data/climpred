@@ -51,8 +51,8 @@ dependencies:
   # Statistics
   - eofs
   - esmtools>=1.1.3
-  - xrft==0.2.0
-  # - xskillscore>=0.0.17
+  - xrft=0.2.0  # New version not compatible with xarray 0.16.1
+  - xskillscore>=0.0.18
   # Visualization
   - cartopy
   - matplotlib
@@ -62,4 +62,3 @@ dependencies:
       - cftime>=1.1.2 # Optimization changes to make cftime fast.
       - pytest-tldr
       - pytest-lazy-fixture
-      - git+https://github.com/raybellwaves/xskillscore@master

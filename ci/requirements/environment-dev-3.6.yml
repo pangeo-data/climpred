@@ -54,7 +54,7 @@ dependencies:
   - xrft=0.2.0  # New version not compatible with xarray 0.16.1
   - xskillscore>=0.0.18
   # Visualization
-  - cartopy>=0.18.0
+  - cartopy>=0.18
   - matplotlib
   - nc-time-axis
   - pip

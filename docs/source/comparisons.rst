@@ -8,11 +8,10 @@ the ensemble of forecasts. Here we cover the comparison options for both hindcas
 perfect model ensembles. See `terminology <terminology.html>`__ for clarification on
 the differences between these two experimental setups.
 
-Note that all compute functions (:py:func:`~climpred.prediction.compute_hindcast`,
-:py:func:`~climpred.prediction.compute_perfect_model`,
-:py:func:`~climpred.prediction.compute_hindcast`,
-:py:func:`~climpred.bootstrap.bootstrap_hindcast`,
-:py:func:`~climpred.bootstrap.bootstrap_perfect_model`) take an optional
+All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` take a
 ``comparison=''`` keyword to select the comparison style. See below for a detailed
 description on the differences between these comparisons.
 

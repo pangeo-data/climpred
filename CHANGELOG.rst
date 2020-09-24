@@ -106,6 +106,10 @@ Internals/Minor Fixes
   :py:func:`~climpred.prediction.compute_perfect_model` and
   :py:func:`~climpred.prediction.compute_hindcast`.
   (:issue:`282`, :pr:`407`) `Aaron Spring`_.
+- Update ``cartopy`` requirement to 0.0.18 or greater to release lock on
+  ``matplotlib`` version. Update ``xskillscore`` requirement to 0.0.18 to
+  cooperate with new ``xarray`` version. (:pr:`451`,:pr:`449`)
+  `Riley X. Brady`_
 
 
 

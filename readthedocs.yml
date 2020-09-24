@@ -3,10 +3,10 @@ version: 2
 build:
   image: latest
 
-sphinx:
-  configuration: docs/source/conf.py
-
 conda:
-  environment: ci/docs.yml
+  environment: ci/requirements/docs.yml
+
+sphinx:
+  fail_on_warning: true
 
 formats: []

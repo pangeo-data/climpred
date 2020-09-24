@@ -87,7 +87,7 @@ documents. Some helpful guides are located
 
     .. code:: bash
 
-        $ conda env update -f ci/environment-dev-3.6.yml
+        $ conda env update -f ci/requirements/environment-dev-3.6.yml
         $ cd docs
         $ make html
 
@@ -124,7 +124,7 @@ Preparing Pull Requests
 
 #. Install dependencies into a new conda environment::
 
-    $ conda env update -f ci/environment-dev-3.7.yml
+    $ conda env update -f ci/requirements/environment-dev-3.6.yml
     $ conda activate climpred-dev
 
 #. Make an editable install of climpred by running::

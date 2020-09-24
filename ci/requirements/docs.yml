@@ -20,3 +20,7 @@ dependencies:
   - toolz
   - tqdm
   - xarray>=0.16.1
+  - pip
+  - pip:
+    # Install latest version of climpred.
+    - -e ..

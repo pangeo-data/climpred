@@ -1,7 +1,12 @@
+version: 2
+
+build:
+  image: latest
+
+conda:
+  environment: ci/requirements/docs.yml
+
 sphinx:
-  configuration: docs/source/conf.py
-python:
-  version: 3.6
-  setup_py_install: true
-  install:
-      - requirements: docs/requirements.txt
+  fail_on_warning: false
+
+formats: []

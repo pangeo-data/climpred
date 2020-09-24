@@ -1,7 +1,7 @@
 cftime>=1.1.2
 eofs
 esmtools>=1.1.3
-matplotlib<= 3.2.2
+matplotlib
 numpy
 pandas
 scipy

@@ -17,7 +17,7 @@ before_install:
   - conda info -a
 
 install:
-  - conda env create -n climpred-dev --file ci/environment-dev-3.6.yml
+  - conda env create -n climpred-dev --file ci/requirements/environment-dev-3.6.yml
   - source activate climpred-dev
   - conda install pip
   - conda list
@@ -27,7 +27,7 @@ install:
   - python setup.py install --user
 
 script:
-  - coverage run --source climpred -m py.test 
+  - coverage run --source climpred -m py.test
   - coverage report
   - pushd docs
   - nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/subseasonal/*.ipynb

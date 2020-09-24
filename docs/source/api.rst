@@ -51,6 +51,7 @@ Analysis Functions
     :toctree: api/
 
     HindcastEnsemble.verify
+    HindcastEnsemble.bootstrap
 
 --------------
 Pre-Processing
@@ -104,8 +105,8 @@ Analysis Functions
 .. autosummary::
     :toctree: api/
 
+    PerfectModelEnsemble.verify
     PerfectModelEnsemble.bootstrap
-    PerfectModelEnsemble.compute_metric
     PerfectModelEnsemble.compute_persistence
     PerfectModelEnsemble.compute_uninitialized
 

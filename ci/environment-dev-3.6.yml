@@ -47,14 +47,14 @@ dependencies:
   # Currently, xesmf breaks with esmpy v8.0.0. There is an issue with PIO and MPI.
   # See e.g. https://github.com/conda-forge/esmpy-feedstock/issues/28
   - esmpy<=7.1.0
-  - xesmf
+  - xesmf  # should switch to https://github.com/pangeo-data/xesmf
   # Statistics
   - eofs
   - esmtools>=1.1.3
   - xrft==0.2.0
   # - xskillscore>=0.0.17
   # Visualization
-  - cartopy
+  - cartopy>=0.18.0
   - matplotlib
   - nc-time-axis
   - pip

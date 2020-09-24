@@ -16,8 +16,11 @@
 Metrics
 #######
 
-All high-level functions have an optional ``metric`` argument that can be called to
-determine which metric is used in computing predictability.
+All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` have a ``metric`` argument
+that has to be called to determine which metric is used in computing predictability.
 
 .. note::
 
@@ -28,10 +31,9 @@ determine which metric is used in computing predictability.
     predictability.
 
 Internally, all metric functions require ``forecast`` and ``observations`` as inputs.
-The dimension ``dim`` is set internally by
-:py:func:`~climpred.prediction.compute_hindcast` or
-:py:func:`~climpred.prediction.compute_perfect_model` to specify over which dimensions
-the ``metric`` is applied. See :ref:`comparisons` for more on the ``dim`` argument.
+The dimension ``dim`` has to be set to specify over which dimensions
+the ``metric`` is applied and are hence reduced.
+See :ref:`comparisons` for more on the ``dim`` argument.
 
 *************
 Deterministic

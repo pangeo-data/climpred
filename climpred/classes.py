@@ -624,7 +624,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Args:
             metric (str or Metric): Metric to apply in the comparison.
             comparison (str): How to compare the initialized prediction ensemble with
-                itself.
+                itself, see `comparisons <comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -690,8 +690,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Compares the bootstrapped uninitialized run to the control run.
 
         Args:
-            metric (str): Metric to apply in the comparison.
-            comparison (str): How to compare the initialized against itself.
+            metric (str): Metric to apply in the comparison. see
+                `metrics <metrics.html>`_.
+            comparison (str): How to compare the uninitialized against itself, see
+                `comparisons <comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -727,7 +729,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Compute a simple persistence forecast for the control run.
 
         Args:
-            metric (str): Metric to apply to the persistence forecast.
+            metric (str): Metric to apply to the persistence forecast, see
+                `metrics <metrics.html>`_.
 
         Returns:
             Dataset of persistence forecast results (if ``refname`` is declared),
@@ -761,7 +764,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self,
         metric=None,
         comparison=None,
-        dim=['init', 'member'],
+        dim=None,
         iterations=5,
         sig=95,
         pers_sig=None,
@@ -771,9 +774,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Goddard et al. 2013.
 
         Args:
-            metric (str): Metric to verify bootstrapped skill.
-            comparison (str): comparison passed to verify. One of [``'m2c'``,
-                ``'m2m'``, ``'e2c'``, ``'m2e'``].
+            metric (str): Metric to verify bootstrapped skill, see
+                `metrics <metrics.html>`_.
+            comparison (str): comparison passed to verify, see
+                `comparisons <comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -1015,11 +1019,10 @@ class HindcastEnsemble(PredictionEnsemble):
                 If ``None``, compare to all observations/verification data.
             reference (str): Which reference skill is also computed. Choose
                 from ['historical', 'persistence']. Defaults to None.
-            metric (str): Metric to apply for verification.
+            metric (str): Metric to apply for verification. see
+                `metrics <metrics.html>`_.
             comparison (str): How to compare to the
-                observations/verification data. ``'e2o'`` for ensemble mean to
-                observations/verification data. ``'m2o'`` for each individual member to
-                observations/verification data.
+                observations/verification data. , see `comparisons <comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -1029,11 +1032,9 @@ class HindcastEnsemble(PredictionEnsemble):
 
                 - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
                 ``verif`` to a common time frame at each lead.
-
                 - 'same_inits': slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
                 based on the same set of initializations.
-
                 - 'same_verif': slice to a common/consistent verification time frame
                 prior to computing metric. This philosophy follows the thought that
                 each lead should be based on the same set of verification dates.
@@ -1177,11 +1178,10 @@ class HindcastEnsemble(PredictionEnsemble):
         Goddard et al. 2013.
 
         Args:
-            metric (str): Metric to apply for verification.
+            metric (str): Metric to apply for verification, see
+                `metrics <metrics.html>`_.
             comparison (str): How to compare to the
-                observations/verification data. ``'e2o'`` for ensemble mean to
-                observations/verification data. ``'m2o'`` for each individual member to
-                observations/verification data.
+                observations/verification data, see `comparisons <comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -1191,11 +1191,9 @@ class HindcastEnsemble(PredictionEnsemble):
 
                 - 'maximize': maximize the degrees of freedom by slicing ``init`` and
                 ``verif`` to a common time frame at each lead
-
                 - 'same_inits': slice to a common init frame prior to computing
                 metric. This philosophy follows the thought that each lead should be
                 based on the same set of initializations
-
                 - 'same_verif': slice to a common/consistent verification time frame
                 prior to computing metric. This philosophy follows the thought that
                 each lead should be based on the same set of verification dates

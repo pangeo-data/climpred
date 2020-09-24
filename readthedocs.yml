@@ -7,6 +7,6 @@ conda:
   environment: ci/requirements/docs.yml
 
 sphinx:
-  fail_on_warning: true
+  fail_on_warning: false
 
 formats: []

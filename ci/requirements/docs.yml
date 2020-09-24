@@ -23,4 +23,4 @@ dependencies:
   - pip
   - pip:
     # Install latest version of climpred.
-    - -e ..
+    - -e ../..

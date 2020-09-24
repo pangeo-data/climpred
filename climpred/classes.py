@@ -984,10 +984,10 @@ class HindcastEnsemble(PredictionEnsemble):
         self,
         name=None,
         reference=None,
-        metric='pearson_r',
-        comparison='e2o',
-        dim='init',
-        alignment='same_verifs',
+        metric=None,
+        comparison=None,
+        dim=None,
+        alignment=None,
         **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations/verification data.
@@ -998,7 +998,9 @@ class HindcastEnsemble(PredictionEnsemble):
         Args:
             name (str): Short name of observations/verification data to compare to.
                 If ``None``, compare to all observations/verification data.
-            metric (str, default 'pearson_r'): Metric to apply for verification.
+            reference (str): Which reference skill is also computed. Choose
+                from ['historical', 'persistence']. Defaults to None.
+            metric (str): Metric to apply for verification.
             comparison (str, default 'e2o'): How to compare to the
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
@@ -1137,13 +1139,13 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric='pearson_r',
-        comparison='e2o',
-        alignment='same_verifs',
+        metric=None,
+        comparison=None,
+        alignment=None,
         sig=95,
-        dim='init',
+        dim=None,
         resample_dim='member',
-        iterations=500,
+        iterations=5,
         pers_sig=None,
         **metric_kwargs,
     ):
@@ -1151,8 +1153,8 @@ class HindcastEnsemble(PredictionEnsemble):
         Goddard et al. 2013.
 
         Args:
-            metric (str, default 'pearson_r'): Metric to apply for verification.
-            comparison (str, default 'e2o'): How to compare to the
+            metric (str): Metric to apply for verification.
+            comparison (str): How to compare to the
                 observations/verification data. ('e2o' for ensemble mean to
                 observations/verification data. 'm2o' for each individual member to
                 observations/verification data).
@@ -1174,8 +1176,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'member': select a different set of members from hind
                 - 'init': select a different set of initializations from hind
 
-            iterations (int, default 500): Number of resampling iterations for
-                bootstrapping with replacement.
+            iterations (int, default 5): Number of resampling iterations for
+                bootstrapping with replacement. Recommended: 500.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
             **metric_kwargs (optional): arguments passed to `metric`.

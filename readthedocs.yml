@@ -4,6 +4,6 @@ sphinx:
   configuration: docs/source/conf.py
 
 conda:
-  environment: docs/docs.yml
+  environment: ci/docs.yml
 
 formats: []

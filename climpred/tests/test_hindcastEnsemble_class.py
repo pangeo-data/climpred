@@ -1,4 +1,5 @@
 import pytest
+import xarray as xr
 
 from climpred import HindcastEnsemble
 
@@ -173,3 +174,33 @@ def test_bootstrap(hindcast_hist_obs_1d):
     hindcast_hist_obs_1d.bootstrap(
         metric='acc', comparison='e2o', alignment='same_verifs', dim='init'
     )
+
+
+def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
+    """Tests that error is thrown if calendars mismatch when adding observations."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+    reconstruction_ds_1d['time'] = xr.cftime_range(
+        start='1950',
+        periods=reconstruction_ds_1d.time.size,
+        freq='MS',
+        calendar='all_leap',
+    )
+    with pytest.raises(ValueError) as excinfo:
+        hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
+    assert 'does not match' in str(excinfo.value)
+
+
+def test_calendar_matching_uninitialized(
+    hind_ds_initialized_1d, hist_ds_uninitialized_1d
+):
+    """Tests that error is thrown if calendars mismatch when adding uninitialized."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+    hist_ds_uninitialized_1d['time'] = xr.cftime_range(
+        start='1950',
+        periods=hist_ds_uninitialized_1d.time.size,
+        freq='MS',
+        calendar='all_leap',
+    )
+    with pytest.raises(ValueError) as excinfo:
+        hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
+    assert 'does not match' in str(excinfo.value)

@@ -43,6 +43,12 @@ New Features
   ``hindcast.verify(metric='brier_score',comparison='m2o',dim='member',logical=logical)``.
   (:pr:`431`) `Aaron Spring`_.
 - Allow to pass ``dim`` to functions from ``xskillscore``. (:pr:`431`) `Aaron Spring`_.
+- Check calendar types when using
+  :py:meth:`~climpred.classes.HindcastEnsemble.add_observations`,
+  :py:meth:`~climpred.classes.HindcastEnsemble.add_uninitialized`,
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.add_control` to ensure that the
+  verification data calendars match that of the initialized ensemble.
+  (:pr:`452`) `Riley X. Brady`_
 - Implement new metrics which have been ported over from
   https://github.com/csiro-dcfp/doppyo/ to ``xskillscore`` by Dougie Squire.
   (:pr:`439`) `Aaron Spring`_

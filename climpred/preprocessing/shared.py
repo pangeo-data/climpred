@@ -42,7 +42,7 @@ def load_hindcast(
     """
     init_list = []
     for init in inits:
-        print(f'Processing init {init} ...')
+        print(f"Processing init {init} ...")
         member_list = []
         for member in members:
             # get path p
@@ -50,23 +50,23 @@ def load_hindcast(
             # open all leads for specified member and init
             member_ds = xr.open_mfdataset(
                 p,
-                combine='nested',
-                concat_dim='time',
+                combine="nested",
+                concat_dim="time",
                 preprocess=preprocess,
                 parallel=parallel,
                 engine=engine,
-                coords='minimal',  # expecting identical coords
-                data_vars='minimal',  # expecting identical vars
-                compat='override',  # speed up
+                coords="minimal",  # expecting identical coords
+                data_vars="minimal",  # expecting identical vars
+                compat="override",  # speed up
             ).squeeze()
             # set new integer time
             member_ds = set_integer_time_axis(member_ds)
             member_list.append(member_ds)
-        member_ds = xr.concat(member_list, 'member')
+        member_ds = xr.concat(member_list, "member")
         init_list.append(member_ds)
-    ds = xr.concat(init_list, 'init').rename({'time': 'lead'})
-    ds['member'] = members
-    ds['init'] = inits
+    ds = xr.concat(init_list, "init").rename({"time": "lead"})
+    ds["member"] = members
+    ds["init"] = inits
     return ds
 
 
@@ -82,7 +82,7 @@ def rename_SLM_to_climpred_dims(xro):
     Returns:
         xr.object: `climpred` compatible with dimensions: `member`, `init`, `lead`.
     """
-    dim_dict = {'S': 'init', 'L': 'lead', 'M': 'member'}
+    dim_dict = {"S": "init", "L": "lead", "M": "member"}
     for dim in dim_dict.keys():
         if dim in xro.dims:
             xro = xro.rename({dim: dim_dict[dim]})
@@ -109,10 +109,10 @@ def rename_to_climpred_dims(xro):
                     xro = xro.rename({c: cdim})
                     renamed = True
         # special case for hindcast when containing time
-        if 'time' in xro.dims and 'lead' not in xro.dims:
-            xro = xro.rename({'time': 'lead'})
+        if "time" in xro.dims and "lead" not in xro.dims:
+            xro = xro.rename({"time": "lead"})
             renamed = True
-        elif 'lead' in xro.dims:
+        elif "lead" in xro.dims:
             renamed = True
         if not renamed:
             raise ValueError(
@@ -121,7 +121,7 @@ def rename_to_climpred_dims(xro):
     return xro
 
 
-def set_integer_time_axis(xro, offset=1, time_dim='time'):
+def set_integer_time_axis(xro, offset=1, time_dim="time"):
     """Set time axis to integers starting from `offset`. Used in hindcast preprocessing
     before the concatination of `intake-esm` happens."""
     xro[time_dim] = np.arange(offset, offset + xro[time_dim].size)

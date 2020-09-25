@@ -99,12 +99,9 @@ def _display_metadata_html(self):
 
     if isinstance(self, HindcastEnsemble):
         if any(self._datasets['observations']):
-            for key in self._datasets['observations']:
-                obs_repr_str = dataset_repr(self._datasets['observations'][key])
-                obs_repr_str = obs_repr_str.replace(
-                    'xarray.Dataset', f'Verification Data {key}'
-                )
-                display_html(obs_repr_str, raw=True)
+            obs_repr_str = dataset_repr(self._datasets['observations'])
+            obs_repr_str = obs_repr_str.replace('xarray.Dataset', 'Verification Data')
+            display_html(obs_repr_str, raw=True)
     elif isinstance(self, PerfectModelEnsemble):
         if any(self._datasets['control']):
             control_repr_str = dataset_repr(self._datasets['control'])

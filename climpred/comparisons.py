@@ -129,10 +129,10 @@ def _m2m(ds, metric=None):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m])
+        forecast = ds.drop_sel(member=m)
         # set incrementing members to avoid nans from broadcasting
         forecast['member'] = np.arange(1, 1 + forecast.member.size)
-        reference = ds.sel(member=m).squeeze()
+        reference = ds.sel(member=m, drop=True)
         # Tiles the singular "reference" member to compare directly to all other members
         if not metric.probabilistic:
             forecast, reference = xr.broadcast(forecast, reference)
@@ -173,8 +173,8 @@ def _m2e(ds, metric=None):
     forecast_list = []
     M2E_COMPARISON_DIM = 'member'
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m]).mean('member')
-        reference = ds.sel(member=m).squeeze()
+        forecast = ds.drop_sel(member=m).mean('member')
+        reference = ds.sel(member=m, drop=True)
         forecast_list.append(forecast)
         reference_list.append(reference)
     reference = xr.concat(reference_list, M2E_COMPARISON_DIM)
@@ -213,14 +213,12 @@ def _m2c(ds, control_member=None, metric=None):
         xr.object: forecast, reference.
     """
     if control_member is None:
-        control_member = [0]
-    reference = ds.isel(member=control_member).squeeze()
+        control_member = ds.member.values[0]
+    reference = ds.sel(member=control_member, drop=True)
     # drop the member being reference
-    forecast = _drop_members(ds, removed_member=ds.member.values[control_member])
+    forecast = ds.drop_sel(member=control_member)
     if not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
-    elif 'member' in reference.coords:
-        del reference['member']
     return forecast, reference
 
 
@@ -249,13 +247,10 @@ def _e2c(ds, control_member=None, metric=None):
     Returns:
         xr.object: forecast, reference.
     """
-    # stack_dim irrelevant
     if control_member is None:
-        control_member = [0]
-    reference = ds.isel(member=control_member).squeeze()
-    if 'member' in reference.coords:
-        del reference['member']
-    ds = _drop_members(ds, removed_member=[ds.member.values[control_member]])
+        control_member = ds.member.values[0]
+    reference = ds.sel(member=control_member, drop=True)
+    ds = ds.drop_sel(member=control_member)
     forecast = ds.mean('member')
     return forecast, reference
 

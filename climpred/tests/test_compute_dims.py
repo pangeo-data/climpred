@@ -129,6 +129,9 @@ def test_bootstrap_hindcast_dim(
         assert not actualk
 
 
+xr.set_options(display_style='text')
+
+
 @pytest.mark.parametrize('metric', ['rmse', 'pearson_r'])
 @pytest.mark.parametrize(
     'comparison,dim', comparison_dim_PM,
@@ -138,7 +141,7 @@ def test_compute_pm_dims(
 ):
     """Test whether compute_pm calcs skill over many possible dims
     and comparisons and just reduces the result by dim."""
-    xr.set_options(display_style='text')
+    print(dim)
     pm = perfectModelEnsemble_initialized_control
     actual = pm.verify(metric=metric, comparison=comparison, dim=dim)['tos']
     if isinstance(dim, str):

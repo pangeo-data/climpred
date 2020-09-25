@@ -287,7 +287,6 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r_p_value
         * climpred.pearson_r_eff_p_value
     """
-
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
@@ -338,7 +337,6 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r
         * climpred.pearson_r_eff_p_value
     """
-
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -407,7 +405,6 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
@@ -481,7 +478,6 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -549,7 +545,6 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r_p_value
         * climpred.spearman_r_eff_p_value
     """
-
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
         return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
@@ -600,7 +595,6 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r
         * climpred.spearman_r_eff_p_value
     """
-
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -678,7 +672,6 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
@@ -746,7 +739,6 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
           Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
-
     return mse(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -792,7 +784,6 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.rmse
     """
-
     return rmse(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -845,7 +836,6 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
           Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
-
     return mae(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -891,7 +881,6 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.median_absolute_error
     """
-
     return median_absolute_error(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -970,7 +959,6 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize NMSE. Not found in', metric_kwargs
         )
-
     mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
     fac = _get_norm_factor(comparison)
@@ -1053,7 +1041,6 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize NMAE. Not found in', metric_kwargs
         )
-
     mae_skill = __mae.function(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
@@ -1143,7 +1130,6 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
         )
-
     rmse_skill = __rmse.function(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
@@ -1235,7 +1221,6 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             'Comparison needed to normalize MSSS. Not found in', metric_kwargs
         )
-
     mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
     fac = _get_norm_factor(comparison)
@@ -1287,7 +1272,6 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.mape
     """
-
     return mape(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -1333,7 +1317,6 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.smape
     """
-
     return smape(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -1407,7 +1390,6 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
           Relationships to the Correlation Coefficient. Monthly Weather Review,
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
     """
-
     messs_res = __msess.function(forecast, verif, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
     uacc_res = messs_res ** 0.5
@@ -1459,7 +1441,6 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-
     return forecast.std(dim=dim, **metric_kwargs) / verif.std(dim=dim, **metric_kwargs)
 
 
@@ -1503,7 +1484,6 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www.cawcr.gov.au/projects/verification/
         * https://www-miklip.dkrz.de/about/murcss/
     """
-
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
 
@@ -1550,7 +1530,6 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     return acc - __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1600,7 +1579,6 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-
     std_ratio = __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     return std_ratio * acc
@@ -1661,7 +1639,6 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
         forecast, verif, dim=dim, **metric_kwargs
@@ -1773,7 +1750,6 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -1843,7 +1819,6 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError('Please provide threshold.')
     else:
         threshold = metric_kwargs.pop('threshold')
-
     dim = _remove_member_from_dim_or_raise(dim)
     # switch args b/c xskillscore.threshold_brier_score(verif, forecasts)
     return threshold_brier_score(verif, forecast, threshold, dim=dim, **metric_kwargs)
@@ -1916,9 +1891,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> hindcast.verify(metric='crps', comparison='m2o', dim='member')
     """
-
     dim = _remove_member_from_dim_or_raise(dim)
-
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
     return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
@@ -2225,7 +2198,6 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-
     return discrimination(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2302,7 +2274,6 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2343,7 +2314,6 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
-
     return rank_histogram(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2455,7 +2425,6 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
                 forecast_category_edges=category_edges)
 
     """
-
     if score == 'table':
         return Contingency(verif, forecast, dim=dim, **metric_kwargs).table
     else:

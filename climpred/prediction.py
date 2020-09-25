@@ -78,10 +78,6 @@ def _apply_metric_at_given_lead(
         a, b = historical(hist, verif, verif_dates, lead)
     a['time'] = b['time']
 
-    # broadcast dims when deterministic metric and apply over member
-    # # TODO: remove
-    if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
-        a, b = xr.broadcast(a, b)
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:
         metric_kwargs['comparison'] = comparison

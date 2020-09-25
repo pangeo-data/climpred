@@ -81,7 +81,7 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
         cross_validate (bool): Use properly defined mean bias reduction function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
-            and but yields similar skill with a large N of initializations.
+            but yields similar skill with a large N of initializations.
             Defaults to True.
 
     Returns:
@@ -103,9 +103,9 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
     ).squeeze()
 
     if cross_validate:
-        mean_bias_func = _mean_bias_reduction_quick
-    else:
         mean_bias_func = _mean_bias_reduction_cross_validate
+    else:
+        mean_bias_func = _mean_bias_reduction_quick
 
     bias_reduced_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
     hindcast_bias_reduced = hindcast.copy()

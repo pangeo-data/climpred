@@ -30,11 +30,11 @@ def test_e2c(PM_da_initialized_1d):
 
     control_member = [0]
     reference = ds.isel(member=control_member).squeeze()
-    if 'member' in reference.coords:
-        del reference['member']
+    if "member" in reference.coords:
+        del reference["member"]
     # drop the member being reference
     ds = _drop_members(ds, removed_member=[ds.member.values[control_member]])
-    forecast = ds.mean('member')
+    forecast = ds.mean("member")
 
     eforecast, ereference = forecast, reference
     # very weak testing on shape
@@ -80,15 +80,15 @@ def test_m2e(PM_da_initialized_1d):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m]).mean('member')
+        forecast = _drop_members(ds, removed_member=[m]).mean("member")
         reference = ds.sel(member=m).squeeze()
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
-    reference = xr.concat(reference_list, 'member')
-    forecast = xr.concat(forecast_list, 'member')
-    forecast['member'] = np.arange(forecast.member.size)
-    reference['member'] = np.arange(reference.member.size)
+    reference = xr.concat(reference_list, "member")
+    forecast = xr.concat(forecast_list, "member")
+    forecast["member"] = np.arange(forecast.member.size)
+    reference["member"] = np.arange(reference.member.size)
 
     eforecast, ereference = forecast, reference
     # very weak testing on shape
@@ -111,12 +111,12 @@ def test_m2m(PM_da_initialized_1d):
     forecast_list = []
     for m in ds.member.values:
         forecast = _drop_members(ds, removed_member=[m])
-        forecast['member'] = np.arange(1, 1 + forecast.member.size)
+        forecast["member"] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m).squeeze()
         forecast, reference = xr.broadcast(forecast, reference)
         reference_list.append(reference)
         forecast_list.append(forecast)
-    supervector_dim = 'forecast_member'
+    supervector_dim = "forecast_member"
     reference = xr.concat(reference_list, supervector_dim)
     forecast = xr.concat(forecast_list, supervector_dim)
     reference[supervector_dim] = np.arange(reference[supervector_dim].size)
@@ -127,8 +127,8 @@ def test_m2m(PM_da_initialized_1d):
     assert ereference.size == areference.size
 
 
-@pytest.mark.parametrize('metric', ['crps', 'mse'])
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+@pytest.mark.parametrize("metric", ["crps", "mse"])
+@pytest.mark.parametrize("comparison", PM_COMPARISONS)
 def test_all(PM_da_initialized_1d, comparison, metric):
     metric = get_metric_class(metric, PM_METRICS)
     ds = PM_da_initialized_1d
@@ -142,16 +142,16 @@ def test_all(PM_da_initialized_1d, comparison, metric):
     else:
         if comparison.name in PROBABILISTIC_PM_COMPARISONS:
             # same but member dim for probabilistic
-            assert set(forecast.dims) - set(['member']) == set(obs.dims)
+            assert set(forecast.dims) - set(["member"]) == set(obs.dims)
 
 
 def my_m2me_comparison(ds, metric=None):
     """Identical to m2e but median."""
     reference_list = []
     forecast_list = []
-    supervector_dim = 'member'
+    supervector_dim = "member"
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m]).median('member')
+        forecast = _drop_members(ds, removed_member=[m]).median("member")
         reference = ds.sel(member=m).squeeze()
         forecast_list.append(forecast)
         reference_list.append(reference)
@@ -163,11 +163,11 @@ def my_m2me_comparison(ds, metric=None):
 
 
 my_m2me_comparison = Comparison(
-    name='m2me', function=my_m2me_comparison, probabilistic=False, hindcast=False,
+    name="m2me", function=my_m2me_comparison, probabilistic=False, hindcast=False,
 )
 
 
-@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+@pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
 def test_new_comparison_passed_to_compute(
     PM_da_initialized_1d, PM_da_control_1d, metric
 ):
@@ -179,7 +179,7 @@ def test_new_comparison_passed_to_compute(
     )
 
     expected = compute_perfect_model(
-        PM_da_initialized_1d, PM_da_control_1d, comparison='m2e', metric='mse'
+        PM_da_initialized_1d, PM_da_control_1d, comparison="m2e", metric="mse"
     )
 
     assert (actual - expected).mean() != 0
@@ -187,7 +187,7 @@ def test_new_comparison_passed_to_compute(
 
 def test_Comparison_display():
     summary = __m2m.__repr__()
-    assert 'Kind: deterministic and probabilistic' in summary.split('\n')[2]
+    assert "Kind: deterministic and probabilistic" in summary.split("\n")[2]
 
 
 def test_no_repeating_comparison_aliases():
@@ -199,5 +199,5 @@ def test_no_repeating_comparison_aliases():
             for a in c.aliases:
                 COMPARISONS.append(a)
     duplicates = set([x for x in COMPARISONS if COMPARISONS.count(x) > 1])
-    print(f'Duplicate comparisons: {duplicates}')
+    print(f"Duplicate comparisons: {duplicates}")
     assert len(duplicates) == 0

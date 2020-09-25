@@ -9,9 +9,9 @@ from climpred.prediction import compute_hindcast
 from . import ensure_loaded, parameterized, randn, requires_dask
 
 # only take subselection of all possible metrics
-METRICS = ['rmse', 'pearson_r', 'crpss']
+METRICS = ["rmse", "pearson_r", "crpss"]
 # only take comparisons compatible with probabilistic metrics
-HINDCAST_COMPARISONS = ['m2o']
+HINDCAST_COMPARISONS = ["m2o"]
 
 ITERATIONS = 16
 
@@ -44,57 +44,57 @@ class Generate:
         FRAC_NAN = 0.0
 
         inits = xr.cftime_range(
-            start=str(self.init_start), end=str(self.init_end - 1), freq='YS'
+            start=str(self.init_start), end=str(self.init_end - 1), freq="YS"
         )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
 
         lons = xr.DataArray(
             np.linspace(0.5, 359.5, self.nx),
-            dims=('lon',),
-            attrs={'units': 'degrees east', 'long_name': 'longitude'},
+            dims=("lon",),
+            attrs={"units": "degrees east", "long_name": "longitude"},
         )
         lats = xr.DataArray(
             np.linspace(-89.5, 89.5, self.ny),
-            dims=('lat',),
-            attrs={'units': 'degrees north', 'long_name': 'latitude'},
+            dims=("lat",),
+            attrs={"units": "degrees north", "long_name": "latitude"},
         )
-        self.hind['var'] = xr.DataArray(
+        self.hind["var"] = xr.DataArray(
             randn(
                 (self.nmember, self.ninit, self.nlead, self.nx, self.ny),
                 frac_nan=FRAC_NAN,
             ),
             coords={
-                'member': members,
-                'init': inits,
-                'lon': lons,
-                'lat': lats,
-                'lead': leads,
+                "member": members,
+                "init": inits,
+                "lon": lons,
+                "lat": lats,
+                "lead": leads,
             },
-            dims=('member', 'init', 'lead', 'lon', 'lat'),
-            name='var',
-            attrs={'units': 'var units', 'description': 'a description'},
+            dims=("member", "init", "lead", "lon", "lat"),
+            name="var",
+            attrs={"units": "var units", "description": "a description"},
         )
-        self.observations['var'] = xr.DataArray(
+        self.observations["var"] = xr.DataArray(
             randn((self.ninit, self.nx, self.ny), frac_nan=FRAC_NAN),
-            coords={'lon': lons, 'lat': lats, 'time': inits},
-            dims=('time', 'lon', 'lat'),
-            name='var',
-            attrs={'units': 'var units', 'description': 'a description'},
+            coords={"lon": lons, "lat": lats, "time": inits},
+            dims=("time", "lon", "lat"),
+            name="var",
+            attrs={"units": "var units", "description": "a description"},
         )
 
-        self.uninit['var'] = xr.DataArray(
+        self.uninit["var"] = xr.DataArray(
             randn((self.ninit, self.nx, self.ny, self.nmember), frac_nan=FRAC_NAN),
-            coords={'lon': lons, 'lat': lats, 'time': inits, 'member': members},
-            dims=('time', 'lon', 'lat', 'member'),
-            name='var',
-            attrs={'units': 'var units', 'description': 'a description'},
+            coords={"lon": lons, "lat": lats, "time": inits, "member": members},
+            dims=("time", "lon", "lat", "member"),
+            name="var",
+            attrs={"units": "var units", "description": "a description"},
         )
 
-        self.hind.attrs = {'history': 'created for xarray benchmarking'}
-        self.hind.lead.attrs['units'] = 'years'
-        self.uninit.time.attrs['units'] = 'years'
-        self.observations.time.attrs['units'] = 'years'
+        self.hind.attrs = {"history": "created for xarray benchmarking"}
+        self.hind.lead.attrs["units"] = "years"
+        self.uninit.time.attrs["units"] = "years"
+        self.observations.time.attrs["units"] = "years"
 
 
 class Compute(Generate):
@@ -105,10 +105,10 @@ class Compute(Generate):
     def setup(self, *args, **kwargs):
         self.make_hind_obs()
 
-    @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, HINDCAST_COMPARISONS))
     def time_compute_hindcast(self, metric, comparison):
         """Take time for `compute_hindcast`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
+        dim = "member" if metric in PROBABILISTIC_METRICS else "init"
         ensure_loaded(
             compute_hindcast(
                 self.hind,
@@ -119,10 +119,10 @@ class Compute(Generate):
             )
         )
 
-    @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, HINDCAST_COMPARISONS))
     def peakmem_compute_hindcast(self, metric, comparison):
         """Take memory peak for `compute_hindcast`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
+        dim = "member" if metric in PROBABILISTIC_METRICS else "init"
         ensure_loaded(
             compute_hindcast(
                 self.hind,
@@ -133,10 +133,10 @@ class Compute(Generate):
             )
         )
 
-    @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, HINDCAST_COMPARISONS))
     def time_bootstrap_hindcast(self, metric, comparison):
         """Take time for `bootstrap_hindcast`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
+        dim = "member" if metric in PROBABILISTIC_METRICS else "init"
         ensure_loaded(
             bootstrap_hindcast(
                 self.hind,
@@ -149,10 +149,10 @@ class Compute(Generate):
             )
         )
 
-    @parameterized(['metric', 'comparison'], (METRICS, HINDCAST_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, HINDCAST_COMPARISONS))
     def peakmem_bootstrap_hindcast(self, metric, comparison):
         """Take memory peak for `bootstrap_hindcast`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else 'init'
+        dim = "member" if metric in PROBABILISTIC_METRICS else "init"
         ensure_loaded(
             bootstrap_hindcast(
                 self.hind,
@@ -176,9 +176,9 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.hind = self.hind['var'].chunk()
-        self.observations = self.observations['var'].chunk()
-        self.uninit = self.uninit['var'].chunk()
+        self.hind = self.hind["var"].chunk()
+        self.observations = self.observations["var"].chunk()
+        self.uninit = self.uninit["var"].chunk()
 
 
 class ComputeDaskDistributed(ComputeDask):
@@ -206,7 +206,7 @@ class ComputeSmall(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        spatial_dims = ['lon', 'lat']
+        spatial_dims = ["lon", "lat"]
         self.hind = self.hind.mean(spatial_dims)
         self.observations = self.observations.mean(spatial_dims)
         self.uninit = self.uninit.mean(spatial_dims)

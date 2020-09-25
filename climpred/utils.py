@@ -45,34 +45,34 @@ def assign_attrs(
 
     # climpred info
     skill.attrs[
-        'prediction_skill'
-    ] = 'calculated by climpred https://climpred.readthedocs.io/'
-    skill.attrs['skill_calculated_by_function'] = function_name
-    if 'init' in ds.coords:
-        skill.attrs['number_of_initializations'] = ds.init.size
-    if 'member' in ds.coords and function_name != 'compute_persistence':
-        skill.attrs['number_of_members'] = ds.member.size
+        "prediction_skill"
+    ] = "calculated by climpred https://climpred.readthedocs.io/"
+    skill.attrs["skill_calculated_by_function"] = function_name
+    if "init" in ds.coords:
+        skill.attrs["number_of_initializations"] = ds.init.size
+    if "member" in ds.coords and function_name != "compute_persistence":
+        skill.attrs["number_of_members"] = ds.member.size
 
     if alignment is not None:
-        skill.attrs['alignment'] = alignment
-    skill.attrs['metric'] = metric.name
+        skill.attrs["alignment"] = alignment
+    skill.attrs["metric"] = metric.name
     if comparison is not None:
-        skill.attrs['comparison'] = comparison.name
+        skill.attrs["comparison"] = comparison.name
     if dim is not None:
-        skill.attrs['dim'] = dim
+        skill.attrs["dim"] = dim
 
     # change unit power
     if metric.unit_power == 0:
-        skill.attrs['units'] = 'None'
-    if metric.unit_power >= 2 and 'units' in skill.attrs:
+        skill.attrs["units"] = "None"
+    if metric.unit_power >= 2 and "units" in skill.attrs:
         p = metric.unit_power
         p = int(p) if int(p) == p else p
-        skill.attrs['units'] = f"({skill.attrs['units']})^{p}"
+        skill.attrs["units"] = f"({skill.attrs['units']})^{p}"
 
     # check for none attrs and remove
     del_list = []
     for key, value in metadata_dict.items():
-        if value is None and key != 'units':
+        if value is None and key != "units":
             del_list.append(key)
     for entry in del_list:
         del metadata_dict[entry]
@@ -83,7 +83,7 @@ def assign_attrs(
     skill.attrs.update(metadata_dict)
 
     skill.attrs[
-        'created'
+        "created"
     ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
     return skill
 
@@ -98,8 +98,8 @@ def copy_coords_from_to(xro_from, xro_to):
         xro_to = xro_to.assign_coords(**xro_from.coords)
     else:
         raise ValueError(
-            'xro_from and xro_to must be both either xr.DataArray or',
-            f'xr.Dataset, found {type(xro_from)} {type(xro_to)}.',
+            "xro_from and xro_to must be both either xr.DataArray or",
+            f"xr.Dataset, found {type(xro_from)} {type(xro_to)}.",
         )
     return xro_to
 
@@ -131,29 +131,29 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
         if isinstance(time_index, pd.DatetimeIndex):
             # Extract year, month, day strings from datetime.
             time_strings = [str(t) for t in time_index]
-            split_dates = [d.split(' ')[0].split('-') for d in time_strings]
+            split_dates = [d.split(" ")[0].split("-") for d in time_strings]
 
         # If Float64Index or Int64Index, assume annual and convert accordingly.
         elif isinstance(time_index, pd.Float64Index) | isinstance(
             time_index, pd.Int64Index
         ):
             warnings.warn(
-                'Assuming annual resolution due to numeric inits. '
-                'Change init to a datetime if it is another resolution.'
+                "Assuming annual resolution due to numeric inits. "
+                "Change init to a datetime if it is another resolution."
             )
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
-            dates = [str(int(t)) + '-01-01' for t in time_index]
-            split_dates = [d.split('-') for d in dates]
-            if 'lead' in xobj.dims:
+            dates = [str(int(t)) + "-01-01" for t in time_index]
+            split_dates = [d.split("-") for d in dates]
+            if "lead" in xobj.dims:
                 # Probably the only case we can assume lead units, since `lead` does not
                 # give us any information on this.
-                xobj['lead'].attrs['units'] = 'years'
+                xobj["lead"].attrs["units"] = "years"
 
         else:
             raise ValueError(
-                f'Your {kind} object must be pd.Float64Index, '
-                'pd.Int64Index, xr.CFTimeIndex or '
-                'pd.DatetimeIndex.'
+                f"Your {kind} object must be pd.Float64Index, "
+                "pd.Int64Index, xr.CFTimeIndex or "
+                "pd.DatetimeIndex."
             )
         cftime_dates = [
             getattr(cftime, calendar)(int(y), int(m), int(d))
@@ -173,15 +173,15 @@ def find_start_dates_for_given_init(control, single_init):
     for dim in [single_init.init, control.time]:
         # dirty workaround .values requires a dimension but single_init is only a
         # single initialization and therefore without init dim
-        dim = dim.expand_dims('init') if 'time' not in dim.coords else dim
+        dim = dim.expand_dims("init") if "time" not in dim.coords else dim
         calendar = type(dim.values[0]).__name__
-        if 'Leap' not in calendar:
+        if "Leap" not in calendar:
             raise ValueError(
-                f'inputs to `find_start_dates_for_given_init` must be `Leap` '
-                f' or `NoLeap` calendar, found {calendar} in {dim}.'
+                f"inputs to `find_start_dates_for_given_init` must be `Leap` "
+                f" or `NoLeap` calendar, found {calendar} in {dim}."
             )
     # could also just take first of month or even a random number day in month
-    take_same_time = 'dayofyear'
+    take_same_time = "dayofyear"
     return control.sel(
         time=getattr(control.time.dt, take_same_time).values
         == getattr(single_init.init.dt, take_same_time).values
@@ -229,12 +229,12 @@ def get_metric_class(metric, list_):
         return metric
     elif isinstance(metric, str):
         # check if metric allowed
-        is_in_list(metric, list_, 'metric')
+        is_in_list(metric, list_, "metric")
         metric = METRIC_ALIASES.get(metric, metric)
-        return getattr(metrics, '__' + metric)
+        return getattr(metrics, "__" + metric)
     else:
         raise ValueError(
-            f'Please provide metric as str or Metric class, found {type(metric)}'
+            f"Please provide metric as str or Metric class, found {type(metric)}"
         )
 
 
@@ -266,12 +266,12 @@ def get_comparison_class(comparison, list_):
         return comparison
     elif isinstance(comparison, str):
         # check if comparison allowed
-        is_in_list(comparison, list_, 'comparison')
+        is_in_list(comparison, list_, "comparison")
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
-        return getattr(comparisons, '__' + comparison)
+        return getattr(comparisons, "__" + comparison)
     else:
-        is_in_list(comparison, list_, 'comparison')
-        return getattr(comparisons, '__' + comparison)
+        is_in_list(comparison, list_, "comparison")
+        return getattr(comparisons, "__" + comparison)
 
 
 def get_lead_cftime_shift_args(units, lead):
@@ -293,20 +293,20 @@ def get_lead_cftime_shift_args(units, lead):
 
     d = {
         # Currently assumes yearly aligns with year start.
-        'years': (lead, 'YS'),
-        'seasons': (lead * 3, 'MS'),
+        "years": (lead, "YS"),
+        "seasons": (lead * 3, "MS"),
         # Currently assumes monthly aligns with month start.
-        'months': (lead, 'MS'),
-        'weeks': (lead * 7, 'D'),
-        'pentads': (lead * 5, 'D'),
-        'days': (lead, 'D'),
+        "months": (lead, "MS"),
+        "weeks": (lead * 7, "D"),
+        "pentads": (lead * 5, "D"),
+        "days": (lead, "D"),
     }
 
     try:
         n, freq = d[units]
     except KeyError:
-        print(f'{units} is not a valid choice.')
-        print(f'Accepted `units` values include: {d.keys()}')
+        print(f"{units} is not a valid choice.")
+        print(f"Accepted `units` values include: {d.keys()}")
     return n, freq
 
 
@@ -350,13 +350,13 @@ def lead_units_equal_control_time_stride(init, verif):
         bool: Possible to continue or raise warning.
 
     """
-    verif_time_stride = return_time_series_freq(verif, 'time')
-    lead_units = init.lead.attrs['units'].strip('s')
+    verif_time_stride = return_time_series_freq(verif, "time")
+    lead_units = init.lead.attrs["units"].strip("s")
     if verif_time_stride != lead_units:
         raise ValueError(
-            'Please provide the same temporal resolution for verif.time',
-            f'(found {verif_time_stride}) and init.init (found',
-            f'{lead_units}).',
+            "Please provide the same temporal resolution for verif.time",
+            f"(found {verif_time_stride}) and init.init (found",
+            f"{lead_units}).",
         )
     else:
         return True
@@ -431,7 +431,7 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a."""
     transpose_kwargs = (
-        {'transpose_coords': False} if isinstance(new_chunk_ds, xr.DataArray) else {}
+        {"transpose_coords": False} if isinstance(new_chunk_ds, xr.DataArray) else {}
     )
     return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks

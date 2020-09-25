@@ -71,12 +71,12 @@ def _get_norm_factor(comparison):
           the Decadal Predictability of Land and Ocean Carbon Uptake.”
           Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
     """
-    if comparison.name in ['m2e', 'e2c', 'e2o']:
+    if comparison.name in ["m2e", "e2c", "e2o"]:
         fac = 1
-    elif comparison.name in ['m2c', 'm2m', 'm2o']:
+    elif comparison.name in ["m2c", "m2m", "m2o"]:
         fac = 2
     else:
-        raise KeyError('specify comparison to get normalization factor.')
+        raise KeyError("specify comparison to get normalization factor.")
     return fac
 
 
@@ -97,7 +97,7 @@ def _preprocess_dims(dim):
 def _sanitize_kwargs(kwargs, delete=None):
     """Delete some keywords from kwargs."""
     if delete is None:
-        delete = ['comparison', 'alignment']
+        delete = ["comparison", "alignment"]
     kwargs2 = kwargs.copy()
     if delete is not []:
         for k, v in kwargs.items():
@@ -108,87 +108,87 @@ def _sanitize_kwargs(kwargs, delete=None):
 
 def _rename_dim(dim, forecast, verif):
     """rename `dim` to `time` or `init` if forecast and verif dims require."""
-    if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
+    if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
-        dim.remove('init')
-        dim = dim + ['time']
-    elif 'time' in dim and 'init' in forecast.dims and 'init' in verif.dims:
+        dim.remove("init")
+        dim = dim + ["time"]
+    elif "time" in dim and "init" in forecast.dims and "init" in verif.dims:
         dim = dim.copy()
-        dim.remove('time')
-        dim = dim + ['init']
+        dim.remove("time")
+        dim = dim + ["init"]
     return dim
 
 
 def _remove_member_from_dim_or_raise(dim):
     """delete `member` from `dim` to not pass to `xskillscore` where expected as
     default `member_dim`."""
-    if 'member' in dim:
+    if "member" in dim:
         dim = dim.copy()
-        dim.remove('member')
+        dim.remove("member")
     else:
-        raise ValueError(f'Expected to find `member` in `dim`, found {dim}')
+        raise ValueError(f"Expected to find `member` in `dim`, found {dim}")
     return dim
 
 
 def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
     """Extract callable `logical` from `metric_kwargs` and apply to `forecast` and
     `verif`."""
-    if 'comparison' in metric_kwargs:
+    if "comparison" in metric_kwargs:
         metric_kwargs = metric_kwargs.copy()
-        comparison = metric_kwargs.pop('comparison')
-    if 'logical' in metric_kwargs:
-        logical = metric_kwargs.pop('logical')
+        comparison = metric_kwargs.pop("comparison")
+    if "logical" in metric_kwargs:
+        logical = metric_kwargs.pop("logical")
         if not callable(logical):
-            raise ValueError(f'`logical` must be `callable`, found {type(logical)}')
+            raise ValueError(f"`logical` must be `callable`, found {type(logical)}")
         dim = _remove_member_from_dim_or_raise(dim)
-        if 'member' in forecast.dims:  # apply logical function to get
-            forecast = logical(forecast).mean('member')  # forecast probability
+        if "member" in forecast.dims:  # apply logical function to get
+            forecast = logical(forecast).mean("member")  # forecast probability
             verif = logical(verif)  # binary outcome
         else:
             raise ValueError(
-                f'Expected dimension `member` in forecast, found {list(forecast.dims)}'
+                f"Expected dimension `member` in forecast, found {list(forecast.dims)}"
             )
         # rename dim to time if forecast and verif dims allow
         dim = _rename_dim(dim, forecast, verif)
         return forecast, verif, metric_kwargs, dim
     elif (
-        comparison.name == 'e2o'
-        and 'logical' not in metric_kwargs
-        and 'member' not in dim
+        comparison.name == "e2o"
+        and "logical" not in metric_kwargs
+        and "member" not in dim
     ):  # allow e2o comparison without logical
         return forecast, verif, metric_kwargs, dim
     elif (
-        comparison.name == 'm2o' and 'logical' not in metric_kwargs and 'member' in dim
+        comparison.name == "m2o" and "logical" not in metric_kwargs and "member" in dim
     ):  # allow m2o and member
         return forecast, verif, metric_kwargs, dim
     else:
         raise ValueError(
-            'Please provide a callable `logical` to be applied to comparison and \
-             verification data to get values in interval [0,1].'
+            "Please provide a callable `logical` to be applied to comparison and \
+             verification data to get values in interval [0,1]."
         )
 
 
 def _display_metric_metadata(self):
-    summary = '----- Metric metadata -----\n'
-    summary += f'Name: {self.name}\n'
-    summary += f'Alias: {self.aliases}\n'
+    summary = "----- Metric metadata -----\n"
+    summary += f"Name: {self.name}\n"
+    summary += f"Alias: {self.aliases}\n"
     # positively oriented
     if self.positive:
-        summary += 'Orientation: positive\n'
+        summary += "Orientation: positive\n"
     else:
-        summary += 'Orientation: negative\n'
+        summary += "Orientation: negative\n"
     # probabilistic or deterministic
     if self.probabilistic:
-        summary += 'Kind: probabilistic\n'
+        summary += "Kind: probabilistic\n"
     else:
-        summary += 'Kind: deterministic\n'
-    summary += f'Power to units: {self.unit_power}\n'
-    summary += f'long_name: {self.long_name}\n'
-    summary += f'Minimum skill: {self.minimum}\n'
-    summary += f'Maximum skill: {self.maximum}\n'
-    summary += f'Perfect skill: {self.perfect}\n'
+        summary += "Kind: deterministic\n"
+    summary += f"Power to units: {self.unit_power}\n"
+    summary += f"long_name: {self.long_name}\n"
+    summary += f"Minimum skill: {self.minimum}\n"
+    summary += f"Maximum skill: {self.maximum}\n"
+    summary += f"Perfect skill: {self.perfect}\n"
     # doc
-    summary += f'Function: {self.function.__doc__}\n'
+    summary += f"Function: {self.function.__doc__}\n"
     return summary
 
 
@@ -292,18 +292,18 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         return pearson_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r = Metric(
-    name='pearson_r',
+    name="pearson_r",
     function=_pearson_r,
     positive=True,
     probabilistic=False,
     unit_power=0.0,
-    long_name='Pearson product-moment correlation coefficient',
-    aliases=['pr', 'acc', 'pacc'],
+    long_name="Pearson product-moment correlation coefficient",
+    aliases=["pr", "acc", "pacc"],
     minimum=-1.0,
     maximum=1.0,
     perfect=1.0,
@@ -347,18 +347,18 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=(RuntimeWarning, DeprecationWarning))
+        warnings.simplefilter("ignore", category=(RuntimeWarning, DeprecationWarning))
         return pearson_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r_p_value = Metric(
-    name='pearson_r_p_value',
+    name="pearson_r_p_value",
     function=_pearson_r_p_value,
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name='Pearson product-moment correlation coefficient p value',
-    aliases=['p_pval', 'pvalue', 'pval'],
+    long_name="Pearson product-moment correlation coefficient p value",
+    aliases=["p_pval", "pvalue", "pval"],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -414,18 +414,18 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         return effective_sample_size(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __effective_sample_size = Metric(
-    name='effective_sample_size',
+    name="effective_sample_size",
     function=_effective_sample_size,
     positive=True,
     probabilistic=False,
     unit_power=0.0,
-    long_name='Effective sample size for temporally correlated data',
-    aliases=['n_eff', 'eff_n'],
+    long_name="Effective sample size for temporally correlated data",
+    aliases=["n_eff", "eff_n"],
     minimum=0.0,
     maximum=np.inf,
 )
@@ -492,21 +492,21 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=(RuntimeWarning, DeprecationWarning))
+        warnings.simplefilter("ignore", category=(RuntimeWarning, DeprecationWarning))
         return pearson_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __pearson_r_eff_p_value = Metric(
-    name='pearson_r_eff_p_value',
+    name="pearson_r_eff_p_value",
     function=_pearson_r_eff_p_value,
     positive=False,
     probabilistic=False,
     unit_power=0.0,
     long_name=(
         "Pearson's Anomaly correlation coefficient "
-        'p value using the effective sample size'
+        "p value using the effective sample size"
     ),
-    aliases=['p_pval_eff', 'pvalue_eff', 'pval_eff'],
+    aliases=["p_pval_eff", "pvalue_eff", "pval_eff"],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -558,18 +558,18 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         return spearman_r(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r = Metric(
-    name='spearman_r',
+    name="spearman_r",
     function=_spearman_r,
     positive=True,
     probabilistic=False,
     unit_power=0.0,
     long_name="Spearman's rank correlation coefficient",
-    aliases=['sacc', 'sr'],
+    aliases=["sacc", "sr"],
     minimum=-1.0,
     maximum=1.0,
     perfect=1.0,
@@ -613,18 +613,18 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=RuntimeWarning)
+        warnings.simplefilter("ignore", category=RuntimeWarning)
         return spearman_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r_p_value = Metric(
-    name='spearman_r_p_value',
+    name="spearman_r_p_value",
     function=_spearman_r_p_value,
     positive=False,
     probabilistic=False,
     unit_power=0.0,
     long_name="Spearman's rank correlation coefficient p value",
-    aliases=['s_pval', 'spvalue', 'spval'],
+    aliases=["s_pval", "spvalue", "spval"],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -692,21 +692,21 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter('ignore', category=(RuntimeWarning, DeprecationWarning))
+        warnings.simplefilter("ignore", category=(RuntimeWarning, DeprecationWarning))
         return spearman_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __spearman_r_eff_p_value = Metric(
-    name='spearman_r_eff_p_value',
+    name="spearman_r_eff_p_value",
     function=_spearman_r_eff_p_value,
     positive=False,
     probabilistic=False,
     unit_power=0.0,
     long_name=(
         "Spearman's Rank correlation coefficient "
-        'p value using the effective sample size'
+        "p value using the effective sample size"
     ),
-    aliases=['s_pval_eff', 'spvalue_eff', 'spval_eff'],
+    aliases=["s_pval_eff", "spvalue_eff", "spval_eff"],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -761,12 +761,12 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
 
 
 __mse = Metric(
-    name='mse',
+    name="mse",
     function=_mse,
     positive=False,
     probabilistic=False,
     unit_power=2,
-    long_name='Mean Squared Error',
+    long_name="Mean Squared Error",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -808,12 +808,12 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
 
 
 __rmse = Metric(
-    name='rmse',
+    name="rmse",
     function=_rmse,
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name='Root Mean Squared Error',
+    long_name="Root Mean Squared Error",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -862,12 +862,12 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
 
 
 __mae = Metric(
-    name='mae',
+    name="mae",
     function=_mae,
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name='Mean Absolute Error',
+    long_name="Mean Absolute Error",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -909,12 +909,12 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
 
 
 __median_absolute_error = Metric(
-    name='median_absolute_error',
+    name="median_absolute_error",
     function=_median_absolute_error,
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name='Median Absolute Error',
+    long_name="Median Absolute Error",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -977,11 +977,11 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+    if "comparison" in metric_kwargs:
+        comparison = metric_kwargs["comparison"]
     else:
         raise ValueError(
-            'Comparison needed to normalize NMSE. Not found in', metric_kwargs
+            "Comparison needed to normalize NMSE. Not found in", metric_kwargs
         )
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
@@ -993,13 +993,13 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
 
 
 __nmse = Metric(
-    name='nmse',
+    name="nmse",
     function=_nmse,
     positive=False,
     probabilistic=False,
     unit_power=0.0,
-    long_name='Normalized Mean Squared Error',
-    aliases=['nev'],
+    long_name="Normalized Mean Squared Error",
+    aliases=["nev"],
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -1060,11 +1060,11 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+    if "comparison" in metric_kwargs:
+        comparison = metric_kwargs["comparison"]
     else:
         raise ValueError(
-            'Comparison needed to normalize NMAE. Not found in', metric_kwargs
+            "Comparison needed to normalize NMAE. Not found in", metric_kwargs
         )
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
@@ -1076,12 +1076,12 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
 
 
 __nmae = Metric(
-    name='nmae',
+    name="nmae",
     function=_nmae,
     positive=False,
     probabilistic=False,
     unit_power=0,
-    long_name='Normalized Mean Absolute Error',
+    long_name="Normalized Mean Absolute Error",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -1150,11 +1150,11 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         Review 116, no. 12 (December 1, 1988): 2417–24.
         https://doi.org/10/fc7mxd.
     """
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+    if "comparison" in metric_kwargs:
+        comparison = metric_kwargs["comparison"]
     else:
         raise ValueError(
-            'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
+            "Comparison needed to normalize NRMSE. Not found in", metric_kwargs
         )
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
@@ -1166,12 +1166,12 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
 
 
 __nrmse = Metric(
-    name='nrmse',
+    name="nrmse",
     function=_nrmse,
     positive=False,
     probabilistic=False,
     unit_power=0,
-    long_name='Normalized Root Mean Squared Error',
+    long_name="Normalized Root Mean Squared Error",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -1242,11 +1242,11 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
-    if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+    if "comparison" in metric_kwargs:
+        comparison = metric_kwargs["comparison"]
     else:
         raise ValueError(
-            'Comparison needed to normalize MSSS. Not found in', metric_kwargs
+            "Comparison needed to normalize MSSS. Not found in", metric_kwargs
         )
     dim = _rename_dim(dim, forecast, verif)
     mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
@@ -1257,13 +1257,13 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
 
 
 __msess = Metric(
-    name='msess',
+    name="msess",
     function=_msess,
     positive=True,
     probabilistic=False,
     unit_power=0,
-    long_name='Mean Squared Error Skill Score',
-    aliases=['ppp', 'msss'],
+    long_name="Mean Squared Error Skill Score",
+    aliases=["ppp", "msss"],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -1305,12 +1305,12 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
 
 
 __mape = Metric(
-    name='mape',
+    name="mape",
     function=_mape,
     positive=False,
     probabilistic=False,
     unit_power=0,
-    long_name='Mean Absolute Percentage Error',
+    long_name="Mean Absolute Percentage Error",
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -1352,12 +1352,12 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
 
 
 __smape = Metric(
-    name='smape',
+    name="smape",
     function=_smape,
     positive=False,
     probabilistic=False,
     unit_power=0,
-    long_name='symmetric Mean Absolute Percentage Error',
+    long_name="symmetric Mean Absolute Percentage Error",
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -1429,7 +1429,7 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
 
 
 __uacc = Metric(
-    name='uacc',
+    name="uacc",
     function=_uacc,
     positive=True,
     probabilistic=False,
@@ -1478,12 +1478,12 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
 
 
 __std_ratio = Metric(
-    name='std_ratio',
+    name="std_ratio",
     function=_std_ratio,
     positive=None,
     probabilistic=False,
     unit_power=0,
-    long_name='Ratio of standard deviations of the forecast and verification data',
+    long_name="Ratio of standard deviations of the forecast and verification data",
     minimum=0.0,
     maximum=np.inf,
     perfect=1.0,
@@ -1523,13 +1523,13 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
 
 
 __unconditional_bias = Metric(
-    name='unconditional_bias',
+    name="unconditional_bias",
     function=_unconditional_bias,
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name='Unconditional bias',
-    aliases=['u_b', 'bias'],
+    long_name="Unconditional bias",
+    aliases=["u_b", "bias"],
     minimum=-np.inf,
     maximum=np.inf,
     perfect=0.0,
@@ -1572,13 +1572,13 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
 
 
 __conditional_bias = Metric(
-    name='conditional_bias',
+    name="conditional_bias",
     function=_conditional_bias,
     positive=False,
     probabilistic=False,
     unit_power=0,
-    long_name='Conditional bias',
-    aliases=['c_b', 'cond_bias'],
+    long_name="Conditional bias",
+    aliases=["c_b", "cond_bias"],
     minimum=-np.inf,
     maximum=1.0,
     perfect=0.0,
@@ -1624,12 +1624,12 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
 
 
 __bias_slope = Metric(
-    name='bias_slope',
+    name="bias_slope",
     function=_bias_slope,
     positive=False,
     probabilistic=False,
     unit_power=0,
-    long_name='Bias slope',
+    long_name="Bias slope",
     minimum=0.0,
     maximum=np.inf,
     perfect=1.0,
@@ -1691,13 +1691,13 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
 
 
 __msess_murphy = Metric(
-    name='msess_murphy',
+    name="msess_murphy",
     function=_msess_murphy,
     positive=True,
     probabilistic=False,
     unit_power=0,
     long_name="Murphy's Mean Square Error Skill Score",
-    aliases=['msss_murphy'],
+    aliases=["msss_murphy"],
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -1796,13 +1796,13 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
 
 __brier_score = Metric(
-    name='brier_score',
+    name="brier_score",
     function=_brier_score,
     positive=False,
     probabilistic=True,
     unit_power=0,
-    long_name='Brier Score',
-    aliases=['brier', 'bs'],
+    long_name="Brier Score",
+    aliases=["brier", "bs"],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -1856,10 +1856,10 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
                 dim='member', threshold=[.3, .7])
     """
-    if 'threshold' not in metric_kwargs:
-        raise ValueError('Please provide threshold.')
+    if "threshold" not in metric_kwargs:
+        raise ValueError("Please provide threshold.")
     else:
-        threshold = metric_kwargs.pop('threshold')
+        threshold = metric_kwargs.pop("threshold")
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _remove_member_from_dim_or_raise(dim)
     # switch args b/c xskillscore.threshold_brier_score(verif, forecasts)
@@ -1867,13 +1867,13 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
 
 
 __threshold_brier_score = Metric(
-    name='threshold_brier_score',
+    name="threshold_brier_score",
     function=_threshold_brier_score,
     positive=False,
     probabilistic=True,
     unit_power=0,
-    long_name='Threshold Brier Score',
-    aliases=['tbs'],
+    long_name="Threshold Brier Score",
+    aliases=["tbs"],
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -1941,12 +1941,12 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
 
 
 __crps = Metric(
-    name='crps',
+    name="crps",
     function=_crps,
     positive=False,
     probabilistic=True,
     unit_power=1.0,
-    long_name='Continuous Ranked Probability Score',
+    long_name="Continuous Ranked Probability Score",
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
@@ -1971,7 +1971,7 @@ def _crps_gaussian(verification, mu, sig, **metric_kwargs):
         * xskillscore.crps_gaussian
     """
     metric_kwargs = _sanitize_kwargs(
-        metric_kwargs, delete=['dim', 'alignment', 'comparison']
+        metric_kwargs, delete=["dim", "alignment", "comparison"]
     )
     return crps_gaussian(verification, mu, sig, **metric_kwargs)
 
@@ -1997,7 +1997,7 @@ def _crps_quadrature(verification, cdf_or_dist, **metric_kwargs):
         * xskillscore.crps_quadrature
     """
     metric_kwargs = _sanitize_kwargs(
-        metric_kwargs, delete=['dim', 'alignment', 'comparison']
+        metric_kwargs, delete=["dim", "alignment", "comparison"]
     )
     return crps_quadrature(verification, cdf_or_dist, **metric_kwargs)
 
@@ -2070,14 +2070,14 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     mu = verif.mean(rdim)
     sig = verif.std(rdim)
     # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
-    gaussian = metric_kwargs.pop('gaussian', True)
+    gaussian = metric_kwargs.pop("gaussian", True)
     if gaussian:
         ref_skill = _crps_gaussian(verif, mu, sig, dim=dim, **metric_kwargs)
     else:
-        cdf_or_dist = metric_kwargs.pop('cdf_or_dist', norm)
-        xmin = metric_kwargs.pop('xmin', None)
-        xmax = metric_kwargs.pop('xmax', None)
-        tol = metric_kwargs.pop('tol', 1e-6)
+        cdf_or_dist = metric_kwargs.pop("cdf_or_dist", norm)
+        xmin = metric_kwargs.pop("xmin", None)
+        xmax = metric_kwargs.pop("xmax", None)
+        tol = metric_kwargs.pop("tol", 1e-6)
         ref_skill = _crps_quadrature(
             forecast,
             cdf_or_dist,
@@ -2093,12 +2093,12 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
 
 
 __crpss = Metric(
-    name='crpss',
+    name="crpss",
     function=_crpss,
     positive=True,
     probabilistic=True,
     unit_power=0,
-    long_name='Continuous Ranked Probability Skill Score',
+    long_name="Continuous Ranked Probability Skill Score",
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
@@ -2154,28 +2154,28 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
     rdim = [d for d in verif.dims if d in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
     # forecast, verif_member = xr.broadcast(forecast, verif)
-    dim_no_member = [d for d in dim if d != 'member']
-    ensemble_spread = forecast.std('member').mean(dim=dim_no_member, **metric_kwargs)
+    dim_no_member = [d for d in dim if d != "member"]
+    ensemble_spread = forecast.std("member").mean(dim=dim_no_member, **metric_kwargs)
     mse_h = __mse.function(
-        forecast.mean('member'), verif, dim=dim_no_member, **metric_kwargs
+        forecast.mean("member"), verif, dim=dim_no_member, **metric_kwargs
     )
     crps_h = crps_gaussian(verif, mu, mse_h, dim=dim_no_member, **metric_kwargs)
     crps_r = crps_gaussian(
         verif, mu, ensemble_spread, dim=dim_no_member, **metric_kwargs
     )
     res = 1 - crps_h / crps_r
-    if 'time' in res.dims:
-        res = res.rename({'time': 'init'})
+    if "time" in res.dims:
+        res = res.rename({"time": "init"})
     return res
 
 
 __crpss_es = Metric(
-    name='crpss_es',
+    name="crpss_es",
     function=_crpss_es,
     positive=True,
     probabilistic=True,
     unit_power=0,
-    long_name='CRPSS Ensemble Spread',
+    long_name="CRPSS Ensemble Spread",
     minimum=-np.inf,
     maximum=0.0,
     perfect=0.0,
@@ -2250,12 +2250,12 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
 
 
 __discrimination = Metric(
-    name='discrimination',
+    name="discrimination",
     function=_discrimination,
     positive=None,
     probabilistic=True,
     unit_power=0,
-    long_name='Discrimination',
+    long_name="Discrimination",
 )
 
 
@@ -2326,12 +2326,12 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
 
 
 __reliability = Metric(
-    name='reliability',
+    name="reliability",
     function=_reliability,
     positive=None,
     probabilistic=True,
     unit_power=0,
-    long_name='Reliability',
+    long_name="Reliability",
 )
 
 
@@ -2367,12 +2367,12 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
 
 
 __rank_histogram = Metric(
-    name='rank_histogram',
+    name="rank_histogram",
     function=_rank_histogram,
     positive=None,
     probabilistic=True,
     unit_power=0,
-    long_name='rank_histogram',
+    long_name="rank_histogram",
 )
 
 
@@ -2416,29 +2416,29 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     dim = _remove_member_from_dim_or_raise(dim)
     dim = _rename_dim(dim, forecast, verif)
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
-    if 'category_edges' in metric_kwargs:
-        category_edges = metric_kwargs.pop('category_edges')
+    if "category_edges" in metric_kwargs:
+        category_edges = metric_kwargs.pop("category_edges")
     else:
-        raise ValueError('require category_edges')
-    if 'member' in verif.coords and 'member' not in verif.dims:
-        del verif.coords['member']  # TODO: cleanup in comparison
+        raise ValueError("require category_edges")
+    if "member" in verif.coords and "member" not in verif.dims:
+        del verif.coords["member"]  # TODO: cleanup in comparison
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 
 __rps = Metric(
-    name='rps',
+    name="rps",
     function=_rps,
     positive=False,
     probabilistic=True,
     unit_power=0,
-    long_name='rps',
+    long_name="rps",
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
 )
 
 
-def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
+def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
     """Contingency table.
 
     Args:
@@ -2477,14 +2477,14 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
     """
     metric_kwargs = _sanitize_kwargs(metric_kwargs)
     dim = _rename_dim(dim, forecast, verif)
-    if score == 'table':
+    if score == "table":
         return Contingency(verif, forecast, dim=dim, **metric_kwargs).table
     else:
         return getattr(Contingency(verif, forecast, dim=dim, **metric_kwargs), score)()
 
 
 __contingency = Metric(
-    name='contingency',
+    name="contingency",
     function=_contingency,
     positive=None,
     probabilistic=False,
@@ -2546,7 +2546,7 @@ DETERMINISTIC_PM_METRICS = [
     e
     for e in DETERMINISTIC_PM_METRICS
     if e
-    not in ('effective_sample_size', 'pearson_r_eff_p_value', 'spearman_r_eff_p_value',)
+    not in ("effective_sample_size", "pearson_r_eff_p_value", "spearman_r_eff_p_value",)
 ]
 # Used to set attrs['units'] to None.
 DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]

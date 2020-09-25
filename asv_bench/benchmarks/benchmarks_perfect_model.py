@@ -9,9 +9,9 @@ from climpred.prediction import compute_perfect_model
 from . import ensure_loaded, parameterized, randn, requires_dask
 
 # only take subselection of all possible metrics
-METRICS = ['rmse', 'pearson_r', 'crpss']
+METRICS = ["rmse", "pearson_r", "crpss"]
 # only take comparisons compatible with probabilistic metrics
-PM_COMPARISONS = ['m2m', 'm2c']
+PM_COMPARISONS = ["m2m", "m2c"]
 
 ITERATIONS = 16
 
@@ -44,55 +44,55 @@ class Generate:
         times = xr.cftime_range(
             start=str(self.control_start),
             periods=self.ntime,
-            freq='YS',
-            calendar='noleap',
+            freq="YS",
+            calendar="noleap",
         )
         leads = np.arange(1, 1 + self.nlead)
         members = np.arange(1, 1 + self.nmember)
         inits = xr.cftime_range(
             start=str(self.control_start),
             periods=self.ninit,
-            freq='10YS',
-            calendar='noleap',
+            freq="10YS",
+            calendar="noleap",
         )
 
         lons = xr.DataArray(
             np.linspace(0.5, 359.5, self.nx),
-            dims=('lon',),
-            attrs={'units': 'degrees east', 'long_name': 'longitude'},
+            dims=("lon",),
+            attrs={"units": "degrees east", "long_name": "longitude"},
         )
         lats = xr.DataArray(
             np.linspace(-89.5, 89.5, self.ny),
-            dims=('lat',),
-            attrs={'units': 'degrees north', 'long_name': 'latitude'},
+            dims=("lat",),
+            attrs={"units": "degrees north", "long_name": "latitude"},
         )
-        self.ds['var'] = xr.DataArray(
+        self.ds["var"] = xr.DataArray(
             randn(
                 (self.nmember, self.ninit, self.nlead, self.nx, self.ny),
                 frac_nan=FRAC_NAN,
             ),
             coords={
-                'member': members,
-                'init': inits,
-                'lon': lons,
-                'lat': lats,
-                'lead': leads,
+                "member": members,
+                "init": inits,
+                "lon": lons,
+                "lat": lats,
+                "lead": leads,
             },
-            dims=('member', 'init', 'lead', 'lon', 'lat'),
-            name='var',
-            attrs={'units': 'var units', 'description': 'a description'},
+            dims=("member", "init", "lead", "lon", "lat"),
+            name="var",
+            attrs={"units": "var units", "description": "a description"},
         )
-        self.control['var'] = xr.DataArray(
+        self.control["var"] = xr.DataArray(
             randn((self.ntime, self.nx, self.ny), frac_nan=FRAC_NAN),
-            coords={'lon': lons, 'lat': lats, 'time': times},
-            dims=('time', 'lon', 'lat'),
-            name='var',
-            attrs={'units': 'var units', 'description': 'a description'},
+            coords={"lon": lons, "lat": lats, "time": times},
+            dims=("time", "lon", "lat"),
+            name="var",
+            attrs={"units": "var units", "description": "a description"},
         )
 
-        self.ds.attrs = {'history': 'created for xarray benchmarking'}
-        self.ds.lead.attrs['units'] = 'years'
-        self.control.time.attrs['units'] = 'years'
+        self.ds.attrs = {"history": "created for xarray benchmarking"}
+        self.ds.lead.attrs["units"] = "years"
+        self.control.time.attrs["units"] = "years"
 
 
 class Compute(Generate):
@@ -104,30 +104,30 @@ class Compute(Generate):
     def setup(self, *args, **kwargs):
         self.make_initialized_control()
 
-    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, PM_COMPARISONS))
     def time_compute_perfect_model(self, metric, comparison):
         """Take time for `compute_perfect_model`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else None
+        dim = "member" if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             compute_perfect_model(
                 self.ds, self.control, metric=metric, comparison=comparison, dim=dim
             )
         )
 
-    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, PM_COMPARISONS))
     def peakmem_compute_perfect_model(self, metric, comparison):
         """Take memory peak for `compute_perfect_model`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else None
+        dim = "member" if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             compute_perfect_model(
                 self.ds, self.control, metric=metric, comparison=comparison, dim=dim
             )
         )
 
-    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, PM_COMPARISONS))
     def time_bootstrap_perfect_model(self, metric, comparison):
         """Take time for `bootstrap_perfect_model`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else None
+        dim = "member" if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
@@ -139,10 +139,10 @@ class Compute(Generate):
             )
         )
 
-    @parameterized(['metric', 'comparison'], (METRICS, PM_COMPARISONS))
+    @parameterized(["metric", "comparison"], (METRICS, PM_COMPARISONS))
     def peakmem_bootstrap_perfect_model(self, metric, comparison):
         """Take memory peak for `bootstrap_perfect_model`."""
-        dim = 'member' if metric in PROBABILISTIC_METRICS else None
+        dim = "member" if metric in PROBABILISTIC_METRICS else None
         ensure_loaded(
             bootstrap_perfect_model(
                 self.ds,
@@ -165,8 +165,8 @@ class ComputeDask(Compute):
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
         # chunk along a spatial dimension to enable embarrasingly parallel computation
-        self.ds = self.ds['var'].chunk()
-        self.control = self.control['var'].chunk()
+        self.ds = self.ds["var"].chunk()
+        self.control = self.control["var"].chunk()
 
 
 class ComputeDaskDistributed(ComputeDask):
@@ -192,7 +192,7 @@ class ComputeSmall(Compute):
         # magic taken from
         # https://github.com/pydata/xarray/blob/stable/asv_bench/benchmarks/rolling.py
         super().setup(**kwargs)
-        spatial_dims = ['lon', 'lat']
+        spatial_dims = ["lon", "lat"]
         self.ds = self.ds.mean(spatial_dims)
         self.control = self.control.mean(spatial_dims)
         self.iterations = 500

@@ -18,7 +18,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_da(
     res = bootstrap_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
-        metric='pearson_r',
+        metric="pearson_r",
         iterations=ITERATIONS,
     )
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
@@ -34,7 +34,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_single_uninit_lead(
     res = bootstrap_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
-        metric='pearson_r',
+        metric="pearson_r",
         iterations=ITERATIONS,
     )
     # set all but first uninit lead to nan
@@ -52,22 +52,22 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
     res = bootstrap_perfect_model(
         PM_ds_initialized_1d,
         PM_ds_control_1d,
-        metric='pearson_r',
+        metric="pearson_r",
         iterations=ITERATIONS,
     )
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
     assert res_ax is not None
 
 
-@pytest.mark.parametrize('cmap', ['tab10', 'jet'])
-@pytest.mark.parametrize('show_members', [True, False])
-@pytest.mark.parametrize('variable', ['tos', None])
+@pytest.mark.parametrize("cmap", ["tab10", "jet"])
+@pytest.mark.parametrize("show_members", [True, False])
+@pytest.mark.parametrize("variable", ["tos", None])
 def test_PerfectModelEnsemble_plot(
     PM_ds_initialized_1d, PM_ds_control_1d, variable, show_members, cmap
 ):
     """Test PredictionEnsemble.plot()."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
-    kws = {'cmap': cmap, 'show_members': show_members, 'variable': variable}
+    kws = {"cmap": cmap, "show_members": show_members, "variable": variable}
     pm.plot(**kws)
     pm = pm.add_control(PM_ds_control_1d)
     pm.plot(**kws)
@@ -80,12 +80,12 @@ def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     pm = PerfectModelEnsemble(PM_ds_initialized_3d)
     with pytest.raises(DimensionError) as excinfo:
         pm.plot()
-    assert 'does not allow dimensions other' in str(excinfo.value)
+    assert "does not allow dimensions other" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('cmap', ['tab10', 'jet'])
-@pytest.mark.parametrize('show_members', [True, False])
-@pytest.mark.parametrize('variable', ['SST', None])
+@pytest.mark.parametrize("cmap", ["tab10", "jet"])
+@pytest.mark.parametrize("show_members", [True, False])
+@pytest.mark.parametrize("variable", ["SST", None])
 def test_HindcastEnsemble_plot(
     hind_ds_initialized_1d,
     hist_ds_uninitialized_1d,
@@ -97,7 +97,7 @@ def test_HindcastEnsemble_plot(
 ):
     """Test PredictionEnsemble.plot()."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
-    kws = {'cmap': cmap, 'show_members': show_members, 'variable': variable}
+    kws = {"cmap": cmap, "show_members": show_members, "variable": variable}
     he.plot(**kws)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
     he.plot(**kws)

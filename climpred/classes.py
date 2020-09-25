@@ -1048,13 +1048,15 @@ class HindcastEnsemble(PredictionEnsemble):
             alignment (str): which inits or verification times should be aligned?
 
                 - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
+                  ``verif`` to a common time frame at each lead.
+
                 - 'same_inits': slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
+                  metric. This philosophy follows the thought that each lead should be
+                  based on the same set of initializations.
+
                 - 'same_verif': slice to a common/consistent verification time frame
-                prior to computing metric. This philosophy follows the thought that
-                each lead should be based on the same set of verification dates.
+                  prior to computing metric. This philosophy follows the thought that
+                  each lead should be based on the same set of verification dates.
 
             **metric_kwargs (optional): arguments passed to ``metric``.
 

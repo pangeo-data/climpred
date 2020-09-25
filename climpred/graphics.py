@@ -315,21 +315,17 @@ def plot_lead_timeseries_hindcast(
             zorder=hind.lead.size - i,
         )
 
-    linestyles = ['-', ':', '-.', '--']
-    if len(obs) > len(linestyles):
-        raise ValueError(f'Please provide fewer than {len(linestyles)+1} observations.')
     if len(obs) > 0:
-        for i, (obs_name, obs_item) in enumerate(obs.items()):
-            if isinstance(obs_item, xr.Dataset):
-                obs_item = obs_item[variable]
-            obs_item.plot(
-                ax=ax,
-                color='k',
-                lw=3,
-                ls=linestyles[i],
-                label=f'reference: {obs_name}',
-                zorder=hind.lead.size + 2,
-            )
+        if isinstance(obs, xr.Dataset):
+            obs = obs[variable]
+        obs.plot(
+            ax=ax,
+            color='k',
+            lw=3,
+            ls='-',
+            label='observations',
+            zorder=hind.lead.size + 2,
+        )
 
     # show only one item per label in legend
     handles, labels = ax.get_legend_handles_labels()

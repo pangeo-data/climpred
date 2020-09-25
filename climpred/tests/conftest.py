@@ -309,10 +309,8 @@ def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
     time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice('1964', '1970'))
     hindcast._datasets['initialized'].lead.attrs['units'] = 'months'
-    hindcast._datasets['observations']['recon'] = (
-        hindcast._datasets['observations']['recon']
-        .resample(time='1MS')
-        .interpolate('linear')
+    hindcast._datasets['observations'] = (
+        hindcast._datasets['observations'].resample(time='1MS').interpolate('linear')
     )
     return hindcast
 
@@ -323,10 +321,8 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice('1964', '1970'))
     hindcast._datasets['initialized'].lead.attrs['units'] = 'days'
-    hindcast._datasets['observations']['recon'] = (
-        hindcast._datasets['observations']['recon']
-        .resample(time='1D')
-        .interpolate('linear')
+    hindcast._datasets['observations'] = (
+        hindcast._datasets['observations'].resample(time='1D').interpolate('linear')
     )
     return hindcast
 

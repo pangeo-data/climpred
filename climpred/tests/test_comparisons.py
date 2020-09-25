@@ -28,9 +28,7 @@ def test_e2c(PM_da_initialized_1d):
     aforecast, areference = __e2c.function(ds, metric=metric)
 
     control_member = ds.member.values[0]
-    reference = ds.sel(member=control_member).squeeze()
-    if 'member' in reference.coords:
-        del reference['member']
+    reference = ds.sel(member=control_member, drop=True)
     # drop the member being reference
     ds = ds.drop_sel(member=control_member)
     forecast = ds.mean('member')

@@ -44,11 +44,10 @@ def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitiali
     assert hindcast.get_uninitialized()
 
 
-def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Test to see if verify automatically works with a single observational
-    product."""
+def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d):
+    """Test to see if verify automatically works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
+    hindcast = hindcast.add_observations(reconstruction_ds_1d)
     hindcast.verify(metric='acc', comparison='e2o', dim='init', alignment='same_verif')
 
 
@@ -198,7 +197,7 @@ def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_d
         calendar='all_leap',
     )
     with pytest.raises(ValueError) as excinfo:
-        hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
+        hindcast = hindcast.add_observations(reconstruction_ds_1d)
     assert 'does not match' in str(excinfo.value)
 
 

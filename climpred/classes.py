@@ -1221,7 +1221,6 @@ class HindcastEnsemble(PredictionEnsemble):
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
-
         """
         if iterations is None:
             raise ValueError('Designate number of bootstrapping `iterations`.')

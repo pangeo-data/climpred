@@ -861,9 +861,9 @@ class HindcastEnsemble(PredictionEnsemble):
     """An object for climate prediction ensembles initialized by a data-like
     product.
 
-    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
-    verification data associated with the prediction ensemble for easy
-    computation across multiple variables and products.
+    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks a single
+    verification dataset associated with the hindcast ensemble for easy computation
+    across multiple variables.
 
     This object is built on `xarray` and thus requires the input object to
     be an `xarray` Dataset or DataArray.
@@ -887,46 +887,20 @@ class HindcastEnsemble(PredictionEnsemble):
         self._datasets.update({'observations': {}})
         self.kind = 'hindcast'
 
-    def _apply_climpred_function(self, func, input_dict=None, **kwargs):
+    def _apply_climpred_function(self, func, init, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
 
         Args:
             func (function): climpred function to apply to object.
-            input_dict (dict): dictionary with the following things:
-                * ensemble: initialized or uninitialized ensemble.
-                * observations: Dictionary of verification data from
-                    ``HindcastEnsemble``.
-                * name: name of verification data to target.
-                * init: bool of whether or not it's the initialized ensemble.
+            init (bool): Whether or not it's the initialized ensemble.
         """
         hind = self._datasets['initialized']
         verif = self._datasets['observations']
-        name = input_dict['name']
-        init = input_dict['init']
+        drop_init, drop_obs = self._vars_to_drop(init=init)
+        return func(hind.drop_vars(drop_init), verif.drop_vars(drop_obs), **kwargs)
 
-        # Apply only to specific observations.
-        if name is not None:
-            drop_init, drop_obs = self._vars_to_drop(name, init=init)
-            hind = hind.drop_vars(drop_init)
-            verif = verif[name].drop_vars(drop_obs)
-            return func(hind, verif, **kwargs)
-        else:
-            # If only one observational product, just apply to that one.
-            if len(verif) == 1:
-                name = list(verif.keys())[0]
-                drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                return func(hind, verif[name], **kwargs)
-            # Loop through verif, apply function, and store in dictionary.
-            # TODO: Parallelize this process.
-            else:
-                result = {}
-                for name in verif.keys():
-                    drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                    result[name] = func(hind, verif[name], **kwargs)
-                return result
-
-    def _vars_to_drop(self, name, init=True):
+    def _vars_to_drop(self, init=True):
         """Returns list of variables to drop when comparing
         initialized/uninitialized to observations.
 
@@ -936,7 +910,6 @@ class HindcastEnsemble(PredictionEnsemble):
         from the initialized.
 
         Args:
-          name (str): Short name of observations being compared to.
           init (bool, default True):
             If ``True``, check variables on the initialized.
             If ``False``, check variables on the uninitialized.
@@ -949,7 +922,7 @@ class HindcastEnsemble(PredictionEnsemble):
             init_vars = [var for var in self._datasets['initialized'].data_vars]
         else:
             init_vars = [var for var in self._datasets['uninitialized'].data_vars]
-        obs_vars = [var for var in self._datasets['observations'][name].data_vars]
+        obs_vars = [var for var in self._datasets['observations'].data_vars]
         # Make lists of variables to drop that aren't in common
         # with one another.
         init_vars_to_drop = list(set(init_vars) - set(obs_vars))
@@ -957,13 +930,12 @@ class HindcastEnsemble(PredictionEnsemble):
         return init_vars_to_drop, obs_vars_to_drop
 
     @is_xarray(1)
-    def add_observations(self, xobj, name):
-        """Add a verification data with which to verify the initialized ensemble.
+    def add_observations(self, xobj):
+        """Add verification data against which to verify the initialized ensemble.
 
         Args:
             xobj (xarray object): Dataset/DataArray to append to the
                 ``HindcastEnsemble`` object.
-            name (str): Short name for referencing the verification data.
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
@@ -975,12 +947,8 @@ class HindcastEnsemble(PredictionEnsemble):
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
         match_calendars(self._datasets['initialized'], xobj)
-        # For some reason, I could only get the non-inplace method to work
-        # by updating the nested dictionaries separately.
-        datasets_obs = self._datasets['observations'].copy()
         datasets = self._datasets.copy()
-        datasets_obs.update({name: xobj})
-        datasets.update({'observations': datasets_obs})
+        datasets.update({'observations': xobj})
         return self._construct_direct(datasets, kind='hindcast')
 
     @is_xarray(1)
@@ -1005,29 +973,16 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets, kind='hindcast')
 
-    def get_observations(self, name=None):
+    def get_observations(self):
         """Returns xarray Datasets of the observations/verification data.
 
-        Args:
-            name (str, optional): Name of the observations/verification data to return.
-                If ``None``, return dictionary of all observations/verification data.
-
         Returns:
-            Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
-            ``xarray`` Dataset.
+            ``xarray`` Dataset of observations.
         """
-        if name is None:
-            if len(self._datasets['observations']) == 1:
-                key = list(self._datasets['observations'].keys())[0]
-                return self._datasets['observations'][key]
-            else:
-                return self._datasets['observations']
-        else:
-            return self._datasets['observations'][name]
+        return self._datasets['observations']
 
     def verify(
         self,
-        name=None,
         reference=None,
         metric=None,
         comparison=None,
@@ -1042,8 +997,6 @@ class HindcastEnsemble(PredictionEnsemble):
             between the initialized ensemble and observations/verification data.
 
         Args:
-            name (str): Short name of observations/verification data to compare to.
-                If ``None``, compare to all observations/verification data.
             reference (str): Type of reference forecasts to also verify against the
                 observations. Choose one or more of ['historical', 'persistence'].
                 Defaults to None.
@@ -1073,10 +1026,7 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
-            Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to
-            observations/verification data short name.
-
+            Dataset of comparison results.
         """
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
@@ -1183,14 +1133,9 @@ class HindcastEnsemble(PredictionEnsemble):
         else:
             hist = None
 
-        # TODO: Get rid of this somehow. Might use attributes.
-        input_dict = {
-            'name': name,
-            'init': True,
-        }
         res = self._apply_climpred_function(
             _verify,
-            input_dict=input_dict,
+            init=True,
             metric=metric,
             comparison=comparison,
             alignment=alignment,

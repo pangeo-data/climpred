@@ -63,17 +63,11 @@ def test_intersect():
 
 def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     """Test assigning attrs for compute_perfect_model and dataarrays."""
-    alignment = 'same_inits'
     metric = 'pearson_r'
     comparison = 'm2e'
     actual = compute_perfect_model(
-        PM_ds_initialized_1d,
-        PM_ds_control_1d,
-        metric=metric,
-        comparison=comparison,
-        alignment=alignment,
+        PM_ds_initialized_1d, PM_ds_control_1d, metric=metric, comparison=comparison,
     ).attrs
-    assert actual['alignment'] == alignment
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':
@@ -89,7 +83,6 @@ def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     """Test assigning attrs for datasets."""
     metric = 'mse'
     comparison = 'm2e'
-    alignment = 'same_inits'
     dim = ['init', 'member']
     PM_ds_initialized_1d.attrs['units'] = 'C'
     actual = compute_perfect_model(
@@ -98,9 +91,7 @@ def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
         metric=metric,
         comparison=comparison,
         dim=dim,
-        alignment=alignment,
     ).attrs
-    assert actual['alignment'] == alignment
     assert actual['metric'] == metric
     assert actual['comparison'] == comparison
     if metric == 'pearson_r':

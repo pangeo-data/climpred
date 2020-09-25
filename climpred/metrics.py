@@ -94,18 +94,6 @@ def _preprocess_dims(dim):
     return dim
 
 
-def _sanitize_kwargs(kwargs, delete=None):
-    """Delete some keywords from kwargs."""
-    if delete is None:
-        delete = ['comparison', 'alignment']
-    kwargs2 = kwargs.copy()
-    if delete is not []:
-        for k, v in kwargs.items():
-            if k in delete:
-                kwargs2.pop(k)
-    return kwargs2
-
-
 def _rename_dim(dim, forecast, verif):
     """rename `dim` to `time` or `init` if forecast and verif dims require."""
     if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
@@ -209,6 +197,7 @@ class Metric:
         maximum=None,
         perfect=None,
         normalize=False,
+        allows_logical=False,
     ):
         """Metric initialization.
 
@@ -229,6 +218,9 @@ class Metric:
             perfect (float, optional): Perfect skill for metric. Defaults to None.
             normalize (bool, optional): Will the metric be normalized? Then metric
              function will require to get Comparison passed. Defaults to False.
+            allows_logical (bool, optional): Does the metric allow a logical to be
+              passed in metric_kwargs? Some probabilistic metrics allow this. Defaults
+              to False.
 
         Returns:
             Metric: metric class Metric.
@@ -245,6 +237,7 @@ class Metric:
         self.maximum = maximum
         self.perfect = perfect
         self.normalize = normalize
+        self.allows_logical = allows_logical
 
     def __repr__(self):
         """Show metadata of metric class."""
@@ -1795,6 +1788,7 @@ __brier_score = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
+    allows_logical=True,
 )
 
 
@@ -1942,7 +1936,7 @@ __crps = Metric(
 )
 
 
-def _crps_gaussian(verification, mu, sig, **metric_kwargs):
+def _crps_gaussian(verification, mu, sig, dim=None, **metric_kwargs):
     """Computes the CRPS of verification data ``o`` relative to normally distributed
     forecasts with mean ``mu`` and standard deviation ``sig``.
 
@@ -1959,13 +1953,10 @@ def _crps_gaussian(verification, mu, sig, **metric_kwargs):
         * properscoring.crps_gaussian
         * xskillscore.crps_gaussian
     """
-    metric_kwargs = _sanitize_kwargs(
-        metric_kwargs, delete=['dim', 'alignment', 'comparison']
-    )
-    return crps_gaussian(verification, mu, sig, **metric_kwargs)
+    return crps_gaussian(verification, mu, sig, dim=dim, **metric_kwargs)
 
 
-def _crps_quadrature(verification, cdf_or_dist, **metric_kwargs):
+def _crps_quadrature(verification, cdf_or_dist, dim=None, **metric_kwargs):
     """Compute the continuously ranked probability score (CPRS) for a given
     forecast distribution (``cdf``) and observation (``o``) using numerical quadrature.
 
@@ -1985,10 +1976,7 @@ def _crps_quadrature(verification, cdf_or_dist, **metric_kwargs):
         * properscoring.crps_quadrature
         * xskillscore.crps_quadrature
     """
-    metric_kwargs = _sanitize_kwargs(
-        metric_kwargs, delete=['dim', 'alignment', 'comparison']
-    )
-    return crps_quadrature(verification, cdf_or_dist, **metric_kwargs)
+    return crps_quadrature(verification, cdf_or_dist, dim=dim, **metric_kwargs)
 
 
 def _crpss(forecast, verif, dim=None, **metric_kwargs):
@@ -2059,8 +2047,13 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     sig = verif.std(rdim)
     # checking metric_kwargs, if not found use defaults: gaussian, else crps_quadrature
     gaussian = metric_kwargs.pop('gaussian', True)
+    # dim='member' only for crps_gaussian, remove member for crps_gaussian/quadrature
+    dim_for_gaussian = dim.copy()
+    dim_for_gaussian.remove('member')
     if gaussian:
-        ref_skill = _crps_gaussian(verif, mu, sig, dim=dim, **metric_kwargs)
+        ref_skill = _crps_gaussian(
+            verif, mu, sig, dim=dim_for_gaussian, **metric_kwargs
+        )
     else:
         cdf_or_dist = metric_kwargs.pop('cdf_or_dist', norm)
         xmin = metric_kwargs.pop('xmin', None)
@@ -2072,7 +2065,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
             xmin=xmin,
             xmax=xmax,
             tol=tol,
-            dim=dim,
+            dim=dim_for_gaussian,
             **metric_kwargs,
         )
     forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
@@ -2243,6 +2236,7 @@ __discrimination = Metric(
     probabilistic=True,
     unit_power=0,
     long_name='Discrimination',
+    allows_logical=True,
 )
 
 
@@ -2319,6 +2313,7 @@ __reliability = Metric(
     probabilistic=True,
     unit_power=0,
     long_name='Reliability',
+    allows_logical=True,
 )
 
 

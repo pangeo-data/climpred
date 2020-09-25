@@ -83,7 +83,7 @@ def _apply_metric_at_given_lead(
     if (a.dims != b.dims) and (dim == 'member') and not metric.probabilistic:
         a, b = xr.broadcast(a, b)
     dim = _rename_dim(dim, hind, verif)
-    if metric.normalize:
+    if metric.normalize or metric.allows_logical:
         metric_kwargs['comparison'] = comparison
     result = metric.function(a, b, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
@@ -227,11 +227,7 @@ def compute_perfect_model(
 
     forecast, verif = comparison.function(init_pm, metric=metric)
 
-    # in case you want to compute deterministic skill over member dim
-    # TODO: is this needed? xs does that now
-    if (forecast.dims != verif.dims) and not metric.probabilistic:
-        forecast, verif = xr.broadcast(forecast, verif)
-    if metric.normalize:
+    if metric.normalize or metric.allows_logical:
         metric_kwargs['comparison'] = comparison
     skill = metric.function(forecast, verif, dim=dim, **metric_kwargs)
     if comparison.name == 'm2m' and M2M_MEMBER_DIM in skill.dims:

@@ -68,12 +68,16 @@ def test_PerfectModelEnsemble_constant_forecasts(
             if metric in probabilistic_metrics_requiring_more_than_member_dim
             else 'member'
         )
-        skill = pe.verify(metric=metric, comparison='m2c', dim=dim, **metric_kwargs)
+        comparison = 'm2c'
+        skill = pe.verify(
+            metric=metric, comparison=comparison, dim=dim, **metric_kwargs
+        )
     else:
         dim = 'init' if comparison == 'e2c' else ['init', 'member']
         skill = pe.verify(
             metric=metric, comparison=comparison, dim=dim, **metric_kwargs
         )
+    # # TODO: test assert skill.variable == perfect).all()
     if metric == 'contingency':
         assert (skill == 1).all()  # checks Contingency.accuracy
     else:

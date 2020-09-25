@@ -155,7 +155,6 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
                 'pd.Int64Index, xr.CFTimeIndex or '
                 'pd.DatetimeIndex.'
             )
-        # TODO: Account for differing calendars. Currently assuming `Gregorian`.
         cftime_dates = [
             getattr(cftime, calendar)(int(y), int(m), int(d))
             for (y, m, d) in split_dates

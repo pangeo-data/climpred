@@ -23,18 +23,16 @@ perform better than individual ensemble members (``comparison='m2o'``) as the ch
 component of forecasts is expected to be suppressed by this averaging, while the memory
 of the system sustains. [Boer2016]_
 
-``keyword: 'e2o', 'e2r'``
-
-**This is the default option.**
-
 .. currentmodule:: climpred.comparisons
 
-.. autosummary:: _e2o
+``keyword: 'e2o', 'e2r'``
 
+.. autosummary:: _e2o
 
 ``keyword: 'm2o', 'm2r'``
 
 .. autosummary:: _m2o
+
 
 Perfect Model Ensembles
 #######################
@@ -47,8 +45,6 @@ against one control member (``comparison='e2c'``) or all members (``comparison='
 as done in [Griffies1997]_.
 
 ``keyword: 'm2e'``
-
-**This is the default option.**
 
 .. autosummary:: _m2e
 

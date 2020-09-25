@@ -718,6 +718,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
+        has_dataset(
+            self._datasets['uninitialized'],
+            'uninitialized',
+            'compute an uninitialized metric',
+        )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
             'control': self._datasets['control'],

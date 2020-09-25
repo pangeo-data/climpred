@@ -1,4 +1,5 @@
 import pytest
+import xarray as xr
 
 from climpred import PerfectModelEnsemble
 
@@ -163,3 +164,14 @@ def test_bootstrap_metric_kwargs(perfectModelEnsemble_initialized_control):
         iterations=3,
         dim=['init', 'member'],
     )
+
+
+def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
+    """Tests that error is thrown if calendars mismatch when adding observations."""
+    pm = PerfectModelEnsemble(PM_da_initialized_1d)
+    PM_ds_control_1d['time'] = xr.cftime_range(
+        start='1950', periods=PM_ds_control_1d.time.size, freq='MS', calendar='all_leap'
+    )
+    with pytest.raises(ValueError) as excinfo:
+        pm = pm.add_control(PM_ds_control_1d)
+    assert 'does not match' in str(excinfo.value)

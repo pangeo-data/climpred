@@ -48,7 +48,7 @@ def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test to see if verify automatically works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    hindcast.verify(metric="acc", comparison="e2o", dim="init", alignment="same_verif")
+    hindcast.verify(metric='acc', comparison='e2o', dim='init', alignment='same_verif')
 
 
 def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
@@ -65,7 +65,7 @@ def test_get_initialized(hind_ds_initialized_1d):
     """Test whether get_initialized method works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     init = hindcast.get_initialized()
-    assert init == hindcast._datasets["initialized"]
+    assert init == hindcast._datasets['initialized']
 
 
 def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
@@ -73,7 +73,7 @@ def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     uninit = hindcast.get_uninitialized()
-    assert uninit == hindcast._datasets["uninitialized"]
+    assert uninit == hindcast._datasets['uninitialized']
 
 
 def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
@@ -81,7 +81,7 @@ def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d)
     obs = hindcast.get_observations()
-    assert obs == hindcast._datasets["observations"]
+    assert obs == hindcast._datasets['observations']
 
 
 def test_inplace(
@@ -98,17 +98,17 @@ def test_inplace(
     with_uninit = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     assert hindcast != with_uninit
     # Applying arbitrary func.
-    hindcast.sum("init")
-    summed = hindcast.sum("init")
+    hindcast.sum('init')
+    summed = hindcast.sum('init')
     assert hindcast != summed
 
 
-@pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
+@pytest.mark.parametrize('alignment', ['same_inits', 'same_verifs', 'maximize'])
 def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
-    how = "mean"
-    metric = "rmse"
-    dim = "init"
-    comparison = "e2o"
+    how = 'mean'
+    metric = 'rmse'
+    dim = 'init'
+    comparison = 'e2o'
     hindcast = hindcast_hist_obs_1d
     biased_skill = hindcast.verify(
         metric=metric, alignment=alignment, dim=dim, comparison=comparison
@@ -127,12 +127,12 @@ def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
 def test_verify_metric_kwargs(hindcast_hist_obs_1d):
     """Test that HindcastEnsemble works with metrics using metric_kwargs."""
     assert hindcast_hist_obs_1d.verify(
-        metric="threshold_brier_score",
-        comparison="m2o",
-        dim="member",
+        metric='threshold_brier_score',
+        comparison='m2o',
+        dim='member',
         threshold=0.5,
-        reference="historical",
-        alignment="same_verifs",
+        reference='historical',
+        alignment='same_verifs',
     )
 
 
@@ -141,12 +141,12 @@ def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
     hindcast = hindcast_hist_obs_1d
     with pytest.raises(ValueError) as excinfo:
         hindcast.verify(
-            metric="threshold_brier_score",
-            comparison="m2o",
-            dim="member",
-            alignment="same_verifs",
+            metric='threshold_brier_score',
+            comparison='m2o',
+            dim='member',
+            alignment='same_verifs',
         )
-    assert "Please provide threshold." == str(excinfo.value)
+    assert 'Please provide threshold.' == str(excinfo.value)
 
 
 def test_verify_m2o_reference(hindcast_hist_obs_1d):
@@ -154,35 +154,35 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
     hindcast = hindcast_hist_obs_1d
     # determinstic
     hindcast.verify(
-        metric="mse",
-        comparison="m2o",
-        dim="init",
-        alignment="same_verif",
-        reference="historical",
+        metric='mse',
+        comparison='m2o',
+        dim='init',
+        alignment='same_verif',
+        reference='historical',
     )
     hindcast.verify(
-        metric="mse",
-        comparison="m2o",
-        dim="init",
-        alignment="same_verif",
-        reference="persistence",
+        metric='mse',
+        comparison='m2o',
+        dim='init',
+        alignment='same_verif',
+        reference='persistence',
     )
     # probabilistic
     hindcast.verify(
-        metric="crps",
-        comparison="m2o",
-        reference="historical",
-        dim="member",
-        alignment="same_verif",
+        metric='crps',
+        comparison='m2o',
+        reference='historical',
+        dim='member',
+        alignment='same_verif',
     )
 
 
 def test_bootstrap(hindcast_hist_obs_1d):
     hindcast_hist_obs_1d.bootstrap(
-        metric="acc",
-        comparison="e2o",
-        alignment="same_verifs",
-        dim="init",
+        metric='acc',
+        comparison='e2o',
+        alignment='same_verifs',
+        dim='init',
         iterations=3,
     )
 
@@ -190,15 +190,15 @@ def test_bootstrap(hindcast_hist_obs_1d):
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    reconstruction_ds_1d["time"] = xr.cftime_range(
-        start="1950",
+    reconstruction_ds_1d['time'] = xr.cftime_range(
+        start='1950',
         periods=reconstruction_ds_1d.time.size,
-        freq="MS",
-        calendar="all_leap",
+        freq='MS',
+        calendar='all_leap',
     )
     with pytest.raises(ValueError) as excinfo:
         hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    assert "does not match" in str(excinfo.value)
+    assert 'does not match' in str(excinfo.value)
 
 
 def test_calendar_matching_uninitialized(
@@ -206,12 +206,12 @@ def test_calendar_matching_uninitialized(
 ):
     """Tests that error is thrown if calendars mismatch when adding uninitialized."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hist_ds_uninitialized_1d["time"] = xr.cftime_range(
-        start="1950",
+    hist_ds_uninitialized_1d['time'] = xr.cftime_range(
+        start='1950',
         periods=hist_ds_uninitialized_1d.time.size,
-        freq="MS",
-        calendar="all_leap",
+        freq='MS',
+        calendar='all_leap',
     )
     with pytest.raises(ValueError) as excinfo:
         hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
-    assert "does not match" in str(excinfo.value)
+    assert 'does not match' in str(excinfo.value)

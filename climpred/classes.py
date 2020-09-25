@@ -646,7 +646,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             results for the initialized ensemble (``init``) and any reference forecasts
             verified.
         """
-        has_dataset(self._datasets['control'], 'control', 'compute a metric')
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],
@@ -719,11 +718,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Returns:
             Result of the comparison as a Dataset.
         """
-        has_dataset(
-            self._datasets['uninitialized'],
-            'uninitialized',
-            'compute an uninitialized metric',
-        )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
             'control': self._datasets['control'],
@@ -756,9 +750,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        has_dataset(
-            self._datasets['control'], 'control', 'compute a persistence forecast'
-        )
         input_dict = {
             'ensemble': self._datasets['initialized'],
             'control': self._datasets['control'],

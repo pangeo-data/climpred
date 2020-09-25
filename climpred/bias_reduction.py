@@ -18,7 +18,7 @@ def _mean_bias_reduction_quick(hind, bias, dim):
 
     """
     bias_reduced_hind = (
-        hind.groupby(f'{dim}.dayofyear') - bias.groupby(f'{dim}.dayofyear').mean()
+        hind.groupby(f"{dim}.dayofyear") - bias.groupby(f"{dim}.dayofyear").mean()
     )
     return bias_reduced_hind
 
@@ -45,22 +45,22 @@ def _mean_bias_reduction_cross_validate(hind, bias, dim):
           Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
-    bias = bias.rename({dim: 'init'})
+    bias = bias.rename({dim: "init"})
     bias_reduced_hind = []
-    logging.info('mean bias reduction:')
+    logging.info("mean bias reduction:")
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init
         hind_drop_init_where_bias = hind_drop_init.where(bias.init)
         logging.info(
-            f'initialization {init}: remove bias from'
-            f'{hind_drop_init_where_bias.min().values}-'
-            f'{hind_drop_init_where_bias.max().values}'
+            f"initialization {init}: remove bias from"
+            f"{hind_drop_init_where_bias.min().values}-"
+            f"{hind_drop_init_where_bias.max().values}"
         )
         bias_reduced_hind.append(
             hind.sel(init=init)
-            - bias.sel(init=hind_drop_init_where_bias).groupby('init.dayofyear').mean()
+            - bias.sel(init=hind_drop_init_where_bias).groupby("init.dayofyear").mean()
         )
-    bias_reduced_hind = xr.concat(bias_reduced_hind, 'init')
+    bias_reduced_hind = xr.concat(bias_reduced_hind, "init")
     return bias_reduced_hind
 
 
@@ -92,12 +92,12 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
     def bias_func(a, b, **kwargs):
         return a - b
 
-    bias_metric = Metric('bias', bias_func, True, False, 1)
+    bias_metric = Metric("bias", bias_func, True, False, 1)
 
     bias = hindcast.verify(
         metric=bias_metric,
-        comparison='e2o',
-        dim='init',
+        comparison="e2o",
+        dim="init",
         alignment=alignment,
         **metric_kwargs,
     ).squeeze()
@@ -107,7 +107,7 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
     else:
         mean_bias_func = _mean_bias_reduction_cross_validate
 
-    bias_reduced_hind = mean_bias_func(hindcast._datasets['initialized'], bias, 'init')
+    bias_reduced_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
     hindcast_bias_reduced = hindcast.copy()
-    hindcast_bias_reduced._datasets['initialized'] = bias_reduced_hind
+    hindcast_bias_reduced._datasets["initialized"] = bias_reduced_hind
     return hindcast_bias_reduced

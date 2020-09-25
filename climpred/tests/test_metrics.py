@@ -16,19 +16,19 @@ def my_mse_function(forecast, verif, dim=None, **metric_kwargs):
 
 
 my_mse = Metric(
-    name='mse',
+    name="mse",
     function=my_mse_function,
     positive=True,
     probabilistic=False,
     unit_power=2,
-    long_name='MSE',
-    aliases=['mSe', '<<<SE'],
+    long_name="MSE",
+    aliases=["mSe", "<<<SE"],
 )
 
 ITERATIONS = 2
 
 
-@pytest.mark.parametrize('comparison', PM_COMPARISONS)
+@pytest.mark.parametrize("comparison", PM_COMPARISONS)
 def test_custom_metric_passed_to_compute(
     PM_da_initialized_1d, PM_da_control_1d, comparison
 ):
@@ -38,15 +38,15 @@ def test_custom_metric_passed_to_compute(
         PM_da_control_1d,
         comparison=comparison,
         metric=my_mse,
-        dim='init',
+        dim="init",
     )
 
     expected = compute_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison=comparison,
-        metric='mse',
-        dim='init',
+        metric="mse",
+        dim="init",
     )
 
     assert_allclose(actual, expected)
@@ -57,8 +57,8 @@ def test_custom_metric_passed_to_bootstrap_compute(
     PM_da_initialized_1d, PM_da_control_1d
 ):
     """Test custom metric in bootstrap_perfect_model."""
-    comparison = 'e2c'
-    dim = 'init'
+    comparison = "e2c"
+    dim = "init"
     np.random.seed(42)
     actual = bootstrap_perfect_model(
         PM_da_initialized_1d,
@@ -73,7 +73,7 @@ def test_custom_metric_passed_to_bootstrap_compute(
         PM_da_initialized_1d,
         PM_da_control_1d,
         comparison=comparison,
-        metric='mse',
+        metric="mse",
         iterations=ITERATIONS,
         dim=dim,
     )
@@ -81,7 +81,7 @@ def test_custom_metric_passed_to_bootstrap_compute(
     assert_allclose(actual, expected, rtol=0.1, atol=1)
 
 
-@pytest.mark.parametrize('metric', ('rmse', 'mse'))
+@pytest.mark.parametrize("metric", ("rmse", "mse"))
 def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
     """Test skipna in compute_perfect_model."""
     PM_da_initialized_3d = PM_da_initialized_3d.copy()
@@ -93,31 +93,31 @@ def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
         PM_da_control_3d,
         metric=metric,
         skipna=False,
-        dim='init',
-        comparison='m2e',
-    ).mean('member')
+        dim="init",
+        comparison="m2e",
+    ).mean("member")
     skipping = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
         metric=metric,
         skipna=True,
-        dim='init',
-        comparison='m2e',
-    ).mean('member')
+        dim="init",
+        comparison="m2e",
+    ).mean("member")
     assert ((base - skipping) != 0.0).any()
     assert base.isel(lead=2, x=5, y=5).isnull()
     assert not skipping.isel(lead=2, x=5, y=5).isnull()
 
 
-@pytest.mark.skip(reason='comparisons dont work here')
-@pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ['m2e', 'm2m'])
+@pytest.mark.skip(reason="comparisons dont work here")
+@pytest.mark.parametrize("metric", ("rmse", "mse"))
+@pytest.mark.parametrize("comparison", ["m2e", "m2m"])
 def test_pm_metric_weights_m2x(
     PM_da_initialized_3d, PM_da_control_3d, comparison, metric
 ):
     """Test init weights in compute_perfect_model."""
     # distribute weights on initializations
-    dim = 'init'
+    dim = "init"
     base = compute_perfect_model(
         PM_da_initialized_3d,
         PM_da_control_3d,
@@ -128,9 +128,9 @@ def test_pm_metric_weights_m2x(
     weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
     weights = xr.DataArray(
         np.arange(
-            1, 1 + PM_da_initialized_3d[dim].size * PM_da_initialized_3d['member'].size,
+            1, 1 + PM_da_initialized_3d[dim].size * PM_da_initialized_3d["member"].size,
         ),
-        dims='init',
+        dims="init",
     )
 
     weighted = compute_perfect_model(
@@ -141,12 +141,12 @@ def test_pm_metric_weights_m2x(
         metric=metric,
         weights=weights,
     )
-    print((base / weighted).mean(['x', 'y']))
+    print((base / weighted).mean(["x", "y"]))
     # test for difference
-    assert (xs.smape(base, weighted, ['x', 'y']) > 0.01).any()
+    assert (xs.smape(base, weighted, ["x", "y"]) > 0.01).any()
 
 
-@pytest.mark.parametrize('metric', ('rmse', 'mse'))
+@pytest.mark.parametrize("metric", ("rmse", "mse"))
 def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, metric):
     """Test skipna argument in hindcast_metric."""
     # manipulating data with nans
@@ -156,29 +156,29 @@ def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, me
         reconstruction_da_3d,
         metric=metric,
         skipna=False,
-        dim='init',
-        alignment='same_inits',
+        dim="init",
+        alignment="same_inits",
     )
     skipping = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
         metric=metric,
         skipna=True,
-        dim='init',
-        alignment='same_inits',
+        dim="init",
+        alignment="same_inits",
     )
     div = base / skipping
     assert (div != 1).any()
 
 
-@pytest.mark.skip(reason='comparisons dont work here')
-@pytest.mark.parametrize('metric', ('rmse', 'mse'))
-@pytest.mark.parametrize('comparison', ['e2o', 'm2o'])
+@pytest.mark.skip(reason="comparisons dont work here")
+@pytest.mark.parametrize("metric", ("rmse", "mse"))
+@pytest.mark.parametrize("comparison", ["e2o", "m2o"])
 def test_hindcast_metric_weights_x2r(
     hind_da_initialized_3d, reconstruction_da_3d, comparison, metric
 ):
     """Test init weights in compute_hindcast."""
-    dim = 'init'
+    dim = "init"
     base = compute_hindcast(
         hind_da_initialized_3d,
         reconstruction_da_3d,
@@ -191,9 +191,9 @@ def test_hindcast_metric_weights_x2r(
         np.arange(
             1,
             1
-            + hind_da_initialized_3d[dim].size * hind_da_initialized_3d['member'].size,
+            + hind_da_initialized_3d[dim].size * hind_da_initialized_3d["member"].size,
         ),
-        dims='init',
+        dims="init",
     )
 
     weighted = compute_hindcast(
@@ -204,14 +204,14 @@ def test_hindcast_metric_weights_x2r(
         metric=metric,
         weights=weights,
     )
-    print((base / weighted).mean(['nlon', 'nlat']))
+    print((base / weighted).mean(["nlon", "nlat"]))
     # test for difference
-    assert (xs.smape(base, weighted, ['nlat', 'nlon']) > 0.01).any()
+    assert (xs.smape(base, weighted, ["nlat", "nlon"]) > 0.01).any()
 
 
 def test_Metric_display():
     summary = __pearson_r.__repr__()
-    assert 'Kind: deterministic' in summary.split('\n')[4]
+    assert "Kind: deterministic" in summary.split("\n")[4]
 
 
 def test_no_repeating_metric_aliases():
@@ -223,5 +223,5 @@ def test_no_repeating_metric_aliases():
             for a in m.aliases:
                 METRICS.append(a)
     duplicates = set([x for x in METRICS if METRICS.count(x) > 1])
-    print(f'Duplicate metrics: {duplicates}')
+    print(f"Duplicate metrics: {duplicates}")
     assert len(duplicates) == 0

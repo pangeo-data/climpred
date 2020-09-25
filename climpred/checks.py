@@ -25,8 +25,8 @@ def has_dataset(obj, kind, what):
     """Checks that the PredictionEnsemble has a specific dataset in it."""
     if len(obj) == 0:
         raise DatasetError(
-            f'You need to add at least one {kind} dataset before '
-            f'attempting to {what}.'
+            f"You need to add at least one {kind} dataset before "
+            f"attempting to {what}."
         )
     return True
 
@@ -40,8 +40,8 @@ def has_dims(xobj, dims, kind):
 
     if not all(dim in xobj.dims for dim in dims):
         raise DimensionError(
-            f'Your {kind} object must contain the '
-            f'following dimensions at the minimum: {dims}'
+            f"Your {kind} object must contain the "
+            f"following dimensions at the minimum: {dims}"
         )
     return True
 
@@ -53,8 +53,8 @@ def has_min_len(arr, len_, kind):
     arr_len = len(arr)
     if arr_len < len_:
         raise DimensionError(
-            f'Your {kind} array must be at least {len_}, '
-            f'but has only length {arr_len}!'
+            f"Your {kind} array must be at least {len_}, "
+            f"but has only length {arr_len}!"
         )
     return True
 
@@ -64,25 +64,25 @@ def has_valid_lead_units(xobj):
     Checks that the object has valid units for the lead dimension.
     """
     LEAD_UNIT_ERROR = (
-        'The lead dimension must must have a valid '
-        f'units attribute. Valid options are: {VALID_LEAD_UNITS}'
+        "The lead dimension must must have a valid "
+        f"units attribute. Valid options are: {VALID_LEAD_UNITS}"
     )
     # Use `hasattr` here, as it doesn't throw an error if `xobj` doesn't have a
     # coordinate for lead.
-    if hasattr(xobj['lead'], 'units'):
+    if hasattr(xobj["lead"], "units"):
 
-        units = xobj['lead'].attrs['units']
+        units = xobj["lead"].attrs["units"]
 
         # Check if letter s is appended to lead units string and add it if needed
-        if not units.endswith('s'):
-            units += 's'
-            xobj['lead'].attrs['units'] = units
+        if not units.endswith("s"):
+            units += "s"
+            xobj["lead"].attrs["units"] = units
             warnings.warn(
                 f'The letter "s" was appended to the lead units; now {units}.'
             )
 
         # Raise Error if lead units is not valid
-        if not xobj['lead'].attrs['units'] in VALID_LEAD_UNITS:
+        if not xobj["lead"].attrs["units"] in VALID_LEAD_UNITS:
             raise AttributeError(LEAD_UNIT_ERROR)
     else:
         raise AttributeError(LEAD_UNIT_ERROR)
@@ -92,7 +92,7 @@ def has_valid_lead_units(xobj):
 def is_in_list(item, list_, kind):
     """Check whether an item is in a list; kind is just a string."""
     if item not in list_:
-        raise KeyError(f'Specify {kind} from {list_}: got {item}')
+        raise KeyError(f"Specify {kind} from {list_}: got {item}")
     return True
 
 
@@ -138,7 +138,7 @@ def is_xarray(func, *dec_args):
 
 
 def match_calendars(
-    ds1, ds2, ds1_time='init', ds2_time='time', kind1='initialized', kind2='observation'
+    ds1, ds2, ds1_time="init", ds2_time="time", kind1="initialized", kind2="observation"
 ):
     """Checks that calendars match between two xarray Datasets.
 
@@ -162,7 +162,8 @@ def match_calendars(
         raise ValueError(
             f"{kind2} calendar of type '{ds2_calendar}' does not match "
             f"{kind1} calendar of type '{ds1_calendar}'. Please modify {kind2} calendar"
-            f' using, e.g. `xr.cftime_range(..., calendar="{ds1_calendar}")` and then try again.'
+            f' using, e.g. `xr.cftime_range(..., calendar="{ds1_calendar}")` and then '
+            "try again."
         )
 
 
@@ -174,17 +175,17 @@ def match_initialized_dims(init, verif, uninitialized=False):
     """
     # Since verification data won't have the ``init``` dimension, temporarily rename to
     # time.
-    init = init.rename({'init': 'time'})
+    init = init.rename({"init": "time"})
     init_dims = list(init.dims)
-    if 'lead' in init_dims:
-        init_dims.remove('lead')
-    if ('member' in init_dims) and not uninitialized:
-        init_dims.remove('member')
+    if "lead" in init_dims:
+        init_dims.remove("lead")
+    if ("member" in init_dims) and not uninitialized:
+        init_dims.remove("member")
     if not (set(verif.dims) == set(init_dims)):
         unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
-            'Dimensions must match initialized prediction ensemble '
-            f'dimensions; these dimensions do not match: {unmatch_dims}.'
+            "Dimensions must match initialized prediction ensemble "
+            f"dimensions; these dimensions do not match: {unmatch_dims}."
         )
     return True
 
@@ -205,9 +206,9 @@ def match_initialized_vars(init, verif):
     # one-liner-to-check-if-at-least-one-item-in-list-exists-in-another-list
     if set(init_vars).isdisjoint(verif_vars):
         raise VariableError(
-            'Please provide a Dataset/DataArray with at least '
-            'one matching variable to the initialized prediction ensemble; '
-            f'got {init_vars} for init and {verif_vars} for verif.'
+            "Please provide a Dataset/DataArray with at least "
+            "one matching variable to the initialized prediction ensemble; "
+            f"got {init_vars} for init and {verif_vars} for verif."
         )
     return True
 
@@ -226,21 +227,21 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
     if not dask.is_dask_collection(ds):
         if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
             warnings.warn(
-                'Consider chunking input `ds` along other dimensions than '
-                'needed by algorithm, e.g. spatial dimensions, for parallelized '
-                'performance increase.'
+                "Consider chunking input `ds` along other dimensions than "
+                "needed by algorithm, e.g. spatial dimensions, for parallelized "
+                "performance increase."
             )
     else:
         if nbytes_in_MB < crit_size_in_MB:
             warnings.warn(
-                'Chunking might not bring parallelized performance increase, '
-                f'because input size quite small, found {nbytes_in_MB} MB <'
-                f' {crit_size_in_MB} MB.'
+                "Chunking might not bring parallelized performance increase, "
+                f"because input size quite small, found {nbytes_in_MB} MB <"
+                f" {crit_size_in_MB} MB."
             )
         if NCPU < 4:
             warnings.warn(
-                f'Chunking might not bring parallelized performance increase, '
-                f'because only few CPUs available, found {NCPU} CPUs.'
+                f"Chunking might not bring parallelized performance increase, "
+                f"because only few CPUs available, found {NCPU} CPUs."
             )
         number_of_chunks = (
             ds.data.npartitions
@@ -250,7 +251,7 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
         if number_of_chunks > 16 * NCPU:
             # much larger than nworkers, warn smaller chunks
             warnings.warn(
-                f'Chunking might not bring parallelized performance increase, '
-                f'because of much more chunks than CPUs, found {number_of_chunks} '
-                f'chunks and {NCPU} CPUs.'
+                f"Chunking might not bring parallelized performance increase, "
+                f"because of much more chunks than CPUs, found {number_of_chunks} "
+                f"chunks and {NCPU} CPUs."
             )

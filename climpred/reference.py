@@ -35,10 +35,10 @@ def historical(hist, verif, verif_dates, lead):
 def compute_persistence(
     hind,
     verif,
-    metric='pearson_r',
-    alignment='same_verifs',
+    metric="pearson_r",
+    alignment="same_verifs",
     add_attrs=True,
-    dim='init',
+    dim="init",
     **metric_kwargs,
 ):
     """Computes the skill of a persistence forecast from a simulation.
@@ -76,8 +76,8 @@ def compute_persistence(
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, 'init', 'hind[init]')
-    verif = convert_time_index(verif, 'time', 'verif[time]')
+    hind = convert_time_index(hind, "init", "hind[init]")
+    verif = convert_time_index(verif, "time", "verif[time]")
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
@@ -89,9 +89,9 @@ def compute_persistence(
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     if metric.probabilistic:
         raise ValueError(
-            'probabilistic metric ',
+            "probabilistic metric ",
             metric.name,
-            'cannot compute persistence forecast.',
+            "cannot compute persistence forecast.",
         )
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
@@ -99,12 +99,12 @@ def compute_persistence(
         hind = hind.copy()
         with xr.set_options(keep_attrs=True):  # keeps lead.attrs['units']
 
-            hind['lead'] = hind['lead'] + 1
-        n, freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)
+            hind["lead"] = hind["lead"] + 1
+        n, freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
         # Shift backwards shift for lead zero.
-        hind['init'] = shift_cftime_index(hind, 'init', -1 * n, freq)
+        hind["init"] = shift_cftime_index(hind, "init", -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
-    hind = hind.rename({'init': 'time'})
+    hind = hind.rename({"init": "time"})
 
     inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
@@ -115,15 +115,15 @@ def compute_persistence(
     for i in hind.lead.values:
         a = verif.sel(time=inits[i])
         b = verif.sel(time=verif_dates[i])
-        a['time'] = b['time']
+        a["time"] = b["time"]
         # comparison expected for normalized metrics
         plag.append(metric.function(a, b, dim=dim, **metric_kwargs))
-    pers = xr.concat(plag, 'lead')
-    pers['lead'] = hind.lead.values
+    pers = xr.concat(plag, "lead")
+    pers["lead"] = hind.lead.values
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
-    if 'iteration' in hind.dims:
-        drop_dims += ['iteration']
+    if "iteration" in hind.dims:
+        drop_dims += ["iteration"]
     pers = copy_coords_from_to(hind.drop_vars(drop_dims), pers)
     if add_attrs:
         pers = assign_attrs(
@@ -142,10 +142,10 @@ def compute_uninitialized(
     hind,
     uninit,
     verif,
-    metric='pearson_r',
-    comparison='e2o',
-    dim='time',
-    alignment='same_verifs',
+    metric="pearson_r",
+    comparison="e2o",
+    dim="time",
+    alignment="same_verifs",
     add_attrs=True,
     **metric_kwargs,
 ):
@@ -187,9 +187,9 @@ def compute_uninitialized(
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, 'init', 'hind[init]')
-    uninit = convert_time_index(uninit, 'time', 'uninit[time]')
-    verif = convert_time_index(verif, 'time', 'verif[time]')
+    hind = convert_time_index(hind, "init", "hind[init]")
+    uninit = convert_time_index(uninit, "time", "uninit[time]")
+    verif = convert_time_index(verif, "time", "verif[time]")
     has_valid_lead_units(hind)
 
     # get metric/comparison function name, not the alias
@@ -200,7 +200,7 @@ def compute_uninitialized(
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
 
-    hind = hind.rename({'init': 'time'})
+    hind = hind.rename({"init": "time"})
 
     _, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
@@ -211,17 +211,17 @@ def compute_uninitialized(
     # TODO: Refactor this, getting rid of `compute_uninitialized` completely.
     # `same_verifs` does not need to go through the loop, since it's a fixed
     # skill over all leads.
-    for i in hind['lead'].values:
+    for i in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.
-        dates = list(set(forecast['time'].values) & set(verif_dates[i]))
+        dates = list(set(forecast["time"].values) & set(verif_dates[i]))
         a = forecast.sel(time=dates)
         b = verif.sel(time=dates)
-        a['time'] = b['time']
+        a["time"] = b["time"]
         # comparison expected for normalized metrics
         plag.append(metric.function(a, b, dim=dim, **metric_kwargs))
-    uninit_skill = xr.concat(plag, 'lead')
-    uninit_skill['lead'] = hind.lead.values
+    uninit_skill = xr.concat(plag, "lead")
+    uninit_skill["lead"] = hind.lead.values
 
     # Attach climpred compute information to skill
     if add_attrs:

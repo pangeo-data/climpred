@@ -12,7 +12,7 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     First transpose a to ds.dims then apply ds chunking to a."""
     # supposed to be in .utils but circular imports therefore here
     transpose_kwargs = (
-        {'transpose_coords': False} if isinstance(new_chunk_ds, xr.DataArray) else {}
+        {"transpose_coords": False} if isinstance(new_chunk_ds, xr.DataArray) else {}
     )
     return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks
@@ -20,16 +20,16 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
 
 
 def _display_comparison_metadata(self):
-    summary = '----- Comparison metadata -----\n'
-    summary += f'Name: {self.name}\n'
+    summary = "----- Comparison metadata -----\n"
+    summary += f"Name: {self.name}\n"
     # probabilistic or only deterministic
     if not self.probabilistic:
-        summary += 'Kind: deterministic\n'
+        summary += "Kind: deterministic\n"
     else:
-        summary += 'Kind: deterministic and probabilistic\n'
-    summary += f'long_name: {self.long_name}\n'
+        summary += "Kind: deterministic and probabilistic\n"
+    summary += f"long_name: {self.long_name}\n"
     # doc
-    summary += f'Function: {self.function.__doc__}\n'
+    summary += f"Function: {self.function.__doc__}\n"
     return summary
 
 
@@ -94,7 +94,7 @@ def _m2m(ds, metric=None):
     for m in ds.member.values:
         forecast = ds.drop_sel(member=m)
         # set incrementing members to avoid nans from broadcasting
-        forecast['member'] = np.arange(1, 1 + forecast.member.size)
+        forecast["member"] = np.arange(1, 1 + forecast.member.size)
         reference = ds.sel(member=m, drop=True)
         # Tiles the singular "reference" member to compare directly to all other members
         if not metric.probabilistic:
@@ -109,11 +109,11 @@ def _m2m(ds, metric=None):
 
 
 __m2m = Comparison(
-    name='m2m',
+    name="m2m",
     function=_m2m,
     hindcast=False,
     probabilistic=True,
-    long_name='Comparison of all forecasts vs. all other members as verification',
+    long_name="Comparison of all forecasts vs. all other members as verification",
 )
 
 
@@ -134,9 +134,9 @@ def _m2e(ds, metric=None):
     """
     reference_list = []
     forecast_list = []
-    M2E_COMPARISON_DIM = 'member'
+    M2E_COMPARISON_DIM = "member"
     for m in ds.member.values:
-        forecast = ds.drop_sel(member=m).mean('member')
+        forecast = ds.drop_sel(member=m).mean("member")
         reference = ds.sel(member=m, drop=True)
         forecast_list.append(forecast)
         reference_list.append(reference)
@@ -151,12 +151,12 @@ def _m2e(ds, metric=None):
 
 
 __m2e = Comparison(
-    name='m2e',
+    name="m2e",
     function=_m2e,
     hindcast=False,
     probabilistic=False,
-    long_name='Comparison of all members as verification vs. the ensemble mean'
-    'forecast',
+    long_name="Comparison of all members as verification vs. the ensemble mean"
+    "forecast",
 )
 
 
@@ -186,11 +186,11 @@ def _m2c(ds, control_member=None, metric=None):
 
 
 __m2c = Comparison(
-    name='m2c',
+    name="m2c",
     function=_m2c,
     hindcast=False,
     probabilistic=True,
-    long_name='Comparison of multiple forecasts vs. control verification',
+    long_name="Comparison of multiple forecasts vs. control verification",
 )
 
 
@@ -214,16 +214,16 @@ def _e2c(ds, control_member=None, metric=None):
         control_member = ds.member.values[0]
     reference = ds.sel(member=control_member, drop=True)
     ds = ds.drop_sel(member=control_member)
-    forecast = ds.mean('member')
+    forecast = ds.mean("member")
     return forecast, reference
 
 
 __e2c = Comparison(
-    name='e2c',
+    name="e2c",
     function=_e2c,
     hindcast=False,
     probabilistic=False,
-    long_name='Comparison of the ensemble mean forecast vs. control as verification',
+    long_name="Comparison of the ensemble mean forecast vs. control as verification",
 )
 
 
@@ -244,20 +244,20 @@ def _e2o(hind, verif, metric=None):
     Returns:
         xr.object: forecast, verif.
     """
-    if 'member' in hind.dims:
-        forecast = hind.mean('member')
+    if "member" in hind.dims:
+        forecast = hind.mean("member")
     else:
         forecast = hind
     return forecast, verif
 
 
 __e2o = Comparison(
-    name='e2o',
+    name="e2o",
     function=_e2o,
     hindcast=True,
     probabilistic=False,
-    long_name='Verify the ensemble mean against the verification data',
-    aliases=['e2r'],
+    long_name="Verify the ensemble mean against the verification data",
+    aliases=["e2r"],
 )
 
 
@@ -276,23 +276,23 @@ def _m2o(hind, verif, metric=None):
         xr.object: forecast, verif.
     """
     # check that this contains more than one member
-    has_dims(hind, 'member', 'decadal prediction ensemble')
-    has_min_len(hind['member'], 1, 'decadal prediction ensemble member')
+    has_dims(hind, "member", "decadal prediction ensemble")
+    has_min_len(hind["member"], 1, "decadal prediction ensemble member")
     forecast = hind
-    if not metric.probabilistic and 'member' not in verif.dims:
+    if not metric.probabilistic and "member" not in verif.dims:
         forecast, verif = xr.broadcast(
-            forecast, verif, exclude=['time', 'init', 'lead']
+            forecast, verif, exclude=["time", "init", "lead"]
         )
     return forecast, verif
 
 
 __m2o = Comparison(
-    name='m2o',
+    name="m2o",
     function=_m2o,
     hindcast=True,
     probabilistic=True,
-    long_name='Verify each individual forecast member against the verification data.',
-    aliases=['m2r'],
+    long_name="Verify each individual forecast member against the verification data.",
+    aliases=["m2r"],
 )
 
 

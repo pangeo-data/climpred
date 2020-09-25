@@ -12,14 +12,14 @@ import sys
 
 import climpred
 
-sys.path.insert(0, os.path.abspath('../..'))
+sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Project information -----------------------------------------------------
 current_year = datetime.datetime.now().year
-project = 'climpred'
-copyright = f'2019-{current_year}, climpred development team'
-author = 'climpred development team'
+project = "climpred"
+copyright = f"2019-{current_year}, climpred development team"
+author = "climpred development team"
 
 version = climpred.__version__
 
@@ -30,35 +30,35 @@ version = climpred.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    'nbsphinx',
-    'sphinx.ext.autodoc',
-    'sphinx.ext.autosummary',
-    'sphinx.ext.extlinks',
-    'sphinx.ext.intersphinx',
-    'sphinxcontrib.napoleon',
-    'sphinx.ext.imgmath',
-    'sphinx.ext.autosectionlabel',
-    'sphinx.ext.viewcode',
-    'IPython.sphinxext.ipython_directive',
-    'IPython.sphinxext.ipython_console_highlighting',
+    "nbsphinx",
+    "sphinx.ext.autodoc",
+    "sphinx.ext.autosummary",
+    "sphinx.ext.extlinks",
+    "sphinx.ext.intersphinx",
+    "sphinxcontrib.napoleon",
+    "sphinx.ext.imgmath",
+    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.viewcode",
+    "IPython.sphinxext.ipython_directive",
+    "IPython.sphinxext.ipython_console_highlighting",
 ]
 
 extlinks = {
-    'issue': ('https://github.com/pangeo-data/climpred/issues/%s', 'GH#'),
-    'pr': ('https://github.com/pangeo-data/climpred/pull/%s', 'GH#'),
+    "issue": ("https://github.com/pangeo-data/climpred/issues/%s", "GH#"),
+    "pr": ("https://github.com/pangeo-data/climpred/pull/%s", "GH#"),
 }
 
 # Add any paths that contain templates here, relative to this directory.
-templates_path = ['_templates']
+templates_path = ["_templates"]
 
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ['build', '**.ipynb_checkpoints', 'Thumbs.db', '.DS_Store']
+exclude_patterns = ["build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
 
-pygments_style = 'sphinx'
-source_suffix = '.rst'
-master_doc = 'index'
+pygments_style = "sphinx"
+source_suffix = ".rst"
+master_doc = "index"
 
 nbsphinx_timeout = 180  # 3 minute timeout
 # -- Options for HTML output -------------------------------------------------
@@ -67,9 +67,9 @@ nbsphinx_timeout = 180  # 3 minute timeout
 # a list of builtin themes.
 #
 # html_theme = "alabaster"
-html_theme = 'sphinx_rtd_theme'
-html_logo = 'images/climpred-logo.png'
-html_theme_options = {'logo_only': False, 'style_nav_header_background': '#fcfcfc'}
+html_theme = "sphinx_rtd_theme"
+html_logo = "images/climpred-logo.png"
+html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcfc"}
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,

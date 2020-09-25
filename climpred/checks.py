@@ -162,7 +162,7 @@ def match_calendars(
         raise ValueError(
             f"{kind2} calendar of type '{ds2_calendar}' does not match "
             f"{kind1} calendar of type '{ds1_calendar}'. Please modify {kind2} calendar"
-            ' using, e.g. `xr.cftime_range` and then try again.'
+            f' using, e.g. `xr.cftime_range(..., calendar="{ds1_calendar}")` and then try again.'
         )
 
 

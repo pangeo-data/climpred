@@ -545,7 +545,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         init = input_dict['init']
         init_vars, ctrl_vars = self._vars_to_drop(init=init)
         ensemble = ensemble.drop_vars(init_vars)
-        control = control.drop_vars(ctrl_vars)
+        if control is not None:
+            control = control.drop_vars(ctrl_vars)
         return func(ensemble, control, **kwargs)
 
     def _vars_to_drop(self, init=True):
@@ -572,7 +573,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # Make lists of variables to drop that aren't in common
         # with one another.
         init_vars_to_drop = list(set(init_vars) - set(ctrl_vars))
-        ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
+        if self._datasets['control']:
+            ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
+        else:
+            ctrl_vars_to_drop = None
         return init_vars_to_drop, ctrl_vars_to_drop
 
     @is_xarray(1)

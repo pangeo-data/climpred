@@ -95,27 +95,15 @@ def test_hindcastEnsemble_plus_defined(
     allowed other types."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
-    he = he.add_observations(observations_ds_1d, "obs")
+    he = he.add_observations(observations_ds_1d)
     operator = eval(operator)
     he2 = operator(he, other)
     for dataset in he._datasets:
         if he._datasets[dataset]:
-            if dataset == "observations":
-                for obs_dataset in he._datasets["observations"]:
-                    print("check observations", obs_dataset)
-                    assert_equal(
-                        he2._datasets["observations"][obs_dataset],
-                        operator(he._datasets["observations"][obs_dataset], other),
-                    )
-                    # check same dims and data_vars as before
-                    check_dataset_dims_and_data_vars(he, he2, obs_dataset)
-            else:
-                print("check", dataset)
-                assert_equal(
-                    he2._datasets[dataset], operator(he._datasets[dataset], other)
-                )
-                # check same dims and data_vars as before
-                check_dataset_dims_and_data_vars(he, he2, dataset)
+            print("check", dataset)
+            assert_equal(he2._datasets[dataset], operator(he._datasets[dataset], other))
+            # check same dims and data_vars as before
+            check_dataset_dims_and_data_vars(he, he2, dataset)
 
 
 @pytest.mark.parametrize("operator", MATH_OPERATORS, ids=MATH_OPERATORS)
@@ -126,32 +114,19 @@ def test_hindcastEnsemble_plus_hindcastEnsemble(
     correctly."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
-    he = he.add_observations(observations_ds_1d, "obs")
+    he = he.add_observations(observations_ds_1d)
     other = he.mean("init")
     operator = eval(operator)
     he2 = operator(he, other)
     for dataset in he._datasets:
         if he._datasets[dataset]:
-            if dataset == "observations":
-                for obs_dataset in he._datasets["observations"]:
-                    print("check observations", obs_dataset)
-                    assert_equal(
-                        he2._datasets["observations"][obs_dataset],
-                        operator(
-                            he._datasets["observations"][obs_dataset],
-                            other._datasets["observations"][obs_dataset],
-                        ),
-                    )
-                    # check same dims and data_vars as before
-                    check_dataset_dims_and_data_vars(he, he2, obs_dataset)
-            else:
-                print("check", dataset)
-                assert_equal(
-                    he2._datasets[dataset],
-                    operator(he._datasets[dataset], other._datasets[dataset]),
-                )
-                # check same dims and data_vars as before
-                check_dataset_dims_and_data_vars(he, he2, dataset)
+            print("check", dataset)
+            assert_equal(
+                he2._datasets[dataset],
+                operator(he._datasets[dataset], other._datasets[dataset]),
+            )
+            # check same dims and data_vars as before
+            check_dataset_dims_and_data_vars(he, he2, dataset)
 
 
 @pytest.mark.parametrize("operator", MATH_OPERATORS, ids=MATH_OPERATORS)

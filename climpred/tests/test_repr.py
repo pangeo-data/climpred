@@ -27,11 +27,9 @@ def test_repr_HC(
         display(he)
         he = he.add_uninitialized(hist_ds_uninitialized_1d)
         display(he)
-        he = he.add_observations(observations_ds_1d, "OBS1")
-        display(he)
-        he = he.add_observations(observations_ds_1d, "OBS2")
+        he = he.add_observations(observations_ds_1d)
         display(he)
         # no uninit
         he = HindcastEnsemble(hind_ds_initialized_1d)
-        he = he.add_observations(observations_ds_1d, "OBS1")
+        he = he.add_observations(observations_ds_1d)
         display(he)

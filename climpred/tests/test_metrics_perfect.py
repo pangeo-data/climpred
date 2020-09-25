@@ -114,11 +114,8 @@ def test_HindcastEnsemble_constant_forecasts(
             cftime.date2num(he._datasets["uninitialized"].time, units), dims=["time"]
         )
         # set obs values to init in cftime days
-        he._datasets["observations"]["obs"] = he._datasets["observations"][
-            "obs"
-        ] * xr.DataArray(
-            cftime.date2num(he._datasets["observations"]["obs"].time, units),
-            dims=["time"],
+        he._datasets["observations"] = he._datasets["observations"] * xr.DataArray(
+            cftime.date2num(he._datasets["observations"].time, units), dims=["time"],
         )
     # get metric and comparison strings incorporating alias
     metric = METRIC_ALIASES.get(metric, metric)

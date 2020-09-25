@@ -187,15 +187,6 @@ Reference
     compute_persistence
     compute_uninitialized
 
-Comparisons
-~~~~~~~~~~~
-.. currentmodule:: climpred.comparisons
-
-.. autosummary::
-    :toctree: api/
-
-    Comparison
-
 Statistics
 ~~~~~~~~~~
 .. currentmodule:: climpred.stats

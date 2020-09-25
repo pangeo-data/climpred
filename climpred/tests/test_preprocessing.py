@@ -14,8 +14,8 @@ from climpred.preprocessing.shared import (
 
 on_mistral = False
 try:
-    host = os.environ['HOSTNAME']
-    for node in ['mlogin', 'mistralpp']:
+    host = os.environ["HOSTNAME"]
+    for node in ["mlogin", "mistralpp"]:
         if node in host:
             on_mistral = True
             from climpred.preprocessing.mpi import get_path
@@ -33,14 +33,14 @@ except ImportError:
     intake_esm_loaded = False
 
 
-def preprocess_1var(ds, v='global_primary_production'):
+def preprocess_1var(ds, v="global_primary_production"):
     return ds[v].to_dataset(name=v).squeeze()
 
 
 @pytest.mark.mistral
-@pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
+@pytest.mark.skipif(not on_mistral, reason="requires to be on mistral.dkrz.de")
 @pytest.mark.parametrize(
-    'inits,members',
+    "inits,members",
     [(range(1961, 1964), range(3, 6)), (range(1970, 1972), range(1, 3))],
 )
 def test_load_hindcast(inits, members):
@@ -49,31 +49,31 @@ def test_load_hindcast(inits, members):
         inits=inits, members=members, preprocess=preprocess_1var, get_path=get_path,
     )
     assert isinstance(actual, xr.Dataset)
-    assert (actual['init'].values == inits).all()
-    assert (actual['member'].values == members).all()
-    assert 'global_primary_production' in actual.data_vars
+    assert (actual["init"].values == inits).all()
+    assert (actual["member"].values == members).all()
+    assert "global_primary_production" in actual.data_vars
     assert len(actual.data_vars) == 1
 
 
 @pytest.mark.mistral
-@pytest.mark.skipif(not on_mistral, reason='requires to be on mistral.dkrz.de')
-@pytest.mark.skipif(not intake_esm_loaded, reason='requires intake_esm to be installed')
+@pytest.mark.skipif(not on_mistral, reason="requires to be on mistral.dkrz.de")
+@pytest.mark.skipif(not intake_esm_loaded, reason="requires intake_esm to be installed")
 def test_climpred_pre_with_intake_esm():
     """Test that `preprocess` including `set_integer_time_axis` enables concatination
     of all hindcast into one xr.object."""
-    col_url = '/home/mpim/m300524/intake-esm-datastore/catalogs/mistral-cmip6.json'
+    col_url = "/home/mpim/m300524/intake-esm-datastore/catalogs/mistral-cmip6.json"
     col = intake.open_esm_datastore(col_url)
     # load 2 members for 2 inits from one model
     query = dict(
-        experiment_id=['dcppA-hindcast'],
-        table_id='Amon',
-        member_id=['r1i1p1f1', 'r2i1p1f1'],
+        experiment_id=["dcppA-hindcast"],
+        table_id="Amon",
+        member_id=["r1i1p1f1", "r2i1p1f1"],
         dcpp_init_year=[1970, 1971],
-        variable_id='tas',
-        source_id='MPI-ESM1-2-HR',
+        variable_id="tas",
+        source_id="MPI-ESM1-2-HR",
     )
     cat = col.search(**query)
-    cdf_kwargs = {'chunks': {'time': 12}, 'decode_times': False}
+    cdf_kwargs = {"chunks": {"time": 12}, "decode_times": False}
 
     def preprocess(ds):
         # extract tiny spatial and temporal subset

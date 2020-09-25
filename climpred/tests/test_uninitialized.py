@@ -8,11 +8,11 @@ from climpred.reference import compute_uninitialized
 
 # uacc breaks
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
-DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
+DETERMINISTIC_HINDCAST_METRICS.remove("uacc")
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_HINDCAST_METRICS)
-@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
+@pytest.mark.parametrize("metric", DETERMINISTIC_HINDCAST_METRICS)
+@pytest.mark.parametrize("comparison", HINDCAST_COMPARISONS)
 def test_compute_uninitialized(
     hind_ds_initialized_1d,
     reconstruction_ds_1d,
@@ -24,11 +24,11 @@ def test_compute_uninitialized(
     Checks that compute uninitialized works without breaking.
     """
     category_edges = np.array([0.0, 0.5, 1.0])
-    if metric == 'contingency':
+    if metric == "contingency":
         metric_kwargs = {
-            'forecast_category_edges': category_edges,
-            'observation_category_edges': category_edges,
-            'score': 'accuracy',
+            "forecast_category_edges": category_edges,
+            "observation_category_edges": category_edges,
+            "score": "accuracy",
         }
     else:
         metric_kwargs = {}
@@ -48,7 +48,7 @@ def test_compute_uninitialized(
         assert not res[var]
 
 
-@pytest.mark.parametrize('alignment', VALID_ALIGNMENTS)
+@pytest.mark.parametrize("alignment", VALID_ALIGNMENTS)
 def test_compute_uninitialized_alignment(
     hind_ds_initialized_1d, reconstruction_ds_1d, hist_ds_uninitialized_1d, alignment
 ):
@@ -58,8 +58,8 @@ def test_compute_uninitialized_alignment(
             hind_ds_initialized_1d,
             hist_ds_uninitialized_1d,
             reconstruction_ds_1d,
-            metric='pr',
-            comparison='e2o',
+            metric="pr",
+            comparison="e2o",
             alignment=alignment,
         )
         .isnull()
@@ -78,8 +78,8 @@ def test_compute_uninitialized_same_verifs(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         reconstruction_da_1d,
-        metric='pr',
-        comparison='e2o',
-        alignment='same_verifs',
+        metric="pr",
+        comparison="e2o",
+        alignment="same_verifs",
     )
     assert ((res - res[0]) == 0).all()

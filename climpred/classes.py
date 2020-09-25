@@ -810,7 +810,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``uninit``):
                 * result='skill', kind='init':
                     mean initialized skill
-                * result='skill', kind='high_ci':
+                * result='high_ci', kind='init':
                     high confidence interval boundary for initialized skill
                 * result='p', kind='uninit':
                     p value of the hypothesis that the
@@ -1224,15 +1224,15 @@ class HindcastEnsemble(PredictionEnsemble):
             alignment (str): which inits or verification times should be aligned?
 
                 - 'maximize': maximize the degrees of freedom by slicing ``init`` and
-                  ``verif`` to a common time frame at each lead
+                  ``verif`` to a common time frame at each lead.
 
                 - 'same_inits': slice to a common init frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
-                  based on the same set of initializations
+                  based on the same set of initializations.
 
                 - 'same_verif': slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
-                  each lead should be based on the same set of verification dates
+                  each lead should be based on the same set of verification dates.
 
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
@@ -1253,7 +1253,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ``uninit``):
                 * result='skill', kind='init':
                     mean initialized skill
-                * result='skill', kind='high_ci':
+                * result='high_ci', kind='init':
                     high confidence interval boundary for initialized skill
                 * result='p', kind='uninit':
                     p value of the hypothesis that the
@@ -1285,7 +1285,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
 
     def reduce_bias(self, alignment, how='mean', cross_validate=True, **metric_kwargs):
-        """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+        """Calc and remove bias from :py:class:`~climpred.classes.HindcastEnsemble`.
 
         Args:
             alignment (str): which inits or verification times should be aligned?

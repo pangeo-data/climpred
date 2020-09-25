@@ -69,7 +69,7 @@ Deprecated
 ----------
 
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
-- ``compute_metric``. Use :py:meth:`~climpred.classes.PredictionEnsemble.verify`
+- ``compute_metric``. Use :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`
   instead. (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Bug Fixes
@@ -89,7 +89,8 @@ Bug Fixes
   :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
-- Reduce bias by ``dayofyear`` :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`.
+- Reduce bias by ``dayofyear`` in
+  :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
   (:pr:`443`) `Aaron Spring`_.
 
 Documentation

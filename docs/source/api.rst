@@ -61,6 +61,7 @@ Pre-Processing
     :toctree: api/
 
     HindcastEnsemble.smooth
+    HindcastEnsemble.reduce_bias
 
 -------------
 Visualization

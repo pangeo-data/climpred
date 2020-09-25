@@ -91,10 +91,9 @@ results.
 Compute over dimension
 ######################
 
-The optional argument ``dim`` defines over which dimension a metric is computed. We can
-apply a metric over ``dim`` from [``'init'``, ``'member'``, ``['member', 'init']``] in
-:py:func:`~climpred.prediction.compute_perfect_model` and [``'init'``, ``'member'``]
-in :py:func:`~climpred.prediction.compute_hindcast`. The resulting skill is then
+The argument ``dim`` defines over which dimension a metric is computed. We can
+apply a metric over all dimensions from the initialized dataset expect ``lead``.
+The resulting skill is then
 reduced by this ``dim``. Therefore, applying a metric over ``dim='member'`` creates a
 skill for all initializations individually. This can show the initial conditions
 dependence of skill. Likewise when computing skill over ``'init'``, we get skill for
@@ -103,9 +102,12 @@ just specifies how ``forecast`` and ``observations`` are defined.
 
 However, this above logic applies to deterministic metrics. Probabilistic metrics need
 to be applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``]
-in :py:func:`~climpred.prediction.compute_perfect_model` and ``'m2o'`` comparison in
-:py:func:`~climpred.prediction.compute_hindcast`. Using a probabilistic metric
-automatically switches internally to using ``dim='member'``.
+in :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``'m2o'`` comparison in
+:py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+
+``dim`` should not contain
+``member`` when the comparison already computes ensemble means as in
+[``'e2o'``, ``'e2c'``].
 
 
 User-defined comparisons

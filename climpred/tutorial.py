@@ -5,64 +5,64 @@ from urllib.request import urlretrieve as _urlretrieve
 
 from xarray.backends.api import open_dataset as _open_dataset
 
-_default_cache_dir = _os.sep.join(('~', '.climpred_data'))
+_default_cache_dir = _os.sep.join(("~", ".climpred_data"))
 
 aliases = [
-    'MPI-control-1D',
-    'MPI-control-3D',
-    'MPI-PM-DP-1D',
-    'MPI-PM-DP-3D',
-    'CESM-DP-SST',
-    'CESM-DP-SSS',
-    'CESM-DP-SST-3D',
-    'CESM-LE',
-    'MPIESM_miklip_baseline1-hind-SST-global',
-    'MPIESM_miklip_baseline1-hist-SST-global',
-    'MPIESM_miklip_baseline1-assim-SST-global',
-    'ERSST',
-    'FOSI-SST',
-    'FOSI-SSS',
-    'FOSI-SST-3D',
-    'GMAO-GEOS-RMM1',
-    'RMM-INTERANN-OBS',
+    "MPI-control-1D",
+    "MPI-control-3D",
+    "MPI-PM-DP-1D",
+    "MPI-PM-DP-3D",
+    "CESM-DP-SST",
+    "CESM-DP-SSS",
+    "CESM-DP-SST-3D",
+    "CESM-LE",
+    "MPIESM_miklip_baseline1-hind-SST-global",
+    "MPIESM_miklip_baseline1-hist-SST-global",
+    "MPIESM_miklip_baseline1-assim-SST-global",
+    "ERSST",
+    "FOSI-SST",
+    "FOSI-SSS",
+    "FOSI-SST-3D",
+    "GMAO-GEOS-RMM1",
+    "RMM-INTERANN-OBS",
 ]
 true_file_names = [
-    'PM_MPI-ESM-LR_control',
-    'PM_MPI-ESM-LR_control3d',
-    'PM_MPI-ESM-LR_ds',
-    'PM_MPI-ESM-LR_ds3d',
-    'CESM-DP-LE.SST.global',
-    'CESM-DP-LE.SSS.global',
-    'CESM-DP-LE.SST.eastern_pacific',
-    'CESM-LE.global_mean.SST.1955-2015',
-    'MPIESM_miklip_baseline1-hind-SST-global',
-    'MPIESM_miklip_baseline1-hist-SST-global',
-    'MPIESM_miklip_baseline1-assim-SST-global',
-    'ERSSTv4.global.mean',
-    'FOSI.SST.global',
-    'FOSI.SSS.global',
-    'FOSI.SST.eastern_pacific',
-    'GMAO-GEOS-V2p1.RMM1',
-    'RMM1.observed.interannual.1974-06.2017-07',
+    "PM_MPI-ESM-LR_control",
+    "PM_MPI-ESM-LR_control3d",
+    "PM_MPI-ESM-LR_ds",
+    "PM_MPI-ESM-LR_ds3d",
+    "CESM-DP-LE.SST.global",
+    "CESM-DP-LE.SSS.global",
+    "CESM-DP-LE.SST.eastern_pacific",
+    "CESM-LE.global_mean.SST.1955-2015",
+    "MPIESM_miklip_baseline1-hind-SST-global",
+    "MPIESM_miklip_baseline1-hist-SST-global",
+    "MPIESM_miklip_baseline1-assim-SST-global",
+    "ERSSTv4.global.mean",
+    "FOSI.SST.global",
+    "FOSI.SSS.global",
+    "FOSI.SST.eastern_pacific",
+    "GMAO-GEOS-V2p1.RMM1",
+    "RMM1.observed.interannual.1974-06.2017-07",
 ]
 file_descriptions = [
-    'area averages for the MPI control run of SST/SSS.',
-    'lat/lon/time for the MPI control run of SST/SSS.',
-    'perfect model decadal prediction ensemble area averages of SST/SSS/AMO.',
-    'perfect model decadal prediction ensemble lat/lon/time of SST/SSS/AMO.',
-    'hindcast decadal prediction ensemble of global mean SSTs.',
-    'hindcast decadal prediction ensemble of global mean SSS.',
-    'hindcast decadal prediction ensemble of eastern Pacific SSTs.',
-    'uninitialized ensemble of global mean SSTs.',
-    'hindcast initialized ensemble of global mean SSTs',
-    'uninitialized ensemble of global mean SSTs',
-    'assimilation in MPI-ESM of global mean SSTs',
-    'observations of global mean SSTs.',
-    'reconstruction of global mean SSTs.',
-    'reconstruction of global mean SSS.',
-    'reconstruction of eastern Pacific SSTs',
-    'daily RMM1 from the GMAO-GEOS-V2p1 model for SubX',
-    'observed RMM with interannual variablity included',
+    "area averages for the MPI control run of SST/SSS.",
+    "lat/lon/time for the MPI control run of SST/SSS.",
+    "perfect model decadal prediction ensemble area averages of SST/SSS/AMO.",
+    "perfect model decadal prediction ensemble lat/lon/time of SST/SSS/AMO.",
+    "hindcast decadal prediction ensemble of global mean SSTs.",
+    "hindcast decadal prediction ensemble of global mean SSS.",
+    "hindcast decadal prediction ensemble of eastern Pacific SSTs.",
+    "uninitialized ensemble of global mean SSTs.",
+    "hindcast initialized ensemble of global mean SSTs",
+    "uninitialized ensemble of global mean SSTs",
+    "assimilation in MPI-ESM of global mean SSTs",
+    "observations of global mean SSTs.",
+    "reconstruction of global mean SSTs.",
+    "reconstruction of global mean SSS.",
+    "reconstruction of eastern Pacific SSTs",
+    "daily RMM1 from the GMAO-GEOS-V2p1 model for SubX",
+    "observed RMM with interannual variablity included",
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))
@@ -71,7 +71,7 @@ FILE_DESCRIPTIONS = dict(zip(aliases, file_descriptions))
 
 def _file_md5_checksum(fname):
     hash_md5 = hashlib.md5()
-    with open(fname, 'rb') as f:
+    with open(fname, "rb") as f:
         hash_md5.update(f.read())
     return hash_md5.hexdigest()
 
@@ -103,8 +103,8 @@ def load_dataset(
     name=None,
     cache=True,
     cache_dir=_default_cache_dir,
-    github_url='https://github.com/pangeo-data/climpred-data',
-    branch='master',
+    github_url="https://github.com/pangeo-data/climpred-data",
+    branch="master",
     extension=None,
     proxy_dict=None,
     **kws,
@@ -147,8 +147,8 @@ def load_dataset(
     # filename-in-python
     # Allows for generalized file extensions.
     name, ext = _os.path.splitext(name)
-    if not ext.endswith('.nc'):
-        ext += '.nc'
+    if not ext.endswith(".nc"):
+        ext += ".nc"
 
     # use aliases
     if name in FILE_ALIAS_DICT.keys():
@@ -156,7 +156,7 @@ def load_dataset(
     longdir = _os.path.expanduser(cache_dir)
     fullname = name + ext
     localfile = _os.sep.join((longdir, fullname))
-    md5name = name + '.md5'
+    md5name = name + ".md5"
     md5file = _os.sep.join((longdir, md5name))
 
     if not _os.path.exists(localfile):
@@ -166,18 +166,18 @@ def load_dataset(
             _os.mkdir(longdir)
 
         if extension is not None:
-            url = '/'.join((github_url, 'raw', branch, extension, fullname))
+            url = "/".join((github_url, "raw", branch, extension, fullname))
             _urlretrieve(url, localfile)
-            url = '/'.join((github_url, 'raw', branch, extension, md5name))
+            url = "/".join((github_url, "raw", branch, extension, md5name))
             _urlretrieve(url, md5file)
         else:
-            url = '/'.join((github_url, 'raw', branch, fullname))
+            url = "/".join((github_url, "raw", branch, fullname))
             _urlretrieve(url, localfile)
-            url = '/'.join((github_url, 'raw', branch, md5name))
+            url = "/".join((github_url, "raw", branch, md5name))
             _urlretrieve(url, md5file)
 
         localmd5 = _file_md5_checksum(localfile)
-        with open(md5file, 'r') as f:
+        with open(md5file, "r") as f:
             remotemd5 = f.read()
         if localmd5 != remotemd5:
             _os.remove(localfile)

@@ -10,7 +10,7 @@ from .utils import copy_coords_from_to
 
 
 @is_xarray(0)
-def decorrelation_time(da, r=20, dim='time'):
+def decorrelation_time(da, r=20, dim="time"):
     """Calculate the decorrelaton time of a time series.
 
     .. math::
@@ -33,11 +33,11 @@ def decorrelation_time(da, r=20, dim='time'):
     one = xr.ones_like(da.isel({dim: 0}))
     one = one.where(da.isel({dim: 0}).notnull())
     return one + 2 * xr.concat(
-        [corr(da, da, dim=dim, lead=i) ** i for i in range(1, r)], 'it'
-    ).sum('it')
+        [corr(da, da, dim=dim, lead=i) ** i for i in range(1, r)], "it"
+    ).sum("it")
 
 
-def dpp(ds, dim='time', m=10, chunk=True):
+def dpp(ds, dim="time", m=10, chunk=True):
     """Calculates the Diagnostic Potential Predictability (dpp)
 
     .. math::
@@ -74,7 +74,7 @@ def dpp(ds, dim='time', m=10, chunk=True):
 
     """
 
-    def _chunking(ds, dim='time', number_chunks=False, chunk_length=False):
+    def _chunking(ds, dim="time", number_chunks=False, chunk_length=False):
         """
         Separate data into chunks and reshapes chunks in a c dimension.
 
@@ -98,18 +98,18 @@ def dpp(ds, dim='time', m=10, chunk=True):
             cmin = int(ds[dim].min())
             number_chunks = int(np.floor(ds[dim].size / chunk_length))
         else:
-            raise KeyError('set number_chunks or chunk_length to True')
+            raise KeyError("set number_chunks or chunk_length to True")
         c = ds.sel({dim: slice(cmin, cmin + chunk_length - 1)})
-        c = c.expand_dims('c')
-        c['c'] = [0]
+        c = c.expand_dims("c")
+        c["c"] = [0]
         for i in range(1, number_chunks):
             c2 = ds.sel(
                 {dim: slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)}
             )
-            c2 = c2.expand_dims('c')
-            c2['c'] = [i]
+            c2 = c2.expand_dims("c")
+            c2["c"] = [i]
             c2[dim] = c[dim]
-            c = xr.concat([c, c2], 'c')
+            c = xr.concat([c, c2], "c")
         return c
 
     if not chunk:  # Resplandy 2015, Seferian 2018
@@ -121,15 +121,15 @@ def dpp(ds, dim='time', m=10, chunk=True):
         chunked_means = _chunking(ds, dim=dim, chunk_length=m).mean(dim)
         # sub means in chunks
         chunked_deviations = _chunking(ds, dim=dim, chunk_length=m) - chunked_means
-        s2v = chunked_means.var('c')
-        s2e = chunked_deviations.var([dim, 'c'])
+        s2v = chunked_means.var("c")
+        s2e = chunked_deviations.var([dim, "c"])
         s2 = s2v + s2e
     dpp = (s2v - s2 / (m)) / s2
     return dpp
 
 
 @is_xarray(0)
-def varweighted_mean_period(da, dim='time', **kwargs):
+def varweighted_mean_period(da, dim="time", **kwargs):
     """Calculate the variance weighted mean period of time series based on
     xrft.power_spectrum.
 
@@ -151,7 +151,7 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     """
     # set nans to 0
     if isinstance(da, xr.Dataset):
-        raise ValueError('require xr.Dataset')
+        raise ValueError("require xr.Dataset")
     da = da.fillna(0.0)
     # dim should be list
     if isinstance(dim, str):
@@ -160,13 +160,13 @@ def varweighted_mean_period(da, dim='time', **kwargs):
     ps = power_spectrum(da, dim=dim, **kwargs)
     # take pos
     for d in dim:
-        ps = ps.where(ps[f'freq_{d}'] > 0)
+        ps = ps.where(ps[f"freq_{d}"] > 0)
     # weighted average
     vwmp = ps
     for d in dim:
-        vwmp = vwmp.sum(f'freq_{d}') / ((vwmp * vwmp[f'freq_{d}']).sum(f'freq_{d}'))
+        vwmp = vwmp.sum(f"freq_{d}") / ((vwmp * vwmp[f"freq_{d}"]).sum(f"freq_{d}"))
     for d in dim:
-        del vwmp[f'freq_{d}_spacing']
+        del vwmp[f"freq_{d}_spacing"]
     # try to copy coords
     try:
         vwmp = copy_coords_from_to(da.drop(dim), vwmp)

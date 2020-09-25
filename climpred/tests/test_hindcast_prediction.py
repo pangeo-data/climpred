@@ -11,22 +11,22 @@ from climpred.reference import compute_persistence
 
 # uacc is sqrt(MSSS), fails when MSSS negative
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
-DETERMINISTIC_HINDCAST_METRICS.remove('uacc')
+DETERMINISTIC_HINDCAST_METRICS.remove("uacc")
 
 ITERATIONS = 2
 
 category_edges = np.array([0, 0.5, 1])
 
 
-@pytest.mark.skip(reason='less not properly implemented')
+@pytest.mark.skip(reason="less not properly implemented")
 def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
     """Test LESS m2o runs through"""
     actual = (
         compute_hindcast(
             hind_da_initialized_1d,
             reconstruction_da_1d,
-            metric='less',
-            comparison='m2o',
+            metric="less",
+            comparison="m2o",
         )
         .isnull()
         .any()
@@ -34,19 +34,19 @@ def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d)
     assert not actual
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_HINDCAST_METRICS)
-@pytest.mark.parametrize('comparison', HINDCAST_COMPARISONS)
+@pytest.mark.parametrize("metric", DETERMINISTIC_HINDCAST_METRICS)
+@pytest.mark.parametrize("comparison", HINDCAST_COMPARISONS)
 def test_compute_hindcast(
     hind_ds_initialized_1d, reconstruction_ds_1d, metric, comparison
 ):
     """
     Checks that compute hindcast works without breaking.
     """
-    if metric == 'contingency':
+    if metric == "contingency":
         metric_kwargs = {
-            'forecast_category_edges': category_edges,
-            'observation_category_edges': category_edges,
-            'score': 'accuracy',
+            "forecast_category_edges": category_edges,
+            "observation_category_edges": category_edges,
+            "score": "accuracy",
         }
     else:
         metric_kwargs = {}
@@ -73,27 +73,27 @@ def test_compute_hindcast_lead0_lead1(
     framework.
     """
     res1 = compute_hindcast(
-        hind_ds_initialized_1d, reconstruction_ds_1d, metric='rmse', comparison='e2o',
+        hind_ds_initialized_1d, reconstruction_ds_1d, metric="rmse", comparison="e2o",
     )
     res2 = compute_hindcast(
         hind_ds_initialized_1d_lead0,
         reconstruction_ds_1d,
-        metric='rmse',
-        comparison='e2o',
+        metric="rmse",
+        comparison="e2o",
     )
     assert (res1.SST.values == res2.SST.values).all()
 
 
-@pytest.mark.parametrize('metric', DETERMINISTIC_HINDCAST_METRICS)
+@pytest.mark.parametrize("metric", DETERMINISTIC_HINDCAST_METRICS)
 def test_persistence(hind_da_initialized_1d, reconstruction_da_1d, metric):
     """
     Checks that compute persistence works without breaking.
     """
-    if metric == 'contingency':
+    if metric == "contingency":
         metric_kwargs = {
-            'forecast_category_edges': category_edges,
-            'observation_category_edges': category_edges,
-            'score': 'accuracy',
+            "forecast_category_edges": category_edges,
+            "observation_category_edges": category_edges,
+            "score": "accuracy",
         }
     else:
         metric_kwargs = {}
@@ -102,9 +102,9 @@ def test_persistence(hind_da_initialized_1d, reconstruction_da_1d, metric):
     )
     assert not res.isnull().any()
     # check persistence metadata
-    assert res.attrs['metric'] == metric
-    assert res.attrs['skill_calculated_by_function'] == 'compute_persistence'
-    assert 'number of members' not in res.attrs
+    assert res.attrs["metric"] == metric
+    assert res.attrs["skill_calculated_by_function"] == "compute_persistence"
+    assert "number of members" not in res.attrs
 
 
 def test_persistence_lead0_lead1(
@@ -115,10 +115,10 @@ def test_persistence_lead0_lead1(
     framework.
     """
     res1 = compute_persistence(
-        hind_ds_initialized_1d, reconstruction_ds_1d, metric='rmse'
+        hind_ds_initialized_1d, reconstruction_ds_1d, metric="rmse"
     )
     res2 = compute_persistence(
-        hind_ds_initialized_1d_lead0, reconstruction_ds_1d, metric='rmse'
+        hind_ds_initialized_1d_lead0, reconstruction_ds_1d, metric="rmse"
     )
     assert (res1.SST.values == res2.SST.values).all()
 
@@ -133,18 +133,18 @@ def test_bootstrap_hindcast_da1d_not_nan(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         reconstruction_da_1d,
-        metric='rmse',
-        comparison='e2o',
+        metric="rmse",
+        comparison="e2o",
         sig=50,
         iterations=ITERATIONS,
     )
-    actual_init_skill = actual.sel(kind='init', results='skill').isnull().any()
+    actual_init_skill = actual.sel(kind="init", results="skill").isnull().any()
     assert not actual_init_skill
-    actual_uninit_p = actual.sel(kind='uninit', results='p').isnull().any()
+    actual_uninit_p = actual.sel(kind="uninit", results="p").isnull().any()
     assert not actual_uninit_p
 
 
-@pytest.mark.parametrize('metric', ('AnomCorr', 'test', 'None'))
+@pytest.mark.parametrize("metric", ("AnomCorr", "test", "None"))
 def test_compute_hindcast_metric_keyerrors(
     hind_ds_initialized_1d, reconstruction_ds_1d, metric
 ):
@@ -155,13 +155,13 @@ def test_compute_hindcast_metric_keyerrors(
         compute_hindcast(
             hind_ds_initialized_1d,
             reconstruction_ds_1d,
-            comparison='e2o',
+            comparison="e2o",
             metric=metric,
         )
-    assert 'Specify metric from' in str(excinfo.value)
+    assert "Specify metric from" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('comparison', ('ensemblemean', 'test', 'None'))
+@pytest.mark.parametrize("comparison", ("ensemblemean", "test", "None"))
 def test_compute_hindcast_comparison_keyerrors(
     hind_ds_initialized_1d, reconstruction_ds_1d, comparison
 ):
@@ -173,12 +173,12 @@ def test_compute_hindcast_comparison_keyerrors(
             hind_ds_initialized_1d,
             reconstruction_ds_1d,
             comparison=comparison,
-            metric='mse',
+            metric="mse",
         )
-    assert 'Specify comparison from' in str(excinfo.value)
+    assert "Specify comparison from" in str(excinfo.value)
 
 
-@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+@pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
 def test_compute_hindcast_dask_spatial(
     hind_da_initialized_3d, reconstruction_da_3d, metric
 ):
@@ -190,7 +190,7 @@ def test_compute_hindcast_dask_spatial(
             res_chunked = compute_hindcast(
                 hind_da_initialized_3d.chunk({dim: step}),
                 reconstruction_da_3d.chunk({dim: step}),
-                comparison='e2o',
+                comparison="e2o",
                 metric=metric,
             )
             # check for chunks
@@ -198,8 +198,8 @@ def test_compute_hindcast_dask_spatial(
             assert res_chunked.chunks is not None
 
 
-@pytest.mark.skip(reason='not yet implemented')
-@pytest.mark.parametrize('metric', ('rmse', 'pearson_r'))
+@pytest.mark.skip(reason="not yet implemented")
+@pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
 def test_compute_hindcast_dask_climpred_dims(
     hind_da_initialized_3d, reconstruction_da_3d, metric
 ):
@@ -213,7 +213,7 @@ def test_compute_hindcast_dask_climpred_dims(
         res_chunked = compute_hindcast(
             hind_da_initialized_3d,
             reconstruction_da_3d,
-            comparison='e2o',
+            comparison="e2o",
             metric=metric,
         )
         # check for chunks
@@ -226,7 +226,7 @@ def test_compute_hindcast_CESM_3D_keep_coords(
 ):
     """Test that no coords are lost in compute_hindcast with the CESM sample data."""
     s = compute_hindcast(hind_da_initialized_3d, reconstruction_da_3d)
-    for c in hind_da_initialized_3d.drop('init').coords:
+    for c in hind_da_initialized_3d.drop("init").coords:
         assert c in s.coords
 
 
@@ -235,16 +235,16 @@ def test_bootstrap_hindcast_keeps_lead_units(
 ):
     """Test that lead units is kept in compute."""
     sig = 95
-    units = 'years'
-    hind_da_initialized_1d['lead'].attrs['units'] = units
+    units = "years"
+    hind_da_initialized_1d["lead"].attrs["units"] = units
     actual = bootstrap_hindcast(
         hind_da_initialized_1d,
         hist_da_uninitialized_1d,
         observations_da_1d,
-        metric='mse',
+        metric="mse",
         iterations=ITERATIONS,
-        comparison='e2o',
+        comparison="e2o",
         sig=sig,
-        dim='init',
+        dim="init",
     )
-    assert actual.lead.attrs['units'] == units
+    assert actual.lead.attrs["units"] == units

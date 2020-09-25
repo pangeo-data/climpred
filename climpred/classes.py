@@ -652,7 +652,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         input_dict = {
             'ensemble': self._datasets['initialized'],
-            'control': self._datasets['control'],
             'init': True,
         }
         init_skill = self._apply_climpred_function(
@@ -729,7 +728,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
-            'control': self._datasets['control'],
             'init': False,
         }
         res = self._apply_climpred_function(
@@ -761,7 +759,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         input_dict = {
             'ensemble': self._datasets['initialized'],
-            'control': self._datasets['control'],
             'init': True,
         }
         res = self._apply_climpred_function(

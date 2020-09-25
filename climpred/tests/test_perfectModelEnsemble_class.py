@@ -175,3 +175,10 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
     with pytest.raises(ValueError) as excinfo:
         pm = pm.add_control(PM_ds_control_1d)
     assert 'does not match' in str(excinfo.value)
+
+
+@pytest.mark.parametrize('func', ['verify', 'compute_persistence'])
+def test_no_need_for_control(PM_da_initialized_1d, func):
+    """Tests that no error is thrown when no control present."""
+    pm = PerfectModelEnsemble(PM_da_initialized_1d)
+    getattr(pm, func)()

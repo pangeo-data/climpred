@@ -271,7 +271,7 @@ def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
     for c in ["TLAT", "TLONG", "TAREA"]:
         reconstruction_ds_3d[c] = hind_ds_initialized_3d[c]
     hindcast = HindcastEnsemble(hind_ds_initialized_3d)
-    hindcast = hindcast.add_observations(reconstruction_ds_3d, "recon")
+    hindcast = hindcast.add_observations(reconstruction_ds_3d)
     hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(
         init=slice("1964", "2014")
     ).mean("init")
@@ -282,7 +282,7 @@ def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
 def hindcast_recon_1d_ym(hind_ds_initialized_1d, reconstruction_ds_1d):
     """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `recon`."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, "recon")
+    hindcast = hindcast.add_observations(reconstruction_ds_1d)
     hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(
         init=slice("1964", "2014")
     ).mean("init")
@@ -296,7 +296,7 @@ def hindcast_hist_obs_1d(
     """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
-    hindcast = hindcast.add_observations(observations_ds_1d, "obs")
+    hindcast = hindcast.add_observations(observations_ds_1d)
     hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(
         init=slice("1964", "2014")
     ).mean("init")
@@ -309,10 +309,8 @@ def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
     time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970"))
     hindcast._datasets["initialized"].lead.attrs["units"] = "months"
-    hindcast._datasets["observations"]["recon"] = (
-        hindcast._datasets["observations"]["recon"]
-        .resample(time="1MS")
-        .interpolate("linear")
+    hindcast._datasets["observations"] = (
+        hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")
     )
     return hindcast
 
@@ -323,10 +321,8 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970"))
     hindcast._datasets["initialized"].lead.attrs["units"] = "days"
-    hindcast._datasets["observations"]["recon"] = (
-        hindcast._datasets["observations"]["recon"]
-        .resample(time="1D")
-        .interpolate("linear")
+    hindcast._datasets["observations"] = (
+        hindcast._datasets["observations"].resample(time="1D").interpolate("linear")
     )
     return hindcast
 

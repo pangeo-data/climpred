@@ -78,7 +78,7 @@ def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast = hindcast.isel(lead=0, init=slice(0, 3)).isel(time=slice(5, 10))
     assert hindcast.get_initialized().init.size == 3
     assert hindcast.get_initialized().lead.size == 1
-    assert hindcast.get_observations('FOSI').time.size == 5
+    assert hindcast.get_observations.time.size == 5
 
 
 def test_get_initialized(hind_ds_initialized_1d):

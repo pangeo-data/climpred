@@ -212,13 +212,3 @@ def test_PredictionEnsemble_smooth_None(
     pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
     pm_smoothed = pm.smooth(None)
     assert_PredictionEnsemble(pm, pm_smoothed)
-
-
-def test_HindcastEnsemble_temporal_smoothing_two_observations(hindcast_recon_1d_ym):
-    """Test HindcastEnsemble.smooth().verify() when more than observation present."""
-    he = hindcast_recon_1d_ym.add_observations(
-        hindcast_recon_1d_ym.get_observations('recon'), 'recon2'
-    )
-    assert he.smooth({'time': 2}).verify(
-        metric='acc', comparison='e2o', alignment='same_verif', dim='init'
-    )

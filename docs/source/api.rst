@@ -248,7 +248,7 @@ Metrics
 -------
 
 For a thorough look at our metrics library, please see the
-`metrics <metrics.html>`_ page.
+`metrics </metrics.html>`_ page.
 
 .. currentmodule:: climpred.metrics
 
@@ -290,3 +290,22 @@ For a thorough look at our metrics library, please see the
     _reliability
     _rank_histogram
     _contingency
+
+Comparisons
+-----------
+
+For a thorough look at our metrics library, please see the
+`comparisons </comparisons.html>`_ page.
+
+.. currentmodule:: climpred.comparisons
+
+.. autosummary::
+    :toctree: api/
+
+    Comparison
+    _e2o
+    _m2o
+    _m2m
+    _m2e
+    _m2c
+    _e2c

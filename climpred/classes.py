@@ -16,6 +16,7 @@ from .checks import (
     has_dims,
     has_valid_lead_units,
     is_xarray,
+    match_calendars,
     match_initialized_dims,
     match_initialized_vars,
 )
@@ -590,6 +591,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        # Check that converted/original cftime calendar is the same as the
+        # initialized calendar to avoid any alignment errors.
+        match_calendars(self._datasets['initialized'], xobj, kind2='control')
         datasets = self._datasets.copy()
         datasets.update({'control': xobj})
         return self._construct_direct(datasets, kind='perfect')
@@ -968,6 +972,9 @@ class HindcastEnsemble(PredictionEnsemble):
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        # Check that converted/original cftime calendar is the same as the
+        # initialized calendar to avoid any alignment errors.
+        match_calendars(self._datasets['initialized'], xobj)
         # For some reason, I could only get the non-inplace method to work
         # by updating the nested dictionaries separately.
         datasets_obs = self._datasets['observations'].copy()
@@ -991,6 +998,9 @@ class HindcastEnsemble(PredictionEnsemble):
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
         xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        # Check that converted/original cftime calendar is the same as the
+        # initialized calendar to avoid any alignment errors.
+        match_calendars(self._datasets['initialized'], xobj, kind2='uninitialized')
         datasets = self._datasets.copy()
         datasets.update({'uninitialized': xobj})
         return self._construct_direct(datasets, kind='hindcast')

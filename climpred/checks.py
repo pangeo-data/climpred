@@ -137,6 +137,35 @@ def is_xarray(func, *dec_args):
     return wrapper
 
 
+def match_calendars(
+    ds1, ds2, ds1_time='init', ds2_time='time', kind1='initialized', kind2='observation'
+):
+    """Checks that calendars match between two xarray Datasets.
+
+    This assumes that the two datasets coming in have cftime time axes.
+
+    Args:
+        ds1, ds2 (xarray object): Datasets/DataArrays to compare calendars on. For
+            classes, ds1 can be thought of Dataset already existing in the object,
+            and ds2 the one being added.
+        ds1_time, ds2_time (str, default 'time'): Name of time dimension to look
+            for calendar in.
+        kind1, kind2 (str): Puts `ds1` and `ds2` into context for custom error message.
+            Defaults to `ds1` being "initialized" and `ds2` being "observation".
+
+    Returns:
+        True if calendars match, False if they do not match.
+    """
+    ds1_calendar = ds1[ds1_time].to_index().calendar
+    ds2_calendar = ds2[ds2_time].to_index().calendar
+    if ds1_calendar != ds2_calendar:
+        raise ValueError(
+            f"{kind2} calendar of type '{ds2_calendar}' does not match "
+            f"{kind1} calendar of type '{ds1_calendar}'. Please modify {kind2} calendar"
+            f' using, e.g. `xr.cftime_range(..., calendar="{ds1_calendar}")` and then try again.'
+        )
+
+
 def match_initialized_dims(init, verif, uninitialized=False):
     """Checks that the verification data dimensions match appropriate initialized
     dimensions.

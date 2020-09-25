@@ -165,10 +165,10 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     return metric, comparison, dim
 
 
-@is_xarray([0, 1])
+@is_xarray([0])
 def compute_perfect_model(
     init_pm,
-    control,
+    control=None,
     metric='pearson_r',
     comparison='m2e',
     dim=['member', 'init'],

@@ -176,7 +176,7 @@ def _display_metric_metadata(self):
     summary += f'Maximum skill: {self.maximum}\n'
     summary += f'Perfect skill: {self.perfect}\n'
     summary += f'Normalize: {self.normalize}\n'
-    summary += f'Allow logical: {self.allow_logical}\n'
+    summary += f'Allows logical: {self.allows_logical}\n'
     # doc
     summary += f'Function: {self.function.__doc__}\n'
     return summary

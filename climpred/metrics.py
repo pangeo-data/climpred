@@ -2365,13 +2365,10 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
-
     if 'category_edges' in metric_kwargs:
         category_edges = metric_kwargs.pop('category_edges')
     else:
         raise ValueError('require category_edges')
-    if 'member' in verif.coords and 'member' not in verif.dims:
-        del verif.coords['member']  # TODO: cleanup in comparison
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 

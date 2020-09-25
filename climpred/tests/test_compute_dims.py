@@ -64,6 +64,7 @@ def test_compute_perfect_model_dim_over_member(
 @pytest.mark.parametrize('comparison', PROBABILISTIC_HINDCAST_COMPARISONS)
 def test_compute_hindcast_dim_over_member(hindcast_hist_obs_1d, comparison):
     """Test deterministic metric calc skill over member dim."""
+    print(hindcast_hist_obs_1d.get_initialized().coords)
     actual = hindcast_hist_obs_1d.verify(
         comparison=comparison, metric='rmse', dim='member', alignment='same_verif'
     )['SST']

@@ -116,14 +116,14 @@ Internals/Minor Fixes
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 - remove fixed pandas dependency from ``pandas=0.25`` to stable `pandas`.
-  (:issue:`402`,:pr:`403`) `Aaron Spring`_.
+  (:issue:`402`, :pr:`403`) `Aaron Spring`_.
 - ``dim`` is expected to be a list of strings in
   :py:func:`~climpred.prediction.compute_perfect_model` and
   :py:func:`~climpred.prediction.compute_hindcast`.
   (:issue:`282`, :pr:`407`) `Aaron Spring`_.
 - Update ``cartopy`` requirement to 0.0.18 or greater to release lock on
   ``matplotlib`` version. Update ``xskillscore`` requirement to 0.0.18 to
-  cooperate with new ``xarray`` version. (:pr:`451`,:pr:`449`)
+  cooperate with new ``xarray`` version. (:pr:`451`, :pr:`449`)
   `Riley X. Brady`_
 
 

@@ -619,23 +619,31 @@ class PerfectModelEnsemble(PredictionEnsemble):
     def verify(
         self, metric=None, comparison=None, dim=None, reference=None, **metric_kwargs,
     ):
-        """Verify predictability of the initialized ensemble.
+        """Verify initialized predictions against a configuration of other ensemble members.
+
+        .. note::
+            The configuration of the other ensemble members is based off of the
+            ``comparison`` keyword argument.
 
         Args:
-            metric (str or Metric): Metric to apply in the comparison.
+            metric (str or Metric): Metric to apply in the comparison. See
+                `metrics </metrics.html>`_.
             comparison (str): How to compare the initialized prediction ensemble with
-                itself, see `comparisons <comparisons.html>`_.
-            dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
-                on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
-                ``dim`` should contain ``member`` when ``comparison`` is probabilistic
-                but should not contain ``member`` when ``comparison=e2c``. Defaults to
-                ``None`` meaning that all dimensions other than ``lead`` are reduced.
-            reference (str, list of str): Reference forecasts to compute metric
-                with.
-            **metric_kwargs (optional): arguments passed to ``metric``.
+                itself, see `comparisons </comparisons.html>`_.
+            dim (str, list of str): Dimension(s) over which to apply ``metric``.
+                ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
+                ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
+                is probabilistic but should not contain ``member`` when
+                ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
+                other than ``lead`` are reduced.
+            reference (str, list of str): Type of reference forecasts with which to
+                verify. One or more of ['persistence', 'historical', 'uninitialized'].
+            **metric_kwargs (optional): Arguments passed to ``metric``.
 
-        Returns: Dataset of comparison results with `skill` dimension for difference
-            references compared against.
+        Returns:
+            Dataset of comparison results with ``skill`` dimension for verification
+            results for the initialized ensemble (``init``) and any reference forecasts
+            verified.
         """
         has_dataset(self._datasets['control'], 'control', 'compute a metric')
         input_dict = {
@@ -687,21 +695,28 @@ class PerfectModelEnsemble(PredictionEnsemble):
     def compute_uninitialized(
         self, metric=None, comparison=None, dim=None, **metric_kwargs
     ):
-        """Compares the bootstrapped uninitialized run to the control run.
+        """Verify the bootstrapped uninitialized run against a configuration of other
+        ensemble members.
+
+        .. note::
+            The configuration of the other ensemble members is based off of the
+            ``comparison`` keyword argument.
 
         Args:
-            metric (str): Metric to apply in the comparison. see
-                `metrics <metrics.html>`_.
+            metric (str): Metric to apply in the comparison. See
+                `metrics </metrics.html>`_.
             comparison (str): How to compare the uninitialized against itself, see
-                `comparisons <comparisons.html>`_.
-            dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
-                on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
-                ``dim`` should contain ``member`` when ``comparison`` is probabilistic
-                but should not contain ``member`` when ``comparison=e2c``. Defaults to
-                ``None`` meaning that all dimensions other than ``lead`` are reduced.
+                `comparisons </comparisons.html>`_.
+            dim (str, list of str): Dimension(s) over which to apply metric.
+                ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
+                ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
+                is probabilistic but should not contain ``member`` when
+                ``comparison=e2c``. Defaults to ``None``, meaning that all dimensions
+                other than ``lead`` are reduced.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
-        Returns: Result of the comparison as a Dataset.
+        Returns:
+            Result of the comparison as a Dataset.
         """
         has_dataset(
             self._datasets['uninitialized'],
@@ -726,16 +741,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return res
 
     def compute_persistence(self, metric=None):
-        """Compute a simple persistence forecast for the control run.
+        """Verify a simple persistence forecast of the control run against itself.
 
         Args:
-            metric (str): Metric to apply to the persistence forecast, see
-                `metrics <metrics.html>`_.
+            metric (str): Metric to use when comparing the persistence forecast to the
+            control run. See `metrics </metrics.html>`_.
 
         Returns:
-            Dataset of persistence forecast results (if ``refname`` is declared),
-            or dictionary of Datasets with keys corresponding to verification data
-            name.
+            Dataset of persistence forecast results.
 
         Reference:
             * Chapter 8 (Short-Term Climate Prediction) in
@@ -765,26 +778,26 @@ class PerfectModelEnsemble(PredictionEnsemble):
         metric=None,
         comparison=None,
         dim=None,
-        iterations=5,
+        iterations=None,
         sig=95,
         pers_sig=None,
         **metric_kwargs,
     ):
-        """Bootstrap ensemble PerfectModelEnsemble with replacement according to
-        Goddard et al. 2013.
+        """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
             metric (str): Metric to verify bootstrapped skill, see
-                `metrics <metrics.html>`_.
-            comparison (str): comparison passed to verify, see
-                `comparisons <comparisons.html>`_.
-            dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
-                on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
-                ``dim`` should contain ``member`` when ``comparison`` is probabilistic
-                but should not contain ``member`` when ``comparison=e2c``. Defaults to
-                ``None`` meaning that all dimensions other than ``lead`` are reduced.
-            iterations (int, default 5): Number of resampling iterations for
-                bootstrapping with replacement. Recommended >=500.
+                `metrics </metrics.html>`_.
+            comparison (str): Comparison passed to verify, see
+                `comparisons </comparisons.html>`_.
+            dim (str, list of str): Dimension(s) over which to apply metric.
+                ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
+                ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
+                is probabilistic but should not contain ``member`` when
+                ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
+                other than ``lead`` are reduced.
+            iterations (int): Number of resampling iterations for bootstrapping with
+                replacement. Recommended >= 500.
             sig (int, default 95): Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
@@ -818,6 +831,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
               https://doi.org/10/f4jjvf.
 
         """
+        if iterations is None:
+            raise ValueError('Designate number of bootstrapping `iterations`.')
         has_dataset(self._datasets['control'], 'control', 'iteration')
         input_dict = {
             'ensemble': self._datasets['initialized'],
@@ -1009,21 +1024,23 @@ class HindcastEnsemble(PredictionEnsemble):
         alignment=None,
         **metric_kwargs,
     ):
-        """Verifies the initialized ensemble against observations/verification data.
+        """Verifies the initialized ensemble against observations.
 
-        This will automatically verify against all shared variables
-        between the initialized ensemble and observations/verification data.
+        .. note::
+            This will automatically verify against all shared variables
+            between the initialized ensemble and observations/verification data.
 
         Args:
             name (str): Short name of observations/verification data to compare to.
                 If ``None``, compare to all observations/verification data.
-            reference (str): Which reference skill is also computed. Choose
-                from ['historical', 'persistence']. Defaults to None.
+            reference (str): Type of reference forecasts to also verify against the
+                observations. Choose one or more of ['historical', 'persistence'].
+                Defaults to None.
             metric (str): Metric to apply for verification. see
-                `metrics <metrics.html>`_.
+                `metrics </metrics.html>`_.
             comparison (str): How to compare to the
-                observations/verification data. , see `comparisons <comparisons.html>`_.
-            dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
+                observations/verification data. See `comparisons </comparisons.html>`_.
+            dim (str, list of str): Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
                 but should not contain ``member`` when ``comparison=e2o``. Defaults to
@@ -1047,6 +1064,22 @@ class HindcastEnsemble(PredictionEnsemble):
             observations/verification data short name.
 
         """
+        # Have to do checks here since this doesn't call `compute_hindcast` directly.
+        # Will be refactored when `climpred` migrates to inheritance-based.
+        if dim is None:
+            viable_dims = dict(self._datasets['initialized'].dims)
+            viable_dims = list(viable_dims.keys())
+            if 'lead' in viable_dims:
+                viable_dims.remove('lead')
+            raise ValueError(
+                'Designate a dimension to reduce over when applying the '
+                f'metric. Got {dim}. Choose one or more of {viable_dims}'
+            )
+        if ('member' in dim) and comparison not in ['m2o', 'm2r']:
+            raise ValueError(
+                "Comparison must equal 'm2o' with dim='member'. "
+                f'Got comparison {comparison}.'
+            )
         if isinstance(reference, str):
             reference = [reference]
         elif reference is None:
@@ -1166,22 +1199,21 @@ class HindcastEnsemble(PredictionEnsemble):
         self,
         metric=None,
         comparison=None,
-        alignment=None,
-        sig=95,
         dim=None,
+        alignment=None,
+        iterations=None,
+        sig=95,
         resample_dim='member',
-        iterations=5,
         pers_sig=None,
         **metric_kwargs,
     ):
-        """Bootstrap ensemble HindcastEnsemble with replacement according to
-        Goddard et al. 2013.
+        """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
             metric (str): Metric to apply for verification, see
                 `metrics <metrics.html>`_.
             comparison (str): How to compare to the
-                observations/verification data, see `comparisons <comparisons.html>`_.
+                observations/verification data, see `comparisons </comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -1190,14 +1222,18 @@ class HindcastEnsemble(PredictionEnsemble):
             alignment (str): which inits or verification times should be aligned?
 
                 - 'maximize': maximize the degrees of freedom by slicing ``init`` and
-                ``verif`` to a common time frame at each lead
-                - 'same_inits': slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations
-                - 'same_verif': slice to a common/consistent verification time frame
-                prior to computing metric. This philosophy follows the thought that
-                each lead should be based on the same set of verification dates
+                  ``verif`` to a common time frame at each lead
 
+                - 'same_inits': slice to a common init frame prior to computing
+                  metric. This philosophy follows the thought that each lead should be
+                  based on the same set of initializations
+
+                - 'same_verif': slice to a common/consistent verification time frame
+                  prior to computing metric. This philosophy follows the thought that
+                  each lead should be based on the same set of verification dates
+
+            iterations (int): Number of resampling iterations for bootstrapping with
+                replacement. Recommended >= 500.
             sig (int, default 95): Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             resample_dim (str or list): dimension to resample from. default: 'member'.
@@ -1205,8 +1241,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'member': select a different set of members from hind
                 - 'init': select a different set of initializations from hind
 
-            iterations (int, default 5): Number of resampling iterations for
-                bootstrapping with replacement. Recommended >=500.
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
             **metric_kwargs (optional): arguments passed to ``metric``.
@@ -1231,6 +1265,8 @@ class HindcastEnsemble(PredictionEnsemble):
                     bootstrapping with replacement.
 
         """
+        if iterations is None:
+            raise ValueError('Designate number of bootstrapping `iterations`.')
         # TODO: replace with more computationally efficient classes implementation
         return bootstrap_hindcast(
             self.get_initialized(),
@@ -1252,14 +1288,16 @@ class HindcastEnsemble(PredictionEnsemble):
         Args:
             alignment (str): which inits or verification times should be aligned?
 
-                - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-                ``verif`` to a common time frame at each lead.
-                - same_inits: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-                - same_verif: slice to a common/consistent verification time frame prior
-                to computing metric. This philosophy follows the thought that each lead
-                should be based on the same set of verification dates.
+                - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
+                  ``verif`` to a common time frame at each lead.
+
+                - 'same_inits': slice to a common init frame prior to computing
+                  metric. This philosophy follows the thought that each lead should be
+                  based on the same set of initializations.
+
+                - 'same_verif': slice to a common/consistent verification time frame
+                  prior to computing metric. This philosophy follows the thought that
+                  each lead should be based on the same set of verification dates.
 
             how (str or list of str): what kind of bias reduction to perform. Select
                 from ['mean']. Defaults to 'mean'.

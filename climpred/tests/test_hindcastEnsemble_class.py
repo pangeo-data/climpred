@@ -202,5 +202,9 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
 
 def test_bootstrap(hindcast_hist_obs_1d):
     hindcast_hist_obs_1d.bootstrap(
-        metric='acc', comparison='e2o', alignment='same_verifs', dim='init'
+        metric='acc',
+        comparison='e2o',
+        alignment='same_verifs',
+        dim='init',
+        iterations=3,
     )

@@ -48,7 +48,7 @@ def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test to see if verify automatically works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    hindcast.verify(metric='acc', comparison='e2o', dim='init', alignment='same_verif')
+    hindcast.verify(metric="acc", comparison="e2o", dim="init", alignment="same_verif")
 
 
 def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
@@ -81,7 +81,7 @@ def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_observations(reconstruction_ds_1d)
     obs = hindcast.get_observations()
-    assert obs == hindcast._datasets['observations']
+    assert obs == hindcast._datasets["observations"]
 
 
 def test_inplace(
@@ -198,7 +198,7 @@ def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_d
     )
     with pytest.raises(ValueError) as excinfo:
         hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    assert 'does not match' in str(excinfo.value)
+    assert "does not match" in str(excinfo.value)
 
 
 def test_calendar_matching_uninitialized(

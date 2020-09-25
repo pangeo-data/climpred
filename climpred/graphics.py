@@ -320,10 +320,10 @@ def plot_lead_timeseries_hindcast(
             obs = obs[variable]
         obs.plot(
             ax=ax,
-            color='k',
+            color="k",
             lw=3,
-            ls='-',
-            label='observations',
+            ls="-",
+            label="observations",
             zorder=hind.lead.size + 2,
         )
 

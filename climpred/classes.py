@@ -54,19 +54,19 @@ def _display_metadata(self):
     if isinstance(self, HindcastEnsemble):
         # Prints out verification dataand associated variables if they exist.
         # If not, just write "None".
-        summary += 'Verification Data:\n'
-        if any(self._datasets['observations']):
-            num_obs = len(self._datasets['observations'].data_vars)
+        summary += "Verification Data:\n"
+        if any(self._datasets["observations"]):
+            num_obs = len(self._datasets["observations"].data_vars)
             for i in range(1, num_obs + 1):
                 summary += (
                     SPACE
-                    + str(self._datasets['observations'].data_vars)
-                    .split('\n')[i]
+                    + str(self._datasets["observations"].data_vars)
+                    .split("\n")[i]
                     .strip()
-                    + '\n'
+                    + "\n"
                 )
         else:
-            summary += SPACE + 'None\n'
+            summary += SPACE + "None\n"
     elif isinstance(self, PerfectModelEnsemble):
         summary += "Control:\n"
         # Prints out control variables if a control is appended. If not,
@@ -98,9 +98,9 @@ def _display_metadata_html(self):
     display_html(init_repr_str, raw=True)
 
     if isinstance(self, HindcastEnsemble):
-        if any(self._datasets['observations']):
-            obs_repr_str = dataset_repr(self._datasets['observations'])
-            obs_repr_str = obs_repr_str.replace('xarray.Dataset', 'Verification Data')
+        if any(self._datasets["observations"]):
+            obs_repr_str = dataset_repr(self._datasets["observations"])
+            obs_repr_str = obs_repr_str.replace("xarray.Dataset", "Verification Data")
             display_html(obs_repr_str, raw=True)
     elif isinstance(self, PerfectModelEnsemble):
         if any(self._datasets["control"]):
@@ -890,8 +890,8 @@ class HindcastEnsemble(PredictionEnsemble):
             func (function): climpred function to apply to object.
             init (bool): Whether or not it's the initialized ensemble.
         """
-        hind = self._datasets['initialized']
-        verif = self._datasets['observations']
+        hind = self._datasets["initialized"]
+        verif = self._datasets["observations"]
         drop_init, drop_obs = self._vars_to_drop(init=init)
         return func(hind.drop_vars(drop_init), verif.drop_vars(drop_obs), **kwargs)
 
@@ -916,8 +916,8 @@ class HindcastEnsemble(PredictionEnsemble):
         if init:
             init_vars = [var for var in self._datasets["initialized"].data_vars]
         else:
-            init_vars = [var for var in self._datasets['uninitialized'].data_vars]
-        obs_vars = [var for var in self._datasets['observations'].data_vars]
+            init_vars = [var for var in self._datasets["uninitialized"].data_vars]
+        obs_vars = [var for var in self._datasets["observations"].data_vars]
         # Make lists of variables to drop that aren't in common
         # with one another.
         init_vars_to_drop = list(set(init_vars) - set(obs_vars))
@@ -941,10 +941,10 @@ class HindcastEnsemble(PredictionEnsemble):
         xobj = convert_time_index(xobj, "time", "xobj[init]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets['initialized'], xobj)
+        match_calendars(self._datasets["initialized"], xobj)
         datasets = self._datasets.copy()
-        datasets.update({'observations': xobj})
-        return self._construct_direct(datasets, kind='hindcast')
+        datasets.update({"observations": xobj})
+        return self._construct_direct(datasets, kind="hindcast")
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
@@ -974,7 +974,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Returns:
             ``xarray`` Dataset of observations.
         """
-        return self._datasets['observations']
+        return self._datasets["observations"]
 
     def verify(
         self,

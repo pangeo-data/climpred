@@ -100,7 +100,7 @@ def test_hindcastEnsemble_plus_defined(
     he2 = operator(he, other)
     for dataset in he._datasets:
         if he._datasets[dataset]:
-            print('check', dataset)
+            print("check", dataset)
             assert_equal(he2._datasets[dataset], operator(he._datasets[dataset], other))
             # check same dims and data_vars as before
             check_dataset_dims_and_data_vars(he, he2, dataset)
@@ -115,12 +115,12 @@ def test_hindcastEnsemble_plus_hindcastEnsemble(
     he = HindcastEnsemble(hind_ds_initialized_1d)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
     he = he.add_observations(observations_ds_1d)
-    other = he.mean('init')
+    other = he.mean("init")
     operator = eval(operator)
     he2 = operator(he, other)
     for dataset in he._datasets:
         if he._datasets[dataset]:
-            print('check', dataset)
+            print("check", dataset)
             assert_equal(
                 he2._datasets[dataset],
                 operator(he._datasets[dataset], other._datasets[dataset]),

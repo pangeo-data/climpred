@@ -52,22 +52,20 @@ def _display_metadata(self):
     summary = header + '\nInitialized Ensemble:\n'
     summary += SPACE + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
     if isinstance(self, HindcastEnsemble):
-        # Prints out verification data names and associated variables if they exist.
+        # Prints out verification dataand associated variables if they exist.
         # If not, just write "None".
+        summary += 'Verification Data:\n'
         if any(self._datasets['observations']):
-            for key in self._datasets['observations']:
-                summary += f'{key}:\n'
-                num_obs = len(self._datasets['observations'][key].data_vars)
-                for i in range(1, num_obs + 1):
-                    summary += (
-                        SPACE
-                        + str(self._datasets['observations'][key].data_vars)
-                        .split('\n')[i]
-                        .strip()
-                        + '\n'
-                    )
+            num_obs = len(self._datasets['observations'].data_vars)
+            for i in range(1, num_obs + 1):
+                summary += (
+                    SPACE
+                    + str(self._datasets['observations'].data_vars)
+                    .split('\n')[i]
+                    .strip()
+                    + '\n'
+                )
         else:
-            summary += 'Verification Data:\n'
             summary += SPACE + 'None\n'
     elif isinstance(self, PerfectModelEnsemble):
         summary += 'Control:\n'

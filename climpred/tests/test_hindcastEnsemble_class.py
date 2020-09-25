@@ -19,14 +19,14 @@ def test_hindcastEnsemble_init_da(hind_da_initialized_1d):
 def test_add_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test to see if observations can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
+    hindcast = hindcast.add_observations(reconstruction_ds_1d)
     assert hindcast.get_observations()
 
 
 def test_add_observations_da_1d(hind_ds_initialized_1d, observations_da_1d):
     """Test to see if observations can be added to the HindcastEnsemble as a da"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(observations_da_1d, 'observations')
+    hindcast = hindcast.add_observations(observations_da_1d)
     assert hindcast.get_observations()
 
 
@@ -44,25 +44,6 @@ def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitiali
     assert hindcast.get_uninitialized()
 
 
-def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d, observations_ds_1d):
-    """Test to see if verify can be run from the HindcastEnsemble"""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'reconstruction')
-    hindcast = hindcast.add_observations(observations_ds_1d, 'observations')
-    # Don't need to check for NaNs, etc. since that's handled in the prediction
-    # module testing.
-    hindcast.verify(
-        metric='acc', comparison='e2o', dim='init', alignment='same_verif'
-    )  # compute over all observations
-    hindcast.verify(
-        'reconstruction',
-        metric='acc',
-        comparison='e2o',
-        dim='init',
-        alignment='same_verif',
-    )  # compute over single observation
-
-
 def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test to see if verify automatically works with a single observational
     product."""
@@ -74,11 +55,11 @@ def test_verify_single(hind_ds_initialized_1d, reconstruction_ds_1d):
 def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Test whether applying isel to the objects works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'FOSI')
+    hindcast = hindcast.add_observations(reconstruction_ds_1d)
     hindcast = hindcast.isel(lead=0, init=slice(0, 3)).isel(time=slice(5, 10))
     assert hindcast.get_initialized().init.size == 3
     assert hindcast.get_initialized().lead.size == 1
-    assert hindcast.get_observations.time.size == 5
+    assert hindcast.get_observations().time.size == 5
 
 
 def test_get_initialized(hind_ds_initialized_1d):
@@ -99,13 +80,9 @@ def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
 def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests whether get_observations method works."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d, 'FOSI')
-    # Without name keyword.
+    hindcast = hindcast.add_observations(reconstruction_ds_1d)
     obs = hindcast.get_observations()
-    assert obs == hindcast._datasets['observations']['FOSI']
-    # With name keyword.
-    obs = hindcast.get_observations('FOSI')
-    assert obs == hindcast._datasets['observations']['FOSI']
+    assert obs == hindcast._datasets['observations']
 
 
 def test_inplace(
@@ -114,8 +91,8 @@ def test_inplace(
     """Tests that inplace operations do not work."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     # Adding observations.
-    hindcast.add_observations(reconstruction_ds_1d, 'FOSI')
-    with_obs = hindcast.add_observations(reconstruction_ds_1d, 'FOSI')
+    hindcast.add_observations(reconstruction_ds_1d)
+    with_obs = hindcast.add_observations(reconstruction_ds_1d)
     assert hindcast != with_obs
     # Adding an uninitialized ensemble.
     hindcast.add_uninitialized(hist_ds_uninitialized_1d)

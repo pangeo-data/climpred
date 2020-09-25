@@ -187,6 +187,7 @@ def _display_metric_metadata(self):
     summary += f'Minimum skill: {self.minimum}\n'
     summary += f'Maximum skill: {self.maximum}\n'
     summary += f'Perfect skill: {self.perfect}\n'
+    summary += f'Normalize: {self.normalize}\n'
     # doc
     summary += f'Function: {self.function.__doc__}\n'
     return summary
@@ -207,6 +208,7 @@ class Metric:
         minimum=None,
         maximum=None,
         perfect=None,
+        normalize=False,
     ):
         """Metric initialization.
 
@@ -225,6 +227,8 @@ class Metric:
             min (float, optional): Minimum skill for metric. Defaults to None.
             max (float, optional): Maxmimum skill for metric. Defaults to None.
             perfect (float, optional): Perfect skill for metric. Defaults to None.
+            normalize (bool, optional): Will the metric be normalized? Then metric
+             function will require to get Comparison passed. Defaults to False.
 
         Returns:
             Metric: metric class Metric.
@@ -240,6 +244,7 @@ class Metric:
         self.minimum = minimum
         self.maximum = maximum
         self.perfect = perfect
+        self.normalize = normalize
 
     def __repr__(self):
         """Show metadata of metric class."""
@@ -289,7 +294,6 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r_p_value
         * climpred.pearson_r_eff_p_value
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
@@ -341,7 +345,6 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.pearson_r
         * climpred.pearson_r_eff_p_value
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -411,7 +414,6 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
@@ -486,7 +488,6 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -555,7 +556,6 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r_p_value
         * climpred.spearman_r_eff_p_value
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     with warnings.catch_warnings():
         warnings.simplefilter('ignore', category=RuntimeWarning)
@@ -607,7 +607,6 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * climpred.spearman_r
         * climpred.spearman_r_eff_p_value
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -686,7 +685,6 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -755,7 +753,6 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
           Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return mse(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -802,7 +799,6 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.rmse
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return rmse(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -856,7 +852,6 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
           Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
           URL: http://doi.wiley.com/10.1002/9781119960003.
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return mae(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -903,7 +898,6 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.median_absolute_error
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return median_absolute_error(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -978,12 +972,11 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
     """
     if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+        comparison = metric_kwargs.pop('comparison')
     else:
         raise ValueError(
             'Comparison needed to normalize NMSE. Not found in', metric_kwargs
         )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
@@ -1003,6 +996,7 @@ __nmse = Metric(
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
+    normalize=True,
 )
 
 
@@ -1061,12 +1055,11 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
     """
     if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+        comparison = metric_kwargs.pop('comparison')
     else:
         raise ValueError(
             'Comparison needed to normalize NMAE. Not found in', metric_kwargs
         )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     mae_skill = __mae.function(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
@@ -1085,6 +1078,7 @@ __nmae = Metric(
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
+    normalize=True,
 )
 
 
@@ -1151,12 +1145,11 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         https://doi.org/10/fc7mxd.
     """
     if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+        comparison = metric_kwargs.pop('comparison')
     else:
         raise ValueError(
             'Comparison needed to normalize NRMSE. Not found in', metric_kwargs
         )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     rmse_skill = __rmse.function(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
@@ -1175,6 +1168,7 @@ __nrmse = Metric(
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
+    normalize=True,
 )
 
 
@@ -1243,7 +1237,7 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
     """
     if 'comparison' in metric_kwargs:
-        comparison = metric_kwargs['comparison']
+        comparison = metric_kwargs.pop('comparison')
     else:
         raise ValueError(
             'Comparison needed to normalize MSSS. Not found in', metric_kwargs
@@ -1267,6 +1261,7 @@ __msess = Metric(
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
+    normalize=True,
 )
 
 
@@ -1299,7 +1294,6 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.mape
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return mape(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1346,7 +1340,6 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * xskillscore.smape
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return smape(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1438,6 +1431,7 @@ __uacc = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=1.0,
+    normalize=True,
 )
 
 
@@ -1472,7 +1466,6 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return forecast.std(dim=dim, **metric_kwargs) / verif.std(dim=dim, **metric_kwargs)
 
@@ -1517,7 +1510,6 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www.cawcr.gov.au/projects/verification/
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
@@ -1565,7 +1557,6 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     return acc - __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
@@ -1616,7 +1607,6 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
     Reference:
         * https://www-miklip.dkrz.de/about/murcss/
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     std_ratio = __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
@@ -1678,7 +1668,6 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           Review 116, no. 12 (December 1, 1988): 2417–24.
           https://doi.org/10/fc7mxd.
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
@@ -1791,7 +1780,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -1860,7 +1849,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError('Please provide threshold.')
     else:
         threshold = metric_kwargs.pop('threshold')
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+
     dim = _remove_member_from_dim_or_raise(dim)
     # switch args b/c xskillscore.threshold_brier_score(verif, forecasts)
     return threshold_brier_score(verif, forecast, threshold, dim=dim, **metric_kwargs)
@@ -1933,7 +1922,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> hindcast.verify(metric='crps', comparison='m2o', dim='member')
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+
     dim = _remove_member_from_dim_or_raise(dim)
 
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
@@ -2063,7 +2052,6 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         * properscoring.crps_ensemble
         * xskillscore.crps_ensemble
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
@@ -2148,7 +2136,6 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         >>> hindcast.verify(metric='crpss_es', comparison='m2o',
                 alignment='same_verifs', dim='member')
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     # helper dim to calc mu
     rdim = [d for d in verif.dims if d in CLIMPRED_DIMS]
@@ -2245,7 +2232,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+
     return discrimination(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2321,7 +2308,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
+
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2362,7 +2349,6 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
     """
     dim = _remove_member_from_dim_or_raise(dim)
 
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     return rank_histogram(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2415,7 +2401,6 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     """
     dim = _remove_member_from_dim_or_raise(dim)
 
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
     if 'category_edges' in metric_kwargs:
         category_edges = metric_kwargs.pop('category_edges')
     else:
@@ -2475,7 +2460,6 @@ def _contingency(forecast, verif, score='table', dim=None, **metric_kwargs):
                 forecast_category_edges=category_edges)
 
     """
-    metric_kwargs = _sanitize_kwargs(metric_kwargs)
 
     if score == 'table':
         return Contingency(verif, forecast, dim=dim, **metric_kwargs).table

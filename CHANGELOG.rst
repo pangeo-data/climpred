@@ -8,6 +8,18 @@ climpred v2.x.x (2020-06-xx)
 Breaking changes
 ----------------
 
+- User now has to designate number of iterations with ``iterations=...`` in
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`. (:pr:`436`)
+  `Aaron Spring`_ and `Riley X. Brady`_.
+- Make ``metric``, ``comparison``, ``dim``, and ``alignment`` required (default None)
+  arguments for :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
+  (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
+- Make ``metric``, ``comparison``, and ``dim`` required (default None) arguments for
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`.
+  (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
 - metric :py:class:`~climpred.metrics._brier_score` now requires callable ``logical``
   instead of ``func``. (:pr:`388`) `Aaron Spring`_.
 - ``comparison`` is not applied to uninitialized skill in
@@ -57,6 +69,8 @@ Deprecated
 ----------
 
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
+- ``compute_metric``. Use :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`
+  instead. (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Bug Fixes
 ---------
@@ -75,7 +89,8 @@ Bug Fixes
   :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
-- Reduce bias by ``dayofyear`` :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`.
+- Reduce bias by ``dayofyear`` in
+  :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
   (:pr:`443`) `Aaron Spring`_.
 
 Documentation
@@ -101,14 +116,14 @@ Internals/Minor Fixes
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 - remove fixed pandas dependency from ``pandas=0.25`` to stable `pandas`.
-  (:issue:`402`,:pr:`403`) `Aaron Spring`_.
+  (:issue:`402`, :pr:`403`) `Aaron Spring`_.
 - ``dim`` is expected to be a list of strings in
   :py:func:`~climpred.prediction.compute_perfect_model` and
   :py:func:`~climpred.prediction.compute_hindcast`.
   (:issue:`282`, :pr:`407`) `Aaron Spring`_.
 - Update ``cartopy`` requirement to 0.0.18 or greater to release lock on
   ``matplotlib`` version. Update ``xskillscore`` requirement to 0.0.18 to
-  cooperate with new ``xarray`` version. (:pr:`451`,:pr:`449`)
+  cooperate with new ``xarray`` version. (:pr:`451`, :pr:`449`)
   `Riley X. Brady`_
 
 

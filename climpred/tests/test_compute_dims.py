@@ -65,9 +65,8 @@ def test_compute_perfect_model_dim_over_member(
 def test_compute_hindcast_dim_over_member(hindcast_hist_obs_1d, comparison):
     """Test deterministic metric calc skill over member dim."""
     actual = hindcast_hist_obs_1d.verify(
-        comparison=comparison, metric='rmse', dim='member',
+        comparison=comparison, metric='rmse', dim='member', alignment='same_verif'
     )['SST']
-    print(actual.dims)
     assert 'init' in actual.dims
     # mean init because skill has still coords for init lead
     assert not actual.mean('init').isnull().any()
@@ -164,9 +163,9 @@ def test_compute_pm_dims(
 def test_compute_hindcast_dims(hindcast_hist_obs_1d, dim, metric):
     """Test whether compute_hindcast calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
-    actual = hindcast_hist_obs_1d.verify(metric=metric, dim=dim, comparison='m2o',)[
-        'SST'
-    ]
+    actual = hindcast_hist_obs_1d.verify(
+        metric=metric, dim=dim, comparison='m2o', alignment='same_verif'
+    )['SST']
     # check whether only dim got reduced from coords
     assert set(hindcast_hist_obs_1d.get_initialized().dims) - set(actual.dims) == set(
         [dim]

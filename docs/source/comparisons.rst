@@ -8,11 +8,10 @@ the ensemble of forecasts. Here we cover the comparison options for both hindcas
 perfect model ensembles. See `terminology <terminology.html>`__ for clarification on
 the differences between these two experimental setups.
 
-Note that all compute functions (:py:func:`~climpred.prediction.compute_hindcast`,
-:py:func:`~climpred.prediction.compute_perfect_model`,
-:py:func:`~climpred.prediction.compute_hindcast`,
-:py:func:`~climpred.bootstrap.bootstrap_hindcast`,
-:py:func:`~climpred.bootstrap.bootstrap_perfect_model`) take an optional
+All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` take a
 ``comparison=''`` keyword to select the comparison style. See below for a detailed
 description on the differences between these comparisons.
 
@@ -24,18 +23,16 @@ perform better than individual ensemble members (``comparison='m2o'``) as the ch
 component of forecasts is expected to be suppressed by this averaging, while the memory
 of the system sustains. [Boer2016]_
 
-``keyword: 'e2o', 'e2r'``
-
-**This is the default option.**
-
 .. currentmodule:: climpred.comparisons
 
-.. autosummary:: _e2o
+``keyword: 'e2o', 'e2r'``
 
+.. autosummary:: _e2o
 
 ``keyword: 'm2o', 'm2r'``
 
 .. autosummary:: _m2o
+
 
 Perfect Model Ensembles
 #######################
@@ -48,8 +45,6 @@ against one control member (``comparison='e2c'``) or all members (``comparison='
 as done in [Griffies1997]_.
 
 ``keyword: 'm2e'``
-
-**This is the default option.**
 
 .. autosummary:: _m2e
 
@@ -96,10 +91,9 @@ results.
 Compute over dimension
 ######################
 
-The optional argument ``dim`` defines over which dimension a metric is computed. We can
-apply a metric over ``dim`` from [``'init'``, ``'member'``, ``['member', 'init']``] in
-:py:func:`~climpred.prediction.compute_perfect_model` and [``'init'``, ``'member'``]
-in :py:func:`~climpred.prediction.compute_hindcast`. The resulting skill is then
+The argument ``dim`` defines over which dimension a metric is computed. We can
+apply a metric over all dimensions from the initialized dataset expect ``lead``.
+The resulting skill is then
 reduced by this ``dim``. Therefore, applying a metric over ``dim='member'`` creates a
 skill for all initializations individually. This can show the initial conditions
 dependence of skill. Likewise when computing skill over ``'init'``, we get skill for
@@ -108,9 +102,12 @@ just specifies how ``forecast`` and ``observations`` are defined.
 
 However, this above logic applies to deterministic metrics. Probabilistic metrics need
 to be applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``]
-in :py:func:`~climpred.prediction.compute_perfect_model` and ``'m2o'`` comparison in
-:py:func:`~climpred.prediction.compute_hindcast`. Using a probabilistic metric
-automatically switches internally to using ``dim='member'``.
+in :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``'m2o'`` comparison in
+:py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+
+``dim`` should not contain
+``member`` when the comparison already computes ensemble means as in
+[``'e2o'``, ``'e2c'``].
 
 
 User-defined comparisons

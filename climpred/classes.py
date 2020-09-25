@@ -626,10 +626,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``comparison`` keyword argument.
 
         Args:
-            metric (str or Metric): Metric to apply in the comparison. See
-                `metrics </metrics.html>`_.
-            comparison (str): How to compare the initialized prediction ensemble with
-                itself, see `comparisons </comparisons.html>`_.
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply in the
+                comparison. See `metrics </metrics.html>`_.
+            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
+                compare the initialized prediction ensemble with itself, see
+                `comparisons </comparisons.html>`_.
             dim (str, list of str): Dimension(s) over which to apply ``metric``.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -695,17 +696,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
     def compute_uninitialized(
         self, metric=None, comparison=None, dim=None, **metric_kwargs
     ):
-        """Verify the bootstrapped uninitialized run against a configuration of other
-        ensemble members.
+        """Verify the bootstrapped uninitialized run against itself.
 
         .. note::
             The configuration of the other ensemble members is based off of the
             ``comparison`` keyword argument.
 
         Args:
-            metric (str): Metric to apply in the comparison. See
-                `metrics </metrics.html>`_.
-            comparison (str): How to compare the uninitialized against itself, see
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply in the
+                comparison. See `metrics </metrics.html>`_.
+            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
+                compare the uninitialized against itself, see
                 `comparisons </comparisons.html>`_.
             dim (str, list of str): Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
@@ -744,8 +745,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Verify a simple persistence forecast of the control run against itself.
 
         Args:
-            metric (str): Metric to use when comparing the persistence forecast to the
-            control run. See `metrics </metrics.html>`_.
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
+            verifying skill of the persistence forecast. See `metrics </metrics.html>`_.
 
         Returns:
             Dataset of persistence forecast results.
@@ -786,10 +787,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric (str): Metric to verify bootstrapped skill, see
-                `metrics </metrics.html>`_.
-            comparison (str): Comparison passed to verify, see
-                `comparisons </comparisons.html>`_.
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to verify
+                bootstrapped skill, see `metrics </metrics.html>`_.
+            comparison (str, :py:class:`~climpred.comparisons.Comparison`): Comparison
+                passed to verify, see `comparisons </comparisons.html>`_.
             dim (str, list of str): Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1036,10 +1037,11 @@ class HindcastEnsemble(PredictionEnsemble):
             reference (str): Type of reference forecasts to also verify against the
                 observations. Choose one or more of ['historical', 'persistence'].
                 Defaults to None.
-            metric (str): Metric to apply for verification. see
-                `metrics </metrics.html>`_.
-            comparison (str): How to compare to the
-                observations/verification data. See `comparisons </comparisons.html>`_.
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
+                verification. see `metrics </metrics.html>`_.
+            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
+                compare to the observations/verification data. See
+                `comparisons </comparisons.html>`_.
             dim (str, list of str): Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -1212,10 +1214,11 @@ class HindcastEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric (str): Metric to apply for verification, see
-                `metrics <metrics.html>`_.
-            comparison (str): How to compare to the
-                observations/verification data, see `comparisons </comparisons.html>`_.
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
+                verification, see `metrics <metrics.html>`_.
+            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
+                compare to the observations/verification data, see
+                `comparisons </comparisons.html>`_.
             dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic

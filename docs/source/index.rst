@@ -150,7 +150,7 @@ repository and running ``pip install . --upgrade`` in the main directory
 * :doc:`contributors`
 * :doc:`helpful-links`
 * :doc:`publications`
-* :doc:`related_packages`
+* :doc:`related-packages`
 * :doc:`release_procedure`
 
 .. toctree::

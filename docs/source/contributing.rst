@@ -87,7 +87,7 @@ documents. Some helpful guides are located
 
     .. code:: bash
 
-        $ conda env update -f ci/requirements/environment-dev-3.6.yml
+        $ conda env update -f ci/requirements/environment-dev.yml
         $ cd docs
         $ make html
 

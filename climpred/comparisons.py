@@ -105,7 +105,6 @@ def _m2m(ds, metric=None):
     forecast = xr.concat(forecast_list, M2M_MEMBER_DIM)
     reference[M2M_MEMBER_DIM] = np.arange(reference[M2M_MEMBER_DIM].size)
     forecast[M2M_MEMBER_DIM] = np.arange(forecast[M2M_MEMBER_DIM].size)
-    print(forecast, reference)
     return forecast, reference
 
 

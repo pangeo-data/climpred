@@ -563,7 +563,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         init_str = "initialized" if init else "uninitialized"
         init_vars = list(self._datasets[init_str])
-        # only drop of control present
+        # only drop if control present
         if self._datasets["control"]:
             ctrl_vars = list(self._datasets["control"])
             # Make lists of variables to drop that aren't in common
@@ -732,12 +732,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "uninitialized",
             "compute an uninitialized metric",
         )
+        # pass fake control if no control dataset available
+        # compute_perfect_model does not use control anyways
         input_dict = {
             "ensemble": self._datasets["uninitialized"],
             "control": self._datasets["control"]
             if isinstance(self._datasets["control"], xr.Dataset)
             else self._datasets["initialized"]
-            .isel(member=0, lead=0)
+            .isel(member=0, lead=0, drop=True)
             .rename({"init": "time"}),
             "init": False,
         }

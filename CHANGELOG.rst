@@ -74,8 +74,8 @@ New Features
     * ranked probability score :py:func:`~climpred.metrics._rps`
     * contingency table and related scores :py:func:`~climpred.metrics._contingency`
 - :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` does not require to find
-  ``control`` in :py:class:`~climpred.classes.PerfectModelEnsemble`.
-  (:pr:`461`) `Aaron Spring`_
+  ``control`` in :py:class:`~climpred.classes.PerfectModelEnsemble`, only for
+   ``reference=['persistence']``. (:pr:`461`) `Aaron Spring`_.
 
 Deprecated
 ----------

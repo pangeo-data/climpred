@@ -226,3 +226,5 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(
         .isnull()
         .any()
     )
+
+    pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])

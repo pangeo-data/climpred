@@ -176,7 +176,7 @@ def find_start_dates_for_given_init(control, single_init):
         dim = dim.expand_dims("init") if "time" not in dim.coords else dim
         calendar = type(dim.values[0]).__name__
         if "Leap" not in calendar:
-            raise ValueError(
+            warnings.warn(
                 f"inputs to `find_start_dates_for_given_init` must be `Leap` "
                 f" or `NoLeap` calendar, found {calendar} in {dim}."
             )

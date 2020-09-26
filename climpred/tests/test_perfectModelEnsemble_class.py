@@ -1,7 +1,7 @@
 import pytest
 import xarray as xr
 
-from climpred import HindcastEnsemble, PerfectModelEnsemble
+from climpred import PerfectModelEnsemble
 
 
 def test_perfectModelEnsemble_init(PM_ds_initialized_1d):
@@ -177,36 +177,30 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
     assert "does not match" in str(excinfo.value)
 
 
-def test_HindcastEnsemble_as_PerfectModelEnsemble(
-    hind_ds_initialized_1d, reconstruction_ds_1d
-):
+def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for
         PerfectModelEnsemble."""
     v = "SST"
-    hind_ds_initialized_1d["init"] = xr.cftime_range(
-        start="1954", periods=hind_ds_initialized_1d.init.size, freq="YS"
-    )
-    hind_ds_initialized_1d["lead"].attrs["units"] = "years"
-    reconstruction_ds_1d["time"] = xr.cftime_range(
-        start="1948", periods=reconstruction_ds_1d["time"].size, freq="YS"
-    )
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d)
+    alignment = "maximize"
+    hindcast = hindcast_recon_1d_mm
     assert (
         not hindcast.verify(
-            metric="acc", comparison="e2o", dim="init", alignment="same_verif"
+            metric="acc", comparison="e2o", dim="init", alignment=alignment
         )[v]
         .isnull()
         .any()
     )
 
     # try PerfectModelEnsemble predictability
-    pm = PerfectModelEnsemble(hind_ds_initialized_1d)
+    init = hindcast.get_initialized()
+    print(init.lead)
+    pm = PerfectModelEnsemble(init)
     # add fake control, remove after #461
     pm = pm.add_control(
-        hind_ds_initialized_1d.isel(member=0, lead=0, drop=True).rename(
-            {"init": "time"}
-        )
+        init.isel(member=0, lead=0, drop=True)
+        .rename({"init": "time"})
+        .resample(time="1MS")
+        .interpolate("linear")
     )
     assert (
         not pm.verify(metric="acc", comparison="m2e", dim=["member", "init"])[v]

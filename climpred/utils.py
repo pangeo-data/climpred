@@ -177,8 +177,9 @@ def find_start_dates_for_given_init(control, single_init):
         calendar = type(dim.values[0]).__name__
         if "Leap" not in calendar:
             warnings.warn(
-                f"inputs to `find_start_dates_for_given_init` must be `Leap` "
+                f"inputs to `find_start_dates_for_given_init` should be `Leap` "
                 f" or `NoLeap` calendar, found {calendar} in {dim}."
+                f" Otherwise dayofyear is not static and can lead to slight shifts."
             )
     # could also just take first of month or even a random number day in month
     take_same_time = "dayofyear"

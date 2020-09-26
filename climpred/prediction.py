@@ -88,14 +88,14 @@ def _apply_metric_at_given_lead(
 
 def _rename_dim(dim, forecast, verif):
     """rename `dim` to `time` or `init` if forecast and verif dims require."""
-    if 'init' in dim and 'time' in forecast.dims and 'time' in verif.dims:
+    if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
-        dim.remove('init')
-        dim = dim + ['time']
-    elif 'time' in dim and 'init' in forecast.dims and 'init' in verif.dims:
+        dim.remove("init")
+        dim = dim + ["time"]
+    elif "time" in dim and "init" in forecast.dims and "init" in verif.dims:
         dim = dim.copy()
-        dim.remove('time')
-        dim = dim + ['init']
+        dim.remove("time")
+        dim = dim + ["init"]
     return dim
 
 

@@ -109,7 +109,7 @@ def compute_persistence(
     inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
     if metric.normalize:
-        metric_kwargs['comparison'] = __e2c
+        metric_kwargs["comparison"] = __e2c
     dim = _rename_dim(dim, hind, verif)
     plag = []
     for i in hind.lead.values:
@@ -205,12 +205,12 @@ def compute_uninitialized(
     _, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
     if metric.normalize:
-        metric_kwargs['comparison'] = comparison
+        metric_kwargs["comparison"] = comparison
 
     plag = []
     # TODO: Refactor this, getting rid of `compute_uninitialized` completely.
     # `same_verifs` does not need to go through the loop, since it's a fixed
-    # skill over all leads.
+    # skill over all leads
     for i in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.

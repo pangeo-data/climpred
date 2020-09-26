@@ -695,10 +695,10 @@ def bootstrap_compute(
 
     # carry alignment for compute_reference separately
     metric_kwargs_reference = metric_kwargs.copy()
-    metric_kwargs_reference['alignment'] = reference_alignment
+    metric_kwargs_reference["alignment"] = reference_alignment
     # carry alignment in metric_kwargs
     if isHindcast:
-        metric_kwargs['alignment'] = alignment
+        metric_kwargs["alignment"] = alignment
 
     if hist is None:  # PM path, use verif = control
         hist = verif

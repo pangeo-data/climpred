@@ -409,11 +409,9 @@ def _bootstrap_hindcast_over_init_dim(
     iterations,
     metric,
     comparison,
-    alignment,
     compute,
     reference_compute,
     resample_uninit,
-    reference_alignment,
     **metric_kwargs,
 ):
     """Bootstrap hindcast skill over the ``init`` dimension.
@@ -440,7 +438,6 @@ def _bootstrap_hindcast_over_init_dim(
             verif,
             metric=metric,
             comparison=comparison,
-            alignment=alignment,
             add_attrs=False,
             dim=dim,
             **metric_kwargs,
@@ -460,7 +457,6 @@ def _bootstrap_hindcast_over_init_dim(
             compute(
                 uninit_hind,
                 verif,
-                alignment=alignment,
                 metric=metric,
                 comparison=comparison,
                 dim=dim,
@@ -473,12 +469,7 @@ def _bootstrap_hindcast_over_init_dim(
         if not metric.probabilistic:
             pers_skill.append(
                 reference_compute(
-                    smp_hind,
-                    verif,
-                    metric=metric,
-                    alignment=reference_alignment,
-                    add_attrs=False,
-                    **metric_kwargs,
+                    smp_hind, verif, metric=metric, add_attrs=False, **metric_kwargs,
                 )
             )
     bootstrapped_init_skill = xr.concat(
@@ -702,6 +693,13 @@ def bootstrap_compute(
     reference_alignment = alignment if isHindcast else "same_inits"
     chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
+    # carry alignment for compute_reference separately
+    metric_kwargs_reference = metric_kwargs.copy()
+    metric_kwargs_reference["alignment"] = reference_alignment
+    # carry alignment in metric_kwargs
+    if isHindcast:
+        metric_kwargs["alignment"] = alignment
+
     if hist is None:  # PM path, use verif = control
         hist = verif
 
@@ -721,11 +719,9 @@ def bootstrap_compute(
             iterations,
             metric,
             comparison,
-            alignment,
             compute,
             reference_compute,
             resample_uninit,
-            reference_alignment,
             **metric_kwargs,
         )
     else:  # faster: first _resample_iterations_idx, then compute skill
@@ -783,7 +779,6 @@ def bootstrap_compute(
         bootstrapped_uninit_skill = compute(
             bootstrapped_uninit,
             verif,
-            alignment=alignment,
             metric=metric,
             comparison="m2o" if isHindcast else comparison,
             dim=dim,
@@ -803,7 +798,6 @@ def bootstrap_compute(
             verif,
             metric=metric,
             comparison=comparison,
-            alignment=alignment,
             add_attrs=False,
             dim=dim,
             **metric_kwargs,
@@ -811,20 +805,12 @@ def bootstrap_compute(
 
         if not metric.probabilistic:
             pers_skill = reference_compute(
-                hind,
-                verif,
-                metric=metric,
-                alignment=reference_alignment,
-                **metric_kwargs,
+                hind, verif, metric=metric, **metric_kwargs_reference,
             )
             # bootstrap pers
             if resample_dim == "init":
                 bootstrapped_pers_skill = reference_compute(
-                    bootstrapped_hind,
-                    verif,
-                    metric=metric,
-                    alignment=reference_alignment,
-                    **metric_kwargs,
+                    bootstrapped_hind, verif, metric=metric, **metric_kwargs_reference,
                 )
             else:  # member
                 bootstrapped_pers_skill = pers_skill.expand_dims("iteration").isel(
@@ -835,13 +821,7 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind,
-        verif,
-        metric=metric,
-        comparison=comparison,
-        alignment=alignment,
-        dim=dim,
-        **metric_kwargs,
+        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
     if "init" in init_skill:
         init_skill = init_skill.mean("init")
@@ -850,7 +830,7 @@ def bootstrap_compute(
     uninit_skill = bootstrapped_uninit_skill.mean("iteration")
     if not metric.probabilistic:
         pers_skill = reference_compute(
-            hind, verif, metric=metric, alignment=reference_alignment, **metric_kwargs
+            hind, verif, metric=metric, **metric_kwargs_reference
         )
     else:
         pers_skill = init_skill.isnull()

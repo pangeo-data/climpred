@@ -64,6 +64,7 @@ def test_compute_perfect_model_dim_over_member(
 @pytest.mark.parametrize("comparison", PROBABILISTIC_HINDCAST_COMPARISONS)
 def test_compute_hindcast_dim_over_member(hindcast_hist_obs_1d, comparison):
     """Test deterministic metric calc skill over member dim."""
+    print(hindcast_hist_obs_1d.get_initialized().coords)
     actual = hindcast_hist_obs_1d.verify(
         comparison=comparison, metric="rmse", dim="member", alignment="same_verif"
     )["SST"]
@@ -129,6 +130,9 @@ def test_bootstrap_hindcast_dim(
         assert not actualk
 
 
+xr.set_options(display_style="text")
+
+
 @pytest.mark.parametrize("metric", ["rmse", "pearson_r"])
 @pytest.mark.parametrize(
     "comparison,dim", comparison_dim_PM,
@@ -138,7 +142,7 @@ def test_compute_pm_dims(
 ):
     """Test whether compute_pm calcs skill over many possible dims
     and comparisons and just reduces the result by dim."""
-    xr.set_options(display_style="text")
+    print(dim)
     pm = perfectModelEnsemble_initialized_control
     actual = pm.verify(metric=metric, comparison=comparison, dim=dim)["tos"]
     if isinstance(dim, str):

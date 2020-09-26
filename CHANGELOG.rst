@@ -29,6 +29,9 @@ Breaking changes
   automatically to ``member`` for probabilistic metrics. (:pr:`407`) `Aaron Spring`_.
 - metric :py:func:`~climpred.metrics._threshold_brier_score` now requires ``logical``
   instead of ``func`` as ``metric_kwargs``. (:pr:`388`) `Aaron Spring`_.
+- Remove ability to add multiple observations to
+  :py:class:`~climpred.classes.HindcastEnsemble`. This makes current and future
+  development much easier. (:pr:`453`) `Riley X. Brady`_
 
 New Features
 ------------

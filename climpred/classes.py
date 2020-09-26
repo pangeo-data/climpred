@@ -47,82 +47,77 @@ def _display_metadata(self):
     print(dp)
     ```
     """
-    SPACE = '    '
-    header = f'<climpred.{type(self).__name__}>'
-    summary = header + '\nInitialized Ensemble:\n'
-    summary += SPACE + str(self._datasets['initialized'].data_vars)[18:].strip() + '\n'
+    SPACE = "    "
+    header = f"<climpred.{type(self).__name__}>"
+    summary = header + "\nInitialized Ensemble:\n"
+    summary += SPACE + str(self._datasets["initialized"].data_vars)[18:].strip() + "\n"
     if isinstance(self, HindcastEnsemble):
-        # Prints out verification data names and associated variables if they exist.
+        # Prints out verification dataand associated variables if they exist.
         # If not, just write "None".
-        if any(self._datasets['observations']):
-            for key in self._datasets['observations']:
-                summary += f'{key}:\n'
-                num_obs = len(self._datasets['observations'][key].data_vars)
-                for i in range(1, num_obs + 1):
-                    summary += (
-                        SPACE
-                        + str(self._datasets['observations'][key].data_vars)
-                        .split('\n')[i]
-                        .strip()
-                        + '\n'
-                    )
+        summary += "Verification Data:\n"
+        if any(self._datasets["observations"]):
+            num_obs = len(self._datasets["observations"].data_vars)
+            for i in range(1, num_obs + 1):
+                summary += (
+                    SPACE
+                    + str(self._datasets["observations"].data_vars)
+                    .split("\n")[i]
+                    .strip()
+                    + "\n"
+                )
         else:
-            summary += 'Verification Data:\n'
-            summary += SPACE + 'None\n'
+            summary += SPACE + "None\n"
     elif isinstance(self, PerfectModelEnsemble):
-        summary += 'Control:\n'
+        summary += "Control:\n"
         # Prints out control variables if a control is appended. If not,
         # just write "None".
-        if any(self._datasets['control']):
-            num_ctrl = len(self._datasets['control'].data_vars)
+        if any(self._datasets["control"]):
+            num_ctrl = len(self._datasets["control"].data_vars)
             for i in range(1, num_ctrl + 1):
                 summary += (
                     SPACE
-                    + str(self._datasets['control'].data_vars).split('\n')[i].strip()
-                    + '\n'
+                    + str(self._datasets["control"].data_vars).split("\n")[i].strip()
+                    + "\n"
                 )
         else:
-            summary += SPACE + 'None\n'
-    if any(self._datasets['uninitialized']):
-        summary += 'Uninitialized:\n'
-        summary += SPACE + str(self._datasets['uninitialized'].data_vars)[18:].strip()
+            summary += SPACE + "None\n"
+    if any(self._datasets["uninitialized"]):
+        summary += "Uninitialized:\n"
+        summary += SPACE + str(self._datasets["uninitialized"].data_vars)[18:].strip()
     else:
-        summary += 'Uninitialized:\n'
-        summary += SPACE + 'None'
+        summary += "Uninitialized:\n"
+        summary += SPACE + "None"
     return summary
 
 
 def _display_metadata_html(self):
-    header = f'<h4>climpred.{type(self).__name__}</h4>'
+    header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
-    init_repr_str = dataset_repr(self._datasets['initialized'])
-    init_repr_str = init_repr_str.replace('xarray.Dataset', 'Initialized Ensemble')
+    init_repr_str = dataset_repr(self._datasets["initialized"])
+    init_repr_str = init_repr_str.replace("xarray.Dataset", "Initialized Ensemble")
     display_html(init_repr_str, raw=True)
 
     if isinstance(self, HindcastEnsemble):
-        if any(self._datasets['observations']):
-            for key in self._datasets['observations']:
-                obs_repr_str = dataset_repr(self._datasets['observations'][key])
-                obs_repr_str = obs_repr_str.replace(
-                    'xarray.Dataset', f'Verification Data {key}'
-                )
-                display_html(obs_repr_str, raw=True)
+        if any(self._datasets["observations"]):
+            obs_repr_str = dataset_repr(self._datasets["observations"])
+            obs_repr_str = obs_repr_str.replace("xarray.Dataset", "Verification Data")
+            display_html(obs_repr_str, raw=True)
     elif isinstance(self, PerfectModelEnsemble):
-        if any(self._datasets['control']):
-            control_repr_str = dataset_repr(self._datasets['control'])
+        if any(self._datasets["control"]):
+            control_repr_str = dataset_repr(self._datasets["control"])
             control_repr_str = control_repr_str.replace(
-                'xarray.Dataset', 'Control Simulation'
+                "xarray.Dataset", "Control Simulation"
             )
             display_html(control_repr_str, raw=True)
 
-    if any(self._datasets['uninitialized']):
-        uninit_repr_str = dataset_repr(self._datasets['uninitialized'])
-        uninit_repr_str = uninit_repr_str.replace('xarray.Dataset', 'Uninitialized')
+    if any(self._datasets["uninitialized"]):
+        uninit_repr_str = dataset_repr(self._datasets["uninitialized"])
+        uninit_repr_str = uninit_repr_str.replace("xarray.Dataset", "Uninitialized")
         display_html(uninit_repr_str, raw=True)
     # better would be to aggregate repr_strs and then all return but this fails
     # TypeError: __repr__ returned non-string (type NoneType)
     # workaround return empty string
-    return ''
+    return ""
 
 
 class PredictionEnsemble:
@@ -137,24 +132,24 @@ class PredictionEnsemble:
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
-        has_dims(xobj, ['init', 'lead'], 'PredictionEnsemble')
+        has_dims(xobj, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, 'init', 'xobj[init]')
+        xobj = convert_time_index(xobj, "init", "xobj[init]")
         # Put this after `convert_time_index` since it assigns 'years' attribute if the
         # `init` dimension is a `float` or `int`.
         has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
-        self._datasets = {'initialized': xobj, 'uninitialized': {}}
-        self.kind = 'prediction'
+        self._datasets = {"initialized": xobj, "uninitialized": {}}
+        self.kind = "prediction"
         self._temporally_smoothed = None
         self._is_annual_lead = None
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
-        if XR_OPTIONS['display_style'] == 'html':
+        if XR_OPTIONS["display_style"] == "html":
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
@@ -174,15 +169,15 @@ class PredictionEnsemble:
             ax: plt.axes
 
         """
-        if self.kind == 'hindcast':
+        if self.kind == "hindcast":
             if cmap is None:
-                cmap = 'jet'
+                cmap = "jet"
             return plot_lead_timeseries_hindcast(
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
-        elif self.kind == 'perfect':
+        elif self.kind == "perfect":
             if cmap is None:
-                cmap = 'tab10'
+                cmap = "tab10"
             return plot_ensemble_perfect_model(
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
@@ -221,32 +216,32 @@ class PredictionEnsemble:
             type(self),
         ]
         OPERATOR_STR = {
-            'add': '+',
-            'sub': '-',
-            'mul': '*',
-            'div': '/',
+            "add": "+",
+            "sub": "-",
+            "mul": "*",
+            "div": "/",
         }
-        error_str = f'Cannot use {type(self)} {OPERATOR_STR[operator]} {type(other)}'
+        error_str = f"Cannot use {type(self)} {OPERATOR_STR[operator]} {type(other)}"
 
         # catch undefined types for other
         if not isinstance(other, tuple(ALLOWED_TYPES_FOR_MATH_OPERATORS)):
             raise TypeError(
-                f'{error_str} because type {type(other)} not supported. '
-                f'Please choose from {ALLOWED_TYPES_FOR_MATH_OPERATORS}.'
+                f"{error_str} because type {type(other)} not supported. "
+                f"Please choose from {ALLOWED_TYPES_FOR_MATH_OPERATORS}."
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets['initialized'].dims):
-                raise DimensionError(f'{error_str} containing new dimensions.')
+            if not set(other.dims).issubset(self._datasets["initialized"].dims):
+                raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
-            if list(other.data_vars) != list(self._datasets['initialized'].data_vars):
+            if list(other.data_vars) != list(self._datasets["initialized"].data_vars):
                 raise VariableError(
-                    f'{error_str} with new `data_vars`. Please use {type(self)} '
-                    f'{operator} {type(other)} only with same `data_vars`. Found '
-                    f'initialized.data_vars = '
+                    f"{error_str} with new `data_vars`. Please use {type(self)} "
+                    f"{operator} {type(other)} only with same `data_vars`. Found "
+                    f"initialized.data_vars = "
                     f' {list(self._datasets["initialized"].data_vars)} vs. '
-                    f'other.data_vars = { list(other.data_vars)}.'
+                    f"other.data_vars = { list(other.data_vars)}."
                 )
 
         operator = eval(operator)
@@ -259,12 +254,12 @@ class PredictionEnsemble:
                 # Some pre-allocated entries might be empty, such as 'uninitialized'
                 if self._datasets[dataset]:
                     # Loop through observations if there are multiple
-                    if dataset == 'observations' and isinstance(
+                    if dataset == "observations" and isinstance(
                         self._datasets[dataset], dict
                     ):
-                        obs_datasets = self._datasets['observations'].copy()
+                        obs_datasets = self._datasets["observations"].copy()
                         for obs_dataset in obs_datasets:
-                            other_obs_dataset = other._datasets['observations'][
+                            other_obs_dataset = other._datasets["observations"][
                                 obs_dataset
                             ]
                             obs_datasets.update(
@@ -274,7 +269,7 @@ class PredictionEnsemble:
                                     )
                                 }
                             )
-                            datasets.update({'observations': obs_datasets})
+                            datasets.update({"observations": obs_datasets})
                     else:
                         if datasets[dataset]:
                             datasets.update(
@@ -285,16 +280,16 @@ class PredictionEnsemble:
             return self._apply_func(operator, other)
 
     def __add__(self, other):
-        return self._math(other, operator='add')
+        return self._math(other, operator="add")
 
     def __sub__(self, other):
-        return self._math(other, operator='sub')
+        return self._math(other, operator="sub")
 
     def __mul__(self, other):
-        return self._math(other, operator='mul')
+        return self._math(other, operator="mul")
 
     def __truediv__(self, other):
-        return self._math(other, operator='div')
+        return self._math(other, operator="div")
 
     def __getitem__(self, varlist):
         """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
@@ -307,9 +302,9 @@ class PredictionEnsemble:
             varlist = [varlist]
         if not isinstance(varlist, list):
             raise ValueError(
-                'Please subset PredictionEnsemble as you would subset an xr.Dataset '
-                'with a list or single string of variable name(s), found '
-                f'{type(varlist)}.'
+                "Please subset PredictionEnsemble as you would subset an xr.Dataset "
+                "with a list or single string of variable name(s), found "
+                f"{type(varlist)}."
             )
 
         def sel_vars(ds, varlist):
@@ -400,13 +395,13 @@ class PredictionEnsemble:
 
     def get_initialized(self):
         """Returns the xarray dataset for the initialized ensemble."""
-        return self._datasets['initialized']
+        return self._datasets["initialized"]
 
     def get_uninitialized(self):
         """Returns the xarray dataset for the uninitialized ensemble."""
-        return self._datasets['uninitialized']
+        return self._datasets["uninitialized"]
 
-    def smooth(self, smooth_kws=None, how='mean', **xesmf_kwargs):
+    def smooth(self, smooth_kws=None, how="mean", **xesmf_kwargs):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
@@ -432,14 +427,14 @@ class PredictionEnsemble:
             return self
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
-            if 'goddard' in smooth_kws:
+            if "goddard" in smooth_kws:
                 if self._is_annual_lead:
                     smooth_fct = smooth_goddard_2013
-                    tsmooth_kws = {'lead': 4}  # default
-                    d_lon_lat_kws = {'lon': 5, 'lat': 5}  # default
+                    tsmooth_kws = {"lead": 4}  # default
+                    d_lon_lat_kws = {"lon": 5, "lat": 5}  # default
                 else:
                     raise ValueError(
-                        '`goddard2013` smoothing only available for annual leads.'
+                        "`goddard2013` smoothing only available for annual leads."
                     )
             else:
                 raise ValueError(
@@ -451,29 +446,29 @@ class PredictionEnsemble:
         # of name. Optional work in progress comment.
         elif isinstance(smooth_kws, dict):
             non_time_dims = [
-                dim for dim in smooth_kws.keys() if dim not in ['time', 'lead']
+                dim for dim in smooth_kws.keys() if dim not in ["time", "lead"]
             ]
             if len(non_time_dims) > 0:
                 non_time_dims = non_time_dims[0]
             # goddard when time_dim and lon/lat given
-            if ('lon' in smooth_kws or 'lat' in smooth_kws) and (
-                'lead' in smooth_kws or 'time' in smooth_kws
+            if ("lon" in smooth_kws or "lat" in smooth_kws) and (
+                "lead" in smooth_kws or "time" in smooth_kws
             ):
                 smooth_fct = smooth_goddard_2013
                 # separate lon, lat keywords into d_lon_lat_kws
                 d_lon_lat_kws = dict()
                 tsmooth_kws = dict()
-                for c in ['lon', 'lat']:
+                for c in ["lon", "lat"]:
                     if c in smooth_kws:
                         d_lon_lat_kws[c] = smooth_kws[c]
                     else:
                         tsmooth_kws[c] = smooth_kws[c]
             # else only one smoothing operation
-            elif 'lon' in smooth_kws or 'lat' in smooth_kws:
+            elif "lon" in smooth_kws or "lat" in smooth_kws:
                 smooth_fct = spatial_smoothing_xesmf
                 d_lon_lat_kws = smooth_kws
                 tsmooth_kws = None
-            elif 'lead' in smooth_kws or 'time' in smooth_kws:
+            elif "lead" in smooth_kws or "time" in smooth_kws:
                 smooth_fct = temporal_smoothing
                 d_lon_lat_kws = None
                 tsmooth_kws = smooth_kws
@@ -484,7 +479,7 @@ class PredictionEnsemble:
                 )
         else:
             raise ValueError(
-                'Please provide kwargs as dict or str and not', type(smooth_kws)
+                "Please provide kwargs as dict or str and not", type(smooth_kws)
             )
         self = self.map(
             smooth_fct,
@@ -526,8 +521,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         super().__init__(xobj)
         # Reserve sub-dictionary for the control simulation.
-        self._datasets.update({'control': {}})
-        self.kind = 'perfect'
+        self._datasets.update({"control": {}})
+        self.kind = "perfect"
 
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary climpred
@@ -540,9 +535,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 * control: control dictionary from HindcastEnsemble.
                 * init (bool): True if the initialized ensemble, False if uninitialized.
         """
-        ensemble = input_dict['ensemble']
-        control = input_dict['control']
-        init = input_dict['init']
+        ensemble = input_dict["ensemble"]
+        control = input_dict["control"]
+        init = input_dict["init"]
         init_vars, ctrl_vars = self._vars_to_drop(init=init)
         ensemble = ensemble.drop_vars(init_vars)
         if control is not None:
@@ -567,9 +562,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
           Lists of variables to drop from the initialized/uninitialized
           and control Datasets.
         """
-        init_str = 'initialized' if init else 'uninitialized'
+        init_str = "initialized" if init else "uninitialized"
         init_vars = list(self._datasets[init_str])
-        ctrl_vars = list(self._datasets['control'])
+        ctrl_vars = list(self._datasets["control"])
         # Make lists of variables to drop that aren't in common
         # with one another.
         init_vars_to_drop = list(set(init_vars) - set(ctrl_vars))
@@ -590,17 +585,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # NOTE: These should all be decorators.
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets['initialized'], xobj)
-        match_initialized_vars(self._datasets['initialized'], xobj)
+        match_initialized_dims(self._datasets["initialized"], xobj)
+        match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        xobj = convert_time_index(xobj, "time", "xobj[init]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets['initialized'], xobj, kind2='control')
+        match_calendars(self._datasets["initialized"], xobj, kind2="control")
         datasets = self._datasets.copy()
-        datasets.update({'control': xobj})
-        return self._construct_direct(datasets, kind='perfect')
+        datasets.update({"control": xobj})
+        return self._construct_direct(datasets, kind="perfect")
 
     def generate_uninitialized(self):
         """Generate an uninitialized ensemble by bootstrapping the
@@ -610,19 +605,19 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Bootstrapped (uninitialized) ensemble as a Dataset.
         """
         has_dataset(
-            self._datasets['control'], 'control', 'generate an uninitialized ensemble.'
+            self._datasets["control"], "control", "generate an uninitialized ensemble."
         )
 
         uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
-            self._datasets['initialized'], self._datasets['control']
+            self._datasets["initialized"], self._datasets["control"]
         )
         datasets = self._datasets.copy()
-        datasets.update({'uninitialized': uninit})
-        return self._construct_direct(datasets, kind='perfect')
+        datasets.update({"uninitialized": uninit})
+        return self._construct_direct(datasets, kind="perfect")
 
     def get_control(self):
         """Returns the control as an xarray dataset."""
-        return self._datasets['control']
+        return self._datasets["control"]
 
     def verify(
         self, metric=None, comparison=None, dim=None, reference=None, **metric_kwargs,
@@ -669,35 +664,35 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         if self._temporally_smoothed:
             init_skill = _reset_temporal_axis(
-                init_skill, self._temporally_smoothed, dim='lead'
+                init_skill, self._temporally_smoothed, dim="lead"
             )
         if isinstance(reference, str):
             reference = [reference]
         elif reference is None:
             return init_skill
-        skill_labels = ['init']
-        if 'historical' in reference:
+        skill_labels = ["init"]
+        if "historical" in reference:
             uninit_skill = self.compute_uninitialized(
                 metric=metric, comparison=comparison, **metric_kwargs
             )
-            skill_labels.append('historical')
-        elif 'uninitialized' in reference:
+            skill_labels.append("historical")
+        elif "uninitialized" in reference:
             uninit_skill = self.compute_uninitialized(
                 metric=metric, comparison=comparison, **metric_kwargs
             )
-            skill_labels.append('uninitialized')
+            skill_labels.append("uninitialized")
         else:
             uninit_skill = None
-        if 'persistence' in reference:
+        if "persistence" in reference:
             persistence_skill = self.compute_persistence(metric=metric)
-            skill_labels.append('persistence')
+            skill_labels.append("persistence")
         else:
             persistence_skill = None
         all_skills = xr.concat(
             [s for s in [init_skill, uninit_skill, persistence_skill] if s is not None],
-            dim='skill',
+            dim="skill",
         )
-        all_skills['skill'] = skill_labels
+        all_skills["skill"] = skill_labels
         return all_skills.squeeze()
 
     def compute_uninitialized(
@@ -727,9 +722,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Result of the comparison as a Dataset.
         """
         has_dataset(
-            self._datasets['uninitialized'],
-            'uninitialized',
-            'compute an uninitialized metric',
+            self._datasets["uninitialized"],
+            "uninitialized",
+            "compute an uninitialized metric",
         )
         input_dict = {
             'ensemble': self._datasets['uninitialized'],
@@ -745,7 +740,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
         if self._temporally_smoothed:
-            res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
+            res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
         return res
 
     def compute_persistence(self, metric=None):
@@ -772,10 +767,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             compute_persistence,
             input_dict=input_dict,
             metric=metric,
-            alignment='same_inits',
+            alignment="same_inits",
         )
         if self._temporally_smoothed:
-            res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
+            res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
         return res
 
     def bootstrap(
@@ -837,12 +832,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         """
         if iterations is None:
-            raise ValueError('Designate number of bootstrapping `iterations`.')
-        has_dataset(self._datasets['control'], 'control', 'iteration')
+            raise ValueError("Designate number of bootstrapping `iterations`.")
+        has_dataset(self._datasets["control"], "control", "iteration")
         input_dict = {
-            'ensemble': self._datasets['initialized'],
-            'control': self._datasets['control'],
-            'init': True,
+            "ensemble": self._datasets["initialized"],
+            "control": self._datasets["control"],
+            "init": True,
         }
         return self._apply_climpred_function(
             bootstrap_perfect_model,
@@ -861,9 +856,9 @@ class HindcastEnsemble(PredictionEnsemble):
     """An object for climate prediction ensembles initialized by a data-like
     product.
 
-    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks all
-    verification data associated with the prediction ensemble for easy
-    computation across multiple variables and products.
+    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks a single
+    verification dataset associated with the hindcast ensemble for easy computation
+    across multiple variables.
 
     This object is built on `xarray` and thus requires the input object to
     be an `xarray` Dataset or DataArray.
@@ -884,49 +879,23 @@ class HindcastEnsemble(PredictionEnsemble):
               uninitialized ensemble run.
         """
         super().__init__(xobj)
-        self._datasets.update({'observations': {}})
-        self.kind = 'hindcast'
+        self._datasets.update({"observations": {}})
+        self.kind = "hindcast"
 
-    def _apply_climpred_function(self, func, input_dict=None, **kwargs):
+    def _apply_climpred_function(self, func, init, **kwargs):
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
 
         Args:
             func (function): climpred function to apply to object.
-            input_dict (dict): dictionary with the following things:
-                * ensemble: initialized or uninitialized ensemble.
-                * observations: Dictionary of verification data from
-                    ``HindcastEnsemble``.
-                * name: name of verification data to target.
-                * init: bool of whether or not it's the initialized ensemble.
+            init (bool): Whether or not it's the initialized ensemble.
         """
-        hind = self._datasets['initialized']
-        verif = self._datasets['observations']
-        name = input_dict['name']
-        init = input_dict['init']
+        hind = self._datasets["initialized"]
+        verif = self._datasets["observations"]
+        drop_init, drop_obs = self._vars_to_drop(init=init)
+        return func(hind.drop_vars(drop_init), verif.drop_vars(drop_obs), **kwargs)
 
-        # Apply only to specific observations.
-        if name is not None:
-            drop_init, drop_obs = self._vars_to_drop(name, init=init)
-            hind = hind.drop_vars(drop_init)
-            verif = verif[name].drop_vars(drop_obs)
-            return func(hind, verif, **kwargs)
-        else:
-            # If only one observational product, just apply to that one.
-            if len(verif) == 1:
-                name = list(verif.keys())[0]
-                drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                return func(hind, verif[name], **kwargs)
-            # Loop through verif, apply function, and store in dictionary.
-            # TODO: Parallelize this process.
-            else:
-                result = {}
-                for name in verif.keys():
-                    drop_init, drop_obs = self._vars_to_drop(name, init=init)
-                    result[name] = func(hind, verif[name], **kwargs)
-                return result
-
-    def _vars_to_drop(self, name, init=True):
+    def _vars_to_drop(self, init=True):
         """Returns list of variables to drop when comparing
         initialized/uninitialized to observations.
 
@@ -936,7 +905,6 @@ class HindcastEnsemble(PredictionEnsemble):
         from the initialized.
 
         Args:
-          name (str): Short name of observations being compared to.
           init (bool, default True):
             If ``True``, check variables on the initialized.
             If ``False``, check variables on the uninitialized.
@@ -946,10 +914,10 @@ class HindcastEnsemble(PredictionEnsemble):
           and observational Datasets.
         """
         if init:
-            init_vars = [var for var in self._datasets['initialized'].data_vars]
+            init_vars = [var for var in self._datasets["initialized"].data_vars]
         else:
-            init_vars = [var for var in self._datasets['uninitialized'].data_vars]
-        obs_vars = [var for var in self._datasets['observations'][name].data_vars]
+            init_vars = [var for var in self._datasets["uninitialized"].data_vars]
+        obs_vars = [var for var in self._datasets["observations"].data_vars]
         # Make lists of variables to drop that aren't in common
         # with one another.
         init_vars_to_drop = list(set(init_vars) - set(obs_vars))
@@ -957,31 +925,26 @@ class HindcastEnsemble(PredictionEnsemble):
         return init_vars_to_drop, obs_vars_to_drop
 
     @is_xarray(1)
-    def add_observations(self, xobj, name):
-        """Add a verification data with which to verify the initialized ensemble.
+    def add_observations(self, xobj):
+        """Add verification data against which to verify the initialized ensemble.
 
         Args:
             xobj (xarray object): Dataset/DataArray to append to the
                 ``HindcastEnsemble`` object.
-            name (str): Short name for referencing the verification data.
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets['initialized'], xobj)
-        match_initialized_vars(self._datasets['initialized'], xobj)
+        match_initialized_dims(self._datasets["initialized"], xobj)
+        match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        xobj = convert_time_index(xobj, "time", "xobj[init]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets['initialized'], xobj)
-        # For some reason, I could only get the non-inplace method to work
-        # by updating the nested dictionaries separately.
-        datasets_obs = self._datasets['observations'].copy()
+        match_calendars(self._datasets["initialized"], xobj)
         datasets = self._datasets.copy()
-        datasets_obs.update({name: xobj})
-        datasets.update({'observations': datasets_obs})
-        return self._construct_direct(datasets, kind='hindcast')
+        datasets.update({"observations": xobj})
+        return self._construct_direct(datasets, kind="hindcast")
 
     @is_xarray(1)
     def add_uninitialized(self, xobj):
@@ -993,41 +956,28 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets['initialized'], xobj, uninitialized=True)
-        match_initialized_vars(self._datasets['initialized'], xobj)
+        match_initialized_dims(self._datasets["initialized"], xobj, uninitialized=True)
+        match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, 'time', 'xobj[init]')
+        xobj = convert_time_index(xobj, "time", "xobj[init]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets['initialized'], xobj, kind2='uninitialized')
+        match_calendars(self._datasets["initialized"], xobj, kind2="uninitialized")
         datasets = self._datasets.copy()
-        datasets.update({'uninitialized': xobj})
-        return self._construct_direct(datasets, kind='hindcast')
+        datasets.update({"uninitialized": xobj})
+        return self._construct_direct(datasets, kind="hindcast")
 
-    def get_observations(self, name=None):
+    def get_observations(self):
         """Returns xarray Datasets of the observations/verification data.
 
-        Args:
-            name (str, optional): Name of the observations/verification data to return.
-                If ``None``, return dictionary of all observations/verification data.
-
         Returns:
-            Dictionary of ``xarray`` Datasets (if ``name`` is ``None``) or single
-            ``xarray`` Dataset.
+            ``xarray`` Dataset of observations.
         """
-        if name is None:
-            if len(self._datasets['observations']) == 1:
-                key = list(self._datasets['observations'].keys())[0]
-                return self._datasets['observations'][key]
-            else:
-                return self._datasets['observations']
-        else:
-            return self._datasets['observations'][name]
+        return self._datasets["observations"]
 
     def verify(
         self,
-        name=None,
         reference=None,
         metric=None,
         comparison=None,
@@ -1042,8 +992,6 @@ class HindcastEnsemble(PredictionEnsemble):
             between the initialized ensemble and observations/verification data.
 
         Args:
-            name (str): Short name of observations/verification data to compare to.
-                If ``None``, compare to all observations/verification data.
             reference (str): Type of reference forecasts to also verify against the
                 observations. Choose one or more of ['historical', 'persistence'].
                 Defaults to None.
@@ -1073,26 +1021,23 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
-            Dataset of comparison results (if comparing to one observational product),
-            or dictionary of Datasets with keys corresponding to
-            observations/verification data short name.
-
+            Dataset of comparison results.
         """
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
-            viable_dims = dict(self._datasets['initialized'].dims)
+            viable_dims = dict(self._datasets["initialized"].dims)
             viable_dims = list(viable_dims.keys())
-            if 'lead' in viable_dims:
-                viable_dims.remove('lead')
+            if "lead" in viable_dims:
+                viable_dims.remove("lead")
             raise ValueError(
-                'Designate a dimension to reduce over when applying the '
-                f'metric. Got {dim}. Choose one or more of {viable_dims}'
+                "Designate a dimension to reduce over when applying the "
+                f"metric. Got {dim}. Choose one or more of {viable_dims}"
             )
-        if ('member' in dim) and comparison not in ['m2o', 'm2r']:
+        if ("member" in dim) and comparison not in ["m2o", "m2r"]:
             raise ValueError(
                 "Comparison must equal 'm2o' with dim='member'. "
-                f'Got comparison {comparison}.'
+                f"Got comparison {comparison}."
             )
         if isinstance(reference, str):
             reference = [reference]
@@ -1115,7 +1060,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 hind, metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
-            forecast = forecast.rename({'init': 'time'})
+            forecast = forecast.rename({"init": "time"})
             inits, verif_dates = return_inits_and_verif_dates(
                 forecast, verif, alignment, reference=reference, hist=hist,
             )
@@ -1135,13 +1080,13 @@ class HindcastEnsemble(PredictionEnsemble):
                     dim=dim,
                     **metric_kwargs,
                 )
-                for lead in forecast['lead'].data
+                for lead in forecast["lead"].data
             ]
-            result = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
-            result['lead'] = forecast['lead']
+            result = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
+            result["lead"] = forecast["lead"]
 
             if reference is not None:
-                if 'member' in verif.dims:  # if broadcasted before
+                if "member" in verif.dims:  # if broadcasted before
                     verif = verif.isel(member=0)
                 for r in reference:
                     metric_over_leads = [
@@ -1158,39 +1103,34 @@ class HindcastEnsemble(PredictionEnsemble):
                             dim=dim,
                             **metric_kwargs,
                         )
-                        for lead in forecast['lead'].data
+                        for lead in forecast["lead"].data
                     ]
-                    ref = xr.concat(metric_over_leads, dim='lead', **CONCAT_KWARGS)
-                    ref['lead'] = forecast['lead']
-                    result = xr.concat([result, ref], dim='skill', **CONCAT_KWARGS)
+                    ref = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
+                    ref["lead"] = forecast["lead"]
+                    result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
-            if 'time' in result.dims:
-                result = result.rename({'time': 'init'})
+            if "time" in result.dims:
+                result = result.rename({"time": "init"})
             # Add dimension/coordinate for different references.
-            result = result.assign_coords(skill=['init'] + reference)
+            result = result.assign_coords(skill=["init"] + reference)
             return result
 
         has_dataset(
-            self._datasets['observations'], 'observational', 'verify a forecast'
+            self._datasets["observations"], "observational", "verify a forecast"
         )
-        if 'historical' in reference or 'uninitialized' in reference:
+        if "historical" in reference or "uninitialized" in reference:
             has_dataset(
-                self._datasets['uninitialized'],
-                'uninitialized',
-                'compute an uninitialized reference forecast',
+                self._datasets["uninitialized"],
+                "uninitialized",
+                "compute an uninitialized reference forecast",
             )
-            hist = self._datasets['uninitialized']
+            hist = self._datasets["uninitialized"]
         else:
             hist = None
 
-        # TODO: Get rid of this somehow. Might use attributes.
-        input_dict = {
-            'name': name,
-            'init': True,
-        }
         res = self._apply_climpred_function(
             _verify,
-            input_dict=input_dict,
+            init=True,
             metric=metric,
             comparison=comparison,
             alignment=alignment,
@@ -1203,10 +1143,10 @@ class HindcastEnsemble(PredictionEnsemble):
             if isinstance(res, dict) and not isinstance(res, xr.Dataset):
                 for res_key, res_item in res.items():
                     res[res_key] = _reset_temporal_axis(
-                        res_item, self._temporally_smoothed, dim='lead'
+                        res_item, self._temporally_smoothed, dim="lead"
                     )
             else:
-                res = _reset_temporal_axis(res, self._temporally_smoothed, dim='lead')
+                res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
         return res
 
     def bootstrap(
@@ -1217,7 +1157,7 @@ class HindcastEnsemble(PredictionEnsemble):
         alignment=None,
         iterations=None,
         sig=95,
-        resample_dim='member',
+        resample_dim="member",
         pers_sig=None,
         **metric_kwargs,
     ):
@@ -1278,10 +1218,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
-
         """
         if iterations is None:
-            raise ValueError('Designate number of bootstrapping `iterations`.')
+            raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation
         return bootstrap_hindcast(
             self.get_initialized(),
@@ -1297,7 +1236,7 @@ class HindcastEnsemble(PredictionEnsemble):
             pers_sig=pers_sig,
         )
 
-    def reduce_bias(self, alignment, how='mean', cross_validate=True, **metric_kwargs):
+    def reduce_bias(self, alignment, how="mean", cross_validate=True, **metric_kwargs):
         """Calc and remove bias from :py:class:`~climpred.classes.HindcastEnsemble`.
 
         Args:
@@ -1330,10 +1269,10 @@ class HindcastEnsemble(PredictionEnsemble):
         if isinstance(how, str):
             how = [how]
         for h in how:
-            if h == 'mean':
+            if h == "mean":
                 func = mean_bias_reduction
             else:
-                raise NotImplementedError(f'{h}_bias_reduction is not implemented.')
+                raise NotImplementedError(f"{h}_bias_reduction is not implemented.")
 
             self = func(
                 self,

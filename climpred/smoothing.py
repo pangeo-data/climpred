@@ -11,8 +11,8 @@ except ImportError:
 @is_xarray(0)
 def spatial_smoothing_xesmf(
     ds,
-    d_lon_lat_kws={'lon': 5, 'lat': 5},
-    method='bilinear',
+    d_lon_lat_kws={"lon": 5, "lat": 5},
+    method="bilinear",
     periodic=False,
     filename=None,
     reuse_weights=True,
@@ -58,8 +58,8 @@ def spatial_smoothing_xesmf(
 
     if xe is None:
         raise ImportError(
-            'xesmf is not installed; see'
-            'https://xesmf.readthedocs.io/en/latest/installation.html'
+            "xesmf is not installed; see"
+            "https://xesmf.readthedocs.io/en/latest/installation.html"
         )
 
     def _regrid_it(da, d_lon, d_lat, **kwargs):
@@ -80,52 +80,52 @@ def spatial_smoothing_xesmf(
         """
 
         def check_lon_lat_present(da):
-            if method == 'conservative':
-                if 'lat_b' in ds.coords and 'lon_b' in ds.coords:
+            if method == "conservative":
+                if "lat_b" in ds.coords and "lon_b" in ds.coords:
                     return da
                 else:
                     raise ValueError(
                         'if method == "conservative", lat_b and lon_b are required.'
                     )
             else:
-                if 'lat' in ds.coords and 'lon' in ds.coords:
+                if "lat" in ds.coords and "lon" in ds.coords:
                     return da
-                elif 'lat_b' in ds.coords and 'lon_b' in ds.coords:
+                elif "lat_b" in ds.coords and "lon_b" in ds.coords:
                     return da
                 # for CESM POP grid
-                elif 'TLAT' in ds.coords and 'TLONG' in ds.coords:
-                    da = da.rename({'TLAT': 'lat', 'TLONG': 'lon'})
+                elif "TLAT" in ds.coords and "TLONG" in ds.coords:
+                    da = da.rename({"TLAT": "lat", "TLONG": "lon"})
                     return da
                 else:
                     raise ValueError(
-                        'lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename.'
+                        "lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename."
                     )
 
         da = check_lon_lat_present(da)
         grid_out = {
-            'lon': np.arange(da.lon.min(), da.lon.max() + d_lon, d_lon),
-            'lat': np.arange(da.lat.min(), da.lat.max() + d_lat, d_lat),
+            "lon": np.arange(da.lon.min(), da.lon.max() + d_lon, d_lon),
+            "lat": np.arange(da.lat.min(), da.lat.max() + d_lat, d_lat),
         }
         regridder = xe.Regridder(da, grid_out, **kwargs)
         return regridder(da)
 
     # check if lon or/and lat missing
-    if ('lon' in d_lon_lat_kws) and ('lat' in d_lon_lat_kws):
+    if ("lon" in d_lon_lat_kws) and ("lat" in d_lon_lat_kws):
         pass
-    elif ('lon' not in d_lon_lat_kws) and ('lat' in d_lon_lat_kws):
-        d_lon_lat_kws['lon'] = d_lon_lat_kws['lat']
-    elif ('lat' not in d_lon_lat_kws) and ('lon' in d_lon_lat_kws):
-        d_lon_lat_kws['lat'] = d_lon_lat_kws['lon']
+    elif ("lon" not in d_lon_lat_kws) and ("lat" in d_lon_lat_kws):
+        d_lon_lat_kws["lon"] = d_lon_lat_kws["lat"]
+    elif ("lat" not in d_lon_lat_kws) and ("lon" in d_lon_lat_kws):
+        d_lon_lat_kws["lat"] = d_lon_lat_kws["lon"]
     else:
-        raise ValueError('please provide either `lon` or/and `lat` in d_lon_lat_kws.')
+        raise ValueError("please provide either `lon` or/and `lat` in d_lon_lat_kws.")
 
     kwargs = {
-        'd_lon': d_lon_lat_kws['lon'],
-        'd_lat': d_lon_lat_kws['lat'],
-        'method': method,
-        'periodic': periodic,
-        'filename': filename,
-        'reuse_weights': reuse_weights,
+        "d_lon": d_lon_lat_kws["lon"],
+        "d_lat": d_lon_lat_kws["lat"],
+        "method": method,
+        "periodic": periodic,
+        "filename": filename,
+        "reuse_weights": reuse_weights,
     }
 
     ds = _regrid_it(ds, **kwargs)
@@ -134,7 +134,7 @@ def spatial_smoothing_xesmf(
 
 
 @is_xarray(0)
-def temporal_smoothing(ds, tsmooth_kws=None, how='mean', d_lon_lat_kws=None):
+def temporal_smoothing(ds, tsmooth_kws=None, how="mean", d_lon_lat_kws=None):
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
     Reference:
@@ -160,9 +160,9 @@ def temporal_smoothing(ds, tsmooth_kws=None, how='mean', d_lon_lat_kws=None):
     # unpack dict
     if not isinstance(tsmooth_kws, dict):
         raise ValueError(
-            'Please provide tsmooth_kws as dict, found ', type(tsmooth_kws)
+            "Please provide tsmooth_kws as dict, found ", type(tsmooth_kws)
         )
-    if not ('time' in tsmooth_kws or 'lead' in tsmooth_kws):
+    if not ("time" in tsmooth_kws or "lead" in tsmooth_kws):
         raise ValueError(
             'tsmooth_kws doesnt contain a time dimension \
             (either "lead" or "time").',
@@ -171,7 +171,7 @@ def temporal_smoothing(ds, tsmooth_kws=None, how='mean', d_lon_lat_kws=None):
     smooth = list(tsmooth_kws.values())[0]
     dim = list(tsmooth_kws.keys())[0]
     # fix to smooth either lead or time depending
-    time_dims = ['time', 'lead']
+    time_dims = ["time", "lead"]
     if dim not in ds.dims:
         time_dims.remove(dim)
         dim = time_dims[0]
@@ -184,7 +184,7 @@ def temporal_smoothing(ds, tsmooth_kws=None, how='mean', d_lon_lat_kws=None):
     return ds_smoothed
 
 
-def _reset_temporal_axis(ds_smoothed, tsmooth_kws, dim='lead', set_lead_center=True):
+def _reset_temporal_axis(ds_smoothed, tsmooth_kws, dim="lead", set_lead_center=True):
     """Reduce and reset temporal axis. See temporal_smoothing(). Should be
     used after calculation of skill to maintain readable labels for skill
     computation.
@@ -202,34 +202,34 @@ def _reset_temporal_axis(ds_smoothed, tsmooth_kws, dim='lead', set_lead_center=T
     # bugfix: actually tsmooth_kws should only dict
     if tsmooth_kws is None or callable(tsmooth_kws):
         return ds_smoothed
-    if not ('time' in tsmooth_kws.keys() or 'lead' in tsmooth_kws.keys()):
-        raise ValueError('tsmooth_kws does not contain a time dimension.', tsmooth_kws)
-    for c in ['time', 'lead']:
+    if not ("time" in tsmooth_kws.keys() or "lead" in tsmooth_kws.keys()):
+        raise ValueError("tsmooth_kws does not contain a time dimension.", tsmooth_kws)
+    for c in ["time", "lead"]:
         if c in tsmooth_kws.keys():
             smooth = tsmooth_kws[c]
-    ds_smoothed[dim] = [f'{t}-{t + smooth - 1}' for t in ds_smoothed[dim].values]
+    ds_smoothed[dim] = [f"{t}-{t + smooth - 1}" for t in ds_smoothed[dim].values]
     if set_lead_center:
         _set_center_coord(ds_smoothed, dim)
     return ds_smoothed
 
 
-def _set_center_coord(ds, dim='lead'):
+def _set_center_coord(ds, dim="lead"):
     """Set lead_center as a new coordinate."""
     new_dim = []
     old_dim = ds[dim].values
     for i in old_dim:
-        new_dim.append(eval(i.replace('-', '+')) / 2)
+        new_dim.append(eval(i.replace("-", "+")) / 2)
     new_dim = np.array(new_dim)
-    ds.coords[f'{dim}_center'] = (dim, new_dim)
+    ds.coords[f"{dim}_center"] = (dim, new_dim)
     return ds
 
 
 @is_xarray(0)
 def smooth_goddard_2013(
     ds,
-    tsmooth_kws={'lead': 4},
-    d_lon_lat_kws={'lon': 5, 'lat': 5},
-    how='mean',
+    tsmooth_kws={"lead": 4},
+    d_lon_lat_kws={"lon": 5, "lat": 5},
+    how="mean",
     **xesmf_kwargs,
 ):
     """Wrapper to smooth as suggested by Goddard et al. 2013:

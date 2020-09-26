@@ -10,7 +10,7 @@ echo "[flake8]"
 flake8 climpred --exclude=__init__.py
 
 echo "[black]"
-black --check -S climpred
+black --check climpred
 
 echo "[isort]"
 isort --recursive --check-only climpred

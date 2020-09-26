@@ -24,17 +24,17 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
         **kwargs: for plt.subplots( **kwargs)
 
     """
-    colors = ['royalblue', 'indianred', 'goldenrod']
+    colors = ["royalblue", "indianred", "goldenrod"]
     _, ax = plt.subplots(ncols=3, **kwargs)
 
-    for i, dim in enumerate(['R', 'S', 'D']):
-        m = rel_ent[dim].median('init')
-        std = rel_ent[dim].std('init')
+    for i, dim in enumerate(["R", "S", "D"]):
+        m = rel_ent[dim].median("init")
+        std = rel_ent[dim].std("init")
         ax[i].plot(
             rel_ent.lead,
             rel_ent[dim].to_dataframe().unstack(0),
-            c='gray',
-            label='individual initializations',
+            c="gray",
+            label="individual initializations",
             linewidth=0.5,
             alpha=0.5,
         )
@@ -43,28 +43,28 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
             rel_ent.lead,
             (m - std),
             c=colors[i],
-            label=dim + ' median +/- std',
+            label=dim + " median +/- std",
             linewidth=2.5,
-            ls='--',
+            ls="--",
         )
         ax[i].plot(
-            rel_ent.lead, (m + std), c=colors[i], label='', linewidth=2.5, ls='--',
+            rel_ent.lead, (m + std), c=colors[i], label="", linewidth=2.5, ls="--",
         )
         if rel_ent_threshold is not None:
             ax[i].axhline(
                 y=rel_ent_threshold[dim].values,
-                label='bootstrapped threshold',
-                c='gray',
-                ls='--',
+                label="bootstrapped threshold",
+                c="gray",
+                ls="--",
             )
         handles, labels = ax[i].get_legend_handles_labels()
         by_label = OrderedDict(zip(labels, handles))
         ax[i].legend(by_label.values(), by_label.keys(), frameon=False)
-        ax[i].set_xlabel('Lead')
-    ax[0].set_title('Relative Entropy')
-    ax[1].set_title('Signal')
-    ax[2].set_title('Dispersion')
-    ax[0].set_ylabel('Relative Entropy [ ]')
+        ax[i].set_xlabel("Lead")
+    ax[0].set_title("Relative Entropy")
+    ax[1].set_title("Signal")
+    ax[2].set_title("Dispersion")
+    ax[0].set_ylabel("Relative Entropy [ ]")
     ax[0].set_ylim(bottom=0)
     return ax
 
@@ -111,7 +111,7 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
         var = list(bootstrapped.data_vars)
         if len(var) > 1:
             raise ValueError(
-                'Please provide only xr.Dataset with one variable or xr.DataArray.'
+                "Please provide only xr.Dataset with one variable or xr.DataArray."
             )
         elif len(var) == 1:
             var = var[0]
@@ -121,37 +121,37 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
 
     assert isinstance(bootstrapped, xr.DataArray)
 
-    sig = bootstrapped.attrs['confidence_interval_levels'].split('-')
+    sig = bootstrapped.attrs["confidence_interval_levels"].split("-")
     sig = int(100 * (float(sig[0]) - float(sig[1])))
     pers_sig = sig
 
-    if 'metric' in bootstrapped.attrs:
-        if bootstrapped.attrs['metric'] in PROBABILISTIC_METRICS:
+    if "metric" in bootstrapped.attrs:
+        if bootstrapped.attrs["metric"] in PROBABILISTIC_METRICS:
             plot_persistence = False
 
-    init_skill = bootstrapped.sel(kind='init', results='skill')
-    init_ci = bootstrapped.sel(kind='init', results=['low_ci', 'high_ci']).rename(
-        {'results': 'quantile'}
+    init_skill = bootstrapped.sel(kind="init", results="skill")
+    init_ci = bootstrapped.sel(kind="init", results=["low_ci", "high_ci"]).rename(
+        {"results": "quantile"}
     )
-    uninit_skill = bootstrapped.sel(kind='uninit', results='skill')
-    uninit_ci = bootstrapped.sel(kind='uninit', results=['low_ci', 'high_ci']).rename(
-        {'results': 'quantile'}
+    uninit_skill = bootstrapped.sel(kind="uninit", results="skill")
+    uninit_ci = bootstrapped.sel(kind="uninit", results=["low_ci", "high_ci"]).rename(
+        {"results": "quantile"}
     )
-    pers_skill = bootstrapped.sel(kind='pers', results='skill')
-    pers_ci = bootstrapped.sel(kind='pers', results=['low_ci', 'high_ci']).rename(
-        {'results': 'quantile'}
+    pers_skill = bootstrapped.sel(kind="pers", results="skill")
+    pers_ci = bootstrapped.sel(kind="pers", results=["low_ci", "high_ci"]).rename(
+        {"results": "quantile"}
     )
-    p_uninit_over_init = bootstrapped.sel(kind='uninit', results='p')
-    p_pers_over_init = bootstrapped.sel(kind='pers', results='p')
+    p_uninit_over_init = bootstrapped.sel(kind="uninit", results="p")
+    p_pers_over_init = bootstrapped.sel(kind="pers", results="p")
 
     fontsize = 8
-    c_uninit = 'indianred'
-    c_init = 'steelblue'
-    c_pers = 'gray'
+    c_uninit = "indianred"
+    c_init = "steelblue"
+    c_pers = "gray"
     capsize = 4
 
     if pers_sig != sig:
-        raise NotImplementedError('pers_sig != sig not implemented yet.')
+        raise NotImplementedError("pers_sig != sig not implemented yet.")
 
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
@@ -162,10 +162,10 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
             init_skill - init_ci.isel(quantile=0),
             init_ci.isel(quantile=1) - init_skill,
         ],
-        fmt='--o',
+        fmt="--o",
         capsize=capsize,
         c=c_uninit,
-        label=(' ').join(['initialized with', str(sig) + '%', 'confidence interval']),
+        label=(" ").join(["initialized with", str(sig) + "%", "confidence interval"]),
     )
     # uninit
     if p_uninit_over_init is not None:
@@ -174,20 +174,20 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
             ax.text(
                 init_skill.lead.sel(lead=t),
                 init_ci.isel(quantile=1).sel(lead=t).values,
-                '%.2f' % float(p_uninit_over_init.sel(lead=t).values),
-                horizontalalignment='center',
-                verticalalignment='bottom',
+                "%.2f" % float(p_uninit_over_init.sel(lead=t).values),
+                horizontalalignment="center",
+                verticalalignment="bottom",
                 fontsize=fontsize,
                 color=c_uninit,
             )
-        uninit_skill = uninit_skill.dropna('lead').squeeze()
-        uninit_ci = uninit_ci.dropna('lead').squeeze()
-        if 'lead' not in uninit_skill.dims:
+        uninit_skill = uninit_skill.dropna("lead").squeeze()
+        uninit_ci = uninit_ci.dropna("lead").squeeze()
+        if "lead" not in uninit_skill.dims:
             yerr = [
                 [uninit_skill - uninit_ci.isel(quantile=0)],
                 [uninit_ci.isel(quantile=1) - uninit_skill],
             ]
-            ax.axhline(y=uninit_skill, c='steelblue', ls=':')
+            ax.axhline(y=uninit_skill, c="steelblue", ls=":")
             x = 0
         else:
             yerr = [
@@ -199,11 +199,11 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
             x,
             uninit_skill,
             yerr=yerr,
-            fmt='--o',
+            fmt="--o",
             capsize=capsize,
             c=c_init,
-            label=(' ').join(
-                ['uninitialized with', str(sig) + '%', 'confidence interval']
+            label=(" ").join(
+                ["uninitialized with", str(sig) + "%", "confidence interval"]
             ),
         )
     # persistence
@@ -216,25 +216,25 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
                     pers_skill - pers_ci.isel(quantile=0),
                     pers_ci.isel(quantile=1) - pers_skill,
                 ],
-                fmt='--o',
+                fmt="--o",
                 capsize=capsize,
                 c=c_pers,
-                label=f'persistence with {pers_sig}% confidence interval',
+                label=f"persistence with {pers_sig}% confidence interval",
             )
         for t in pers_skill.lead.values:
             ax.text(
                 pers_skill.lead.sel(lead=t),
                 pers_ci.isel(quantile=0).sel(lead=t).values,
-                '%.2f' % float(p_pers_over_init.sel(lead=t).values),
-                horizontalalignment='center',
-                verticalalignment='bottom',
+                "%.2f" % float(p_pers_over_init.sel(lead=t).values),
+                horizontalalignment="center",
+                verticalalignment="bottom",
                 fontsize=fontsize,
                 color=c_pers,
             )
 
     ax.xaxis.set_ticks(np.arange(init_skill.lead.size + 1))
     ax.legend(frameon=False)
-    ax.set_xlabel('Lead time [years]')
+    ax.set_xlabel("Lead time [years]")
     return ax
 
 
@@ -243,15 +243,15 @@ def _check_only_climpred_dims(pe):
     additional_dims = set(pe.get_initialized().dims) - set(CLIMPRED_DIMS)
     if len(additional_dims) != 0:
         raise DimensionError(
-            f'{type(pe.__name__)}.plot() does not allow dimensions other '
-            f'than {CLIMPRED_DIMS}, found {additional_dims}. '
-            f'Please use .mean({additional_dims}) '
-            f'or .isel() before plot.'
+            f"{type(pe.__name__)}.plot() does not allow dimensions other "
+            f"than {CLIMPRED_DIMS}, found {additional_dims}. "
+            f"Please use .mean({additional_dims}) "
+            f"or .isel() before plot."
         )
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, ax=None, show_members=False, cmap='jet'
+    he, variable=None, ax=None, show_members=False, cmap="jet"
 ):
     """Plot datasets from HindcastEnsemble.
 
@@ -271,18 +271,18 @@ def plot_lead_timeseries_hindcast(
     if variable is None:
         variable = list(he.get_initialized().data_vars)[0]
     hind = he.get_initialized()[variable]
-    lead_freq = get_lead_cftime_shift_args(hind.lead.attrs['units'], 1)[1]
+    lead_freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)[1]
     hist = he.get_uninitialized()
     if isinstance(hist, xr.Dataset):
         hist = hist[variable]
-    obs = he._datasets['observations']
+    obs = he._datasets["observations"]
 
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
     if isinstance(hist, xr.DataArray):
-        if 'member' in hist.dims and not show_members:
-            hist = hist.mean('member')
+        if "member" in hist.dims and not show_members:
+            hist = hist.mean("member")
             member_alpha = 1
             lw = 2
         else:
@@ -291,58 +291,54 @@ def plot_lead_timeseries_hindcast(
         hist.plot(
             ax=ax,
             lw=lw,
-            hue='member',
-            color='gray',
+            hue="member",
+            color="gray",
             alpha=member_alpha,
-            label='uninitialized',
+            label="uninitialized",
             zorder=hind.lead.size + 1,
         )
 
     for i, lead in enumerate(hind.lead.values):
-        h = hind.sel(lead=lead).rename({'init': 'time'})
-        if not show_members and 'member' in h.dims:
-            h = h.mean('member')
+        h = hind.sel(lead=lead).rename({"init": "time"})
+        if not show_members and "member" in h.dims:
+            h = h.mean("member")
             lead_alpha = 1
         else:
             lead_alpha = 0.5
-        h['time'] = shift_cftime_index(h.time, 'time', int(lead), lead_freq)
+        h["time"] = shift_cftime_index(h.time, "time", int(lead), lead_freq)
         h.plot(
             ax=ax,
-            hue='member',
+            hue="member",
             color=cmap(i),
-            label=f'initialized: lead={lead}',
+            label=f"initialized: lead={lead}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
         )
 
-    linestyles = ['-', ':', '-.', '--']
-    if len(obs) > len(linestyles):
-        raise ValueError(f'Please provide fewer than {len(linestyles)+1} observations.')
     if len(obs) > 0:
-        for i, (obs_name, obs_item) in enumerate(obs.items()):
-            if isinstance(obs_item, xr.Dataset):
-                obs_item = obs_item[variable]
-            obs_item.plot(
-                ax=ax,
-                color='k',
-                lw=3,
-                ls=linestyles[i],
-                label=f'reference: {obs_name}',
-                zorder=hind.lead.size + 2,
-            )
+        if isinstance(obs, xr.Dataset):
+            obs = obs[variable]
+        obs.plot(
+            ax=ax,
+            color="k",
+            lw=3,
+            ls="-",
+            label="observations",
+            zorder=hind.lead.size + 2,
+        )
 
     # show only one item per label in legend
     handles, labels = ax.get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
     ax.legend(
-        by_label.values(), by_label.keys(), loc='center left', bbox_to_anchor=(1, 0.5)
+        by_label.values(), by_label.keys(), loc="center left", bbox_to_anchor=(1, 0.5)
     )
-    ax.set_title('')
+    ax.set_title("")
     return ax
 
 
 def plot_ensemble_perfect_model(
-    pm, variable=None, ax=None, show_members=False, cmap='tab10'
+    pm, variable=None, ax=None, show_members=False, cmap="tab10"
 ):
     """Plot datasets from PerfectModelEnsemble.
 
@@ -373,9 +369,9 @@ def plot_ensemble_perfect_model(
     if isinstance(control, xr.Dataset):
         control = control[variable]
     calendar = infer_calendar_name(initialized.init)
-    lead_freq = get_lead_cftime_shift_args(initialized.lead.attrs['units'], 1)[1]
+    lead_freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], 1)[1]
 
-    control_color = 'gray'
+    control_color = "gray"
 
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
@@ -383,51 +379,51 @@ def plot_ensemble_perfect_model(
     cmap = mpl.cm.get_cmap(cmap, initialized.init.size)
 
     for ii, i in enumerate(initialized.init.values):
-        dsi = initialized.sel(init=i).rename({'lead': 'time'})
+        dsi = initialized.sel(init=i).rename({"lead": "time"})
         if uninitialized_present:
-            dsu = uninitialized.sel(init=i).rename({'lead': 'time'})
+            dsu = uninitialized.sel(init=i).rename({"lead": "time"})
         # convert lead time into cftime
         start_str = i.strftime()[:10]
         if initialized.lead.min() == 0:
-            dsi['time'] = xr.cftime_range(
+            dsi["time"] = xr.cftime_range(
                 start=start_str,
                 freq=lead_freq,
                 periods=dsi.time.size,
                 calendar=calendar,
             )
         elif initialized.lead.min() == 1:
-            dsi['time'] = xr.cftime_range(
+            dsi["time"] = xr.cftime_range(
                 start=start_str,
                 freq=lead_freq,
                 periods=dsi.time.size,
                 calendar=calendar,
             )
-            dsi['time'] = shift_cftime_index(dsi.time, 'time', 1, lead_freq)
+            dsi["time"] = shift_cftime_index(dsi.time, "time", 1, lead_freq)
         if uninitialized_present:
-            dsu['time'] = dsi['time']
+            dsu["time"] = dsi["time"]
         if not show_members:
-            dsi = dsi.mean('member')
+            dsi = dsi.mean("member")
             if uninitialized_present:
-                dsu = dsu.mean('member')
+                dsu = dsu.mean("member")
             member_alpha = 1
             lw = 2
-            labelstr = 'ensemble mean'
+            labelstr = "ensemble mean"
         else:
             member_alpha = 0.5
             lw = 1
-            labelstr = 'members'
+            labelstr = "members"
             # plot ensemble mean, first white then color to highlight ensemble mean
             if uninitialized_present:
-                dsu.mean('member').plot(ax=ax, color='white', lw=3, zorder=8, alpha=0.6)
-                dsu.mean('member').plot(
+                dsu.mean("member").plot(ax=ax, color="white", lw=3, zorder=8, alpha=0.6)
+                dsu.mean("member").plot(
                     ax=ax, color=control_color, lw=2, zorder=9, alpha=0.6
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
-            dsi.mean('member').plot(ax=ax, color='white', lw=3, zorder=10)
-            dsi.mean('member').plot(ax=ax, color=cmap(ii), lw=2, zorder=11)
+            dsi.mean("member").plot(ax=ax, color="white", lw=3, zorder=10)
+            dsi.mean("member").plot(ax=ax, color=cmap(ii), lw=2, zorder=11)
         dsi.plot(
             ax=ax,
-            hue='member',
+            hue="member",
             color=cmap(ii),
             alpha=member_alpha,
             lw=lw,
@@ -436,19 +432,19 @@ def plot_ensemble_perfect_model(
         if uninitialized_present:
             dsu.plot(
                 ax=ax,
-                hue='member',
+                hue="member",
                 color=control_color,
                 alpha=member_alpha / 2,
                 lw=lw,
-                label='uninitialized ' + labelstr,
+                label="uninitialized " + labelstr,
             )
 
     if isinstance(control, xr.DataArray):
-        control.plot(ax=ax, color=control_color, label='control')
+        control.plot(ax=ax, color=control_color, label="control")
 
     # show only one item per label in legend
     handles, labels = ax.get_legend_handles_labels()
     by_label = OrderedDict(zip(labels, handles))
     ax.legend(by_label.values(), by_label.keys())
-    ax.set_title(' ')
+    ax.set_title(" ")
     return ax

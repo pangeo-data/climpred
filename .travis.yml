@@ -5,7 +5,9 @@ notifications:
     email: false
 
 python:
-  - "3.6"
+  - 3.6
+  - 3.7
+  - 3.8
 
 before_install:
   - wget http://repo.continuum.io/miniconda/Miniconda3-latest-Linux-x86_64.sh -O miniconda.sh
@@ -17,7 +19,7 @@ before_install:
   - conda info -a
 
 install:
-  - conda env create -n climpred-dev --file ci/requirements/environment-dev-3.6.yml
+  - conda env create -n climpred-dev --file ci/requirements/environment-dev.yml
   - source activate climpred-dev
   - conda install pip
   - conda list

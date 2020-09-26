@@ -563,11 +563,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         init_str = "initialized" if init else "uninitialized"
         init_vars = list(self._datasets[init_str])
-        ctrl_vars = list(self._datasets["control"])
-        # Make lists of variables to drop that aren't in common
-        # with one another.
-        init_vars_to_drop = list(set(init_vars) - set(ctrl_vars))
-        ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
+        # only drop of control present
+        if self._datasets["control"]:
+            ctrl_vars = list(self._datasets["control"])
+            # Make lists of variables to drop that aren't in common
+            # with one another.
+            init_vars_to_drop = list(set(init_vars) - set(ctrl_vars))
+            ctrl_vars_to_drop = list(set(ctrl_vars) - set(init_vars))
+        else:
+            init_vars_to_drop, ctrl_vars_to_drop = [], []
         return init_vars_to_drop, ctrl_vars_to_drop
 
     @is_xarray(1)
@@ -645,10 +649,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             results for the initialized ensemble (``init``) and any reference forecasts
             verified.
         """
-        has_dataset(self._datasets["control"], "control", "compute a metric")
+        # pass fake control if no control dataset available
+        # compute_perfect_model does not use control anyways
         input_dict = {
             "ensemble": self._datasets["initialized"],
-            "control": self._datasets["control"],
+            "control": self._datasets["control"]
+            if isinstance(self._datasets["control"], xr.Dataset)
+            else self._datasets["initialized"]
+            .isel(member=0, lead=0, drop=True)
+            .rename({"init": "time"}),
             "init": True,
         }
         init_skill = self._apply_climpred_function(
@@ -725,7 +734,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         input_dict = {
             "ensemble": self._datasets["uninitialized"],
-            "control": self._datasets["control"],
+            "control": self._datasets["control"]
+            if isinstance(self._datasets["control"], xr.Dataset)
+            else self._datasets["initialized"]
+            .isel(member=0, lead=0)
+            .rename({"init": "time"}),
             "init": False,
         }
         res = self._apply_climpred_function(

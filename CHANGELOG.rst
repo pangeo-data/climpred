@@ -66,7 +66,7 @@ New Features
   (:pr:`452`) `Riley X. Brady`_
 - Implement new metrics which have been ported over from
   https://github.com/csiro-dcfp/doppyo/ to ``xskillscore`` by Dougie Squire.
-  (:pr:`439`) `Aaron Spring`_
+  (:pr:`439`, :pr:`456`) `Aaron Spring`_
 
     * rank histogram :py:func:`~climpred.metrics._rank_histogram`
     * discrimination :py:func:`~climpred.metrics._discrimination`

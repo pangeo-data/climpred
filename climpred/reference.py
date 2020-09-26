@@ -6,7 +6,7 @@ from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_xarray
 from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, __e2c
 from .constants import CLIMPRED_DIMS
-from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES
+from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES, _rename_dim
 from .utils import (
     assign_attrs,
     convert_time_index,
@@ -108,13 +108,16 @@ def compute_persistence(
 
     inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
+    if metric.normalize:
+        metric_kwargs["comparison"] = __e2c
+    dim = _rename_dim(dim, hind, verif)
     plag = []
     for i in hind.lead.values:
         a = verif.sel(time=inits[i])
         b = verif.sel(time=verif_dates[i])
         a["time"] = b["time"]
         # comparison expected for normalized metrics
-        plag.append(metric.function(a, b, dim=dim, comparison=__e2c, **metric_kwargs))
+        plag.append(metric.function(a, b, dim=dim, **metric_kwargs))
     pers = xr.concat(plag, "lead")
     pers["lead"] = hind.lead.values
     # keep coords from hind
@@ -201,10 +204,13 @@ def compute_uninitialized(
 
     _, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
 
+    if metric.normalize:
+        metric_kwargs["comparison"] = comparison
+
     plag = []
     # TODO: Refactor this, getting rid of `compute_uninitialized` completely.
     # `same_verifs` does not need to go through the loop, since it's a fixed
-    # skill over all leads.
+    # skill over all leads
     for i in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.
@@ -213,9 +219,7 @@ def compute_uninitialized(
         b = verif.sel(time=dates)
         a["time"] = b["time"]
         # comparison expected for normalized metrics
-        plag.append(
-            metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs)
-        )
+        plag.append(metric.function(a, b, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
     uninit_skill["lead"] = hind.lead.values
 

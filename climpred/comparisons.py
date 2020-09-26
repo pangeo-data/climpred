@@ -3,8 +3,7 @@ import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
-from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
-from .exceptions import DimensionError
+from .constants import M2M_MEMBER_DIM
 
 
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
@@ -18,42 +17,6 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks
     )
-
-
-def _drop_members(ds, removed_member=None):
-    """
-    Drop members by name selection .sel(member=) from ds.
-
-    Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member dimension
-        removed_member (list): list of members to be dropped. Default: [0]
-
-    Returns:
-        ds (xarray object): xr.Dataset/xr.DataArray with less members.
-
-    Raises:
-        DimensionError: if list items are not all in ds.member
-
-    """
-    if removed_member is None:
-        removed_member = [0]
-    if all(m in ds.member.values for m in removed_member):
-        member_list = list(ds.member.values)
-        for ens in removed_member:
-            member_list.remove(ens)
-    else:
-        raise DimensionError("select available members only")
-    return ds.sel(member=member_list)
-
-
-def _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(forecast, verif):
-    """Broadcast missing non CLIMPRED_DIMS from forecast to verif."""
-    for d in forecast.dims:
-        if d not in CLIMPRED_DIMS and d in forecast.dims and d not in verif.dims:
-            verif = verif.expand_dims(d)
-            verif = verif.isel({d: [0] * forecast[d].size})
-            verif[d] = forecast[d]
-    return forecast, verif
 
 
 def _display_comparison_metadata(self):
@@ -129,10 +92,10 @@ def _m2m(ds, metric=None):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m])
+        forecast = ds.drop_sel(member=m)
         # set incrementing members to avoid nans from broadcasting
         forecast["member"] = np.arange(1, 1 + forecast.member.size)
-        reference = ds.sel(member=m).squeeze()
+        reference = ds.sel(member=m, drop=True)
         # Tiles the singular "reference" member to compare directly to all other members
         if not metric.probabilistic:
             forecast, reference = xr.broadcast(forecast, reference)
@@ -173,8 +136,8 @@ def _m2e(ds, metric=None):
     forecast_list = []
     M2E_COMPARISON_DIM = "member"
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m]).mean("member")
-        reference = ds.sel(member=m).squeeze()
+        forecast = ds.drop_sel(member=m).mean("member")
+        reference = ds.sel(member=m, drop=True)
         forecast_list.append(forecast)
         reference_list.append(reference)
     reference = xr.concat(reference_list, M2E_COMPARISON_DIM)
@@ -213,14 +176,12 @@ def _m2c(ds, control_member=None, metric=None):
         xr.object: forecast, reference.
     """
     if control_member is None:
-        control_member = [0]
-    reference = ds.isel(member=control_member).squeeze()
+        control_member = ds.member.values[0]
+    reference = ds.sel(member=control_member, drop=True)
     # drop the member being reference
-    forecast = _drop_members(ds, removed_member=ds.member.values[control_member])
+    forecast = ds.drop_sel(member=control_member)
     if not metric.probabilistic:
         forecast, reference = xr.broadcast(forecast, reference)
-    elif "member" in reference.coords:
-        del reference["member"]
     return forecast, reference
 
 
@@ -249,13 +210,10 @@ def _e2c(ds, control_member=None, metric=None):
     Returns:
         xr.object: forecast, reference.
     """
-    # stack_dim irrelevant
     if control_member is None:
-        control_member = [0]
-    reference = ds.isel(member=control_member).squeeze()
-    if "member" in reference.coords:
-        del reference["member"]
-    ds = _drop_members(ds, removed_member=[ds.member.values[control_member]])
+        control_member = ds.member.values[0]
+    reference = ds.sel(member=control_member, drop=True)
+    ds = ds.drop_sel(member=control_member)
     forecast = ds.mean("member")
     return forecast, reference
 
@@ -290,9 +248,6 @@ def _e2o(hind, verif, metric=None):
         forecast = hind.mean("member")
     else:
         forecast = hind
-    forecast, verif = _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(
-        forecast, verif
-    )
     return forecast, verif
 
 
@@ -323,12 +278,11 @@ def _m2o(hind, verif, metric=None):
     # check that this contains more than one member
     has_dims(hind, "member", "decadal prediction ensemble")
     has_min_len(hind["member"], 1, "decadal prediction ensemble member")
-    forecast, verif = _broadcast_non_CLIMPRED_DIMS_from_forecast_to_verif(hind, verif)
+    forecast = hind
     if not metric.probabilistic and "member" not in verif.dims:
-        verif = verif.expand_dims("member")
-        nMember = forecast.member.size
-        verif = verif.isel(member=[0] * nMember)
-        verif["member"] = forecast["member"]
+        forecast, verif = xr.broadcast(
+            forecast, verif, exclude=["time", "init", "lead"]
+        )
     return forecast, verif
 
 

@@ -78,12 +78,25 @@ def _apply_metric_at_given_lead(
         a, b = historical(hist, verif, verif_dates, lead)
     a["time"] = b["time"]
 
-    # broadcast dims when deterministic metric and apply over member
-    if (a.dims != b.dims) and (dim == "member") and not metric.probabilistic:
-        a, b = xr.broadcast(a, b)
-    result = metric.function(a, b, dim=dim, comparison=comparison, **metric_kwargs,)
+    dim = _rename_dim(dim, hind, verif)
+    if metric.normalize or metric.allows_logical:
+        metric_kwargs["comparison"] = comparison
+    result = metric.function(a, b, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result
+
+
+def _rename_dim(dim, forecast, verif):
+    """rename `dim` to `time` or `init` if forecast and verif dims require."""
+    if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
+        dim = dim.copy()
+        dim.remove("init")
+        dim = dim + ["time"]
+    elif "time" in dim and "init" in forecast.dims and "init" in verif.dims:
+        dim = dim.copy()
+        dim.remove("time")
+        dim = dim + ["init"]
+    return dim
 
 
 def _sanitize_str_to_list(dim):
@@ -210,12 +223,9 @@ def compute_perfect_model(
 
     forecast, verif = comparison.function(init_pm, metric=metric)
 
-    # in case you want to compute deterministic skill over member dim
-    if (forecast.dims != verif.dims) and not metric.probabilistic:
-        forecast, verif = xr.broadcast(forecast, verif)
-    skill = metric.function(
-        forecast, verif, dim=dim, comparison=comparison, **metric_kwargs
-    )
+    if metric.normalize or metric.allows_logical:
+        metric_kwargs["comparison"] = comparison
+    skill = metric.function(forecast, verif, dim=dim, **metric_kwargs)
     if comparison.name == "m2m" and M2M_MEMBER_DIM in skill.dims:
         skill = skill.mean(M2M_MEMBER_DIM)
     # Attach climpred compute information to skill

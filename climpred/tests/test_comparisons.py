@@ -12,7 +12,6 @@ from climpred.comparisons import (
     __m2c,
     __m2e,
     __m2m,
-    _drop_members,
 )
 from climpred.metrics import PM_METRICS, __mse as metric
 from climpred.prediction import compute_perfect_model
@@ -28,12 +27,10 @@ def test_e2c(PM_da_initialized_1d):
     ds = PM_da_initialized_1d
     aforecast, areference = __e2c.function(ds, metric=metric)
 
-    control_member = [0]
-    reference = ds.isel(member=control_member).squeeze()
-    if "member" in reference.coords:
-        del reference["member"]
+    control_member = ds.member.values[0]
+    reference = ds.sel(member=control_member, drop=True)
     # drop the member being reference
-    ds = _drop_members(ds, removed_member=[ds.member.values[control_member]])
+    ds = ds.drop_sel(member=control_member)
     forecast = ds.mean("member")
 
     eforecast, ereference = forecast, reference
@@ -54,10 +51,10 @@ def test_m2c(PM_da_initialized_1d):
     ds = PM_da_initialized_1d
     aforecast, areference = __m2c.function(ds, metric=metric)
 
-    control_member = [0]
-    reference = ds.isel(member=control_member).squeeze()
+    control_member = ds.member.values[0]
+    reference = ds.sel(member=control_member, drop=True)
     # drop the member being reference
-    ds_dropped = _drop_members(ds, removed_member=ds.member.values[control_member])
+    ds_dropped = ds.drop_sel(member=control_member)
     forecast, reference = xr.broadcast(ds_dropped, reference)
 
     eforecast, ereference = forecast, reference
@@ -80,8 +77,8 @@ def test_m2e(PM_da_initialized_1d):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m]).mean("member")
-        reference = ds.sel(member=m).squeeze()
+        forecast = ds.drop_sel(member=m).mean("member")
+        reference = ds.sel(member=m, drop=True)
         forecast, reference = xr.broadcast(forecast, reference)
         forecast_list.append(forecast)
         reference_list.append(reference)
@@ -110,9 +107,9 @@ def test_m2m(PM_da_initialized_1d):
     reference_list = []
     forecast_list = []
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m])
+        forecast = ds.drop_sel(member=m)
         forecast["member"] = np.arange(1, 1 + forecast.member.size)
-        reference = ds.sel(member=m).squeeze()
+        reference = ds.sel(member=m, drop=True)
         forecast, reference = xr.broadcast(forecast, reference)
         reference_list.append(reference)
         forecast_list.append(forecast)
@@ -151,7 +148,7 @@ def my_m2me_comparison(ds, metric=None):
     forecast_list = []
     supervector_dim = "member"
     for m in ds.member.values:
-        forecast = _drop_members(ds, removed_member=[m]).median("member")
+        forecast = ds.drop_sel(member=m).median("member")
         reference = ds.sel(member=m).squeeze()
         forecast_list.append(forecast)
         reference_list.append(reference)

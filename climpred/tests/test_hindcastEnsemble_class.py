@@ -105,6 +105,7 @@ def test_inplace(
 
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
 def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
+    """Test reduce mean bias."""
     how = "mean"
     metric = "rmse"
     dim = "init"
@@ -119,6 +120,7 @@ def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
     bias_reduced_skill_properly = hindcast.reduce_bias(
         how=how, cross_validate=True, alignment=alignment
     ).verify(metric=metric, alignment=alignment, dim=dim, comparison=comparison)
+    assert "dayofyear" not in bias_reduced_skill_properly.coords
     assert biased_skill > bias_reduced_skill
     assert biased_skill > bias_reduced_skill_properly
     assert bias_reduced_skill_properly >= bias_reduced_skill

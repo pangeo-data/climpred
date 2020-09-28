@@ -108,6 +108,9 @@ def mean_bias_reduction(hindcast, alignment, cross_validate=True, **metric_kwarg
         mean_bias_func = _mean_bias_reduction_quick
 
     bias_reduced_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
+    bias_reduced_hind = bias_reduced_hind.squeeze()
+    if "dayofyear" in bias_reduced_hind.coords:
+        del bias_reduced_hind["dayofyear"]
     hindcast_bias_reduced = hindcast.copy()
     hindcast_bias_reduced._datasets["initialized"] = bias_reduced_hind
     return hindcast_bias_reduced

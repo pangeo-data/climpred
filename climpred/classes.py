@@ -740,7 +740,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
         return res
 
-    def compute_persistence(self, metric=None):
+    def compute_persistence(self, metric=None, dim=None, **metric_kwargs):
         """Verify a simple persistence forecast of the control run against itself.
 
         Args:
@@ -763,11 +763,19 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "control": self._datasets["control"],
             "init": True,
         }
+        if dim is None:
+            dim = list(self._datasets["initialized"].dims)
+        for d in ["member", "lead"]:
+            if d in dim:
+                dim.remove(d)
+        print(dim)
         res = self._apply_climpred_function(
             compute_persistence,
             input_dict=input_dict,
             metric=metric,
             alignment="same_inits",
+            dim=dim,
+            **metric_kwargs,
         )
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")

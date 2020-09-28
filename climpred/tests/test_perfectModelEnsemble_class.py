@@ -3,6 +3,8 @@ import xarray as xr
 
 from climpred import PerfectModelEnsemble
 
+xr.set_options(display_style="text")
+
 
 def test_perfectModelEnsemble_init(PM_ds_initialized_1d):
     """Test to see if perfect model ensemble can be initialized"""
@@ -175,3 +177,36 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
     with pytest.raises(ValueError) as excinfo:
         pm = pm.add_control(PM_ds_control_1d)
     assert "does not match" in str(excinfo.value)
+
+
+def test_persistence_dim(perfectModelEnsemble_initialized_control):
+    pm = perfectModelEnsemble_initialized_control.expand_dims(
+        "lon"
+    ).generate_uninitialized()
+    print(pm, pm.get_initialized().init)
+    assert "lon" in pm.get_initialized().dims
+    dim = ["lon"]
+    metric = "rmse"
+    comparison = "m2e"
+
+    actual = pm.compute_persistence(metric=metric, dim=dim)
+    print(actual)
+    assert "lon" not in actual.dims
+    assert "init" in actual.dims
+
+    actual = pm.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        reference=["persistence", "historical"],
+    )
+    assert "lon" not in actual.dims
+    assert "init" in actual.dims
+
+    pm = perfectModelEnsemble_initialized_control.expand_dims("lon")
+    pm = pm.isel(
+        lon=[0, 0]
+    )  # TODO:  fix that works also with singular dimension, rm squeeze somewhere
+    actual = pm.bootstrap(metric=metric, comparison=comparison, dim=dim, iterations=2)
+    assert "lon" not in actual.dims
+    assert "init" in actual.dims

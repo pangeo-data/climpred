@@ -98,7 +98,6 @@ def compute_persistence(
     if [0] in hind.lead.values:
         hind = hind.copy()
         with xr.set_options(keep_attrs=True):  # keeps lead.attrs['units']
-
             hind["lead"] = hind["lead"] + 1
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
         # Shift backwards shift for lead zero.
@@ -111,6 +110,7 @@ def compute_persistence(
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
     dim = _rename_dim(dim, hind, verif)
+    print("internally", dim)
     plag = []
     for i in hind.lead.values:
         a = verif.sel(time=inits[i])
@@ -119,6 +119,8 @@ def compute_persistence(
         # comparison expected for normalized metrics
         plag.append(metric.function(a, b, dim=dim, **metric_kwargs))
     pers = xr.concat(plag, "lead")
+    if "time" in pers:
+        pers = pers.dropna(dim="time").rename({"time": "init"})
     pers["lead"] = hind.lead.values
     # keep coords from hind
     drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]

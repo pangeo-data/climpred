@@ -768,7 +768,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         for d in ["member", "lead"]:
             if d in dim:
                 dim.remove(d)
-        print(dim)
         res = self._apply_climpred_function(
             compute_persistence,
             input_dict=input_dict,

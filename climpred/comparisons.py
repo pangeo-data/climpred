@@ -160,23 +160,23 @@ __m2e = Comparison(
 )
 
 
-def _m2c(ds, control_member=None, metric=None):
+def _m2c(ds, metric=None):
     """
-    Compare all other members forecasts to control member verification.
+    Compare all other member forecasts to a single member verification.
+    If the initialized dataset is concatinated in a way that the first member
+    is taken from the control simulation, this compares all other member forecasts
+    to the control simulation.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        control_member: list of the one integer member serving as
-                        reference. Default 0
         metric (Metric): if deterministic, forecast and reference both have member dim
                       if probabilistic, only forecast has member dim
 
     Returns:
         xr.object: forecast, reference.
     """
-    if control_member is None:
-        control_member = ds.member.values[0]
+    control_member = ds.member.values[0]
     reference = ds.sel(member=control_member, drop=True)
     # drop the member being reference
     forecast = ds.drop_sel(member=control_member)
@@ -194,15 +194,16 @@ __m2c = Comparison(
 )
 
 
-def _e2c(ds, control_member=None, metric=None):
+def _e2c(ds, metric=None):
     """
-    Compare ensemble mean forecast to control member verification.
+    Compare ensemble mean forecast to single member verification.
+    If the initialized dataset is concatinated in a way that the first member
+    is taken from the control simulation, this compares the member mean of all 
+    other member forecasts to the control simulation.
 
     Args:
         ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
                             dimension.
-        control_member: list of the one integer member serving as
-                        reference. Default 0
         metric (Metric): needed for probabilistic metrics.
                       therefore useless in e2c comparison,
                       but expected by internal API.
@@ -210,8 +211,7 @@ def _e2c(ds, control_member=None, metric=None):
     Returns:
         xr.object: forecast, reference.
     """
-    if control_member is None:
-        control_member = ds.member.values[0]
+    control_member = ds.member.values[0]
     reference = ds.sel(member=control_member, drop=True)
     ds = ds.drop_sel(member=control_member)
     forecast = ds.mean("member")

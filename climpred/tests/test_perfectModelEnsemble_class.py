@@ -204,9 +204,56 @@ def test_persistence_dim(perfectModelEnsemble_initialized_control):
     assert "init" in actual.dims
 
     pm = perfectModelEnsemble_initialized_control.expand_dims("lon")
+    # fix _resample_iterations_idx doesnt work with singular dimension somewhere.
     pm = pm.isel(
         lon=[0, 0]
-    )  # TODO:  fix that works also with singular dimension, rm squeeze somewhere
+    )
     actual = pm.bootstrap(metric=metric, comparison=comparison, dim=dim, iterations=2)
     assert "lon" not in actual.dims
     assert "init" in actual.dims
+
+def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
+    """Test that initialized dataset for HindcastEnsemble can also be used for
+        PerfectModelEnsemble."""
+    v = "SST"
+    alignment = "maximize"
+    hindcast = hindcast_recon_1d_mm
+    assert (
+        not hindcast.verify(
+            metric="acc", comparison="e2o", dim="init", alignment=alignment
+        )[v]
+        .isnull()
+        .any()
+    )
+
+    # try PerfectModelEnsemble predictability
+    init = hindcast.get_initialized()
+    print(init.lead)
+    pm = PerfectModelEnsemble(init)
+    # add fake control, remove after #461
+    pm = pm.add_control(
+        init.isel(member=0, lead=0, drop=True)
+        .rename({"init": "time"})
+        .resample(time="1MS")
+        .interpolate("linear")
+    )
+    assert (
+        not pm.verify(metric="acc", comparison="m2e", dim=["member", "init"])[v]
+        .isnull()
+        .any()
+    )
+
+    # generate_uninitialized
+    pm = pm.generate_uninitialized()
+    assert (
+        not pm.verify(
+            metric="acc",
+            comparison="m2e",
+            dim=["member", "init"],
+            reference=["uninitialized"],
+        )[v]
+        .isnull()
+        .any()
+    )
+
+    pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])

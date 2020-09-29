@@ -995,7 +995,7 @@ def bootstrap_hindcast(
           * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
 
     """
-    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
     hind = convert_time_index(hind, "init", "hind[init]")
     hist = convert_time_index(hist, "time", "uninitialized[time]")
     verif = convert_time_index(verif, "time", "verif[time]")
@@ -1119,7 +1119,7 @@ def bootstrap_perfect_model(
 
     if dim is None:
         dim = ["init", "member"]
-    # Check init & time is int, cftime, or datetime; convert ints or cftime to datetime.
+    # Check init & time is int, cftime, or datetime; convert ints or datetime to cftime.
     init_pm = convert_time_index(
         init_pm, "init", "init_pm[init]", calendar=PM_CALENDAR_STR
     )

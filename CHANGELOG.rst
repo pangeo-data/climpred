@@ -63,7 +63,8 @@ New Features
   :py:meth:`~climpred.classes.HindcastEnsemble.add_uninitialized`,
   :py:meth:`~climpred.classes.PerfectModelEnsemble.add_control` to ensure that the
   verification data calendars match that of the initialized ensemble.
-  (:pr:`452`) `Riley X. Brady`_
+  (:issue:`300`, :pr:`452`, :issue:`422`,:pr:`462`)
+  `Riley X. Brady`_ and `Aaron Spring`_.
 - Implement new metrics which have been ported over from
   https://github.com/csiro-dcfp/doppyo/ to ``xskillscore`` by Dougie Squire.
   (:pr:`439`, :pr:`456`) `Aaron Spring`_

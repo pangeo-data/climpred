@@ -179,6 +179,50 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
         pm = pm.add_control(PM_ds_control_1d)
     assert "does not match" in str(excinfo.value)
 
+    
+def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
+    """Test that initialized dataset for HindcastEnsemble can also be used for
+        PerfectModelEnsemble."""
+    v = "SST"
+    alignment = "maximize"
+    hindcast = hindcast_recon_1d_mm
+    assert (
+        not hindcast.verify(
+            metric="acc", comparison="e2o", dim="init", alignment=alignment
+        )[v]
+    
+    # try PerfectModelEnsemble predictability
+    init = hindcast.get_initialized()
+    print(init.lead)
+    pm = PerfectModelEnsemble(init)
+    # add fake control, remove after #461
+    pm = pm.add_control(
+        init.isel(member=0, lead=0, drop=True)
+        .rename({"init": "time"})
+        .resample(time="1MS")
+        .interpolate("linear")
+    )
+    assert (
+        not pm.verify(metric="acc", comparison="m2e", dim=["member", "init"])[v]
+        .isnull()
+        .any()
+    )
+    
+    # generate_uninitialized
+    pm = pm.generate_uninitialized()
+    assert (
+        not pm.verify(
+            metric="acc",
+            comparison="m2e",
+            dim=["member", "init"],
+            reference=["uninitialized"],
+        )[v]
+        .isnull()
+        .any()
+
+    pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])
+
+
 
 def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     """Tests that no error is thrown when no control present
@@ -216,7 +260,3 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     assert (
         not pm.verify(
             metric="mse", comparison=comparison, dim="init", reference=["uninitialized"]
-        )[v]
-        .isnull()
-        .any()
-    )

@@ -1,8 +1,9 @@
-name: climpred-docs
+name: climpred-docs-notebooks
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
+  - xesmf
+  - esmpy
   - bottleneck
   - cartopy>=0.18.0
   - esmtools>=1.1.3

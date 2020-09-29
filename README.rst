@@ -33,8 +33,8 @@ Verification of weather and climate forecasts.
      :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=master
      :alt: Requirements Status
 
-.. |codecov| image:: https://coveralls.io/repos/github/pangeo-data/climpred/badge.svg?branch=master
-    :target: https://coveralls.io/github/pangeo-data/climpred?branch=master
+.. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/master/graph/badge.svg?token=e53kXaaOqS
+      :target: https://codecov.io/gh/pangeo-data/climpred
 
 .. |conda| image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
     :target: https://anaconda.org/conda-forge/climpred
@@ -88,5 +88,3 @@ Documentation
 Documentation is in development and can be found on readthedocs_.
 
 .. _readthedocs: https://climpred.readthedocs.io/en/latest/
-
-DELETE THIS

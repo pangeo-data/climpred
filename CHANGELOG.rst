@@ -138,6 +138,8 @@ Internals/Minor Fixes
   ``matplotlib`` version. Update ``xskillscore`` requirement to 0.0.18 to
   cooperate with new ``xarray`` version. (:pr:`451`, :pr:`449`)
   `Riley X. Brady`_
+- Switch from Travis CI and Coveralls to Github Actions and CodeCov.
+  (:pr:`471`) `Riley X. Brady`_
 
 
 

@@ -105,7 +105,7 @@ Bug Fixes
 - Spatial and temporal smoothing :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now
   work as expected and rename time dimensions after
   :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
-- ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
+- ``PredictionEnsemble.verify(comparison='m2o', references=['uninitialized',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
 - Reduce bias by ``dayofyear`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
@@ -168,8 +168,9 @@ New Features
   :py:class:`~climpred.classes.PerfectModelEnsemble` now use an HTML representation, following the
   more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
 - ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. Current options are
-  ``'persistence'`` for a persistence forecast of the observations and ``'historical'`` for some
-  historical reference, such as an uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
+  ``'persistence'`` for a persistence forecast of the observations and
+  ``'uninitialized'`` for some uninitialized/historical reference, such as an
+  uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
 - We now only enforce a union of the initialization dates with observations if
   ``reference='persistence'`` for :py:class:`~climpred.classes.HindcastEnsemble`. This is to ensure
   that the same set of initializations is used

@@ -99,10 +99,7 @@ def test_bootstrap_pm_dim(perfectModelEnsemble_initialized_control):
     )["tos"]
     assert "init" in actual.dims
     for kind in ["initialized", "uninitialized"]:
-        actualk = actual.sel(kind=kind, results="skill")
-        if "init" in actualk.coords:
-            actualk = actualk.mean("init")
-        actualk = actualk.isnull().any()
+        actualk = actual.sel(kind=kind, results="skill").isnull().any()
         assert not actualk
 
 

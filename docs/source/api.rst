@@ -108,8 +108,6 @@ Analysis Functions
 
     PerfectModelEnsemble.verify
     PerfectModelEnsemble.bootstrap
-    PerfectModelEnsemble.compute_persistence
-    PerfectModelEnsemble.compute_uninitialized
 
 -------------
 Generate Data

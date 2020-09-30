@@ -34,12 +34,12 @@ def test_compute_uninitialized(perfectModelEnsemble_initialized_control):
     """Test that compute uninitialized can be run for perfect model ensemble"""
     pm = perfectModelEnsemble_initialized_control
     pm = pm.generate_uninitialized()
-    pm.compute_uninitialized()
+    pm._compute_uninitialized()
 
 
 def test_compute_persistence(perfectModelEnsemble_initialized_control):
     """Test that compute persistence can be run for perfect model ensemble"""
-    perfectModelEnsemble_initialized_control.compute_persistence(metric="acc")
+    perfectModelEnsemble_initialized_control._compute_persistence(metric="acc")
 
 
 @pytest.mark.slow
@@ -140,11 +140,11 @@ def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_co
 
 
 def test_compute_uninitialized_metric_kwargs(perfectModelEnsemble_initialized_control):
-    "Test that compute_uninitialized with metric_kwargs works"
+    "Test that _compute_uninitialized with metric_kwargs works"
     pm = perfectModelEnsemble_initialized_control
     pm = pm - pm.mean("time").mean("init")
     pm = pm.generate_uninitialized()
-    assert pm.compute_uninitialized(
+    assert pm._compute_uninitialized(
         metric="threshold_brier_score",
         comparison="m2c",
         threshold=0.5,

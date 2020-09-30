@@ -78,8 +78,10 @@ Deprecated
 ----------
 
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
-- ``compute_metric``. Use :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`
-  instead. (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
+- ``compute_metric``, ``compute_uninitialized`` and ``compute_persistence``. Use
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and the ``reference``
+  keyword. instead.
+  (:pr:`436`, :issue:`468` ,:pr:`472`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Bug Fixes
 ---------

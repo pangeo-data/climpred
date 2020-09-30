@@ -190,6 +190,9 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         not hindcast.verify(
             metric="acc", comparison="e2o", dim="init", alignment=alignment
         )[v]
+        .isnull()
+        .any()
+    )
     
     # try PerfectModelEnsemble predictability
     init = hindcast.get_initialized()
@@ -219,6 +222,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         )[v]
         .isnull()
         .any()
+    )
 
     pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])
 
@@ -260,3 +264,7 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     assert (
         not pm.verify(
             metric="mse", comparison=comparison, dim="init", reference=["uninitialized"]
+        )[v]
+        .isnull()
+        .any()
+    )

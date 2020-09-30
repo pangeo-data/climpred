@@ -212,7 +212,7 @@ def compute_perfect_model(
                                without `dim`.
 
     """
-    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    # Check that init is int, cftime, or datetime; convert ints or datetime to cftime
     init_pm = convert_time_index(
         init_pm, "init", "init_pm[init]", calendar=PM_CALENDAR_STR
     )

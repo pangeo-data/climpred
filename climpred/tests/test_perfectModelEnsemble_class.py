@@ -2,6 +2,9 @@ import pytest
 import xarray as xr
 
 from climpred import PerfectModelEnsemble
+from climpred.exceptions import DatasetError
+
+xr.set_options(display_style="text")
 
 
 def test_perfectModelEnsemble_init(PM_ds_initialized_1d):
@@ -176,7 +179,7 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
         pm = pm.add_control(PM_ds_control_1d)
     assert "does not match" in str(excinfo.value)
 
-
+    
 def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for
         PerfectModelEnsemble."""
@@ -187,10 +190,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         not hindcast.verify(
             metric="acc", comparison="e2o", dim="init", alignment=alignment
         )[v]
-        .isnull()
-        .any()
-    )
-
+    
     # try PerfectModelEnsemble predictability
     init = hindcast.get_initialized()
     print(init.lead)
@@ -207,7 +207,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .isnull()
         .any()
     )
-
+    
     # generate_uninitialized
     pm = pm.generate_uninitialized()
     assert (
@@ -219,6 +219,44 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         )[v]
         .isnull()
         .any()
-    )
 
     pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])
+
+
+
+def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
+    """Tests that no error is thrown when no control present
+    when calling verify(reference=['uninitialized'])."""
+    v = "tos"
+    comparison = "m2e"
+    pm = PerfectModelEnsemble(PM_da_initialized_1d).load()
+    # verify needs to control
+    skill = pm.verify(metric="mse", comparison=comparison, dim="init")
+    assert not skill[v].isnull().any()
+    # control not needed for normalized metrics as normalized
+    # with verif which is the verification member in PM and
+    # not the control simulation.
+    assert (
+        not pm.verify(metric="nmse", comparison=comparison, dim="init")[v]
+        .isnull()
+        .any()
+    )
+
+    with pytest.raises(DatasetError) as e:
+        pm.verify(
+            metric="mse", comparison=comparison, dim="init", reference=["persistence"]
+        )
+    assert "at least one control dataset" in str(e.value)
+
+    # unlikely case that control gets deleted after generating uninitialized
+    pm = pm.add_control(PM_da_control_1d).generate_uninitialized()
+    pm._datasets["control"] = {}
+    assert (
+        not pm.compute_uninitialized(metric="mse", comparison=comparison, dim="init")[v]
+        .isnull()
+        .any()
+    )
+
+    assert (
+        not pm.verify(
+            metric="mse", comparison=comparison, dim="init", reference=["uninitialized"]

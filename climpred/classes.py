@@ -540,7 +540,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         init = input_dict["init"]
         init_vars, ctrl_vars = self._vars_to_drop(init=init)
         ensemble = ensemble.drop_vars(init_vars)
-        control = control.drop_vars(ctrl_vars)
+        if control:
+            control = control.drop_vars(ctrl_vars)
         return func(ensemble, control, **kwargs)
 
     def _vars_to_drop(self, init=True):
@@ -649,15 +650,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             results for the initialized ensemble (``init``) and any reference forecasts
             verified.
         """
-        # pass fake control if no control dataset available
-        # compute_perfect_model does not use control anyways
         input_dict = {
             "ensemble": self._datasets["initialized"],
             "control": self._datasets["control"]
             if isinstance(self._datasets["control"], xr.Dataset)
-            else self._datasets["initialized"]
-            .isel(member=0, lead=0, drop=True)
-            .rename({"init": "time"}),
+            else None,
             "init": True,
         }
         init_skill = self._apply_climpred_function(
@@ -732,15 +729,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "uninitialized",
             "compute an uninitialized metric",
         )
-        # pass fake control if no control dataset available
-        # compute_perfect_model does not use control anyways
         input_dict = {
             "ensemble": self._datasets["uninitialized"],
             "control": self._datasets["control"]
             if isinstance(self._datasets["control"], xr.Dataset)
-            else self._datasets["initialized"]
-            .isel(member=0, lead=0, drop=True)
-            .rename({"init": "time"}),
+            else None,
             "init": False,
         }
         res = self._apply_climpred_function(

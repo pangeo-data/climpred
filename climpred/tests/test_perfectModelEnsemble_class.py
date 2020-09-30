@@ -113,7 +113,13 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
 
 @pytest.mark.parametrize(
     "reference",
-    ["historical", ["historical"], "persistence", None, ["historical", "persistence"]],
+    [
+        "uninitialized",
+        ["uninitialized"],
+        "persistence",
+        None,
+        ["uninitialized", "persistence"],
+    ],
 )
 def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
     """Test that verify works with references given."""
@@ -179,7 +185,7 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
         pm = pm.add_control(PM_ds_control_1d)
     assert "does not match" in str(excinfo.value)
 
-    
+
 def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for
         PerfectModelEnsemble."""
@@ -190,7 +196,9 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         not hindcast.verify(
             metric="acc", comparison="e2o", dim="init", alignment=alignment
         )[v]
-    
+        .isnull()
+        .any()
+    )
     # try PerfectModelEnsemble predictability
     init = hindcast.get_initialized()
     print(init.lead)
@@ -207,7 +215,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .isnull()
         .any()
     )
-    
+
     # generate_uninitialized
     pm = pm.generate_uninitialized()
     assert (
@@ -219,9 +227,9 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         )[v]
         .isnull()
         .any()
+    )
 
     pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])
-
 
 
 def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
@@ -260,3 +268,7 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     assert (
         not pm.verify(
             metric="mse", comparison=comparison, dim="init", reference=["uninitialized"]
+        )[v]
+        .isnull()
+        .any()
+    )

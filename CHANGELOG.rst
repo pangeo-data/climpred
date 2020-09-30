@@ -32,6 +32,11 @@ Breaking changes
 - Remove ability to add multiple observations to
   :py:class:`~climpred.classes.HindcastEnsemble`. This makes current and future
   development much easier. (:pr:`453`) `Riley X. Brady`_
+- Align the names of the output dimensions of
+ :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
+ :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
+  ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
+  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`473`) `Aaron Spring`_
 
 New Features
 ------------

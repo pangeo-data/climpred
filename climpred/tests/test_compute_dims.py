@@ -98,7 +98,7 @@ def test_bootstrap_pm_dim(perfectModelEnsemble_initialized_control):
         resample_dim="member",
     )["tos"]
     assert "init" in actual.dims
-    for kind in ["init", "uninit"]:
+    for kind in ["initialized", "uninitialized"]:
         actualk = actual.sel(kind=kind, results="skill")
         if "init" in actualk.coords:
             actualk = actualk.mean("init")
@@ -122,7 +122,7 @@ def test_bootstrap_hindcast_dim(
         resample_dim="member",
     )
     assert "init" in actual.dims
-    for kind in ["init", "uninit"]:
+    for kind in ["initialized", "uninitialized"]:
         actualk = actual.sel(kind=kind, results="skill")
         if "init" in actualk.coords:
             actualk = actualk.mean("init")

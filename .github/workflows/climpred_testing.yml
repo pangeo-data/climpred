@@ -58,4 +58,4 @@ jobs:
           pushd docs
           nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/subseasonal/*.ipynb
           make html
-          pop
+          popd

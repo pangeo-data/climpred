@@ -10,7 +10,6 @@ dependencies:
   - jupyterlab
   - matplotlib
   - nbsphinx
-  - nbstripout
   - nc-time-axis
   - netcdf4
   - numpy

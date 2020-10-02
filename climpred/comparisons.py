@@ -198,7 +198,7 @@ def _e2c(ds, metric=None):
     """
     Compare ensemble mean forecast to single member verification.
     If the initialized dataset is concatinated in a way that the first member
-    is taken from the control simulation, this compares the member mean of all 
+    is taken from the control simulation, this compares the member mean of all
     other member forecasts to the control simulation.
 
     Args:

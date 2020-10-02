@@ -179,7 +179,7 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
         pm = pm.add_control(PM_ds_control_1d)
     assert "does not match" in str(excinfo.value)
 
-    
+
 def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for
         PerfectModelEnsemble."""
@@ -193,7 +193,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .isnull()
         .any()
     )
-    
+
     # try PerfectModelEnsemble predictability
     init = hindcast.get_initialized()
     print(init.lead)
@@ -210,7 +210,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .isnull()
         .any()
     )
-    
+
     # generate_uninitialized
     pm = pm.generate_uninitialized()
     assert (
@@ -225,7 +225,6 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     )
 
     pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])
-
 
 
 def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):

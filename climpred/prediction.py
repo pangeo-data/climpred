@@ -178,10 +178,10 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     return metric, comparison, dim
 
 
-@is_xarray([0, 1])
+@is_xarray([0])
 def compute_perfect_model(
     init_pm,
-    control,
+    control=None,
     metric="pearson_r",
     comparison="m2e",
     dim=["member", "init"],
@@ -194,7 +194,8 @@ def compute_perfect_model(
 
     Args:
         init_pm (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
-        control (xarray object): control with dimension ``time``.
+        control (xarray object): NOTE that this is a legacy argument from a former
+            release. ``control`` is not used in ``compute_perfect_model`` anymore.
         metric (str): `metric` name, see
          :py:func:`climpred.utils.get_metric_class` and (see :ref:`Metrics`).
         comparison (str): `comparison` name defines what to take as forecast
@@ -211,7 +212,7 @@ def compute_perfect_model(
                                without `dim`.
 
     """
-    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    # Check that init is int, cftime, or datetime; convert ints or datetime to cftime
     init_pm = convert_time_index(
         init_pm, "init", "init_pm[init]", calendar=PM_CALENDAR_STR
     )

@@ -169,7 +169,7 @@ New Features
   more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
 - ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. Current options are
   ``'persistence'`` for a persistence forecast of the observations and
-  ``'uninitialized'`` for some uninitialized/historical reference, such as an
+  ``'uninitialized'`` for an uninitialized/historical reference, such as an
   uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
 - We now only enforce a union of the initialization dates with observations if
   ``reference='persistence'`` for :py:class:`~climpred.classes.HindcastEnsemble`. This is to ensure

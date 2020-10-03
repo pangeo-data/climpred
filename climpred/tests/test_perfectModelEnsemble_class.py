@@ -199,7 +199,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .isnull()
         .any()
     )
-    
+
     # try PerfectModelEnsemble predictability
     init = hindcast.get_initialized()
     print(init.lead)

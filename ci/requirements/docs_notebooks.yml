@@ -1,0 +1,29 @@
+name: climpred-docs-notebooks
+channels:
+  - conda-forge
+dependencies:
+  - xesmf
+  - esmpy
+  - bottleneck
+  - cartopy>=0.18.0
+  - esmtools>=1.1.3
+  - importlib_metadata
+  - jupyterlab
+  - matplotlib
+  - nbsphinx
+  - nbstripout
+  - nc-time-axis
+  - netcdf4
+  - numpy
+  - pandas
+  - pygments==2.6.1
+  - sphinx
+  - sphinxcontrib-napoleon
+  - sphinx_rtd_theme
+  - toolz
+  - tqdm
+  - xarray>=0.16.1
+  - pip
+  - pip:
+    # Install latest version of climpred.
+    - -e ../..

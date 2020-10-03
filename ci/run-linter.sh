@@ -4,8 +4,6 @@ set -eo pipefail
 
 echo "Code Styling with (black, flake8, isort)"
 
-source activate climpred-dev
-
 echo "[flake8]"
 flake8 climpred --exclude=__init__.py
 

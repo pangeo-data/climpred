@@ -74,6 +74,9 @@ New Features
     * reliability :py:func:`~climpred.metrics._reliability`
     * ranked probability score :py:func:`~climpred.metrics._rps`
     * contingency table and related scores :py:func:`~climpred.metrics._contingency`
+- :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` does not require to find
+  ``control`` in :py:class:`~climpred.classes.PerfectModelEnsemble`, only for
+   ``reference=['persistence']``. (:pr:`461`) `Aaron Spring`_.
 
 Deprecated
 ----------
@@ -135,6 +138,8 @@ Internals/Minor Fixes
   ``matplotlib`` version. Update ``xskillscore`` requirement to 0.0.18 to
   cooperate with new ``xarray`` version. (:pr:`451`, :pr:`449`)
   `Riley X. Brady`_
+- Switch from Travis CI and Coveralls to Github Actions and CodeCov.
+  (:pr:`471`) `Riley X. Brady`_
 
 
 

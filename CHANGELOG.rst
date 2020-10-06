@@ -36,7 +36,7 @@ Breaking changes
  :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
  :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
   ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
-  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`473`) `Aaron Spring`_
+  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`) `Aaron Spring`_
 
 New Features
 ------------
@@ -89,6 +89,8 @@ Deprecated
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
 - ``compute_metric``. Use :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`
   instead. (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
+- ``'historical'`` no longer a valid choice for ``reference``. Use ``'uninitialized'``
+  instead. (:pr:`478`) `Aaron Spring`_.
 
 Bug Fixes
 ---------

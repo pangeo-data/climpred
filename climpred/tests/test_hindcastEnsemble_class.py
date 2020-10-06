@@ -131,7 +131,7 @@ def test_verify_metric_kwargs(hindcast_hist_obs_1d):
         comparison="m2o",
         dim="member",
         threshold=0.5,
-        reference="historical",
+        reference="uninitialized",
         alignment="same_verifs",
     )
 
@@ -158,7 +158,7 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
         comparison="m2o",
         dim="init",
         alignment="same_verif",
-        reference="historical",
+        reference="uninitialized",
     )
     hindcast.verify(
         metric="mse",
@@ -171,7 +171,7 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
     hindcast.verify(
         metric="crps",
         comparison="m2o",
-        reference="historical",
+        reference="uninitialized",
         dim="member",
         alignment="same_verif",
     )

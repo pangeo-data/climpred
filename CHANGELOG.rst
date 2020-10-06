@@ -32,6 +32,11 @@ Breaking changes
 - Remove ability to add multiple observations to
   :py:class:`~climpred.classes.HindcastEnsemble`. This makes current and future
   development much easier. (:pr:`453`) `Riley X. Brady`_
+- Align the names of the output dimensions of
+ :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
+ :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
+  ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
+  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`) `Aaron Spring`_
 
 New Features
 ------------
@@ -84,6 +89,8 @@ Deprecated
 - ``spatial_smoothing_xrcoarsen`` (:pr:`391`) `Aaron Spring`_.
 - ``compute_metric``. Use :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`
   instead. (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
+- ``'historical'`` no longer a valid choice for ``reference``. Use ``'uninitialized'``
+  instead. (:pr:`478`) `Aaron Spring`_.
 
 Bug Fixes
 ---------
@@ -100,7 +107,7 @@ Bug Fixes
 - Spatial and temporal smoothing :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now
   work as expected and rename time dimensions after
   :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
-- ``PredictionEnsemble.verify(comparison='m2o', references=['historical',
+- ``PredictionEnsemble.verify(comparison='m2o', references=['uninitialized',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
 - Reduce bias by ``dayofyear`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
@@ -165,8 +172,9 @@ New Features
   :py:class:`~climpred.classes.PerfectModelEnsemble` now use an HTML representation, following the
   more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
 - ``HindcastEnsemble.verify()`` now takes ``reference=...`` keyword. Current options are
-  ``'persistence'`` for a persistence forecast of the observations and ``'historical'`` for some
-  historical reference, such as an uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
+  ``'persistence'`` for a persistence forecast of the observations and
+  ``'uninitialized'`` for an uninitialized/historical reference, such as an
+  uninitialized/forced run. (:pr:`341`) `Riley X. Brady`_.
 - We now only enforce a union of the initialization dates with observations if
   ``reference='persistence'`` for :py:class:`~climpred.classes.HindcastEnsemble`. This is to ensure
   that the same set of initializations is used

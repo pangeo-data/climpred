@@ -642,7 +642,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['persistence', 'historical', 'uninitialized'].
+                verify. One or more of ['persistence', 'uninitialized'].
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
@@ -673,13 +673,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference = [reference]
         elif reference is None:
             return init_skill
-        skill_labels = ["init"]
-        if "historical" in reference:
-            uninit_skill = self.compute_uninitialized(
-                metric=metric, comparison=comparison, **metric_kwargs
-            )
-            skill_labels.append("historical")
-        elif "uninitialized" in reference:
+
+        skill_labels = ["initialized"]
+        if "uninitialized" in reference:
             uninit_skill = self.compute_uninitialized(
                 metric=metric, comparison=comparison, **metric_kwargs
             )
@@ -722,7 +718,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
-            Result of the comparison as a Dataset.
+            Dataset with dimension skill containing initialized and reference skill(s).
         """
         has_dataset(
             self._datasets["uninitialized"],
@@ -814,20 +810,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         Returns:
             xr.Datasets: with dimensions ``result`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``init``, ``pers`` and
-            ``uninit``):
-                * result='skill', kind='init':
+            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``initialized``,
+            ``persistence`` and ``uninitialized``):
+                * result='skill', kind='initialized':
                     mean initialized skill
-                * result='high_ci', kind='init':
+                * result='high_ci', kind='initialized':
                     high confidence interval boundary for initialized skill
-                * result='p', kind='uninit':
+                * result='p', kind='uninitialized':
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
                 * result='p', kind='pers':
                     p value of the hypothesis that the
-                    difference of skill between the initialized and persistence
+                    difference of skill between the initialized and persistenceistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
 
@@ -1001,7 +997,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Args:
             reference (str): Type of reference forecasts to also verify against the
-                observations. Choose one or more of ['historical', 'persistence'].
+                observations. Choose one or more of ['uninitialized', 'persistence'].
                 Defaults to None.
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
                 verification. see `metrics </metrics.html>`_.
@@ -1029,7 +1025,7 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
-            Dataset of comparison results.
+            Dataset with dimension skill containing initialized and reference skill(s).
         """
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
@@ -1126,7 +1122,7 @@ class HindcastEnsemble(PredictionEnsemble):
         has_dataset(
             self._datasets["observations"], "observational", "verify a forecast"
         )
-        if "historical" in reference or "uninitialized" in reference:
+        if "uninitialized" in reference:
             has_dataset(
                 self._datasets["uninitialized"],
                 "uninitialized",
@@ -1148,6 +1144,7 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
         if self._temporally_smoothed:
+            # TODO: cleanup
             if isinstance(res, dict) and not isinstance(res, xr.Dataset):
                 for res_key, res_item in res.items():
                     res[res_key] = _reset_temporal_axis(
@@ -1210,18 +1207,18 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Returns:
             xr.Datasets: with dimensions ``result`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``init``, ``pers`` and
-            ``uninit``):
-                * result='skill', kind='init':
+            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``initialized``,
+            ``persistence`` and ``uninitialized``):
+                * result='skill', kind='initialized':
                     mean initialized skill
-                * result='high_ci', kind='init':
+                * result='high_ci', kind='initialized':
                     high confidence interval boundary for initialized skill
-                * result='p', kind='uninit':
+                * result='p', kind='uninitialized':
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * result='p', kind='pers':
+                * result='p', kind='persistence':
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on

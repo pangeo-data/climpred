@@ -45,9 +45,9 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
     all_inits = forecast["time"]
     all_verifs = verif["time"]
 
-    # If aligning historical reference, need to account for potential differences in its
-    # temporal coverage. Note that the historical reference only aligns verification
-    # dates and doesn't care about inits.
+    # If aligning reference='uninitialized', need to account for potential differences
+    # in its temporal coverage. Note that the reference='uninitialized' only aligns
+    # verification dates and doesn't care about inits.
     if hist is not None:
         all_verifs = np.sort(list(set(all_verifs.data) & set(hist["time"].data)))
         all_verifs = xr.DataArray(all_verifs, dims=["time"], coords=[all_verifs])

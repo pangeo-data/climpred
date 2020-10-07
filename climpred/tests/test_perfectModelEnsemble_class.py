@@ -261,7 +261,7 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     pm = pm.add_control(PM_da_control_1d).generate_uninitialized()
     pm._datasets["control"] = {}
     assert (
-        not pm.compute_uninitialized(metric="mse", comparison=comparison, dim="init")[v]
+        not pm._compute_uninitialized(metric="mse", comparison=comparison, dim="init")[v]
         .isnull()
         .any()
     )

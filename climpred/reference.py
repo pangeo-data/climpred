@@ -110,7 +110,7 @@ def compute_persistence(
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
     dim = _rename_dim(dim, hind, verif)
-    print("internally", dim)
+
     plag = []
     for i in hind.lead.values:
         a = verif.sel(time=inits[i])

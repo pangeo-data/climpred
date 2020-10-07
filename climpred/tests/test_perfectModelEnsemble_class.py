@@ -113,7 +113,13 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
 
 @pytest.mark.parametrize(
     "reference",
-    ["historical", ["historical"], "persistence", None, ["historical", "persistence"]],
+    [
+        "uninitialized",
+        ["uninitialized"],
+        "persistence",
+        None,
+        ["uninitialized", "persistence"],
+    ],
 )
 def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
     """Test that verify works with references given."""

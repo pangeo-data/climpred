@@ -113,6 +113,7 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
             raise ValueError(
                 "Please provide only xr.Dataset with one variable or xr.DataArray."
             )
+        # copy attributes to xr.DataArray
         elif len(var) == 1:
             var = var[0]
             attrs = bootstrapped.attrs
@@ -129,20 +130,20 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
         if bootstrapped.attrs["metric"] in PROBABILISTIC_METRICS:
             plot_persistence = False
 
-    init_skill = bootstrapped.sel(kind="init", results="skill")
-    init_ci = bootstrapped.sel(kind="init", results=["low_ci", "high_ci"]).rename(
-        {"results": "quantile"}
-    )
-    uninit_skill = bootstrapped.sel(kind="uninit", results="skill")
-    uninit_ci = bootstrapped.sel(kind="uninit", results=["low_ci", "high_ci"]).rename(
-        {"results": "quantile"}
-    )
-    pers_skill = bootstrapped.sel(kind="pers", results="skill")
-    pers_ci = bootstrapped.sel(kind="pers", results=["low_ci", "high_ci"]).rename(
-        {"results": "quantile"}
-    )
-    p_uninit_over_init = bootstrapped.sel(kind="uninit", results="p")
-    p_pers_over_init = bootstrapped.sel(kind="pers", results="p")
+    init_skill = bootstrapped.sel(kind="initialized", results="skill")
+    init_ci = bootstrapped.sel(
+        kind="initialized", results=["low_ci", "high_ci"]
+    ).rename({"results": "quantile"})
+    uninit_skill = bootstrapped.sel(kind="uninitialized", results="skill")
+    uninit_ci = bootstrapped.sel(
+        kind="uninitialized", results=["low_ci", "high_ci"]
+    ).rename({"results": "quantile"})
+    pers_skill = bootstrapped.sel(kind="persistence", results="skill")
+    pers_ci = bootstrapped.sel(
+        kind="persistence", results=["low_ci", "high_ci"]
+    ).rename({"results": "quantile"})
+    p_uninit_over_init = bootstrapped.sel(kind="uninitialized", results="p")
+    p_pers_over_init = bootstrapped.sel(kind="persistence", results="p")
 
     fontsize = 8
     c_uninit = "indianred"

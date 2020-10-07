@@ -9,7 +9,7 @@ system is skillful. Some questions that significance testing can answer are:
       zero?
 
     - What is the probability that the retrospective forecast is more valuable than a
-      historical simulation?
+      historical/uninitialized simulation?
 
     - Are correlation coefficients statistically significant despite temporal and
       spatial autocorrelation?

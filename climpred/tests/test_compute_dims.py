@@ -12,6 +12,8 @@ from climpred.exceptions import DimensionError
 from climpred.metrics import PM_METRICS
 from climpred.utils import get_comparison_class, get_metric_class
 
+xr.set_options(display_style="text")
+
 # TODO: move to conftest.py
 ITERATIONS = 2
 
@@ -128,9 +130,6 @@ def test_bootstrap_hindcast_dim(
             actualk = actualk.mean("init")
         actualk = actualk.isnull().any()
         assert not actualk
-
-
-xr.set_options(display_style="text")
 
 
 @pytest.mark.parametrize("metric", ["rmse", "pearson_r"])

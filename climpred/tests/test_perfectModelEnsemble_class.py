@@ -6,8 +6,6 @@ from climpred.exceptions import DatasetError
 
 xr.set_options(display_style="text")
 
-xr.set_options(display_style="text")
-
 
 def test_perfectModelEnsemble_init(PM_ds_initialized_1d):
     """Test to see if perfect model ensemble can be initialized"""
@@ -208,12 +206,11 @@ def test_persistence_dim(perfectModelEnsemble_initialized_control):
 
     pm = perfectModelEnsemble_initialized_control.expand_dims("lon")
     # fix _resample_iterations_idx doesnt work with singular dimension somewhere.
-    pm = pm.isel(
-        lon=[0, 0]
-    )
+    pm = pm.isel(lon=[0, 0])
     actual = pm.bootstrap(metric=metric, comparison=comparison, dim=dim, iterations=2)
     assert "lon" not in actual.dims
     assert "init" in actual.dims
+
 
 def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for

@@ -879,7 +879,7 @@ def bootstrap_compute(
     p["kind"] = ["uninit", "pers"]
 
     # ci for each skill
-    ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind").rename(
+    ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind", coords="minimal").rename(
         {"quantile": "results"}
     )
     ci["kind"] = ["init", "uninit", "pers"]

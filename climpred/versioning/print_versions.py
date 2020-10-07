@@ -79,7 +79,6 @@ def show_versions(as_json=False):
         ("setuptools", lambda mod: mod.__version__),
         ("pip", lambda mod: mod.__version__),
         ("conda", lambda mod: mod.__version__),
-        ("pytest", lambda mod: mod.__version__),
         # Misc.
         ("IPython", lambda mod: mod.__version__),
         ("sphinx", lambda mod: mod.__version__),

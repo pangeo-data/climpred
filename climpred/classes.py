@@ -676,14 +676,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         skill_labels = ["initialized"]
         if "uninitialized" in reference:
-            uninit_skill = self.compute_uninitialized(
+            uninit_skill = self._compute_uninitialized(
                 metric=metric, comparison=comparison, **metric_kwargs
             )
             skill_labels.append("uninitialized")
         else:
             uninit_skill = None
         if "persistence" in reference:
-            persistence_skill = self.compute_persistence(metric=metric)
+            persistence_skill = self._compute_persistence(metric=metric)
             skill_labels.append("persistence")
         else:
             persistence_skill = None
@@ -694,7 +694,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         all_skills["skill"] = skill_labels
         return all_skills.squeeze()
 
-    def compute_uninitialized(
+    def _compute_uninitialized(
         self, metric=None, comparison=None, dim=None, **metric_kwargs
     ):
         """Verify the bootstrapped uninitialized run against itself.
@@ -744,7 +744,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
         return res
 
-    def compute_persistence(self, metric=None, dim=None, **metric_kwargs):
+    def _compute_persistence(self, metric=None, dim=None, **metric_kwargs):
         """Verify a simple persistence forecast of the control run against itself.
 
         Args:

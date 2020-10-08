@@ -88,5 +88,3 @@ Documentation
 Documentation is in development and can be found on readthedocs_.
 
 .. _readthedocs: https://climpred.readthedocs.io/en/latest/
-
-TEST

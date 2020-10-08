@@ -8,7 +8,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          repository: '${{ github.repository_owner }}/${{ github.repository }}'
+          repository: ${{ github.repository }}
       - name: Set up Python
         uses: actions/setup-python@v2
         with:

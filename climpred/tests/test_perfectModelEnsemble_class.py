@@ -190,14 +190,12 @@ def test_persistence_dim(perfectModelEnsemble_initialized_control):
     pm = perfectModelEnsemble_initialized_control.expand_dims(
         "lon"
     ).generate_uninitialized()
-    print(pm, pm.get_initialized().init)
     assert "lon" in pm.get_initialized().dims
     dim = ["lon"]
     metric = "rmse"
     comparison = "m2e"
 
-    actual = pm.compute_persistence(metric=metric, dim=dim)
-    print(actual)
+    actual = pm._compute_persistence(metric=metric, dim=dim)
     assert "lon" not in actual.dims
     assert "init" in actual.dims
 
@@ -205,7 +203,7 @@ def test_persistence_dim(perfectModelEnsemble_initialized_control):
         metric=metric,
         comparison=comparison,
         dim=dim,
-        reference=["persistence", "historical"],
+        reference=["persistence", "uninitialized"],
     )
     assert "lon" not in actual.dims
     assert "init" in actual.dims

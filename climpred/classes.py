@@ -744,7 +744,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
         return res
 
-    def compute_persistence(self, metric=None, dim=None, **metric_kwargs):
+    def _compute_persistence(self, metric=None, dim=None, **metric_kwargs):
         """Verify a simple persistence forecast of the control run against itself.
 
         Args:

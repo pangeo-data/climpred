@@ -5,7 +5,7 @@ channels:
 dependencies:
   - xesmf
   - esmpy
-  - dask=2.27
+  - dask
   - netcdf4
   - ipython
   - nc-time-axis

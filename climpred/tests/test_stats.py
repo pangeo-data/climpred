@@ -13,7 +13,7 @@ ITERATIONS = 5
 def test_dpp(PM_da_control_3d, chunk):
     """Check for positive diagnostic potential predictability in NA SST."""
     res = dpp(PM_da_control_3d, chunk=chunk)
-    assert res.mean() > 0
+    assert res.mean() <  0
 
 
 @pytest.mark.parametrize("func", (varweighted_mean_period, decorrelation_time))

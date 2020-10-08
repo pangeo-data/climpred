@@ -12,7 +12,8 @@ jobs:
     steps:
       - name: Checkout branch
         uses: actions/checkout@v2
-        run: git checkout HEAD
+        with:
+          ref: HEAD
       - name: Install Conda environment
         uses: conda-incubator/setup-miniconda@v1
         with:

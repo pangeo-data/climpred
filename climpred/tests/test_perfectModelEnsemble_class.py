@@ -232,22 +232,21 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
 
     # try PerfectModelEnsemble predictability
     init = hindcast.get_initialized()
-    print(init.lead)
     pm = PerfectModelEnsemble(init)
-    # add fake control, remove after #461
-    pm = pm.add_control(
-        init.isel(member=0, lead=0, drop=True)
-        .rename({"init": "time"})
-        .resample(time="1MS")
-        .interpolate("linear")
-    )
+
     assert (
         not pm.verify(metric="acc", comparison="m2e", dim=["member", "init"])[v]
         .isnull()
         .any()
     )
 
-    # generate_uninitialized
+    pm = pm.add_control(
+        init.isel(member=0, lead=0, drop=True)
+        .rename({"init": "time"})
+        .resample(time="1MS")
+        .interpolate("linear")
+    )
+
     pm = pm.generate_uninitialized()
     assert (
         not pm.verify(

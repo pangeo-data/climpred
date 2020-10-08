@@ -38,6 +38,8 @@ Breaking changes
   ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
   [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`, :issue:`476`,
   :pr:`480`) `Aaron Spring`_
+- :py:meth:`~climpred.classes.PredictionEnsemble.verify` returns no ``skill`` dimension
+  if ``reference=None``.  (:pr:`480`) `Aaron Spring`_
 
 New Features
 ------------

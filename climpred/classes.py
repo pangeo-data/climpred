@@ -657,7 +657,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             else None,
             "init": True,
         }
-        init_skill = self._apply_climpred_function(
+        result = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
             metric=metric,
@@ -666,33 +666,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
         if self._temporally_smoothed:
-            init_skill = _reset_temporal_axis(
-                init_skill, self._temporally_smoothed, dim="lead"
-            )
+            result = _reset_temporal_axis(result, self._temporally_smoothed, dim="lead")
+        # compute reference skills
         if isinstance(reference, str):
             reference = [reference]
-        elif reference is None:
-            return init_skill
-
-        skill_labels = ["initialized"]
-        if "uninitialized" in reference:
-            uninit_skill = self._compute_uninitialized(
-                metric=metric, comparison=comparison, **metric_kwargs
-            )
-            skill_labels.append("uninitialized")
-        else:
-            uninit_skill = None
-        if "persistence" in reference:
-            persistence_skill = self._compute_persistence(metric=metric)
-            skill_labels.append("persistence")
-        else:
-            persistence_skill = None
-        all_skills = xr.concat(
-            [s for s in [init_skill, uninit_skill, persistence_skill] if s is not None],
-            dim="skill",
-        )
-        all_skills["skill"] = skill_labels
-        return all_skills.squeeze()
+        if reference:
+            for r in reference:
+                ref_compute_kwargs = metric_kwargs.copy()
+                ref_compute_kwargs["metric"] = metric
+                if r != "persistence":
+                    ref_compute_kwargs["comparison"] = comparison
+                ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
+                result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
+            result = result.assign_coords(skill=["initialized"] + reference)
+        return result.squeeze()
 
     def _compute_uninitialized(
         self, metric=None, comparison=None, dim=None, **metric_kwargs
@@ -750,6 +737,13 @@ class PerfectModelEnsemble(PredictionEnsemble):
         Args:
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
             verifying skill of the persistence forecast. See `metrics </metrics.html>`_.
+            dim (str, list of str): Dimension(s) over which to apply metric.
+                ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
+                ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
+                is probabilistic but should not contain ``member`` when
+                ``comparison=e2c``. Defaults to ``None``, meaning that all dimensions
+                other than ``lead`` are reduced.
+            **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
             Dataset of persistence forecast results.

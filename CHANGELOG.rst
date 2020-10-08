@@ -114,7 +114,7 @@ Bug Fixes
 - Reduce bias by ``dayofyear`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
   (:pr:`443`) `Aaron Spring`_.
-- also works with ``dask=>2.28``. (:issue:`479`, :pr:`482`) `Aaron Spring`_.
+- climpred also works with ``dask=>2.28``. (:issue:`479`, :pr:`482`) `Aaron Spring`_.
 
 Documentation
 -------------

@@ -11,8 +11,8 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
-      - name: Checkout HEAD branch
-        run: git checkout HEAD
+        with:
+          repository: ${{ github.head_ref }}
       - name: Install Conda environment
         uses: conda-incubator/setup-miniconda@v1
         with:

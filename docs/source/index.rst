@@ -94,8 +94,6 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
 You can also install the bleeding edge (pre-release versions) by cloning this
 repository and running ``pip install . --upgrade`` in the main directory
 
-TEST TEST THIS IS A TEST
-
 **Getting Started**
 
 

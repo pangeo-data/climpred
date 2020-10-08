@@ -1,6 +1,6 @@
 name: climpred testing
 
-on: [push]
+on: [push, pull_request_target]
 
 jobs:
   test:  # Runs testing suite on various python versions.

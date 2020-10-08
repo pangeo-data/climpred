@@ -11,8 +11,8 @@ jobs:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
     steps:
     - uses: actions/checkout@v2
-    - name: Checkout HEAD branch
-      run: git checkout HEAD
+      with:
+        repository: ${{ github.head_ref }}
     - name: Setup python
       uses: actions/setup-python@v2
       with:

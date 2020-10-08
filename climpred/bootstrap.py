@@ -469,7 +469,12 @@ def _bootstrap_hindcast_over_init_dim(
         if not metric.probabilistic:
             pers_skill.append(
                 reference_compute(
-                    smp_hind, verif, metric=metric, add_attrs=False, **metric_kwargs,
+                    smp_hind,
+                    verif,
+                    metric=metric,
+                    dim=dim,
+                    add_attrs=False,
+                    **metric_kwargs,
                 )
             )
     bootstrapped_init_skill = xr.concat(
@@ -805,7 +810,7 @@ def bootstrap_compute(
 
         if not metric.probabilistic:
             pers_skill = reference_compute(
-                hind, verif, metric=metric, **metric_kwargs_reference,
+                hind, verif, metric=metric, dim=dim, **metric_kwargs_reference,
             )
             # bootstrap pers
             if resample_dim == "init":
@@ -830,7 +835,7 @@ def bootstrap_compute(
     uninit_skill = bootstrapped_uninit_skill.mean("iteration")
     if not metric.probabilistic:
         pers_skill = reference_compute(
-            hind, verif, metric=metric, **metric_kwargs_reference
+            hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
         )
     else:
         pers_skill = init_skill.isnull()
@@ -874,7 +879,7 @@ def bootstrap_compute(
     p["kind"] = ["uninitialized", "persistence"]
 
     # ci for each skill
-    ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind").rename(
+    ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind", coords="minimal").rename(
         {"quantile": "results"}
     )
     ci["kind"] = ["initialized", "uninitialized", "persistence"]

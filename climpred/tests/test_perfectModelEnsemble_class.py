@@ -186,6 +186,38 @@ def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
     assert "does not match" in str(excinfo.value)
 
 
+def test_persistence_dim(perfectModelEnsemble_initialized_control):
+    pm = perfectModelEnsemble_initialized_control.expand_dims(
+        "lon"
+    ).generate_uninitialized()
+    print(pm, pm.get_initialized().init)
+    assert "lon" in pm.get_initialized().dims
+    dim = ["lon"]
+    metric = "rmse"
+    comparison = "m2e"
+
+    actual = pm.compute_persistence(metric=metric, dim=dim)
+    print(actual)
+    assert "lon" not in actual.dims
+    assert "init" in actual.dims
+
+    actual = pm.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        reference=["persistence", "historical"],
+    )
+    assert "lon" not in actual.dims
+    assert "init" in actual.dims
+
+    pm = perfectModelEnsemble_initialized_control.expand_dims("lon")
+    # fix _resample_iterations_idx doesnt work with singular dimension somewhere.
+    pm = pm.isel(lon=[0, 0])
+    actual = pm.bootstrap(metric=metric, comparison=comparison, dim=dim, iterations=2)
+    assert "lon" not in actual.dims
+    assert "init" in actual.dims
+
+
 def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for
         PerfectModelEnsemble."""

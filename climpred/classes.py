@@ -1118,13 +1118,20 @@ class HindcastEnsemble(PredictionEnsemble):
                     ]
                     ref = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
                     ref["lead"] = forecast["lead"]
+                    # fix to get no member dim for uninitialized e2o skill #477
+                    if (
+                        r == "uninitialized"
+                        and comparison.name == "e2o"
+                        and "member" in ref.dims
+                    ):
+                        ref = ref.mean("member")
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
             if "time" in result.dims:
                 result = result.rename({"time": "init"})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=["init"] + reference)
-            return result
+            return result.squeeze()
 
         has_dataset(
             self._datasets["observations"], "observational", "verify a forecast"

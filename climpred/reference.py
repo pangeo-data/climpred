@@ -24,7 +24,8 @@ def persistence(verif, inits, verif_dates, lead):
     return a, b
 
 
-def historical(hist, verif, verif_dates, lead):
+def uninitialized(hist, verif, verif_dates, lead):
+    """also called historical in some communities."""
     a = hist.sel(time=verif_dates[lead])
     b = verif.sel(time=verif_dates[lead])
     return a, b

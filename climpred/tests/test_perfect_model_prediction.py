@@ -50,7 +50,7 @@ def test_pvalue_from_bootstrapping(PM_da_initialized_1d, PM_da_control_1d, metri
             sig=sig,
             dim="init",
         )
-        .sel(kind="uninit", results="p")
+        .sel(kind="uninitialized", results="p")
         .isel(lead=0)
     )
     assert actual.values < 2 * (1 - sig / 100)
@@ -213,9 +213,9 @@ def test_bootstrap_perfect_model_da1d_not_nan(PM_da_initialized_1d, PM_da_contro
         sig=50,
         iterations=ITERATIONS,
     )
-    actual_init_skill = actual.sel(kind="init", results="skill").isnull().any()
+    actual_init_skill = actual.sel(kind="initialized", results="skill").isnull().any()
     assert not actual_init_skill
-    actual_uninit_p = actual.sel(kind="uninit", results="p").isnull().any()
+    actual_uninit_p = actual.sel(kind="uninitialized", results="p").isnull().any()
     assert not actual_uninit_p
 
 
@@ -234,10 +234,14 @@ def test_bootstrap_perfect_model_ds1d_not_nan(PM_ds_initialized_1d, PM_ds_contro
         iterations=ITERATIONS,
     )
     for var in actual.data_vars:
-        actual_init_skill = actual[var].sel(kind="init", results="skill").isnull().any()
+        actual_init_skill = (
+            actual[var].sel(kind="initialized", results="skill").isnull().any()
+        )
         assert not actual_init_skill
     for var in actual.data_vars:
-        actual_uninit_p = actual[var].sel(kind="uninit", results="p").isnull().any()
+        actual_uninit_p = (
+            actual[var].sel(kind="uninitialized", results="p").isnull().any()
+        )
         assert not actual_uninit_p
 
 

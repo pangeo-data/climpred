@@ -207,8 +207,8 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
 
 
 def _pvalue_from_distributions(simple_fct, init, metric=None):
-    """Get probability that skill of a simple forecast (e.g., persistence or
-    uninitlaized skill) is larger than initialized skill.
+    """Get probability that skill of a reference forecast (e.g., persistence or
+    uninitialized skill) is larger than initialized skill.
 
     Needed for bootstrapping confidence intervals and p_values of a metric in
     the hindcast framework. Checks whether a simple forecast like persistence
@@ -217,7 +217,7 @@ def _pvalue_from_distributions(simple_fct, init, metric=None):
     than smaller ones.)
 
     Args:
-        simple_fct (xarray object): persistence or uninit skill.
+        simple_fct (xarray object): persistence or uninitialized skill.
         init (xarray object): hindcast skill.
         metric (Metric): metric class Metric
 
@@ -646,9 +646,9 @@ def bootstrap_compute(
         results: (xr.Dataset): bootstrapped results for the three different kinds of
                                predictions:
 
-            - `init` for the initialized hindcast `hind` and describes skill due to
-             initialization and external forcing
-            - `uninit` for the uninitialized historical `hist` and approximates skill
+            - `initialized` for the initialized hindcast `hind` and describes skill due
+             to initialization and external forcing
+            - `uninit` for the uninitialized/historical and approximates skill
              from external forcing
             - `pers` for the reference forecast computed by `reference_compute`, which
              defaults to `compute_persistence`
@@ -872,17 +872,17 @@ def bootstrap_compute(
     skill = xr.concat(
         [init_skill, uninit_skill, pers_skill], dim="kind", **CONCAT_KWARGS
     )
-    skill["kind"] = ["init", "uninit", "pers"]
+    skill["kind"] = ["initialized", "uninitialized", "persistence"]
 
     # probability that i beats init
     p = xr.concat([p_uninit_over_init, p_pers_over_init], dim="kind", **CONCAT_KWARGS)
-    p["kind"] = ["uninit", "pers"]
+    p["kind"] = ["uninitialized", "persistence"]
 
     # ci for each skill
     ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind", coords="minimal").rename(
         {"quantile": "results"}
     )
-    ci["kind"] = ["init", "uninit", "pers"]
+    ci["kind"] = ["initialized", "uninitialized", "persistence"]
 
     results = xr.concat([skill, p], dim="results", **CONCAT_KWARGS)
     results["results"] = ["skill", "p"]
@@ -964,9 +964,9 @@ def bootstrap_hindcast(
         results: (xr.Dataset): bootstrapped results for the three different kinds of
                                predictions:
 
-            - `init` for the initialized hindcast `hind` and describes skill due to
-             initialization and external forcing
-            - `uninit` for the uninitialized historical `hist` and approximates skill
+            - `initialized` for the initialized hindcast `hind` and describes skill due
+             to initialization and external forcing
+            - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
             - `pers` for the reference forecast computed by `reference_compute`, which
              defaults to `compute_persistence`
@@ -996,7 +996,7 @@ def bootstrap_hindcast(
         >>> bootstrapped_skill.coords
         Coordinates:
           * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
-          * kind     (kind) object 'init' 'pers' 'uninit'
+          * kind     (kind) object 'initialized' 'persistence' 'uninitialized'
           * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
 
     """
@@ -1087,9 +1087,9 @@ def bootstrap_perfect_model(
         results: (xr.Dataset): bootstrapped results for the three different kinds of
                                predictions:
 
-            - `init` for the initialized hindcast `hind` and describes skill due to
-             initialization and external forcing
-            - `uninit` for the uninitialized historical `hist` and approximates skill
+            - `initialized` for the initialized hindcast `hind` and describes skill due
+             to initialization and external forcing
+            - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
             - `pers` for the reference forecast computed by `reference_compute`, which
              defaults to `compute_persistence`
@@ -1118,7 +1118,7 @@ def bootstrap_perfect_model(
         >>> bootstrapped_s.coords
         Coordinates:
           * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
-          * kind     (kind) object 'init' 'pers' 'uninit'
+          * kind     (kind) object 'initialized' 'persistence' 'uninitialized'
           * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
     """
 

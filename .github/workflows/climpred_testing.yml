@@ -1,6 +1,6 @@
 name: climpred testing
 
-on: [push, pull_request_target]
+on: pull_request_target
 
 jobs:
   test:  # Runs testing suite on various python versions.
@@ -37,7 +37,7 @@ jobs:
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
-          fail_ci_if_error: true
+          fail_ci_if_error: false
 
   docs_notebooks:  # Checks that pre-compiled notebooks in docs still work.
     runs-on: ubuntu-latest

@@ -1,12 +1,14 @@
 name: Lint
 
-on: [push]
+on: [push, pull_request_target]
 
 jobs:
   lint:  # Runs linting package checks for code styling.
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
+      - name: Checkout HEAD branch
+        run: git checkout HEAD
       - name: Set up Python
         uses: actions/setup-python@v2
         with:

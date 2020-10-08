@@ -413,3 +413,18 @@ def test_resample_iterations_dim_max(PM_da_initialized_1d, chunk, replace):
         dim_max=PM_da_initialized_1d.member.size,
     )
     assert (ds_r["member"] == PM_da_initialized_1d.member).all()
+
+
+@pytest.mark.skip(reason="this is a bug, test fails and should be resolved.")
+def test_resample_iterations_dix_no_squeeze(PM_da_initialized_1d):
+    """Test _resample_iteration_idx with singular dimension.
+
+    Currently this fails for dimensions with just a single index as we use `squeeze` in
+    the code and not using squeeze doesnt maintain functionality. This means that
+    _resample_iteration_idx should not be called on singleton dimension inputs (which
+    is not critical and can be circumvented when using squeeze before climpred.).
+    """
+    da = PM_da_initialized_1d.expand_dims("test_dim")
+    print(da)
+    actual = _resample_iterations_idx(da, iterations=ITERATIONS)
+    assert "test_dim" in actual.dims

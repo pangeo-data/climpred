@@ -10,7 +10,9 @@ jobs:
       matrix:
         python-version: [3.6, 3.7, 3.8]
     steps:
-      - uses: actions/checkout@v2
+      - name: Checkout branch
+        uses: actions/checkout@v2
+        run: git checkout HEAD
       - name: Install Conda environment
         uses: conda-incubator/setup-miniconda@v1
         with:

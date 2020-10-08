@@ -210,7 +210,6 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .any()
     )
 
-    # generate_uninitialized
     pm = pm.add_control(
         init.isel(member=0, lead=0, drop=True)
         .rename({"init": "time"})

@@ -12,7 +12,7 @@ jobs:
     steps:
     - uses: actions/checkout@v2
       with:
-        repository: ${{ github.head_ref }}
+        repository: ${{ github.repository }}
     - name: Setup python
       uses: actions/setup-python@v2
       with:

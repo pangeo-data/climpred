@@ -52,9 +52,9 @@ def _display_metadata(self):
     summary = header + "\nInitialized Ensemble:\n"
     summary += SPACE + str(self._datasets["initialized"].data_vars)[18:].strip() + "\n"
     if isinstance(self, HindcastEnsemble):
-        # Prints out verification dataand associated variables if they exist.
+        # Prints out observations and associated variables if they exist.
         # If not, just write "None".
-        summary += "Verification Data:\n"
+        summary += "Observations:\n"
         if any(self._datasets["observations"]):
             num_obs = len(self._datasets["observations"].data_vars)
             for i in range(1, num_obs + 1):
@@ -100,7 +100,7 @@ def _display_metadata_html(self):
     if isinstance(self, HindcastEnsemble):
         if any(self._datasets["observations"]):
             obs_repr_str = dataset_repr(self._datasets["observations"])
-            obs_repr_str = obs_repr_str.replace("xarray.Dataset", "Verification Data")
+            obs_repr_str = obs_repr_str.replace("xarray.Dataset", "Observations")
             display_html(obs_repr_str, raw=True)
     elif isinstance(self, PerfectModelEnsemble):
         if any(self._datasets["control"]):
@@ -525,7 +525,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self.kind = "perfect"
 
     def _apply_climpred_function(self, func, input_dict=None, **kwargs):
-        """Helper function to loop through verification data and apply an arbitrary climpred
+        """Helper function to loop through observations and apply an arbitrary climpred
         function.
 
         Args:
@@ -862,8 +862,8 @@ class HindcastEnsemble(PredictionEnsemble):
     product.
 
     `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks a single
-    verification dataset associated with the hindcast ensemble for easy computation
-    across multiple variables.
+    verification dataset (i.e., observations) associated with the hindcast ensemble
+    for easy computation across multiple variables.
 
     This object is built on `xarray` and thus requires the input object to
     be an `xarray` Dataset or DataArray.

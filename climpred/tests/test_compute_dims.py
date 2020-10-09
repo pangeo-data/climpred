@@ -98,10 +98,11 @@ def test_bootstrap_pm_dim(perfectModelEnsemble_initialized_control):
         comparison="m2c",
         iterations=ITERATIONS,
         resample_dim="member",
+        reference=["uninitialized"],
     )["tos"]
     assert "init" in actual.dims
-    for kind in ["initialized", "uninitialized"]:
-        actualk = actual.sel(kind=kind, results="skill").isnull().any()
+    for skill in ["initialized", "uninitialized"]:
+        actualk = actual.sel(skill=skill, results="verify skill").isnull().any()
         assert not actualk
 
 
@@ -121,8 +122,8 @@ def test_bootstrap_hindcast_dim(
         resample_dim="member",
     )
     assert "init" in actual.dims
-    for kind in ["initialized", "uninitialized"]:
-        actualk = actual.sel(kind=kind, results="skill")
+    for skill in ["initialized", "uninitialized"]:
+        actualk = actual.sel(skill=skill, results="verify skill")
         if "init" in actualk.coords:
             actualk = actualk.mean("init")
         actualk = actualk.isnull().any()

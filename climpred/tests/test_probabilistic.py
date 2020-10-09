@@ -137,8 +137,8 @@ def test_bootstrap_perfect_model_da1d_not_nan_probabilistic(
     kwargs["iterations"] = ITERATIONS
     kwargs["resample_dim"] = "member"
     actual = bootstrap_perfect_model(PM_da_initialized_1d, PM_da_control_1d, **kwargs)
-    for kind in ["initialized", "uninitialized"]:
-        actualk = actual.sel(kind=kind, results="skill")
+    for skill in ["initialized", "uninitialized"]:
+        actualk = actual.sel(skill=skill, results="verify skill")
         actualk = actualk.isnull().all()
         assert not actualk
 
@@ -179,8 +179,8 @@ def test_bootstrap_hindcast_da1d_not_nan_probabilistic(
         observations_da_1d,
         resample_dim="member",
     )
-    for kind in ["initialized", "uninitialized"]:
-        actualk = actual.sel(kind=kind, results="skill")
+    for skill in ["initialized", "uninitialized"]:
+        actualk = actual.sel(skill=skill, results="verify skill")
         if "init" in actualk.coords:
             actualk = actualk.mean("init")
         actualk = actualk.isnull().any()

@@ -789,6 +789,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         metric=None,
         comparison=None,
         dim=None,
+        reference=None,
         iterations=None,
         sig=95,
         pers_sig=None,
@@ -807,6 +808,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 is probabilistic but should not contain ``member`` when
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
+            reference (str, list of str): Type of reference forecasts with which to
+                verify. One or more of ['persistence', 'uninitialized'].
+                If None or empty, returns no p value.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
             sig (int, default 95): Significance level in percent for deciding whether
@@ -816,19 +820,19 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
-            xr.Datasets: with dimensions ``result`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``initialized``,
-            ``persistence`` and ``uninitialized``):
-                * result='skill', kind='initialized':
+            xr.Datasets: with dimensions ``result`` (holding ``verify skill``, ``p``,
+            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
+            ``persistence`` and/or ``uninitialized``):
+                * result='verify skill', skill='initialized':
                     mean initialized skill
-                * result='high_ci', kind='initialized':
+                * result='high_ci', skill='initialized':
                     high confidence interval boundary for initialized skill
-                * result='p', kind='uninitialized':
+                * result='p', skill='uninitialized':
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * result='p', kind='pers':
+                * result='p', skill='persistence':
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistenceistence
                     simulations is smaller or equal to zero based on
@@ -856,6 +860,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             dim=dim,
+            reference=reference,
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
@@ -1167,6 +1172,7 @@ class HindcastEnsemble(PredictionEnsemble):
         comparison=None,
         dim=None,
         alignment=None,
+        reference=None,
         iterations=None,
         sig=95,
         resample_dim="member",
@@ -1186,6 +1192,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
                 but should not contain ``member`` when ``comparison='e2o'``. Defaults to
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
+            reference (str, list of str): Type of reference forecasts with which to
+                verify. One or more of ['persistence', 'uninitialized'].
+                If None or empty, returns no p value.
             alignment (str): which inits or verification times should be aligned?
 
                 - 'maximize': maximize the degrees of freedom by slicing ``init`` and
@@ -1214,18 +1223,18 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Returns:
             xr.Datasets: with dimensions ``result`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``initialized``,
-            ``persistence`` and ``uninitialized``):
-                * result='skill', kind='initialized':
+            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
+            ``persistence`` and/or ``uninitialized``):
+                * result='verify skill', skill='initialized':
                     mean initialized skill
-                * result='high_ci', kind='initialized':
+                * result='high_ci', skill='initialized':
                     high confidence interval boundary for initialized skill
-                * result='p', kind='uninitialized':
+                * result='p', skill='uninitialized':
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * result='p', kind='persistence':
+                * result='p', skill='persistence':
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
@@ -1242,6 +1251,7 @@ class HindcastEnsemble(PredictionEnsemble):
             comparison=comparison,
             dim=dim,
             alignment=alignment,
+            reference=reference,
             resample_dim=resample_dim,
             sig=sig,
             iterations=iterations,

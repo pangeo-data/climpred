@@ -215,3 +215,39 @@ def test_calendar_matching_uninitialized(
     with pytest.raises(ValueError) as excinfo:
         hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     assert "does not match" in str(excinfo.value)
+
+
+def test_verify_reference_same_dims(hindcast_hist_obs_1d):
+    """Test that verify returns the same dimensionality regardless of reference."""
+    hindcast = hindcast_hist_obs_1d
+    metric = "mse"
+    comparison = "e2o"
+    dim = "init"
+    alignment = "same_verif"
+    actual_no_ref = hindcast.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        alignment=alignment,
+        reference=None,
+    )
+    actual_uninit_ref = hindcast.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        alignment=alignment,
+        reference="uninitialized",
+    )
+    actual_pers_ref = hindcast.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        alignment=alignment,
+        reference="persistence",
+    )
+    assert actual_uninit_ref.skill.size == 2
+    assert actual_pers_ref.skill.size == 2
+    # no additional dimension, +1 because initialized squeezed
+    assert len(actual_no_ref.dims) + 1 == len(actual_pers_ref.dims)
+    assert len(actual_no_ref.dims) + 1 == len(actual_uninit_ref.dims)
+    assert len(actual_pers_ref.dims) == len(actual_uninit_ref.dims)

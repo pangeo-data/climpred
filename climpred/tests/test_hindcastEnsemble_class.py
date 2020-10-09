@@ -104,7 +104,8 @@ def test_inplace(
 
 
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
-def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
+def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
+    """Test remove mean bias."""
     how = "mean"
     metric = "rmse"
     dim = "init"
@@ -113,15 +114,16 @@ def test_mean_reduce_bias(hindcast_hist_obs_1d, alignment):
     biased_skill = hindcast.verify(
         metric=metric, alignment=alignment, dim=dim, comparison=comparison
     )
-    bias_reduced_skill = hindcast.reduce_bias(
+    bias_removed_skill = hindcast.remove_bias(
         how=how, alignment=alignment, cross_validate=False
     ).verify(metric=metric, alignment=alignment, dim=dim, comparison=comparison)
-    bias_reduced_skill_properly = hindcast.reduce_bias(
+    bias_removed_skill_properly = hindcast.remove_bias(
         how=how, cross_validate=True, alignment=alignment
     ).verify(metric=metric, alignment=alignment, dim=dim, comparison=comparison)
-    assert biased_skill > bias_reduced_skill
-    assert biased_skill > bias_reduced_skill_properly
-    assert bias_reduced_skill_properly >= bias_reduced_skill
+    assert "dayofyear" not in bias_removed_skill_properly.coords
+    assert biased_skill > bias_removed_skill
+    assert biased_skill > bias_removed_skill_properly
+    assert bias_removed_skill_properly >= bias_removed_skill
 
 
 def test_verify_metric_kwargs(hindcast_hist_obs_1d):

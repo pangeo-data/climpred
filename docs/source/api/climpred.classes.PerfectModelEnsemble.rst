@@ -16,8 +16,6 @@ climpred.classes.PerfectModelEnsemble
       ~PerfectModelEnsemble.__init__
       ~PerfectModelEnsemble.add_control
       ~PerfectModelEnsemble.bootstrap
-      ~PerfectModelEnsemble.compute_persistence
-      ~PerfectModelEnsemble.compute_uninitialized
       ~PerfectModelEnsemble.generate_uninitialized
       ~PerfectModelEnsemble.get_control
       ~PerfectModelEnsemble.get_initialized

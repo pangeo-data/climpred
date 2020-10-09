@@ -1,7 +1,7 @@
 from pkg_resources import DistributionNotFound, get_distribution
 
 from . import (
-    bias_reduction,
+    bias_removal,
     bootstrap,
     comparisons,
     constants,

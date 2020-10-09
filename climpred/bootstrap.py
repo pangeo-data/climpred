@@ -853,11 +853,6 @@ def bootstrap_compute(
     init_skill = compute(
         hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
     )
-    # TODO: remove that
-    if "init" in init_skill:
-        init_skill = init_skill.mean("init")
-
-    print("ref", reference)
 
     if "uninitialized" in reference:
         # uninit skill as mean resampled uninit skill

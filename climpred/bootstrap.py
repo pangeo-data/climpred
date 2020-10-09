@@ -818,8 +818,8 @@ def bootstrap_compute(
                     bootstrapped_hind, verif, metric=metric, **metric_kwargs_reference,
                 )
             else:  # member
-                bootstrapped_pers_skill = pers_skill.expand_dims("iteration").isel(
-                    iteration=[0] * iterations
+                _, bootstrapped_pers_skill = xr.broadcast(
+                    bootstrapped_init_skill, pers_skill, exclude=CLIMPRED_DIMS
                 )
         else:
             bootstrapped_pers_skill = bootstrapped_init_skill.isnull()

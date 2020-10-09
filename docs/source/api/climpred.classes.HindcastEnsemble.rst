@@ -5,14 +5,14 @@ climpred.classes.HindcastEnsemble
 
 .. autoclass:: HindcastEnsemble
 
-   
+
    .. automethod:: __init__
 
-   
+
    .. rubric:: Methods
 
    .. autosummary::
-   
+
       ~HindcastEnsemble.__init__
       ~HindcastEnsemble.add_observations
       ~HindcastEnsemble.add_uninitialized
@@ -21,12 +21,6 @@ climpred.classes.HindcastEnsemble
       ~HindcastEnsemble.get_observations
       ~HindcastEnsemble.get_uninitialized
       ~HindcastEnsemble.plot
-      ~HindcastEnsemble.reduce_bias
+      ~HindcastEnsemble.remove_bias
       ~HindcastEnsemble.smooth
       ~HindcastEnsemble.verify
-   
-   
-
-   
-   
-   

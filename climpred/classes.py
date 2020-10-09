@@ -5,7 +5,7 @@ from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 
 from .alignment import return_inits_and_verif_dates
-from .bias_reduction import mean_bias_reduction
+from .bias_removal import mean_bias_removal
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -1249,8 +1249,9 @@ class HindcastEnsemble(PredictionEnsemble):
             pers_sig=pers_sig,
         )
 
-    def reduce_bias(self, alignment, how="mean", cross_validate=True, **metric_kwargs):
-        """Calc and remove bias from :py:class:`~climpred.classes.HindcastEnsemble`.
+    def remove_bias(self, alignment, how="mean", cross_validate=True, **metric_kwargs):
+        """Calculate and remove bias from
+        :py:class:`~climpred.classes.HindcastEnsemble`.
 
         Args:
             alignment (str): which inits or verification times should be aligned?
@@ -1266,9 +1267,9 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            how (str or list of str): what kind of bias reduction to perform. Select
+            how (str or list of str): what kind of bias removal to perform. Select
                 from ['mean']. Defaults to 'mean'.
-            cross_validate (bool): Use properly defined mean bias reduction function.
+            cross_validate (bool): Use properly defined mean bias removal function.
                 This excludes the given initialization from the bias calculation.
                 With False, include the given initialization in the calculation, which
                 is much faster and but yields similar skill with a large N of
@@ -1283,9 +1284,9 @@ class HindcastEnsemble(PredictionEnsemble):
             how = [how]
         for h in how:
             if h == "mean":
-                func = mean_bias_reduction
+                func = mean_bias_removal
             else:
-                raise NotImplementedError(f"{h}_bias_reduction is not implemented.")
+                raise NotImplementedError(f"{h}_bias_removal is not implemented.")
 
             self = func(
                 self,

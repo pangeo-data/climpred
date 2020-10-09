@@ -46,11 +46,28 @@ def test_compute_persistence(perfectModelEnsemble_initialized_control):
 
 
 @pytest.mark.slow
-def test_bootstrap(perfectModelEnsemble_initialized_control):
-    """Test that perfect model ensemble object can be bootstrapped"""
-    perfectModelEnsemble_initialized_control.bootstrap(
-        iterations=2, metric="acc", comparison="m2e", dim=["init", "member"]
+@pytest.mark.parametrize(
+    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
+)
+def test_bootstrap(perfectModelEnsemble_initialized_control, reference):
+    """Test that hindcast.bootstrap returns reference skill."""
+    actual = perfectModelEnsemble_initialized_control.bootstrap(
+        iterations=2,
+        metric="acc",
+        comparison="m2e",
+        dim=["init", "member"],
+        reference=reference,
     )
+    if isinstance(reference, str):
+        reference = [reference]
+    if len(reference) >= 1:
+        # check for initialized + reference
+        assert len(reference) + 1 == actual["skill"].size, print(
+            actual.coords, actual.dims
+        )
+    else:
+        # assert 'kind' in actual.coords
+        assert "skill" not in actual.dims
 
 
 def test_get_initialized(PM_ds_initialized_1d):

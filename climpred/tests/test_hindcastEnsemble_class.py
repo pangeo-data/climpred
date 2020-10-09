@@ -179,14 +179,29 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
     )
 
 
-def test_bootstrap(hindcast_hist_obs_1d):
-    hindcast_hist_obs_1d.bootstrap(
+@pytest.mark.parametrize(
+    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
+)
+def test_bootstrap(hindcast_hist_obs_1d, reference):
+    """Test that hindcast.bootstrap returns reference skill."""
+    actual = hindcast_hist_obs_1d.bootstrap(
         metric="acc",
         comparison="e2o",
         alignment="same_verifs",
         dim="init",
+        reference=reference,
         iterations=3,
     )
+    if isinstance(reference, str):
+        reference = [reference]
+    if len(reference) >= 1:
+        # check for initialized + reference
+        assert len(reference) + 1 == actual["skill"].size, print(
+            actual.coords, actual.dims
+        )
+    else:
+        # assert 'kind' in actual.coords
+        assert "skill" not in actual.dims
 
 
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):

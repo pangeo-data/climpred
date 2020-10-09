@@ -85,10 +85,10 @@ New Features
 - :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` does not require to find
   ``control`` in :py:class:`~climpred.classes.PerfectModelEnsemble`, only for
    ``reference=['persistence']``. (:pr:`461`) `Aaron Spring`_.
-- Implemented bias reduction
- :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`. ``reduce_bias(how='mean')``
+- Implemented bias removal
+ :py:class:`~climpred.classes.HindcastEnsemble.remove_bias`. ``remova_bias(how='mean')``
  reduces the mean bias of initialized hindcasts with respect to observation.
- See `example <examples/decadal/bias_reduction.html>`__.
+ See `example <examples/decadal/bias_removal.html>`__.
  (:pr:`389`, :pr:`443`, :pr:`459`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Deprecated

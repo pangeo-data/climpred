@@ -820,19 +820,19 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
-            xr.Datasets: with dimensions ``result`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``initialized``,
+            xr.Datasets: with dimensions ``result`` (holding ``verify skill``, ``p``,
+            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
-                * result='skill', kind='initialized':
+                * result='verify skill', skill='initialized':
                     mean initialized skill
-                * result='high_ci', kind='initialized':
+                * result='high_ci', skill='initialized':
                     high confidence interval boundary for initialized skill
-                * result='p', kind='uninitialized':
+                * result='p', skill='uninitialized':
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * result='p', kind='pers':
+                * result='p', skill='persistence':
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistenceistence
                     simulations is smaller or equal to zero based on
@@ -1223,18 +1223,18 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Returns:
             xr.Datasets: with dimensions ``result`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``kind`` (holding ``initialized``,
+            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
-                * result='skill', kind='initialized':
+                * result='verify skill', skill='initialized':
                     mean initialized skill
-                * result='high_ci', kind='initialized':
+                * result='high_ci', skill='initialized':
                     high confidence interval boundary for initialized skill
-                * result='p', kind='uninitialized':
+                * result='p', skill='uninitialized':
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * result='p', kind='persistence':
+                * result='p', skill='persistence':
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on

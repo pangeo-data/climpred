@@ -656,18 +656,17 @@ def bootstrap_compute(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        results: (xr.Dataset): bootstrapped results for the three different kinds of
-                               predictions:
+        results: (xr.Dataset): bootstrapped results for the three different skills:
 
             - `initialized` for the initialized hindcast `hind` and describes skill due
              to initialization and external forcing
-            - `uninit` for the uninitialized/historical and approximates skill
+            - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `reference_compute`, which
-             defaults to `compute_persistence`
+            - `persistence` for the persistence forecast computed by
+              `compute_persistence`
 
         the different results:
-            - `skill`: skill values
+            - `verify skill`: skill values
             - `p`: p value
             - `low_ci` and `high_ci`: high and low ends of confidence intervals based
              on significance threshold `sig`
@@ -1068,11 +1067,11 @@ def bootstrap_hindcast(
              to initialization and external forcing
             - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `reference_compute`, which
-             defaults to `compute_persistence`
+            - `persistence` for the persistence forecast computed by
+             `compute_persistence`
 
         the different results:
-            - `skill`: skill values
+            - `verify skill`: skill values
             - `p`: p value
             - `low_ci` and `high_ci`: high and low ends of confidence intervals based
              on significance threshold `sig`
@@ -1097,7 +1096,7 @@ def bootstrap_hindcast(
         Coordinates:
           * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
           * kind     (kind) object 'initialized' 'persistence' 'uninitialized'
-          * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
+          * results  (results) <U7 'verify skill' 'p' 'low_ci' 'high_ci'
 
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
@@ -1224,7 +1223,7 @@ def bootstrap_perfect_model(
         Coordinates:
           * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10
           * kind     (kind) object 'initialized' 'persistence' 'uninitialized'
-          * results  (results) <U7 'skill' 'p' 'low_ci' 'high_ci'
+          * results  (results) <U7 'verify skill' 'p' 'low_ci' 'high_ci'
     """
 
     if dim is None:

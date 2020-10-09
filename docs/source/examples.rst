@@ -43,4 +43,3 @@ Decadal
    examples/decadal/tropical-pacific-ssts.ipynb
    examples/decadal/diagnose-potential-predictability.ipynb
    examples/decadal/Significance.ipynb
-   examples/decadal/bias_removal.ipynb

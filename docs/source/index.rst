@@ -136,7 +136,7 @@ repository and running ``pip install . --upgrade`` in the main directory
     metrics
     comparisons
     significance
-    bias_removal
+    bias_removal.ipynb
     smoothing
     terminology
     reference_forecast

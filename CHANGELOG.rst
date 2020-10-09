@@ -36,7 +36,10 @@ Breaking changes
  :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
  :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
   ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
-  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`) `Aaron Spring`_
+  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`, :issue:`476`,
+  :pr:`480`) `Aaron Spring`_
+- :py:meth:`~climpred.classes.PredictionEnsemble.verify` returns no ``skill`` dimension
+  if ``reference=None``.  (:pr:`480`) `Aaron Spring`_
 
 New Features
 ------------
@@ -116,6 +119,10 @@ Bug Fixes
   :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['uninitialized',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
+- Reduce bias by ``dayofyear`` in
+  :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
+  (:pr:`443`) `Aaron Spring`_.
+- climpred also works with ``dask=>2.28``. (:issue:`479`, :pr:`482`) `Aaron Spring`_.
 
 Documentation
 -------------

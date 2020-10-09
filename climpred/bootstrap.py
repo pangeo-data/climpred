@@ -818,8 +818,8 @@ def bootstrap_compute(
                     bootstrapped_hind, verif, metric=metric, **metric_kwargs_reference,
                 )
             else:  # member
-                bootstrapped_pers_skill = pers_skill.expand_dims("iteration").isel(
-                    iteration=[0] * iterations
+                _, bootstrapped_pers_skill = xr.broadcast(
+                    bootstrapped_init_skill, pers_skill, exclude=CLIMPRED_DIMS
                 )
         else:
             bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
@@ -842,8 +842,16 @@ def bootstrap_compute(
 
     # align to prepare for concat
     if set(bootstrapped_pers_skill.coords) != set(bootstrapped_init_skill.coords):
+        if (
+            "time" in bootstrapped_pers_skill.dims
+            and "init" in bootstrapped_init_skill.dims
+        ):
+            bootstrapped_pers_skill = bootstrapped_pers_skill.rename({"time": "init"})
+        # allow member to be broadcasted
         bootstrapped_init_skill, bootstrapped_pers_skill = xr.broadcast(
-            bootstrapped_init_skill, bootstrapped_pers_skill
+            bootstrapped_init_skill,
+            bootstrapped_pers_skill,
+            exclude=("init", "lead", "time"),
         )
 
     # get confidence intervals CI
@@ -879,7 +887,7 @@ def bootstrap_compute(
     p["kind"] = ["uninitialized", "persistence"]
 
     # ci for each skill
-    ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind", coords="minimal").rename(
+    ci = xr.concat([init_ci, uninit_ci, pers_ci], dim="kind").rename(
         {"quantile": "results"}
     )
     ci["kind"] = ["initialized", "uninitialized", "persistence"]

@@ -304,3 +304,26 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
         .isnull()
         .any()
     )
+
+
+def test_verify_reference_same_dims(perfectModelEnsemble_initialized_control):
+    """Test that verify returns the same dimensionality regardless of reference."""
+    pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
+    metric = "mse"
+    comparison = "m2e"
+    dim = "init"
+    actual_no_ref = pm.verify(
+        metric=metric, comparison=comparison, dim=dim, reference=None
+    )
+    actual_uninit_ref = pm.verify(
+        metric=metric, comparison=comparison, dim=dim, reference="uninitialized"
+    )
+    actual_pers_ref = pm.verify(
+        metric=metric, comparison=comparison, dim=dim, reference="persistence"
+    )
+    assert actual_uninit_ref.skill.size == 2
+    assert actual_pers_ref.skill.size == 2
+    # no additional dimension, +1 because initialized squeezed
+    assert len(actual_no_ref.dims) + 1 == len(actual_pers_ref.dims)
+    assert len(actual_no_ref.dims) + 1 == len(actual_uninit_ref.dims)
+    assert len(actual_pers_ref.dims) == len(actual_uninit_ref.dims)

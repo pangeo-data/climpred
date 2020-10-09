@@ -1,6 +1,6 @@
 name: climpred testing
 
-on: [push]
+on: pull_request_target
 
 jobs:
   test:  # Runs testing suite on various python versions.
@@ -11,6 +11,9 @@ jobs:
         python-version: [3.6, 3.7, 3.8]
     steps:
       - uses: actions/checkout@v2
+        with:
+          ref: ${{github.event.pull_request.head.ref}}
+          repository: ${{github.event.pull_request.head.repo.full_name}}
       - name: Install Conda environment
         uses: conda-incubator/setup-miniconda@v1
         with:
@@ -30,10 +33,11 @@ jobs:
           conda activate climpred-minimum-tests
           pytest --cov=climpred --cov-report=xml
       - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v1
+        uses: codecov/codecov-action@v1.0.7
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
           file: ./coverage.xml
-          fail_ci_if_error: true
+          fail_ci_if_error: false
 
   docs_notebooks:  # Checks that pre-compiled notebooks in docs still work.
     runs-on: ubuntu-latest

@@ -6,3 +6,4 @@ coverage:
         target: 90
     patch: false
     changes: false
+    ignore: climpred/tests/

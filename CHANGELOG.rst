@@ -82,6 +82,11 @@ New Features
 - :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` does not require to find
   ``control`` in :py:class:`~climpred.classes.PerfectModelEnsemble`, only for
    ``reference=['persistence']``. (:pr:`461`) `Aaron Spring`_.
+- Implemented bias reduction
+ :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`. ``reduce_bias(how='mean')``
+ reduces the mean bias of initialized hindcasts with respect to observation.
+ See `example <examples/decadal/bias_reduction.html>`__.
+ (:pr:`389`, :pr:`443`, :pr:`459`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Deprecated
 ----------
@@ -111,9 +116,6 @@ Bug Fixes
   :py:meth:`~climpred.classes.PredictionEnsembleEnsemble.verify`. (:pr:`391`) `Aaron Spring`_.
 - ``PredictionEnsemble.verify(comparison='m2o', references=['uninitialized',
   'persistence']`` does not fail anymore. (:issue:`385`, :pr:`400`) `Aaron Spring`_.
-- Reduce bias by ``dayofyear`` in
-  :py:meth:`~climpred.classes.HindcastEnsemble.reduce_bias`.
-  (:pr:`443`) `Aaron Spring`_.
 
 Documentation
 -------------
@@ -131,10 +133,6 @@ Internals/Minor Fixes
 - :py:meth:`~climpred.classes.PredictionEnsemble.verify` replaces deprecated
   ``PerfectModelEnsemble.compute_metric()`` and accepts ``reference`` as keyword.
   (:pr:`387`) `Aaron Spring`_.
-- Implemented bias reduction
-  :py:class:`~climpred.classes.HindcastEnsemble.reduce_bias`. ``reduce_bias(how='mean')``
-  reduces the mean bias of initialized hindcasts with respect to a observation.
-  See `example <examples/decadal/bias_reduction.html>`__. (:pr:`389`) `Aaron Spring`_.
 - Cleared out unnecessary statistics functions from ``climpred`` and migrated them to
   ``esmtools``. Add ``esmtools`` as a required package. (:pr:`395`) `Riley X. Brady`_.
 - remove fixed pandas dependency from ``pandas=0.25`` to stable `pandas`.

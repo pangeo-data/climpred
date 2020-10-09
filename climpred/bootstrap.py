@@ -914,75 +914,75 @@ def bootstrap_compute(
             ],
             dim="results",
         )
-        results["results"] = ["skill", "low_ci", "high_ci"]
+        results["results"] = ["verify skill", "low_ci", "high_ci"]
 
     elif reference == ["persistence"]:
-        skill = xr.concat([init_skill, pers_skill], dim="kind", **CONCAT_KWARGS)
-        skill["kind"] = ["initialized", "persistence"]
+        skill = xr.concat([init_skill, pers_skill], dim="skill", **CONCAT_KWARGS)
+        skill["skill"] = ["initialized", "persistence"]
 
         # ci for each skill
-        ci = xr.concat([init_ci, pers_ci], "kind", coords="minimal").rename(
+        ci = xr.concat([init_ci, pers_ci], "skill", coords="minimal").rename(
             {"quantile": "results"}
         )
-        ci["kind"] = ["initialized", "persistence"]
+        ci["skill"] = ["initialized", "persistence"]
 
         results = xr.concat([skill, p_pers_over_init], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["skill", "p"]
+        results["results"] = ["verify skill", "p"]
         if set(results.coords) != set(ci.coords):
             res_drop = [c for c in results.coords if c not in ci.coords]
             ci_drop = [c for c in ci.coords if c not in results.coords]
             results = results.drop_vars(res_drop)
             ci = ci.drop_vars(ci_drop)
         results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["skill", "p", "low_ci", "high_ci"]
+        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
 
     elif reference == ["uninitialized"]:
-        skill = xr.concat([init_skill, uninit_skill], dim="kind", **CONCAT_KWARGS)
-        skill["kind"] = ["initialized", "uninitialized"]
+        skill = xr.concat([init_skill, uninit_skill], dim="skill", **CONCAT_KWARGS)
+        skill["skill"] = ["initialized", "uninitialized"]
 
         # ci for each skill
-        ci = xr.concat([init_ci, uninit_ci], "kind", coords="minimal").rename(
+        ci = xr.concat([init_ci, uninit_ci], "skill", coords="minimal").rename(
             {"quantile": "results"}
         )
-        ci["kind"] = ["initialized", "uninitialized"]
+        ci["skill"] = ["initialized", "uninitialized"]
 
         results = xr.concat([skill, p_uninit_over_init], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["skill", "p"]
+        results["results"] = ["verify skill", "p"]
         if set(results.coords) != set(ci.coords):
             res_drop = [c for c in results.coords if c not in ci.coords]
             ci_drop = [c for c in ci.coords if c not in results.coords]
             results = results.drop_vars(res_drop)
             ci = ci.drop_vars(ci_drop)
         results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["skill", "p", "low_ci", "high_ci"]
+        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
 
     elif set(reference) == set(["uninitialized", "persistence"]):
         skill = xr.concat(
-            [init_skill, uninit_skill, pers_skill], dim="kind", **CONCAT_KWARGS
+            [init_skill, uninit_skill, pers_skill], dim="skill", **CONCAT_KWARGS
         )
-        skill["kind"] = ["initialized", "uninitialized", "persistence"]
+        skill["skill"] = ["initialized", "uninitialized", "persistence"]
 
         # probability that i beats init
         p = xr.concat(
-            [p_uninit_over_init, p_pers_over_init], dim="kind", **CONCAT_KWARGS
+            [p_uninit_over_init, p_pers_over_init], dim="skill", **CONCAT_KWARGS
         )
-        p["kind"] = ["uninitialized", "persistence"]
+        p["skill"] = ["uninitialized", "persistence"]
 
         # ci for each skill
-        ci = xr.concat([init_ci, uninit_ci, pers_ci], "kind", coords="minimal").rename(
+        ci = xr.concat([init_ci, uninit_ci, pers_ci], "skill", coords="minimal").rename(
             {"quantile": "results"}
         )
-        ci["kind"] = ["initialized", "uninitialized", "persistence"]
+        ci["skill"] = ["initialized", "uninitialized", "persistence"]
 
         results = xr.concat([skill, p], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["skill", "p"]
+        results["results"] = ["verify skill", "p"]
         if set(results.coords) != set(ci.coords):
             res_drop = [c for c in results.coords if c not in ci.coords]
             ci_drop = [c for c in ci.coords if c not in results.coords]
             results = results.drop_vars(res_drop)
             ci = ci.drop_vars(ci_drop)
         results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["skill", "p", "low_ci", "high_ci"]
+        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
     else:
         raise ValueError("results not created")
 

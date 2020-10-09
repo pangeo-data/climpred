@@ -62,10 +62,12 @@ def test_bootstrap(perfectModelEnsemble_initialized_control, reference):
         reference = [reference]
     if len(reference) >= 1:
         # check for initialized + reference
-        assert len(reference) + 1 == actual.kind.size, print(actual.coords, actual.dims)
+        assert len(reference) + 1 == actual["skill"].size, print(
+            actual.coords, actual.dims
+        )
     else:
         # assert 'kind' in actual.coords
-        assert "kind" not in actual.dims
+        assert "skill" not in actual.dims
 
 
 def test_get_initialized(PM_ds_initialized_1d):

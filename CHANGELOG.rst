@@ -36,7 +36,8 @@ Breaking changes
  :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
  :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
   ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
-  [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`) `Aaron Spring`_
+  [``uninitialized``, ``persistence``].
+  (:issue:`460`, :pr:`478`, :issue:`466`,:pr:`495`) `Aaron Spring`_
 
 New Features
 ------------

@@ -35,27 +35,23 @@ Bootstrapping with replacement
 
 Testing statistical significance through bootstrapping is commonly used in the field of
 climate prediction [could add some example citations here]. Bootstrapping relies on
-resampling the underlying data with replacement for a large number of iterations, as
+resampling the underlying data with replacement for a large number of ``iterations``, as
 proposed by the decadal prediction framework of Goddard et al. 2013 [Goddard2013]_.
-This means that the initialized ensemble is resampled with replacement along a
+This means that the ``initialized`` ensemble is resampled with replacement along a
 dimension (``init`` or ``member``) and then that resampled ensemble is verified against
-the observations. This leads to a distribution of initialized skill. Further, a
-reference forecast uses the resampled initialized ensemble, e.g.
-:py:func:`~climpred.prediction.compute_persistence`, which creates a reference skill
-distribution. Lastly, an uninitialized skill distribution is created from the
-underlying historical members or the control simulation.
+the observations. This leads to a distribution of ``initialized`` skill. Further, a
+``reference`` forecast uses the resampled ``initialized`` ensemble, which creates a
+``reference`` skill distribution. Lastly, an ``uninitialized`` skill distribution is
+created from the underlying historical members or the control simulation.
 
-The probability or p value is the fraction of these resampled initialized metrics
-beaten by the uninitialized or resampled reference metrics calculated from their
+The probability or p value is the fraction of these resampled ``initialized`` metrics
+beaten by the ``uninitialized`` or resampled reference metrics calculated from their
 respective distributions. Confidence intervals using these distributions are also
 calculated.
 
-This behavior is incorporated into ``climpred`` by the base function
-:py:func:`~climpred.bootstrap.bootstrap_compute`, which is wrapped by
-:py:func:`~climpred.bootstrap.bootstrap_hindcast` and
-:py:func:`~climpred.bootstrap.bootstrap_perfect_model` for the respective prediction
-simulation type. See
-`example <examples/decadal/significance.html#Bootstrapping-with-replacement>`__
+This behavior is incorporated by
+:py:meth:`~climpred.classes.PredictionEnsemble.bootstrap`, see
+`example <examples/decadal/significance.html#Bootstrapping-with-replacement>`__.
 
 
 Field significance

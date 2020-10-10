@@ -12,8 +12,8 @@ Breaking changes
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`. (:pr:`436`)
   `Aaron Spring`_ and `Riley X. Brady`_.
-- Make ``metric``, ``comparison``, ``dim``, and ``alignment`` required (default None)
-  arguments for :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
+- Make ``metric``, ``comparison``, ``dim``, and ``alignment`` required (default
+  ``None``) arguments for :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
   (:pr:`436`) `Aaron Spring`_ and `Riley X. Brady`_.
 - Make ``metric``, ``comparison``, and ``dim`` required (default None) arguments for
@@ -33,8 +33,8 @@ Breaking changes
   :py:class:`~climpred.classes.HindcastEnsemble`. This makes current and future
   development much easier. (:pr:`453`) `Riley X. Brady`_
 - Align the names of the output dimensions of
- :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
- :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
+  :py:meth:`~climpred.classes.PredictionEnsemble.verify` and
+  :py:meth:`~climpred.classes.PredictionEnsemble.bootstrap` to ``initialized``,
   ``uninitialized`` and ``persistence``. Also ``reference`` should be choosen from
   [``uninitialized``, ``persistence``]. (:issue:`460`, :pr:`478`, :issue:`476`,
   :pr:`480`) `Aaron Spring`_
@@ -71,7 +71,7 @@ New Features
   :py:meth:`~climpred.classes.HindcastEnsemble.add_uninitialized`,
   :py:meth:`~climpred.classes.PerfectModelEnsemble.add_control` to ensure that the
   verification data calendars match that of the initialized ensemble.
-  (:issue:`300`, :pr:`452`, :issue:`422`,:pr:`462`)
+  (:issue:`300`, :pr:`452`, :issue:`422`, :pr:`462`)
   `Riley X. Brady`_ and `Aaron Spring`_.
 - Implement new metrics which have been ported over from
   https://github.com/csiro-dcfp/doppyo/ to ``xskillscore`` by Dougie Squire.
@@ -84,12 +84,12 @@ New Features
     * contingency table and related scores :py:func:`~climpred.metrics._contingency`
 - :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` does not require to find
   ``control`` in :py:class:`~climpred.classes.PerfectModelEnsemble`, only for
-   ``reference=['persistence']``. (:pr:`461`) `Aaron Spring`_.
+  ``reference=['persistence']``. (:pr:`461`) `Aaron Spring`_.
 - Implemented bias removal
- :py:class:`~climpred.classes.HindcastEnsemble.remove_bias`. ``remova_bias(how='mean')``
- reduces the mean bias of initialized hindcasts with respect to observation.
- See `example <examples/decadal/bias_removal.html>`__.
- (:pr:`389`, :pr:`443`, :pr:`459`) `Aaron Spring`_ and `Riley X. Brady`_.
+  :py:class:`~climpred.classes.HindcastEnsemble.remove_bias`.
+  ``remove_bias(how='mean')`` reduces the mean bias of initialized hindcasts with
+  respect to observation. See `example <examples/decadal/bias_removal.html>`__.
+  (:pr:`389`, :pr:`443`, :pr:`459`) `Aaron Spring`_ and `Riley X. Brady`_.
 
 Deprecated
 ----------
@@ -98,7 +98,7 @@ Deprecated
 - ``compute_metric``, ``compute_uninitialized`` and ``compute_persistence``. Use
   :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and the ``reference``
   keyword instead.
-  (:pr:`436`, :issue:`468` ,:pr:`472`) `Aaron Spring`_ and `Riley X. Brady`_.
+  (:pr:`436`, :issue:`468`, :pr:`472`) `Aaron Spring`_ and `Riley X. Brady`_.
 - ``'historical'`` no longer a valid choice for ``reference``. Use ``'uninitialized'``
   instead. (:pr:`478`) `Aaron Spring`_.
 

@@ -918,6 +918,8 @@ def bootstrap_compute(
             dim="results",
         )
         results["results"] = ["verify skill", "low_ci", "high_ci"]
+        results["skill"] = ["initialized"]
+        results = results.squeeze()
 
     elif reference == ["persistence"]:
         skill = xr.concat([init_skill, pers_skill], dim="skill", **CONCAT_KWARGS)

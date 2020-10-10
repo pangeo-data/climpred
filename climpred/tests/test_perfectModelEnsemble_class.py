@@ -66,7 +66,7 @@ def test_bootstrap(perfectModelEnsemble_initialized_control, reference):
             actual.coords, actual.dims
         )
     else:
-        # assert 'kind' in actual.coords
+        assert "skill" in actual.coords
         assert "skill" not in actual.dims
 
 

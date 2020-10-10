@@ -200,7 +200,7 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
             actual.coords, actual.dims
         )
     else:
-        # assert 'kind' in actual.coords
+        assert "skill" in actual.coords
         assert "skill" not in actual.dims
 
 

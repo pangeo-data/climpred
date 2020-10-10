@@ -66,7 +66,7 @@ Verification of weather and climate forecasts.
     :alt: climpred workshop
     :target: https://mybinder.org/v2/gh/bradyrx/climpred_workshop/master
 
-.. |cloud| image:: https://img.shields.io/badge/climpred-cloud_demo-f5a252
+.. |cloud| image:: https://img.shields.io/badge/climpred-cloud_demo-f9c99a
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
 

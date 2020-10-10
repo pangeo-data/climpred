@@ -1129,7 +1129,7 @@ class HindcastEnsemble(PredictionEnsemble):
             if "time" in result.dims:
                 result = result.rename({"time": "init"})
             # Add dimension/coordinate for different references.
-            result = result.assign_coords(skill=["init"] + reference)
+            result = result.assign_coords(skill=["initialized"] + reference)
             return result.squeeze()
 
         has_dataset(

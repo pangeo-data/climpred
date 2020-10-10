@@ -103,13 +103,3 @@ def test_stats_functions_dask_many_chunks(PM_da_control_3d, func):
                 assert res.chunks is None
                 # check for identical result
                 assert_allclose(res, res_chunked.compute())
-
-
-def test_varweighted_mean_period_dim(PM_da_control_3d):
-    """Test varweighted_mean_period for different dims."""
-    for d in PM_da_control_3d.dims:
-        # single dim
-        varweighted_mean_period(PM_da_control_3d, dim=d)
-        # all but one dim
-        di = [di for di in PM_da_control_3d.dims if di != d]
-        varweighted_mean_period(PM_da_control_3d, dim=di)

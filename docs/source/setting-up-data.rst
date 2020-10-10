@@ -17,7 +17,7 @@ dimension must be specified in as an attribute.  Valid options are
 be passed through ``climpred`` without issue: these could be things like ``lat``,
 ``lon``, ``depth``, etc.
 
-Check out the demo to setup a ``climpred``-ready prediction ensemble `from your own data <https://climpred.readthedocs.io/examples/preprocessing/setup_your_own_data.html>`_ or via `intake-esm <https://intake-esm.readthedocs.io/>`_ from `CMIP DCPP <https://climpred.readthedocs.io/examples/preprocessing/setup_your_own_data.html#intake-esm-for-cmorized-output>`_.
+Check out the demo to setup a ``climpred``-ready prediction ensemble `from your own data <setup_your_own_data.html>`_ or via `intake-esm <https://intake-esm.readthedocs.io/>`_ from `CMIP DCPP <examples/preprocessing/setup_your_own_data.html#intake-esm-for-cmorized-output>`_.
 
 **Verification products** are expected to contain the ``time`` dimension at the minimum.
 For best use of ``climpred``, their ``time`` dimension should cover the full length of

@@ -8,5 +8,5 @@ pandas
 scipy
 toolz
 xarray>=0.16.1
-xrft==0.2.0
+xrft
 xskillscore>=0.0.18

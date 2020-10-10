@@ -53,8 +53,8 @@ def test_bootstrap_func_multiple_sig_levels(PM_da_control_3d):
     "func", [dpp, varweighted_mean_period, decorrelation_time],
 )
 def test_stats_functions_dask_chunks(PM_da_control_3d, func, step):
-    """Check whether selected stats functions be chunked in multiple chunks and
-     computed along other dim."""
+    """Check whether selected stats functions be chunked and computed along other
+    dim."""
     dim = "time"
     for chunk_dim in PM_da_control_3d.isel({dim: 0}).dims:
         control_chunked = PM_da_control_3d.chunk({chunk_dim: step})

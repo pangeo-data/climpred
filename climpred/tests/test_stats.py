@@ -6,7 +6,7 @@ from xarray.testing import assert_allclose
 from climpred.bootstrap import dpp_threshold, varweighted_mean_period_threshold
 from climpred.stats import decorrelation_time, dpp, varweighted_mean_period
 
-ITERATIONS = 5
+ITERATIONS = 2
 
 
 @pytest.mark.parametrize("chunk", (True, False))
@@ -48,58 +48,23 @@ def test_bootstrap_func_multiple_sig_levels(PM_da_control_3d):
     assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()
 
 
+@pytest.mark.parametrize("step", [1, 2, -1])
 @pytest.mark.parametrize(
-    "func",
-    (
-        dpp,
-        varweighted_mean_period,
-        pytest.param(decorrelation_time, marks=pytest.mark.xfail(reason="some bug")),
-    ),
+    "func", [dpp, varweighted_mean_period, decorrelation_time],
 )
-def test_stats_functions_dask_single_chunk(PM_da_control_3d, func):
-    """Test stats functions when single chunk not along dim."""
-    step = -1  # single chunk
-    for chunk_dim in PM_da_control_3d.dims:
-        control_chunked = PM_da_control_3d.chunk({chunk_dim: step})
-        for dim in PM_da_control_3d.dims:
-            if dim != chunk_dim:
-                res_chunked = func(control_chunked, dim=dim)
-                res = func(PM_da_control_3d, dim=dim)
-                # check for chunks
-                assert dask.is_dask_collection(res_chunked)
-                assert res_chunked.chunks is not None
-                # check for no chunks
-                assert not dask.is_dask_collection(res)
-                assert res.chunks is None
-                # check for identical result
-                assert_allclose(res, res_chunked.compute())
-
-
-@pytest.mark.parametrize(
-    "func",
-    [
-        dpp,
-        varweighted_mean_period,
-        pytest.param(
-            decorrelation_time, marks=pytest.mark.xfail(reason="some chunking bug"),
-        ),
-    ],
-)
-def test_stats_functions_dask_many_chunks(PM_da_control_3d, func):
+def test_stats_functions_dask_chunks(PM_da_control_3d, func, step):
     """Check whether selected stats functions be chunked in multiple chunks and
      computed along other dim."""
-    step = 1
-    for chunk_dim in PM_da_control_3d.dims:
+    dim = "time"
+    for chunk_dim in PM_da_control_3d.isel({dim: 0}).dims:
         control_chunked = PM_da_control_3d.chunk({chunk_dim: step})
-        for dim in PM_da_control_3d.dims:
-            if dim != chunk_dim and dim in control_chunked.dims:
-                res_chunked = func(control_chunked, dim=dim)
-                res = func(PM_da_control_3d, dim=dim)
-                # check for chunks
-                assert dask.is_dask_collection(res_chunked)
-                assert res_chunked.chunks is not None
-                # check for no chunks
-                assert not dask.is_dask_collection(res)
-                assert res.chunks is None
-                # check for identical result
-                assert_allclose(res, res_chunked.compute())
+        res_chunked = func(control_chunked, dim=dim)
+        res = func(PM_da_control_3d, dim=dim)
+        # check for chunks
+        assert dask.is_dask_collection(res_chunked)
+        assert res_chunked.chunks is not None
+        # check for no chunks
+        assert not dask.is_dask_collection(res)
+        assert res.chunks is None
+        # check for identical result
+        assert_allclose(res, res_chunked.compute())

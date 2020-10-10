@@ -149,7 +149,6 @@ def varweighted_mean_period(da, dim="time", **kwargs):
     See also:
     https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
-    # set nans to 0
     if isinstance(da, xr.Dataset):
         raise ValueError("require xr.Dataset")
     da = da.fillna(0.0)
@@ -167,9 +166,4 @@ def varweighted_mean_period(da, dim="time", **kwargs):
         vwmp = vwmp.sum(f"freq_{d}") / ((vwmp * vwmp[f"freq_{d}"]).sum(f"freq_{d}"))
     for d in dim:
         del vwmp[f"freq_{d}_spacing"]
-    # try to copy coords
-    try:
-        vwmp = copy_coords_from_to(da.drop(dim), vwmp)
-    except ValueError:
-        warnings.warn("Couldn't keep coords.")
     return vwmp

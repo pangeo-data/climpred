@@ -130,20 +130,20 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
         if bootstrapped.attrs["metric"] in PROBABILISTIC_METRICS:
             plot_persistence = False
 
-    init_skill = bootstrapped.sel(kind="initialized", results="skill")
+    init_skill = bootstrapped.sel(skill="initialized", results="verify skill")
     init_ci = bootstrapped.sel(
-        kind="initialized", results=["low_ci", "high_ci"]
+        skill="initialized", results=["low_ci", "high_ci"]
     ).rename({"results": "quantile"})
-    uninit_skill = bootstrapped.sel(kind="uninitialized", results="skill")
+    uninit_skill = bootstrapped.sel(skill="uninitialized", results="verify skill")
     uninit_ci = bootstrapped.sel(
-        kind="uninitialized", results=["low_ci", "high_ci"]
+        skill="uninitialized", results=["low_ci", "high_ci"]
     ).rename({"results": "quantile"})
-    pers_skill = bootstrapped.sel(kind="persistence", results="skill")
+    pers_skill = bootstrapped.sel(skill="persistence", results="verify skill")
     pers_ci = bootstrapped.sel(
-        kind="persistence", results=["low_ci", "high_ci"]
+        skill="persistence", results=["low_ci", "high_ci"]
     ).rename({"results": "quantile"})
-    p_uninit_over_init = bootstrapped.sel(kind="uninitialized", results="p")
-    p_pers_over_init = bootstrapped.sel(kind="persistence", results="p")
+    p_uninit_over_init = bootstrapped.sel(skill="uninitialized", results="p")
+    p_pers_over_init = bootstrapped.sel(skill="persistence", results="p")
 
     fontsize = 8
     c_uninit = "indianred"

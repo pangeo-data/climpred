@@ -138,9 +138,11 @@ def test_bootstrap_hindcast_da1d_not_nan(
         sig=50,
         iterations=ITERATIONS,
     )
-    actual_init_skill = actual.sel(kind="initialized", results="skill").isnull().any()
+    actual_init_skill = (
+        actual.sel(skill="initialized", results="verify skill").isnull().any()
+    )
     assert not actual_init_skill
-    actual_uninit_p = actual.sel(kind="uninitialized", results="p").isnull().any()
+    actual_uninit_p = actual.sel(skill="uninitialized", results="p").isnull().any()
     assert not actual_uninit_p
 
 

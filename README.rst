@@ -58,7 +58,7 @@ Verification of weather and climate forecasts.
     :alt: Conda downloads
     :target: https://anaconda.org/conda-forge/climpred
 
-.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-F5A252.svg
+.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-ed7b0e.svg
     :alt: climpred gallery
     :target: https://climpred.readthedocs.io/en/stable/examples.html
 

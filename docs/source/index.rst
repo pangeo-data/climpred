@@ -79,12 +79,15 @@ keywords for ``metric``, ``comparison``, ``dim``, and ``alignment``. We also req
 the explicit definition of ``iterations`` for
 :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
 
-We've added a few new features as well:
+We've added a few new features as well (see key additions below). For a complete list,
+please see the `changelog <changelog.html>`__.
 
 * An early implementation of `bias correction <bias_removal.html>`__.
 * Spatial dimensions can now be used in metric calls, e.g. for pattern correlation.
 * New metrics have been added from ``xskillscore``, which are mostly based on the Contingency
-  table. (See `metrics here <metrics.html#contingency-based-metrics>`__).
+  table. (See `metrics here <metrics.html#contingency-based-metrics>`__). We have also
+  added additional probability metrics: the ranked probability score, reliability,
+  discrimination, and ranked histogram. (See `here <metrics.html#probabilistic)`__)
 * Math operations can be used between :py:class:`~climpred.classes.PredictionEnsemble` objects
   (see `example here <prediction-ensemble-object.html#Arithmetic-Operations-with-PredictionEnsemble-Objects>`__).
 * Users can now quick plot their prediction system (if there are no spatial dimensions) with

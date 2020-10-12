@@ -16,10 +16,8 @@
 Metrics
 #######
 
-All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
-:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
-:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` have a ``metric`` argument
+All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` (for both ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects) have a ``metric`` argument
 that has to be called to determine which metric is used in computing predictability.
 
 .. note::

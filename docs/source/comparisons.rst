@@ -8,10 +8,7 @@ the ensemble of forecasts. Here we cover the comparison options for both hindcas
 perfect model ensembles. See `terminology <terminology.html>`__ for clarification on
 the differences between these two experimental setups.
 
-All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
-:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
-:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` take a
+All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify` and :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` (for both ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects) take a
 ``comparison=''`` keyword to select the comparison style. See below for a detailed
 description on the differences between these comparisons.
 
@@ -77,7 +74,7 @@ comparisons ``m2c``, ``m2m``, and ``m2o``. It is 1 for ``m2e``, ``e2c``, and ``e
 Interpretation of Results
 #########################
 
-While ``HindcastEnsemble`` skill is computed over all initializations ``init`` of the
+When ``HindcastEnsemble`` skill is computed over all initializations ``dim='init'`` of the
 hindcast, the resulting skill is a mean forecast skill over all initializations.
 
 ``PerfectModelEnsemble`` skill is computed over a supervector comprised of all
@@ -102,7 +99,7 @@ just specifies how ``forecast`` and ``observations`` are defined.
 
 However, this above logic applies to deterministic metrics. Probabilistic metrics need
 to be applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``]
-in :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``'m2o'`` comparison in
+in ``PerfectModelEnsemble`` :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``'m2o'`` comparison in ``HindcastEnsemble``
 :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
 
 ``dim`` should not contain

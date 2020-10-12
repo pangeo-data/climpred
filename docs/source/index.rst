@@ -72,6 +72,8 @@ climpred: verification of weather and climate forecasts
 Version 2.1.1 Release
 =====================
 
+*October 12th, 2020*
+
 The most recent release adds a few new features along with a few deprecations. We want
 users to think about methodology with every call of
 :py:meth:`~climpred.classes.HindcastEnsemble.verify`, so we now require explicit

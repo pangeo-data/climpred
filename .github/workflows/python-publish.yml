@@ -44,9 +44,3 @@ jobs:
       run: |
         python setup.py sdist bdist_wheel
         twine upload dist/*
-    - name: Update stable branch
-      run: |
-        git checkout stable
-        git rebase master
-        git push -f origin stable
-        git checkout master

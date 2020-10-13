@@ -20,7 +20,7 @@ Verification of weather and climate forecasts.
     * - community
       - |gitter| |contributors| |downloads|
     * - tutorials
-      - |gallery| |tutorial|
+      - |gallery| |workshop| |cloud|
 
 .. |docs| image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
     :target: https://climpred.readthedocs.io/en/stable/?badge=stable
@@ -58,13 +58,17 @@ Verification of weather and climate forecasts.
     :alt: Conda downloads
     :target: https://anaconda.org/conda-forge/climpred
 
-.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-F5A252.svg
+.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-ed7b0e.svg
     :alt: climpred gallery
     :target: https://climpred.readthedocs.io/en/stable/examples.html
 
-.. |tutorial| image:: https://img.shields.io/badge/climpred-tutorial-f5a252
+.. |workshop| image:: https://img.shields.io/badge/climpred-workshop-f5a252
     :alt: climpred workshop
     :target: https://mybinder.org/v2/gh/bradyrx/climpred_workshop/master
+
+.. |cloud| image:: https://img.shields.io/badge/climpred-cloud_demo-f9c99a
+    :alt: climpred cloud demo
+    :target: https://github.com/aaronspring/climpred-cloud-demo
 
 Installation
 ============

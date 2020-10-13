@@ -7,7 +7,7 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
 #. Create a new branch ``release-vX.x.x`` with the version for the release.
 
  * Update `CHANGELOG.rst`
- * Make sure all new changes, features are reflected in the documentation.
+ * Make sure all new changes and features are reflected in the documentation.
 
 #. Open a new pull request for this branch targeting `master`
 
@@ -18,13 +18,19 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
     $ git tag -a v1.0.0 -m "Version 1.0.0"
     $ git push origin master --tags
 
-#. Build and publish release on PyPI::
+#. We use Github Actions to automate the new release being published to PyPI.
+   Simply confirm that the new release is reflected at
+   https://pypi.org/project/climpred/. There is typically a delay, but check Github
+   Actions if there's an issue, and otherwise you can manually do it with the
+   following::
 
     $ git clean -xfd  # remove any files not checked into git
     $ python setup.py sdist bdist_wheel --universal  # build package
     $ twine upload dist/*  # register and push to pypi
 
-#. Update the stable branch (used by ReadTheDocs)::
+#. We also update the stable branch using Github Actions for ReadTheDocs. Again,
+   if the branch ``stable`` is not up to date with ``master``, you can do this
+   manually by::
 
     $ git checkout stable
     $ git rebase master

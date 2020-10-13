@@ -19,7 +19,7 @@ climpred: verification of weather and climate forecasts
     * - community
       - |gitter| |contributors| |downloads|
     * - tutorials
-      - |gallery| |tutorial|
+      - |gallery| |workshop| |cloud|
 
 .. |docs| image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
     :target: https://climpred.readthedocs.io/en/stable/?badge=stable
@@ -57,26 +57,44 @@ climpred: verification of weather and climate forecasts
     :alt: Conda downloads
     :target: https://anaconda.org/conda-forge/climpred
 
-.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-F5A252.svg
+.. |gallery| image:: https://img.shields.io/badge/climpred-example_gallery-ed7b0e.svg
     :alt: climpred gallery
     :target: https://climpred.readthedocs.io/en/stable/examples.html
 
-.. |tutorial| image:: https://img.shields.io/badge/climpred-tutorial-f5a252
+.. |workshop| image:: https://img.shields.io/badge/climpred-workshop-f5a252
     :alt: climpred workshop
     :target: https://mybinder.org/v2/gh/bradyrx/climpred_workshop/master
 
-Version 2.0.0 Release
+.. |cloud| image:: https://img.shields.io/badge/climpred-cloud_demo-f9c99a
+    :alt: climpred cloud demo
+    :target: https://github.com/aaronspring/climpred-cloud-demo
+
+Version 2.1.1 Release
 =====================
 
-**We now support sub-annual (e.g., seasonal, monthly, weekly, daily) forecasts**.
-We provide a host of deterministic and probabilistic metrics_. We support both
-perfect-model and hindcast-based prediction ensembles, and provide
-:py:class:`~climpred.classes.PerfectModelEnsemble` and
-:py:class:`~climpred.classes.HindcastEnsemble` classes to make analysis easier.
+*October 12th, 2020*
 
-See `quick start <quick-start.html>`_ and our `examples <examples.html>`_ to get started.
+The most recent release adds a few new features along with a few deprecations. We want
+users to think about methodology with every call of
+:py:meth:`~climpred.classes.HindcastEnsemble.verify`, so we now require explicit
+keywords for ``metric``, ``comparison``, ``dim``, and ``alignment``. We also require
+the explicit definition of ``iterations`` for
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
 
-.. _metrics: metrics.html
+We've added a few new features as well (see key additions below). For a complete list,
+please see the `changelog <changelog.html>`__.
+
+* An early implementation of `bias correction <bias_removal.html>`__.
+* Spatial dimensions can now be used in metric calls, e.g. for pattern correlation.
+* New metrics have been added from ``xskillscore``, which are mostly based on the `Contingency
+  table <metrics.html#contingency-based-metrics>`__. We have also
+  added additional `probability metrics <metrics.html#probabilistic>`__:
+  the ranked probability score, reliability, discrimination, and ranked histogram.
+* Math operations can be used between :py:class:`~climpred.classes.PredictionEnsemble` objects
+  (see `example here <prediction-ensemble-object.html#Arithmetic-Operations-with-PredictionEnsemble-Objects>`__).
+* Users can now quick plot their prediction system (if there are no spatial dimensions) with
+  :py:meth:`~climpred.classes.HindcastEnsemble.plot`. See an example of this in the
+  `quick start <quick-start.html>`__.
 
 Installation
 ============

@@ -8,10 +8,10 @@ will allow computation of other reference forecasts. Consider opening a
 `Pull Request <contributing.html>`_ to get it implemented more quickly.
 
 **Persistence Forecast**: Whatever is observed at the time of initialization is forecasted to
-persist into the forecast period [Jolliffe2012]_. You can compute this directly via
-:py:func:`~climpred.reference.compute_persistence` or as a method of
+persist into the forecast period [Jolliffe2012]_. You can compute this by passing
+``reference='persistence'`` into the ``.verify()`` method for
 :py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble`.
+:py:class:`~climpred.classes.PerfectModelEnsemble` objects.
 
 **Damped Persistence Forecast**: (*Not Implemented*) The amplitudes of the anomalies reduce in time
 exponentially at a time scale of the local autocorrelation [Yuan2016]_.
@@ -26,9 +26,13 @@ exponentially at a time scale of the local autocorrelation [Yuan2016]_.
 **Random Mechanism**: (*Not Implemented*) A probability distribution is assigned to the possible
 range of the variable being forecasted, and a sequence of forecasts is produced by taking a sequence
 of independent values from that distribution [Jolliffe2012]_. This would be similar to computing an
-uninitialized forecast, using ``climpred``'s :py:func:`~climpred.reference.compute_uninitialized`
-function.
-
+uninitialized forecast, using ``reference='uninitialized'`` in
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble` objects. For ``HindcastEnsemble`` objects, an
+uninitialized ensemble has to be added through ``.add_uninitialized(...)``. This could be, for
+example, output from a Large Ensemble. For ``PerfectModelEnsemble`` objects, one can run
+``.generate_uninitialized()`` which uses a bootstrapping approach to create an uninitialized
+equivalent.
 
 References
 ##########

@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.1.1 (2020-10-10)
+climpred v2.1.1 (2020-10-13)
 ============================
 
 Breaking changes
@@ -44,6 +44,9 @@ the number of ``iterations`` for bootstrapping.
   be choosen from [``uninitialized``, ``persistence``]. ``historical`` no longer works (:issue:`460`, :pr:`478`, :issue:`476`, :pr:`480`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.verify` returns no ``skill`` dimension
   if ``reference=None``  (:pr:`480`) `Aaron Spring`_.
+- ``comparison`` is not applied to uninitialized skill in
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
+  (:issue:`352`, :pr:`418`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -166,9 +169,6 @@ Internals/Minor Fixes
   `Riley X. Brady`_
 - Switch from Travis CI and Coveralls to Github Actions and CodeCov.
   (:pr:`471`) `Riley X. Brady`_
-- ``comparison`` is not applied to uninitialized skill in
-  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
-  (:issue:`352`, :pr:`418`) `Aaron Spring`_.
 - Assertion functions added for :py:class:`~climpred.classes.PerfectModelEnsemble`:
   :py:func:`~climpred.testing.assert_PredictionEnsemble`. (:pr:`391`) `Aaron Spring`_.
 - Test all metrics against synthetic data. (:pr:`388`) `Aaron Spring`_.

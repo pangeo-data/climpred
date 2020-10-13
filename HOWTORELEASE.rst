@@ -28,9 +28,8 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
     $ python setup.py sdist bdist_wheel --universal  # build package
     $ twine upload dist/*  # register and push to pypi
 
-#. We also update the stable branch using Github Actions for ReadTheDocs. Again,
-   if the branch ``stable`` is not up to date with ``master``, you can do this
-   manually by::
+#. Next, update the stable branch with ``master``. This will trigger a stable build
+   for ReadTheDocs::
 
     $ git checkout stable
     $ git rebase master

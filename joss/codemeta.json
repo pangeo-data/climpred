@@ -1,0 +1,30 @@
+{
+  "@context": "https://raw.githubusercontent.com/codemeta/codemeta/master/codemeta.jsonld",
+  "@type": "Code",
+  "author": [
+    {
+      "@id": "0000-0002-2309-8245",
+      "@type": "Person",
+      "email": "riley.brady@colorado.edu",
+      "name": "Riley X. Brady",
+      "affiliation": "University of Colorado Boulder"
+    },
+    {
+      "@id": "0000-0003-0216-2241",
+      "@type": "Person",
+      "email": "aaron.spring@mpimet.mpg.de",
+      "name": "Aaron Spring",
+      "affiliation": "Max Planck Institute for Meteorology"
+    }
+  ],
+  "identifier": "",
+  "codeRepository": "https://www.github.com/pangeo-data/climpred",
+  "datePublished": "2020-10-14",
+  "dateModified": "2020-10-14",
+  "dateCreated": "2020-10-14",
+  "description": "verification of weather and climate forecasts.",
+  "keywords": "python, climate, prediction, geospatial",
+  "license": "MIT",
+  "title": "climpred",
+  "version": "v2.1.1"
+}

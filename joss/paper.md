@@ -12,12 +12,14 @@ authors:
     affiliation: 1
   - name: Aaron Spring
     orcid: 0000-0003-0216-2241
-    affiliation: 2
+    affiliation: 2, 3
 affiliations:
  - name: Department of Atmospheric and Oceanic Sciences and Institute of Arctic and Alpine Research, University of Colorado Boulder, Boulder, Colorado USA
    index: 1
- - name: International Max Planck Research School on Earth System Modelling and Max Planck Institute for Meteorology, Hamburg, Germany
+ - name: Max Planck Institute for Meteorology, Hamburg, Germany
    index: 2
+ - name: International Max Planck Research School on Earth System Modelling, Hamburg, Germany
+   index: 3
 date: 16 October 2020
 bibliography: paper.bib
 ---

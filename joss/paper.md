@@ -74,7 +74,7 @@ relevant references and literature.
 
 <!-- 207 words -->
 # Prediction Simulation Types
-Weather and climate modeling institutions typically run so-called “hindcasts," where
+Weather and climate modeling institutions typically run so-called “hindcasts", where
 they retrospectively initialize dynamical models from many past observed climate states
 [@Meehl:2009]. Initializations are then slightly perturbed to generate an ensemble of
 forecasts that diverge solely due to their sensitive dependence on initial conditions

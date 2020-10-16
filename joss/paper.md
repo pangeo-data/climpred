@@ -64,7 +64,7 @@ and seasonal-to-decadal (S2D) communities. (2) `climpred` supports `dask`
 [@dask; @Rocklin:2015] and thus works across all computational scales, from personal
 laptops to supercomputers (HPC). This leads to
 verification of a global 5° x 5° resolution climate prediction in a few seconds,
-compared to the 8 minutes required in `MurCSS`. This allows for a truly interactive
+compared to the 8 minutes required by `MurCSS`. This allows for a truly interactive
 analysis experience. However, note that benchmarking is inherently biased and `MurCSS`
 is valuable for their rigorous replication of decadal climate prediction metrics.
 (3) `climpred` is highly modular and supports the research process from end-to-end,
@@ -77,7 +77,7 @@ notebook [@Kluyver:2016] examples and collects references and literature.
 
 <!-- 207 words -->
 # Prediction Simulation Types
-Weather and climate modeling institutions typically run so-called “hindcasts", where
+Weather and climate modeling institutions typically run so-called “hindcasts," where
 dynamical models are retrospectively initialized from many past observed climate states
 [@Meehl:2009]. Initializations are then slightly perturbed to generate an ensemble of
 forecasts that diverge solely due to their sensitive dependence on initial conditions
@@ -116,15 +116,15 @@ and `PerfectModelEnsemble`) is standardized into a one-liner:
 ```python
 PredictionEnsemble.verify(
     # Score forecast using the Anomaly Correlation Coefficient.
-    metric=acc’,
+    metric='acc’,
     # Compare the ensemble mean to observations.
-    comparison=’e2o’,
+    comparison='e2o',
     # Keep the same set of initializations at each lead time.
-    alignment=’same_inits’,
+    alignment='same_inits',
     # Reduce the verification over the initialization dimension.
-    dim=’init’,
+    dim='init',
     # Score performance of a persistence forecast as well.
-    reference=’persistence’
+    reference='persistence',
 )
 ```
 

@@ -24,13 +24,13 @@ date: 16 October 2020
 bibliography: paper.bib
 ---
 
-<!-- 982 words total -->
+<!-- 998 words total -->
 
 # Summary
 <!-- 71 words -->
 Predicting extreme events and variations in weather and climate provides crucial
-information for economic, social, and environmental decision-making [@Merryfield:2020]. However,
-quantifying prediction skill for multi-dimensional geospatial model output is
+information for economic, social, and environmental decision-making [@Merryfield:2020].
+However, quantifying prediction skill for multi-dimensional geospatial model output is
 computationally expensive and a difficult coding challenge. The large datasets
 (order gigabytes to terabytes) require parallel and out-of-memory computing to be
 analyzed efficiently. Further, aligning the many forecast initializations with differing
@@ -54,7 +54,7 @@ reanalysis products, control simulations). The package includes a suite of deter
 and probabilistic verification metrics that are constantly expanded by the community and
 are generally organized in our companion package, `xskillscore`.
 
-<!-- 161 words -->
+<!-- 180 words -->
 # Statement of Need
 While other climate verification packages exist (_e.g._, `s2dverification`
 [@Manubens:2018] written in R and `MurCSS` [@Illing:2014] written with python-based
@@ -62,16 +62,18 @@ While other climate verification packages exist (_e.g._, `s2dverification`
 temporal scales of prediction, supporting the weather, subseasonal-to-seasonal (S2S),
 and seasonal-to-decadal (S2D) communities. (2) `climpred` supports `dask`
 [@dask; @Rocklin:2015] and thus works across all computational scales, from personal
-laptops to supercomputers (HPC), and in the cloud. This leads to, for example,
-verification of a global 5° x 5° resolution climate prediction in less than one second,
-compared to the 8 minutes required in `MurCSS`.  (3) `climpred` is highly modular and
-supports the research process from end-to-end, from loading in model output, to
-interactive pre-processing and analysis, to visualization. (4) `climpred` is part of
-and benefits from the wider scientific python community, `pangeo` [@Eynard:2019]. A
-wide adoption of `climpred` could standardize prediction model evaluation and make
-verification reproducible [@Irving:2015]. (5) The `climpred` documentation serves as a
-repository of unified analysis methods through `jupyter` notebook [@Kluyver:2016]
-examples and collects relevant references and literature.
+laptops to supercomputers (HPC). This leads to
+verification of a global 5° x 5° resolution climate prediction in a few seconds,
+compared to the 8 minutes required in `MurCSS`. This allows for a truly interactive
+analysis experience. However, note that benchmarking is inherently biased and `MurCSS`
+is valuable for their rigorous replication of decadal climate prediction metrics.
+(3) `climpred` is highly modular and supports the research process from end-to-end,
+from loading in model output, to interactive pre-processing and analysis, to
+visualization. (4) `climpred` is part of the wider scientific python community, `pangeo`
+[@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
+evaluation and make verification reproducible [@Irving:2015]. (5) The `climpred`
+documentation serves as a repository of unified analysis methods through `jupyter`
+notebook [@Kluyver:2016] examples and collects references and literature.
 
 <!-- 207 words -->
 # Prediction Simulation Types
@@ -97,7 +99,7 @@ dynamics of the real world. Skill quantification is accomplished by considering 
 ensemble member as the verification data and the remaining members as the forecasts
 [@Griffies:1997].
 
-<!-- 362 words -->
+<!-- 360 words -->
 # Climpred Classes and Object-Oriented Verification
 `climpred` supports both prediction system formats, offering `HindcastEnsemble` and
 `PerfectModelEnsemble` objects. `HindcastEnsemble` is instantiated with an `initialized`
@@ -150,7 +152,7 @@ shown graphically and explained in more detail in the documentation. Note that
 such as spatiotemporal smoothing [@Goddard:2013], bias removal [@Boer:2016],
 significance testing [@Goddard:2013; @Boer:2016; @DelSole:2016], and a graphics library.
 
-<!-- 59 words -->
+<!-- 58 words -->
 # Use in Academic Literature
 `climpred` has been used to drive analysis in three academic papers so far. @Brady:2020
 used the `HindcastEnsemble` class to highlight multi-year predictability of ocean

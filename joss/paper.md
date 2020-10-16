@@ -29,7 +29,7 @@ bibliography: paper.bib
 # Summary
 <!-- 71 words -->
 Predicting extreme events and variations in weather and climate provides crucial
-information for economic, social, and environmental decision-making. However,
+information for economic, social, and environmental decision-making [@Merryfield:2020]. However,
 quantifying prediction skill for multi-dimensional geospatial model output is
 computationally expensive and a difficult coding challenge. The large datasets
 (order gigabytes to terabytes) require parallel and out-of-memory computing to be

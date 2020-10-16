@@ -12,7 +12,7 @@ authors:
     affiliation: 1
   - name: Aaron Spring
     orcid: 0000-0003-0216-2241
-    affiliation: 2, 3
+    affiliation: "2, 3"
 affiliations:
  - name: Department of Atmospheric and Oceanic Sciences and Institute of Arctic and Alpine Research, University of Colorado Boulder, Boulder, Colorado USA
    index: 1
@@ -43,8 +43,9 @@ decadal climate forecasts, we built `climpred`: a community-driven python packag
 computationally efficient and methodologically consistent verification of ensemble
 prediction models. The code base is maintained through open-source development. It
 leverages `xarray` [@Hoyer:2017] to anticipate core prediction ensemble dimensions
-(ensemble `member`, `init`ialization date and `lead` time) and `dask` [@dask] to
-perform out-of-memory and parallelized computations on large datasets.
+(ensemble `member`, `init`ialization date and `lead` time) and `dask`
+[@dask; @Rocklin:2015] to perform out-of-memory and parallelized computations on
+large datasets.
 
  <!-- 54 words -->
 `climpred` aims to offer a comprehensive set of analysis tools for assessing the quality
@@ -59,23 +60,23 @@ While other climate verification packages exist (_e.g._, `s2dverification`
 [@Manubens:2018] written in R and `MurCSS` [@Illing:2014] written with python-based
 `CDO`-bindings [@CDO]), `climpred` is unique for many reasons. (1) It spans broad
 temporal scales of prediction, supporting the weather, subseasonal-to-seasonal (S2S),
-and seasonal-to-decadal (S2D) communities. (2) `climpred` supports `dask` [@dask] and
-thus works across all computational scales, from personal laptops to supercomputers
-(HPC), and in the cloud. This leads to, for example, verification of a global 5°x5°
-resolution climate prediction in less than one second, compared to the 8 minutes
-required in `MurCSS`.  (3) `climpred` is highly modular and supports the research
-process from end-to-end, from loading in model output, to interactive pre-processing and
-analysis, to visualization. (4) `climpred` is part of and benefits from the wider
-scientific python community, `pangeo` [@Eynard:2019]. A wide adoption of `climpred`
-could standardize prediction model evaluation and make verification reproducible
-[@Irving:2015]. (5) The `climpred` documentation serves as a repository of unified
-analysis methods through `jupyter` notebook [@Kluyver:2016] examples and collects
-relevant references and literature.
+and seasonal-to-decadal (S2D) communities. (2) `climpred` supports `dask`
+[@dask; @Rocklin:2015] and thus works across all computational scales, from personal
+laptops to supercomputers (HPC), and in the cloud. This leads to, for example,
+verification of a global 5° x 5° resolution climate prediction in less than one second,
+compared to the 8 minutes required in `MurCSS`.  (3) `climpred` is highly modular and
+supports the research process from end-to-end, from loading in model output, to
+interactive pre-processing and analysis, to visualization. (4) `climpred` is part of
+and benefits from the wider scientific python community, `pangeo` [@Eynard:2019]. A
+wide adoption of `climpred` could standardize prediction model evaluation and make
+verification reproducible [@Irving:2015]. (5) The `climpred` documentation serves as a
+repository of unified analysis methods through `jupyter` notebook [@Kluyver:2016]
+examples and collects relevant references and literature.
 
 <!-- 207 words -->
 # Prediction Simulation Types
 Weather and climate modeling institutions typically run so-called “hindcasts", where
-they retrospectively initialize dynamical models from many past observed climate states
+dynamical models are retrospectively initialized from many past observed climate states
 [@Meehl:2009]. Initializations are then slightly perturbed to generate an ensemble of
 forecasts that diverge solely due to their sensitive dependence on initial conditions
 [@Lorenz:1963]. Hindcasts are evaluated by using some statistical metric to score their
@@ -151,12 +152,12 @@ significance testing [@Goddard:2013; @Boer:2016; @DelSole:2016], and a graphics 
 
 <!-- 59 words -->
 # Use in Academic Literature
-`climpred` has been used to drive analysis in three academic papers, to the author’s
-knowledge. @Brady:2020 used the hindcast module to highlight multi-year predictability
-of ocean acidification in the California Current; @Spring:2020 used the perfect-model
-module to highlight predictability horizons in the global carbon cycle; and
-@Krumhardt:2020 used the hindcast module illuminate multi-year predictability in marine
-Net Primary Productivity.
+`climpred` has been used to drive analysis in three academic papers so far. @Brady:2020
+used the `HindcastEnsemble` class to highlight multi-year predictability of ocean
+acidification in the California Current; @Spring:2020 used the `PerfectModelEnsemble`
+class to highlight predictability horizons in the global carbon cycle; and
+@Krumhardt:2020 used the `HindcastEnsemble` class to illuminate multi-year
+predictability in marine Net Primary Productivity.
 
 # Acknolwedgements
 We thank Andrew Huang for early stage refactoring and continued feedback on

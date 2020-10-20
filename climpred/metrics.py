@@ -270,7 +270,7 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.pearson_r
+        metric_kwargs (dict): see :py:func:`~xskillscore.pearson_r`
 
     Details:
         +-----------------+-----------+
@@ -390,7 +390,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.effective_sample_size
+        metric_kwargs (dict): see :py:func:`~xskillscore.effective_sample_size`
 
     Details:
         +-----------------+-----------------+
@@ -459,7 +459,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.pearson_r_eff_p_value
+        metric_kwargs (dict): see :py:func:`~xskillscore.pearson_r_eff_p_value`
 
     Details:
         +-----------------+-----------+
@@ -528,7 +528,7 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.spearman_r
+        metric_kwargs (dict): see :py:func:`~xskillscore.spearman_r`
 
     Details:
         +-----------------+-----------+
@@ -578,7 +578,7 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.spearman_r_p_value
+        metric_kwargs (dict): see :py:func:`~xskillscore.spearman_r_p_value`
 
     Details:
         +-----------------+-----------+
@@ -594,8 +594,8 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
     See also:
         * :py:func:`~xskillscore.spearman_r`
         * :py:func:`~xskillscore.spearman_r_p_value`
-        * :py:func:`~climpred.metrics.spearman_r`
-        * :py:func:`~climpred.metrics.spearman_r_eff_p_value`
+        * :py:func:`~climpred.metrics._spearman_r`
+        * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -653,7 +653,7 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.spearman_r_eff_p_value
+        metric_kwargs (dict): see :py:func:`~xskillscore.spearman_r_eff_p_value`
 
     Details:
         +-----------------+-----------+
@@ -719,7 +719,7 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.mse
+        metric_kwargs (dict): see :py:func:`~xskillscore.mse`
 
     Details:
         +-----------------+-----------+
@@ -770,7 +770,7 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.rmse
+        metric_kwargs (dict): see :py:func:`~xskillscore.rmse`
 
     Details:
         +-----------------+-----------+
@@ -816,7 +816,7 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.mae
+        metric_kwargs (dict): see :py:func:`~xskillscore.mae`
 
     Details:
         +-----------------+-----------+
@@ -867,7 +867,7 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.median_absolute_error
+        metric_kwargs (dict): see :py:func:`~xskillscore.median_absolute_error`
 
     Details:
         +-----------------+-----------+
@@ -929,7 +929,7 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs (dict): see xskillscore.mse
+        metric_kwargs (dict): see :py:func:`~xskillscore.mse`
 
     Details:
         +----------------------------+-----------+
@@ -1011,7 +1011,7 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs (dict): see xskillscore.mae
+        metric_kwargs (dict): see :py:func:`~xskillscore.mae`
 
     Details:
         +----------------------------+-----------+
@@ -1094,7 +1094,7 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs (dict): see xskillscore.rmse
+        metric_kwargs (dict): see :py:func:`~xskillscore.rmse`
 
     Details:
         +----------------------------+-----------+
@@ -1181,7 +1181,7 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         comparison (str): Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs (dict): see xskillscore.mse
+        metric_kwargs (dict): see :py:func:`~xskillscore.mse`
 
     Details:
         +----------------------------+-----------+
@@ -1258,7 +1258,7 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.mape
+        metric_kwargs (dict): see :py:func:`~xskillscore.mape`
 
     Details:
         +-----------------+-----------+
@@ -1303,7 +1303,7 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.smape
+        metric_kwargs (dict): see :py:func:`~xskillscore.smape`
 
     Details:
         +-----------------+-----------+
@@ -1365,7 +1365,7 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
         comparison (str): Name comparison needed for normalization factor ``fac``, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs (dict): see xskillscore.mse
+        metric_kwargs (dict): see :py:func:`~xskillscore.mse`
 
     Details:
         +----------------------------+-----------+
@@ -1516,7 +1516,8 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.pearson_r and xarray.std
+        metric_kwargs (dict): see :py:func:`~xskillscore.pearson_r`
+        and :py:meth:`~xarray.Datasetstd`
 
     Details:
         +-----------------+-----------+
@@ -1565,7 +1566,8 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.pearson_r and xarray.std
+        metric_kwargs (dict): see :py:func:`~xskillscore.pearson_r` and
+        :py:meth:`~xarray.Dataset.std`
 
     Details:
         +-----------------+-----------+
@@ -1616,7 +1618,8 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data.
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see xskillscore.pearson_r, xarray.mean and xarray.std
+        metric_kwargs (dict): see :py:func:`~xskillscore.pearson_r`,
+        :py:meth:`~xarray.Dataset.mean` and :py:meth:`~xarray.Dataset.std`
 
     Details:
         +-----------------+-----------+
@@ -1705,7 +1708,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean('member')`` to get forecasts and
                 verification data in interval [0,1].
-            see xskillscore.brier_score
+            see :py:func:`~xskillscore.brier_score`
 
     Details:
         +-----------------+-----------+
@@ -1789,7 +1792,8 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             `member`. Other dimensions are passed to `xskillscore` and averaged.
         threshold (int, float, xr.object): Threshold to check exceedance, see
             properscoring.threshold_brier_score.
-        metric_kwargs (dict): optional, see xskillscore.threshold_brier_score
+        metric_kwargs (dict): optional, see
+            :py:func:`~xskillscore.threshold_brier_score`
 
     Details:
         +-----------------+-----------+
@@ -1867,7 +1871,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         verif (xr.object): Verification data without `member` dim.
         dim (list of str): Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs (dict): optional, see xskillscore.crps_ensemble
+        metric_kwargs (dict): optional, see :py:func:`~xskillscore.crps_ensemble`
 
     Details:
         +-----------------+-----------+
@@ -1922,7 +1926,7 @@ def _crps_gaussian(verification, mu, sig, dim=None, **metric_kwargs):
         forecast (xr.object): Forecast with ``member`` dim.
         mu (xr.object): The mean of the verification data.
         sig (xr.object): The standard deviation verification data.
-        metric_kwargs (dict): optional, see xskillscore.crps_gaussian
+        metric_kwargs (dict): optional, see :py:func:`~xskillscore.crps_gaussian`
 
     See also:
         * :py:func:`~properscoring.crps_gaussian`
@@ -1945,7 +1949,7 @@ def _crps_quadrature(verification, cdf_or_dist, dim=None, **metric_kwargs):
         forecast (xr.object): Forecast with ``member`` dim.
         cdf_or_dist (callable or scipy.stats.distribution): Function which returns the
             cumulative density of the forecast distribution at value x.
-        metric_kwargs (dict): see xskillscore.crps_quadrature
+        metric_kwargs (dict): see :py:func:`~xskillscore.crps_quadrature`
 
     See also:
         * :py:func:`~properscoring.crps_quadrature`
@@ -1967,7 +1971,8 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     .. note::
         When assuming a Gaussian distribution of forecasts, use default
         ``gaussian=True``. If not gaussian, you may specify the distribution type,
-        xmin/xmax/tolerance for integration (see xskillscore.crps_quadrature).
+        xmin/xmax/tolerance for integration
+        (see :py:func:`~xskillscore.crps_quadrature`).
 
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
@@ -1977,8 +1982,9 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         metric_kwargs (dict): optional
             gaussian (bool, optional): If ``True``, assume Gaussian distribution for
                 baseline skill. Defaults to ``True``.
-            see xskillscore.crps_ensemble, xskillscore.crps_gaussian and
-            xskillscore.crps_quadrature
+            see :py:func:`~xskillscore.crps_ensemble`,
+            :py:func:`~xskillscore.crps_gaussian` and
+            :py:func:`~xskillscore.crps_quadrature`
 
     Details:
         +----------------------------+-----------+
@@ -2076,7 +2082,8 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         verif (xr.object): Verification data without ``member`` dim.
         dim (list of str): Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs (dict): see xskillscore.crps_ensemble and xskillscore.mse
+        metric_kwargs (dict): see :py:func:`~xskillscore.crps_ensemble`
+        and :py:func:`~xskillscore.mse`
 
     Details:
         +----------------------------+-----------+
@@ -2395,7 +2402,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         verif (xr.object): Verification data.
         dim (list or str): Dimensions to aggregate.
         score (str): Score derived from contingency table. Attribute from
-            xskillscore.Contingency. Use ``score=table`` to return a contingency table
+            :py:class:`~xskillscore.Contingency`. Use ``score=table`` to return a contingency table
             or any other contingency score, e.g. ``score=hit_rate``.
         observation_category_edges (array_like): Category bin edges used to compute
             the observations CDFs. Bins include the left most edge, but not the right.

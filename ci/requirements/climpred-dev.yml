@@ -24,7 +24,7 @@ dependencies:
   - xarray
   # Package Management
   - asv
-  - black==19.10b0
+  - black
   - coveralls
   - dataclasses  # to get black to not error
   - flake8

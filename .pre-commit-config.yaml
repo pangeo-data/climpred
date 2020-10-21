@@ -4,7 +4,6 @@ repos:
       rev: v3.3.0
       hooks:
       - id: trailing-whitespace
-      - id: end-of-file-fixer
       - id: check-docstring-first
       - id: check-yaml
       - id: no-commit-to-branch

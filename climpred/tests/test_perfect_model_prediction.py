@@ -256,7 +256,10 @@ def test_compute_perfect_model_metric_keyerrors(
     """
     with pytest.raises(KeyError) as excinfo:
         compute_perfect_model(
-            PM_da_initialized_1d, PM_da_control_1d, comparison="e2c", metric=metric,
+            PM_da_initialized_1d,
+            PM_da_control_1d,
+            comparison="e2c",
+            metric=metric,
         )
     assert "Specify metric from" in str(excinfo.value)
 
@@ -270,7 +273,10 @@ def test_compute_perfect_model_comparison_keyerrors(
     """
     with pytest.raises(KeyError) as excinfo:
         compute_perfect_model(
-            PM_da_initialized_1d, PM_da_control_1d, comparison=comparison, metric="mse",
+            PM_da_initialized_1d,
+            PM_da_control_1d,
+            comparison=comparison,
+            metric="mse",
         )
     assert "Specify comparison from" in str(excinfo.value)
 

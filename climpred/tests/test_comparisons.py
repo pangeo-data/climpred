@@ -160,7 +160,10 @@ def my_m2me_comparison(ds, metric=None):
 
 
 my_m2me_comparison = Comparison(
-    name="m2me", function=my_m2me_comparison, probabilistic=False, hindcast=False,
+    name="m2me",
+    function=my_m2me_comparison,
+    probabilistic=False,
+    hindcast=False,
 )
 
 

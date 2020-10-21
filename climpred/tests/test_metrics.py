@@ -128,7 +128,8 @@ def test_pm_metric_weights_m2x(
     weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
     weights = xr.DataArray(
         np.arange(
-            1, 1 + PM_da_initialized_3d[dim].size * PM_da_initialized_3d["member"].size,
+            1,
+            1 + PM_da_initialized_3d[dim].size * PM_da_initialized_3d["member"].size,
         ),
         dims="init",
     )

@@ -50,7 +50,8 @@ def test_bootstrap_func_multiple_sig_levels(PM_da_control_3d):
 
 @pytest.mark.parametrize("step", [1, 2, -1])
 @pytest.mark.parametrize(
-    "func", [dpp, varweighted_mean_period, decorrelation_time],
+    "func",
+    [dpp, varweighted_mean_period, decorrelation_time],
 )
 def test_stats_functions_dask_chunks(PM_da_control_3d, func, step):
     """Check whether selected stats functions be chunked and computed along other

@@ -13,7 +13,9 @@ def test_eff_sample_size_smaller_than_n_hind_da_initialized_1d(
     of the data."""
     N = hind_da_initialized_1d.mean("member").count("init")
     eff_N = compute_hindcast(
-        hind_da_initialized_1d, reconstruction_da_1d, metric="eff_n",
+        hind_da_initialized_1d,
+        reconstruction_da_1d,
+        metric="eff_n",
     )
     assert (eff_N <= N).all()
 

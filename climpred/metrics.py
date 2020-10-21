@@ -2492,7 +2492,11 @@ DETERMINISTIC_PM_METRICS = [
     e
     for e in DETERMINISTIC_PM_METRICS
     if e
-    not in ("effective_sample_size", "pearson_r_eff_p_value", "spearman_r_eff_p_value",)
+    not in (
+        "effective_sample_size",
+        "pearson_r_eff_p_value",
+        "spearman_r_eff_p_value",
+    )
 ]
 # Used to set attrs['units'] to None.
 DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]

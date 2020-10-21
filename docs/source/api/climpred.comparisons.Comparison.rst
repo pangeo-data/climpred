@@ -5,18 +5,12 @@ climpred.comparisons.Comparison
 
 .. autoclass:: Comparison
 
-   
+
    .. automethod:: __init__
 
-   
+
    .. rubric:: Methods
 
    .. autosummary::
-   
-      ~Comparison.__init__
-   
-   
 
-   
-   
-   
+      ~Comparison.__init__

@@ -37,7 +37,13 @@ class Comparison:
     """Master class for all comparisons."""
 
     def __init__(
-        self, name, function, hindcast, probabilistic, long_name=None, aliases=None,
+        self,
+        name,
+        function,
+        hindcast,
+        probabilistic,
+        long_name=None,
+        aliases=None,
     ):
         """Comparison initialization.
 

@@ -54,7 +54,9 @@ def test_compute_perfect_model_dim_over_member(
 ):
     """Test deterministic metric calc skill over member dim."""
     actual = perfectModelEnsemble_initialized_control.verify(
-        comparison=comparison, metric="rmse", dim="member",
+        comparison=comparison,
+        metric="rmse",
+        dim="member",
     )["tos"]
     assert "init" in actual.dims
     assert not actual.isnull().any()
@@ -80,10 +82,14 @@ def test_compute_perfect_model_different_dims_quite_close(
 ):
     """Tests nearly equal dim=['init','member'] and dim='member'."""
     stack_dims_true = perfectModelEnsemble_initialized_control.verify(
-        comparison="m2c", metric="rmse", dim=["init", "member"],
+        comparison="m2c",
+        metric="rmse",
+        dim=["init", "member"],
     )["tos"]
     stack_dims_false = perfectModelEnsemble_initialized_control.verify(
-        comparison="m2c", metric="rmse", dim="member",
+        comparison="m2c",
+        metric="rmse",
+        dim="member",
     ).mean(["init"])["tos"]
     # no more than 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
@@ -132,7 +138,8 @@ def test_bootstrap_hindcast_dim(
 
 @pytest.mark.parametrize("metric", ["rmse", "pearson_r"])
 @pytest.mark.parametrize(
-    "comparison,dim", comparison_dim_PM,
+    "comparison,dim",
+    comparison_dim_PM,
 )
 def test_compute_pm_dims(
     perfectModelEnsemble_initialized_control, dim, comparison, metric

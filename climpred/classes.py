@@ -621,7 +621,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._datasets["control"]
 
     def verify(
-        self, metric=None, comparison=None, dim=None, reference=None, **metric_kwargs,
+        self,
+        metric=None,
+        comparison=None,
+        dim=None,
+        reference=None,
+        **metric_kwargs,
     ):
         """Verify initialized predictions against a configuration of other ensemble members.
 
@@ -1072,7 +1077,11 @@ class HindcastEnsemble(PredictionEnsemble):
             forecast, verif = comparison.function(hind, verif, metric=metric)
             forecast = forecast.rename({"init": "time"})
             inits, verif_dates = return_inits_and_verif_dates(
-                forecast, verif, alignment, reference=reference, hist=hist,
+                forecast,
+                verif,
+                alignment,
+                reference=reference,
+                hist=hist,
             )
             metric_over_leads = [
                 _apply_metric_at_given_lead(

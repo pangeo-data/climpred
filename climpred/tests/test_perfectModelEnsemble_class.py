@@ -235,7 +235,7 @@ def test_persistence_dim(perfectModelEnsemble_initialized_control):
 
 def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     """Test that initialized dataset for HindcastEnsemble can also be used for
-        PerfectModelEnsemble."""
+    PerfectModelEnsemble."""
     v = "SST"
     alignment = "maximize"
     hindcast = hindcast_recon_1d_mm

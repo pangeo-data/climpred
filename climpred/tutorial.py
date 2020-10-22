@@ -78,7 +78,7 @@ def _file_md5_checksum(fname):
 
 def _get_datasets():
     """Prints out available datasets for the user to load if no args are
-       given."""
+    given."""
     for key in FILE_DESCRIPTIONS.keys():
         print(f"'{key}': {FILE_DESCRIPTIONS[key]}")
 

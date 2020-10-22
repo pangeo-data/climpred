@@ -66,7 +66,10 @@ def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     metric = "pearson_r"
     comparison = "m2e"
     actual = compute_perfect_model(
-        PM_ds_initialized_1d, PM_ds_control_1d, metric=metric, comparison=comparison,
+        PM_ds_initialized_1d,
+        PM_ds_control_1d,
+        metric=metric,
+        comparison=comparison,
     ).attrs
     assert actual["metric"] == metric
     assert actual["comparison"] == comparison

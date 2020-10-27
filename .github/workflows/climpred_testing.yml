@@ -71,5 +71,5 @@ jobs:
         run: |
           pushd docs
           nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/subseasonal/*.ipynb
-          make html
+          make -j4 html
           popd

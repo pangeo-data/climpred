@@ -7,9 +7,10 @@ import xarray as xr
 
 from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS, PM_CALENDAR_STR
 
+
 from .checks import (
     has_dims,
-    has_valid_lead_units,
+    has_valid_lead_units, 
     warn_if_chunking_would_increase_performance,
 )
 from .comparisons import (

@@ -76,12 +76,12 @@ html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcf
 # so a file named "default.css" will overwrite the builtin "default.css".
 # html_static_path = ["_static"]
 
-# Currently makes build time quite slow and doesn't add anythiing significant to docs.
-# intersphinx_mapping = {
-#     'python': ('https://docs.python.org/3/', None),
-#     'xarray': ('https://http://xarray.pydata.org/en/stable/', None),
-#     'numpy': ('https://docs.scipy.org/doc/numpy/', None),
-# }
+intersphinx_mapping = {
+    "python": ("https://docs.python.org/3/", None),
+    "xarray": ("https://xarray.pydata.org/en/stable/", None),
+    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "xskillscore": ("https://xskillscore.readthedocs.io/en/stable", None),
+}
 
 # Should only be uncommented when testing page development while notebooks
 # are breaking.

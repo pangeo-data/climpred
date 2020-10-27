@@ -1,6 +1,6 @@
 name: Lint
 
-on: [pull_request_target, push, pull_request]
+on: pull_request
 
 jobs:
   lint:  # Runs linting package checks for code styling.

@@ -10,7 +10,7 @@ Verification of weather and climate forecasts.
     :widths: 10 90
 
     * - docs
-      - |docs|
+      - |docs| |joss|
     * - tests
       - |travis| |requires| |codecov|
     * - package
@@ -25,6 +25,9 @@ Verification of weather and climate forecasts.
 .. |docs| image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
     :target: https://climpred.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
+
+.. |joss| image:: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef/status.svg
+    :target: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef
 
 .. |travis| image:: https://travis-ci.org/pangeo-data/climpred.svg?branch=master
     :target: https://travis-ci.org/pangeo-data/climpred

@@ -37,7 +37,10 @@ def test_same_inits_verification_dates(
             alignment="same_inits",
         )
         nleads = hind_ds_initialized_1d_cftime["lead"].size
-        for i, record in zip(np.arange(nleads + 2), caplog.record_tuples,):
+        for i, record in zip(
+            np.arange(nleads + 2),
+            caplog.record_tuples,
+        ):
             if i >= 2:
                 print(record)
                 assert (
@@ -109,7 +112,10 @@ def test_same_verifs_initializations(
             alignment="same_verifs",
         )
         nleads = hind_ds_initialized_1d_cftime["lead"].size
-        for i, record in zip(np.arange(nleads + 2), caplog.record_tuples,):
+        for i, record in zip(
+            np.arange(nleads + 2),
+            caplog.record_tuples,
+        ):
             if i >= 2:
                 print(record)
                 assert (

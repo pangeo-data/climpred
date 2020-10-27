@@ -1,7 +1,7 @@
 repos:
 
   -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.2.3
+      rev: v3.3.0
       hooks:
       - id: trailing-whitespace
       - id: end-of-file-fixer
@@ -13,19 +13,18 @@ repos:
       - id: check-added-large-files
 
   -   repo: https://github.com/ambv/black
-      rev: 19.10b0
+      rev: 20.8b1
       hooks:
       - id: black
-        args: ["--line-length", "88"]
 
-  -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v2.4.0
+
+  -   repo: https://gitlab.com/pycqa/flake8
+      rev: 3.8.4
       hooks:
       - id: flake8
-        args: ["--max-line-length=88", "--exclude=__init__.py", "--ignore=C901,W605,W503,F722"]
+
 
   -   repo: https://github.com/pre-commit/mirrors-isort
-      rev: v4.3.21
+      rev: v5.6.4
       hooks:
       -   id: isort
-          args: ["-w", "88"]

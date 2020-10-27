@@ -48,7 +48,12 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
             ls="--",
         )
         ax[i].plot(
-            rel_ent.lead, (m + std), c=colors[i], label="", linewidth=2.5, ls="--",
+            rel_ent.lead,
+            (m + std),
+            c=colors[i],
+            label="",
+            linewidth=2.5,
+            ls="--",
         )
         if rel_ent_threshold is not None:
             ax[i].axhline(

@@ -1,6 +1,6 @@
 name: Lint
 
-on: pull_request_target
+on: pull_request
 
 jobs:
   lint:  # Runs linting package checks for code styling.
@@ -14,19 +14,5 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: 3.6
-      - name: Install linting dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install flake8 black==19.10b0 isort
-      - name: Lint with flake8
-        shell: bash -l {0}
-        run: |
-          flake8 climpred
-      - name: Lint with black
-        shell: bash -l {0}
-        run: |
-          black --check climpred
-      - name: Lint with isort
-        shell: bash -l {0}
-        run: |
-          isort --check-only climpred
+      - name: Lint via pre-commit checks
+        uses: pre-commit/action@v2.0.0

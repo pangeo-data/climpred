@@ -832,7 +832,11 @@ def bootstrap_compute(
         if "persistence" in reference:
             if not metric.probabilistic:
                 pers_skill = reference_compute(
-                    hind, verif, metric=metric, dim=dim, **metric_kwargs_reference,
+                    hind,
+                    verif,
+                    metric=metric,
+                    dim=dim,
+                    **metric_kwargs_reference,
                 )
                 # bootstrap pers
                 if resample_dim == "init":
@@ -851,7 +855,12 @@ def bootstrap_compute(
 
     # calc mean skill without any resampling
     init_skill = compute(
-        hind, verif, metric=metric, comparison=comparison, dim=dim, **metric_kwargs,
+        hind,
+        verif,
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        **metric_kwargs,
     )
 
     if "uninitialized" in reference:
@@ -1262,7 +1271,13 @@ def bootstrap_perfect_model(
 
 
 def _bootstrap_func(
-    func, ds, resample_dim, sig=95, iterations=500, *func_args, **func_kwargs,
+    func,
+    ds,
+    resample_dim,
+    sig=95,
+    iterations=500,
+    *func_args,
+    **func_kwargs,
 ):
     """Sig % threshold of function based on iterations resampling with replacement.
 
@@ -1332,5 +1347,9 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
         * climpred.stats.varweighted_mean_period
     """
     return _bootstrap_func(
-        varweighted_mean_period, control, time_dim, sig=sig, iterations=iterations,
+        varweighted_mean_period,
+        control,
+        time_dim,
+        sig=sig,
+        iterations=iterations,
     )

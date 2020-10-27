@@ -1,6 +1,6 @@
 name: climpred installs
 
-on: pull_request_target
+on: pull_request
 
 jobs:
   install-climpred:  # Installs climpred on various OS.

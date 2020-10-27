@@ -56,7 +56,9 @@ def test_temporal_smoothing_reduce_length(PM_da_control_3d_full):
 
 
 @pytest.mark.skipif(not xesmf_loaded, reason="xesmf not installed")
-def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(PM_da_control_3d_full,):
+def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(
+    PM_da_control_3d_full,
+):
     """Test whether spatial dimsizes are properly reduced."""
     da = PM_da_control_3d_full
     step = 5
@@ -67,7 +69,9 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(PM_da_control_3d_f
 
 
 @pytest.mark.skipif(not xesmf_loaded, reason="xesmf not installed")
-def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(reconstruction_ds_3d_full,):
+def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(
+    reconstruction_ds_3d_full,
+):
     """Test whether spatial dimsizes are properly reduced."""
     da = reconstruction_ds_3d_full
     step = 0.1

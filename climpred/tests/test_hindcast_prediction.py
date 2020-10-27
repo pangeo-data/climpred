@@ -73,7 +73,10 @@ def test_compute_hindcast_lead0_lead1(
     framework.
     """
     res1 = compute_hindcast(
-        hind_ds_initialized_1d, reconstruction_ds_1d, metric="rmse", comparison="e2o",
+        hind_ds_initialized_1d,
+        reconstruction_ds_1d,
+        metric="rmse",
+        comparison="e2o",
     )
     res2 = compute_hindcast(
         hind_ds_initialized_1d_lead0,

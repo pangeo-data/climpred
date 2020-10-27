@@ -46,7 +46,10 @@ def preprocess_1var(ds, v="global_primary_production"):
 def test_load_hindcast(inits, members):
     """Test that `load_hindcast` loads the appropriate files."""
     actual = load_hindcast(
-        inits=inits, members=members, preprocess=preprocess_1var, get_path=get_path,
+        inits=inits,
+        members=members,
+        preprocess=preprocess_1var,
+        get_path=get_path,
     )
     assert isinstance(actual, xr.Dataset)
     assert (actual["init"].values == inits).all()

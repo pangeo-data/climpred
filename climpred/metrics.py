@@ -1,7 +1,6 @@
 import warnings
 
 import numpy as np
-
 from scipy.stats import norm
 from xskillscore import (
     Contingency,

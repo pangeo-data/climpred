@@ -17,7 +17,7 @@ jobs:
         with:
           ref: ${{github.event.pull_request.head.ref}}
           repository: ${{github.event.pull_request.head.repo.full_name}}
-      - name: Install Conda environment
+      - name: Set up conda
         uses: conda-incubator/setup-miniconda@v1
         with:
           auto-update-conda: true
@@ -25,7 +25,7 @@ jobs:
           mamba-version: '*'
           activate-environment: climpred-minimum-tests
           python-version: ${{ matrix.python-version }}
-      - name: set up conda environment
+      - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/minimum-tests.yml
       - name: Conda info

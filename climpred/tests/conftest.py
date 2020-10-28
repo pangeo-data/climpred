@@ -10,26 +10,26 @@ from climpred.utils import convert_time_index
 CALENDAR = PM_CALENDAR_STR.strip("Datetime").lower()
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds3v_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
     variables."""
     return load_dataset("MPI-PM-DP-1D").isel(area=1, period=-1)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_initialized_1d(PM_ds3v_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset."""
     return PM_ds3v_initialized_1d.drop_vars(["sos", "AMO"])
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_initialized_1d(PM_ds_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.DataArray."""
     return PM_ds_initialized_1d["tos"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_initialized_1d_lead0(PM_da_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.DataArray in lead-0
     framework."""
@@ -40,78 +40,78 @@ def PM_da_initialized_1d_lead0(PM_da_initialized_1d):
     return da
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_initialized_3d_full():
     """MPI Perfect-model-framework initialized global maps xr.Dataset."""
     return load_dataset("MPI-PM-DP-3D")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_initialized_3d_full(PM_ds_initialized_3d_full):
     """MPI Perfect-model-framework initialized global maps xr.Dataset."""
     return PM_ds_initialized_3d_full["tos"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_initialized_3d(PM_ds_initialized_3d_full):
     """MPI Perfect-model-framework initialized maps xr.Dataset of subselected North
     Atlantic."""
     return PM_ds_initialized_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_initialized_3d(PM_ds_initialized_3d):
     """MPI Perfect-model-framework initialized maps xr.DataArray of subselected North
     Atlantic."""
     return PM_ds_initialized_3d["tos"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds3v_control_1d():
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     three variables."""
     return load_dataset("MPI-control-1D").isel(area=1, period=-1)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_control_1d(PM_ds3v_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset."""
     return PM_ds3v_control_1d.drop_vars(["sos", "AMO"])
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_control_1d(PM_ds_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.DataArray."""
     return PM_ds_control_1d["tos"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_control_3d_full():
     """To MPI Perfect-model-framework corresponding control global maps xr.Dataset."""
     return load_dataset("MPI-control-3D")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_control_3d_full(PM_ds_control_3d_full):
     """To MPI Perfect-model-framework corresponding control global maps xr.DataArray."""
     return PM_ds_control_3d_full["tos"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_control_3d(PM_ds_control_3d_full):
     """To MPI Perfect-model-framework corresponding control maps xr.Dataset of
     subselected North Atlantic."""
     return PM_ds_control_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_da_control_3d(PM_ds_control_3d):
     """To MPI Perfect-model-framework corresponding control maps xr.DataArray of
     subselected North Atlantic."""
     return PM_ds_control_3d["tos"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def perfectModelEnsemble_initialized_control_3d_North_Atlantic(
     PM_ds_initialized_3d, PM_ds_control_3d
 ):
@@ -119,7 +119,7 @@ def perfectModelEnsemble_initialized_control_3d_North_Atlantic(
     return PerfectModelEnsemble(PM_ds_initialized_3d).add_control(PM_ds_control_3d)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control_1d):
     """PerfectModelEnsemble initialized with `initialized` and `control` xr.Dataset."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
@@ -127,7 +127,7 @@ def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control
     return pm
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def perfectModelEnsemble_3v_initialized_control_1d(
     PM_ds3v_initialized_1d, PM_ds3v_control_1d
 ):
@@ -136,7 +136,7 @@ def perfectModelEnsemble_3v_initialized_control_1d(
     return PerfectModelEnsemble(PM_ds3v_initialized_1d).add_control(PM_ds3v_control_1d)
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_ds_initialized_1d():
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
     ds = load_dataset("CESM-DP-SST")
@@ -144,7 +144,7 @@ def hind_ds_initialized_1d():
     return ds
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_ds_initialized_1d_cftime(hind_ds_initialized_1d):
     """CESM-DPLE initialzed hindcast timeseries with cftime initializations."""
     ds = hind_ds_initialized_1d
@@ -153,7 +153,7 @@ def hind_ds_initialized_1d_cftime(hind_ds_initialized_1d):
     return ds
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset in lead-0
     framework."""
@@ -164,32 +164,32 @@ def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     return da
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_da_initialized_1d(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.DataArray."""
     return hind_ds_initialized_1d["SST"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_ds_initialized_3d_full():
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
     da = load_dataset("CESM-DP-SST-3D")
     return da - da.mean("init")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_ds_initialized_3d(hind_ds_initialized_3d_full):
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
     return hind_ds_initialized_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hind_da_initialized_3d(hind_ds_initialized_3d):
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.DataArray."""
     return hind_ds_initialized_3d["SST"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
     da = load_dataset("CESM-LE")
@@ -198,13 +198,13 @@ def hist_ds_uninitialized_1d():
     return da - da.mean("time")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hist_da_uninitialized_1d(hist_ds_uninitialized_1d):
     """CESM-LE uninitialized historical timeseries members mean removed xr.DataArray."""
     return hist_ds_uninitialized_1d["SST"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reconstruction_ds_1d():
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.Dataset."""
@@ -212,7 +212,7 @@ def reconstruction_ds_1d():
     return da - da.mean("time")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reconstruction_ds_1d_cftime(reconstruction_ds_1d):
     """CESM-FOSI historical reconstruction timeseries with cftime time axis."""
     ds = reconstruction_ds_1d
@@ -220,14 +220,14 @@ def reconstruction_ds_1d_cftime(reconstruction_ds_1d):
     return ds
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reconstruction_da_1d(reconstruction_ds_1d):
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.DataArray."""
     return reconstruction_ds_1d["SST"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reconstruction_ds_3d_full():
     """CESM-FOSI historical Pacific reconstruction maps members mean removed
     xr.Dataset."""
@@ -235,21 +235,21 @@ def reconstruction_ds_3d_full():
     return ds - ds.mean("time")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reconstruction_ds_3d(reconstruction_ds_3d_full):
     """CESM-FOSI historical reconstruction maps members mean removed
     xr.Dataset."""
     return reconstruction_ds_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def reconstruction_da_3d(reconstruction_ds_3d):
     """CESM-FOSI historical reconstruction maps members mean removed
     xr.DataArray."""
     return reconstruction_ds_3d["SST"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def observations_ds_1d():
     """Historical timeseries from observations matching `hind_da_initialized_1d` and
     `hind_da_uninitialized_1d` mean removed xr.Dataset."""
@@ -257,14 +257,14 @@ def observations_ds_1d():
     return da - da.mean("time")
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def observations_da_1d(observations_ds_1d):
     """Historical timeseries from observations matching `hind_da_initialized_1d` and
     `hind_da_uninitialized_1d` mean removed xr.DataArray."""
     return observations_ds_1d["SST"]
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
     """HindcastEnsemble initialized with `initialized`, `reconstruction`(`recon`)."""
     # fix to align coords
@@ -278,7 +278,7 @@ def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
     return hindcast
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hindcast_recon_1d_ym(hind_ds_initialized_1d, reconstruction_ds_1d):
     """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `recon`."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
@@ -289,7 +289,7 @@ def hindcast_recon_1d_ym(hind_ds_initialized_1d, reconstruction_ds_1d):
     return hindcast
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hindcast_hist_obs_1d(
     hind_ds_initialized_1d, hist_ds_uninitialized_1d, observations_ds_1d
 ):
@@ -303,7 +303,7 @@ def hindcast_hist_obs_1d(
     return hindcast
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
     time series (no grid)."""
@@ -315,7 +315,7 @@ def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
     return hindcast
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     """HindcastEnsemble with initialized and reconstruction (observations) as a daily
     time series (no grid)."""
@@ -327,7 +327,7 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     return hindcast
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def ds1():
     """Small plain multi-dimensional coords xr.Dataset."""
     return xr.Dataset(
@@ -336,7 +336,7 @@ def ds1():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def ds2():
     """Small plain multi-dimensional coords xr.Dataset identical values but with
     different coords compared to ds1."""
@@ -346,20 +346,20 @@ def ds2():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def da1():
     """Small plain two-dimensional xr.DataArray."""
     return xr.DataArray([[0, 1], [3, 4], [6, 7]], dims=("x", "y"))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def da2():
     """Small plain two-dimensional xr.DataArray with different values compared to
     da1."""
     return xr.DataArray([[0, 1], [5, 6], [6, 7]], dims=("x", "y"))
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def da_lead():
     """Small xr.DataArray with coords `init` and `lead`."""
     lead = np.arange(5)
@@ -371,7 +371,7 @@ def da_lead():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def two_dim_da():
     """xr.DataArray with two dims."""
     da = xr.DataArray(
@@ -388,7 +388,7 @@ def two_dim_da():
     return da
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def multi_dim_ds():
     """xr.Dataset with multi-dimensional coords."""
     ds = xr.tutorial.open_dataset("air_temperature")
@@ -396,7 +396,7 @@ def multi_dim_ds():
     return ds
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def da_SLM():
     """Small xr.DataArray with dims `S`, `M` and  `L` for `init`, `member` and
     `lead`.
@@ -411,7 +411,7 @@ def da_SLM():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def da_dcpp():
     """Small xr.DataArray with coords `dcpp_init_year`, `member_id` and `time` as from
     `intake-esm` `hindcastA-dcpp`."""
@@ -425,7 +425,7 @@ def da_dcpp():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_initialized_1d_ym_cftime(PM_ds_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
     cftime."""
@@ -439,7 +439,7 @@ def PM_ds_initialized_1d_ym_cftime(PM_ds_initialized_1d):
     return PM_ds_initialized_1d
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_control_1d_ym_cftime(PM_ds_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     time as cftime."""
@@ -449,7 +449,7 @@ def PM_ds_control_1d_ym_cftime(PM_ds_control_1d):
     return PM_ds_control_1d
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def perfectModelEnsemble_initialized_control_1d_ym_cftime(
     PM_ds_initialized_1d_ym_cftime, PM_ds_control_1d_ym_cftime
 ):
@@ -460,7 +460,7 @@ def perfectModelEnsemble_initialized_control_1d_ym_cftime(
     return pm
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_initialized_1d_mm_cftime(PM_ds_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
     cftime faking all inits with monthly separation in one year and lead units to
@@ -475,7 +475,7 @@ def PM_ds_initialized_1d_mm_cftime(PM_ds_initialized_1d):
     return PM_ds_initialized_1d
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_control_1d_mm_cftime(PM_ds_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     time as cftime faking the time resolution to monthly means."""
@@ -485,7 +485,7 @@ def PM_ds_control_1d_mm_cftime(PM_ds_control_1d):
     return PM_ds_control_1d
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def perfectModelEnsemble_initialized_control_1d_mm_cftime(
     PM_ds_initialized_1d_mm_cftime, PM_ds_control_1d_mm_cftime
 ):
@@ -496,7 +496,7 @@ def perfectModelEnsemble_initialized_control_1d_mm_cftime(
     return pm
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_initialized_1d_dm_cftime(PM_ds_initialized_1d):
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with init as
     cftime faking all inits with daily separation in one year and lead units to
@@ -511,7 +511,7 @@ def PM_ds_initialized_1d_dm_cftime(PM_ds_initialized_1d):
     return PM_ds_initialized_1d
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     time as cftime faking the time resolution to daily means."""
@@ -524,7 +524,7 @@ def PM_ds_control_1d_dm_cftime(PM_ds_control_1d):
     return PM_ds_control_1d
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def perfectModelEnsemble_initialized_control_1d_dm_cftime(
     PM_ds_initialized_1d_dm_cftime, PM_ds_control_1d_dm_cftime
 ):
@@ -535,7 +535,7 @@ def perfectModelEnsemble_initialized_control_1d_dm_cftime(
     return pm
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def small_initialized_da():
     """Very small simulation of an initialized forecasting system."""
     inits = [1990, 1991, 1992, 1993]
@@ -547,7 +547,7 @@ def small_initialized_da():
     )
 
 
-@pytest.fixture
+@pytest.fixture(scope="module")
 def small_verif_da():
     """Very small simulation of a verification product."""
     time = [1990, 1991, 1992, 1993, 1994]

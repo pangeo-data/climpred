@@ -22,7 +22,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v1
         with:
           auto-update-conda: true
-          channels: conda-forge,defaults
+          channels: conda-forge
           mamba-version: '*'
           activate-environment: climpred-minimum-tests
           python-version: ${{ matrix.python-version }}
@@ -57,7 +57,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v1
         with:
           auto-update-conda: true
-          channels: conda-forge,defaults
+          channels: conda-forge
           mamba-version: '*'
           activate-environment: climpred-docs-notebooks
           python-version: 3.6

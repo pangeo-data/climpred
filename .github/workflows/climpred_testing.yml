@@ -35,7 +35,7 @@ jobs:
         run: conda list
       - name: Run tests
         run: |
-          pytest -n auto -rf --setup-show --cov=climpred --cov-report=xml --verbose
+          pytest --cov=climpred --cov-report=xml --verbose
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1.0.7
         with:

@@ -12,7 +12,6 @@ dependencies:
   - coveralls
   - pytest
   - pytest-cov
-  - pytest-xdist
   - pip
   - pip:
     - pytest-lazy-fixture

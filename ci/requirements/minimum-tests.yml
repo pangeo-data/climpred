@@ -1,18 +1,25 @@
 name: climpred-minimum-tests
 channels:
   - conda-forge
-  - defaults
 dependencies:
-  - xesmf
-  - esmpy
-  - dask
-  - netcdf4
-  - ipython
-  - nc-time-axis
+  - cftime>=1.1.2
   - coveralls
+  - dask
+  - eofs
+  - esmpy=*=mpi*
+  - esmtools>=1.1.3
+  - ipython
+  - matplotlib
+  - nc-time-axis
+  - netcdf4
+  - pip
   - pytest
   - pytest-cov
-  - pip
+  - scipy
+  - xarray>=0.16.1
+  - xesmf
+  - xrft
+  - xskillscore>=0.0.18
   - pip:
     - pytest-lazy-fixture
     - -e ../..

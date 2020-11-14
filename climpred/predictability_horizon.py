@@ -17,6 +17,7 @@ def last_item_cond_true(cond, dim, shift=-1):
 
 
 def predictability_horizon(cond):
+    """Calculate the predictability horizon based on a condition `cond`."""
     ph = last_item_cond_true(cond, "lead")
     if isinstance(ph, xr.DataArray):
         ph.attrs["units"] = cond["lead"].attrs["units"]

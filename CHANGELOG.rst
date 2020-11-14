@@ -2,6 +2,18 @@
 What's New
 ==========
 
+
+climpred v2.1.2 (2020-1x-xx)
+============================
+
+New Features
+------------
+
+- Function to calculate predictability horizon
+  :py:func:`~climpred.predictability_horizon.predictability_horizon` based on condition.
+  (:issue:`46`, :pr:`521`) `Aaron Spring`_.
+
+
 climpred v2.1.1 (2020-10-13)
 ============================
 

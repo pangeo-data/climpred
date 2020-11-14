@@ -9,6 +9,7 @@ from . import (
     exceptions,
     graphics,
     metrics,
+    predictability_horizon,
     prediction,
     relative_entropy,
     smoothing,

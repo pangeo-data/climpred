@@ -678,7 +678,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if reference:
             for r in reference:
                 ref_compute_kwargs = metric_kwargs.copy()
-                ref_compute_kwargs["metric"] = metric
+                ref_compute_kwargs.update({"dim": dim, "metric": metric})
                 if r != "persistence":
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)

@@ -43,10 +43,8 @@ dependencies:
   - numba
   - dask
   # Regridding
-  # Currently, xesmf breaks with esmpy v8.0.0. There is an issue with PIO and MPI.
-  # See e.g. https://github.com/conda-forge/esmpy-feedstock/issues/28
-  - esmpy<=7.1.0
-  - xesmf  # should switch to https://github.com/pangeo-data/xesmf
+  - esmpy=*=mpi*
+  - xesmf
   # Statistics
   - eofs
   - esmtools>=1.1.3

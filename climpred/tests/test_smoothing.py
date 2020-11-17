@@ -176,7 +176,9 @@ def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim
     """Test that HindcastEnsemble.smooth({dim: int}) aggregates dim."""
     he = hindcast_recon_3d
     smooth_kws = {key: step for key in dim}
-    he_smoothed = he.smooth(smooth_kws)
+    # RXB: For some reason, `reuse_weights` breaks here with newer xesmf/esmpy version.
+    # ValueError: to reuse weights, you need to provide either filename or weights
+    he_smoothed = he.smooth(smooth_kws, reuse_weights=False)
     for d in dim:
         assert he_smoothed.get_initialized()[d].any()
         assert he_smoothed.get_observations()[d].any()

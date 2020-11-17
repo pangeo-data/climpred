@@ -62,7 +62,9 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(
     """Test whether spatial dimsizes are properly reduced."""
     da = PM_da_control_3d_full
     step = 5
-    actual = spatial_smoothing_xesmf(da, d_lon_lat_kws={"lon": step})
+    # RXB: For some reason, `reuse_weights` breaks here with newer xesmf/esmpy version.
+    # ValueError: to reuse weights, you need to provide either filename or weights
+    actual = spatial_smoothing_xesmf(da, d_lon_lat_kws={"lon": step}, reuse_weights=False)
     expected_lat_size = 180 // step
     assert actual["lon"].size < da.lon.size
     assert actual["lat"].size == expected_lat_size
@@ -75,7 +77,9 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(
     """Test whether spatial dimsizes are properly reduced."""
     da = reconstruction_ds_3d_full
     step = 0.1
-    actual = spatial_smoothing_xesmf(da, d_lon_lat_kws={"lat": step})
+    # RXB: For some reason, `reuse_weights` breaks here with newer xesmf/esmpy version.
+    # ValueError: to reuse weights, you need to provide either filename or weights
+    actual = spatial_smoothing_xesmf(da, d_lon_lat_kws={"lat": step}, reuse_weights=False)
     # test whether upsampled
     assert actual["lon"].size >= da.nlon.size
     assert actual["lat"].size >= da.nlat.size
@@ -85,7 +89,9 @@ def test_smooth_goddard_2013(PM_da_control_3d_full):
     """Test whether Goddard 2013 recommendations are fulfilled by
     smooth_Goddard_2013."""
     da = PM_da_control_3d_full
-    actual = smooth_goddard_2013(da)
+    # RXB: For some reason, `reuse_weights` breaks here with newer xesmf/esmpy version.
+    # ValueError: to reuse weights, you need to provide either filename or weights
+    actual = smooth_goddard_2013(da, reuse_weights=False)
     # test that x, y not in dims
     assert "x" not in actual.dims
     assert "y" not in actual.dims
@@ -99,8 +105,10 @@ def test_compute_after_smooth_goddard_2013(
     PM_da_initialized_3d_full, PM_da_control_3d_full
 ):
     """Test compute_perfect_model works after smoothings."""
-    PM_da_control_3d_full = smooth_goddard_2013(PM_da_control_3d_full)
-    PM_da_initialized_3d_full = smooth_goddard_2013(PM_da_initialized_3d_full)
+    # RXB: For some reason, `reuse_weights` breaks here with newer xesmf/esmpy version.
+    # ValueError: to reuse weights, you need to provide either filename or weights
+    PM_da_control_3d_full = smooth_goddard_2013(PM_da_control_3d_full, reuse_weights=False)
+    PM_da_initialized_3d_full = smooth_goddard_2013(PM_da_initialized_3d_full, reuse_weights=False)
     actual = compute_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()

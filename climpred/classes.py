@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import xarray as xr
 from IPython.display import display_html
@@ -677,8 +679,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference = [reference]
         if reference:
             for r in reference:
-                ref_compute_kwargs = metric_kwargs.copy()
-                ref_compute_kwargs.update({"dim": dim, "metric": metric})
+                dim_ori = deepcopy(dim)
+                ref_compute_kwargs = metric_kwargs.copy()  # persistence changes dim
+                ref_compute_kwargs.update({"dim": dim_ori, "metric": metric})
                 if r != "persistence":
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)

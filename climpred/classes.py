@@ -401,7 +401,7 @@ class PredictionEnsemble:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets["uninitialized"]
 
-    def smooth(self, smooth_kws=None, how="mean", **xesmf_kwargs):
+    def smooth(self, smooth_kws=None, how="mean", reuse_weights=False, **xesmf_kwargs):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
@@ -414,6 +414,8 @@ class PredictionEnsemble:
                 'goddard2013'. Defaults to None.
             how (str): how to smooth temporally. From ['mean','sum']. Defaults to
                 'mean'.
+            reuse_weights (bool): Whether to store weights in memory for reuse.
+                Defaults to False. See xESMF docs for more info.
             **xesmf_kwargs (args): kwargs passed to
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
@@ -423,6 +425,8 @@ class PredictionEnsemble:
             >>> PredictionEnsemble.smooth({'lon':1, 'lat':1}, method='patch')
             >>> PredictionEnsemble.smooth({'lead':2}, how='sum')
         """
+        # Add `reuse_weights` to keywords passed to xESMF.
+        xesmf_kwargs.update({"reuse_weights": reuse_weights})
         if not smooth_kws:
             return self
         # get proper smoothing function based on smooth args

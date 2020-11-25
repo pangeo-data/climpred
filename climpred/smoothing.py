@@ -15,7 +15,7 @@ def spatial_smoothing_xesmf(
     method="bilinear",
     periodic=False,
     filename=None,
-    reuse_weights=True,
+    reuse_weights=False,
     tsmooth_kws=None,
     how=None,
 ):

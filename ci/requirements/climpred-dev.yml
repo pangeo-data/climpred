@@ -43,7 +43,7 @@ dependencies:
   - numba
   - dask
   # Regridding
-  - esmpy=*=mpi*
+  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - xesmf
   # Statistics
   - eofs

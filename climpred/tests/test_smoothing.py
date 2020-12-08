@@ -209,6 +209,32 @@ def test_set_center_coord():
     assert (actual == expected).all()
 
 
+def test_PerfectModelEnsemble_smooth_carries_lead_attrs(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    """Test that PerfectModelEnsemble carries lead attrs after smooth  and verify."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    pm_smooth = pm.smooth({"lead": 4}, how="mean")
+    assert (
+        pm_smooth.verify(metric="rmse", comparison="m2e", dim="init").lead.attrs[
+            "units"
+        ]
+        == "years"
+    )
+
+
+def test_HindcastEnsemble_smooth_carries_lead_attrs(hindcast_recon_1d_ym):
+    """Test that HindcastEnsemble carries lead attrs after smooth  and verify."""
+    he = hindcast_recon_1d_ym
+    he_smooth = he.smooth({"lead": 4}, how="mean")
+    assert (
+        he_smooth.verify(metric="rmse", comparison="m2e", dim="init").lead.attrs[
+            "units"
+        ]
+        == "years"
+    )
+
+
 @pytest.mark.parametrize(
     "smooth", [{"lead": 4, "lon": 5, "lat": 5}, "goddard", "goddard2013"]
 )

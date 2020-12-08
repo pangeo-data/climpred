@@ -47,11 +47,8 @@ def test_horizon_3d(hindcast_recon_3d):
         alignment="maximize",
         reference=["persistence"],
     )
-    from climpred.horizon import horizon
 
-    ph = horizon(
-        skill.sel(skill="initialized") > skill.sel(skill="persistence")
-    )
+    ph = horizon(skill.sel(skill="initialized") > skill.sel(skill="persistence"))
     # test all nan on land
     assert ph["SST"][0, 0].isnull()
     # test significant everywhere
@@ -60,9 +57,7 @@ def test_horizon_3d(hindcast_recon_3d):
 
 
 @pytest.mark.parametrize("smooth", [True, False])
-def test_horizon_smooth(
-    perfectModelEnsemble_initialized_control, smooth
-):
+def test_horizon_smooth(perfectModelEnsemble_initialized_control, smooth):
     """test horizon for pm.smooth(lead).verify."""
     pm = perfectModelEnsemble_initialized_control
     if smooth:

@@ -2,31 +2,52 @@ import numpy as np
 import xarray as xr
 
 
-def _last_item_cond_true(cond, dim, shift=-1):
-    """Get the last item of condition ``cond`` which is True.
+def _last_item_cond_true(cond, dim):
+    """Return the final item from cond that evaluates to True.
 
     Args:
-        cond (xr.DataArray, xr.Dataset): Condition True means predictable. ``cond``
-            contains at least the dimension lead and checks for how many leads the
-            ``condition`` is true and hence skill is predictable.
+        cond (xr.DataArray, xr.Dataset): User-defined boolean array where True means
+            the system is predictable at the given lead. E.g., this could be based on
+            the dynamical forecast beating a reference forecast, p values, confidence
+            intervals, etc. cond should contain the dimension dim at the minimum.
         dim (str): Dimension to check for condition == True over.
-        shift (int): Description of parameter `shift`. Defaults to 1.
 
     Returns:
         xr.DataArray, xr.Dataset: ``dim`` value until condition is True.
 
     """
-    reached = cond.idxmin(dim) + shift  # to get the last True lead
+    # force DataArray because isel (when transforming to dim space) requires DataArray
+    if isinstance(cond, xr.Dataset):
+        was_dataset = True
+        cond = cond.to_array()
+    else:
+        was_dataset = False
+    # index last True
+    reached = cond.argmin(dim)
     # fix below one
     reached = reached.where(reached >= 1, np.nan)
-    # reset that never reach to nan
-    # reached = reached.where(reached!=cond[dim].min(),other=np.nan)
-    # reset where always true to max dim
-    reached = reached.where(~cond.all("lead"), other=cond[dim].max())
+    # reset where always true to len(lead)
+    reached = reached.where(~cond.all("lead"), other=cond[dim].size)
     # fix locations where always nan to nan
     mask = cond.notnull().all("lead")  # ~(cond == False).all("lead")
     reached = reached.where(mask, other=np.nan)
-    return reached
+    ## shift back into coordinate space ##
+    # problem: cannot convert nan to idx in isel
+    # therefore set to dim:0 and mask again afterwards
+    reached_notnull = reached.notnull()  # remember where not masked
+    reached = reached.where(
+        reached.notnull(), other=cond.isel({dim: 0})
+    )  # set nan to dim:0
+    # take one index before calculated by argmin
+    reached_dim_space = cond[dim].isel(
+        {dim: reached.astype(int) - 1}
+    )  # to not break conversion to dim space
+    reached_dim_space = reached_dim_space.where(
+        reached_notnull, other=np.nan
+    )  # cleanup replace dim:0 with nan again
+    if was_dataset:
+        reached_dim_space = reached_dim_space.to_dataset(dim="variable")
+    return reached_dim_space
 
 
 def predictability_horizon(cond):

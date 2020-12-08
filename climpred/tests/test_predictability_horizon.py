@@ -5,15 +5,20 @@ import xarray as xr
 from climpred.predictability_horizon import _last_item_cond_true, predictability_horizon
 
 
+@pytest.mark.parametrize("input", ["DataArray", "Dataset"])
 @pytest.mark.parametrize("threshold,expected", [(1, 1), (2, 3), (3, 6), (3.5, 6)])
-def test_least_item_cond_true(threshold, expected):
+def test_least_item_cond_true(threshold, expected, input):
     """"test `last_item_cond_true` on artificial data."""
     ds = xr.DataArray(
         [1, 2, 2, 3, 3, 1, 4], dims="lead", coords={"lead": np.arange(1, 1 + 7)}
     )
+    if input == "Dataset":
+        ds = ds.to_dataset(name="test")
     cond = ds <= threshold
     actual = _last_item_cond_true(cond, "lead")
+    print(cond, threshold, expected, actual)
     assert actual == expected
+    assert type(ds) == type(actual)
 
 
 def test_predictability_horizon_bootstrap_1d(perfectModelEnsemble_initialized_control):
@@ -27,7 +32,7 @@ def test_predictability_horizon_bootstrap_1d(perfectModelEnsemble_initialized_co
     )
     ph = predictability_horizon(bskill.sel(results="p", skill="uninitialized") <= 0.05)
     assert ph.tos.attrs["units"] == "years", print(ph.tos)
-    assert int(ph.tos) in [5, 6, 7]  # should be 6, testing on the safe side
+    assert int(ph.tos) in [4, 5, 6, 7, 8]  # should be 6, testing on the safe side
 
 
 def test_predictability_horizon_3d(hindcast_recon_3d):
@@ -54,3 +59,59 @@ def test_predictability_horizon_3d(hindcast_recon_3d):
     # test significant everywhere
     assert (ph >= 1).all()
     assert (ph.isel(nlat=-1) == 2).all()
+
+
+@pytest.mark.parametrize("smooth", [True, False])
+def test_predictability_horizon_smooth(
+    perfectModelEnsemble_initialized_control, smooth
+):
+    """test predictability_horizon for pm.smooth(lead).verify."""
+    pm = perfectModelEnsemble_initialized_control
+    if smooth:
+        pm = pm.smooth(
+            {"lead": 2}, how="mean"
+        )  # converts lead to '1-2', '2-3', ... after verify
+    skill = pm.verify(
+        metric="rmse",
+        comparison="m2e",
+        dim=["member", "init"],
+        reference="persistence",
+    )
+    print("skill = ", skill.tos.values)
+    assert skill.lead.attrs["units"] == "years", print(skill.lead.attrs)
+    # initialized better than persistence if RMSE smaller
+    cond = skill.sel(skill="initialized", drop=True) < skill.sel(
+        skill="persistence", drop=True
+    )
+    print("cond = ", cond)
+    ph = predictability_horizon(cond)
+    # print('ph = ',ph,'\n',ph.lead)
+    assert ph.tos.attrs["units"] == "years", print("ph.tos.attrs = ", ph.tos.attrs)
+    print(ph.tos.values)
+    print(skill.lead.isel(lead=-1).values)
+    assert (
+        ph.tos.values == skill.lead.isel(lead=-1).values
+    )  # , print(ph.tos) # last one
+
+
+# test dataset, DataArray
+
+
+def test_predictability_horizon_weird_coords():
+    """"Test predictability_horizon for weird coords"""
+    cond = xr.DataArray([True] * 10, dims="lead").to_dataset(name="SST")
+    # Change leads to something weird
+    cond["lead"] = [0.25, 0.75, 1, 3, 4, 5, 6, 7, 8, 9]
+    assert _last_item_cond_true(cond, "lead") == 9.0
+
+    cond[0] = False
+    assert _last_item_cond_true(cond, "lead").isnull(), print(cond)
+
+    cond[0] = True
+    cond[1] = False
+    assert _last_item_cond_true(cond, "lead") == cond.lead[0], print(cond)
+
+    cond["lead"] = np.arange(cond.lead.size)
+    cond[0] = True
+    cond[1] = False
+    assert _last_item_cond_true(cond, "lead") == 0.0, print(cond)

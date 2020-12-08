@@ -228,9 +228,9 @@ def test_HindcastEnsemble_smooth_carries_lead_attrs(hindcast_recon_1d_ym):
     he = hindcast_recon_1d_ym
     he_smooth = he.smooth({"lead": 4}, how="mean")
     assert (
-        he_smooth.verify(metric="rmse", comparison="e2o", dim="init").lead.attrs[
-            "units"
-        ]
+        he_smooth.verify(
+            metric="rmse", comparison="e2o", dim="init", alginment="same_verifs"
+        ).lead.attrs["units"]
         == "years"
     )
 

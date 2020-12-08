@@ -16,7 +16,6 @@ def test_least_item_cond_true(threshold, expected, input):
         ds = ds.to_dataset(name="test")
     cond = ds <= threshold
     actual = _last_item_cond_true(cond, "lead")
-    print(cond, threshold, expected, actual)
     assert actual == expected
     assert type(ds) == type(actual)
 
@@ -54,7 +53,6 @@ def test_predictability_horizon_3d(hindcast_recon_3d):
         skill.sel(skill="initialized") > skill.sel(skill="persistence")
     )
     # test all nan on land
-    print(ph)
     assert ph["SST"][0, 0].isnull()
     # test significant everywhere
     assert (ph >= 1).all()
@@ -77,28 +75,18 @@ def test_predictability_horizon_smooth(
         dim=["member", "init"],
         reference="persistence",
     )
-    print("skill = ", skill.tos.values)
     assert skill.lead.attrs["units"] == "years", print(skill.lead.attrs)
     # initialized better than persistence if RMSE smaller
     cond = skill.sel(skill="initialized", drop=True) < skill.sel(
         skill="persistence", drop=True
     )
-    print("cond = ", cond)
     ph = predictability_horizon(cond)
-    # print('ph = ',ph,'\n',ph.lead)
     assert ph.tos.attrs["units"] == "years", print("ph.tos.attrs = ", ph.tos.attrs)
-    print(ph.tos.values)
-    print(skill.lead.isel(lead=-1).values)
-    assert (
-        ph.tos.values == skill.lead.isel(lead=-1).values
-    )  # , print(ph.tos) # last one
-
-
-# test dataset, DataArray
+    assert ph.tos.values == skill.lead.isel(lead=-1).values
 
 
 def test_predictability_horizon_weird_coords():
-    """"Test predictability_horizon for weird coords"""
+    """"Test predictability_horizon for weird coords."""
     cond = xr.DataArray([True] * 10, dims="lead").to_dataset(name="SST")
     # Change leads to something weird
     cond["lead"] = [0.25, 0.75, 1, 3, 4, 5, 6, 7, 8, 9]

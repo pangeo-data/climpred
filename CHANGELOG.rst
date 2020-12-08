@@ -16,6 +16,9 @@ New Features
 Bug fixes
 ---------
 - :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now carries lead.attrs (:issue: `527`, pr:`521`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` now works with ``references``
+  also for geospatial inputs, which returned ``NaN``s before.
+  (:issue: `522`, pr:`521`) `Aaron Spring`_.
 
 climpred v2.1.1 (2020-10-13)
 ============================

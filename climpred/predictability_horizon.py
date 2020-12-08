@@ -54,9 +54,10 @@ def predictability_horizon(cond):
     """Calculate the predictability horizon based on a condition ```cond``.
 
     Args:
-        cond (xr.DataArray, xr.Dataset): Condition True means predictable. ``cond``
-        contains at least the dimension lead and checks for how many leads the
-        ``condition`` is true and hence skill is predictable.
+        cond (xr.DataArray, xr.Dataset): User-defined boolean array where True means
+            the system is predictable at the given lead. E.g., this could be based on
+            the dynamical forecast beating a reference forecast, p values, confidence
+            intervals, etc. cond should contain the dimension lead at the minimum.
 
     Returns:
         xr.DataArray, xr.Dataset: predictability horizon reduced by ``lead`` dimension.

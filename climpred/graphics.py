@@ -317,7 +317,7 @@ def plot_lead_timeseries_hindcast(
             ax=ax,
             hue="member",
             color=cmap(i),
-            label=f"initialized: lead={lead} {hind.lead.attrs['units']}",
+            label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
         )

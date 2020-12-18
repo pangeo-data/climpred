@@ -278,7 +278,7 @@ def plot_lead_timeseries_hindcast(
         variable = list(he.get_initialized().data_vars)[0]
     hind = he.get_initialized()[variable]
     lead_freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
-    lead_freq = str(lead_freq[0])+lead_freq[1]
+    lead_freq = str(lead_freq[0]) + lead_freq[1]
     hist = he.get_uninitialized()
     if isinstance(hist, xr.Dataset):
         hist = hist[variable]
@@ -317,7 +317,7 @@ def plot_lead_timeseries_hindcast(
             ax=ax,
             hue="member",
             color=cmap(i),
-            label=f"initialized: lead={lead}",
+            label=f"initialized: lead={lead} {he.lead.attrs['units']}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
         )

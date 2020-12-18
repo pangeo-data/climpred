@@ -257,7 +257,7 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, ax=None, show_members=False, cmap="jet"
+    he, variable=None, ax=None, show_members=False, cmap="viridis"
 ):
     """Plot datasets from HindcastEnsemble.
 
@@ -267,7 +267,7 @@ def plot_lead_timeseries_hindcast(
         ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
         show_members (bool): whether to display all members individually.
             Defaults to False.
-        cmap (str): Name of matplotlib-recognized colorbar. Defaults to 'jet'.
+        cmap (str): Name of matplotlib-recognized colorbar. Defaults to 'viridis'.
 
     Returns:
         ax: plt.axes
@@ -317,7 +317,7 @@ def plot_lead_timeseries_hindcast(
             ax=ax,
             hue="member",
             color=cmap(i),
-            label=f"initialized: lead={lead} {he.lead.attrs['units']}",
+            label=f"initialized: lead={lead} {hind.lead.attrs['units']}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
         )

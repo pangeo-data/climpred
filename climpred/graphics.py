@@ -257,7 +257,7 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, ax=None, show_members=False, cmap="jet"
+    he, variable=None, ax=None, show_members=False, cmap="viridis"
 ):
     """Plot datasets from HindcastEnsemble.
 
@@ -267,7 +267,7 @@ def plot_lead_timeseries_hindcast(
         ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
         show_members (bool): whether to display all members individually.
             Defaults to False.
-        cmap (str): Name of matplotlib-recognized colorbar. Defaults to 'jet'.
+        cmap (str): Name of matplotlib-recognized colorbar. Defaults to 'viridis'.
 
     Returns:
         ax: plt.axes
@@ -277,7 +277,8 @@ def plot_lead_timeseries_hindcast(
     if variable is None:
         variable = list(he.get_initialized().data_vars)[0]
     hind = he.get_initialized()[variable]
-    lead_freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)[1]
+    lead_freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
+    lead_freq = str(lead_freq[0]) + lead_freq[1]
     hist = he.get_uninitialized()
     if isinstance(hist, xr.Dataset):
         hist = hist[variable]
@@ -316,7 +317,7 @@ def plot_lead_timeseries_hindcast(
             ax=ax,
             hue="member",
             color=cmap(i),
-            label=f"initialized: lead={lead}",
+            label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
         )

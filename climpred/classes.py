@@ -1,3 +1,5 @@
+from copy import deepcopy
+
 import numpy as np
 import xarray as xr
 from IPython.display import display_html
@@ -672,13 +674,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         if self._temporally_smoothed:
             result = _reset_temporal_axis(result, self._temporally_smoothed, dim="lead")
+            result["lead"].attrs = self.get_initialized().lead.attrs
         # compute reference skills
         if isinstance(reference, str):
             reference = [reference]
         if reference:
             for r in reference:
-                ref_compute_kwargs = metric_kwargs.copy()
-                ref_compute_kwargs["metric"] = metric
+                dim_orig = deepcopy(dim)  # preserve dim, because
+                ref_compute_kwargs = metric_kwargs.copy()  # persistence changes dim
+                ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
                 if r != "persistence":
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
@@ -734,6 +738,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
+            res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
     def _compute_persistence(self, metric=None, dim=None, **metric_kwargs):
@@ -781,6 +786,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
+            res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
     def bootstrap(
@@ -1174,6 +1180,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     )
             else:
                 res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
+                res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
     def bootstrap(

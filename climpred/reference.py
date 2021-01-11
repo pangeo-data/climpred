@@ -112,7 +112,6 @@ def compute_persistence(
         metric_kwargs["comparison"] = __e2c
     dim = _rename_dim(dim, hind, verif)
     if "member" in dim:
-        dim = dim.copy()
         dim.remove("member")
 
     plag = []

@@ -8,6 +8,7 @@ from . import (
     constants,
     exceptions,
     graphics,
+    horizon,
     metrics,
     prediction,
     relative_entropy,

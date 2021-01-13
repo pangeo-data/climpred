@@ -204,6 +204,35 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
         assert "skill" not in actual.dims
 
 
+@pytest.mark.parametrize(
+    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
+)
+def test_verify_reference(hindcast_hist_obs_1d, reference):
+    """Test that hindcast.bootstrap returns reference skill."""
+    hindcast_hist_obs_1d = hindcast_hist_obs_1d.expand_dims(["lon", "lat"]).isel(
+        lon=[0] * 2, lat=[0] * 2
+    )  # make geospatial
+    actual = hindcast_hist_obs_1d.verify(
+        metric="acc",
+        comparison="e2o",
+        alignment="same_verifs",
+        dim="init",
+        reference=reference,
+    )
+    if isinstance(reference, str):
+        reference = [reference]
+    if len(reference) >= 1:
+        # check for initialized + reference
+        assert len(reference) + 1 == actual["skill"].size, print(
+            actual.coords, actual.dims
+        )
+    else:
+        assert "skill" in actual.coords
+        assert "skill" not in actual.dims
+    # test skills not none
+    assert actual.notnull().all()
+
+
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)

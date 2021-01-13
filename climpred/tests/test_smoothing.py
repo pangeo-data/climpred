@@ -62,7 +62,10 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(
     """Test whether spatial dimsizes are properly reduced."""
     da = PM_da_control_3d_full
     step = 5
-    actual = spatial_smoothing_xesmf(da, d_lon_lat_kws={"lon": step})
+    actual = spatial_smoothing_xesmf(
+        da,
+        d_lon_lat_kws={"lon": step},
+    )
     expected_lat_size = 180 // step
     assert actual["lon"].size < da.lon.size
     assert actual["lat"].size == expected_lat_size
@@ -75,7 +78,10 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(
     """Test whether spatial dimsizes are properly reduced."""
     da = reconstruction_ds_3d_full
     step = 0.1
-    actual = spatial_smoothing_xesmf(da, d_lon_lat_kws={"lat": step})
+    actual = spatial_smoothing_xesmf(
+        da,
+        d_lon_lat_kws={"lat": step},
+    )
     # test whether upsampled
     assert actual["lon"].size >= da.nlon.size
     assert actual["lat"].size >= da.nlat.size
@@ -85,7 +91,9 @@ def test_smooth_goddard_2013(PM_da_control_3d_full):
     """Test whether Goddard 2013 recommendations are fulfilled by
     smooth_Goddard_2013."""
     da = PM_da_control_3d_full
-    actual = smooth_goddard_2013(da)
+    actual = smooth_goddard_2013(
+        da,
+    )
     # test that x, y not in dims
     assert "x" not in actual.dims
     assert "y" not in actual.dims
@@ -99,8 +107,12 @@ def test_compute_after_smooth_goddard_2013(
     PM_da_initialized_3d_full, PM_da_control_3d_full
 ):
     """Test compute_perfect_model works after smoothings."""
-    PM_da_control_3d_full = smooth_goddard_2013(PM_da_control_3d_full)
-    PM_da_initialized_3d_full = smooth_goddard_2013(PM_da_initialized_3d_full)
+    PM_da_control_3d_full = smooth_goddard_2013(
+        PM_da_control_3d_full,
+    )
+    PM_da_initialized_3d_full = smooth_goddard_2013(
+        PM_da_initialized_3d_full,
+    )
     actual = compute_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()
@@ -195,6 +207,32 @@ def test_set_center_coord():
     actual = _set_center_coord(da).lead_center.values
     expected = [2.0, 3.0]
     assert (actual == expected).all()
+
+
+def test_PerfectModelEnsemble_smooth_carries_lead_attrs(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    """Test that PerfectModelEnsemble carries lead attrs after smooth  and verify."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
+    pm_smooth = pm.smooth({"lead": 4}, how="mean")
+    assert (
+        pm_smooth.verify(metric="rmse", comparison="m2e", dim="init").lead.attrs[
+            "units"
+        ]
+        == "years"
+    )
+
+
+def test_HindcastEnsemble_smooth_carries_lead_attrs(hindcast_recon_1d_ym):
+    """Test that HindcastEnsemble carries lead attrs after smooth  and verify."""
+    he = hindcast_recon_1d_ym
+    he_smooth = he.smooth({"lead": 4}, how="mean")
+    assert (
+        he_smooth.verify(
+            metric="rmse", comparison="e2o", dim="init", alignment="same_verifs"
+        ).lead.attrs["units"]
+        == "years"
+    )
 
 
 @pytest.mark.parametrize(

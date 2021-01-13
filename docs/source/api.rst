@@ -185,6 +185,15 @@ Reference
     compute_persistence
     compute_uninitialized
 
+Horizon
+~~~~~~~
+.. currentmodule:: climpred.horizon
+
+.. autosummary::
+    :toctree: api/
+
+    horizon
+
 Statistics
 ~~~~~~~~~~
 .. currentmodule:: climpred.stats

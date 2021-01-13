@@ -2,6 +2,28 @@
 What's New
 ==========
 
+
+climpred v2.1.2 (2021-xx-xx)
+============================
+
+New Features
+------------
+
+- Function to calculate predictability horizon
+  :py:func:`~climpred.predictability_horizon.predictability_horizon` based on condition.
+  (:issue:`46`, :pr:`521`) `Aaron Spring`_.
+
+Bug fixes
+---------
+- :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now carries lead.attrs (:issue: `527`, pr:`521`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` now works with ``references``
+  also for geospatial inputs, which returned ``NaN``s before.
+  (:issue: `522`, pr:`521`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.PredictionEnsemble.plot` now shifts composite lead
+  frequencies like ``days``, ``pentads``, ``seasons`` correctly.
+  (:issue:`532`, :pr:`533`) `Aaron Spring`_.
+
+
 climpred v2.1.1 (2020-10-13)
 ============================
 

@@ -6,7 +6,7 @@ dependencies:
   - coveralls
   - dask
   - eofs
-  - esmpy=*=mpi*
+  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - esmtools>=1.1.3
   - ipython
   - matplotlib

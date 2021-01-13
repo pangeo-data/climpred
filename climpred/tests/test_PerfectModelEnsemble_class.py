@@ -141,9 +141,13 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
 def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
     """Test that verify works with references given."""
     pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
-    skill = pm.verify(
-        metric="rmse", comparison="m2e", dim=["init", "member"], reference=reference
-    )
+    skill = (
+        pm.verify(
+            metric="rmse", comparison="m2e", dim=["init", "member"], reference=reference
+        )
+        .expand_dims(["lon", "lat"])
+        .isel(lon=[0] * 2, lat=[0] * 2)
+    )  # make geospatial
     if isinstance(reference, str):
         reference = [reference]
     elif reference is None:
@@ -152,6 +156,8 @@ def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
         assert "skill" not in skill.dims
     else:
         assert skill.skill.size == len(reference) + 1
+    # test skills not none
+    assert skill.notnull().all()
 
 
 def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_control):

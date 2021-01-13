@@ -1,6 +1,7 @@
 name: climpred-minimum-tests
 channels:
   - conda-forge
+  - numba/label/dev # Temporary fix to get Numba on Python 3.9
 dependencies:
   - cftime>=1.1.2
   - coveralls

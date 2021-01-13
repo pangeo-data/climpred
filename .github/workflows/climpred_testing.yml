@@ -29,11 +29,6 @@ jobs:
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/minimum-tests.yml
-
-      - name: Install Numba with py39 pre-release
-        if: matrix.python-verison == '3.9'
-        run: |
-          mamba install -c numba/label/dev numba
       - name: Conda info
         run: conda info
       - name: Conda list

@@ -11,9 +11,6 @@ jobs:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
     steps:
     - uses: actions/checkout@v2
-      with:
-        ref: ${{github.event.pull_request.head.ref}}
-        repository: ${{github.event.pull_request.head.repo.full_name}}
     - name: Setup python
       uses: actions/setup-python@v2
       with:

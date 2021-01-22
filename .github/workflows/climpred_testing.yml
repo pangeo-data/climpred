@@ -15,9 +15,6 @@ jobs:
         python-version: [3.6, 3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
       - name: Set up conda
         uses: conda-incubator/setup-miniconda@v2
         with:
@@ -50,9 +47,6 @@ jobs:
           shell: bash -l {0}
     steps:
       - uses: actions/checkout@v2
-        with:
-          ref: ${{github.event.pull_request.head.ref}}
-          repository: ${{github.event.pull_request.head.repo.full_name}}
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v2
         with:

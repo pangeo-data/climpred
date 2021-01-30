@@ -12,7 +12,7 @@ Verification of weather and climate forecasts.
     * - docs
       - |docs| |joss|
     * - tests
-      - |travis| |requires| |codecov|
+      - |ci| |requires| |codecov|
     * - package
       - |conda| |pypi|
     * - license
@@ -29,14 +29,13 @@ Verification of weather and climate forecasts.
 .. |joss| image:: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef/status.svg
     :target: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef
 
-.. |travis| image:: https://travis-ci.org/pangeo-data/climpred.svg?branch=master
-    :target: https://travis-ci.org/pangeo-data/climpred
+.. |ci|  image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
 
 .. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=master
      :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=master
      :alt: Requirements Status
 
-.. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/master/graph/badge.svg?token=e53kXaaOqS
+.. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/master/graph/badge.svg
       :target: https://codecov.io/gh/pangeo-data/climpred
 
 .. |conda| image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
@@ -48,7 +47,7 @@ Verification of weather and climate forecasts.
 
 .. |license| image:: https://img.shields.io/github/license/pangeo-data/climpred.svg
     :alt: license
-    :target: ../../LICENSE.txt
+    :target: LICENSE.txt
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
     :target: https://gitter.im/climpred

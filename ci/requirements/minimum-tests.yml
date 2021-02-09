@@ -18,7 +18,7 @@ dependencies:
   - pytest-cov
   - scipy
   - xarray>=0.16.1
-  - xesmf
+  - xesmf==0.5.1
   - xrft
   - xskillscore>=0.0.18
   - pip:

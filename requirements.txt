@@ -3,7 +3,7 @@ eofs
 esmtools>=1.1.3
 ipython
 matplotlib
-numpy
+numpy<=1.19
 pandas
 scipy
 toolz

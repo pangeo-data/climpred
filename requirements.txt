@@ -10,3 +10,5 @@ toolz
 xarray>=0.16.1
 xrft
 xskillscore>=0.0.18
+netcdf4
+nc-time-axis

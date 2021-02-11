@@ -2,8 +2,12 @@ Examples
 #########
 
 .. note::
-    Please use the `climpred-dev` enviroment (`conda env create -f ci/requirements/climpred-dev.yml`)
-    to be able to complete all example notebooks listed here.
+    Please use the ``climpred-dev`` enviroment
+
+        $ conda env create -f ci/requirements/climpred-dev.yml
+
+    to ensure that all dependencies are installed to complete all example
+    notebooks listed here.
 
 Dask
 ====

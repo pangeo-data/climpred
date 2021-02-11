@@ -58,22 +58,25 @@ are generally organized in our companion package, `xskillscore`.
 # Statement of Need
 While other climate verification packages exist (_e.g._, `s2dverification`
 [@Manubens:2018] written in R and `MurCSS` [@Illing:2014] written with python-based
-`CDO`-bindings [@CDO]), `climpred` is unique for many reasons. (1) It spans broad
-temporal scales of prediction, supporting the weather, subseasonal-to-seasonal (S2S),
-and seasonal-to-decadal (S2D) communities. (2) `climpred` supports `dask`
-[@dask; @Rocklin:2015] and thus works across all computational scales, from personal
-laptops to supercomputers (HPC). This leads to
-verification of a global 5° x 5° resolution climate prediction in a few seconds,
-compared to the 8 minutes required by `MurCSS`. This allows for a truly interactive
-analysis experience. However, note that benchmarking is inherently biased and `MurCSS`
-is valuable for their rigorous replication of decadal climate prediction metrics.
-(3) `climpred` is highly modular and supports the research process from end-to-end,
+`CDO`-bindings [@CDO]), `climpred` is unique for many reasons.
+(1) It spans broad temporal scales of prediction, supporting the weather,
+subseasonal-to-seasonal (S2S), and seasonal-to-decadal (S2D) communities.
+(2) `climpred` is highly modular and supports the research process from end-to-end,
 from loading in model output, to interactive pre-processing and analysis, to
-visualization. (4) `climpred` is part of the wider scientific python community, `pangeo`
+visualization.
+(3) `climpred` supports `dask` [@dask; @Rocklin:2015] and thus works across all
+computational scales, from personal laptops to supercomputers (HPC).
+(4) Flexibility and scaling leads to verification of a global 5° x 5° resolution of 
+already preprocessed climate predictions in 8 seconds, compared to the 8 minutes
+required by `MurCSS`, which always needs preprocessing. This time-scale of seconds
+allows for a truly interactive analysis experience. However, note that benchmarking is
+inherently biased.
+(4) `climpred` is part of the wider scientific python community, `pangeo`
 [@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
-evaluation and make verification reproducible [@Irving:2015]. (5) The `climpred`
-documentation serves as a repository of unified analysis methods through `jupyter`
-notebook [@Kluyver:2016] examples and collects references and literature.
+evaluation and make verification reproducible [@Irving:2015].
+(5) The `climpred` documentation serves as a repository of unified analysis methods
+through `jupyter` notebook [@Kluyver:2016] examples and collects references and
+literature.
 
 <!-- 207 words -->
 # Prediction Simulation Types

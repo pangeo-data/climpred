@@ -4,7 +4,7 @@ Examples
 .. note::
     Please use the ``climpred-dev`` enviroment
 
-        conda env create -f ci/requirements/climpred-dev.yml
+        $ conda env create -f ci/requirements/climpred-dev.yml
 
     to ensure that all dependencies are installed to complete all example
     notebooks listed here.

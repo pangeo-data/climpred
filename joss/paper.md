@@ -66,15 +66,15 @@ from loading in model output, to interactive pre-processing and analysis, to
 visualization.
 (3) `climpred` supports `dask` [@dask; @Rocklin:2015] and thus works across all
 computational scales, from personal laptops to supercomputers (HPC).
-(4) Flexibility and scaling leads to verification of a global 5° x 5° resolution of 
+(4) Flexibility and scaling leads to verification of a global 5° x 5° resolution of
 already preprocessed climate predictions in 8 seconds, compared to the 8 minutes
 required by `MurCSS`, which always needs preprocessing. This time-scale of seconds
 allows for a truly interactive analysis experience. However, note that benchmarking is
 inherently biased.
-(4) `climpred` is part of the wider scientific python community, `pangeo`
+(5) `climpred` is part of the wider scientific python community, `pangeo`
 [@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
 evaluation and make verification reproducible [@Irving:2015].
-(5) The `climpred` documentation serves as a repository of unified analysis methods
+(6) The `climpred` documentation serves as a repository of unified analysis methods
 through `jupyter` notebook [@Kluyver:2016] examples and collects references and
 literature.
 

@@ -203,6 +203,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
     ds = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim)
+    ds = ds.astype(float)
     return ds.quantile(q=[ci_low, ci_high], dim=dim, skipna=False)
 
 

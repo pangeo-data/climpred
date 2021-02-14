@@ -203,6 +203,13 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
         uninit_hind (xarray object): uninitialize hindcast with hind.coords.
     """
     ds = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim)
+    if isinstance(ds, xr.Dataset):
+        for v in ds.data_vars:
+            if np.issubdtype(ds[v].dtype, np.bool_):
+                ds[v] = ds[v].astype(np.float_)  # fails on py>36 if boolean dtype
+    else:
+        if np.issubdtype(ds.dtype, np.bool_):
+            ds = ds.astype(np.float_)  # fails on py>36 if boolean dtype
     return ds.quantile(q=[ci_low, ci_high], dim=dim, skipna=False)
 
 

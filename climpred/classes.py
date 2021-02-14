@@ -22,7 +22,7 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
 )
-from .constants import CONCAT_KWARGS
+from .constants import CLIMPRED_DIMS, CONCAT_KWARGS
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .prediction import (

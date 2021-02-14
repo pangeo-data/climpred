@@ -470,6 +470,10 @@ class PredictionEnsemble:
                 smooth_fct = spatial_smoothing_xesmf
                 d_lon_lat_kws = smooth_kws
                 tsmooth_kws = None
+                for c in self._datasets['initialized'].coords:
+                    if c not in CLIMPRED_DIMS:
+                        self._datasets['initialized'].attrs.update(self._datasets['observations'].attrs)
+                        
             elif "lead" in smooth_kws or "time" in smooth_kws:
                 smooth_fct = temporal_smoothing
                 d_lon_lat_kws = None

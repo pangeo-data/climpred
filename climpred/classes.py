@@ -471,9 +471,12 @@ class PredictionEnsemble:
                 d_lon_lat_kws = smooth_kws
                 tsmooth_kws = None
                 for c in self._datasets['initialized'].coords:
-                    if c not in CLIMPRED_DIMS:
-                        self._datasets["initialized"].attrs.update(
-                            self._datasets["observations"].attrs
+                    if c not in CLIMPRED_DIMS and self.kind == "hindcast":
+                        self._datasets["initialized"][c].attrs.update(
+                            self._datasets["observations"][c].attrs
+                        )
+                        self._datasets["observations"][c].attrs.update(
+                            self._datasets["initialized"][c].attrs
                         )
                         
             elif "lead" in smooth_kws or "time" in smooth_kws:

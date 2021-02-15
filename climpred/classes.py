@@ -470,15 +470,6 @@ class PredictionEnsemble:
                 smooth_fct = spatial_smoothing_xesmf
                 d_lon_lat_kws = smooth_kws
                 tsmooth_kws = None
-                for c in self._datasets['initialized'].coords:
-                    if c not in CLIMPRED_DIMS and self.kind == "hindcast":
-                        self._datasets["initialized"][c].attrs.update(
-                            self._datasets["observations"][c].attrs
-                        )
-                        self._datasets["observations"][c].attrs.update(
-                            self._datasets["initialized"][c].attrs
-                        )
-                        
             elif "lead" in smooth_kws or "time" in smooth_kws:
                 smooth_fct = temporal_smoothing
                 d_lon_lat_kws = None

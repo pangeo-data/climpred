@@ -1,6 +1,7 @@
 import numpy as np
 
 from .checks import is_xarray
+import xarray as xr
 
 try:
     import xesmf as xe

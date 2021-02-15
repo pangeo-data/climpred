@@ -173,7 +173,7 @@ def hind_da_initialized_1d(hind_ds_initialized_1d):
 @pytest.fixture()
 def hind_ds_initialized_3d_full():
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
-    da = load_dataset("CESM-DP-SST-3D")
+    da = load_dataset("CESM-DP-SST-3D", branch="AS_fix_coords_DPLE_SST_easter_pacific")
     return da - da.mean("init")
 
 

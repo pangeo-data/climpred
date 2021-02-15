@@ -102,10 +102,32 @@ def spatial_smoothing_xesmf(
                     )
 
         da = check_lon_lat_present(da)
-        grid_out = {
-            "lon": np.arange(da.lon.min(), da.lon.max() + d_lon, d_lon),
-            "lat": np.arange(da.lat.min(), da.lat.max() + d_lat, d_lat),
-        }
+        
+        try:
+            if 'lon' in da.coords:
+                lon = da.lon
+            else:
+                lon = da.cf['longitude']
+        except KeyError:
+            print('C/F compliant or lon as coordinate')
+
+        try:
+            if 'lat' in da.coords:
+                lat = da.lat
+            else:
+                lat = da.cf['latitude']
+        except KeyError:
+            print('C/F compliant or lat as coordinate')
+
+
+        grid_out = xr.Dataset(
+            {
+                "lat": (["lat"], np.arange(lat.min(), lat.max() + d_lat, d_lat)),
+                "lon": (["lon"], np.arange(lon.min(), lon.max() + d_lon, d_lon)),
+            }
+        )
+        ds_out.lat.attrs['standard_name']='latitude'
+        ds_out.lon.attrs['standard_name']='longitude'
         regridder = xe.Regridder(da, grid_out, **kwargs)
         return regridder(da)
 

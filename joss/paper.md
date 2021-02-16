@@ -70,7 +70,12 @@ visualization.
 3. `climpred` supports `dask` [@dask; @Rocklin:2015] and thus works across all
 computational scales, from personal laptops to supercomputers (HPC).
 
-4. Flexibility and scaling leads to verification of global 5° x 5° resolution climate predictions in 8 seconds, compared to the 8 minutes required by `MurCSS`. However, note that `climpred` modularizes its workflow such that the verification step is performed on already pre-processed output, while `MurCSS` uses a more rigid framework that always required pre-processing. This time scale of seconds allows for a truly interactive analysis experience.
+4. Flexibility and scaling leads to verification of global 5° x 5° resolution climate
+predictions in 8 seconds, compared to the 8 minutes required by `MurCSS`. However,
+note that `climpred` modularizes its workflow such that the verification step is
+performed on already pre-processed output, while `MurCSS` uses a more rigid framework
+that always required pre-processing. This time scale of seconds allows for a truly
+interactive analysis experience.
 
 5. `climpred` is part of the wider scientific python community, `pangeo`
 [@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model

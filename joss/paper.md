@@ -20,11 +20,11 @@ affiliations:
    index: 2
  - name: International Max Planck Research School on Earth System Modelling, Hamburg, Germany
    index: 3
-date: 16 October 2020
+date: 16 February 2021
 bibliography: paper.bib
 ---
 
-<!-- 998 words total -->
+<!-- 991 words total -->
 
 # Summary
 <!-- 71 words -->
@@ -54,29 +54,22 @@ reanalysis products, control simulations). The package includes a suite of deter
 and probabilistic verification metrics that are constantly expanded by the community and
 are generally organized in our companion package, `xskillscore`.
 
-<!-- 180 words -->
+<!-- 173 words -->
 # Statement of Need
 While other climate verification packages exist (_e.g._, `s2dverification`
 [@Manubens:2018] written in R and `MurCSS` [@Illing:2014] written with python-based
 `CDO`-bindings [@CDO]), `climpred` is unique for many reasons.
-(1) It spans broad temporal scales of prediction, supporting the weather,
+(1) `climpred` spans broad temporal scales of prediction, supporting the weather,
 subseasonal-to-seasonal (S2S), and seasonal-to-decadal (S2D) communities.
 (2) `climpred` is highly modular and supports the research process from end-to-end,
 from loading in model output, to interactive pre-processing and analysis, to
 visualization.
 (3) `climpred` supports `dask` [@dask; @Rocklin:2015] and thus works across all
 computational scales, from personal laptops to supercomputers (HPC).
-(4) Flexibility and scaling leads to verification of a global 5° x 5° resolution of
-already preprocessed climate predictions in 8 seconds, compared to the 8 minutes
-required by `MurCSS`, which always needs preprocessing. This time-scale of seconds
-allows for a truly interactive analysis experience. However, note that benchmarking is
-inherently biased.
+(4) Flexibility and scaling leads to verification of global 5° x 5° resolution climate predictions in 8 seconds, compared to the 8 minutes required by `MurCSS`. However, note that `climpred` modularizes its workflow such that the verification step is performed on already pre-processed output, while `MurCSS` uses a more rigid framework that always required pre-processing. This time scale of seconds allows for a truly interactive analysis experience.
 (5) `climpred` is part of the wider scientific python community, `pangeo`
 [@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
 evaluation and make verification reproducible [@Irving:2015].
-(6) The `climpred` documentation serves as a repository of unified analysis methods
-through `jupyter` notebook [@Kluyver:2016] examples and collects references and
-literature.
 
 <!-- 207 words -->
 # Prediction Simulation Types

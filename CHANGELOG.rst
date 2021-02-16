@@ -22,6 +22,8 @@ Bug fixes
 - :py:meth:`~climpred.classes.PredictionEnsemble.plot` now shifts composite lead
   frequencies like ``days``, ``pentads``, ``seasons`` correctly.
   (:issue:`532`, :pr:`533`) `Aaron Spring`_.
+- Adapt to ``xesmf>=0.5.2`` for spatial xesmf smoothing. (:issue:`543`, :pr:`548`)
+  `Aaron Spring`_.
 
 
 climpred v2.1.1 (2020-10-13)

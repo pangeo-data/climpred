@@ -20,11 +20,11 @@ affiliations:
    index: 2
  - name: International Max Planck Research School on Earth System Modelling, Hamburg, Germany
    index: 3
-date: 16 October 2020
+date: 16 February 2021
 bibliography: paper.bib
 ---
 
-<!-- 998 words total -->
+<!-- 991 words total -->
 
 # Summary
 <!-- 71 words -->
@@ -54,26 +54,32 @@ reanalysis products, control simulations). The package includes a suite of deter
 and probabilistic verification metrics that are constantly expanded by the community and
 are generally organized in our companion package, `xskillscore`.
 
-<!-- 180 words -->
+<!-- 173 words -->
 # Statement of Need
 While other climate verification packages exist (_e.g._, `s2dverification`
 [@Manubens:2018] written in R and `MurCSS` [@Illing:2014] written with python-based
-`CDO`-bindings [@CDO]), `climpred` is unique for many reasons. (1) It spans broad
-temporal scales of prediction, supporting the weather, subseasonal-to-seasonal (S2S),
-and seasonal-to-decadal (S2D) communities. (2) `climpred` supports `dask`
-[@dask; @Rocklin:2015] and thus works across all computational scales, from personal
-laptops to supercomputers (HPC). This leads to
-verification of a global 5° x 5° resolution climate prediction in a few seconds,
-compared to the 8 minutes required by `MurCSS`. This allows for a truly interactive
-analysis experience. However, note that benchmarking is inherently biased and `MurCSS`
-is valuable for their rigorous replication of decadal climate prediction metrics.
-(3) `climpred` is highly modular and supports the research process from end-to-end,
+`CDO`-bindings [@CDO]), `climpred` is unique for many reasons.
+
+1. `climpred` spans broad temporal scales of prediction, supporting the weather,
+subseasonal-to-seasonal (S2S), and seasonal-to-decadal (S2D) communities.
+
+2. `climpred` is highly modular and supports the research process from end-to-end,
 from loading in model output, to interactive pre-processing and analysis, to
-visualization. (4) `climpred` is part of the wider scientific python community, `pangeo`
+visualization.
+
+3. `climpred` supports `dask` [@dask; @Rocklin:2015] and thus works across all
+computational scales, from personal laptops to supercomputers (HPC).
+
+4. Flexibility and scaling leads to verification of global 5° x 5° resolution climate
+predictions in 8 seconds, compared to the 8 minutes required by `MurCSS`. However,
+note that `climpred` modularizes its workflow such that the verification step is
+performed on already pre-processed output, while `MurCSS` uses a more rigid framework
+that always required pre-processing. This time scale of seconds allows for a truly
+interactive analysis experience.
+
+5. `climpred` is part of the wider scientific python community, `pangeo`
 [@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
-evaluation and make verification reproducible [@Irving:2015]. (5) The `climpred`
-documentation serves as a repository of unified analysis methods through `jupyter`
-notebook [@Kluyver:2016] examples and collects references and literature.
+evaluation and make verification reproducible [@Irving:2015].
 
 <!-- 207 words -->
 # Prediction Simulation Types
@@ -140,17 +146,23 @@ time span of the model.
 
 There is seemingly no unified approach to how hindcast initialization dates are aligned
 with observational dates in the academic literature. The authors of `climpred` thus
-identified three techniques, which can be selected by the user: (1) Maximize the degrees
-of freedom by selecting all initialization dates that verify with the available
-observations at each lead. In turn, initializations and verification dates
-are not held constant for each lead. (2) Use the identical set of initializations that
-can verify over the given observational window at all leads. However, the verification
-dates change at each lead. (3) Use the identical verification window at each lead, while
-allowing the set of initializations used at each lead to change. These strategies are
-shown graphically and explained in more detail in the documentation. Note that
-`climpred` offers extensive analysis functionality in addition to forecast verification,
-such as spatiotemporal smoothing [@Goddard:2013], bias removal [@Boer:2016],
-significance testing [@Goddard:2013; @Boer:2016; @DelSole:2016], and a graphics library.
+identified three techniques, which can be selected by the user:
+
+1. Maximize the degrees of freedom by selecting all initialization dates that verify with
+the available observations at each lead. In turn, initializations and verification dates
+are not held constant for each lead.
+
+2. Use the identical set of initializations that can verify over the given observational
+window at all leads. However, the verification dates change at each lead.
+
+(3) Use the identical verification window at each lead, while allowing the set of
+initializations used at each lead to change.
+
+These strategies are shown graphically and explained in more
+detail in the documentation. Note that `climpred` offers extensive analysis functionality
+in addition to forecast verification, such as spatiotemporal smoothing [@Goddard:2013],
+bias removal [@Boer:2016], significance testing [@Goddard:2013; @Boer:2016; @DelSole:2016],
+and a graphics library.
 
 <!-- 58 words -->
 # Use in Academic Literature

@@ -1,4 +1,5 @@
 import numpy as np
+import xarray as xr
 
 from .checks import is_xarray
 
@@ -25,8 +26,9 @@ def spatial_smoothing_xesmf(
 
     Args:
         ds (xarray-object): Contain input and output grid coordinates.
-            Look for variables ``lon``, ``lat``, and optionally ``lon_b``,
-            ``lat_b`` for conservative method.
+            Look for coordinates ``lon``, ``lat``, and optionally ``lon_b``,
+            ``lat_b`` for conservative method. Also any coordinate which is C/F
+            compliant, .i.e. standard_name in ['longitude', 'latitude'] is allowed.
             Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
             or 2D (Ny, Nx) for general curvilinear grids.
             Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
@@ -79,33 +81,32 @@ def spatial_smoothing_xesmf(
             da : xarray DataArray with coordinate values
         """
 
-        def check_lon_lat_present(da):
-            if method == "conservative":
-                if "lat_b" in ds.coords and "lon_b" in ds.coords:
-                    return da
-                else:
-                    raise ValueError(
-                        'if method == "conservative", lat_b and lon_b are required.'
-                    )
-            else:
-                if "lat" in ds.coords and "lon" in ds.coords:
-                    return da
-                elif "lat_b" in ds.coords and "lon_b" in ds.coords:
-                    return da
-                # for CESM POP grid
-                elif "TLAT" in ds.coords and "TLONG" in ds.coords:
-                    da = da.rename({"TLAT": "lat", "TLONG": "lon"})
-                    return da
-                else:
-                    raise ValueError(
-                        "lon/lat or lon_b/lat_b or TLAT/TLON not found, please rename."
-                    )
+        if "lon" in da.coords:
+            lon = da.lon
+        else:
+            try:
+                lon = da.cf["longitude"]
+            except KeyError:
+                raise KeyError(
+                    "Could not find `lon` as coordinate or any C/F compliant `latitude` coordinate, see https://pangeo-xesmf.readthedocs.io and https://cf-xarray.readthedocs.io"
+                )
 
-        da = check_lon_lat_present(da)
-        grid_out = {
-            "lon": np.arange(da.lon.min(), da.lon.max() + d_lon, d_lon),
-            "lat": np.arange(da.lat.min(), da.lat.max() + d_lat, d_lat),
-        }
+        if "lat" in da.coords:
+            lat = da.lat
+        else:
+            try:
+                lat = da.cf["latitude"]
+            except KeyError:
+                raise KeyError(
+                    "C/F compliant or `lat` as coordinate, see https://pangeo-xesmf.readthedocs.io"
+                )
+
+        grid_out = xr.Dataset(
+            {
+                "lat": (["lat"], np.arange(lat.min(), lat.max() + d_lat, d_lat)),
+                "lon": (["lon"], np.arange(lon.min(), lon.max() + d_lon, d_lon)),
+            }
+        )
         regridder = xe.Regridder(da, grid_out, **kwargs)
         return regridder(da)
 

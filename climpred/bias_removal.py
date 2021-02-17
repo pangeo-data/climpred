@@ -17,9 +17,11 @@ def _mean_bias_removal_quick(hind, bias, dim):
         xr.object: bias removed hind
 
     """
-    bias_removed_hind = (
-        hind.groupby(f"{dim}.dayofyear") - bias.groupby(f"{dim}.dayofyear").mean()
-    )
+    with xr.set_options(keep_attrs=True):
+        bias_removed_hind = (
+            hind.groupby(f"{dim}.dayofyear") - bias.groupby(f"{dim}.dayofyear").mean()
+        )
+    bias_removed_hind.attrs = hind.attrs
     return bias_removed_hind
 
 
@@ -56,11 +58,16 @@ def _mean_bias_removal_cross_validate(hind, bias, dim):
             f"{hind_drop_init_where_bias.min().values}-"
             f"{hind_drop_init_where_bias.max().values}"
         )
-        bias_removed_hind.append(
-            hind.sel(init=init)
-            - bias.sel(init=hind_drop_init_where_bias).groupby("init.dayofyear").mean()
-        )
+        with xr.set_options(keep_attrs=True):
+            init_bias_removed = (
+                hind.sel(init=init)
+                - bias.sel(init=hind_drop_init_where_bias)
+                .groupby("init.dayofyear")
+                .mean()
+            )
+        bias_removed_hind.append(init_bias_removed)
     bias_removed_hind = xr.concat(bias_removed_hind, "init")
+    bias_removed_hind.attrs = hind.attrs
     return bias_removed_hind
 
 
@@ -107,7 +114,8 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
     else:
         mean_bias_func = _mean_bias_removal_quick
 
-    bias_removed_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
+    initialized = hindcast._datasets["initialized"]
+    bias_removed_hind = mean_bias_func(initialized, bias, "init")
     bias_removed_hind = bias_removed_hind.squeeze()
     if "dayofyear" in bias_removed_hind.coords:
         del bias_removed_hind["dayofyear"]

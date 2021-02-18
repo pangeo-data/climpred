@@ -78,7 +78,7 @@ that always required pre-processing. This time scale of seconds allows for a tru
 interactive analysis experience.
 
 5. `climpred` is part of the wider scientific python community, `pangeo`
-[@Abernathey:2017]. A wide adoption of `climpred` could standardize prediction model
+[@Abernathey:2017, @Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
 evaluation and make verification reproducible [@Irving:2015].
 
 <!-- 207 words -->

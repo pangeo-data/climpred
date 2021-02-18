@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -350,7 +351,26 @@ class PredictionEnsemble:
                 #            as ds[dim] and the dim doesn't exist as a key.
                 # DimensionError: This accounts for our custom error when applying
                 # some stats functions.
-                except (ValueError, KeyError, DimensionError):
+                except (ValueError, KeyError, DimensionError) as e:
+                    func_name = args[0].__name__
+                    # print(kwargs)
+                    dim = kwargs.get("dim", False)
+                    error_type = type(e).__name__
+                    # print('in dataset',v.dims, 'dim=',dim)
+                    if len(args) > 1:
+                        msg = f"{func_name}({args[1:]}, {kwargs}) 'failed\n{error_type}:{e}"
+                    else:
+                        msg = f"{func_name}({kwargs}) 'failed\n{error_type}:{e}"
+                    if set(["lead", "init"]).issubset(set(v.dims)):  # initialized
+                        if dim not in v.dims:
+                            warnings.warn(f"initialized: {msg}")
+                    elif set(["time"]).issubset(
+                        set(v.dims)
+                    ):  # uninitialized, control, verification
+                        if dim not in v.dims:
+                            warnings.warn(f"verification/control/uninitialized: {msg}")
+                    else:
+                        warnings(msg)
                     return v
 
             return self._apply_func(_apply_xr_func, name, *args, **kwargs)

@@ -78,7 +78,7 @@ that always required pre-processing. This time scale of seconds allows for a tru
 interactive analysis experience.
 
 5. `climpred` is part of the wider scientific python community, `pangeo`
-[@Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
+[@Abernathey:2017; @Eynard:2019]. A wide adoption of `climpred` could standardize prediction model
 evaluation and make verification reproducible [@Irving:2015].
 
 <!-- 207 words -->
@@ -168,9 +168,9 @@ and a graphics library.
 # Use in Academic Literature
 `climpred` has been used to drive analysis in three academic papers so far. @Brady:2020
 used the `HindcastEnsemble` class to highlight multi-year predictability of ocean
-acidification in the California Current; @Spring:2020 used the `PerfectModelEnsemble`
-class to highlight predictability horizons in the global carbon cycle; and
-@Krumhardt:2020 used the `HindcastEnsemble` class to illuminate multi-year
+acidification in the California Current; @Spring:2020 and @Spring:2021 used the
+`PerfectModelEnsemble` class to highlight predictability horizons in the global carbon
+cycle; and @Krumhardt:2020 used the `HindcastEnsemble` class to illuminate multi-year
 predictability in marine Net Primary Productivity.
 
 # Acknolwedgements

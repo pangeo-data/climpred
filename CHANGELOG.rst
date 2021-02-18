@@ -25,7 +25,7 @@ Bug fixes
 - Adapt to ``xesmf>=0.5.2`` for spatial xesmf smoothing. (:issue:`543`, :pr:`548`)
   `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` now carries attributes.
-          (:issue:`531`, :pr:`551`) `Aaron Spring`_.
+  (:issue:`531`, :pr:`551`) `Aaron Spring`_.
 
 
 climpred v2.1.1 (2020-10-13)

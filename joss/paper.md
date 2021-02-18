@@ -168,7 +168,7 @@ and a graphics library.
 # Use in Academic Literature
 `climpred` has been used to drive analysis in three academic papers so far. @Brady:2020
 used the `HindcastEnsemble` class to highlight multi-year predictability of ocean
-acidification in the California Current; @Spring:2020 and @Spring:2021 used the 
+acidification in the California Current; @Spring:2020 and @Spring:2021 used the
 `PerfectModelEnsemble` class to highlight predictability horizons in the global carbon
 cycle; and @Krumhardt:2020 used the `HindcastEnsemble` class to illuminate multi-year
 predictability in marine Net Primary Productivity.

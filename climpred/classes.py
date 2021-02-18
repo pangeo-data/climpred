@@ -352,11 +352,15 @@ class PredictionEnsemble:
                 # DimensionError: This accounts for our custom error when applying
                 # some stats functions.
                 except (ValueError, KeyError, DimensionError) as e:
-                    func_name = args[0].__name__
-                    # print(kwargs)
+                    if args == tuple():
+                        func_name = None
+                    else:
+                        if callable(args[0]):
+                            func_name = args[0].__name__
+                        else:
+                            func_name = "not a callable"
                     dim = kwargs.get("dim", False)
                     error_type = type(e).__name__
-                    # print('in dataset',v.dims, 'dim=',dim)
                     if len(args) > 1:
                         msg = f"{func_name}({args[1:]}, {kwargs}) 'failed\n{error_type}:{e}"
                     else:
@@ -370,7 +374,7 @@ class PredictionEnsemble:
                         if dim not in v.dims:
                             warnings.warn(f"verification/control/uninitialized: {msg}")
                     else:
-                        warnings(msg)
+                        warnings.warn(msg)
                     return v
 
             return self._apply_func(_apply_xr_func, name, *args, **kwargs)

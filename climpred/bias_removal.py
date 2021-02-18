@@ -114,8 +114,7 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
     else:
         mean_bias_func = _mean_bias_removal_quick
 
-    initialized = hindcast._datasets["initialized"]
-    bias_removed_hind = mean_bias_func(initialized, bias, "init")
+    bias_removed_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
     bias_removed_hind = bias_removed_hind.squeeze()
     if "dayofyear" in bias_removed_hind.coords:
         del bias_removed_hind["dayofyear"]

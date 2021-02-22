@@ -10,7 +10,7 @@ Verification of weather and climate forecasts.
     :widths: 10 90
 
     * - docs
-      - |docs| |joss|
+      - |docs| |joss| |doi|
     * - tests
       - |ci| |requires| |codecov|
     * - package

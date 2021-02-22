@@ -155,7 +155,7 @@ are not held constant for each lead.
 2. Use the identical set of initializations that can verify over the given observational
 window at all leads. However, the verification dates change at each lead.
 
-(3) Use the identical verification window at each lead, while allowing the set of
+3. Use the identical verification window at each lead, while allowing the set of
 initializations used at each lead to change.
 
 These strategies are shown graphically and explained in more

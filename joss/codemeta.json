@@ -19,12 +19,12 @@
   ],
   "identifier": "",
   "codeRepository": "https://www.github.com/pangeo-data/climpred",
-  "datePublished": "2020-10-14",
-  "dateModified": "2020-10-14",
+  "datePublished": "2020-02-22",
+  "dateModified": "2021-02-22",
   "dateCreated": "2020-10-14",
   "description": "verification of weather and climate forecasts.",
   "keywords": "python, climate, prediction, geospatial",
   "license": "MIT",
   "title": "climpred",
-  "version": "v2.1.1"
+  "version": "v2.1.2"
 }

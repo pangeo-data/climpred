@@ -10,7 +10,7 @@ Verification of weather and climate forecasts.
     :widths: 10 90
 
     * - docs
-      - |docs| |joss| |doi|
+      - |docs| |joss| |DOI|
     * - tests
       - |ci| |requires| |codecov|
     * - package
@@ -29,10 +29,11 @@ Verification of weather and climate forecasts.
 .. |joss| image:: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef/status.svg
     :target: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef
 
-.. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4556086.svg
-   :target: https://doi.org/10.5281/zenodo.4556086
+.. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4556086.svg
+    :target: https://doi.org/10.5281/zenodo.4556086
 
 .. |ci|  image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
+    :target: https://github.com/pangeo-data/climpred/actions/workflows/climpred_testing.yml
 
 .. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=master
      :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=master

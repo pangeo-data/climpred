@@ -6,14 +6,15 @@ What's New
 climpred v2.1.2 (2021-01-22)
 ============================
 
+This release is the fixed version for our Journal of Open Source Software (JOSS)
+article about ``climpred``, see `review
+<https://github.com/openjournals/joss-reviews/issues/2781>`_.
+
 New Features
 ------------
-
 - Function to calculate predictability horizon
   :py:func:`~climpred.predictability_horizon.predictability_horizon` based on condition.
   (:issue:`46`, :pr:`521`) `Aaron Spring`_.
-- Fixed version for our Journal of Open Source Software (JOSS) article: See `review
-  <https://github.com/openjournals/joss-reviews/issues/2781>`_
 
 Bug fixes
 ---------

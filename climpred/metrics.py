@@ -60,10 +60,9 @@ def _get_norm_factor(comparison):
 
     Example:
         >>> # check skill saturation value of roughly 1 for different comparisons
-        >>> metric = 'nrmse'
         >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:
-                s = compute_perfect_model(ds, control, metric=metric, comparison=c)
-                s.plot(label=' '.join([metric,c]))
+        ...        s = perfect_model.verify(metric='nrmse', dim=None, comparison=c)
+        ...        s.tos.plot(label=' '.join(['nrmse',c]))
         >>> plt.legend()
 
     Reference:
@@ -1736,20 +1735,20 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='brier_score', comparison='m2o', \
-                dim='member', alignment='same_verifs', logical=pos)
+        >>> hindcast.verify(metric='brier_score', comparison='m2o',
+        ...     dim='member', alignment='same_verifs', logical=pos)
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='brier_score', \
-                comparison='m2o', dim='member', alignment='same_verifs')
+        >>> hindcast.map(pos).verify(metric='brier_score',
+        ...     comparison='m2o', dim='member', alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison='e2o'`` and ``dim=[]``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='brier_score', \
-                comparison='e2o', dim=[], alignment='same_verifs')
+        >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
+        ...     comparison='e2o', dim=[], alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -1815,15 +1814,15 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.threshold_brier_score`
 
     Example:
-        >>> import climpred
+
         >>> init = climpred.tutorial.load_dataset("CESM-DP-SST")
         >>> obs = climpred.tutorial.load_dataset("ERSST")
         >>> obs = obs - obs.mean('time')
         >>> hindcast = climpred.HindcastEnsemble(init).add_observations(obs)
 
         >>> # get threshold brier score for each init
-        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o', \
-                dim='member', threshold=.2, alignment='same_verifs')
+        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
+        ...     dim='member', threshold=.2, alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
@@ -1834,8 +1833,8 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 1.0 0.01 0.0 0.0 0.0
 
         >>> # multiple thresholds averaging over init dimension
-        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o', \
-                dim=['member', 'init'], threshold=[.2, .3], alignment='same_verifs')
+        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
+        ...     dim=['member', 'init'], threshold=[.2, .3], alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:    (lead: 10, threshold: 2)
         Coordinates:
@@ -1920,7 +1919,17 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.crps_ensemble`
 
     Example:
-        >>> hindcast.verify(metric='crps', comparison='m2o', dim='member')
+        >>> hindcast.verify(metric='crps', comparison='m2o', dim='member',
+        ...     alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:  (init: 52, lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead, init) float64 0.1464 0.01486 0.04724 ... 0.02346 0.06369
+
     """
     dim = _remove_member_from_dim_or_raise(dim)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
@@ -2036,11 +2045,29 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/c6758w.
 
     Example:
-        >>> hindcast.verify(metric='crpss', comparison='m2o', \
-                alignment='same_verifs', dim='member')
-        >>> perfect_model.verify(metric='crpss', comparison='m2m', dim='member', \
-                gaussian=False, cdf_or_dist=scipy.stats.norm, xminimum=-10, \
-                xmaximum=10, tol=1e-6)
+        >>> hindcast.verify(metric='crpss', comparison='m2o',
+        ...     alignment='same_verifs', dim='member')
+        <xarray.Dataset>
+        Dimensions:  (init: 52, lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead, init) float64 0.4236 0.9299 0.732 ... 0.8476 0.9007 0.8105
+
+        >>> import scipy
+        >>> perfect_model.isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
+        ...     dim='member', gaussian=False, cdf_or_dist=scipy.stats.norm, xmin=-10,
+        ...     xmax=10, tol=1e-6)
+        <xarray.Dataset>
+        Dimensions:  (init: 12, lead: 2, member: 9)
+        Coordinates:
+          * lead     (lead) int64 1 2
+          * init     (init) object 3014-01-01 00:00:00 ... 3257-01-01 00:00:00
+          * member   (member) int64 1 2 3 4 5 6 7 8 9
+        Data variables:
+            tos      (lead, init, member) float64 0.9931 0.9932 0.9932 ... 0.9947 0.9947
 
     See also:
         * :py:func:`~properscoring.crps_ensemble`
@@ -2133,8 +2160,17 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
           631–43. https://doi.org/10/f9jrhw.
 
     Example:
-        >>> hindcast.verify(metric='crpss_es', comparison='m2o', \
-                alignment='same_verifs', dim='member')
+        >>> hindcast.verify(metric='crpss_es', comparison='m2o',
+        ...     alignment='same_verifs', dim='member')
+        <xarray.Dataset>
+        Dimensions:  (init: 52, lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead, init) float64 -0.02627 -0.0578 -0.09493 ... -0.1313 -0.03761
+
     """
 
     # helper dim to calc mu
@@ -2214,20 +2250,38 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='discrimination', comparison='m2o', \
-                dim=['member', 'init'], alignment='same_verifs', logical=pos)
+        >>> hindcast.verify(metric='discrimination', comparison='m2o',
+        ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
+        <xarray.Dataset>
+        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Coordinates:
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool True False
+            skill                 <U11 'initialized'
+        Data variables:
+            SST                   (lead, event, forecast_probability) float64 0.1875 ...
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='discrimination', \
-                comparison='m2o', dim=['member','init'], alignment='same_verifs')
+        >>> hindcast.map(pos).verify(metric='discrimination',
+        ...     comparison='m2o', dim=['member','init'], alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Coordinates:
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool True False
+            skill                 <U11 'initialized'
+        Data variables:
+            SST                   (lead, event, forecast_probability) float64 0.1875 ...
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='discrimination', \
-                comparison='e2o', dim='init', alignment='same_verifs')
+        >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
+        ...     comparison='e2o', dim='init', alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -2290,20 +2344,29 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='reliability', comparison='m2o', \
-                dim=['member','init'], alignment='same_verifs', logical=pos)
+        >>> hindcast.verify(metric='reliability', comparison='m2o',
+        ...     dim=['member','init'], alignment='same_verifs', logical=pos)
+        <xarray.Dataset>
+        Dimensions:               (forecast_probability: 5, lead: 10)
+        Coordinates:
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
+            SST_samples           (forecast_probability) float64 23.0 3.0 3.0 2.0 21.0
+            skill                 <U11 'initialized'
+        Data variables:
+            SST                   (lead, forecast_probability) float64 0.2609 ... 1.0
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='reliability', \
-                comparison='m2o', dim=['member','init'], alignment='same_verifs')
+        >>> hindcast.map(pos).verify(metric='reliability',
+        ...     comparison='m2o', dim=['init', 'member'], alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='reliability', \
-                comparison='e2o', dim='init', alignment='same_verifs')
+        >>> hindcast.map(pos).mean('member').verify(metric='reliability',
+        ...     comparison='e2o', dim='init', alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -2341,10 +2404,26 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.rank_histogram`
 
     Example:
-        >>> hindcast.verify(metric='rank_histogram', comparison='m2o', \
-                dim=['member','init'], alignment='same_verifs')
-        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c', \
-                dim=['member','init'])
+        >>> hindcast.verify(metric='rank_histogram', comparison='m2o',
+        ...     dim=['member', 'init'], alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:  (lead: 10, rank: 11)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead, rank) int64 9 3 2 2 1 0 0 3 4 4 24 ... 2 3 4 3 4 3 3 9 7 12
+
+        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
+        ...     dim=['member', 'init'])  # doctest: +SKIP
+        <xarray.Dataset>
+        Dimensions:  (lead: 20, rank: 10)
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+          * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0
+        Data variables:
+            tos      (lead, rank) int64 1 4 2 1 2 1 0 0 0 1 2 ... 0 2 0 1 2 1 0 3 1 2 0
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2392,10 +2471,26 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-.5, 0., .5, 1.])
-        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member', \
-                alignment='same_verifs', category_edges=category_edges)
-        >>> perfect_model.verify(metric='rps', comparison='m2c', \
-                dim='member', category_edges=category_edges)
+        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member',
+        ...     alignment='same_verifs', category_edges=category_edges)
+        <xarray.Dataset>
+        Dimensions:  (init: 52, lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead, init) float64 0.3787 0.3787 0.3787 ... 0.1479 0.1579 0.1479
+
+        >>> category_edges = np.array([9.5, 10., 10.5, 11.])
+        >>> perfect_model.verify(metric='rps', comparison='m2c',
+        ...     dim=['member','init'], category_edges=category_edges)  # doctest: +SKIP
+        <xarray.Dataset>
+        Dimensions:  (lead: 20)
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+        Data variables:
+            tos      (lead) float64 0.1512 0.2726 0.1259 0.214 ... 0.2085 0.1427 0.2757
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2446,14 +2541,14 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-0.5, 0., .5, 1.])
-        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o', \
-                dim=[], alignment='same_verifs', \
-                observation_category_edges=category_edges, \
-                forecast_category_edges=category_edges)
-        >>> perfect_model.verify(metric='contingency', score='hit_rate', \
-                comparison='m2c', dim=['member','init'], \
-                observation_category_edges=category_edges, \
-                forecast_category_edges=category_edges)
+        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
+        ...     dim=[], alignment='same_verifs',
+        ...     observation_category_edges=category_edges,
+        ...     forecast_category_edges=category_edges)
+        >>> perfect_model.verify(metric='contingency', score='hit_rate',
+        ...     comparison='m2c', dim=['member','init'],
+        ...     observation_category_edges=category_edges,
+        ...     forecast_category_edges=category_edges)
 
     """
     if score == "table":

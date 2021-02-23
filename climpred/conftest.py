@@ -6,19 +6,17 @@ from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.constants import HINDCAST_CALENDAR_STR, PM_CALENDAR_STR
 from climpred.tutorial import load_dataset
 from climpred.utils import convert_time_index
+import climpred
 
 CALENDAR = PM_CALENDAR_STR.strip("Datetime").lower()
 
 
 @pytest.fixture(autouse=True)
 def add_standard_imports(doctest_namespace, tmpdir):
-    import numpy as np
-    import pandas as pd
-    import xarray as xr
-
+    xr.set_options(display_style='text')
     doctest_namespace["np"] = np
-    doctest_namespace["pd"] = pd
     doctest_namespace["xr"] = xr
+    doctest_namespace['climpred'] = climpred
 
     # always seed numpy.random to make the examples deterministic
     np.random.seed(42)
@@ -30,14 +28,29 @@ def add_standard_imports(doctest_namespace, tmpdir):
     from climpred import HindcastEnsemble
     from climpred.tutorial import load_dataset
 
+    # hindcast 1d
     init = load_dataset("CESM-DP-SST")
     init["init"] = init.init.astype("int")
     init = convert_time_index(init, "init", "init.init", calendar=HINDCAST_CALENDAR_STR)
     init.lead.attrs["units"] = "years"
     hist = load_dataset("CESM-LE")
+    hist = hist - hist.mean('time')
     obs = load_dataset("ERSST")
+    obs = obs - obs.mean('time')
     hindcast = HindcastEnsemble(init).add_uninitialized(hist).add_observations(obs)
     doctest_namespace["hindcast"] = hindcast
+
+    # hindcast 3d
+    init_3d = load_dataset("CESM-DP-SST-3D")
+    assim_3d = load_dataset("FOSI-SST-3D")
+    hindcast_3d = HindcastEnsemble(init_3d).add_observations(assim_3d)
+    doctest_namespace["hindcast_3D"] = hindcast_3d
+
+    # perfect_model
+    init_pm = load_dataset("MPI-PM-DP-1D").isel(area=1, period=-1,drop=True)[['tos']]
+    control = load_dataset("MPI-control-1D").isel(area=1, period=-1,drop=True)[['tos']]
+    pm = PerfectModelEnsemble(init_pm).add_control(control)
+    doctest_namespace["perfect_model"] = pm
 
 
 @pytest.fixture()

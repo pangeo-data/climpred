@@ -420,10 +420,10 @@ class PredictionEnsemble:
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
         Examples:
-            >>> PredictionEnsemble.smooth({'lead': 2, 'lat': 5, 'lon': 4'})
-            >>> PredictionEnsemble.smooth('goddard2013')
-            >>> PredictionEnsemble.smooth({'lon':1, 'lat':1}, method='patch')
-            >>> PredictionEnsemble.smooth({'lead':2}, how='sum')
+            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4})
+            >>> hindcast_3D.smooth('goddard2013')
+            >>> hindcast_3D.smooth({'lon':1, 'lat':1}, method='patch')
+            >>> perfect_model.smooth({'lead':2}, how='sum')
         """
         if not smooth_kws:
             return self

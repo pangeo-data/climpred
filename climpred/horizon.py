@@ -63,13 +63,22 @@ def horizon(cond):
         xr.DataArray, xr.Dataset: predictability horizon reduced by ``lead`` dimension.
 
     Example:
-        >>> skill = pm.verify(metric='acc', comparison='m2e', dim=['init','member'],
-                reference=['persistence'])
+        >>> skill = perfect_model.verify(metric='acc', comparison='m2e',
+        ...     dim=['init','member'], reference=['persistence'])
         >>> horizon(skill.sel(skill='initialized') >
-                skill.sel(skill='persistence'))
+        ...     skill.sel(skill='persistence'))
+        <xarray.Dataset>
+        Dimensions:  (variable: 1)
+        Coordinates:
+            lead     (variable) int64 15
+        Dimensions without coordinates: variable
+        Data variables:
+            tos      float64 15.0
+        Attributes:
+            units:    years
 
-        >>> bskill = pm.bootstrap(metric='acc', comparison='m2e', dim=['init','member'],
-                reference=['persistence'], iterations=21)
+        >>> bskill = perfect_model.bootstrap(metric='acc', comparison='m2e',
+        ...     dim=['init','member'], reference=['persistence'], iterations=21)
         >>> horizon(bskill.sel(skill='persistence', results='p') <= 0.05)
 
     """

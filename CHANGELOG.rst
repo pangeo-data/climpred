@@ -2,6 +2,18 @@
 What's New
 ==========
 
+climpred v2.1.x (2021-0x-xx)
+============================
+
+New Features
+------------
+
+Bug fixes
+---------
+- `~climpred.classes.PredictionEnsemble.verify` and
+  `~climpred.classes.PredictionEnsemble.bootstrap` accept ``dim`` as ``list``, ``set``,
+   ``tuple`` or ``str`` (:issue:`519`, pr:`558`) `Aaron Spring`_.
+
 
 climpred v2.1.2 (2021-01-22)
 ============================

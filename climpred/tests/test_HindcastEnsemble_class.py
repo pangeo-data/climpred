@@ -44,44 +44,40 @@ def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitiali
     assert hindcast.get_uninitialized()
 
 
-def test_verify(hind_ds_initialized_1d, reconstruction_ds_1d):
-    """Test to see if verify automatically works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d)
+def test_verify(hindcast_hist_obs_1d):
+    """Test to see if HindcastEnsemble.verify() works."""
+    hindcast = hindcast_hist_obs_1d
     hindcast.verify(metric="acc", comparison="e2o", dim="init", alignment="same_verif")
 
 
-def test_isel_xarray_func(hind_ds_initialized_1d, reconstruction_ds_1d):
+def test_isel_xarray_func(hindcast_hist_obs_1d):
     """Test whether applying isel to the objects works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d)
+    hindcast = hindcast_hist_obs_1d
     hindcast = hindcast.isel(lead=0, init=slice(0, 3)).isel(time=slice(5, 10))
     assert hindcast.get_initialized().init.size == 3
     assert hindcast.get_initialized().lead.size == 1
     assert hindcast.get_observations().time.size == 5
 
 
-def test_get_initialized(hind_ds_initialized_1d):
+def test_get_initialized(hindcast_hist_obs_1d):
     """Test whether get_initialized method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    init = hindcast.get_initialized()
-    assert init == hindcast._datasets["initialized"]
+    assert hindcast_hist_obs_1d.get_initialized().identical(
+        hindcast_hist_obs_1d._datasets["initialized"]
+    )
 
 
-def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
+def test_get_uninitialized(hindcast_hist_obs_1d):
     """Test whether get_uninitialized method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
-    uninit = hindcast.get_uninitialized()
-    assert uninit == hindcast._datasets["uninitialized"]
+    assert hindcast_hist_obs_1d.get_uninitialized().identical(
+        hindcast_hist_obs_1d._datasets["uninitialized"]
+    )
 
 
-def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
+def test_get_observations(hindcast_hist_obs_1d):
     """Tests whether get_observations method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    obs = hindcast.get_observations()
-    assert obs == hindcast._datasets["observations"]
+    assert hindcast_hist_obs_1d.get_observations().identical(
+        hindcast_hist_obs_1d._datasets["observations"]
+    )
 
 
 def test_inplace(
@@ -101,6 +97,20 @@ def test_inplace(
     hindcast.sum("init")
     summed = hindcast.sum("init")
     assert hindcast != summed
+
+
+@pytest.mark.parametrize("call", ["verify", "bootstrap"])
+@pytest.mark.parametrize(
+    "dim",
+    [set(["init"]), list(["init"]), tuple(["init"]), "init"],
+    ids=["set", "list", "tuple", "str"],
+)
+def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
+    """Test verify and bootstrap for different dim types."""
+    kw = dict(iterations=2) if call == "bootstrap" else {}
+    assert getattr(hindcast_hist_obs_1d, call)(
+        metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
+    )
 
 
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
@@ -178,14 +188,13 @@ def test_verify_metric_kwargs(hindcast_hist_obs_1d):
 def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
     """Test that HindcastEnsemble fails when metric_kwargs expected but not given."""
     hindcast = hindcast_hist_obs_1d
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError, match="Please provide threshold"):
         hindcast.verify(
             metric="threshold_brier_score",
             comparison="m2o",
             dim="member",
             alignment="same_verifs",
         )
-    assert "Please provide threshold." == str(excinfo.value)
 
 
 def test_verify_m2o_reference(hindcast_hist_obs_1d):
@@ -246,10 +255,10 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
 )
 def test_verify_reference(hindcast_hist_obs_1d, reference):
     """Test that hindcast.bootstrap returns reference skill."""
-    hindcast_hist_obs_1d = hindcast_hist_obs_1d.expand_dims(["lon", "lat"]).isel(
+    hindcast = hindcast_hist_obs_1d.expand_dims(["lon", "lat"]).isel(
         lon=[0] * 2, lat=[0] * 2
     )  # make geospatial
-    actual = hindcast_hist_obs_1d.verify(
+    actual = hindcast.verify(
         metric="acc",
         comparison="e2o",
         alignment="same_verifs",
@@ -279,9 +288,8 @@ def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_d
         freq="MS",
         calendar="all_leap",
     )
-    with pytest.raises(ValueError) as excinfo:
-        hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    assert "does not match" in str(excinfo.value)
+    with pytest.raises(ValueError, match="does not match"):
+        hindcast.add_observations(reconstruction_ds_1d)
 
 
 def test_calendar_matching_uninitialized(
@@ -295,9 +303,8 @@ def test_calendar_matching_uninitialized(
         freq="MS",
         calendar="all_leap",
     )
-    with pytest.raises(ValueError) as excinfo:
-        hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
-    assert "does not match" in str(excinfo.value)
+    with pytest.raises(ValueError, match="does not match"):
+        hindcast.add_uninitialized(hist_ds_uninitialized_1d)
 
 
 def test_verify_reference_same_dims(hindcast_hist_obs_1d):

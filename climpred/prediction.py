@@ -99,12 +99,16 @@ def _rename_dim(dim, forecast, verif):
     return dim
 
 
-def _sanitize_str_to_list(dim):
-    """Make dim to list if string, pass if None else raise ValueError."""
+def _sanitize_to_list(dim):
+    """Make dim to list if string, tuple or set, pass if None else raise ValueError."""
     if isinstance(dim, str):
         dim = [dim]
+    elif isinstance(dim, set):
+        dim = list(dim)
+    elif isinstance(dim, tuple):
+        dim = list(dim)
     elif isinstance(dim, list) or dim is None:
-        dim = dim
+        pass
     else:
         raise ValueError(
             f"Expected `dim` as `str`, `list` or None, found {dim} as type {type(dim)}."
@@ -127,7 +131,7 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
         comparison (Comparison): comparison class.
         dim (list of str or str): corrected dimension to apply metric to.
     """
-    dim = _sanitize_str_to_list(dim)
+    dim = _sanitize_to_list(dim)
 
     # check kind allowed
     is_in_list(kind, ["hindcast", "PM"], "kind")

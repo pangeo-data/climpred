@@ -1736,19 +1736,19 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='brier_score', comparison='m2o',
+        >>> hindcast.verify(metric='brier_score', comparison='m2o', \
                 dim='member', alignment='same_verifs', logical=pos)
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='brier_score',
+        >>> hindcast.map(pos).verify(metric='brier_score', \
                 comparison='m2o', dim='member', alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison='e2o'`` and ``dim=[]``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
+        >>> hindcast.map(pos).mean('member').verify(metric='brier_score', \
                 comparison='e2o', dim=[], alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
@@ -1815,10 +1815,36 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.threshold_brier_score`
 
     Example:
-        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
-                dim='member', threshold=.5)
-        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
-                dim='member', threshold=[.3, .7])
+        >>> import climpred
+        >>> init = climpred.tutorial.load_dataset("CESM-DP-SST")
+        >>> obs = climpred.tutorial.load_dataset("ERSST")
+        >>> obs = obs - obs.mean('time')
+        >>> hindcast = climpred.HindcastEnsemble(init).add_observations(obs)
+
+        >>> # get threshold brier score for each init
+        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o', \
+                dim='member', threshold=.2, alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:  (init: 52, lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 1.0 0.01 0.0 0.0 0.0
+
+        >>> # multiple thresholds averaging over init dimension
+        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o', \
+                dim=['member', 'init'], threshold=[.2, .3], alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:    (lead: 10, threshold: 2)
+        Coordinates:
+          * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * threshold  (threshold) int64 1 2
+            skill      <U11 'initialized'
+        Data variables:
+            SST        (lead, threshold) float64 0.09462 0.006731 ... 0.1033 0.02385
+
     """
     if "threshold" not in metric_kwargs:
         raise ValueError("Please provide threshold.")
@@ -2010,10 +2036,10 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/c6758w.
 
     Example:
-        >>> hindcast.verify(metric='crpss', comparison='m2o',
+        >>> hindcast.verify(metric='crpss', comparison='m2o', \
                 alignment='same_verifs', dim='member')
-        >>> perfect_model.verify(metric='crpss', comparison='m2m', dim='member',
-                gaussian=False, cdf_or_dist=scipy.stats.norm, xminimum=-10,
+        >>> perfect_model.verify(metric='crpss', comparison='m2m', dim='member', \
+                gaussian=False, cdf_or_dist=scipy.stats.norm, xminimum=-10, \
                 xmaximum=10, tol=1e-6)
 
     See also:
@@ -2107,7 +2133,7 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
           631–43. https://doi.org/10/f9jrhw.
 
     Example:
-        >>> hindcast.verify(metric='crpss_es', comparison='m2o',
+        >>> hindcast.verify(metric='crpss_es', comparison='m2o', \
                 alignment='same_verifs', dim='member')
     """
 
@@ -2188,19 +2214,19 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='discrimination', comparison='m2o',
+        >>> hindcast.verify(metric='discrimination', comparison='m2o', \
                 dim=['member', 'init'], alignment='same_verifs', logical=pos)
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='discrimination',
+        >>> hindcast.map(pos).verify(metric='discrimination', \
                 comparison='m2o', dim=['member','init'], alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
+        >>> hindcast.map(pos).mean('member').verify(metric='discrimination', \
                 comparison='e2o', dim='init', alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
@@ -2264,19 +2290,19 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
 
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
-        >>> hindcast.verify(metric='reliability', comparison='m2o',
+        >>> hindcast.verify(metric='reliability', comparison='m2o', \
                 dim=['member','init'], alignment='same_verifs', logical=pos)
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='reliability',
+        >>> hindcast.map(pos).verify(metric='reliability', \
                 comparison='m2o', dim=['member','init'], alignment='same_verifs')
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='reliability',
+        >>> hindcast.map(pos).mean('member').verify(metric='reliability', \
                 comparison='e2o', dim='init', alignment='same_verifs')
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
@@ -2315,9 +2341,9 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.rank_histogram`
 
     Example:
-        >>> hindcast.verify(metric='rank_histogram', comparison='m2o',
+        >>> hindcast.verify(metric='rank_histogram', comparison='m2o', \
                 dim=['member','init'], alignment='same_verifs')
-        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
+        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c', \
                 dim=['member','init'])
 
     """
@@ -2366,9 +2392,9 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-.5, 0., .5, 1.])
-        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member',
+        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member', \
                 alignment='same_verifs', category_edges=category_edges)
-        >>> perfect_model.verify(metric='rps', comparison='m2c',
+        >>> perfect_model.verify(metric='rps', comparison='m2c', \
                 dim='member', category_edges=category_edges)
 
     """
@@ -2420,13 +2446,13 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-0.5, 0., .5, 1.])
-        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
-                dim=[], alignment='same_verifs',
-                observation_category_edges=category_edges,
+        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o', \
+                dim=[], alignment='same_verifs', \
+                observation_category_edges=category_edges, \
                 forecast_category_edges=category_edges)
-        >>> perfect_model.verify(metric='contingency', score='hit_rate',
-                comparison='m2c', dim=['member','init'],
-                observation_category_edges=category_edges,
+        >>> perfect_model.verify(metric='contingency', score='hit_rate', \
+                comparison='m2c', dim=['member','init'], \
+                observation_category_edges=category_edges, \
                 forecast_category_edges=category_edges)
 
     """

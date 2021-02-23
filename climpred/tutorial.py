@@ -133,7 +133,7 @@ def load_dataset(
         The desired xarray dataset.
 
     Examples:
-        >>> from climpred.tutorial import load_dataset()
+        >>> from climpred.tutorial import load_dataset
         >>> proxy_dict = {'http': '127.0.0.1'}
         >>> ds = load_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
     """

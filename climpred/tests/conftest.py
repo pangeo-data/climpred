@@ -10,6 +10,36 @@ from climpred.utils import convert_time_index
 CALENDAR = PM_CALENDAR_STR.strip("Datetime").lower()
 
 
+@pytest.fixture(autouse=True)
+def add_standard_imports(doctest_namespace, tmpdir):
+    import numpy as np
+    import pandas as pd
+    import xarray as xr
+
+    doctest_namespace["np"] = np
+    doctest_namespace["pd"] = pd
+    doctest_namespace["xr"] = xr
+
+    # always seed numpy.random to make the examples deterministic
+    np.random.seed(42)
+
+    # always switch to the temporary directory, so files get written there
+    tmpdir.chdir()
+
+    # add hindcast
+    from climpred import HindcastEnsemble
+    from climpred.tutorial import load_dataset
+
+    init = load_dataset("CESM-DP-SST")
+    init["init"] = init.init.astype("int")
+    init = convert_time_index(init, "init", "init.init", calendar=HINDCAST_CALENDAR_STR)
+    init.lead.attrs["units"] = "years"
+    hist = load_dataset("CESM-LE")
+    obs = load_dataset("ERSST")
+    hindcast = HindcastEnsemble(init).add_uninitialized(hist).add_observations(obs)
+    doctest_namespace["hindcast"] = hindcast
+
+
 @pytest.fixture()
 def PM_ds3v_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
@@ -192,10 +222,10 @@ def hind_da_initialized_3d(hind_ds_initialized_3d):
 @pytest.fixture()
 def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
-    da = load_dataset("CESM-LE")
+    ds = load_dataset("CESM-LE")
     # add member coordinate
-    da["member"] = range(1, 1 + da.member.size)
-    return da - da.mean("time")
+    ds["member"] = range(1, 1 + ds.member.size)
+    return ds - ds.mean("time")
 
 
 @pytest.fixture()

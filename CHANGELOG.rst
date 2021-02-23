@@ -2,6 +2,11 @@
 What's New
 ==========
 
+Internals/Minor Fixes
+---------------------
+- docstrings are now tested in GitHub actions continuous integration.
+  (:issue:`545`, :pr:`560`) `Aaron Spring`_.
+
 
 climpred v2.1.2 (2021-01-22)
 ============================

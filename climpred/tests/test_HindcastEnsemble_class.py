@@ -106,22 +106,10 @@ def test_inplace(
     ids=["set", "list", "tuple", "str"],
 )
 def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
-    """Test verify for different dim types."""
+    """Test verify and bootstrap for different dim types."""
     kw = dict(iterations=2) if call == "bootstrap" else {}
-    getattr(hindcast_hist_obs_1d, call)(
+    assert getattr(hindcast_hist_obs_1d, call)(
         metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
-    )
-
-
-@pytest.mark.parametrize(
-    "dim",
-    [set(["init"]), list(["init"]), tuple(["init"]), "init"],
-    ids=["set", "list", "tuple", "str"],
-)
-def test_bootstrap_dim_input_type(hindcast_hist_obs_1d, dim):
-    """Test bootstrap for different dim types."""
-    hindcast_hist_obs_1d.bootstrap(
-        iterations=2, metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs"
     )
 
 

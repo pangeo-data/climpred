@@ -103,6 +103,18 @@ def test_inplace(
     assert hindcast != summed
 
 
+@pytest.mark.parametrize(
+    "dim",
+    [set(["init"]), list(["init"]), tuple(["init"]), "init"],
+    ids=["set", "list", "tuple", "str"],
+)
+def test_verify_dim_input_type(hindcast_hist_obs_1d, dim):
+    """Test verify for different dim types."""
+    hindcast_hist_obs_1d.verify(
+        metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs"
+    )
+
+
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
 def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""

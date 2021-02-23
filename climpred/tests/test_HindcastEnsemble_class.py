@@ -99,15 +99,17 @@ def test_inplace(
     assert hindcast != summed
 
 
+@pytest.mark.parametrize("call", ["verify", "bootstrap"])
 @pytest.mark.parametrize(
     "dim",
     [set(["init"]), list(["init"]), tuple(["init"]), "init"],
     ids=["set", "list", "tuple", "str"],
 )
-def test_verify_dim_input_type(hindcast_hist_obs_1d, dim):
+def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     """Test verify for different dim types."""
-    hindcast_hist_obs_1d.verify(
-        metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs"
+    kw = dict(iterations=2) if call == "bootstrap" else {}
+    getattr(hindcast_hist_obs_1d, call)(
+        metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
     )
 
 

@@ -59,27 +59,25 @@ def test_isel_xarray_func(hindcast_hist_obs_1d):
     assert hindcast.get_observations().time.size == 5
 
 
-def test_get_initialized(hind_ds_initialized_1d):
+def test_get_initialized(hindcast_hist_obs_1d):
     """Test whether get_initialized method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    init = hindcast.get_initialized()
-    assert init == hindcast._datasets["initialized"]
+    assert hindcast_hist_obs_1d.get_initialized().identical(
+        hindcast_hist_obs_1d._datasets["initialized"]
+    )
 
 
-def test_get_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
+def test_get_uninitialized(hindcast_hist_obs_1d):
     """Test whether get_uninitialized method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
-    uninit = hindcast.get_uninitialized()
-    assert uninit == hindcast._datasets["uninitialized"]
+    assert hindcast_hist_obs_1d.get_uninitialized().identical(
+        hindcast_hist_obs_1d._datasets["uninitialized"]
+    )
 
 
-def test_get_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
+def test_get_observations(hindcast_hist_obs_1d):
     """Tests whether get_observations method works."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(reconstruction_ds_1d)
-    obs = hindcast.get_observations()
-    assert obs == hindcast._datasets["observations"]
+    assert hindcast_hist_obs_1d.get_observations().identical(
+        hindcast_hist_obs_1d._datasets["observations"]
+    )
 
 
 def test_inplace(
@@ -110,6 +108,18 @@ def test_verify_dim_input_type(hindcast_hist_obs_1d, dim):
     """Test verify for different dim types."""
     hindcast_hist_obs_1d.verify(
         metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs"
+    )
+
+
+@pytest.mark.parametrize(
+    "dim",
+    [set(["init"]), list(["init"]), tuple(["init"]), "init"],
+    ids=["set", "list", "tuple", "str"],
+)
+def test_bootstrap_dim_input_type(hindcast_hist_obs_1d, dim):
+    """Test bootstrap for different dim types."""
+    hindcast_hist_obs_1d.bootstrap(
+        iterations=2, metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs"
     )
 
 

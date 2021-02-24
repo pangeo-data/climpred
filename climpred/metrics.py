@@ -60,10 +60,10 @@ def _get_norm_factor(comparison):
 
     Example:
         >>> # check skill saturation value of roughly 1 for different comparisons
-        >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:
+        >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:  # doctest: +ELLIPSIS
         ...        s = perfect_model.verify(metric='nrmse', dim=None, comparison=c)
-        ...        s.tos.plot(label=' '.join(['nrmse',c]))
-        >>> plt.legend()
+        ...        s.tos.plot(label='nrmse {c}')
+        [...
 
     Reference:
         * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing
@@ -136,7 +136,6 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
                 f"Expected dimension `member` in forecast, found {list(forecast.dims)}"
             )
         # rename dim to time if forecast and verif dims allow
-
         return forecast, verif, metric_kwargs, dim
     elif (
         comparison.name == "e2o"
@@ -1736,19 +1735,41 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
 
         >>> hindcast.verify(metric='brier_score', comparison='m2o',
-        ...     dim='member', alignment='same_verifs', logical=pos)
+        ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
+        >>> # TODO: should be identical to above
         >>> hindcast.map(pos).verify(metric='brier_score',
-        ...     comparison='m2o', dim='member', alignment='same_verifs')
+        ...     comparison='m2o', dim=['member', 'init'], alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.1577 0.175 0.1904 0.1654 ... 0.2038 0.2135 0.2269
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
-        ``comparison='e2o'`` and ``dim=[]``:
+        ``comparison='e2o'`` and ``dim='init'``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
-        ...     comparison='e2o', dim=[], alignment='same_verifs')
+        ...     comparison='e2o', dim='init', alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -1928,7 +1949,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.1464 0.01486 0.04724 ... 0.02346 0.06369
+            SST      (lead, init) float64 0.1703 0.03346 0.06889 ... 0.05428 0.1638
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2054,12 +2075,12 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.4236 0.9299 0.732 ... 0.8476 0.9007 0.8105
+            SST      (lead, init) float64 0.3291 0.8421 0.6092 ... 0.7526 0.7702 0.5126
 
         >>> import scipy
         >>> perfect_model.isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
         ...     dim='member', gaussian=False, cdf_or_dist=scipy.stats.norm, xmin=-10,
-        ...     xmax=10, tol=1e-6)
+        ...     xmax=10, tol=1e-6)  # doctest: +SKIP
         <xarray.Dataset>
         Dimensions:  (init: 12, lead: 2, member: 9)
         Coordinates:
@@ -2169,7 +2190,7 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 -0.02627 -0.0578 -0.09493 ... -0.1313 -0.03761
+            SST      (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
 
     """
 
@@ -2260,7 +2281,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
           * event                 (event) bool True False
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.1875 ...
+            SST                   (lead, event, forecast_probability) float64 0.1481 ...
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
@@ -2274,7 +2295,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
           * event                 (event) bool True False
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.1875 ...
+            SST                   (lead, event, forecast_probability) float64 0.1481 ...
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
@@ -2282,10 +2303,25 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
 
         >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Coordinates:
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool True False
+            skill                 <U11 'initialized'
+        Data variables:
+            SST                   (lead, event, forecast_probability) float64 0.1481 ...
+
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
+    # allow option 2
+    if "member" in dim and "member" in forecast.dims:
+        forecast = forecast.mean("member")
+        dim = dim.copy()
+        dim.remove("member")
     return discrimination(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2351,15 +2387,24 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 23.0 3.0 3.0 2.0 21.0
+            SST_samples           (forecast_probability) float64 25.0 3.0 0.0 3.0 21.0
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.2609 ... 1.0
+            SST                   (lead, forecast_probability) float64 0.16 ... 1.0
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
         >>> hindcast.map(pos).verify(metric='reliability',
         ...     comparison='m2o', dim=['init', 'member'], alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:               (forecast_probability: 5, lead: 10)
+        Coordinates:
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
+            SST_samples           (forecast_probability) float64 25.0 3.0 0.0 3.0 21.0
+            skill                 <U11 'initialized'
+        Data variables:
+            SST                   (lead, forecast_probability) float64 0.16 ... 1.0
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. Because `member` no present in `hindcast`, use
@@ -2367,10 +2412,25 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
 
         >>> hindcast.map(pos).mean('member').verify(metric='reliability',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
+        <xarray.Dataset>
+        Dimensions:               (forecast_probability: 5, lead: 10)
+        Coordinates:
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
+            SST_samples           (forecast_probability) float64 25.0 3.0 0.0 3.0 21.0
+            skill                 <U11 'initialized'
+        Data variables:
+            SST                   (lead, forecast_probability) float64 0.16 ... 1.0
+
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
+    # allow option 2
+    if "member" in dim and "member" in forecast.dims:
+        forecast = forecast.mean("member")
+        dim = dim.copy()
+        dim.remove("member")
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2413,7 +2473,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
           * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, rank) int64 9 3 2 2 1 0 0 3 4 4 24 ... 2 3 4 3 4 3 3 9 7 12
+            SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
 
         >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
         ...     dim=['member', 'init'])  # doctest: +SKIP
@@ -2480,7 +2540,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.3787 0.3787 0.3787 ... 0.1479 0.1579 0.1479
+            SST      (lead, init) float64 0.2696 0.2696 0.2696 ... 0.2311 0.2311 0.2311
 
         >>> category_edges = np.array([9.5, 10., 10.5, 11.])
         >>> perfect_model.verify(metric='rps', comparison='m2c',
@@ -2540,15 +2600,39 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics # noqa
 
     Example:
-        >>> category_edges = np.array([-0.5, 0., .5, 1.])
+        >>> category_edges = np.array([-0.5, 0.0, 0.5, 1.0])
         >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
-        ...     dim=[], alignment='same_verifs',
+        ...     dim=['member', 'init'], alignment='same_verifs',
         ...     observation_category_edges=category_edges,
-        ...     forecast_category_edges=category_edges)
-        >>> perfect_model.verify(metric='contingency', score='hit_rate',
+        ...     forecast_category_edges=category_edges).isel(lead=[0, 1]).SST
+        <xarray.DataArray 'SST' (lead: 2, observations_category: 3, forecasts_category: 3)>
+        array([[[221,  29,   0],
+                [ 53, 217,   0],
+                [  0,   0,   0]],
+        <BLANKLINE>
+               [[234,  16,   0],
+                [ 75, 194,   1],
+                [  0,   0,   0]]])
+        Coordinates:
+          * lead                          (lead) int32 1 2
+            observations_category_bounds  (observations_category) <U11 '[-0.5, 0.0)' ...
+            forecasts_category_bounds     (forecasts_category) <U11 '[-0.5, 0.0)' ......
+          * observations_category         (observations_category) int64 1 2 3
+          * forecasts_category            (forecasts_category) int64 1 2 3
+            skill                         <U11 'initialized'
+
+        >>> # contingency-based dichotomous accuracy score
+        >>> category_edges = np.array([9.5, 10.0, 10.5])
+        >>> perfect_model.verify(metric='contingency', score='hit_rate', # doctest: +SKIP
         ...     comparison='m2c', dim=['member','init'],
         ...     observation_category_edges=category_edges,
         ...     forecast_category_edges=category_edges)
+        <xarray.Dataset>
+        Dimensions:  (lead: 20)
+        Coordinates:
+          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+        Data variables:
+            tos      (lead) float64 1.0 1.0 1.0 1.0 0.9091 ... 1.0 1.0 1.0 nan 1.0
 
     """
     if score == "table":

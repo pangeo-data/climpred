@@ -79,7 +79,19 @@ def horizon(cond):
 
         >>> bskill = perfect_model.bootstrap(metric='acc', comparison='m2e',
         ...     dim=['init','member'], reference=['persistence'], iterations=21)
+        >>> # TODO: horizon in data_vars
         >>> horizon(bskill.sel(skill='persistence', results='p') <= 0.05)
+        <xarray.Dataset>
+        Dimensions:  (variable: 1)
+        Coordinates:
+            lead     (variable) int64 20
+            skill    <U11 'persistence'
+            results  <U12 'p'
+        Dimensions without coordinates: variable
+        Data variables:
+            tos      float64 nan
+        Attributes:
+            units:    years
 
     """
     ph = _last_item_cond_true(cond, "lead")

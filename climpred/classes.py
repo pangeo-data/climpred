@@ -434,8 +434,21 @@ class PredictionEnsemble:
             Uninitialized:
                 None
 
-            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4})
-            >>> hindcast_3D.smooth('goddard2013')
+            ``smooth`` simultaneously aggregates spatially listening to ``lon`` and ``lat`` and temporally listening to ``lead`` or ``time``.
+
+            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
+            Coordinates:
+              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9
+              * lon      (lon) float64 250.8 254.8 258.8 262.8
+              * lat      (lat) float64 -9.75 -4.75
+            >>> hindcast_3D.smooth('goddard2013').get_initialized().coords
+            Coordinates:
+              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead     (lead) int32 1 2 3 4 5 6 7
+              * lon      (lon) float64 250.8 255.8 260.8 265.8
+              * lat      (lat) float64 -9.75 -4.75
+
 
         """
         if not smooth_kws:
@@ -476,7 +489,8 @@ class PredictionEnsemble:
                 for c in ["lon", "lat"]:
                     if c in smooth_kws:
                         d_lon_lat_kws[c] = smooth_kws[c]
-                    else:
+                for c in ["lead", "time"]:
+                    if c in smooth_kws:
                         tsmooth_kws[c] = smooth_kws[c]
             # else only one smoothing operation
             elif "lon" in smooth_kws or "lat" in smooth_kws:

@@ -425,9 +425,17 @@ class PredictionEnsemble:
             >>> perfect_model.smooth({'lead':4}, how='sum').get_initialized().lead.size
             17
 
-            >>> hindcast_3D.smooth({'lon':1, 'lat':1}).get_initialized().coords  # doctest: +SKIP
-            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords  # doctest: +SKIP
-            >>> hindcast_3D.smooth('goddard2013').get_initialized().coords  # doctest: +SKIP
+            >>> hindcast_3D.smooth({'lon':1, 'lat':1})
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, lat, lon) float64 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
+            Observations:
+                SST      (time, lat, lon) float64 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
+            Uninitialized:
+                None
+
+            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4})
+            >>> hindcast_3D.smooth('goddard2013')
 
         """
         if not smooth_kws:

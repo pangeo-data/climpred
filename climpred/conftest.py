@@ -10,6 +10,8 @@ from climpred.utils import convert_time_index
 
 CALENDAR = PM_CALENDAR_STR.strip("Datetime").lower()
 
+xr.set_options(display_style="text")
+
 
 @pytest.fixture(autouse=True)
 def add_standard_imports(
@@ -19,6 +21,7 @@ def add_standard_imports(
     perfectModelEnsemble_initialized_control,
 ):
     """imports for doctest"""
+    xr.set_options(display_style="text")
     doctest_namespace["np"] = np
     doctest_namespace["xr"] = xr
     doctest_namespace["climpred"] = climpred

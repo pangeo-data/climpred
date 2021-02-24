@@ -46,7 +46,11 @@ def _last_item_cond_true(cond, dim):
         reached_notnull, other=np.nan
     )  # cleanup replace dim:0 with nan again
     if was_dataset:
-        reached_dim_space = reached_dim_space.to_dataset(dim="variable")
+        reached_dim_space = reached_dim_space.to_dataset(dim="variable").squeeze(
+            drop=True
+        )
+        if "lead" in reached_dim_space.coords:
+            reached_dim_space = reached_dim_space.drop("lead")
     return reached_dim_space
 
 
@@ -68,28 +72,22 @@ def horizon(cond):
         >>> horizon(skill.sel(skill='initialized') >
         ...     skill.sel(skill='persistence'))
         <xarray.Dataset>
-        Dimensions:  (variable: 1)
-        Coordinates:
-            lead     (variable) int64 15
-        Dimensions without coordinates: variable
+        Dimensions:  ()
         Data variables:
             tos      float64 15.0
         Attributes:
             units:    years
 
         >>> bskill = perfect_model.bootstrap(metric='acc', comparison='m2e',
-        ...     dim=['init','member'], reference=['persistence'], iterations=21)
-        >>> # TODO: horizon in data_vars
-        >>> horizon(bskill.sel(skill='persistence', results='p') <= 0.05)
+        ...     dim=['init','member'], reference='uninitialized', iterations=201)
+        >>> horizon(bskill.sel(skill='uninitialized', results='p') <= 0.05)
         <xarray.Dataset>
-        Dimensions:  (variable: 1)
+        Dimensions:  ()
         Coordinates:
-            lead     (variable) int64 20
-            skill    <U11 'persistence'
+            skill    <U13 'uninitialized'
             results  <U12 'p'
-        Dimensions without coordinates: variable
         Data variables:
-            tos      float64 nan
+            tos      float64 10.0
         Attributes:
             units:    years
 

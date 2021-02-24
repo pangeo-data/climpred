@@ -140,6 +140,9 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
         dim = list(initialized.dims)
         if "lead" in dim:
             dim.remove("lead")
+        # adjust dim for e2c comparison when member not in forecast or verif
+        if comparison in ["e2c"] and "member" in dim:
+            dim.remove("member")
 
     # check that initialized contains all dims from dim
     if not set(dim).issubset(initialized.dims):

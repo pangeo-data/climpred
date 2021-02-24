@@ -6,6 +6,11 @@ What's New
 climpred v2.1.x (2021-0x-xx)
 ============================
 
+Breaking changes
+----------------
+- `~climpred.classes.PrefectModelEnsemble.verify` does not add climpred
+  attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
+
 New Features
 ------------
 

@@ -154,6 +154,16 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         )
 
 
+def _maybe_member_mean_reduce_dim(forecast, dim):
+    """Take member mean if member in dim. To allow Option 2 in
+    discrimination and reliability, which both dont expect member dim."""
+    if "member" in dim and "member" in forecast.dims:
+        forecast = forecast.mean("member")
+        dim = dim.copy()
+        dim.remove("member")
+    return forecast, dim
+
+
 def _display_metric_metadata(self):
     summary = "----- Metric metadata -----\n"
     summary += f"Name: {self.name}\n"
@@ -2317,11 +2327,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    # allow option 2
-    if "member" in dim and "member" in forecast.dims:
-        forecast = forecast.mean("member")
-        dim = dim.copy()
-        dim.remove("member")
+    forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
     return discrimination(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2426,11 +2432,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    # allow option 2
-    if "member" in dim and "member" in forecast.dims:
-        forecast = forecast.mean("member")
-        dim = dim.copy()
-        dim.remove("member")
+    forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 

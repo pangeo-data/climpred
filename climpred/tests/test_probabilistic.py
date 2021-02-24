@@ -296,14 +296,13 @@ def test_pm_crpss_orientation(PM_da_initialized_1d, PM_da_control_1d):
 def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
     PM_da_initialized_1d, PM_da_control_1d, metric, comparison
 ):
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError, match=f"Probabilistic metric `{metric}` requires"):
         compute_perfect_model(
             PM_da_initialized_1d,
             PM_da_control_1d,
             comparison=comparison,
             metric=metric,
         )
-    assert f"Probabilistic metric `{metric}` requires comparison" in str(excinfo.value)
 
 
 @pytest.mark.parametrize("metric", ["crps"])
@@ -311,7 +310,7 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
     hind_da_initialized_1d, observations_da_1d, metric
 ):
     metric = METRIC_ALIASES.get(metric, metric)
-    with pytest.raises(ValueError) as excinfo:
+    with pytest.raises(ValueError, match=f"Probabilistic metric `{metric}` requires"):
         compute_hindcast(
             hind_da_initialized_1d,
             observations_da_1d,
@@ -319,7 +318,6 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
             metric=metric,
             dim="member",
         )
-    assert f"Probabilistic metric `{metric}` requires" in str(excinfo.value)
 
 
 def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):

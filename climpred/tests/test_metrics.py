@@ -226,3 +226,30 @@ def test_no_repeating_metric_aliases():
     duplicates = set([x for x in METRICS if METRICS.count(x) > 1])
     print(f"Duplicate metrics: {duplicates}")
     assert len(duplicates) == 0
+
+
+def test_contingency(hindcast_hist_obs_1d):
+    """Test contingency table perfect results."""
+    hindcast = hindcast_hist_obs_1d
+    hindcast = hindcast.apply(xr.ones_like)
+    category_edges = np.array([-0.5, 0.0, 0.5, 0.9, 1.1])
+    metric_kwargs = {
+        "forecast_category_edges": category_edges,
+        "observation_category_edges": category_edges,
+        "score": "table",
+    }
+    skill = hindcast.verify(
+        metric="contingency",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+        **metric_kwargs,
+    ).SST
+
+    assert skill.isel(observations_category=-1, forecasts_category=-1).notnull().all()
+    assert (
+        skill.isel(
+            observations_category=slice(None, -1), forecasts_category=slice(None, -1)
+        )
+        == 0.0
+    ).all()

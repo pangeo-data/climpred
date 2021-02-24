@@ -675,6 +675,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             dim=dim,
+            add_attrs=False,
             **metric_kwargs,
         )
         if self._temporally_smoothed:

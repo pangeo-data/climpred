@@ -2476,7 +2476,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
 
         >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
-        ...     dim=['member', 'init'])  # doctest: +SKIP
+        ...     dim=['member', 'init'])
         <xarray.Dataset>
         Dimensions:  (lead: 20, rank: 10)
         Coordinates:
@@ -2544,7 +2544,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
         >>> category_edges = np.array([9.5, 10., 10.5, 11.])
         >>> perfect_model.verify(metric='rps', comparison='m2c',
-        ...     dim=['member','init'], category_edges=category_edges)  # doctest: +SKIP
+        ...     dim=['member','init'], category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:  (lead: 20)
         Coordinates:
@@ -2623,7 +2623,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
         >>> # contingency-based dichotomous accuracy score
         >>> category_edges = np.array([9.5, 10.0, 10.5])
-        >>> perfect_model.verify(metric='contingency', score='hit_rate', # doctest: +SKIP
+        >>> perfect_model.verify(metric='contingency', score='hit_rate',
         ...     comparison='m2c', dim=['member','init'],
         ...     observation_category_edges=category_edges,
         ...     forecast_category_edges=category_edges)

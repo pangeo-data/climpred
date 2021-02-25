@@ -353,26 +353,31 @@ class PredictionEnsemble:
                 # some stats functions.
                 except (ValueError, KeyError, DimensionError) as e:
                     if args == tuple():
-                        func_name = None
+                        func_name = False
                     else:
                         if callable(args[0]):
                             func_name = args[0].__name__
-                        else:
-                            func_name = "not a callable"
+                        else:  # for xarray calls like pe.mean()
+                            func_name = False
                     dim = kwargs.get("dim", False)
                     error_type = type(e).__name__
-                    if len(args) > 1:
-                        msg = f"{func_name}({args[1:]}, {kwargs}) 'failed\n{error_type}:{e}"
+                    if func_name:
+                        if len(args) > 1:
+                            msg = f"{func_name}({args[1:]}, {kwargs}) failed\n{error_type}: {e}"
+                        else:
+                            msg = f"{func_name}({kwargs}) failed\n{error_type}: {e}"
                     else:
-                        msg = f"{func_name}({kwargs}) 'failed\n{error_type}:{e}"
+                        msg = f"xr.{name}({args}, {kwargs}) failed\n{error_type}: {e}"
                     if set(["lead", "init"]).issubset(set(v.dims)):  # initialized
                         if dim not in v.dims:
-                            warnings.warn(f"initialized: {msg}")
+                            warnings.warn(f"Error due to initialized:  {msg}")
                     elif set(["time"]).issubset(
                         set(v.dims)
                     ):  # uninitialized, control, verification
                         if dim not in v.dims:
-                            warnings.warn(f"verification/control/uninitialized: {msg}")
+                            warnings.warn(
+                                f"Error due to verification/control/uninitialized: {msg}"
+                            )
                     else:
                         warnings.warn(msg)
                     return v

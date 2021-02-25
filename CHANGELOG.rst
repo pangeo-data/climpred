@@ -8,8 +8,6 @@ climpred v2.1.x (2021-0x-xx)
 
 Breaking changes
 ----------------
-- `~climpred.classes.PrefectModelEnsemble.verify` does not add climpred
-  attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -24,8 +22,10 @@ Internals/Minor Fixes
 ---------------------
 - docstrings are now tested in GitHub actions continuous integration.
   (:issue:`545`, :pr:`560`) `Aaron Spring`_.
-- GitHub actions cancels previous runs. (:pr:`560`) `Aaron Spring`_.
-
+- Github actions now cancels previous commits, instead of running the full
+  testing suite on every single commit. (:pr:`560`) `Aaron Spring`_.
+- `~climpred.classes.PerfectModelEnsemble.verify` does not add climpred
+  attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

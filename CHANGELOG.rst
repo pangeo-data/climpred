@@ -2,34 +2,50 @@
 What's New
 ==========
 
+climpred v2.1.3 (2021-xx-xx)
+============================
 
+New Features
+------------
+
+Bug fixes
+---------
+- `~climpred.classes.PredictionEnsemble.verify` and
+  `~climpred.classes.PredictionEnsemble.bootstrap` accept ``dim`` as ``list``, ``set``,
+   ``tuple`` or ``str`` (:issue:`519`, pr:`558`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.PredictionEnsemble.map` now does not fail silently.
   Instead, ``UserWarning``s are raised. Furthermore, ``map(func, *args, **kwargs)``
   applies only  function to Datasets with matching dims if ``dim="dim0_or_dim1"`` is
   passed as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
 
 
-climpred v2.1.2 (2021-xx-xx)
+climpred v2.1.2 (2021-01-22)
 ============================
+
+This release is the fixed version for our Journal of Open Source Software (JOSS)
+article about ``climpred``, see `review
+<https://github.com/openjournals/joss-reviews/issues/2781>`_.
 
 New Features
 ------------
-
 - Function to calculate predictability horizon
   :py:func:`~climpred.predictability_horizon.predictability_horizon` based on condition.
   (:issue:`46`, :pr:`521`) `Aaron Spring`_.
 
 Bug fixes
 ---------
-- :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now carries lead.attrs (:issue: `527`, pr:`521`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.PredictionEnsemble.smooth` now carries ``lead.attrs``
+  (:issue:`527`, pr:`521`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` now works with ``references``
-  also for geospatial inputs, which returned ``NaN``s before.
-  (:issue: `522`, pr:`521`) `Aaron Spring`_.
+  also for geospatial inputs, which returned ``NaN`` before.
+  (:issue:`522`, pr:`521`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.PredictionEnsemble.plot` now shifts composite lead
   frequencies like ``days``, ``pentads``, ``seasons`` correctly.
   (:issue:`532`, :pr:`533`) `Aaron Spring`_.
 - Adapt to ``xesmf>=0.5.2`` for spatial xesmf smoothing. (:issue:`543`, :pr:`548`)
   `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` now carries attributes.
+  (:issue:`531`, :pr:`551`) `Aaron Spring`_.
 
 
 climpred v2.1.1 (2020-10-13)

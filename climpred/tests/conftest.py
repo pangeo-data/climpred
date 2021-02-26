@@ -267,9 +267,6 @@ def observations_da_1d(observations_ds_1d):
 @pytest.fixture()
 def hindcast_recon_3d(hind_ds_initialized_3d, reconstruction_ds_3d):
     """HindcastEnsemble initialized with `initialized`, `reconstruction`(`recon`)."""
-    # fix to align coords
-    for c in ["TLAT", "TLONG", "TAREA"]:
-        reconstruction_ds_3d[c] = hind_ds_initialized_3d[c]
     hindcast = HindcastEnsemble(hind_ds_initialized_3d)
     hindcast = hindcast.add_observations(reconstruction_ds_3d)
     hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(

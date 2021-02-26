@@ -3,6 +3,12 @@ What's New
 ==========
 
 
+- :py:meth:`~climpred.classes.PredictionEnsemble.map` now does not fail silently.
+  Instead, ``UserWarning``s are raised. Furthermore, ``map(func, *args, **kwargs)``
+  applies only  function to Datasets with matching dims if ``dim="dim0_or_dim1"`` is
+  passed as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
+
+
 climpred v2.1.2 (2021-xx-xx)
 ============================
 
@@ -12,10 +18,6 @@ New Features
 - Function to calculate predictability horizon
   :py:func:`~climpred.predictability_horizon.predictability_horizon` based on condition.
   (:issue:`46`, :pr:`521`) `Aaron Spring`_.
-- :py:meth:`~climpred.classes.PredictionEnsemble.map` now does not fail silently.
-  Instead, ``UserWarning``s are raised. Furthermore, ``map(func, *args, **kwargs)``
-  applies only  function to Datasets with matching dims if ``"dim0_or_dim1"`` is passed
-  as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
 
 Bug fixes
 ---------

@@ -12,12 +12,11 @@ Bug fixes
 ---------
 - :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` accept ``dim`` as ``list``,
-  ``set``, ``tuple`` or ``str`` (:issue:`519`, pr:`558`) `Aaron Spring`_.
+  ``set``, ``tuple`` or ``str`` (:issue:`519`, :pr:`558`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.PredictionEnsemble.map` now does not fail silently when
-  applying a function to all xr.Datasets of
-  :py:class:`~climpred.classes.PredictionEnsemble`.
-  Instead, ``UserWarning``s are raised. Furthermore,
-  ``PredictionEnsemble.map(func, *args, **kwargs)``
+  applying a function to all ``xr.Datasets`` of
+  :py:class:`~climpred.classes.PredictionEnsemble`. Instead, ``UserWarning``s are
+  raised. Furthermore, ``PredictionEnsemble.map(func, *args, **kwargs)``
   applies only function to Datasets with matching dims if ``dim="dim0_or_dim1"`` is
   passed as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
 

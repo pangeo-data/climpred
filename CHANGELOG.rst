@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.1.x (2021-0x-xx)
+climpred v2.1.3 (2021-xx-xx)
 ============================
 
 New Features
@@ -10,9 +10,15 @@ New Features
 
 Bug fixes
 ---------
-- `~climpred.classes.PredictionEnsemble.verify` and
-  `~climpred.classes.PredictionEnsemble.bootstrap` accept ``dim`` as ``list``, ``set``,
-   ``tuple`` or ``str`` (:issue:`519`, pr:`558`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` accept ``dim`` as ``list``,
+  ``set``, ``tuple`` or ``str`` (:issue:`519`, :pr:`558`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.PredictionEnsemble.map` now does not fail silently when
+  applying a function to all ``xr.Datasets`` of
+  :py:class:`~climpred.classes.PredictionEnsemble`. Instead, ``UserWarning``s are
+  raised. Furthermore, ``PredictionEnsemble.map(func, *args, **kwargs)``
+  applies only function to Datasets with matching dims if ``dim="dim0_or_dim1"`` is
+  passed as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
 
 
 climpred v2.1.2 (2021-01-22)

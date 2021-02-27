@@ -1,3 +1,4 @@
+import warnings
 from copy import deepcopy
 
 import numpy as np
@@ -350,7 +351,35 @@ class PredictionEnsemble:
                 #            as ds[dim] and the dim doesn't exist as a key.
                 # DimensionError: This accounts for our custom error when applying
                 # some stats functions.
-                except (ValueError, KeyError, DimensionError):
+                except (ValueError, KeyError, DimensionError) as e:
+                    if args == tuple():
+                        func_name = False
+                    else:
+                        if callable(args[0]):
+                            func_name = args[0].__name__
+                        else:  # for xarray calls like pe.mean()
+                            func_name = False
+                    dim = kwargs.get("dim", False)
+                    error_type = type(e).__name__
+                    if func_name:
+                        if len(args) > 1:
+                            msg = f"{func_name}({args[1:]}, {kwargs}) failed\n{error_type}: {e}"
+                        else:
+                            msg = f"{func_name}({kwargs}) failed\n{error_type}: {e}"
+                    else:
+                        msg = f"xr.{name}({args}, {kwargs}) failed\n{error_type}: {e}"
+                    if set(["lead", "init"]).issubset(set(v.dims)):  # initialized
+                        if dim not in v.dims:
+                            warnings.warn(f"Error due to initialized:  {msg}")
+                    elif set(["time"]).issubset(
+                        set(v.dims)
+                    ):  # uninitialized, control, verification
+                        if dim not in v.dims:
+                            warnings.warn(
+                                f"Error due to verification/control/uninitialized: {msg}"
+                            )
+                    else:
+                        warnings.warn(msg)
                     return v
 
             return self._apply_func(_apply_xr_func, name, *args, **kwargs)
@@ -376,22 +405,26 @@ class PredictionEnsemble:
         datasets = self._datasets.copy()
 
         # More explicit than nested dictionary comprehension.
-        for outer_k, outer_v in datasets.items():
-            # If initialized, control, uninitialized and just a singular
-            # dataset, apply the function directly to it.
-            if isinstance(outer_v, xr.Dataset):
-                datasets.update({outer_k: func(outer_v, *args, **kwargs)})
-            else:
-                # If a nested dictionary is encountered (i.e., a set of
-                # observations) apply to each individually.
-                #
-                # Similar to the ``add_observations`` method, this only seems to
-                # avoid inplace operations by copying the nested dictionary
-                # separately and then updating the main dictionary.
-                temporary_dataset = self._datasets[outer_k].copy()
-                for inner_k, inner_v in temporary_dataset.items():
-                    temporary_dataset.update({inner_k: func(inner_v, *args, **kwargs)})
-                datasets.update({outer_k: temporary_dataset})
+        for key, ds in datasets.items():
+            # If ds is xr.Dataset, apply the function directly to it. else, e.g. for {} ignore
+            if isinstance(ds, xr.Dataset):
+                dim = kwargs.get("dim", "")
+                if "_or_" in dim:
+                    dims = dim.split("_or_")
+                    if set(dims).issubset(ds.dims):
+                        raise ValueError(
+                            f"{dims} cannot be both in {key} dataset, found {ds.dims}"
+                        )
+                    kwargs_dim0 = kwargs.copy()
+                    kwargs_dim0["dim"] = dims[0]
+                    kwargs_dim1 = kwargs.copy()
+                    kwargs_dim1["dim"] = dims[1]
+                    if dims[0] in ds.dims and dims[1] not in ds.dims:
+                        datasets.update({key: func(ds, *args, **kwargs_dim0)})
+                    if dims[1] in ds.dims and dims[0] not in ds.dims:
+                        datasets.update({key: func(ds, *args, **kwargs_dim1)})
+                else:
+                    datasets.update({key: func(ds, *args, **kwargs)})
         # Instantiates new object with the modified datasets.
         return self._construct_direct(datasets, kind=self.kind)
 

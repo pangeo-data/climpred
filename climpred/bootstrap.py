@@ -1116,7 +1116,7 @@ def bootstrap_hindcast(
         >>> bootstrapped_skill = climpred.bootstrap.bootstrap_hindcast(hind, hist, obs)
         >>> bootstrapped_skill.coords
         Coordinates:
-          * skill    (skill) object 'initialized' 'persistence' 'uninitialized'
+          * skill    (skill) <U13 'initialized' 'persistence' 'uninitialized'
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
 

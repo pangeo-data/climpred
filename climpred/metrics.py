@@ -1737,7 +1737,9 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         >>> def pos(x): return x > 0  # checking binary outcomes
 
-        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+        Option 1. Pass with keyword `logical`: (specifically developed for
+        PerfectModelEnsemble, where binary verification can only be created
+        after comparison)
 
         >>> hindcast.verify(metric='brier_score', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
@@ -1749,9 +1751,9 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
 
-        Option 2. Pre-process to generate a binary forecast and verification product:
+        Option 2. Pre-process to generate a binary multi-member forecast and
+        binary verification product:
 
-        >>> # TODO: should be identical to above
         >>> hindcast.map(pos).verify(metric='brier_score',
         ...     comparison='m2o', dim=['member', 'init'], alignment='same_verifs')
         <xarray.Dataset>
@@ -1760,10 +1762,10 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.1577 0.175 0.1904 0.1654 ... 0.2038 0.2135 0.2269
+            SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
 
         Option 3. Pre-process to generate a probability forecast and binary
-        verification product. Because `member` no present in `hindcast`, use
+        verification product. Because `member` no present in `hindcast` anymore, use
         ``comparison='e2o'`` and ``dim='init'``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
@@ -1779,7 +1781,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    if 'member' in forecast.dims:  # rm this with xs 0.0.19
+    if 'member' in forecast.dims:  # rm with xs 0.0.19
         forecast = forecast.mean('member')
         dim = dim.copy()
         dim.remove('member')

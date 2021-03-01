@@ -1243,7 +1243,7 @@ def bootstrap_perfect_model(
         >>> bootstrapped_s = climpred.bootstrap.bootstrap_perfect_model(init, control)
         >>> bootstrapped_s.coords
         Coordinates:
-          * skill    (skill) object 'initialized' 'persistence' 'uninitialized'
+          * skill    (skill) <U13 'initialized' 'persistence' 'uninitialized'
           * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
           * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
     """

@@ -173,7 +173,7 @@ acidification in the California Current; @Spring:2020 and @Spring:2021 used the
 cycle; and @Krumhardt:2020 used the `HindcastEnsemble` class to illuminate multi-year
 predictability in marine Net Primary Productivity.
 
-# Acknolwedgements
+# Acknowledgements
 We thank Andrew Huang for early stage refactoring and continued feedback on
 `climpred`. We also thank Kathy Pegion for pioneering the seasonal, monthly,
 and subseasonal time resolutions. Thanks in addition to Ray Bell for

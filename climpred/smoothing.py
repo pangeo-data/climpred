@@ -170,6 +170,8 @@ def temporal_smoothing(ds, tsmooth_kws=None, how="mean", d_lon_lat_kws=None):
             tsmooth_kws,
         )
     smooth = list(tsmooth_kws.values())[0]
+    if smooth == 1:
+        return ds
     dim = list(tsmooth_kws.keys())[0]
     # fix to smooth either lead or time depending
     time_dims = ["time", "lead"]

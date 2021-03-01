@@ -131,11 +131,6 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         # apply logical function to get forecast probability
         forecast = logical(forecast).mean("member")
         verif = logical(verif)  # binary outcome
-        else:
-            raise ValueError(
-                f"Expected dimension `member` in forecast, found {list(forecast.dims)}"
-            )
-        # rename dim to time if forecast and verif dims allow
         return forecast, verif, metric_kwargs, dim
     elif (
         comparison.name == "e2o"

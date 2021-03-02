@@ -1781,10 +1781,10 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    if 'member' in forecast.dims:  # rm with xs 0.0.19
-        forecast = forecast.mean('member')
+    if "member" in forecast.dims:  # rm with xs 0.0.19
+        forecast = forecast.mean("member")
         dim = dim.copy()
-        dim.remove('member')
+        dim.remove("member")
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 

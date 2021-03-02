@@ -1781,7 +1781,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    forecast = _maybe_member_mean_reduce_dim(forecast, dim)
+    forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 

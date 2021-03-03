@@ -2007,9 +2007,9 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         >>> def pos(x): return x > 0  # checking binary outcomes
 
-        Option 1. Pass with keyword `logical`: (specifically developed for
-        PerfectModelEnsemble, where binary verification can only be created
-        after comparison)
+        Option 1. Pass with keyword ``logical``: (specifically designed for
+        :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
+        can only be created after comparison)
 
         >>> hindcast.verify(metric='brier_score', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
@@ -2035,7 +2035,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
 
         Option 3. Pre-process to generate a probability forecast and binary
-        verification product. Because `member` no present in `hindcast` anymore, use
+        verification product. because ``member`` not present in ``hindcast`` anymore, use
         ``comparison='e2o'`` and ``dim='init'``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
@@ -2542,7 +2542,9 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
 
         >>> def pos(x): return x > 0  # checking binary outcomes
 
-        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+        Option 1. Pass with keyword ``logical``: (especially designed for
+        :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
+        can only be created after comparison)
 
         >>> hindcast.verify(metric='discrimination', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
@@ -2571,7 +2573,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
             SST                   (lead, event, forecast_probability) float64 0.1481 ...
 
         Option 3. Pre-process to generate a probability forecast and binary
-        verification product. Because `member` no present in `hindcast`, use
+        verification product. because ``member`` not present in ``hindcast``, use
         ``comparison='e2o'`` and ``dim='init'``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
@@ -2647,7 +2649,9 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
 
         >>> def pos(x): return x > 0  # checking binary outcomes
 
-        Option 1. Pass with keyword `logical`: (Works also for PerfectModelEnsemble)
+        Option 1. Pass with keyword ``logical``: (especially designed for
+        :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
+        can only be created after comparison))
 
         >>> hindcast.verify(metric='reliability', comparison='m2o',
         ...     dim=['member','init'], alignment='same_verifs', logical=pos)
@@ -2676,7 +2680,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             SST                   (lead, forecast_probability) float64 0.16 ... 1.0
 
         Option 3. Pre-process to generate a probability forecast and binary
-        verification product. Because `member` no present in `hindcast`, use
+        verification product. because ``member`` not present in ``hindcast``, use
         ``comparison='e2o'`` and ``dim='init'``:
 
         >>> hindcast.map(pos).mean('member').verify(metric='reliability',

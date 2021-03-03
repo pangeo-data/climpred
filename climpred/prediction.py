@@ -15,7 +15,7 @@ from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR
 from .exceptions import DimensionError
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
-from .reference import persistence, uninitialized
+from .reference import climatology, persistence, uninitialized
 from .utils import (
     assign_attrs,
     convert_time_index,
@@ -39,10 +39,6 @@ def _apply_metric_at_given_lead(
     **metric_kwargs,
 ):
     """Applies a metric between two time series at a given lead.
-
-    .. note::
-
-        This will be moved to a method of the `Scoring()` class in the next PR.
 
     Args:
         verif (xr object): Verification data.
@@ -76,7 +72,10 @@ def _apply_metric_at_given_lead(
         a, b = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
         a, b = uninitialized(hist, verif, verif_dates, lead)
-    a["time"] = b["time"]
+    elif reference == "climatology":
+        a, b = climatology(verif, inits, verif_dates, lead)
+    # a=forecast, b=observation
+    a["time"] = b["time"]  # a bit dangerous: what if different?
 
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:

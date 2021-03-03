@@ -251,7 +251,14 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
 
 
 @pytest.mark.parametrize(
-    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
+    "reference",
+    [
+        [],
+        "uninitialized",
+        "persistence",
+        "climatology",
+        ["uninitialized", "persistence", "climatology"],
+    ],
 )
 def test_verify_reference(hindcast_hist_obs_1d, reference):
     """Test that hindcast.bootstrap returns reference skill."""

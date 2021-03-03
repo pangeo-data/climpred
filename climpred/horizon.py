@@ -46,7 +46,11 @@ def _last_item_cond_true(cond, dim):
         reached_notnull, other=np.nan
     )  # cleanup replace dim:0 with nan again
     if was_dataset:
-        reached_dim_space = reached_dim_space.to_dataset(dim="variable")
+        reached_dim_space = reached_dim_space.to_dataset(dim="variable").squeeze(
+            drop=True
+        )
+        if "lead" in reached_dim_space.coords:
+            reached_dim_space = reached_dim_space.drop("lead")
     return reached_dim_space
 
 
@@ -63,14 +67,29 @@ def horizon(cond):
         xr.DataArray, xr.Dataset: predictability horizon reduced by ``lead`` dimension.
 
     Example:
-        >>> skill = pm.verify(metric='acc', comparison='m2e', dim=['init','member'],
-                reference=['persistence'])
+        >>> skill = perfect_model.verify(metric='acc', comparison='m2e',
+        ...     dim=['init','member'], reference=['persistence'])
         >>> horizon(skill.sel(skill='initialized') >
-                skill.sel(skill='persistence'))
+        ...     skill.sel(skill='persistence'))
+        <xarray.Dataset>
+        Dimensions:  ()
+        Data variables:
+            tos      float64 15.0
+        Attributes:
+            units:    years
 
-        >>> bskill = pm.bootstrap(metric='acc', comparison='m2e', dim=['init','member'],
-                reference=['persistence'], iterations=21)
-        >>> horizon(bskill.sel(skill='persistence', results='p') <= 0.05)
+        >>> bskill = perfect_model.bootstrap(metric='acc', comparison='m2e',
+        ...     dim=['init','member'], reference='uninitialized', iterations=201)
+        >>> horizon(bskill.sel(skill='uninitialized', results='p') <= 0.05)
+        <xarray.Dataset>
+        Dimensions:  ()
+        Coordinates:
+            skill    <U13 'uninitialized'
+            results  <U12 'p'
+        Data variables:
+            tos      float64 10.0
+        Attributes:
+            units:    years
 
     """
     ph = _last_item_cond_true(cond, "lead")

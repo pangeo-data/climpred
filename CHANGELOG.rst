@@ -2,8 +2,12 @@
 What's New
 ==========
 
+
 climpred v2.1.3 (2021-xx-xx)
 ============================
+
+Breaking changes
+----------------
 
 New Features
 ------------
@@ -20,6 +24,14 @@ Bug fixes
   applies only function to Datasets with matching dims if ``dim="dim0_or_dim1"`` is
   passed as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
 
+Internals/Minor Fixes
+---------------------
+- docstrings are now tested in GitHub actions continuous integration.
+  (:issue:`545`, :pr:`560`) `Aaron Spring`_.
+- Github actions now cancels previous commits, instead of running the full
+  testing suite on every single commit. (:pr:`560`) `Aaron Spring`_.
+- `~climpred.classes.PerfectModelEnsemble.verify` does not add climpred
+  attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

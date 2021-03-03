@@ -49,6 +49,8 @@ def test_horizon_3d(hindcast_recon_3d):
     )
 
     ph = horizon(skill.sel(skill="initialized") > skill.sel(skill="persistence"))
+    assert "variable" not in skill.dims
+    assert "variable" not in skill.coords
     # test all nan on land
     assert ph["SST"][0, 0].isnull()
     # test significant everywhere

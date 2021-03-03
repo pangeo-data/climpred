@@ -2,6 +2,7 @@ import numpy as np
 import pytest
 import xarray as xr
 
+import climpred
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.constants import HINDCAST_CALENDAR_STR, PM_CALENDAR_STR
 from climpred.tutorial import load_dataset
@@ -9,12 +10,36 @@ from climpred.utils import convert_time_index
 
 CALENDAR = PM_CALENDAR_STR.strip("Datetime").lower()
 
+xr.set_options(display_style="text")
+
+
+@pytest.fixture(autouse=True)
+def add_standard_imports(
+    doctest_namespace,
+    hindcast_hist_obs_1d,
+    hindcast_recon_3d,
+    perfectModelEnsemble_initialized_control,
+):
+    """imports for doctest"""
+    xr.set_options(display_style="text")
+    doctest_namespace["np"] = np
+    doctest_namespace["xr"] = xr
+    doctest_namespace["climpred"] = climpred
+
+    # always seed numpy.random to make the examples deterministic
+    np.random.seed(42)
+
+    # climpred data
+    doctest_namespace["hindcast"] = hindcast_hist_obs_1d
+    doctest_namespace["hindcast_3D"] = hindcast_recon_3d
+    doctest_namespace["perfect_model"] = perfectModelEnsemble_initialized_control
+
 
 @pytest.fixture()
 def PM_ds3v_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
     variables."""
-    return load_dataset("MPI-PM-DP-1D").isel(area=1, period=-1)
+    return load_dataset("MPI-PM-DP-1D").isel(area=1, period=-1, drop=True)
 
 
 @pytest.fixture()
@@ -70,7 +95,7 @@ def PM_da_initialized_3d(PM_ds_initialized_3d):
 def PM_ds3v_control_1d():
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     three variables."""
-    return load_dataset("MPI-control-1D").isel(area=1, period=-1)
+    return load_dataset("MPI-control-1D").isel(area=1, period=-1, drop=True)
 
 
 @pytest.fixture()
@@ -192,10 +217,10 @@ def hind_da_initialized_3d(hind_ds_initialized_3d):
 @pytest.fixture()
 def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
-    da = load_dataset("CESM-LE")
+    ds = load_dataset("CESM-LE")
     # add member coordinate
-    da["member"] = range(1, 1 + da.member.size)
-    return da - da.mean("time")
+    ds["member"] = range(1, 1 + ds.member.size)
+    return ds - ds.mean("time")
 
 
 @pytest.fixture()

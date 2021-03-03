@@ -453,10 +453,36 @@ class PredictionEnsemble:
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
         Examples:
-            >>> PredictionEnsemble.smooth({'lead': 2, 'lat': 5, 'lon': 4'})
-            >>> PredictionEnsemble.smooth('goddard2013')
-            >>> PredictionEnsemble.smooth({'lon':1, 'lat':1}, method='patch')
-            >>> PredictionEnsemble.smooth({'lead':2}, how='sum')
+            >>> perfect_model.get_initialized().lead.size
+            20
+            >>> perfect_model.smooth({'lead':4}, how='sum').get_initialized().lead.size
+            17
+
+            >>> hindcast_3D.smooth({'lon':1, 'lat':1})
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, lat, lon) float64 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
+            Observations:
+                SST      (time, lat, lon) float64 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
+            Uninitialized:
+                None
+
+            ``smooth`` simultaneously aggregates spatially listening to ``lon`` and ``lat`` and temporally listening to ``lead`` or ``time``.
+
+            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
+            Coordinates:
+              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9
+              * lon      (lon) float64 250.8 254.8 258.8 262.8
+              * lat      (lat) float64 -9.75 -4.75
+            >>> hindcast_3D.smooth('goddard2013').get_initialized().coords
+            Coordinates:
+              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead     (lead) int32 1 2 3 4 5 6 7
+              * lon      (lon) float64 250.8 255.8 260.8 265.8
+              * lat      (lat) float64 -9.75 -4.75
+
+
         """
         if not smooth_kws:
             return self
@@ -496,7 +522,8 @@ class PredictionEnsemble:
                 for c in ["lon", "lat"]:
                     if c in smooth_kws:
                         d_lon_lat_kws[c] = smooth_kws[c]
-                    else:
+                for c in ["lead", "time"]:
+                    if c in smooth_kws:
                         tsmooth_kws[c] = smooth_kws[c]
             # else only one smoothing operation
             elif "lon" in smooth_kws or "lat" in smooth_kws:
@@ -703,6 +730,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             dim=dim,
+            add_attrs=False,
             **metric_kwargs,
         )
         if self._temporally_smoothed:

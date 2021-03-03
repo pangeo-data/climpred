@@ -285,15 +285,22 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         | **orientation** | positive  |
         +-----------------+-----------+
 
-    Example:
-    >>> hindcast.verify(metric='pearson_r', comparison='e2o', alignment='same_verifs',
-    ...     dim=['init'])
-
     See also:
         * :py:func:`~xskillscore.pearson_r`
         * :py:func:`~xskillscore.pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
+
+    Example:
+        >>> hindcast.verify(metric='pearson_r', comparison='e2o',
+        ...     alignment='same_verifs', dim=['init'])
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.9272 0.9145 0.9127 0.9319 ... 0.9315 0.9185 0.9112
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -354,7 +361,7 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.9272 0.9145 0.9127 0.9319 ... 0.9315 0.9185 0.9112
+            SST      (lead) float64 5.779e-23 2.753e-21 4.477e-21 ... 8.7e-22 6.781e-21
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -2117,7 +2124,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 1.0 0.01 0.0 0.0 0.0
+            SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
 
         >>> # multiple thresholds averaging over init dimension
         >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
@@ -2129,7 +2136,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
           * threshold  (threshold) int64 1 2
             skill      <U11 'initialized'
         Data variables:
-            SST        (lead, threshold) float64 0.09462 0.006731 ... 0.1033 0.02385
+            SST        (lead, threshold) float64 0.08712 0.005769 ... 0.1312 0.01923
 
     """
     if "threshold" not in metric_kwargs:

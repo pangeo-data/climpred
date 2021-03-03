@@ -74,6 +74,9 @@ def _apply_metric_at_given_lead(
         a, b = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
         a, b = climatology(verif, inits, verif_dates, lead)
+    
+    if metric.probabilistic and "member" not in a.dims and reference is not None:
+        a = a.expand_dims("member")  # add fake member dim
     # a=forecast, b=observation
     a["time"] = b["time"]  # a bit dangerous: what if different?
 

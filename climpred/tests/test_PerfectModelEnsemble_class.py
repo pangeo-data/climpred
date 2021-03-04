@@ -135,7 +135,9 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
         ["uninitialized"],
         "persistence",
         None,
-        ["uninitialized", "persistence"],
+        [],
+        "climatology",
+        ["uninitialized", "persistence", "climatology"],
     ],
 )
 def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
@@ -158,6 +160,7 @@ def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
         assert skill.skill.size == len(reference) + 1
     # test skills not none
     assert skill.notnull().all()
+    assert "dayofyear" not in skill.coords
 
 
 def test_verify_fails_expected_metric_kwargs(perfectModelEnsemble_initialized_control):

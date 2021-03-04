@@ -4,9 +4,14 @@ import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_xarray
-from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, __e2c
+from .comparisons import COMPARISON_ALIASES, HINDCAST_COMPARISONS, PM_COMPARISONS, __e2c
 from .constants import CLIMPRED_DIMS
-from .metrics import DETERMINISTIC_HINDCAST_METRICS, METRIC_ALIASES, _rename_dim
+from .metrics import (
+    DETERMINISTIC_HINDCAST_METRICS,
+    METRIC_ALIASES,
+    PM_METRICS,
+    _rename_dim,
+)
 from .utils import (
     assign_attrs,
     convert_time_index,
@@ -36,7 +41,7 @@ def climatology(verif, inits, verif_dates, lead):
     # print('verif_hind_union',verif_hind_union)
     climatology_forecast = climatology_day.sel(
         dayofyear=verif_hind_union.time.dt.dayofyear
-    )  # .expand_dims('member')
+    ).drop("dayofyear")
     # print('clim forecast',climatology_forecast.time.size,climatology_forecast.time.min(), climatology_forecast.time.max())
     lforecast = climatology_forecast.where(
         climatology_forecast.time.isin(inits[lead]), drop=True
@@ -56,7 +61,67 @@ def uninitialized(hist, verif, verif_dates, lead):
     return lforecast, lverif
 
 
-# LEGACY CODE BELOW -- WILL BE DELETED DURING INHERITANCE REFACTORING #
+# needed for PerfectModelEnsemble.verify(reference=...) or legacy code
+
+
+def compute_climatology(
+    hind,
+    verif=None,
+    metric="pearson_r",
+    comparison="m2e",
+    add_attrs=True,
+    dim="init",
+    **metric_kwargs,
+):
+    """Computes the skill of a climatology forecast for PerfectModelEnsemble.
+
+    Args:
+        hind (xarray object): The initialized ensemble.
+        verif (xarray object): control data, not needed
+        metric (str): Metric name to apply at each lag for the persistence computation.
+            Default: 'pearson_r'
+        dim (str or list of str): dimension to apply metric over.
+        add_attrs (bool): write climpred compute_persistence args to attrs.
+            default: True
+        ** metric_kwargs (dict): additional keywords to be passed to metric
+            (see the arguments required for a given metric in :ref:`Metrics`).
+
+    Returns:
+        clim (xarray object): Results of climatology forecast with the input metric
+            applied.
+    """
+    if isinstance(dim, str):
+        dim = [dim]
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    hind = convert_time_index(hind, "init", "hind[init]")
+    verif = convert_time_index(verif, "time", "verif[time]")
+    # Put this after `convert_time_index` since it assigns 'years' attribute if the
+    # `init` dimension is a `float` or `int`.
+    has_valid_lead_units(hind)
+
+    # get metric/comparison function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
+    comparison = get_comparison_class(comparison, PM_COMPARISONS)
+    metric = get_metric_class(metric, PM_METRICS)
+    forecast, verif = comparison.function(hind, metric=metric)
+
+    climatology_day = verif.groupby("init.dayofyear").mean()
+
+    climatology_day_forecast = climatology_day.sel(
+        dayofyear=forecast.init.dt.dayofyear
+    ).drop("dayofyear")
+
+    if metric.normalize:
+        metric_kwargs["comparison"] = __e2c
+    # print('dim',dim, climatology_day_forecast.dims, verif.dims)
+    clim_skill = metric.function(
+        climatology_day_forecast, verif, dim=dim, **metric_kwargs
+    )
+    return clim_skill
+
+
 @is_xarray([0, 1])
 def compute_persistence(
     hind,

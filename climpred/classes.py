@@ -31,7 +31,7 @@ from .prediction import (
     _get_metric_comparison_dim,
     compute_perfect_model,
 )
-from .reference import compute_persistence
+from .reference import compute_climatology, compute_persistence
 from .smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
@@ -746,6 +746,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
                 if r != "persistence":
                     ref_compute_kwargs["comparison"] = comparison
+                print(f"_compute_{r}")
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             result = result.assign_coords(skill=["initialized"] + reference)
@@ -842,6 +843,55 @@ class PerfectModelEnsemble(PredictionEnsemble):
             input_dict=input_dict,
             metric=metric,
             alignment="same_inits",
+            dim=dim,
+            **metric_kwargs,
+        )
+        if self._temporally_smoothed:
+            res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
+            res["lead"].attrs = self.get_initialized().lead.attrs
+        return res
+
+    def _compute_climatology(
+        self, metric=None, comparison=None, dim=None, **metric_kwargs
+    ):
+        """Verify a climatology forecast of the control run against itself.
+
+        Args:
+            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
+            verifying skill of the persistence forecast. See `metrics </metrics.html>`_.
+            dim (str, list of str): Dimension(s) over which to apply metric.
+                ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
+                ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
+                is probabilistic but should not contain ``member`` when
+                ``comparison=e2c``. Defaults to ``None``, meaning that all dimensions
+                other than ``lead`` are reduced.
+            **metric_kwargs (optional): Arguments passed to ``metric``.
+
+        Returns:
+            Dataset of persistence forecast results.
+
+        Reference:
+            * Chapter 8 (Short-Term Climate Prediction) in
+              Van den Dool, Huug. Empirical methods in short-term climate
+              prediction. Oxford University Press, 2007.
+        """
+        input_dict = {
+            "ensemble": self._datasets["initialized"],
+            "control": self._datasets["control"]
+            if isinstance(self._datasets["control"], xr.Dataset)
+            else None,
+            "init": True,
+        }
+        if dim is None:
+            dim = list(self._datasets["initialized"].dims)
+        for d in ["lead"]:
+            if d in dim:
+                dim.remove(d)
+        res = self._apply_climpred_function(
+            compute_climatology,
+            input_dict=input_dict,
+            metric=metric,
+            comparison=comparison,
             dim=dim,
             **metric_kwargs,
         )

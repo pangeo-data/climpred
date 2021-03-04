@@ -226,7 +226,14 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
 
 
 @pytest.mark.parametrize(
-    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
+    "reference",
+    [
+        [],
+        "uninitialized",
+        "persistence",
+        "climatology",
+        ["climatology", "uninitialized", "persistence"],
+    ],
 )
 def test_bootstrap(hindcast_hist_obs_1d, reference):
     """Test that hindcast.bootstrap returns reference skill."""
@@ -248,6 +255,7 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
     else:
         assert "skill" in actual.coords
         assert "skill" not in actual.dims
+    assert "dayofyear" not in actual.coords
 
 
 @pytest.mark.parametrize("metric", ["pearson_r", "brier_score", "crps"])

@@ -25,6 +25,33 @@ from .utils import (
 )
 
 
+def _maybe_drop_or_raise_member_dim(lforecast, lverif, dim, metric):
+    """Maybe drop member from dim or add single-member dimension for probabilistic
+    metrics. Used in reference forecasts: climatology, uninitialized, persistence."""
+    # persistence or climatology forecasts wont have member dimension
+    # delete member from dim if needed
+    if "member" in dim:
+        if (
+            "member" in lforecast.dims
+            and "member" not in lverif.dims
+            and not metric.requires_member_dim
+        ):
+            dim = dim.copy()
+            dim.remove("member")
+        elif "member" not in lforecast.dims and "member" not in lverif.dims:
+            dim = dim.copy()
+            dim.remove("member")
+    # for probabilistic metrics requiring member dim, add single-member dimension
+    if metric.requires_member_dim:
+        if "member" not in lforecast.dims:
+            lforecast = lforecast.expand_dims("member")  # add fake member dim
+            if "member" not in dim:
+                dim = dim.copy()
+                dim.append("member")
+        assert "member" in lforecast.dims and "member" not in lverif.dims
+    return lforecast, lverif, dim
+
+
 def _apply_metric_at_given_lead(
     verif,
     verif_dates,
@@ -59,56 +86,32 @@ def _apply_metric_at_given_lead(
         result (xr object): Metric results for the given lead for the initialized
             forecast or reference forecast.
     """
-
-    def _maybe_drop_or_raise_member_dim(a, b, dim, metric):
-        """Maybe drop member from dim. Used in reference forecasts: climatology, uninitialized, persistence."""
-        if "member" in dim:
-            if (
-                "member" in a.dims
-                and "member" not in b.dims
-                and not metric.requires_member_dim
-            ):
-                dim = dim.copy()
-                dim.remove("member")
-            elif "member" not in a.dims and "member" not in b.dims:
-                dim = dim.copy()
-                dim.remove("member")
-
-        if metric.requires_member_dim:
-            if "member" not in a.dims and reference is not None:
-                a = a.expand_dims("member")  # add fake member dim
-                if "member" not in dim:
-                    dim = dim.copy()
-                    dim.append("member")
-        # if 'member' in a.dims and 'member' not in b.dims and 'member' :
-        return a, b, dim
-
+    # lforecast: forecast at lead; lverif: verification at lead
     if reference is None:
         # print("calc skill")
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
-        a = (
+        lforecast = (
             hind.sel(lead=lead)
             .where(hind["time"].isin(inits[lead]), drop=True)
             .drop_vars("lead")
         )
-        b = verif.sel(time=verif_dates[lead])
+        lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
         # print("calc persistence")
-        a, b = persistence(verif, inits, verif_dates, lead)
-        a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
+        lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
         # print("calc uninit")
-        a, b = uninitialized(hist, verif, verif_dates, lead)
-        a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
+        lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
         # print("calculating climatology")
-        a, b = climatology(verif, inits, verif_dates, lead)
+        lforecast, lverif = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
-        a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
+        lforecast, lverif, dim = _maybe_drop_or_raise_member_dim(
+            lforecast, lverif, dim, metric
+        )
 
-    # a=forecast, b=observation
-    a["time"] = b["time"]  # a bit dangerous: what if different?
+    lforecast["time"] = lverif["time"]  # a bit dangerous: what if different?
 
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:
@@ -121,7 +124,7 @@ def _apply_metric_at_given_lead(
     #    "b.dims",
     #    list(b.dims),
     # )
-    result = metric.function(a, b, dim=dim, **metric_kwargs)
+    result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result
 

@@ -19,9 +19,9 @@ from .utils import (
 
 
 def persistence(verif, inits, verif_dates, lead):
-    a = verif.where(verif.time.isin(inits[lead]), drop=True)
-    b = verif.sel(time=verif_dates[lead])
-    return a, b
+    lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
+    lverif = verif.sel(time=verif_dates[lead])
+    return lforecast, lverif
 
 
 def climatology(verif, inits, verif_dates, lead):
@@ -38,22 +38,22 @@ def climatology(verif, inits, verif_dates, lead):
         dayofyear=verif_hind_union.time.dt.dayofyear
     )  # .expand_dims('member')
     # print('clim forecast',climatology_forecast.time.size,climatology_forecast.time.min(), climatology_forecast.time.max())
-    a = climatology_forecast.where(
+    lforecast = climatology_forecast.where(
         climatology_forecast.time.isin(inits[lead]), drop=True
     )
     # need to take one more for last init
     # print('clim forecast at verif dates',a.time.size,a.time.min(),a.time.max())
-    b = verif.sel(time=verif_dates[lead])
+    lverif = verif.sel(time=verif_dates[lead])
     # print('obs',b.time.size,b.time.min(), b.time.max())
-    assert a.time.size == b.time.size
-    return a, b
+    assert lforecast.time.size == lverif.time.size
+    return lforecast, lverif
 
 
 def uninitialized(hist, verif, verif_dates, lead):
     """also called historical in some communities."""
-    a = hist.sel(time=verif_dates[lead])
-    b = verif.sel(time=verif_dates[lead])
-    return a, b
+    lforecast = hist.sel(time=verif_dates[lead])
+    lverif = verif.sel(time=verif_dates[lead])
+    return lforecast, lverif
 
 
 # LEGACY CODE BELOW -- WILL BE DELETED DURING INHERITANCE REFACTORING #

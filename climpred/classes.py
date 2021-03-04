@@ -1105,6 +1105,8 @@ class HindcastEnsemble(PredictionEnsemble):
         Returns:
             Dataset with dimension skill containing initialized and reference skill(s).
         """
+        print("init.dims", self.get_initialized().dims)
+        print("uninit.dims", self.get_uninitialized().dims)
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:

@@ -60,6 +60,7 @@ def _apply_metric_at_given_lead(
             forecast or reference forecast.
     """
     if reference is None:
+        print("calc skill")
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
         a = (
@@ -73,16 +74,46 @@ def _apply_metric_at_given_lead(
     elif reference == "uninitialized":
         a, b = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
+        print("calculating climatology")
         a, b = climatology(verif, inits, verif_dates, lead)
-    
-    if metric.probabilistic and "member" not in a.dims and reference is not None:
+        if (
+            "member" in dim
+            and "member" not in a.dims
+            and not metric.requires_member_dim
+        ):
+            dim = dim.copy()
+            dim.remove("member")
+
+    if (
+        metric.probabilistic
+        and "member" in dim
+        and "member" not in a.dims
+        and reference is not None
+    ):
         a = a.expand_dims("member")  # add fake member dim
+    if comparison.name in ["e2o"]:
+        if "member" in a.dims:
+            a = a.mean("member")
+        if "member" in dim:
+            dim = dim.copy()
+            dim.remove("member")
+    # if reference in ['climatology'] and 'member' in dim and 'member' not in a.dims:
+    #    a = a.expand_dims("member")
+
     # a=forecast, b=observation
     a["time"] = b["time"]  # a bit dangerous: what if different?
 
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
+    print(
+        "passed to metric.function: dim =",
+        list(dim),
+        "a.dims =",
+        list(a.dims),
+        "b.dims",
+        list(b.dims),
+    )
     result = metric.function(a, b, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result

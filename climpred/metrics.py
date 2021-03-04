@@ -202,6 +202,7 @@ class Metric:
         perfect=None,
         normalize=False,
         allows_logical=False,
+        requires_member_dim=False,
     ):
         """Metric initialization.
 
@@ -225,6 +226,8 @@ class Metric:
             allows_logical (bool, optional): Does the metric allow a logical to be
               passed in metric_kwargs? Some probabilistic metrics allow this. Defaults
               to False.
+            requires_member_dim (bool, optional):
+              Does xskillscore.metric expect a member dimension?
 
         Returns:
             Metric: metric class Metric.
@@ -242,6 +245,7 @@ class Metric:
         self.perfect = perfect
         self.normalize = normalize
         self.allows_logical = allows_logical
+        self.requires_member_dim = requires_member_dim
 
     def __repr__(self):
         """Show metadata of metric class."""
@@ -1523,6 +1527,7 @@ __smape = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
+    requires_member_dim=True,
 )
 
 
@@ -1937,6 +1942,7 @@ __msess_murphy = Metric(
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
+    requires_member_dim=True,
 )
 
 
@@ -2240,6 +2246,7 @@ __crps = Metric(
     minimum=0.0,
     maximum=np.inf,
     perfect=0.0,
+    requires_member_dim=True,
 )
 
 
@@ -2496,6 +2503,7 @@ __crpss_es = Metric(
     minimum=-np.inf,
     maximum=0.0,
     perfect=0.0,
+    requires_member_dim=True,
 )
 
 

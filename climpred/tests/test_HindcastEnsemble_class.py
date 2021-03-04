@@ -250,6 +250,7 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
         assert "skill" not in actual.dims
 
 
+@pytest.mark.parametrize("metric", ["pearson_r", "brier_score", "crps"])
 @pytest.mark.parametrize(
     "reference",
     [
@@ -260,17 +261,25 @@ def test_bootstrap(hindcast_hist_obs_1d, reference):
         ["uninitialized", "persistence", "climatology"],
     ],
 )
-def test_verify_reference(hindcast_hist_obs_1d, reference):
+def test_verify_reference(hindcast_hist_obs_1d, reference, metric):
     """Test that hindcast.bootstrap returns reference skill."""
     hindcast = hindcast_hist_obs_1d.expand_dims(["lon", "lat"]).isel(
         lon=[0] * 2, lat=[0] * 2
     )  # make geospatial
+    metric_kwargs = {}
+    if metric == "brier_score":
+
+        def logical(ds):
+            return ds > 0.2
+
+        metric_kwargs["logical"] = logical
     actual = hindcast.verify(
-        metric="acc",
-        comparison="e2o",
+        metric=metric,
+        comparison="m2o",
         alignment="same_verifs",
-        dim="init",
+        dim=["init", "member"],
         reference=reference,
+        **metric_kwargs
     )
     if isinstance(reference, str):
         reference = [reference]

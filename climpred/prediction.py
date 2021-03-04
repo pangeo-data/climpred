@@ -94,15 +94,15 @@ def _apply_metric_at_given_lead(
         )
         b = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
-        print("calc persistence")
+        # print("calc persistence")
         a, b = persistence(verif, inits, verif_dates, lead)
         a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
     elif reference == "uninitialized":
-        print("calc uninit")
+        # print("calc uninit")
         a, b = uninitialized(hist, verif, verif_dates, lead)
         a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
     elif reference == "climatology":
-        print("calculating climatology")
+        # print("calculating climatology")
         a, b = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
         a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)

@@ -144,8 +144,9 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         return forecast, verif, metric_kwargs, dim
     else:
         raise ValueError(
-            "Please provide a callable `logical` to be applied to comparison and \
-             verification data to get values in interval [0,1]."
+            "Please provide a callable `logical` to be applied to forecast and \
+             verification data to get forecast probabilities or binary forecast with \
+             member dimension and binary verification."
         )
 
 

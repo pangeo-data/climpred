@@ -59,8 +59,25 @@ def _apply_metric_at_given_lead(
         result (xr object): Metric results for the given lead for the initialized
             forecast or reference forecast.
     """
+
+    def _maybe_drop_member_from_dim(a, b, dim, metric):
+        """Maybe drop member from dim """
+        if "member" in dim:
+            if (
+                "member" in a.dims
+                and "member" not in b.dims
+                and not metric.requires_member_dim
+            ):
+                dim = dim.copy()
+                dim.remove("member")
+            elif "member" not in a.dims and "member" not in b.dims:
+                dim = dim.copy()
+                dim.remove("member")
+        # if 'member' in a.dims and 'member' not in b.dims and 'member' :
+        return dim
+
     if reference is None:
-        print("calc skill")
+        # print("calc skill")
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
         a = (
@@ -70,28 +87,34 @@ def _apply_metric_at_given_lead(
         )
         b = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
+        print("calc persistence")
         a, b = persistence(verif, inits, verif_dates, lead)
+        dim = _maybe_drop_member_from_dim(a, b, dim, metric)
     elif reference == "uninitialized":
+        print("calc uninit")
         a, b = uninitialized(hist, verif, verif_dates, lead)
+        dim = _maybe_drop_member_from_dim(a, b, dim, metric)
     elif reference == "climatology":
         print("calculating climatology")
         a, b = climatology(verif, inits, verif_dates, lead)
-        if (
-            "member" in dim
-            and "member" not in a.dims
-            and not metric.requires_member_dim
-        ):
-            dim = dim.copy()
-            dim.remove("member")
+        dim = _maybe_drop_member_from_dim(a, b, dim, metric)
+        # if (
+        #    "member" in dim
+        #    and "member" not in a.dims
+        #    and not metric.requires_member_dim
+        # ):
+        #    dim = dim.copy()
+        #    dim.remove("member")
 
-    if (
-        metric.probabilistic
-        and "member" in dim
-        and "member" not in a.dims
-        and reference is not None
-    ):
-        a = a.expand_dims("member")  # add fake member dim
-    if comparison.name in ["e2o"]:
+    if metric.requires_member_dim:
+        if "member" not in a.dims and reference is not None:
+            a = a.expand_dims("member")  # add fake member dim
+            if "member" not in dim:
+                dim = dim.copy()
+                dim.append("member")
+
+    # apply comparison for reference forecasts
+    if comparison.name in ["e2o"] and reference is not None:
         if "member" in a.dims:
             a = a.mean("member")
         if "member" in dim:
@@ -106,14 +129,14 @@ def _apply_metric_at_given_lead(
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
-    print(
-        "passed to metric.function: dim =",
-        list(dim),
-        "a.dims =",
-        list(a.dims),
-        "b.dims",
-        list(b.dims),
-    )
+    # print(
+    #    "passed to metric.function: dim =",
+    #    list(dim),
+    #    "a.dims =",
+    #    list(a.dims),
+    #    "b.dims",
+    #    list(b.dims),
+    # )
     result = metric.function(a, b, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result

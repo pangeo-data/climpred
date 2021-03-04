@@ -127,10 +127,12 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
         logical = metric_kwargs.pop("logical")
         if not callable(logical):
             raise ValueError(f"`logical` must be `callable`, found {type(logical)}")
-        dim = _remove_member_from_dim_or_raise(dim)
         # apply logical function to get forecast probability
-        forecast = logical(forecast).mean("member")
-        verif = logical(verif)  # binary outcome
+        forecast = logical(forecast)
+        # if not metric.requires_member_dim:
+        # dim = _remove_member_from_dim_or_raise(dim)
+        # forecast=forecast.mean("member")
+        verif = logical(verif).astype("int")  # binary outcome
         return forecast, verif, metric_kwargs, dim
     elif (
         comparison.name == "e2o"
@@ -2165,6 +2167,7 @@ __threshold_brier_score = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
+    requires_member_dim=True,
 )
 
 

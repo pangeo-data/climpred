@@ -28,6 +28,8 @@ def climatology(verif, inits, verif_dates, lead):
     # print(f'lead {lead}')
     # print('inits',inits[lead])
     climatology_day = verif.groupby("time.dayofyear").mean()
+    # enlarge times to get climatology_forecast times
+    # this prevents errors if verification.time and hindcast.init are too much apart
     verif_hind_union = xr.DataArray(
         verif.time.to_index().union(inits[lead].time.to_index()), dims="time"
     )

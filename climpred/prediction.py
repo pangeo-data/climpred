@@ -60,8 +60,8 @@ def _apply_metric_at_given_lead(
             forecast or reference forecast.
     """
 
-    def _maybe_drop_member_from_dim(a, b, dim, metric):
-        """Maybe drop member from dim """
+    def _maybe_drop_or_raise_member_dim(a, b, dim, metric):
+        """Maybe drop member from dim. Used in reference forecasts: climatology, uninitialized, persistence."""
         if "member" in dim:
             if (
                 "member" in a.dims
@@ -73,8 +73,15 @@ def _apply_metric_at_given_lead(
             elif "member" not in a.dims and "member" not in b.dims:
                 dim = dim.copy()
                 dim.remove("member")
+
+        if metric.requires_member_dim:
+            if "member" not in a.dims and reference is not None:
+                a = a.expand_dims("member")  # add fake member dim
+                if "member" not in dim:
+                    dim = dim.copy()
+                    dim.append("member")
         # if 'member' in a.dims and 'member' not in b.dims and 'member' :
-        return dim
+        return a, b, dim
 
     if reference is None:
         # print("calc skill")
@@ -89,39 +96,16 @@ def _apply_metric_at_given_lead(
     elif reference == "persistence":
         print("calc persistence")
         a, b = persistence(verif, inits, verif_dates, lead)
-        dim = _maybe_drop_member_from_dim(a, b, dim, metric)
+        a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
     elif reference == "uninitialized":
         print("calc uninit")
         a, b = uninitialized(hist, verif, verif_dates, lead)
-        dim = _maybe_drop_member_from_dim(a, b, dim, metric)
+        a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
     elif reference == "climatology":
         print("calculating climatology")
         a, b = climatology(verif, inits, verif_dates, lead)
-        dim = _maybe_drop_member_from_dim(a, b, dim, metric)
-        # if (
-        #    "member" in dim
-        #    and "member" not in a.dims
-        #    and not metric.requires_member_dim
-        # ):
-        #    dim = dim.copy()
-        #    dim.remove("member")
-
-    if metric.requires_member_dim:
-        if "member" not in a.dims and reference is not None:
-            a = a.expand_dims("member")  # add fake member dim
-            if "member" not in dim:
-                dim = dim.copy()
-                dim.append("member")
-
-    # apply comparison for reference forecasts
-    if comparison.name in ["e2o"] and reference is not None:
-        if "member" in a.dims:
-            a = a.mean("member")
-        if "member" in dim:
-            dim = dim.copy()
-            dim.remove("member")
-    # if reference in ['climatology'] and 'member' in dim and 'member' not in a.dims:
-    #    a = a.expand_dims("member")
+    if reference is not None:
+        a, b, dim = _maybe_drop_or_raise_member_dim(a, b, dim, metric)
 
     # a=forecast, b=observation
     a["time"] = b["time"]  # a bit dangerous: what if different?

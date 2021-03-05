@@ -33,13 +33,6 @@ from .utils import (
 def persistence(verif, inits, verif_dates, lead):
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])
-    print(
-        "clim forecast at verif dates",
-        lforecast.time.size,
-        lforecast.time.min(),
-        lforecast.time.max(),
-    )
-    print("obs", lverif.time.size, lverif.time.min(), lverif.time.max())
     return lforecast, lverif
 
 
@@ -72,7 +65,7 @@ def uninitialized(hist, verif, verif_dates, lead):
     """also called historical in some communities."""
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
-    print("lforecast", lforecast.dims, "lverif", lverif.dims)
+    # print("lforecast", lforecast.dims, "lverif", lverif.dims)
     return lforecast, lverif
 
 
@@ -155,14 +148,6 @@ def compute_climatology(
         ):
             dim = dim.copy()
             dim.remove("member")
-    print(
-        "climatology: dim",
-        dim,
-        climatology_day_forecast.dims,
-        verif.dims,
-        "metric_kwargs",
-        metric_kwargs,
-    )
     clim_skill = metric.function(
         climatology_day_forecast, verif, dim=dim, **metric_kwargs
     )
@@ -260,7 +245,7 @@ def compute_persistence(
                 dim = dim.copy()
                 dim.remove("member")
         lverif = verif.sel(time=verif_dates[i])
-        print("persistence: dim", dim, lforecast.dims, lverif.dims)
+        # print("persistence: dim", dim, lforecast.dims, lverif.dims)
         # print('dim =',dim'lforecast',lforecast.dims,'lverif',lverif.dims)
         # lforecast["time"] = lverif["time"] #was before: works for all alignemnts?
         lverif["time"] = lforecast["time"]

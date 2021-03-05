@@ -84,8 +84,8 @@ def horizon(cond):
         <xarray.Dataset>
         Dimensions:  ()
         Coordinates:
-            skill    <U13 'uninitialized'
             results  <U12 'p'
+            skill    <U13 'uninitialized'
         Data variables:
             tos      float64 10.0
         Attributes:

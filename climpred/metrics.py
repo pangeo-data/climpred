@@ -2715,11 +2715,11 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
+    # print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
     if "member" in forecast.dims:
         forecast = forecast.mean("member")  # TODO: fix somehwere else
-    print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
+    # print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 

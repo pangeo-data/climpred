@@ -690,7 +690,7 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
-    print("metric_kwargs", metric_kwargs)
+    # print("metric_kwargs", metric_kwargs)
     warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
@@ -829,7 +829,7 @@ def bootstrap_compute(
         if dask.is_dask_collection(bootstrapped_hind):
             bootstrapped_hind = bootstrapped_hind.chunk({"member": -1})
 
-        print(metric_kwargs)
+        # print(metric_kwargs)
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
             verif,
@@ -1072,20 +1072,9 @@ def bootstrap_hindcast(
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_hindcast
 
-    Example:
-        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')['SST']
-        >>> hist = climpred.tutorial.load_dataset('CESM-LE')['SST']
-        >>> obs = climpred.tutorial.load_dataset('ERSST')['SST']
-        >>> bootstrapped_skill = climpred.bootstrap.bootstrap_hindcast(hind, hist, obs)
-        >>> bootstrapped_skill.coords
-        Coordinates:
-          * skill    (skill) <U13 'initialized' 'persistence' 'uninitialized'
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
-
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
-    print("metric_kwargs", metric_kwargs)
+    # print("metric_kwargs", metric_kwargs)
     hind = convert_time_index(hind, "init", "hind[init]")
     if isinstance(hist, xr.Dataset):
         hist = convert_time_index(hist, "time", "uninitialized[time]")
@@ -1207,18 +1196,7 @@ def bootstrap_perfect_model(
     See also:
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_perfect_model
-
-    Example:
-        >>> init = climpred.tutorial.load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1, drop=True)
-        >>> control = climpred.tutorial.load_dataset('MPI-control-1D').isel(area=1, period=-1, drop=True)
-        >>> bootstrapped_s = climpred.bootstrap.bootstrap_perfect_model(init, control)
-        >>> bootstrapped_s.coords
-        Coordinates:
-          * skill    (skill) <U13 'initialized' 'persistence' 'uninitialized'
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-          * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
     """
-
     if dim is None:
         dim = ["init", "member"]
     # Check init & time is int, cftime, or datetime; convert ints or datetime to cftime.

@@ -230,12 +230,10 @@ def compute_persistence(
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
     dim = _rename_dim(dim, hind, verif)
-    # if "member" in dim:
-    #    dim.remove("member")
 
     plag = []
     for i in hind.lead.values:
-        lforecast = verif.sel(time=inits[i])  # TODO: rename
+        lforecast = verif.sel(time=inits[i])
         if metric.requires_member_dim:
             if "member" not in lforecast.dims:
                 lforecast = lforecast.expand_dims("member")  # add fake member dim
@@ -243,7 +241,6 @@ def compute_persistence(
                     dim = dim.copy()
                     dim.append("member")
         else:  # if member dim is unnecessary
-            # lforecast=lforecast.squeeze(dim='member')
             if "member" in dim and "member" not in verif.dims:
                 dim = dim.copy()
                 dim.remove("member")

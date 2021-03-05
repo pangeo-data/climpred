@@ -127,7 +127,6 @@ def test_bootstrap_pm_assign_attrs():
     assert str(round((1 - sig / 100) / 2, 3)) in actual["confidence_interval_levels"]
     if metric == "pearson_r":
         assert actual["units"] == "None"
-    assert "bootstrap" in actual["skill_calculated_by_function"]
 
 
 def test_hindcast_assign_attrs():

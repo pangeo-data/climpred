@@ -418,7 +418,6 @@ def _bootstrap_hindcast_over_init_dim(
     metric,
     comparison,
     compute,
-    reference_compute,
     resample_uninit,
     **metric_kwargs,
 ):
@@ -474,19 +473,16 @@ def _bootstrap_hindcast_over_init_dim(
                 )
             )
         if "persistence" in reference:
-            # compute persistence skill
-            # impossible for probabilistic
-            if not metric.probabilistic:
-                pers_skill.append(
-                    reference_compute(
-                        smp_hind,
-                        verif,
-                        metric=metric,
-                        dim=dim,
-                        add_attrs=False,
-                        **metric_kwargs,
-                    )
+            pers_skill.append(
+                compute_persistence(
+                    smp_hind,
+                    verif,
+                    metric=metric,
+                    dim=dim,
+                    add_attrs=False,
+                    **metric_kwargs,
                 )
+            )
     bootstrapped_init_skill = xr.concat(
         bootstrapped_init_skill, dim="iteration", **CONCAT_KWARGS
     )
@@ -497,17 +493,12 @@ def _bootstrap_hindcast_over_init_dim(
     else:
         bootstrapped_uninit_skill = None
     if "persistence" in reference:
-        if pers_skill != []:
-            bootstrapped_pers_skill = xr.concat(
-                pers_skill, dim="iteration", **CONCAT_KWARGS
-            )
+        bootstrapped_pers_skill = xr.concat(
+            pers_skill, dim="iteration", **CONCAT_KWARGS
+        )
     else:
         bootstrapped_pers_skill = None
-    return (
-        bootstrapped_init_skill,
-        bootstrapped_uninit_skill,
-        bootstrapped_pers_skill,
-    )
+    return (bootstrapped_init_skill, bootstrapped_uninit_skill, bootstrapped_pers_skill)
 
 
 def _get_resample_func(ds):
@@ -615,14 +606,13 @@ def bootstrap_compute(
     metric="pearson_r",
     comparison="m2e",
     dim="init",
-    reference=["uninitialized", "persistence"],
+    reference=["uninitialized", "persistence", "climatology"],
     resample_dim="member",
     sig=95,
     iterations=500,
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
-    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement.
@@ -657,8 +647,6 @@ def bootstrap_compute(
                         ensemble. Choose from:
                         [:py:func:`bootstrap_uninitialized_ensemble`,
                          :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
-        reference_compute (func): function to compute a reference forecast skill with.
-                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -750,7 +738,6 @@ def bootstrap_compute(
             metric,
             comparison,
             compute,
-            reference_compute,
             resample_uninit,
             **metric_kwargs,
         )
@@ -792,7 +779,6 @@ def bootstrap_compute(
                     )
         else:  # hindcast
             if "uninitialized" in reference:
-                # print('hist',hist.dims)
                 uninit_hind = resample_uninit(hind, hist)
                 if dask.is_dask_collection(uninit_hind):
                     # too minimize tasks: ensure uninit_hind get pre-computed
@@ -840,7 +826,7 @@ def bootstrap_compute(
             **metric_kwargs,
         )
         if "persistence" in reference:
-            pers_skill = reference_compute(
+            pers_skill = compute_persistence(
                 hind,
                 verif,
                 metric=metric,
@@ -849,15 +835,15 @@ def bootstrap_compute(
             )
             # bootstrap pers
             if resample_dim == "init":
-                bootstrapped_pers_skill = reference_compute(
+                bootstrapped_pers_skill = compute_persistence(
                     bootstrapped_hind,
                     verif,
                     metric=metric,
                     **metric_kwargs_reference,
                 )
-            else:  # member
-                _, bootstrapped_pers_skill = xr.broadcast(
-                    bootstrapped_init_skill, pers_skill, exclude=CLIMPRED_DIMS
+            else:  # member no need to calculate all again
+                bootstrapped_pers_skill = pers_skill.expand_dims("iteration").isel(
+                    iteration=[0] * iterations
                 )
 
     # calc mean skill without any resampling
@@ -873,32 +859,14 @@ def bootstrap_compute(
         # uninit skill as mean resampled uninit skill
         unin_skill = bootstrapped_uninit_skill.mean("iteration")  # noqa: F841
     if "persistence" in reference:
-        pers_skill = reference_compute(
+        pers_skill = compute_persistence(
             hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
         )
-
-        # align to prepare for concat
-        if set(bootstrapped_pers_skill.coords) != set(bootstrapped_init_skill.coords):
-            if (
-                "time" in bootstrapped_pers_skill.dims
-                and "init" in bootstrapped_init_skill.dims
-            ):
-                bootstrapped_pers_skill = bootstrapped_pers_skill.rename(
-                    {"time": "init"}
-                )
-            # allow member to be broadcasted
-            bootstrapped_init_skill, bootstrapped_pers_skill = xr.broadcast(
-                bootstrapped_init_skill,
-                bootstrapped_pers_skill,
-                exclude=("init", "lead", "time"),
-            )
     if "climatology" in reference:
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
-        bootstrapped_clim_skill = clim_skill.expand_dims(
-            "iteration"
-        )  # TODO: broadcast?
+        bootstrapped_clim_skill = clim_skill.expand_dims("iteration")
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
@@ -910,17 +878,10 @@ def bootstrap_compute(
         clim_ci = _distribution_to_ci(  # noqa: F841
             bootstrapped_clim_skill, ci_low, ci_high
         )
-
-    # probabilistic metrics wont have persistence forecast
-    # therefore only get CI if persistence was computed # TODO: allow persistence
     if "persistence" in reference:
-        if "iteration" in bootstrapped_pers_skill.dims:
-            pers_ci = _distribution_to_ci(
-                bootstrapped_pers_skill, ci_low_pers, ci_high_pers
-            )  # noqa: F841
-        else:
-            # otherwise set all persistence outputs to false
-            pers_ci = init_ci == -999  # noqa: F841
+        pers_ci = _distribution_to_ci(  # noqa: F841
+            bootstrapped_pers_skill, ci_low_pers, ci_high_pers
+        )
 
     # pvalue whether uninit or pers better than init forecast
     if "uninitialized" in reference:
@@ -936,6 +897,10 @@ def bootstrap_compute(
             bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
         )
 
+    # gather return
+    # p defined as probability that reference better than
+    # initialized, therefore not defined for initialized skill
+    # itself
     results = xr.concat(
         [
             init_skill,
@@ -1010,7 +975,6 @@ def bootstrap_hindcast(
     sig=95,
     iterations=500,
     pers_sig=None,
-    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -1037,8 +1001,6 @@ def bootstrap_hindcast(
                         Defaults to sig.
         iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        reference_compute (func): function to compute a reference forecast skill with.
-                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -1072,7 +1034,6 @@ def bootstrap_hindcast(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
-    # print("metric_kwargs", metric_kwargs)
     hind = convert_time_index(hind, "init", "hind[init]")
     if isinstance(hist, xr.Dataset):
         hist = convert_time_index(hist, "time", "uninitialized[time]")
@@ -1119,7 +1080,6 @@ def bootstrap_hindcast(
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
-        reference_compute=reference_compute,
         **metric_kwargs,
     )
 
@@ -1135,7 +1095,6 @@ def bootstrap_perfect_model(
     sig=95,
     iterations=500,
     pers_sig=None,
-    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -1162,8 +1121,6 @@ def bootstrap_perfect_model(
                         Defaults to sig.
         iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        reference_compute (func): function to compute a reference forecast skill with.
-                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -1175,8 +1132,8 @@ def bootstrap_perfect_model(
              to initialization and external forcing
             - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `reference_compute`, which
-             defaults to `compute_persistence`
+            - `persistence` for the persistence forecast
+            - `climatology`
 
         the different results:
             - `skill`: skill values
@@ -1219,7 +1176,6 @@ def bootstrap_perfect_model(
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
-        reference_compute=reference_compute,
         **metric_kwargs,
     )
 

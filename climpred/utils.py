@@ -18,7 +18,7 @@ from .metrics import METRIC_ALIASES
 def assign_attrs(
     skill,
     ds,
-    function_name,
+    function_name=None,
     metadata_dict=None,
     alignment=None,
     metric=None,
@@ -47,7 +47,8 @@ def assign_attrs(
     skill.attrs[
         "prediction_skill"
     ] = "calculated by climpred https://climpred.readthedocs.io/"
-    skill.attrs["skill_calculated_by_function"] = function_name
+    if function_name:
+        skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords:
         skill.attrs["number_of_initializations"] = ds.init.size
     if "member" in ds.coords and function_name != "compute_persistence":
@@ -82,9 +83,6 @@ def assign_attrs(
         metadata_dict = dict()
     skill.attrs.update(metadata_dict)
 
-    skill.attrs[
-        "created"
-    ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
     return skill
 
 

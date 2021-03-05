@@ -745,7 +745,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.3441 0.3632 0.4269
+                tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
         """
         input_dict = {
             "ensemble": self._datasets["initialized"],
@@ -992,6 +992,40 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Interannual-to-Decadal Predictions Experiments.” Climate
               Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
               https://doi.org/10/f4jjvf.
+
+        Example:
+            Calculate the Pearson's Anomaly Correlation ('acc') comparing every member
+            to every other member (``m2m``) reducing dimensions ``member`` and
+            ``init`` 50 times after resampling ``member`` dimension with replacement.
+            Also calculate reference skill for the ``persistence``, ``climatology``
+            and ``uninitialized`` forecast and compare whether initialized skill is
+            better than reference skill: Returns verify skill, probability that
+            reference forecast performs better than initialized and the lower and
+            upper bound of the resample.
+
+            >>> PerfectModelEnsemble.bootstrap(metric='acc', comparison='m2m',
+            ...     dim=['init', 'member'], iterations=50, resample_dim='member',
+            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            <xarray.Dataset>
+            Dimensions:  (lead: 20, results: 4, skill: 4)
+            Coordinates:
+              * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
+              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+            Data variables:
+                tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
+            Attributes:
+                prediction_skill:            calculated by climpred https://climpred.read...
+                number_of_initializations:   12
+                number_of_members:           10
+                alignment:                   same_verifs
+                metric:                      pearson_r
+                comparison:                  m2m
+                dim:                         ['init', 'member']
+                units:                       None
+                confidence_interval_levels:  0.975-0.025
+                bootstrap_iterations:        50
+                p:                           probability that reference performs better t...
 
         """
         if iterations is None:
@@ -1431,6 +1465,42 @@ class HindcastEnsemble(PredictionEnsemble):
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
+
+        Example:
+            Calculate the Pearson's Anomaly Correlation ('acc') comparing the ensemble
+            mean forecast to the verification (``e2o``) over the same verification
+            times (``same_verifs``) for all leads reducing dimensions ``init`` 50
+            times after resampling ``member`` dimension with replacement. Also
+            calculate reference skill for the ``persistence``, ``climatology``
+            and ``uninitialized`` forecast and compare whether initialized skill is
+            better than reference skill: Returns verify skill, probability that
+            reference forecast performs better than initialized and the lower and
+            upper bound of the resample.
+
+            >>> HindcastEnsemble.bootstrap(metric='acc', comparison='e2o',
+            ...     dim='init', iterations=50, resample_dim='member',
+            ...     alignment='same_verifs',
+            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            <xarray.Dataset>
+            Dimensions:  (lead: 10, results: 4, skill: 4)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
+              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+            Data variables:
+                SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
+            Attributes:
+                prediction_skill:            calculated by climpred https://climpred.read...
+                number_of_initializations:   61
+                number_of_members:           10
+                alignment:                   same_verifs
+                metric:                      pearson_r
+                comparison:                  e2o
+                dim:                         ['init']
+                units:                       None
+                confidence_interval_levels:  0.975-0.025
+                bootstrap_iterations:        50
+                p:                           probability that reference performs better t...
         """
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")

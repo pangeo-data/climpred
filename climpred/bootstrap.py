@@ -974,7 +974,6 @@ def bootstrap_compute(
     metadata_dict = {
         "confidence_interval_levels": f"{ci_high}-{ci_low}",
         "bootstrap_iterations": iterations,
-        "reference": reference,
     }
     if reference is not None:
         metadata_dict[
@@ -988,7 +987,6 @@ def bootstrap_compute(
         metric=metric,
         comparison=comparison,
         dim=dim,
-        function_name=inspect.stack()[0][3],  # take function.__name__
         metadata_dict=metadata_dict,
     )
     # Ensure that the lead units get carried along for the calculation. The attribute

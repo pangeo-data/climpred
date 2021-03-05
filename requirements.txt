@@ -2,8 +2,7 @@ cftime>=1.1.2
 eofs
 esmtools>=1.1.3
 matplotlib
-numpy
-pandas
+ipython
 toolz
 xarray>=0.16.1
 xrft

@@ -32,11 +32,11 @@ def test_PerfectModelEnsemble_constant_forecasts(
     identical forecasts."""
     pe = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
     if how == "constant":  # replaces the variable with all 1's
-        pe = pe.apply(xr.ones_like)
+        pe = pe.map(xr.ones_like)
     elif (
         how == "increasing_by_lead"
     ):  # sets variable values to cftime index in days to have increase over time.
-        pe = pe.apply(xr.zeros_like)
+        pe = pe.map(xr.zeros_like)
         pe._datasets["initialized"] = (
             pe._datasets["initialized"] + pe._datasets["initialized"].lead
         )
@@ -95,11 +95,11 @@ def test_HindcastEnsemble_constant_forecasts(
     identical forecasts."""
     he = hindcast_hist_obs_1d.isel(lead=[0, 1, 2])
     if how == "constant":  # replaces the variable with all 1's
-        he = he.apply(xr.ones_like)
+        he = he.map(xr.ones_like)
     elif (
         how == "increasing_by_lead"
     ):  # sets variable values to cftime index in days to have increase over time.
-        he = he.apply(xr.ones_like)
+        he = he.map(xr.ones_like)
         # set initialized values to init in cftime days
         units = "days since 1900-01-01"
         he._datasets["initialized"] = he._datasets["initialized"] * xr.DataArray(

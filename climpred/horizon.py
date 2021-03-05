@@ -67,7 +67,7 @@ def horizon(cond):
         xr.DataArray, xr.Dataset: predictability horizon reduced by ``lead`` dimension.
 
     Example:
-        >>> skill = perfect_model.verify(metric='acc', comparison='m2e',
+        >>> skill = PerfectModelEnsemble.verify(metric='acc', comparison='m2e',
         ...     dim=['init','member'], reference=['persistence'])
         >>> horizon(skill.sel(skill='initialized') >
         ...     skill.sel(skill='persistence'))
@@ -78,7 +78,7 @@ def horizon(cond):
         Attributes:
             units:    years
 
-        >>> bskill = perfect_model.bootstrap(metric='acc', comparison='m2e',
+        >>> bskill = PerfectModelEnsemble.bootstrap(metric='acc', comparison='m2e',
         ...     dim=['init','member'], reference='uninitialized', iterations=201)
         >>> horizon(bskill.sel(skill='uninitialized', results='p') <= 0.05)
         <xarray.Dataset>

@@ -30,9 +30,9 @@ def add_standard_imports(
     np.random.seed(42)
 
     # climpred data
-    doctest_namespace["hindcast"] = hindcast_hist_obs_1d
-    doctest_namespace["hindcast_3D"] = hindcast_recon_3d
-    doctest_namespace["perfect_model"] = perfectModelEnsemble_initialized_control
+    doctest_namespace["HindcastEnsemble"] = hindcast_hist_obs_1d
+    doctest_namespace["HindcastEnsemble_3D"] = hindcast_recon_3d
+    doctest_namespace["PerfectModelEnsemble"] = perfectModelEnsemble_initialized_control
 
 
 @pytest.fixture()
@@ -147,9 +147,8 @@ def perfectModelEnsemble_initialized_control_3d_North_Atlantic(
 @pytest.fixture()
 def perfectModelEnsemble_initialized_control(PM_ds_initialized_1d, PM_ds_control_1d):
     """PerfectModelEnsemble initialized with `initialized` and `control` xr.Dataset."""
-    pm = PerfectModelEnsemble(PM_ds_initialized_1d)
-    pm = pm.add_control(PM_ds_control_1d)
-    return pm
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d).add_control(PM_ds_control_1d)
+    return pm.generate_uninitialized()
 
 
 @pytest.fixture()

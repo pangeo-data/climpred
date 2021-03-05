@@ -61,7 +61,7 @@ def _get_norm_factor(comparison):
     Example:
         >>> # check skill saturation value of roughly 1 for different comparisons
         >>> for c in ['m2m', 'm2e', 'm2c', 'e2c']:  # doctest: +ELLIPSIS
-        ...        s = perfect_model.verify(metric='nrmse', dim=None, comparison=c)
+        ...        s = PerfectModelEnsemble.verify(metric='nrmse', dim=None, comparison=c)
         ...        s.tos.plot(label='nrmse {c}')
         [...
 
@@ -297,7 +297,7 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
     Example:
-        >>> hindcast.verify(metric='pearson_r', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='pearson_r', comparison='e2o',
         ...     alignment='same_verifs', dim=['init'])
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -358,7 +358,7 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
     Example:
-        >>> hindcast.verify(metric='pearson_r_p_value', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='pearson_r_p_value', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -437,7 +437,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
 
     Example:
-        >>> hindcast.verify(metric='effective_sample_size', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='effective_sample_size', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -517,7 +517,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
     Example:
-        >>> hindcast.verify(metric='pearson_r_eff_p_value', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='pearson_r_eff_p_value', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -599,7 +599,7 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
     Example:
-        >>> hindcast.verify(metric='spearman_r', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='spearman_r', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -660,7 +660,7 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
     Example:
-        >>> hindcast.verify(metric='spearman_r_p_value', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='spearman_r_p_value', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -748,7 +748,7 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
           freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
 
     Example:
-        >>> hindcast.verify(metric='spearman_r_eff_p_value', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='spearman_r_eff_p_value', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -826,7 +826,7 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
           URL: http://doi.wiley.com/10.1002/9781119960003.
 
     Example:
-        >>> hindcast.verify(metric='mse', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='mse', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -882,7 +882,7 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.rmse`
 
     Example:
-        >>> hindcast.verify(metric='rmse', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='rmse', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -946,7 +946,7 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
 
 
     Example:
-        >>> hindcast.verify(metric='mae', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='mae', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1002,7 +1002,7 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.median_absolute_error`
 
     Example:
-        >>> hindcast.verify(metric='median_absolute_error', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='median_absolute_error', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1085,7 +1085,7 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
 
     Example:
-        >>> hindcast.verify(metric='nmse', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='nmse', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1178,7 +1178,7 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
 
     Example:
-        >>> hindcast.verify(metric='nmae', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='nmae', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1278,7 +1278,7 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         https://doi.org/10/fc7mxd.
 
     Example:
-        >>> hindcast.verify(metric='nrmse', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='nrmse', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1381,7 +1381,7 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
 
 
     Example:
-        >>> hindcast.verify(metric='msess', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='msess', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1449,7 +1449,7 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.mape`
 
     Example:
-        >>> hindcast.verify(metric='mape', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='mape', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1505,7 +1505,7 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.smape`
 
     Example:
-        >>> hindcast.verify(metric='smape', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='smape', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1589,7 +1589,7 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
 
     Example:
-        >>> hindcast.verify(metric='uacc', comparison='e2o', alignment='same_verifs',
+        >>> HindcastEnsemble.verify(metric='uacc', comparison='e2o', alignment='same_verifs',
         ...     dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1651,7 +1651,7 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
 
     Example:
-        >>> hindcast.verify(metric='std_ratio', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='std_ratio', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1705,7 +1705,7 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
 
     Example:
-        >>> hindcast.verify(metric='unconditional_bias', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='unconditional_bias', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1718,8 +1718,8 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         Conditional bias is removed by
         :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
 
-        >>> hindcast = hindcast.remove_bias(alignment='same_verifs')
-        >>> hindcast.verify(metric='unconditional_bias', comparison='e2o',
+        >>> HindcastEnsemble = HindcastEnsemble.remove_bias(alignment='same_verifs')
+        >>> HindcastEnsemble.verify(metric='unconditional_bias', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1777,7 +1777,7 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
 
     Example:
-        >>> hindcast.verify(metric='conditional_bias', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='conditional_bias', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1838,7 +1838,7 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
         * https://www-miklip.dkrz.de/about/murcss/
 
     Example:
-        >>> hindcast.verify(metric='bias_slope', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='bias_slope', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1910,8 +1910,8 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/fc7mxd.
 
     Example:
-        >>> hindcast = hindcast.remove_bias(alignment='same_verifs')
-        >>> hindcast.verify(metric='msess_murphy', comparison='e2o',
+        >>> HindcastEnsemble = HindcastEnsemble.remove_bias(alignment='same_verifs')
+        >>> HindcastEnsemble.verify(metric='msess_murphy', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -2016,7 +2016,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
         can only be created after comparison)
 
-        >>> hindcast.verify(metric='brier_score', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='brier_score', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -2029,7 +2029,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         Option 2. Pre-process to generate a binary multi-member forecast and
         binary verification product:
 
-        >>> hindcast.map(pos).verify(metric='brier_score',
+        >>> HindcastEnsemble.map(pos).verify(metric='brier_score',
         ...     comparison='m2o', dim=['member', 'init'], alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -2043,7 +2043,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         verification product. because ``member`` not present in ``hindcast`` anymore, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='brier_score',
+        >>> HindcastEnsemble.map(pos).mean('member').verify(metric='brier_score',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -2120,7 +2120,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
     Example:
 
         >>> # get threshold brier score for each init
-        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
         ...     dim='member', threshold=.2, alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
@@ -2132,7 +2132,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
 
         >>> # multiple thresholds averaging over init dimension
-        >>> hindcast.verify(metric='threshold_brier_score', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
         ...     dim=['member', 'init'], threshold=[.2, .3], alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:    (lead: 10, threshold: 2)
@@ -2219,7 +2219,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.crps_ensemble`
 
     Example:
-        >>> hindcast.verify(metric='crps', comparison='m2o', dim='member',
+        >>> HindcastEnsemble.verify(metric='crps', comparison='m2o', dim='member',
         ...     alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
@@ -2248,27 +2248,6 @@ __crps = Metric(
     perfect=0.0,
     requires_member_dim=True,
 )
-
-
-def _crps_gaussian(verification, mu, sig, dim=None, **metric_kwargs):
-    """Computes the CRPS of verification data ``o`` relative to normally distributed
-    forecasts with mean ``mu`` and standard deviation ``sig``.
-
-    .. note::
-        This is a helper function for CRPSS and cannot be called directly by a user.
-
-    Args:
-        forecast (xr.object): Forecast with ``member`` dim.
-        mu (xr.object): The mean of the verification data.
-        sig (xr.object): The standard deviation verification data.
-        metric_kwargs (dict): optional, see :py:func:`~xskillscore.crps_gaussian`
-
-    See also:
-        * :py:func:`~properscoring.crps_gaussian`
-        * :py:func:`~xskillscore.crps_gaussian`
-    """
-    # TODO: delete no added value
-    return crps_gaussian(verification, mu, sig, dim=dim, **metric_kwargs)
 
 
 def _crps_quadrature(verification, cdf_or_dist, dim=None, **metric_kwargs):
@@ -2347,7 +2326,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
           https://doi.org/10/c6758w.
 
     Example:
-        >>> hindcast.verify(metric='crpss', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='crpss', comparison='m2o',
         ...     alignment='same_verifs', dim='member')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
@@ -2359,7 +2338,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead, init) float64 0.3291 0.8421 0.6092 ... 0.7526 0.7702 0.5126
 
         >>> import scipy
-        >>> perfect_model.isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
+        >>> PerfectModelEnsemble..isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
         ...     dim='member', gaussian=False, cdf_or_dist=scipy.stats.norm, xmin=-10,
         ...     xmax=10, tol=1e-6)  # doctest: +SKIP
         <xarray.Dataset>
@@ -2387,9 +2366,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
     dim_for_gaussian = dim.copy()
     dim_for_gaussian.remove("member")
     if gaussian:
-        ref_skill = _crps_gaussian(
-            verif, mu, sig, dim=dim_for_gaussian, **metric_kwargs
-        )
+        ref_skill = crps_gaussian(verif, mu, sig, dim=dim_for_gaussian, **metric_kwargs)
     else:
         cdf_or_dist = metric_kwargs.pop("cdf_or_dist", norm)
         xmin = metric_kwargs.pop("xmin", None)
@@ -2464,7 +2441,7 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
           631–43. https://doi.org/10/f9jrhw.
 
     Example:
-        >>> hindcast.verify(metric='crpss_es', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='crpss_es', comparison='m2o',
         ...     alignment='same_verifs', dim='member')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
@@ -2562,7 +2539,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
         can only be created after comparison)
 
-        >>> hindcast.verify(metric='discrimination', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='discrimination', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
         Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
@@ -2576,7 +2553,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='discrimination',
+        >>> HindcastEnsemble.map(pos).verify(metric='discrimination',
         ...     comparison='m2o', dim=['member','init'], alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
@@ -2592,7 +2569,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         verification product. because ``member`` not present in ``hindcast``, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='discrimination',
+        >>> HindcastEnsemble.map(pos).mean('member').verify(metric='discrimination',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
@@ -2669,7 +2646,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
         can only be created after comparison))
 
-        >>> hindcast.verify(metric='reliability', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='reliability', comparison='m2o',
         ...     dim=['member','init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
         Dimensions:               (forecast_probability: 5, lead: 10)
@@ -2683,7 +2660,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
-        >>> hindcast.map(pos).verify(metric='reliability',
+        >>> HindcastEnsemble.map(pos).verify(metric='reliability',
         ...     comparison='m2o', dim=['init', 'member'], alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:               (forecast_probability: 5, lead: 10)
@@ -2699,7 +2676,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         verification product. because ``member`` not present in ``hindcast``, use
         ``comparison='e2o'`` and ``dim='init'``:
 
-        >>> hindcast.map(pos).mean('member').verify(metric='reliability',
+        >>> HindcastEnsemble.map(pos).mean('member').verify(metric='reliability',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:               (forecast_probability: 5, lead: 10)
@@ -2753,7 +2730,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~xskillscore.rank_histogram`
 
     Example:
-        >>> hindcast.verify(metric='rank_histogram', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='rank_histogram', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (lead: 10, rank: 11)
@@ -2764,7 +2741,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
 
-        >>> perfect_model.verify(metric='rank_histogram', comparison='m2c',
+        >>> PerfectModelEnsemble.verify(metric='rank_histogram', comparison='m2c',
         ...     dim=['member', 'init'])
         <xarray.Dataset>
         Dimensions:  (lead: 20, rank: 10)
@@ -2821,7 +2798,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-.5, 0., .5, 1.])
-        >>> hindcast.verify(metric='rps', comparison='m2o', dim='member',
+        >>> HindcastEnsemble.verify(metric='rps', comparison='m2o', dim='member',
         ...     alignment='same_verifs', category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
@@ -2833,7 +2810,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead, init) float64 0.2696 0.2696 0.2696 ... 0.2311 0.2311 0.2311
 
         >>> category_edges = np.array([9.5, 10., 10.5, 11.])
-        >>> perfect_model.verify(metric='rps', comparison='m2c',
+        >>> PerfectModelEnsemble.verify(metric='rps', comparison='m2c',
         ...     dim=['member','init'], category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:  (lead: 20)
@@ -2892,7 +2869,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-0.5, 0.0, 0.5, 1.0])
-        >>> hindcast.verify(metric='contingency', score='table', comparison='m2o',
+        >>> HindcastEnsemble.verify(metric='contingency', score='table', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs',
         ...     observation_category_edges=category_edges,
         ...     forecast_category_edges=category_edges).isel(lead=[0, 1]).SST
@@ -2914,7 +2891,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
         >>> # contingency-based dichotomous accuracy score
         >>> category_edges = np.array([9.5, 10.0, 10.5])
-        >>> perfect_model.verify(metric='contingency', score='hit_rate',
+        >>> PerfectModelEnsemble.verify(metric='contingency', score='hit_rate',
         ...     comparison='m2c', dim=['member','init'],
         ...     observation_category_edges=category_edges,
         ...     forecast_category_edges=category_edges)
@@ -2988,7 +2965,7 @@ for m in __ALL_METRICS__:
 
 DETERMINISTIC_METRICS = [m.name for m in __ALL_METRICS__ if not m.probabilistic]
 DETERMINISTIC_HINDCAST_METRICS = DETERMINISTIC_METRICS.copy()
-# Metrics to be used in compute_perfect_model.
+# Metrics to be used in PerfectModelEnsemble
 DETERMINISTIC_PM_METRICS = DETERMINISTIC_HINDCAST_METRICS.copy()
 # Effective sample size does not make much sense in this framework.
 DETERMINISTIC_PM_METRICS = [
@@ -3006,7 +2983,7 @@ DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
 # More positive skill is better than more negative.
 POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
 PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
-# Combined allowed metrics for compute_hindcast and compute_perfect_model
+# Combined allowed metrics for compute_hindcast and compute_PerfectModelEnsemble
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
 ALL_METRICS = [m.name for m in __ALL_METRICS__]

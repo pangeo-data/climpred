@@ -11,7 +11,7 @@ from .comparisons import (
     PM_COMPARISONS,
     __e2c,
 )
-from .constants import CLIMPRED_DIMS
+from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
 from .metrics import (
     ALL_METRICS,
     DETERMINISTIC_HINDCAST_METRICS,
@@ -148,9 +148,12 @@ def compute_climatology(
         ):
             dim = dim.copy()
             dim.remove("member")
+    # print('dim',dim, verif.dims, climatology_day_forecast.dims)
     clim_skill = metric.function(
         climatology_day_forecast, verif, dim=dim, **metric_kwargs
     )
+    if M2M_MEMBER_DIM in clim_skill.dims:
+        clim_skill = clim_skill.mean(M2M_MEMBER_DIM)
     return clim_skill
 
 

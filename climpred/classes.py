@@ -23,7 +23,7 @@ from .checks import (
     match_initialized_dims,
     match_initialized_vars,
 )
-from .constants import CLIMPRED_DIMS, CONCAT_KWARGS
+from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .prediction import (
@@ -453,12 +453,12 @@ class PredictionEnsemble:
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
         Examples:
-            >>> perfect_model.get_initialized().lead.size
+            >>> PerfectModelEnsemble.get_initialized().lead.size
             20
-            >>> perfect_model.smooth({'lead':4}, how='sum').get_initialized().lead.size
+            >>> PerfectModelEnsemble.smooth({'lead':4}, how='sum').get_initialized().lead.size
             17
 
-            >>> hindcast_3D.smooth({'lon':1, 'lat':1})
+            >>> HindcastEnsemble_3D.smooth({'lon':1, 'lat':1})
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
                 SST      (init, lead, lat, lon) float64 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
@@ -469,13 +469,13 @@ class PredictionEnsemble:
 
             ``smooth`` simultaneously aggregates spatially listening to ``lon`` and ``lat`` and temporally listening to ``lead`` or ``time``.
 
-            >>> hindcast_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
             Coordinates:
               * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9
               * lon      (lon) float64 250.8 254.8 258.8 262.8
               * lat      (lat) float64 -9.75 -4.75
-            >>> hindcast_3D.smooth('goddard2013').get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth('goddard2013').get_initialized().coords
             Coordinates:
               * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead     (lead) int32 1 2 3 4 5 6 7
@@ -709,13 +709,43 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['persistence', 'uninitialized'].
+                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
-            Dataset of comparison results with ``skill`` dimension for verification
-            results for the initialized ensemble (``init``) and any reference forecasts
-            verified.
+            Dataset with dimension skill reduced by dim containing initialized and
+            reference skill(s) if specified.
+
+        Example:
+            Root mean square error (``rmse``) comparing every member with the
+            ensemble mean forecast (``m2e``) for all leads reducing dimensions
+            ``init`` and ``member``:
+
+            >>> PerfectModelEnsemble.verify(metric='rmse', comparison='m2e',
+            ...     dim=['init','member'])
+            <xarray.Dataset>
+            Dimensions:  (lead: 20)
+            Coordinates:
+              * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+            Data variables:
+                tos      (lead) float32 0.1028 0.1249 0.1443 0.1707 ... 0.2113 0.2452 0.2297
+
+
+            Pearson's Anomaly Correlation ('acc') comparing every member to every
+            other member (``m2m``) reducing dimensions ``member`` and ``init`` while
+            also calculating reference skill for the ``persistence``, ``climatology``
+            and ``uninitialized`` forecast.
+
+            >>> PerfectModelEnsemble.verify(metric='acc', comparison='m2m',
+            ...     dim=['init', 'member'],
+            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            <xarray.Dataset>
+            Dimensions:  (lead: 20, skill: 4)
+            Coordinates:
+              * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+            Data variables:
+                tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.3441 0.3632 0.4269
         """
         input_dict = {
             "ensemble": self._datasets["initialized"],
@@ -733,6 +763,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             add_attrs=False,
             **metric_kwargs,
         )
+        assert M2M_MEMBER_DIM not in result.dims
         if self._temporally_smoothed:
             result = _reset_temporal_axis(result, self._temporally_smoothed, dim="lead")
             result["lead"].attrs = self.get_initialized().lead.attrs
@@ -797,6 +828,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             dim=dim,
             **metric_kwargs,
         )
+        assert M2M_MEMBER_DIM not in res.dims
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
@@ -845,6 +877,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             dim=dim,
             **metric_kwargs,
         )
+        assert M2M_MEMBER_DIM not in res.dims
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
@@ -924,7 +957,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['persistence', 'uninitialized'].
+                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
                 If None or empty, returns no p value.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
@@ -1123,8 +1156,8 @@ class HindcastEnsemble(PredictionEnsemble):
             between the initialized ensemble and observations/verification data.
 
         Args:
-            reference (str): Type of reference forecasts to also verify against the
-                observations. Choose one or more of ['uninitialized', 'persistence'].
+            reference (str, list of str): Type of reference forecasts to also verify against the
+                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
                 Defaults to None.
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
                 verification. see `metrics </metrics.html>`_.
@@ -1152,10 +1185,40 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill containing initialized and reference skill(s).
+            Dataset with dimension skill reduced by dim containing initialized and
+            reference skill(s) if specified.
+
+        Example:
+            Root mean square error (``rmse``) comparing every member with the
+            verification (``m2o``) over the same verification time (``same_verifs``)
+            for all leads reducing dimensions ``init`` and ``member``:
+
+            >>> HindcastEnsemble.verify(metric='rmse', comparison='m2o',
+            ...     alignment='same_verifs', dim=['init','member'])
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.08516 0.09492 0.1041 ... 0.1525 0.1697 0.1785
+
+            Pearson's Anomaly Correlation ('acc') comparing the ensemble mean with the
+            verification (``e2o``) over the same initializations (``same_inits``) for
+            all leads reducing dimension ``init`` while also calculating reference
+            skill for the ``persistence``, ``climatology`` and ``uninitialized``
+            forecast.
+
+            >>> HindcastEnsemble.verify(metric='acc', comparison='e2o',
+            ...     alignment='same_inits', dim='init', reference=['persistence', 'climatology' ,'uninitialized'])
+            <xarray.Dataset>
+            Dimensions:  (lead: 10, skill: 4)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+            Data variables:
+                SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.8323 0.8417 0.8464
         """
-        # print("init.dims", self.get_initialized().dims)
-        # print("uninit.dims", self.get_uninitialized().dims)
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
@@ -1322,7 +1385,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 but should not contain ``member`` when ``comparison='e2o'``. Defaults to
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['persistence', 'uninitialized'].
+                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
                 If None or empty, returns no p value.
             alignment (str): which inits or verification times should be aligned?
 

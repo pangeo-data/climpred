@@ -746,7 +746,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
                 if r != "persistence":
                     ref_compute_kwargs["comparison"] = comparison
-                print(f"_compute_{r}")
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             result = result.assign_coords(skill=["initialized"] + reference)
@@ -1386,6 +1385,7 @@ class HindcastEnsemble(PredictionEnsemble):
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
+            **metric_kwargs,
         )
 
     def remove_bias(self, alignment, how="mean", cross_validate=True, **metric_kwargs):

@@ -126,27 +126,22 @@ def test_persistence_lead0_lead1(
     assert (res1.SST.values == res2.SST.values).all()
 
 
-def test_bootstrap_hindcast_da1d_not_nan(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, reconstruction_da_1d
-):
+# TODO: delete?
+def test_bootstrap_hindcast_da1d_not_nan(hindcast_hist_obs_1d):
     """
     Checks that there are no NaNs on bootstrap hindcast of 1D da.
     """
-    actual = bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        reconstruction_da_1d,
+    actual = hindcast_hist_obs_1d.bootstrap(
         metric="rmse",
         comparison="e2o",
-        sig=50,
         iterations=ITERATIONS,
-    )
-    actual_init_skill = (
-        actual.sel(skill="initialized", results="verify skill").isnull().any()
-    )
-    assert not actual_init_skill
-    actual_uninit_p = actual.sel(skill="uninitialized", results="p").isnull().any()
-    assert not actual_uninit_p
+        dim="init",
+        alignment="same_verifs",
+        reference="uninitialized",
+    ).SST
+    assert not (actual.sel(skill="initialized", results="verify skill").isnull().any())
+
+    assert not actual.sel(skill="uninitialized", results="p").isnull().any()
 
 
 @pytest.mark.parametrize("metric", ("AnomCorr", "test", "None"))
@@ -235,21 +230,15 @@ def test_compute_hindcast_CESM_3D_keep_coords(
         assert c in s.coords
 
 
-def test_bootstrap_hindcast_keeps_lead_units(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
-):
-    """Test that lead units is kept in compute."""
+def test_HindcastEnsemble_keeps_lead_units(hindcast_hist_obs_1d):
+    """Test that lead units is kept in bootstrap."""
     sig = 95
-    units = "years"
-    hind_da_initialized_1d["lead"].attrs["units"] = units
-    actual = bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        observations_da_1d,
+    actual = hindcast_hist_obs_1d.bootstrap(
         metric="mse",
         iterations=ITERATIONS,
         comparison="e2o",
         sig=sig,
         dim="init",
+        alignment="same_verif",
     )
-    assert actual.lead.attrs["units"] == units
+    assert actual.lead.attrs["units"] == "years"

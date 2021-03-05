@@ -81,7 +81,7 @@ def test_compute_persistence_add_attrs(PM_ds_initialized_1d, PM_ds_control_1d, m
 @pytest.mark.parametrize("metric", DETERMINISTIC_PM_METRICS_LUACC)
 def test_compute_persistence_ds1d_not_nan(
     PM_ds_initialized_1d, PM_ds_control_1d, metric
-):
+):  # todo rewrite
     """
     Checks that there are no NaNs on persistence forecast of 1D time series.
     """

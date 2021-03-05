@@ -98,13 +98,13 @@ def _apply_metric_at_given_lead(
         )
         lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
-        # print("calc persistence")
+        print("calc persistence")
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
-        # print("calc uninit")
+        print("calc uninit")
         lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
-        # print("calculating climatology")
+        print("calculating climatology")
         lforecast, lverif = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
         lforecast, lverif, dim = _maybe_drop_or_raise_member_dim(
@@ -116,14 +116,16 @@ def _apply_metric_at_given_lead(
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
-    # print(
-    #    "passed to metric.function: dim =",
-    #    list(dim),
-    #    "a.dims =",
-    #    list(a.dims),
-    #    "b.dims",
-    #    list(b.dims),
-    # )
+    print(
+        "passed to metric.function: dim =",
+        list(dim),
+        "lforecast.dims =",
+        list(lforecast.dims),
+        "lverif.dims",
+        list(lverif.dims),
+        "metric_kwargs",
+        metric_kwargs,
+    )
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result
@@ -139,6 +141,10 @@ def _rename_dim(dim, forecast, verif):
         dim = dim.copy()
         dim.remove("time")
         dim = dim + ["init"]
+    elif "init" in dim and "time" in forecast.dims and "time" in verif.dims:
+        dim = dim.copy()
+        dim.remove("init")
+        dim = dim + ["time"]
     return dim
 
 
@@ -356,6 +362,13 @@ def compute_hindcast(
     inits, verif_dates = return_inits_and_verif_dates(
         forecast, verif, alignment=alignment
     )
+
+    if "iteration" in forecast.dims and "iteration" not in verif.dims:
+        verif = (
+            verif.expand_dims("iteration")
+            .isel(iteration=[0] * forecast.iteration.size)
+            .assign_coords(iteration=forecast.iteration)
+        )
 
     log_compute_hindcast_header(metric, comparison, dim, alignment)
 

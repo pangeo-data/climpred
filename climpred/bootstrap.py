@@ -21,7 +21,7 @@ from .comparisons import (
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model
-from .reference import compute_persistence
+from .reference import compute_climatology, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -690,6 +690,7 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
+    print("metric_kwargs", metric_kwargs)
     warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
@@ -791,6 +792,7 @@ def bootstrap_compute(
                     )
         else:  # hindcast
             if "uninitialized" in reference:
+                # print('hist',hist.dims)
                 uninit_hind = resample_uninit(hind, hist)
                 if dask.is_dask_collection(uninit_hind):
                     # too minimize tasks: ensure uninit_hind get pre-computed
@@ -827,6 +829,7 @@ def bootstrap_compute(
         if dask.is_dask_collection(bootstrapped_hind):
             bootstrapped_hind = bootstrapped_hind.chunk({"member": -1})
 
+        print(metric_kwargs)
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
             verif,
@@ -837,28 +840,25 @@ def bootstrap_compute(
             **metric_kwargs,
         )
         if "persistence" in reference:
-            if not metric.probabilistic:
-                pers_skill = reference_compute(
-                    hind,
+            pers_skill = reference_compute(
+                hind,
+                verif,
+                metric=metric,
+                dim=dim,
+                **metric_kwargs_reference,
+            )
+            # bootstrap pers
+            if resample_dim == "init":
+                bootstrapped_pers_skill = reference_compute(
+                    bootstrapped_hind,
                     verif,
                     metric=metric,
-                    dim=dim,
                     **metric_kwargs_reference,
                 )
-                # bootstrap pers
-                if resample_dim == "init":
-                    bootstrapped_pers_skill = reference_compute(
-                        bootstrapped_hind,
-                        verif,
-                        metric=metric,
-                        **metric_kwargs_reference,
-                    )
-                else:  # member
-                    _, bootstrapped_pers_skill = xr.broadcast(
-                        bootstrapped_init_skill, pers_skill, exclude=CLIMPRED_DIMS
-                    )
-            else:
-                bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
+            else:  # member
+                _, bootstrapped_pers_skill = xr.broadcast(
+                    bootstrapped_init_skill, pers_skill, exclude=CLIMPRED_DIMS
+                )
 
     # calc mean skill without any resampling
     init_skill = compute(
@@ -869,17 +869,13 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
-
     if "uninitialized" in reference:
         # uninit skill as mean resampled uninit skill
-        uninit_skill = bootstrapped_uninit_skill.mean("iteration")
+        unin_skill = bootstrapped_uninit_skill.mean("iteration")
     if "persistence" in reference:
-        if not metric.probabilistic:
-            pers_skill = reference_compute(
-                hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
-            )
-        else:
-            pers_skill = init_skill.isnull()
+        pers_skill = reference_compute(
+            hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
+        )
 
         # align to prepare for concat
         if set(bootstrapped_pers_skill.coords) != set(bootstrapped_init_skill.coords):
@@ -896,14 +892,22 @@ def bootstrap_compute(
                 bootstrapped_pers_skill,
                 exclude=("init", "lead", "time"),
             )
+    if "climatology" in reference:
+        clim_skill = compute_climatology(
+            hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
+        )
+        bootstrapped_clim_skill = clim_skill.expand_dims(
+            "iteration"
+        )  # TODO: broadcast?
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
     if "uninitialized" in reference:
-        uninit_ci = _distribution_to_ci(bootstrapped_uninit_skill, ci_low, ci_high)
-
+        unin_ci = _distribution_to_ci(bootstrapped_uninit_skill, ci_low, ci_high)
+    if "climatology" in reference:
+        clim_ci = _distribution_to_ci(bootstrapped_clim_skill, ci_low, ci_high)
     # probabilistic metrics wont have persistence forecast
-    # therefore only get CI if persistence was computed
+    # therefore only get CI if persistence was computed # TODO: allow persistence
     if "persistence" in reference:
         if "iteration" in bootstrapped_pers_skill.dims:
             pers_ci = _distribution_to_ci(
@@ -915,99 +919,143 @@ def bootstrap_compute(
 
     # pvalue whether uninit or pers better than init forecast
     if "uninitialized" in reference:
-        p_uninit_over_init = _pvalue_from_distributions(
+        p_unin_over_init = _pvalue_from_distributions(
             bootstrapped_uninit_skill, bootstrapped_init_skill, metric=metric
+        )
+    if "climatology" in reference:
+        p_clim_over_init = _pvalue_from_distributions(
+            bootstrapped_clim_skill, bootstrapped_clim_skill, metric=metric
         )
     if "persistence" in reference:
         p_pers_over_init = _pvalue_from_distributions(
             bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
         )
 
-    # wrap results together in one xr object
-    if reference == []:
-        results = xr.concat(
-            [
-                init_skill,
-                init_ci.isel(quantile=0, drop=True),
-                init_ci.isel(quantile=1, drop=True),
-            ],
-            dim="results",
-        )
-        results["results"] = ["verify skill", "low_ci", "high_ci"]
-        results["skill"] = ["initialized"]
-        results = results.squeeze()
+    results = xr.concat(
+        [
+            init_skill,
+            init_skill.where(init_skill == -999.99),
+            init_ci.isel(quantile=0, drop=True),
+            init_ci.isel(quantile=1, drop=True),
+        ],
+        dim="results",
+        coords="minimal",
+    ).assign_coords(
+        results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
+        skill="initialized",
+    )
+    results = results.squeeze()
 
-    elif reference == ["persistence"]:
-        skill = xr.concat([init_skill, pers_skill], dim="skill", **CONCAT_KWARGS)
-        skill["skill"] = ["initialized", "persistence"]
-
-        # ci for each skill
-        ci = xr.concat([init_ci, pers_ci], "skill", coords="minimal").rename(
-            {"quantile": "results"}
-        )
-        ci["skill"] = ["initialized", "persistence"]
-
-        results = xr.concat([skill, p_pers_over_init], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p"]
-        if set(results.coords) != set(ci.coords):
-            res_drop = [c for c in results.coords if c not in ci.coords]
-            ci_drop = [c for c in ci.coords if c not in results.coords]
-            results = results.drop_vars(res_drop)
-            ci = ci.drop_vars(ci_drop)
-        results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
-
-    elif reference == ["uninitialized"]:
-        skill = xr.concat([init_skill, uninit_skill], dim="skill", **CONCAT_KWARGS)
-        skill["skill"] = ["initialized", "uninitialized"]
-
-        # ci for each skill
-        ci = xr.concat([init_ci, uninit_ci], "skill", coords="minimal").rename(
-            {"quantile": "results"}
-        )
-        ci["skill"] = ["initialized", "uninitialized"]
-
-        results = xr.concat([skill, p_uninit_over_init], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p"]
-        if set(results.coords) != set(ci.coords):
-            res_drop = [c for c in results.coords if c not in ci.coords]
-            ci_drop = [c for c in ci.coords if c not in results.coords]
-            results = results.drop_vars(res_drop)
-            ci = ci.drop_vars(ci_drop)
-        results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
-
-    elif set(reference) == set(["uninitialized", "persistence"]):
-        skill = xr.concat(
-            [init_skill, uninit_skill, pers_skill], dim="skill", **CONCAT_KWARGS
-        )
-        skill["skill"] = ["initialized", "uninitialized", "persistence"]
-
-        # probability that i beats init
-        p = xr.concat(
-            [p_uninit_over_init, p_pers_over_init], dim="skill", **CONCAT_KWARGS
-        )
-        p["skill"] = ["uninitialized", "persistence"]
-
-        # ci for each skill
-        ci = xr.concat([init_ci, uninit_ci, pers_ci], "skill", coords="minimal").rename(
-            {"quantile": "results"}
-        )
-        ci["skill"] = ["initialized", "uninitialized", "persistence"]
-
-        results = xr.concat([skill, p], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p"]
-        if set(results.coords) != set(ci.coords):
-            res_drop = [c for c in results.coords if c not in ci.coords]
-            ci_drop = [c for c in ci.coords if c not in results.coords]
-            results = results.drop_vars(res_drop)
-            ci = ci.drop_vars(ci_drop)
-        results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
+    if reference is not []:
+        for r in reference:
+            ref_skill = eval(f"{r[:4]}_skill")
+            ref_p = eval(f"p_{r[:4]}_over_init")
+            ref_ci_low = eval(f"{r[:4]}_ci").isel(quantile=0, drop=True)
+            ref_ci_high = eval(f"{r[:4]}_ci").isel(quantile=1, drop=True)
+            ref_results = xr.concat(
+                [ref_skill, ref_p, ref_ci_low, ref_ci_high],
+                dim="results",
+                **CONCAT_KWARGS,
+            ).assign_coords(
+                skill=r, results=("results", ["verify skill", "p", "low_ci", "high_ci"])
+            )
+            results = xr.concat([results, ref_results], dim="skill", **CONCAT_KWARGS)
+        results = results.assign_coords(skill=["initialized"] + reference).squeeze()
     else:
-        raise ValueError("results not created")
+        results = results.drop_sel(results=p)
+
+    # wrap results together in one xr object
+    if False:
+        if reference == []:
+            results = xr.concat(
+                [
+                    init_skill,
+                    init_ci.isel(quantile=0, drop=True),
+                    init_ci.isel(quantile=1, drop=True),
+                ],
+                dim="results",
+            )
+            results["results"] = ["verify skill", "low_ci", "high_ci"]
+            results["skill"] = ["initialized"]
+            results = results.squeeze()
+
+        # print(init_skill.dims,pers_skill.dims, )
+        elif reference == ["persistence"]:
+            skill = xr.concat([init_skill, pers_skill], dim="skill", **CONCAT_KWARGS)
+            skill["skill"] = ["initialized", "persistence"]
+
+            # ci for each skill
+            ci = xr.concat([init_ci, pers_ci], "skill", coords="minimal").rename(
+                {"quantile": "results"}
+            )
+            ci["skill"] = ["initialized", "persistence"]
+
+            results = xr.concat(
+                [skill, p_pers_over_init], dim="results", **CONCAT_KWARGS
+            )
+            results["results"] = ["verify skill", "p"]
+            if set(results.coords) != set(ci.coords):
+                res_drop = [c for c in results.coords if c not in ci.coords]
+                ci_drop = [c for c in ci.coords if c not in results.coords]
+                results = results.drop_vars(res_drop)
+                ci = ci.drop_vars(ci_drop)
+            results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
+            results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
+
+        elif reference == ["uninitialized"]:
+            skill = xr.concat([init_skill, unin_skill], dim="skill", **CONCAT_KWARGS)
+            skill["skill"] = ["initialized", "uninitialized"]
+
+            # ci for each skill
+            ci = xr.concat([init_ci, unin_ci], "skill", coords="minimal").rename(
+                {"quantile": "results"}
+            )
+            ci["skill"] = ["initialized", "uninitialized"]
+
+            results = xr.concat(
+                [skill, p_unin_over_init], dim="results", **CONCAT_KWARGS
+            )
+            results["results"] = ["verify skill", "p"]
+            if set(results.coords) != set(ci.coords):
+                res_drop = [c for c in results.coords if c not in ci.coords]
+                ci_drop = [c for c in ci.coords if c not in results.coords]
+                results = results.drop_vars(res_drop)
+                ci = ci.drop_vars(ci_drop)
+            results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
+            results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
+
+        elif set(reference) == set(["uninitialized", "persistence"]):
+            skill = xr.concat(
+                [init_skill, unin_skill, pers_skill], dim="skill", **CONCAT_KWARGS
+            )
+            skill["skill"] = ["initialized", "uninitialized", "persistence"]
+
+            # probability that i beats init
+            p = xr.concat(
+                [p_unin_over_init, p_pers_over_init], dim="skill", **CONCAT_KWARGS
+            )
+            p["skill"] = ["uninitialized", "persistence"]
+
+            # ci for each skill
+            ci = xr.concat(
+                [init_ci, unin_ci, pers_ci], "skill", coords="minimal"
+            ).rename({"quantile": "results"})
+            ci["skill"] = ["initialized", "uninitialized", "persistence"]
+
+            results = xr.concat([skill, p], dim="results", **CONCAT_KWARGS)
+            results["results"] = ["verify skill", "p"]
+            if set(results.coords) != set(ci.coords):
+                res_drop = [c for c in results.coords if c not in ci.coords]
+                ci_drop = [c for c in ci.coords if c not in results.coords]
+                results = results.drop_vars(res_drop)
+                ci = ci.drop_vars(ci_drop)
+            results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
+            results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
+        else:
+            raise ValueError("results not created")
 
     # Attach climpred compute information to skill
+    # results.results
     metadata_dict = {
         "confidence_interval_levels": f"{ci_high}-{ci_low}",
         "bootstrap_iterations": iterations,
@@ -1122,8 +1170,12 @@ def bootstrap_hindcast(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
+    print("metric_kwargs", metric_kwargs)
     hind = convert_time_index(hind, "init", "hind[init]")
-    hist = convert_time_index(hist, "time", "uninitialized[time]")
+    if isinstance(hist, xr.Dataset):
+        hist = convert_time_index(hist, "time", "uninitialized[time]")
+    else:
+        hist = False
     verif = convert_time_index(verif, "time", "verif[time]")
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
@@ -1139,11 +1191,15 @@ def bootstrap_hindcast(
 
     # Kludge for now. Since we're computing persistence here we need to ensure that
     # all products have a union in their time axis.
-    times = np.sort(
-        list(set(hind.init.data) & set(hist.time.data) & set(verif.time.data))
-    )
+    if hist not in [None, False]:
+        times = np.sort(
+            list(set(hind.init.data) & set(hist.time.data) & set(verif.time.data))
+        )
+    else:
+        times = np.sort(list(set(hind.init.data) & set(verif.time.data)))
     hind = hind.sel(init=times)
-    hist = hist.sel(time=times)
+    if isinstance(hist, xr.Dataset):
+        hist = hist.sel(time=times)
     verif = verif.sel(time=times)
 
     return bootstrap_compute(

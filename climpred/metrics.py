@@ -1528,7 +1528,6 @@ __smape = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
-    requires_member_dim=True,
 )
 
 
@@ -1943,7 +1942,6 @@ __msess_murphy = Metric(
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
-    requires_member_dim=True,
 )
 
 
@@ -2269,6 +2267,7 @@ def _crps_gaussian(verification, mu, sig, dim=None, **metric_kwargs):
         * :py:func:`~properscoring.crps_gaussian`
         * :py:func:`~xskillscore.crps_gaussian`
     """
+    # TODO: delete no added value
     return crps_gaussian(verification, mu, sig, dim=dim, **metric_kwargs)
 
 
@@ -2376,7 +2375,8 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         * :py:func:`~properscoring.crps_ensemble`
         * :py:func:`~xskillscore.crps_ensemble`
     """
-
+    if dim is None:
+        dim = verif.dims
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
@@ -2419,6 +2419,7 @@ __crpss = Metric(
     minimum=-np.inf,
     maximum=1.0,
     perfect=1.0,
+    requires_member_dim=True,
 )
 
 
@@ -2475,13 +2476,18 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
             SST      (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
 
     """
-
+    if dim is None:
+        dim = verif.dims
     # helper dim to calc mu
     rdim = [d for d in verif.dims if d in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
     # forecast, verif_member = xr.broadcast(forecast, verif)
     dim_no_member = [d for d in dim if d != "member"]
     ensemble_spread = forecast.std("member").mean(dim=dim_no_member, **metric_kwargs)
+    if forecast.member.size == 1:
+        warnings.warn(
+            "Ensemble spread is 0. CRPSS_ES yields NaNs for persistence and climatology reference skill."
+        )
     mse_h = __mse.function(
         forecast.mean("member"), verif, dim=dim_no_member, **metric_kwargs
     )
@@ -2709,7 +2715,11 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
+    print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
+    if "member" in forecast.dims:
+        forecast = forecast.mean("member")  # TODO: fix somehwere else
+    print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2776,6 +2786,7 @@ __rank_histogram = Metric(
     probabilistic=True,
     unit_power=0,
     long_name="rank_histogram",
+    requires_member_dim=True,
 )
 
 
@@ -2850,6 +2861,7 @@ __rps = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
+    requires_member_dim=True,  ## TODO: not really
 )
 
 

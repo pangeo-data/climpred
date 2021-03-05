@@ -11,6 +11,10 @@ Breaking changes
 
 New Features
 ------------
+- :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`
+  accept reference ``climatology``. Furthermore, reference ``persistence`` also allows probabilistic metrics (:issue:`202`, :issue:`565`, :pr:`566`) `Aaron Spring`_.
+
 
 Bug fixes
 ---------

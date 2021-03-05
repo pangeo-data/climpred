@@ -4,7 +4,6 @@ esmtools>=1.1.3
 matplotlib
 numpy
 pandas
-scipy
 toolz
 xarray>=0.16.1
 xrft

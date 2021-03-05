@@ -2861,7 +2861,7 @@ __rps = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
-    requires_member_dim=True,  ## TODO: not really
+    requires_member_dim=True,  # TODO: not really required but required inside reference forecasts
 )
 
 

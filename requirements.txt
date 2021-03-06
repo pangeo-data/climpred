@@ -2,7 +2,7 @@ xarray>=0.16.1
 dask
 matplotlib
 ipython
-setuptools
+toolz
 cftime>=1.1.2
 esmtools>=1.1.3
 xrft

@@ -3,7 +3,7 @@ eofs
 esmtools>=1.1.3
 matplotlib
 ipython
-toolz
+setuptools
 xarray>=0.16.1
 xrft
 xskillscore>=0.0.18

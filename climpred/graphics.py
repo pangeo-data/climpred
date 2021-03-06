@@ -74,32 +74,23 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
     return ax
 
 
-def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, ax=None):
+def plot_bootstrapped_skill_over_leadyear(
+    bootstrapped,
+    ax=None,
+    color_initialized="steelblue",
+    color_uninitialized="indianred",
+    color_persistence="gray",
+    color_climatology="palegreen",
+    capsize=4,
+    fontsize=8,
+):
     """
     Plot Ensemble Prediction skill as in Li et al. 2016 Fig.3a-c.
 
     Args:
         bootstrapped (xr.DataArray or xr.Dataset with one variable):
-            from bootstrap_perfect_model or bootstrap_hindcast
+            from PredictionEnsembleEnsemble.bootstrap() or HindcastEnsemble.bootstrap()
 
-            containing:
-        init_skill (xr.Dataset): skill of initialized
-        init_ci (xr.Dataset): confidence levels of init_skill
-        uninit_skill (xr.Dataset): skill of uninitialized
-        uninit_ci (xr.Dataset): confidence levels of uninit_skill
-        p_uninit_over_init (xr.Dataset): p value of the hypothesis that the
-                                         difference of skill between the
-                                         initialized and uninitialized
-                                         simulations is smaller or equal to
-                                         zero based on bootstrapping with
-                                         replacement. Defaults to None.
-        pers_skill (xr.Dataset): skill of persistence
-        pers_ci (xr.Dataset): confidence levels of pers_skill
-        p_pers_over_init (xr.Dataset): p value of the hypothesis that the
-                                       difference of skill between the
-                                       initialized and persistence simulations
-                                       is smaller or equal to zero based on
-                                       bootstrapping with replacement.
         ax (plt.axes): plot on ax. Defaults to None.
 
     Returns:
@@ -126,41 +117,23 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
             bootstrapped.attrs = attrs
 
     assert isinstance(bootstrapped, xr.DataArray)
+    reference = list(bootstrapped.drop_sel(skill="initialized").coords["skill"].values)
 
     sig = bootstrapped.attrs["confidence_interval_levels"].split("-")
     sig = int(100 * (float(sig[0]) - float(sig[1])))
     pers_sig = sig
 
-    if "metric" in bootstrapped.attrs:
-        if bootstrapped.attrs["metric"] in PROBABILISTIC_METRICS:
-            plot_persistence = False
-
     init_skill = bootstrapped.sel(skill="initialized", results="verify skill")
     init_ci = bootstrapped.sel(
         skill="initialized", results=["low_ci", "high_ci"]
     ).rename({"results": "quantile"})
-    uninit_skill = bootstrapped.sel(skill="uninitialized", results="verify skill")
-    uninit_ci = bootstrapped.sel(
-        skill="uninitialized", results=["low_ci", "high_ci"]
-    ).rename({"results": "quantile"})
-    pers_skill = bootstrapped.sel(skill="persistence", results="verify skill")
-    pers_ci = bootstrapped.sel(
-        skill="persistence", results=["low_ci", "high_ci"]
-    ).rename({"results": "quantile"})
-    p_uninit_over_init = bootstrapped.sel(skill="uninitialized", results="p")
-    p_pers_over_init = bootstrapped.sel(skill="persistence", results="p")
-
-    fontsize = 8
-    c_uninit = "indianred"
-    c_init = "steelblue"
-    c_pers = "gray"
-    capsize = 4
 
     if pers_sig != sig:
         raise NotImplementedError("pers_sig != sig not implemented yet.")
 
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
+    # plot init
     ax.errorbar(
         init_skill.lead,
         init_skill,
@@ -170,73 +143,42 @@ def plot_bootstrapped_skill_over_leadyear(bootstrapped, plot_persistence=True, a
         ],
         fmt="--o",
         capsize=capsize,
-        c=c_uninit,
+        c=color_initialized,
         label=(" ").join(["initialized with", str(sig) + "%", "confidence interval"]),
     )
-    # uninit
-    if p_uninit_over_init is not None:
-        # add p values
+    # plot references
+    for r in reference:
+        p_r_over_init = bootstrapped.sel(skill=r, results="p")
+        r_skill = bootstrapped.sel(skill=r, results="verify skill")
+        r_ci = bootstrapped.sel(skill=r, results=["low_ci", "high_ci"]).rename(
+            {"results": "quantile"}
+        )
+        c = eval(f"color_{r}")
+        # add p values over all reference skills
         for t in init_skill.lead.values:
             ax.text(
-                init_skill.lead.sel(lead=t),
-                init_ci.isel(quantile=1).sel(lead=t).values,
-                "%.2f" % float(p_uninit_over_init.sel(lead=t).values),
+                r_skill.lead.sel(lead=t),
+                r_ci.isel(quantile=0).sel(lead=t).values,
+                "%.2f" % float(p_r_over_init.sel(lead=t).values),
                 horizontalalignment="center",
                 verticalalignment="bottom",
                 fontsize=fontsize,
-                color=c_uninit,
+                color=c,
             )
-        uninit_skill = uninit_skill.dropna("lead").squeeze()
-        uninit_ci = uninit_ci.dropna("lead").squeeze()
-        if "lead" not in uninit_skill.dims:
-            yerr = [
-                [uninit_skill - uninit_ci.isel(quantile=0)],
-                [uninit_ci.isel(quantile=1) - uninit_skill],
-            ]
-            ax.axhline(y=uninit_skill, c="steelblue", ls=":")
-            x = 0
-        else:
-            yerr = [
-                uninit_skill - uninit_ci.isel(quantile=0),
-                uninit_ci.isel(quantile=1) - uninit_skill,
-            ]
-            x = uninit_skill.lead
+        yerr = [
+            r_skill - r_ci.isel(quantile=0),
+            r_ci.isel(quantile=1) - r_skill,
+        ]
+        x = r_skill.lead
         ax.errorbar(
             x,
-            uninit_skill,
+            r_skill,
             yerr=yerr,
             fmt="--o",
             capsize=capsize,
-            c=c_init,
-            label=(" ").join(
-                ["uninitialized with", str(sig) + "%", "confidence interval"]
-            ),
+            c=c,
+            label=(" ").join([f"{reference} with {sig}% confidence interval"]),
         )
-    # persistence
-    if plot_persistence:
-        if pers_skill is not None and pers_ci is not None:
-            ax.errorbar(
-                pers_skill.lead,
-                pers_skill,
-                yerr=[
-                    pers_skill - pers_ci.isel(quantile=0),
-                    pers_ci.isel(quantile=1) - pers_skill,
-                ],
-                fmt="--o",
-                capsize=capsize,
-                c=c_pers,
-                label=f"persistence with {pers_sig}% confidence interval",
-            )
-        for t in pers_skill.lead.values:
-            ax.text(
-                pers_skill.lead.sel(lead=t),
-                pers_ci.isel(quantile=0).sel(lead=t).values,
-                "%.2f" % float(p_pers_over_init.sel(lead=t).values),
-                horizontalalignment="center",
-                verticalalignment="bottom",
-                fontsize=fontsize,
-                color=c_pers,
-            )
 
     ax.xaxis.set_ticks(np.arange(init_skill.lead.size + 1))
     ax.legend(frameon=False)

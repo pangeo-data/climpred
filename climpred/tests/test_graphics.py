@@ -20,6 +20,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_da(
         PM_da_control_1d,
         metric="pearson_r",
         iterations=ITERATIONS,
+        reference="uninitialized",
     )
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
     assert res_ax is not None
@@ -36,6 +37,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_single_uninit_lead(
         PM_da_control_1d,
         metric="pearson_r",
         iterations=ITERATIONS,
+        reference=["uninitialized", "persistence"],
     )
     # set all but first uninit lead to nan
     res[:, 2, 1:] = [np.nan] * (res.lead.size - 1)
@@ -54,7 +56,10 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
         PM_ds_control_1d,
         metric="pearson_r",
         iterations=ITERATIONS,
+        reference="uninitialized",
     )
+    print(res.coords["skill"])
+    assert list(res.coords["skill"]) == ["initialized", "uninitialized"]
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
     assert res_ax is not None
 

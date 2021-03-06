@@ -18,7 +18,6 @@ CLASSIFIERS = [
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.6",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
 ]
@@ -28,7 +27,7 @@ setup(
     maintainer_email="riley.brady@colorado.edu",
     description="Verification of weather and climate forecasts." + " prediction.",
     install_requires=install_requires,
-    python_requires=">=3.6",
+    python_requires=">=3.7",
     license="MIT",
     long_description=long_description,
     classifiers=CLASSIFIERS,

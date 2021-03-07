@@ -12,7 +12,6 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
 
-
   -   repo: https://github.com/psf/black
       rev: stable
       hooks:

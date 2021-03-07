@@ -12,20 +12,24 @@ repos:
       - id: check-merge-conflict
       - id: check-added-large-files
 
+
   -   repo: https://github.com/psf/black
       rev: stable
       hooks:
       - id: black
-      
-  -   repo: https://github.com/asottile/blacken-docs
-      rev: v1.10.0
+
+
+  -   repo: https://github.com/pycqa/pydocstyle
+      rev: 4.0.0  # pick a git hash / tag to point to
       hooks:
-      - id: blacken-docs
+      - id: pydocstyle
+
 
   -   repo: https://gitlab.com/pycqa/flake8
       rev: 3.8.4
       hooks:
       - id: flake8
+
 
   -   repo: https://github.com/pre-commit/mirrors-isort
       rev: v5.6.4

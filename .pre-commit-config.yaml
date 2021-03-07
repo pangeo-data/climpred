@@ -11,6 +11,7 @@ repos:
       - id: debug-statements
       - id: check-merge-conflict
       - id: check-added-large-files
+      - id: doctests
 
   -   repo: https://github.com/psf/black
       rev: stable

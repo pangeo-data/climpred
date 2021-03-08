@@ -74,7 +74,6 @@ def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     assert actual["comparison"] == comparison
     if metric == "pearson_r":
         assert actual["units"] == "None"
-    assert actual["skill_calculated_by_function"] == "compute_perfect_model"
     assert (
         actual["prediction_skill"]
         == "calculated by climpred https://climpred.readthedocs.io/"
@@ -98,7 +97,6 @@ def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     assert actual["comparison"] == comparison
     if metric == "pearson_r":
         assert actual["units"] == "None"
-    assert actual["skill_calculated_by_function"] == "compute_perfect_model"
     assert actual["units"] == "(C)^2"
     assert actual["dim"] == dim
 
@@ -139,7 +137,6 @@ def test_hindcast_assign_attrs():
     assert actual["comparison"] == comparison
     if metric == "pearson_r":
         assert actual["units"] == "None"
-    assert actual["skill_calculated_by_function"] == "compute_hindcast"
 
 
 def test_cftime_index_unchanged():

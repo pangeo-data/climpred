@@ -2994,7 +2994,7 @@ DIMENSIONLESS_METRICS = [m.name for m in __ALL_METRICS__ if m.unit_power == 1]
 # More positive skill is better than more negative.
 POSITIVELY_ORIENTED_METRICS = [m.name for m in __ALL_METRICS__ if m.positive]
 PROBABILISTIC_METRICS = [m.name for m in __ALL_METRICS__ if m.probabilistic]
-# Combined allowed metrics for compute_hindcast and compute_PerfectModelEnsemble
+# Combined allowed metrics for HindcastEnsemble.verify and PerfectModelEnsemble.verify
 HINDCAST_METRICS = DETERMINISTIC_HINDCAST_METRICS + PROBABILISTIC_METRICS
 PM_METRICS = DETERMINISTIC_PM_METRICS + PROBABILISTIC_METRICS
 ALL_METRICS = [m.name for m in __ALL_METRICS__]

@@ -763,7 +763,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             add_attrs=False,
             **metric_kwargs,
         )
-        assert M2M_MEMBER_DIM not in result.dims
         if self._temporally_smoothed:
             result = _reset_temporal_axis(result, self._temporally_smoothed, dim="lead")
             result["lead"].attrs = self.get_initialized().lead.attrs
@@ -821,10 +820,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "init": False,
         }
         if dim is None:
-            dim = list(self._datasets["initialized"].dims)
-        for d in ["lead"]:  # ["member", "lead"]:
-            if d in dim:
-                dim.remove(d)
+            dim = list(self._datasets["initialized"].isel(lead=0).dims)
         res = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
@@ -869,9 +865,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "init": True,
         }
         if dim is None:
-            dim = list(self._datasets["initialized"].dims)
-            if d in dim:
-                dim.remove(d)
+            dim = list(self._datasets["initialized"].isel(lead=0).dims)
         res = self._apply_climpred_function(
             compute_persistence,
             input_dict=input_dict,
@@ -917,10 +911,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "init": True,
         }
         if dim is None:
-            dim = list(self._datasets["initialized"].dims)
-        for d in ["lead"]:
-            if d in dim:
-                dim.remove(d)
+            dim = list(self._datasets["initialized"]isel(lead=0).dims)
         res = self._apply_climpred_function(
             compute_climatology,
             input_dict=input_dict,
@@ -1259,10 +1250,7 @@ class HindcastEnsemble(PredictionEnsemble):
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
-            viable_dims = dict(self._datasets["initialized"].dims)
-            viable_dims = list(viable_dims.keys())
-            if "lead" in viable_dims:
-                viable_dims.remove("lead")
+            viable_dims = list(self.get_initialized().isel(lead=0).dims)
             raise ValueError(
                 "Designate a dimension to reduce over when applying the "
                 f"metric. Got {dim}. Choose one or more of {viable_dims}"
@@ -1501,7 +1489,7 @@ class HindcastEnsemble(PredictionEnsemble):
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation
-        if isinstance(reference, type(None)):
+        if reference is None:
             reference = []
         if isinstance(reference, str):
             reference = [reference]

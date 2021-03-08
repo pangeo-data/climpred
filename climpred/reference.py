@@ -51,7 +51,6 @@ def climatology(verif, inits, verif_dates, lead):
         climatology_forecast.time.isin(inits[lead]), drop=True
     )
     lverif = verif.sel(time=verif_dates[lead])
-    assert lforecast.time.size == lverif.time.size
     return lforecast, lverif
 
 

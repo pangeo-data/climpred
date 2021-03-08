@@ -1,5 +1,3 @@
-import inspect
-
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -257,7 +255,6 @@ def compute_perfect_model(
         skill = assign_attrs(
             skill,
             init_pm,
-            function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
             dim=dim,
@@ -366,7 +363,6 @@ def compute_hindcast(
         result = assign_attrs(
             result,
             hind,
-            function_name=inspect.stack()[0][3],
             alignment=alignment,
             metric=metric,
             comparison=comparison,

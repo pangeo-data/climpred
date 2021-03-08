@@ -33,35 +33,18 @@ references = [
     "climatology",
     ["climatology", "uninitialized", "persistence"],
 ]
+references_ids = [
+    "empty list",
+    "uninitialized",
+    "persistence",
+    "climatology",
+    "climatology, uninitialized, persistence",
+]
 
 xr.set_options(display_style="text")
 
 
-@pytest.mark.parametrize("comparison", PROBABILISTIC_PM_COMPARISONS)
-@pytest.mark.parametrize("metric", PROBABILISTIC_METRICS)
-def test_compute_perfect_model_da1d_not_nan_probabilistic(
-    PM_da_initialized_1d, PM_da_control_1d, metric, comparison
-):
-    """
-    Checks that there are no NaNs on perfect model probabilistic metrics of 1D
-    time series.
-    """
-    metric_kwargs = {"comparison": comparison, "metric": metric, "dim": "member"}
-    if "threshold" in metric:
-        metric_kwargs["threshold"] = 10.5
-    if metric == "brier_score":
-
-        def func(x):
-            return x > 0
-
-        metric_kwargs["logical"] = func
-
-    actual = compute_perfect_model(PM_da_initialized_1d, PM_da_control_1d)
-    actual = actual.isnull().any()
-    assert not actual
-
-
-@pytest.mark.parametrize("reference", references)
+@pytest.mark.parametrize("reference", references, ids=references_ids)
 @pytest.mark.parametrize("metric", PROBABILISTIC_METRICS)
 @pytest.mark.parametrize("comparison", PROBABILISTIC_HINDCAST_COMPARISONS)
 def test_HindcastEnsemble_verify_bootstrap_probabilistic(
@@ -71,34 +54,35 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
     Checks that HindcastEnsemble.verify() and HindcastEnsemble.bootstrap() works without breaking for all probabilistic metrics.
     """
     he = hindcast_hist_obs_1d.isel(lead=[0, 1, 2])
+    he = he.remove_bias(alignment="same_verifs")
+    print("remove_bias done\n\n")
 
-    category_edges = np.array([0, 0.5, 1])
+    category_edges = np.array([-0.5, 0, 0.5])
     if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
-            return x > 0.5
+            return x > 0
 
-        metric_kwargs = {"logical": f}
+        kwargs = {"logical": f}
     elif metric == "threshold_brier_score":
-        metric_kwargs = {"threshold": 0.5}
+        kwargs = {"threshold": 0}
     elif metric == "contingency":
-        metric_kwargs = {
+        kwargs = {
             "forecast_category_edges": category_edges,
             "observation_category_edges": category_edges,
             "score": "accuracy",
         }
     elif metric == "rps":
-        metric_kwargs = {"category_edges": category_edges}
+        kwargs = {"category_edges": category_edges}
     else:
-        metric_kwargs = {}
+        kwargs = {}
     dim = (
         ["member", "init"]
         if metric in probabilistic_metrics_requiring_more_than_member_dim
         else "member"
     )
     # verify()
-    kwargs = metric_kwargs
-    metric_kwargs.update(
+    kwargs.update(
         {
             "comparison": comparison,
             "metric": metric,
@@ -107,25 +91,35 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
             "alignment": "same_verifs",
         }
     )
+    print(kwargs)
     actual_verify = he.verify(**kwargs)["SST"]
-    assert not actual_verify.isnull().all()
+    print("result dims", actual_verify.dims)
+    # assert not actual_verify.isnull().all()
+    print("\n\nbootstrap()\n\n")
     # bootstrap()
     actual = he.bootstrap(iterations=3, **kwargs)["SST"]
-    assert not actual.isnull().all()
+    print("res", actual)
     if isinstance(reference, str):
         reference = [reference]
-    for skill in reference:
-        actual_skill = actual.sel(skill=skill, results="verify skill")
-        if metric == "crpss_es" and skill in ["climatology", "persistence"]:
-            pass
-        else:
-            assert not actual_skill.isnull().all()
+    if len(reference) == 0:
+        assert not actual.sel(results="verify skill").isnull().all()
+    else:
+        assert (
+            not actual.sel(skill="initialized", results="verify skill").isnull().all()
+        )
+        for skill in reference:
+            actual_skill = actual.sel(skill=skill, results="verify skill")
+            if metric == "crpss_es" and skill in ["climatology", "persistence"]:
+                pass
+            else:
+                assert not actual_skill.isnull().all()
 
 
+@pytest.mark.parametrize("reference", references, ids=references_ids)
 @pytest.mark.parametrize("comparison", PROBABILISTIC_PM_COMPARISONS)
 @pytest.mark.parametrize("metric", PROBABILISTIC_METRICS)
 def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
-    perfectModelEnsemble_initialized_control, metric, comparison
+    perfectModelEnsemble_initialized_control, metric, comparison, reference
 ):
     """
     Checks that PerfectModelEnsemble.verify() and PerfectModelEnsemble.bootstrap() works without breaking for all probabilistic metrics.
@@ -135,15 +129,15 @@ def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
         "comparison": comparison,
         "metric": metric,
     }
-    category_edges = np.array([0, 0.5, 1])
+    category_edges = np.array([9.5, 10.0, 10.5])
     if metric in probabilistic_metrics_requiring_logical:
 
         def f(x):
-            return x > 0.5
+            return x > 10
 
         kwargs["logical"] = f
     elif metric == "threshold_brier_score":
-        kwargs["threshold"] = 0.5
+        kwargs["threshold"] = 10.0
     elif metric == "contingency":
         kwargs["forecast_category_edges"] = category_edges
         kwargs["observation_category_edges"] = category_edges
@@ -160,17 +154,23 @@ def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
     # verify()
     actual_verify = pm.verify(**kwargs)
     assert not actual_verify.tos.isnull().all()
+
     # bootstrap
     kwargs["iterations"] = ITERATIONS
     kwargs["resample_dim"] = "member"
-    kwargs["reference"] = ["uninitialized", "climatology", "persistence"]
+    kwargs["reference"] = reference
     actual = pm.bootstrap(**kwargs).tos
-    for skill in kwargs["reference"]:
-        actual_skill = actual.sel(skill=skill, results="verify skill")
-        if metric == "crpss_es" and skill in ["climatology", "persistence"]:
-            pass
-        else:
-            assert not actual_skill.isnull().all()
+    if isinstance(reference, str):
+        reference = [reference]
+    if len(reference) == 0:
+        assert not actual.sel(results="verify skill").isnull().all()
+    else:
+        for skill in reference:
+            actual_skill = actual.sel(skill=skill, results="verify skill")
+            if metric == "crpss_es" and skill in ["climatology", "persistence"]:
+                pass
+            else:
+                assert not actual_skill.isnull().all()
 
 
 def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
@@ -304,6 +304,17 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
             metric=metric,
             dim="member",
         )
+
+
+def test_HindcastEnsemble_rps_terciles(hindcast_hist_obs_1d):
+    actual = hindcast_hist_obs_1d.verify(
+        metric="rps",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+        category_edges=np.array([-0.5, 0.0, 0.5, 1]),
+    )  # todo really use terciles
+    assert actual.notnull().all()
 
 
 def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):

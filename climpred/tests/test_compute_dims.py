@@ -14,7 +14,6 @@ from climpred.utils import get_comparison_class, get_metric_class
 
 xr.set_options(display_style="text")
 
-# TODO: move to conftest.py
 ITERATIONS = 2
 
 comparison_dim_PM = [

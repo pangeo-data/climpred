@@ -331,6 +331,7 @@ def test_calendar_matching_uninitialized(
         hindcast.add_uninitialized(hist_ds_uninitialized_1d)
 
 
+# @pytest.mark.parametrize(metric,['mse',''])
 def test_verify_reference_same_dims(hindcast_hist_obs_1d):
     """Test that verify returns the same dimensionality regardless of reference."""
     hindcast = hindcast_hist_obs_1d
@@ -359,9 +360,19 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d):
         alignment=alignment,
         reference="persistence",
     )
+    actual_clim_ref = hindcast.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        alignment=alignment,
+        reference="climatology",
+    )
     assert actual_uninit_ref.skill.size == 2
     assert actual_pers_ref.skill.size == 2
+    assert actual_clim_ref.skill.size == 2
     # no additional dimension, +1 because initialized squeezed
     assert len(actual_no_ref.dims) + 1 == len(actual_pers_ref.dims)
     assert len(actual_no_ref.dims) + 1 == len(actual_uninit_ref.dims)
+    assert len(actual_no_ref.dims) + 1 == len(actual_clim_ref.dims)
     assert len(actual_pers_ref.dims) == len(actual_uninit_ref.dims)
+    assert len(actual_pers_ref.dims) == len(actual_clim_ref.dims)

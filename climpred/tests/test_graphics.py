@@ -58,7 +58,6 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
         iterations=ITERATIONS,
         reference="uninitialized",
     )
-    print(res.coords["skill"])
     assert list(res.coords["skill"]) == ["initialized", "uninitialized"]
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
     assert res_ax is not None

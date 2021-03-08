@@ -833,7 +833,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             dim=dim,
             **metric_kwargs,
         )
-        assert M2M_MEMBER_DIM not in res.dims
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
@@ -871,7 +870,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         }
         if dim is None:
             dim = list(self._datasets["initialized"].dims)
-        for d in ["lead"]:  # ["member", "lead"]:
             if d in dim:
                 dim.remove(d)
         res = self._apply_climpred_function(
@@ -882,7 +880,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             dim=dim,
             **metric_kwargs,
         )
-        assert M2M_MEMBER_DIM not in res.dims
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs

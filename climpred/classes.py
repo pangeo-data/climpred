@@ -820,6 +820,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             else None,
             "init": False,
         }
+        if dim is None:
+            dim = list(self._datasets["initialized"].dims)
+        for d in ["lead"]:  # ["member", "lead"]:
+            if d in dim:
+                dim.remove(d)
         res = self._apply_climpred_function(
             compute_perfect_model,
             input_dict=input_dict,
@@ -866,7 +871,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         }
         if dim is None:
             dim = list(self._datasets["initialized"].dims)
-        for d in ["member", "lead"]:
+        for d in ["lead"]:  # ["member", "lead"]:
             if d in dim:
                 dim.remove(d)
         res = self._apply_climpred_function(
@@ -1323,6 +1328,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 if "member" in verif.dims:  # if broadcasted before
                     verif = verif.isel(member=0)
                 for r in reference:
+                    print(f"\nreference = {r}")
                     metric_over_leads = [
                         _apply_metric_at_given_lead(
                             verif,
@@ -1498,9 +1504,21 @@ class HindcastEnsemble(PredictionEnsemble):
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation
+        if isinstance(reference, type(None)):
+            reference = []
+        if isinstance(reference, str):
+            reference = [reference]
+        if not isinstance(reference, list):
+            reference = list(reference)
+        if "uninitialized" in reference and not isinstance(
+            self.get_uninitialized(), xr.Dataset
+        ):
+            raise ValueError("reference uninitialized requires uninitialized.")
         return bootstrap_hindcast(
             self.get_initialized(),
-            self.get_uninitialized(),
+            self.get_uninitialized()
+            if isinstance(self.get_uninitialized(), xr.Dataset)
+            else None,
             self.get_observations(),
             metric=metric,
             comparison=comparison,

@@ -606,7 +606,7 @@ def bootstrap_compute(
     metric="pearson_r",
     comparison="m2e",
     dim="init",
-    reference=["uninitialized", "persistence", "climatology"],
+    reference=None,
     resample_dim="member",
     sig=95,
     iterations=500,
@@ -678,7 +678,6 @@ def bootstrap_compute(
         * climpred.bootstrap.bootstrap_hindcast
         * climpred.bootstrap.bootstrap_perfect_model
     """
-    # print("metric_kwargs", metric_kwargs)
     warn_if_chunking_would_increase_performance(hind, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig
@@ -772,6 +771,9 @@ def bootstrap_compute(
                 bootstrapped_uninit = bootstrapped_uninit.isel(
                     member=slice(None, hind.member.size)
                 )
+                bootstrapped_uninit["member"] = np.arange(
+                    1, 1 + bootstrapped_uninit.member.size
+                )
                 if dask.is_dask_collection(bootstrapped_uninit):
                     bootstrapped_uninit = bootstrapped_uninit.chunk({"member": -1})
                     bootstrapped_uninit = _maybe_auto_chunk(
@@ -815,7 +817,6 @@ def bootstrap_compute(
         if dask.is_dask_collection(bootstrapped_hind):
             bootstrapped_hind = bootstrapped_hind.chunk({"member": -1})
 
-        # print(metric_kwargs)
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
             verif,
@@ -863,10 +864,15 @@ def bootstrap_compute(
             hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
         )
     if "climatology" in reference:
+        print("climatology in bootstrap once")
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
-        bootstrapped_clim_skill = clim_skill.expand_dims("iteration")
+        bootstrapped_clim_skill = (
+            clim_skill.expand_dims("iteration")
+            .isel(iteration=[0] * iterations)
+            .assign_coords(iteration=bootstrapped_init_skill.iteration)
+        )
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
@@ -914,9 +920,8 @@ def bootstrap_compute(
         results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
         skill="initialized",
     )
-    results = results.squeeze()
 
-    if reference is not []:
+    if reference != []:
         for r in reference:
             ref_skill = eval(f"{r[:4]}_skill")
             ref_p = eval(f"p_{r[:4]}_over_init")
@@ -929,10 +934,16 @@ def bootstrap_compute(
             ).assign_coords(
                 skill=r, results=("results", ["verify skill", "p", "low_ci", "high_ci"])
             )
+            if "member" in ref_results.dims:
+                if not ref_results["member"].identical(results["member"]):
+                    ref_results["member"] = results[
+                        "member"
+                    ]  # fixes m2c different member names in reference forecasts
             results = xr.concat([results, ref_results], dim="skill", **CONCAT_KWARGS)
         results = results.assign_coords(skill=["initialized"] + reference).squeeze()
     else:
-        results = results.drop_sel(results=p)
+        results = results.drop_sel(results="p")
+    results = results.squeeze()
 
     # Attach climpred compute information to skill
     # results.results
@@ -970,7 +981,7 @@ def bootstrap_hindcast(
     metric="pearson_r",
     comparison="e2o",
     dim="init",
-    reference=["uninitialized", "persistence"],
+    reference=None,
     resample_dim="member",
     sig=95,
     iterations=500,
@@ -1089,8 +1100,8 @@ def bootstrap_perfect_model(
     control,
     metric="pearson_r",
     comparison="m2e",
-    dim=["init", "member"],
-    reference=["uninitialized", "persistence"],
+    dim=None,
+    reference=None,
     resample_dim="member",
     sig=95,
     iterations=500,

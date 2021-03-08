@@ -1,3 +1,4 @@
+import warnings
 from collections import OrderedDict
 
 import matplotlib as mpl
@@ -6,11 +7,10 @@ import numpy as np
 import xarray as xr
 from xarray.coding.times import infer_calendar_name
 
-from climpred.checks import DimensionError
-from climpred.constants import CLIMPRED_DIMS
-from climpred.utils import get_lead_cftime_shift_args, shift_cftime_index
-
-from .metrics import PROBABILISTIC_METRICS
+from .checks import DimensionError
+from .constants import CLIMPRED_DIMS
+from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
+from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
 
 
 def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
@@ -77,12 +77,14 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
 def plot_bootstrapped_skill_over_leadyear(
     bootstrapped,
     ax=None,
-    color_initialized="steelblue",
-    color_uninitialized="indianred",
+    color_initialized="indianred",
+    color_uninitialized="steelblue",
     color_persistence="gray",
-    color_climatology="palegreen",
+    color_climatology="tan",
     capsize=4,
     fontsize=8,
+    figsize=(10, 4),
+    fmt="--o",
 ):
     """
     Plot Ensemble Prediction skill as in Li et al. 2016 Fig.3a-c.
@@ -132,7 +134,7 @@ def plot_bootstrapped_skill_over_leadyear(
         raise NotImplementedError("pers_sig != sig not implemented yet.")
 
     if ax is None:
-        _, ax = plt.subplots(figsize=(10, 4))
+        _, ax = plt.subplots(figsize=figsize)
     # plot init
     ax.errorbar(
         init_skill.lead,
@@ -141,15 +143,18 @@ def plot_bootstrapped_skill_over_leadyear(
             init_skill - init_ci.isel(quantile=0),
             init_ci.isel(quantile=1) - init_skill,
         ],
-        fmt="--o",
+        fmt=fmt,
         capsize=capsize,
         c=color_initialized,
-        label=(" ").join(["initialized with", str(sig) + "%", "confidence interval"]),
+        label="initialized",
     )
     # plot references
     for r in reference:
-        p_r_over_init = bootstrapped.sel(skill=r, results="p")
         r_skill = bootstrapped.sel(skill=r, results="verify skill")
+        if (r_skill == np.nan).all():
+            warnings.warn(f"Found only NaNs in {r} verify skill and skipped.")
+            continue
+        p_r_over_init = bootstrapped.sel(skill=r, results="p")
         r_ci = bootstrapped.sel(skill=r, results=["low_ci", "high_ci"]).rename(
             {"results": "quantile"}
         )
@@ -174,15 +179,16 @@ def plot_bootstrapped_skill_over_leadyear(
             x,
             r_skill,
             yerr=yerr,
-            fmt="--o",
+            fmt=fmt,
             capsize=capsize,
             c=c,
-            label=(" ").join([f"{reference} with {sig}% confidence interval"]),
+            label=r,
         )
 
-    ax.xaxis.set_ticks(np.arange(init_skill.lead.size + 1))
-    ax.legend(frameon=False)
-    ax.set_xlabel("Lead time [years]")
+    ax.xaxis.set_ticks(bootstrapped.lead.values)
+    ax.legend(frameon=False, title=f"skill with {sig}% confidence interval:")
+    ax.set_xlabel(f"Lead time [{bootstrapped.lead.attrs['units']}]")
+    ax.set_ylabel(get_metric_class(bootstrapped.attrs["metric"], ALL_METRICS).long_name)
     return ax
 
 

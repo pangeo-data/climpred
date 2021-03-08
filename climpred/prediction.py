@@ -15,7 +15,12 @@ from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR
 from .exceptions import DimensionError
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
-from .reference import climatology, persistence, uninitialized
+from .reference import (
+    _adapt_member_for_reference_forecast,
+    climatology,
+    persistence,
+    uninitialized,
+)
 from .utils import (
     assign_attrs,
     convert_time_index,
@@ -23,33 +28,6 @@ from .utils import (
     get_comparison_class,
     get_metric_class,
 )
-
-
-def _maybe_drop_or_raise_member_dim(lforecast, lverif, dim, metric):
-    """Maybe drop member from dim or add single-member dimension for probabilistic
-    metrics. Used in reference forecasts: climatology, uninitialized, persistence."""
-    # persistence or climatology forecasts wont have member dimension
-    # delete member from dim if needed
-    if "member" in dim:
-        if (
-            "member" in lforecast.dims
-            and "member" not in lverif.dims
-            and not metric.requires_member_dim
-        ):
-            dim = dim.copy()
-            dim.remove("member")
-        elif "member" not in lforecast.dims and "member" not in lverif.dims:
-            dim = dim.copy()
-            dim.remove("member")
-    # for probabilistic metrics requiring member dim, add single-member dimension
-    if metric.requires_member_dim:
-        if "member" not in lforecast.dims:
-            lforecast = lforecast.expand_dims("member")  # add fake member dim
-            if "member" not in dim:
-                dim = dim.copy()
-                dim.append("member")
-        assert "member" in lforecast.dims and "member" not in lverif.dims
-    return lforecast, lverif, dim
 
 
 def _apply_metric_at_given_lead(
@@ -86,6 +64,7 @@ def _apply_metric_at_given_lead(
         result (xr object): Metric results for the given lead for the initialized
             forecast or reference forecast.
     """
+    print("dim =", dim)
     # lforecast: forecast at lead; lverif: verification at lead
     if reference is None:
         # print("calc skill")
@@ -97,22 +76,31 @@ def _apply_metric_at_given_lead(
             .drop_vars("lead")
         )
         lverif = verif.sel(time=verif_dates[lead])
+        print(
+            f"initialized lead={lead}: obs",
+            lverif.dims,
+            "forecast",
+            lforecast.dims,
+            "dim=",
+            dim,
+        )
     elif reference == "persistence":
-        # print("calc persistence")
+        print("calc persistence")
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
-        # print("calc uninit")
+        print("calc uninit")
         lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
-        # print("calculating climatology")
+        print("calculating climatology")
         lforecast, lverif = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
-        lforecast, lverif, dim = _maybe_drop_or_raise_member_dim(
-            lforecast, lverif, dim, metric
+        lforecast, dim = _adapt_member_for_reference_forecast(
+            lforecast, lverif, metric, comparison, dim
         )
 
-    lforecast["time"] = lverif["time"]  # a bit dangerous: what if different?
-
+    lforecast["time"] = lverif[
+        "time"
+    ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
     dim = _rename_dim(dim, hind, verif)
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
@@ -140,7 +128,9 @@ def _rename_dim(dim, forecast, verif):
         dim = dim.copy()
         dim.remove("time")
         dim = dim + ["init"]
-    elif "init" in dim and "time" in forecast.dims and "time" in verif.dims:
+    elif (
+        "init" in dim and "time" in forecast.dims and "time" in verif.dims
+    ):  # TODO: needed?
         dim = dim.copy()
         dim.remove("init")
         dim = dim + ["time"]

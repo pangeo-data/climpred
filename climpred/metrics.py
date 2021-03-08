@@ -129,8 +129,28 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
             raise ValueError(f"`logical` must be `callable`, found {type(logical)}")
         # apply logical function to get forecast probability
         forecast = logical(forecast)  # mean(member) later
+        print(
+            "before _extract_and_apply_logical:",
+            "dim =",
+            dim,
+            " forecast",
+            forecast.dims,
+            "verif=",
+            verif.dims,
+        )
         forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
         verif = logical(verif).astype("int")  # binary outcome
+        print(
+            "after _extract_and_apply_logical:",
+            "dim =",
+            dim,
+            " forecast",
+            forecast.dims,
+            "dim =",
+            dim,
+            "verif=",
+            verif.dims,
+        )
         return forecast, verif, metric_kwargs, dim
     elif (
         comparison.name == "e2o"
@@ -210,8 +230,8 @@ class Metric:
         Args:
             name (str): name of metric.
             function (function): metric function.
-            positive (bool): Is metric positively oriented? Higher metric
-             values means higher skill.
+            positive (bool): Is metric positively oriented? If True, higher metric
+             value means better skill. If False, lower metric value means better skill.
             probabilistic (bool): Is metric probabilistic? `False` means
              deterministic.
             unit_power (float, int): Power of the unit of skill based on unit
@@ -2586,6 +2606,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         forecast, verif, metric_kwargs, dim
     )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
+    assert "member" not in forecast.dims  # requires probabilities
     return discrimination(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2692,11 +2713,10 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
     )
-    # print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
+    # print("metric before: forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
-    if "member" in forecast.dims:
-        forecast = forecast.mean("member")  # TODO: fix somehwere else
-    # print("forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
+    # print("metric: forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
+    assert "member" not in forecast.dims  # requires probabilities
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2707,7 +2727,6 @@ __reliability = Metric(
     probabilistic=True,
     unit_power=0,
     long_name="Reliability",
-    allows_logical=True,
 )
 
 
@@ -2771,22 +2790,26 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     """Ranked Probability Score.
 
     .. math::
-        RPS(p, k) = 1/M \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} \
+        RPS(p, k) = \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} \
             o_k)]^{2}
+
+    .. note::
+        install xskillscore from source to use most recent xs.rps
+        function. xs=0.0.18 is erroneously limited to [0,1].
 
     Args:
         forecast (xr.object): Raw forecasts with ``member`` dimension.
         verif (xr.object): Verification data without ``member`` dim.
         dim (list or str): Dimensions to aggregate. Requires to contain `member`.
         category_edges (array_like): Category bin edges used to compute the CDFs.
-            Bins include the left most edge, but not the right. Passed via
-            metric_kwargs.
+            Bins must span the limits of forecast and verification.
+            Passed via metric_kwargs.
 
     Details:
         +-----------------+-----------+
         | **minimum**     | 0.0       |
         +-----------------+-----------+
-        | **maximum**     | 1.0       |
+        | **maximum**     | ∞         |
         +-----------------+-----------+
         | **perfect**     | 0.0       |
         +-----------------+-----------+
@@ -2825,6 +2848,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         category_edges = metric_kwargs.pop("category_edges")
     else:
         raise ValueError("require category_edges")
+    assert "member" in forecast.dims
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 
@@ -2838,7 +2862,7 @@ __rps = Metric(
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
-    requires_member_dim=True,  # TODO: not really required but required inside reference forecasts
+    requires_member_dim=True,
 )
 
 
@@ -2903,6 +2927,11 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
             tos      (lead) float64 1.0 1.0 1.0 1.0 0.9091 ... 1.0 1.0 1.0 nan 1.0
 
     """
+    # contingency fails when given empty dimension, therefore add fake dimension
+    if dim == []:
+        forecast = forecast.expand_dims("member")
+        verif = verif.expand_dims("member")
+        dim = "member"
     if score == "table":
         return Contingency(verif, forecast, dim=dim, **metric_kwargs).table
     else:

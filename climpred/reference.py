@@ -33,6 +33,7 @@ from .utils import (
 def persistence(verif, inits, verif_dates, lead):
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])
+    print(f"persistence lead={lead}: obs", lverif.dims, "forecast", lforecast.dims)
     return lforecast, lverif
 
 
@@ -56,7 +57,7 @@ def climatology(verif, inits, verif_dates, lead):
     # need to take one more for last init
     # print('clim forecast at verif dates',lforecast.time.size,lforecast.time.min(),lforecast.time.max())
     lverif = verif.sel(time=verif_dates[lead])
-    # print('obs',lverif.time.size,lverif.time.min(), lverif.time.max())
+    print(f"climatology lead={lead}: obs", lverif.dims, "forecast", lforecast.dims)
     assert lforecast.time.size == lverif.time.size
     return lforecast, lverif
 
@@ -65,11 +66,49 @@ def uninitialized(hist, verif, verif_dates, lead):
     """also called historical in some communities."""
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
-    # print("lforecast", lforecast.dims, "lverif", lverif.dims)
+    print(f"uninit lead={lead}: lforecast", lforecast.dims, "lverif", lverif.dims)
     return lforecast, lverif
 
 
 # needed for PerfectModelEnsemble.verify(reference=...) or legacy code
+
+
+def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, dim):
+    """Maybe drop member from dim or add single-member dimension for probabilistic
+    metrics. Used in reference forecasts: climatology, uninitialized, persistence."""
+    # persistence or climatology forecasts wont have member dimension, create if required
+    # some metrics dont allow member dimension, remove and try mean
+    # delete member from dim if needed
+    if "member" in dim:
+        if (
+            "member" in lforecast.dims
+            and "member" not in lverif.dims
+            and not metric.requires_member_dim
+        ):
+            dim = dim.copy()
+            dim.remove("member")
+        elif "member" not in lforecast.dims and "member" not in lverif.dims:
+            dim = dim.copy()
+            dim.remove("member")
+    # for probabilistic metrics requiring member dim, add single-member dimension
+    if metric.requires_member_dim:
+        if "member" not in lforecast.dims:
+            lforecast = lforecast.expand_dims("member")  # add fake member dim
+            if "member" not in dim:
+                dim = dim.copy()
+                dim.append("member")
+        assert "member" in lforecast.dims and "member" not in lverif.dims
+    # metric not required by metric and not in dim but present in forecast
+    if not metric.requires_member_dim:
+        if "member" in lforecast.dims and "member" not in dim:
+            lforecast = lforecast.mean("member")
+    #
+    if comparison.name in ["m2o", "m2m", "m2c"]:  # and 'member' in dim:
+        # print('add comparison')
+        if "member" not in lforecast.dims and metric.requires_member_dim:
+            # print('really')
+            lforecast = lforecast.expand_dims("member")  # add fake member dim
+    return lforecast, dim
 
 
 def compute_climatology(
@@ -138,17 +177,12 @@ def compute_climatology(
     dim = _rename_dim(dim, climatology_day_forecast, verif)
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
-    if metric.requires_member_dim and "member" not in climatology_day_forecast.dims:
-        climatology_day_forecast = climatology_day_forecast.expand_dims("member")
-    else:
-        if (
-            "member" in dim
-            and "member" not in climatology_day_forecast.dims
-            and verif.dims
-        ):
-            dim = dim.copy()
-            dim.remove("member")
-    # print('dim',dim, verif.dims, climatology_day_forecast.dims)
+
+    climatology_day_forecast, dim = _adapt_member_for_reference_forecast(
+        climatology_day_forecast, verif, metric, comparison, dim
+    )
+
+    print("dim", dim, verif.dims, climatology_day_forecast.dims)
     clim_skill = metric.function(
         climatology_day_forecast, verif, dim=dim, **metric_kwargs
     )
@@ -165,6 +199,7 @@ def compute_persistence(
     alignment="same_verifs",
     add_attrs=True,
     dim="init",
+    comparison="m2o",
     **metric_kwargs,
 ):
     """Computes the skill of a persistence forecast from a simulation.
@@ -199,6 +234,7 @@ def compute_persistence(
           Oxford University Press, 2007.
 
     """
+    print("metric_kwargs", metric_kwargs)
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
@@ -210,6 +246,9 @@ def compute_persistence(
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
+    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
     # get class metric(Metric)
     metric = get_metric_class(metric, ALL_METRICS)
@@ -234,19 +273,12 @@ def compute_persistence(
     plag = []
     for i in hind.lead.values:
         lforecast = verif.sel(time=inits[i])
-        if metric.requires_member_dim:
-            if "member" not in lforecast.dims:
-                lforecast = lforecast.expand_dims("member")  # add fake member dim
-                if "member" not in dim:
-                    dim = dim.copy()
-                    dim.append("member")
-        else:  # if member dim is unnecessary
-            if "member" in dim and "member" not in verif.dims:
-                dim = dim.copy()
-                dim.remove("member")
         lverif = verif.sel(time=verif_dates[i])
+        lforecast, dim = _adapt_member_for_reference_forecast(
+            lforecast, lverif, metric, comparison, dim
+        )
         # print("persistence: dim", dim, lforecast.dims, lverif.dims)
-        # print('dim =',dim'lforecast',lforecast.dims,'lverif',lverif.dims)
+        print("dim =", dim, "lforecast", lforecast.dims, "lverif", lverif.dims)
         # lforecast["time"] = lverif["time"] #was before: works for all alignemnts?
         lverif["time"] = lforecast["time"]
         # comparison expected for normalized metrics
@@ -345,18 +377,20 @@ def compute_uninitialized(
         metric_kwargs["comparison"] = comparison
 
     plag = []
-    # TODO: Refactor this, getting rid of `compute_uninitialized` completely.
-    # `same_verifs` does not need to go through the loop, since it's a fixed
+    # TODO: `same_verifs` does not need to go through the loop, since it's a fixed
     # skill over all leads
     for i in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.
         dates = list(set(forecast["time"].values) & set(verif_dates[i]))
-        a = forecast.sel(time=dates)
-        b = verif.sel(time=dates)
-        a["time"] = b["time"]
+        lforecast = forecast.sel(time=dates)
+        lverif = verif.sel(time=dates)
+        lforecast, dim = _adapt_member_for_reference_forecast(
+            lforecast, lverif, metric, comparison, dim
+        )
+        lforecast["time"] = lverif["time"]
         # comparison expected for normalized metrics
-        plag.append(metric.function(a, b, dim=dim, **metric_kwargs))
+        plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
     uninit_skill["lead"] = hind.lead.values
 

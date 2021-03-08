@@ -911,7 +911,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "init": True,
         }
         if dim is None:
-            dim = list(self._datasets["initialized"]isel(lead=0).dims)
+            dim = list(self.get_initialized().isel(lead=0).dims)
         res = self._apply_climpred_function(
             compute_climatology,
             input_dict=input_dict,

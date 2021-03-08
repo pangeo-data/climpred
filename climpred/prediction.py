@@ -24,7 +24,6 @@ from .reference import (
 from .utils import (
     assign_attrs,
     convert_time_index,
-    copy_coords_from_to,
     get_comparison_class,
     get_metric_class,
 )
@@ -64,10 +63,8 @@ def _apply_metric_at_given_lead(
         result (xr object): Metric results for the given lead for the initialized
             forecast or reference forecast.
     """
-    print("dim =", dim)
-    # lforecast: forecast at lead; lverif: verification at lead
+    # naming:: lforecast: forecast at lead; lverif: verification at lead
     if reference is None:
-        # print("calc skill")
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
         lforecast = (
@@ -76,22 +73,11 @@ def _apply_metric_at_given_lead(
             .drop_vars("lead")
         )
         lverif = verif.sel(time=verif_dates[lead])
-        print(
-            f"initialized lead={lead}: obs",
-            lverif.dims,
-            "forecast",
-            lforecast.dims,
-            "dim=",
-            dim,
-        )
     elif reference == "persistence":
-        print("calc persistence")
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
-        print("calc uninit")
         lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
-        print("calculating climatology")
         lforecast, lverif = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
         lforecast, dim = _adapt_member_for_reference_forecast(
@@ -101,25 +87,19 @@ def _apply_metric_at_given_lead(
     lforecast["time"] = lverif[
         "time"
     ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
-    dim = _rename_dim(dim, hind, verif)
+    dim = _rename_dim(
+        dim, hind, verif
+    )  # dim should be much clearer once time in initialized.coords
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
-    # print(
-    #    "passed to metric.function: dim =",
-    #    list(dim),
-    #    "lforecast.dims =",
-    #    list(lforecast.dims),
-    #    "lverif.dims",
-    #    list(lverif.dims),
-    #    "metric_kwargs",
-    # )
+
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
     return result
 
 
 def _rename_dim(dim, forecast, verif):
-    """rename `dim` to `time` or `init` if forecast and verif dims require."""
+    """rename `dim` to `time` or `init` if forecast and verif dims require to do so."""
     if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
         dim.remove("init")
@@ -128,9 +108,7 @@ def _rename_dim(dim, forecast, verif):
         dim = dim.copy()
         dim.remove("time")
         dim = dim + ["init"]
-    elif (
-        "init" in dim and "time" in forecast.dims and "time" in verif.dims
-    ):  # TODO: needed?
+    elif "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
         dim.remove("init")
         dim = dim + ["time"]
@@ -382,8 +360,6 @@ def compute_hindcast(
         result = result.rename({"time": "init"})
     # These computations sometimes drop coordinates along the way. This appends them
     # back onto the results of the metric.
-    drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
-    result = copy_coords_from_to(hind.drop_vars(drop_dims), result)
 
     # Attach climpred compute information to result
     if add_attrs:

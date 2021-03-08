@@ -232,7 +232,7 @@ def _pvalue_from_distributions(simple_fct, init, metric=None):
         pv (xarray object): probability that simple forecast performs better
                             than initialized forecast.
     """
-    pv = ((simple_fct - init) > 0).sum("iteration") / init.iteration.size
+    pv = ((simple_fct - init) > 0).mean("iteration")
     if not metric.positive:
         pv = 1 - pv
     return pv
@@ -843,8 +843,8 @@ def bootstrap_compute(
                     **metric_kwargs_reference,
                 )
             else:  # member no need to calculate all again
-                bootstrapped_pers_skill = pers_skill.expand_dims("iteration").isel(
-                    iteration=[0] * iterations
+                bootstrapped_pers_skill, _ = xr.broadcast(
+                    pers_skill, bootstrapped_init_skill
                 )
 
     # calc mean skill without any resampling
@@ -864,15 +864,10 @@ def bootstrap_compute(
             hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
         )
     if "climatology" in reference:
-        print("climatology in bootstrap once")
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
-        bootstrapped_clim_skill = (
-            clim_skill.expand_dims("iteration")
-            .isel(iteration=[0] * iterations)
-            .assign_coords(iteration=bootstrapped_init_skill.iteration)
-        )
+        bootstrapped_clim_skill, _ = xr.broadcast(clim_skill, bootstrapped_init_skill)
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)

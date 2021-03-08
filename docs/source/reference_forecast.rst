@@ -21,7 +21,10 @@ exponentially at a time scale of the local autocorrelation [Yuan2016]_.
     v_{dp}(t) = v(0)e^{-\alpha t}
 
 **Climatology**: (*Not Implemented*) The average values at the temporal forecast resolution
-(e.g., annual, monthly) over some long period, which is usually 30 years [Jolliffe2012]_.
+(e.g., annual, monthly) over some long period, which is usually 30 years [Jolliffe2012]_. You can compute this by passing
+``reference='climatology'`` into the ``.verify()`` method for
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble` objects.
 
 **Random Mechanism**: (*Not Implemented*) A probability distribution is assigned to the possible
 range of the variable being forecasted, and a sequence of forecasts is produced by taking a sequence

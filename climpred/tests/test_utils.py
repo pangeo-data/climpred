@@ -12,7 +12,6 @@ from climpred.prediction import compute_hindcast, compute_perfect_model
 from climpred.tutorial import load_dataset
 from climpred.utils import (
     convert_time_index,
-    copy_coords_from_to,
     find_start_dates_for_given_init,
     get_comparison_class,
     get_metric_class,
@@ -141,41 +140,6 @@ def test_hindcast_assign_attrs():
     if metric == "pearson_r":
         assert actual["units"] == "None"
     assert actual["skill_calculated_by_function"] == "compute_hindcast"
-
-
-def test_copy_coords_from_to_ds(PM_ds_control_3d):
-    """Test whether coords are copied from one xr object to another."""
-    xro = PM_ds_control_3d
-    c_1time = xro.isel(time=4).drop_vars("time")
-    assert "time" not in c_1time.coords
-    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
-    assert (c_1time.time == xro.isel(time=2).time).all()
-
-
-def test_copy_coords_from_to_da(PM_da_control_3d):
-    """Test whether coords are copied from one xr object to another."""
-    xro = PM_da_control_3d
-    c_1time = xro.isel(time=4).drop_vars("time")
-    assert "time" not in c_1time.coords
-    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
-    assert (c_1time.time == xro.isel(time=2).time).all()
-
-
-def test_copy_coords_from_to_ds_chunk(PM_ds_control_3d):
-    """Test whether coords are copied from one xr object to another."""
-    xro = PM_ds_control_3d.chunk({"time": 5})
-    c_1time = xro.isel(time=4).drop_vars("time")
-    assert "time" not in c_1time.coords
-    c_1time = copy_coords_from_to(xro.isel(time=2), c_1time)
-    assert (c_1time.time == xro.isel(time=2).time).all()
-
-
-def test_copy_coords_from_to_da_different_xro(PM_ds_control_3d):
-    xro = PM_ds_control_3d.chunk({"time": 5})
-    c_1time = xro.isel(time=4).drop_vars("time")
-    with pytest.raises(ValueError) as excinfo:
-        copy_coords_from_to(xro.isel(time=2).tos, c_1time)
-    assert "xro_from and xro_to must be both either" in str(excinfo.value)
 
 
 def test_cftime_index_unchanged():

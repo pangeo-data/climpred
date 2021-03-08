@@ -51,11 +51,10 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
     hindcast_hist_obs_1d, metric, comparison, reference
 ):
     """
-    Checks that HindcastEnsemble.verify() and HindcastEnsemble.bootstrap() works without breaking for all probabilistic metrics.
+    Checks that HindcastEnsemble.verify() and HindcastEnsemble.bootstrap() works
+    without breaking for all probabilistic metrics.
     """
     he = hindcast_hist_obs_1d.isel(lead=[0, 1, 2])
-    he = he.remove_bias(alignment="same_verifs")
-    print("remove_bias done\n\n")
 
     category_edges = np.array([-0.5, 0, 0.5])
     if metric in probabilistic_metrics_requiring_logical:
@@ -91,14 +90,13 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
             "alignment": "same_verifs",
         }
     )
-    print(kwargs)
     actual_verify = he.verify(**kwargs)["SST"]
-    print("result dims", actual_verify.dims)
-    # assert not actual_verify.isnull().all()
-    print("\n\nbootstrap()\n\n")
+    not actual_verify.isnull().all()
+
     # bootstrap()
     actual = he.bootstrap(iterations=3, **kwargs)["SST"]
-    print("res", actual)
+    assert "dayofyear" not in actual.coords
+
     if isinstance(reference, str):
         reference = [reference]
     if len(reference) == 0:
@@ -230,7 +228,7 @@ def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
     """
     actual = (
         compute_hindcast(
-            hind_da_initialized_1d,
+            hind_da_initialized_1d.isel(lead=[0, 1, 2]),
             observations_da_1d,
             comparison="m2o",
             metric="crpss",
@@ -313,8 +311,11 @@ def test_HindcastEnsemble_rps_terciles(hindcast_hist_obs_1d):
         dim=["member", "init"],
         alignment="same_verifs",
         category_edges=np.array([-0.5, 0.0, 0.5, 1]),
+        reference="climatology",
     )  # todo really use terciles
     assert actual.notnull().all()
+    rpss = 1 - actual.sel(skill="initialized") / actual.sel(skill="climatology")
+    assert rpss.isel(lead=0) > 0
 
 
 def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):

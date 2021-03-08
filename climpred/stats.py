@@ -6,7 +6,6 @@ from esmtools.stats import corr
 from xrft import power_spectrum
 
 from .checks import is_xarray
-from .utils import copy_coords_from_to
 
 
 @is_xarray(0)
@@ -150,7 +149,7 @@ def varweighted_mean_period(da, dim="time", **kwargs):
     https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
     if isinstance(da, xr.Dataset):
-        raise ValueError("require xr.Dataset")
+        raise ValueError("require xr.DataArray, try xr.Dataset.map(func)")
     da = da.fillna(0.0)
     # dim should be list
     if isinstance(dim, str):

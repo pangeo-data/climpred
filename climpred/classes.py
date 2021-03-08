@@ -1249,14 +1249,15 @@ class HindcastEnsemble(PredictionEnsemble):
             forecast.
 
             >>> HindcastEnsemble.verify(metric='acc', comparison='e2o',
-            ...     alignment='same_inits', dim='init', reference=['persistence', 'climatology' ,'uninitialized'])
+            ...     alignment='same_inits', dim='init',
+            ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
             Dimensions:  (lead: 10, skill: 4)
             Coordinates:
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.8323 0.8417 0.8464
+                SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
         """
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
@@ -1328,7 +1329,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 if "member" in verif.dims:  # if broadcasted before
                     verif = verif.isel(member=0)
                 for r in reference:
-                    print(f"\nreference = {r}")
                     metric_over_leads = [
                         _apply_metric_at_given_lead(
                             verif,

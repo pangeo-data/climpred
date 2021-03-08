@@ -129,28 +129,8 @@ def _extract_and_apply_logical(forecast, verif, metric_kwargs, dim):
             raise ValueError(f"`logical` must be `callable`, found {type(logical)}")
         # apply logical function to get forecast probability
         forecast = logical(forecast)  # mean(member) later
-        print(
-            "before _extract_and_apply_logical:",
-            "dim =",
-            dim,
-            " forecast",
-            forecast.dims,
-            "verif=",
-            verif.dims,
-        )
         forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
         verif = logical(verif).astype("int")  # binary outcome
-        print(
-            "after _extract_and_apply_logical:",
-            "dim =",
-            dim,
-            " forecast",
-            forecast.dims,
-            "dim =",
-            dim,
-            "verif=",
-            verif.dims,
-        )
         return forecast, verif, metric_kwargs, dim
     elif (
         comparison.name == "e2o"
@@ -2077,6 +2057,9 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         forecast, verif, metric_kwargs, dim
     )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
+    assert (
+        "member" not in forecast.dims
+    )  # require probabilities # TODO: allow fair=True
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2710,12 +2693,11 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             SST                   (lead, forecast_probability) float64 0.16 ... 1.0
 
     """
-    forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
-        forecast, verif, metric_kwargs, dim
-    )
-    # print("metric before: forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
+    if "logical" in metric_kwargs:
+        forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+            forecast, verif, metric_kwargs, dim
+        )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
-    # print("metric: forecast", forecast.dims, "verif", verif.dims, "dim=", dim)
     assert "member" not in forecast.dims  # requires probabilities
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
@@ -2848,7 +2830,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         category_edges = metric_kwargs.pop("category_edges")
     else:
         raise ValueError("require category_edges")
-    assert "member" in forecast.dims
+    assert "member" in forecast.dims  # require member dim
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 

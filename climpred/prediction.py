@@ -334,7 +334,7 @@ def compute_hindcast(
             .assign_coords(iteration=forecast.iteration)
         )
 
-    log_compute_hindcast_header(metric, comparison, dim, alignment)
+    log_compute_hindcast_header(metric, comparison, dim, alignment, "initialized")
 
     metric_over_leads = [
         _apply_metric_at_given_lead(

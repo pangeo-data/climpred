@@ -15,6 +15,7 @@ from .bootstrap import (
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
 from .checks import (
+    _check_valid_reference,
     has_dataset,
     has_dims,
     has_valid_lead_units,
@@ -26,6 +27,7 @@ from .checks import (
 from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
+from .logging import log_compute_hindcast_header
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -747,6 +749,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
         """
+        reference = _check_valid_reference(reference)
         input_dict = {
             "ensemble": self._datasets["initialized"],
             "control": self._datasets["control"]
@@ -767,8 +770,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             result = _reset_temporal_axis(result, self._temporally_smoothed, dim="lead")
             result["lead"].attrs = self.get_initialized().lead.attrs
         # compute reference skills
-        if isinstance(reference, str):
-            reference = [reference]
         if reference:
             for r in reference:
                 dim_orig = deepcopy(dim)  # preserve dim, because
@@ -1023,6 +1024,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
+        reference = _check_valid_reference(reference)
         has_dataset(self._datasets["control"], "control", "iteration")
         input_dict = {
             "ensemble": self._datasets["initialized"],
@@ -1260,10 +1262,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 "Comparison must equal 'm2o' with dim='member'. "
                 f"Got comparison {comparison}."
             )
-        if isinstance(reference, str):
-            reference = [reference]
-        elif reference is None:
-            reference = []
+        reference = _check_valid_reference(reference)
 
         def _verify(
             hind,
@@ -1489,12 +1488,7 @@ class HindcastEnsemble(PredictionEnsemble):
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation
-        if reference is None:
-            reference = []
-        if isinstance(reference, str):
-            reference = [reference]
-        if not isinstance(reference, list):
-            reference = list(reference)
+        reference = _check_valid_reference(reference)
         if "uninitialized" in reference and not isinstance(
             self.get_uninitialized(), xr.Dataset
         ):

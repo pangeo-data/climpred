@@ -2,7 +2,11 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from eofs.xarray import Eof
+
+try:
+    from eofs.xarray import Eof
+except ImportError:
+    Eof = None
 
 
 def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
@@ -110,6 +114,11 @@ def compute_relative_entropy(
     Returns:
         rel_ent (xr.Dataset): relative entropy
     """
+    if Eof is None:
+        raise ImportError(
+            "eofs is not installed; see"
+            "https://ajdawson.github.io/eofs/latest/index.html"
+        )
     # Defaults
     if neofs is None:
         neofs = initialized.member.size

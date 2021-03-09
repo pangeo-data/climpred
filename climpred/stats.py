@@ -6,7 +6,6 @@ from esmtools.stats import corr
 from xrft import power_spectrum
 
 from .checks import is_xarray
-from .utils import copy_coords_from_to
 
 
 @is_xarray(0)

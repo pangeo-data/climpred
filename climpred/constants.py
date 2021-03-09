@@ -23,3 +23,6 @@ VALID_ALIGNMENTS = ["same_inits", "same_init", "same_verifs", "same_verif", "max
 
 # Valid units for lead dimension
 VALID_LEAD_UNITS = ["years", "seasons", "months", "weeks", "pentads", "days"]
+
+# Valid keywords for reference forecast
+VALID_REFERENCES = ["uninitialized", "persistence", "climatology"]

@@ -12,10 +12,14 @@ def log_compute_hindcast_header(metric, comparison, dim, alignment):
     )
 
 
-def log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates):
+def log_compute_hindcast_inits_and_verifs(
+    dim, lead, inits, verif_dates, reference=None
+):
     """At each lead, log the inits and verification dates being used in computations."""
+    if reference is None:
+        reference = "initialized"
     logging.info(
-        f"lead: {str(lead).zfill(2)} | "
+        f"{reference} lead: {str(lead).zfill(2)} | "
         # This is the init-sliced forecast, thus displaying actual
         # initializations.
         f"inits: {inits[lead].min().values}"

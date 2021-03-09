@@ -92,7 +92,7 @@ def _apply_metric_at_given_lead(
         metric_kwargs["comparison"] = comparison
 
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
-    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
+    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     return result
 
 

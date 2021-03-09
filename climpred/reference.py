@@ -161,9 +161,14 @@ def compute_climatology(
         forecast, verif = comparison.function(hind, verif, metric=metric)
         climatology_day = verif.groupby("time.dayofyear").mean()
 
-    climatology_day_forecast = climatology_day.sel(
-        dayofyear=forecast.init.dt.dayofyear
-    ).drop("dayofyear")
+    try:
+        climatology_day_forecast = climatology_day.sel(
+            dayofyear=forecast.init.dt.dayofyear
+        ).drop("dayofyear")
+    except KeyError:
+        raise KeyError(
+            f'xarray error message: "not all values found in index dayofyear". climpred debug info: climatology_day.dayofyear = {climatology_day.dayofyear} and forecast.init.dt.dayofyear {forecast.init.dt.dayofyear}'
+        )
     if kind == "hindcast":
         climatology_day_forecast = climatology_day_forecast.rename({"init": "time"})
     dim = _rename_dim(dim, climatology_day_forecast, verif)

@@ -1,4 +1,3 @@
-import inspect
 import warnings
 
 import dask
@@ -21,7 +20,7 @@ from .comparisons import (
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model
-from .reference import compute_persistence
+from .reference import compute_climatology, compute_persistence
 from .stats import dpp, varweighted_mean_period
 from .utils import (
     _transpose_and_rechunk_to,
@@ -232,7 +231,7 @@ def _pvalue_from_distributions(simple_fct, init, metric=None):
         pv (xarray object): probability that simple forecast performs better
                             than initialized forecast.
     """
-    pv = ((simple_fct - init) > 0).sum("iteration") / init.iteration.size
+    pv = ((simple_fct - init) > 0).mean("iteration")
     if not metric.positive:
         pv = 1 - pv
     return pv
@@ -418,7 +417,6 @@ def _bootstrap_hindcast_over_init_dim(
     metric,
     comparison,
     compute,
-    reference_compute,
     resample_uninit,
     **metric_kwargs,
 ):
@@ -474,19 +472,16 @@ def _bootstrap_hindcast_over_init_dim(
                 )
             )
         if "persistence" in reference:
-            # compute persistence skill
-            # impossible for probabilistic
-            if not metric.probabilistic:
-                pers_skill.append(
-                    reference_compute(
-                        smp_hind,
-                        verif,
-                        metric=metric,
-                        dim=dim,
-                        add_attrs=False,
-                        **metric_kwargs,
-                    )
+            pers_skill.append(
+                compute_persistence(
+                    smp_hind,
+                    verif,
+                    metric=metric,
+                    dim=dim,
+                    add_attrs=False,
+                    **metric_kwargs,
                 )
+            )
     bootstrapped_init_skill = xr.concat(
         bootstrapped_init_skill, dim="iteration", **CONCAT_KWARGS
     )
@@ -497,17 +492,12 @@ def _bootstrap_hindcast_over_init_dim(
     else:
         bootstrapped_uninit_skill = None
     if "persistence" in reference:
-        if pers_skill != []:
-            bootstrapped_pers_skill = xr.concat(
-                pers_skill, dim="iteration", **CONCAT_KWARGS
-            )
+        bootstrapped_pers_skill = xr.concat(
+            pers_skill, dim="iteration", **CONCAT_KWARGS
+        )
     else:
         bootstrapped_pers_skill = None
-    return (
-        bootstrapped_init_skill,
-        bootstrapped_uninit_skill,
-        bootstrapped_pers_skill,
-    )
+    return (bootstrapped_init_skill, bootstrapped_uninit_skill, bootstrapped_pers_skill)
 
 
 def _get_resample_func(ds):
@@ -615,14 +605,13 @@ def bootstrap_compute(
     metric="pearson_r",
     comparison="m2e",
     dim="init",
-    reference=["uninitialized", "persistence"],
+    reference=None,
     resample_dim="member",
     sig=95,
     iterations=500,
     pers_sig=None,
     compute=compute_hindcast,
     resample_uninit=bootstrap_uninitialized_ensemble,
-    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement.
@@ -657,8 +646,6 @@ def bootstrap_compute(
                         ensemble. Choose from:
                         [:py:func:`bootstrap_uninitialized_ensemble`,
                          :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
-        reference_compute (func): function to compute a reference forecast skill with.
-                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -749,7 +736,6 @@ def bootstrap_compute(
             metric,
             comparison,
             compute,
-            reference_compute,
             resample_uninit,
             **metric_kwargs,
         )
@@ -783,6 +769,9 @@ def bootstrap_compute(
                 # effectively only when _resample_iteration_idx which doesnt use dim_max
                 bootstrapped_uninit = bootstrapped_uninit.isel(
                     member=slice(None, hind.member.size)
+                )
+                bootstrapped_uninit["member"] = np.arange(
+                    1, 1 + bootstrapped_uninit.member.size
                 )
                 if dask.is_dask_collection(bootstrapped_uninit):
                     bootstrapped_uninit = bootstrapped_uninit.chunk({"member": -1})
@@ -837,28 +826,25 @@ def bootstrap_compute(
             **metric_kwargs,
         )
         if "persistence" in reference:
-            if not metric.probabilistic:
-                pers_skill = reference_compute(
-                    hind,
+            pers_skill = compute_persistence(
+                hind,
+                verif,
+                metric=metric,
+                dim=dim,
+                **metric_kwargs_reference,
+            )
+            # bootstrap pers
+            if resample_dim == "init":
+                bootstrapped_pers_skill = compute_persistence(
+                    bootstrapped_hind,
                     verif,
                     metric=metric,
-                    dim=dim,
                     **metric_kwargs_reference,
                 )
-                # bootstrap pers
-                if resample_dim == "init":
-                    bootstrapped_pers_skill = reference_compute(
-                        bootstrapped_hind,
-                        verif,
-                        metric=metric,
-                        **metric_kwargs_reference,
-                    )
-                else:  # member
-                    _, bootstrapped_pers_skill = xr.broadcast(
-                        bootstrapped_init_skill, pers_skill, exclude=CLIMPRED_DIMS
-                    )
-            else:
-                bootstrapped_pers_skill = bootstrapped_init_skill.isnull()
+            else:  # member no need to calculate all again
+                bootstrapped_pers_skill, _ = xr.broadcast(
+                    pers_skill, bootstrapped_init_skill
+                )
 
     # calc mean skill without any resampling
     init_skill = compute(
@@ -869,149 +855,95 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
-
     if "uninitialized" in reference:
         # uninit skill as mean resampled uninit skill
-        uninit_skill = bootstrapped_uninit_skill.mean("iteration")
+        unin_skill = bootstrapped_uninit_skill.mean("iteration")  # noqa: F841
     if "persistence" in reference:
-        if not metric.probabilistic:
-            pers_skill = reference_compute(
-                hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
-            )
-        else:
-            pers_skill = init_skill.isnull()
-
-        # align to prepare for concat
-        if set(bootstrapped_pers_skill.coords) != set(bootstrapped_init_skill.coords):
-            if (
-                "time" in bootstrapped_pers_skill.dims
-                and "init" in bootstrapped_init_skill.dims
-            ):
-                bootstrapped_pers_skill = bootstrapped_pers_skill.rename(
-                    {"time": "init"}
-                )
-            # allow member to be broadcasted
-            bootstrapped_init_skill, bootstrapped_pers_skill = xr.broadcast(
-                bootstrapped_init_skill,
-                bootstrapped_pers_skill,
-                exclude=("init", "lead", "time"),
-            )
+        pers_skill = compute_persistence(
+            hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
+        )
+    if "climatology" in reference:
+        clim_skill = compute_climatology(
+            hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
+        )
+        bootstrapped_clim_skill, _ = xr.broadcast(clim_skill, bootstrapped_init_skill)
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
     if "uninitialized" in reference:
-        uninit_ci = _distribution_to_ci(bootstrapped_uninit_skill, ci_low, ci_high)
-
-    # probabilistic metrics wont have persistence forecast
-    # therefore only get CI if persistence was computed
+        unin_ci = _distribution_to_ci(  # noqa: F841
+            bootstrapped_uninit_skill, ci_low, ci_high
+        )
+    if "climatology" in reference:
+        clim_ci = _distribution_to_ci(  # noqa: F841
+            bootstrapped_clim_skill, ci_low, ci_high
+        )
     if "persistence" in reference:
-        if "iteration" in bootstrapped_pers_skill.dims:
-            pers_ci = _distribution_to_ci(
-                bootstrapped_pers_skill, ci_low_pers, ci_high_pers
-            )
-        else:
-            # otherwise set all persistence outputs to false
-            pers_ci = init_ci == -999
+        pers_ci = _distribution_to_ci(  # noqa: F841
+            bootstrapped_pers_skill, ci_low_pers, ci_high_pers
+        )
 
     # pvalue whether uninit or pers better than init forecast
     if "uninitialized" in reference:
-        p_uninit_over_init = _pvalue_from_distributions(
+        p_unin_over_init = _pvalue_from_distributions(  # noqa: F841
             bootstrapped_uninit_skill, bootstrapped_init_skill, metric=metric
         )
+    if "climatology" in reference:
+        p_clim_over_init = _pvalue_from_distributions(  # noqa: F841
+            bootstrapped_clim_skill, bootstrapped_clim_skill, metric=metric
+        )
     if "persistence" in reference:
-        p_pers_over_init = _pvalue_from_distributions(
+        p_pers_over_init = _pvalue_from_distributions(  # noqa: F841
             bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
         )
 
-    # wrap results together in one xr object
-    if reference == []:
-        results = xr.concat(
-            [
-                init_skill,
-                init_ci.isel(quantile=0, drop=True),
-                init_ci.isel(quantile=1, drop=True),
-            ],
-            dim="results",
-        )
-        results["results"] = ["verify skill", "low_ci", "high_ci"]
-        results["skill"] = ["initialized"]
-        results = results.squeeze()
+    # gather return
+    # p defined as probability that reference better than
+    # initialized, therefore not defined for initialized skill
+    # itself
+    results = xr.concat(
+        [
+            init_skill,
+            init_skill.where(init_skill == -999),
+            init_ci.isel(quantile=0, drop=True),
+            init_ci.isel(quantile=1, drop=True),
+        ],
+        dim="results",
+        coords="minimal",
+    ).assign_coords(
+        results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
+        skill="initialized",
+    )
 
-    elif reference == ["persistence"]:
-        skill = xr.concat([init_skill, pers_skill], dim="skill", **CONCAT_KWARGS)
-        skill["skill"] = ["initialized", "persistence"]
-
-        # ci for each skill
-        ci = xr.concat([init_ci, pers_ci], "skill", coords="minimal").rename(
-            {"quantile": "results"}
-        )
-        ci["skill"] = ["initialized", "persistence"]
-
-        results = xr.concat([skill, p_pers_over_init], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p"]
-        if set(results.coords) != set(ci.coords):
-            res_drop = [c for c in results.coords if c not in ci.coords]
-            ci_drop = [c for c in ci.coords if c not in results.coords]
-            results = results.drop_vars(res_drop)
-            ci = ci.drop_vars(ci_drop)
-        results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
-
-    elif reference == ["uninitialized"]:
-        skill = xr.concat([init_skill, uninit_skill], dim="skill", **CONCAT_KWARGS)
-        skill["skill"] = ["initialized", "uninitialized"]
-
-        # ci for each skill
-        ci = xr.concat([init_ci, uninit_ci], "skill", coords="minimal").rename(
-            {"quantile": "results"}
-        )
-        ci["skill"] = ["initialized", "uninitialized"]
-
-        results = xr.concat([skill, p_uninit_over_init], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p"]
-        if set(results.coords) != set(ci.coords):
-            res_drop = [c for c in results.coords if c not in ci.coords]
-            ci_drop = [c for c in ci.coords if c not in results.coords]
-            results = results.drop_vars(res_drop)
-            ci = ci.drop_vars(ci_drop)
-        results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
-
-    elif set(reference) == set(["uninitialized", "persistence"]):
-        skill = xr.concat(
-            [init_skill, uninit_skill, pers_skill], dim="skill", **CONCAT_KWARGS
-        )
-        skill["skill"] = ["initialized", "uninitialized", "persistence"]
-
-        # probability that i beats init
-        p = xr.concat(
-            [p_uninit_over_init, p_pers_over_init], dim="skill", **CONCAT_KWARGS
-        )
-        p["skill"] = ["uninitialized", "persistence"]
-
-        # ci for each skill
-        ci = xr.concat([init_ci, uninit_ci, pers_ci], "skill", coords="minimal").rename(
-            {"quantile": "results"}
-        )
-        ci["skill"] = ["initialized", "uninitialized", "persistence"]
-
-        results = xr.concat([skill, p], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p"]
-        if set(results.coords) != set(ci.coords):
-            res_drop = [c for c in results.coords if c not in ci.coords]
-            ci_drop = [c for c in ci.coords if c not in results.coords]
-            results = results.drop_vars(res_drop)
-            ci = ci.drop_vars(ci_drop)
-        results = xr.concat([results, ci], dim="results", **CONCAT_KWARGS)
-        results["results"] = ["verify skill", "p", "low_ci", "high_ci"]
+    if reference != []:
+        for r in reference:
+            ref_skill = eval(f"{r[:4]}_skill")
+            ref_p = eval(f"p_{r[:4]}_over_init")
+            ref_ci_low = eval(f"{r[:4]}_ci").isel(quantile=0, drop=True)
+            ref_ci_high = eval(f"{r[:4]}_ci").isel(quantile=1, drop=True)
+            ref_results = xr.concat(
+                [ref_skill, ref_p, ref_ci_low, ref_ci_high],
+                dim="results",
+                **CONCAT_KWARGS,
+            ).assign_coords(
+                skill=r, results=("results", ["verify skill", "p", "low_ci", "high_ci"])
+            )
+            if "member" in ref_results.dims:
+                if not ref_results["member"].identical(results["member"]):
+                    ref_results["member"] = results[
+                        "member"
+                    ]  # fixes m2c different member names in reference forecasts
+            results = xr.concat([results, ref_results], dim="skill", **CONCAT_KWARGS)
+        results = results.assign_coords(skill=["initialized"] + reference).squeeze()
     else:
-        raise ValueError("results not created")
+        results = results.drop_sel(results="p")
+    results = results.squeeze()
 
     # Attach climpred compute information to skill
+    # results.results
     metadata_dict = {
         "confidence_interval_levels": f"{ci_high}-{ci_low}",
         "bootstrap_iterations": iterations,
-        "reference": reference,
     }
     if reference is not None:
         metadata_dict[
@@ -1025,7 +957,6 @@ def bootstrap_compute(
         metric=metric,
         comparison=comparison,
         dim=dim,
-        function_name=inspect.stack()[0][3],  # take function.__name__
         metadata_dict=metadata_dict,
     )
     # Ensure that the lead units get carried along for the calculation. The attribute
@@ -1044,12 +975,11 @@ def bootstrap_hindcast(
     metric="pearson_r",
     comparison="e2o",
     dim="init",
-    reference=["uninitialized", "persistence"],
+    reference=None,
     resample_dim="member",
     sig=95,
     iterations=500,
     pers_sig=None,
-    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -1076,8 +1006,6 @@ def bootstrap_hindcast(
                         Defaults to sig.
         iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        reference_compute (func): function to compute a reference forecast skill with.
-                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -1109,21 +1037,13 @@ def bootstrap_hindcast(
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_hindcast
 
-    Example:
-        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')['SST']
-        >>> hist = climpred.tutorial.load_dataset('CESM-LE')['SST']
-        >>> obs = climpred.tutorial.load_dataset('ERSST')['SST']
-        >>> bootstrapped_skill = climpred.bootstrap.bootstrap_hindcast(hind, hist, obs)
-        >>> bootstrapped_skill.coords
-        Coordinates:
-          * skill    (skill) <U13 'initialized' 'persistence' 'uninitialized'
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
-
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
     hind = convert_time_index(hind, "init", "hind[init]")
-    hist = convert_time_index(hist, "time", "uninitialized[time]")
+    if isinstance(hist, xr.Dataset):
+        hist = convert_time_index(hist, "time", "uninitialized[time]")
+    else:
+        hist = False
     verif = convert_time_index(verif, "time", "verif[time]")
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
@@ -1139,11 +1059,15 @@ def bootstrap_hindcast(
 
     # Kludge for now. Since we're computing persistence here we need to ensure that
     # all products have a union in their time axis.
-    times = np.sort(
-        list(set(hind.init.data) & set(hist.time.data) & set(verif.time.data))
-    )
+    if hist not in [None, False]:
+        times = np.sort(
+            list(set(hind.init.data) & set(hist.time.data) & set(verif.time.data))
+        )
+    else:
+        times = np.sort(list(set(hind.init.data) & set(verif.time.data)))
     hind = hind.sel(init=times)
-    hist = hist.sel(time=times)
+    if isinstance(hist, xr.Dataset):
+        hist = hist.sel(time=times)
     verif = verif.sel(time=times)
 
     return bootstrap_compute(
@@ -1161,7 +1085,6 @@ def bootstrap_hindcast(
         pers_sig=pers_sig,
         compute=compute_hindcast,
         resample_uninit=bootstrap_uninitialized_ensemble,
-        reference_compute=reference_compute,
         **metric_kwargs,
     )
 
@@ -1171,13 +1094,12 @@ def bootstrap_perfect_model(
     control,
     metric="pearson_r",
     comparison="m2e",
-    dim=["init", "member"],
-    reference=["uninitialized", "persistence"],
+    dim=None,
+    reference=None,
     resample_dim="member",
     sig=95,
     iterations=500,
     pers_sig=None,
-    reference_compute=compute_persistence,
     **metric_kwargs,
 ):
     """Bootstrap compute with replacement. Wrapper of
@@ -1204,8 +1126,6 @@ def bootstrap_perfect_model(
                         Defaults to sig.
         iterations (int): number of resampling iterations (bootstrap
                          with replacement). Defaults to 500.
-        reference_compute (func): function to compute a reference forecast skill with.
-                        Default: :py:func:`climpred.prediction.compute_persistence`.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -1217,8 +1137,8 @@ def bootstrap_perfect_model(
              to initialization and external forcing
             - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
-            - `pers` for the reference forecast computed by `reference_compute`, which
-             defaults to `compute_persistence`
+            - `persistence` for the persistence forecast
+            - `climatology`
 
         the different results:
             - `skill`: skill values
@@ -1236,18 +1156,7 @@ def bootstrap_perfect_model(
     See also:
         * climpred.bootstrap.bootstrap_compute
         * climpred.prediction.compute_perfect_model
-
-    Example:
-        >>> init = climpred.tutorial.load_dataset('MPI-PM-DP-1D').isel(area=1, period=-1, drop=True)
-        >>> control = climpred.tutorial.load_dataset('MPI-control-1D').isel(area=1, period=-1, drop=True)
-        >>> bootstrapped_s = climpred.bootstrap.bootstrap_perfect_model(init, control)
-        >>> bootstrapped_s.coords
-        Coordinates:
-          * skill    (skill) <U13 'initialized' 'persistence' 'uninitialized'
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-          * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
     """
-
     if dim is None:
         dim = ["init", "member"]
     # Check init & time is int, cftime, or datetime; convert ints or datetime to cftime.
@@ -1272,7 +1181,6 @@ def bootstrap_perfect_model(
         pers_sig=pers_sig,
         compute=compute_perfect_model,
         resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
-        reference_compute=reference_compute,
         **metric_kwargs,
     )
 

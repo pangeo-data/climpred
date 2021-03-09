@@ -18,7 +18,7 @@ from .metrics import METRIC_ALIASES
 def assign_attrs(
     skill,
     ds,
-    function_name,
+    function_name=None,
     metadata_dict=None,
     alignment=None,
     metric=None,
@@ -47,7 +47,8 @@ def assign_attrs(
     skill.attrs[
         "prediction_skill"
     ] = "calculated by climpred https://climpred.readthedocs.io/"
-    skill.attrs["skill_calculated_by_function"] = function_name
+    if function_name:
+        skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords:
         skill.attrs["number_of_initializations"] = ds.init.size
     if "member" in ds.coords and function_name != "compute_persistence":
@@ -82,26 +83,7 @@ def assign_attrs(
         metadata_dict = dict()
     skill.attrs.update(metadata_dict)
 
-    skill.attrs[
-        "created"
-    ] = f'{datetime.datetime.now().strftime("%Y-%m-%d %H:%M:%S%f")[:-6]}'
     return skill
-
-
-def copy_coords_from_to(xro_from, xro_to):
-    """Copy coords from one xr object to another."""
-    if isinstance(xro_from, xr.DataArray) and isinstance(xro_to, xr.DataArray):
-        for c in xro_from.coords:
-            xro_to[c] = xro_from[c]
-        return xro_to
-    elif isinstance(xro_from, xr.Dataset) and isinstance(xro_to, xr.Dataset):
-        xro_to = xro_to.assign_coords(**xro_from.coords)
-    else:
-        raise ValueError(
-            "xro_from and xro_to must be both either xr.DataArray or",
-            f"xr.Dataset, found {type(xro_from)} {type(xro_to)}.",
-        )
-    return xro_to
 
 
 def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):

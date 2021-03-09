@@ -225,60 +225,6 @@ def test_verify_m2o_reference(hindcast_hist_obs_1d):
     )
 
 
-@pytest.mark.parametrize(
-    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
-)
-def test_bootstrap(hindcast_hist_obs_1d, reference):
-    """Test that hindcast.bootstrap returns reference skill."""
-    actual = hindcast_hist_obs_1d.bootstrap(
-        metric="acc",
-        comparison="e2o",
-        alignment="same_verifs",
-        dim="init",
-        reference=reference,
-        iterations=3,
-    )
-    if isinstance(reference, str):
-        reference = [reference]
-    if len(reference) >= 1:
-        # check for initialized + reference
-        assert len(reference) + 1 == actual["skill"].size, print(
-            actual.coords, actual.dims
-        )
-    else:
-        assert "skill" in actual.coords
-        assert "skill" not in actual.dims
-
-
-@pytest.mark.parametrize(
-    "reference", [[], "uninitialized", "persistence", ["uninitialized", "persistence"]]
-)
-def test_verify_reference(hindcast_hist_obs_1d, reference):
-    """Test that hindcast.bootstrap returns reference skill."""
-    hindcast = hindcast_hist_obs_1d.expand_dims(["lon", "lat"]).isel(
-        lon=[0] * 2, lat=[0] * 2
-    )  # make geospatial
-    actual = hindcast.verify(
-        metric="acc",
-        comparison="e2o",
-        alignment="same_verifs",
-        dim="init",
-        reference=reference,
-    )
-    if isinstance(reference, str):
-        reference = [reference]
-    if len(reference) >= 1:
-        # check for initialized + reference
-        assert len(reference) + 1 == actual["skill"].size, print(
-            actual.coords, actual.dims
-        )
-    else:
-        assert "skill" in actual.coords
-        assert "skill" not in actual.dims
-    # test skills not none
-    assert actual.notnull().all()
-
-
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
@@ -307,12 +253,16 @@ def test_calendar_matching_uninitialized(
         hindcast.add_uninitialized(hist_ds_uninitialized_1d)
 
 
-def test_verify_reference_same_dims(hindcast_hist_obs_1d):
+@pytest.mark.parametrize("metric", ["mse", "crps"])
+def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     """Test that verify returns the same dimensionality regardless of reference."""
     hindcast = hindcast_hist_obs_1d
-    metric = "mse"
-    comparison = "e2o"
-    dim = "init"
+    if metric == "mse":
+        comparison = "e2o"
+        dim = "init"
+    elif metric == "crps":
+        comparison = "m2o"
+        dim = ["member", "init"]
     alignment = "same_verif"
     actual_no_ref = hindcast.verify(
         metric=metric,
@@ -335,9 +285,19 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d):
         alignment=alignment,
         reference="persistence",
     )
+    actual_clim_ref = hindcast.verify(
+        metric=metric,
+        comparison=comparison,
+        dim=dim,
+        alignment=alignment,
+        reference="climatology",
+    )
     assert actual_uninit_ref.skill.size == 2
     assert actual_pers_ref.skill.size == 2
+    assert actual_clim_ref.skill.size == 2
     # no additional dimension, +1 because initialized squeezed
     assert len(actual_no_ref.dims) + 1 == len(actual_pers_ref.dims)
     assert len(actual_no_ref.dims) + 1 == len(actual_uninit_ref.dims)
+    assert len(actual_no_ref.dims) + 1 == len(actual_clim_ref.dims)
     assert len(actual_pers_ref.dims) == len(actual_uninit_ref.dims)
+    assert len(actual_pers_ref.dims) == len(actual_clim_ref.dims)

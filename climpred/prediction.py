@@ -1,5 +1,3 @@
-import inspect
-
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -15,11 +13,15 @@ from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR
 from .exceptions import DimensionError
 from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
-from .reference import persistence, uninitialized
+from .reference import (
+    _adapt_member_for_reference_forecast,
+    climatology,
+    persistence,
+    uninitialized,
+)
 from .utils import (
     assign_attrs,
     convert_time_index,
-    copy_coords_from_to,
     get_comparison_class,
     get_metric_class,
 )
@@ -40,10 +42,6 @@ def _apply_metric_at_given_lead(
 ):
     """Applies a metric between two time series at a given lead.
 
-    .. note::
-
-        This will be moved to a method of the `Scoring()` class in the next PR.
-
     Args:
         verif (xr object): Verification data.
         verif_dates (dict): Lead-dependent verification dates for alignment.
@@ -63,31 +61,43 @@ def _apply_metric_at_given_lead(
         result (xr object): Metric results for the given lead for the initialized
             forecast or reference forecast.
     """
+    # naming:: lforecast: forecast at lead; lverif: verification at lead
     if reference is None:
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
-        a = (
+        lforecast = (
             hind.sel(lead=lead)
             .where(hind["time"].isin(inits[lead]), drop=True)
             .drop_vars("lead")
         )
-        b = verif.sel(time=verif_dates[lead])
+        lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
-        a, b = persistence(verif, inits, verif_dates, lead)
+        lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
-        a, b = uninitialized(hist, verif, verif_dates, lead)
-    a["time"] = b["time"]
+        lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
+    elif reference == "climatology":
+        lforecast, lverif = climatology(verif, inits, verif_dates, lead)
+    if reference is not None:
+        lforecast, dim = _adapt_member_for_reference_forecast(
+            lforecast, lverif, metric, comparison, dim
+        )
 
-    dim = _rename_dim(dim, hind, verif)
+    lforecast["time"] = lverif[
+        "time"
+    ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
+    dim = _rename_dim(
+        dim, hind, verif
+    )  # dim should be much clearer once time in initialized.coords
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
-    result = metric.function(a, b, dim=dim, **metric_kwargs)
-    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates)
+
+    result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
+    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     return result
 
 
 def _rename_dim(dim, forecast, verif):
-    """rename `dim` to `time` or `init` if forecast and verif dims require."""
+    """rename `dim` to `time` or `init` if forecast and verif dims require to do so."""
     if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
         dim.remove("init")
@@ -96,6 +106,10 @@ def _rename_dim(dim, forecast, verif):
         dim = dim.copy()
         dim.remove("time")
         dim = dim + ["init"]
+    elif "init" in dim and "time" in forecast.dims and "time" in verif.dims:
+        dim = dim.copy()
+        dim.remove("init")
+        dim = dim + ["time"]
     return dim
 
 
@@ -241,7 +255,6 @@ def compute_perfect_model(
         skill = assign_attrs(
             skill,
             init_pm,
-            function_name=inspect.stack()[0][3],
             metric=metric,
             comparison=comparison,
             dim=dim,
@@ -314,6 +327,13 @@ def compute_hindcast(
         forecast, verif, alignment=alignment
     )
 
+    if "iteration" in forecast.dims and "iteration" not in verif.dims:
+        verif = (
+            verif.expand_dims("iteration")
+            .isel(iteration=[0] * forecast.iteration.size)
+            .assign_coords(iteration=forecast.iteration)
+        )
+
     log_compute_hindcast_header(metric, comparison, dim, alignment)
 
     metric_over_leads = [
@@ -337,15 +357,12 @@ def compute_hindcast(
         result = result.rename({"time": "init"})
     # These computations sometimes drop coordinates along the way. This appends them
     # back onto the results of the metric.
-    drop_dims = [d for d in hind.coords if d in CLIMPRED_DIMS]
-    result = copy_coords_from_to(hind.drop_vars(drop_dims), result)
 
     # Attach climpred compute information to result
     if add_attrs:
         result = assign_attrs(
             result,
             hind,
-            function_name=inspect.stack()[0][3],
             alignment=alignment,
             metric=metric,
             comparison=comparison,

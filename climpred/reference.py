@@ -43,9 +43,14 @@ def climatology(verif, inits, verif_dates, lead):
         verif.time.to_index().union(inits[lead].time.to_index()), dims="time"
     )
 
-    climatology_forecast = climatology_day.sel(
-        dayofyear=verif_hind_union.time.dt.dayofyear
-    ).drop("dayofyear")
+    try:
+        climatology_forecast = climatology_day.sel(
+            dayofyear=verif_hind_union.time.dt.dayofyear
+        ).drop("dayofyear")
+    except KeyError:
+        raise KeyError(
+            f'xarray error message: "not all values found in index dayofyear". climpred debug info: climatology_day.dayofyear = {climatology_day.dayofyear} and verif_hind_union.time.dt.dayofyear {verif_hind_union.time.dt.dayofyear}'
+        )
 
     lforecast = climatology_forecast.where(
         climatology_forecast.time.isin(inits[lead]), drop=True

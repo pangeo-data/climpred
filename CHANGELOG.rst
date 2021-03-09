@@ -39,6 +39,7 @@ Internals/Minor Fixes
   testing suite on every single commit. (:pr:`560`) `Aaron Spring`_.
 - `~climpred.classes.PerfectModelEnsemble.verify` does not add climpred
   attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
+- Drop python=3.6 support. (:pr:`573`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

@@ -12,7 +12,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: [3.6, 3.7, 3.8, 3.9]
+        python-version: [3.7, 3.8, 3.9]
     steps:
       - name: Cancel previous runs
         uses: styfle/cancel-workflow-action@0.6.0
@@ -97,7 +97,7 @@ jobs:
           channels: conda-forge
           mamba-version: '*'
           activate-environment: climpred-docs-notebooks
-          python-version: 3.6
+          python-version: 3.8
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/docs_notebooks.yml

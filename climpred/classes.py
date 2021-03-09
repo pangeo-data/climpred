@@ -1494,6 +1494,16 @@ class HindcastEnsemble(PredictionEnsemble):
         ):
             raise ValueError("reference uninitialized requires uninitialized.")
         # TODO: replace with more computationally efficient classes implementation
+        if reference is None:
+            reference = []
+        if isinstance(reference, str):
+            reference = [reference]
+        if not isinstance(reference, list):
+            reference = list(reference)
+        if "uninitialized" in reference and not isinstance(
+            self.get_uninitialized(), xr.Dataset
+        ):
+            raise ValueError("reference uninitialized requires uninitialized.")
         return bootstrap_hindcast(
             self.get_initialized(),
             self.get_uninitialized()

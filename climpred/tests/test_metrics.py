@@ -231,7 +231,7 @@ def test_no_repeating_metric_aliases():
 def test_contingency(hindcast_hist_obs_1d):
     """Test contingency table perfect results."""
     hindcast = hindcast_hist_obs_1d
-    hindcast = hindcast.apply(xr.ones_like)
+    hindcast = hindcast.map(xr.ones_like)
     category_edges = np.array([-0.5, 0.0, 0.5, 0.9, 1.1])
     metric_kwargs = {
         "forecast_category_edges": category_edges,

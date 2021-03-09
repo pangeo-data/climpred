@@ -2,7 +2,7 @@ name: climpred-docs
 channels:
   - conda-forge
 dependencies:
-  - python=3.6
+  - python=3.8
   - bottleneck
   - cartopy>=0.18.0
   - esmtools>=1.1.3

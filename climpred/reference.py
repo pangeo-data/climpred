@@ -45,7 +45,7 @@ def climatology(verif, inits, verif_dates, lead):
 
     try:
         climatology_forecast = climatology_day.sel(
-            dayofyear=verif_hind_union.time.dt.dayofyear
+            dayofyear=verif_hind_union.time.dt.dayofyear, method="nearest"
         ).drop("dayofyear")
     except KeyError:
         raise KeyError(
@@ -168,7 +168,7 @@ def compute_climatology(
 
     try:
         climatology_day_forecast = climatology_day.sel(
-            dayofyear=forecast.init.dt.dayofyear
+            dayofyear=forecast.init.dt.dayofyear, method="nearest"
         ).drop("dayofyear")
     except KeyError:
         raise KeyError(

@@ -57,20 +57,20 @@ def decorrelation_time(da, iterations=20, dim="time"):
 
     """
 
-    def _lag_correlate(x, y, dim, lead):
+    def _lag_corr(x, y, dim, lead):
         """Helper function to shift the two time series and correlate."""
         N = x[dim].size
         normal = x.isel({dim: slice(0, N - lead)})
         shifted = y.isel({dim: slice(0 + lead, N)})
-        # Align dimensions for xarray operation.
+        # Align dimensions for xarray operation
         shifted[dim] = normal[dim]
         return pearson_r(normal, shifted, dim)
 
     one = xr.ones_like(da.isel({dim: 0}))
     one = one.where(da.isel({dim: 0}).notnull())
     return one + 2 * xr.concat(
-        [_lag_correlate(da, da, dim=dim, lead=i) ** i for i in range(1, iterations)], "iteration"
-    ).sum("iteration")
+        [_lag_corr(da, da, dim=dim, lead=i) ** i for i in range(1, iterations)], "it"
+    ).sum("it")
 
 
 def dpp(ds, dim="time", m=10, chunk=True):

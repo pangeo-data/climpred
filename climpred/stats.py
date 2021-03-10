@@ -8,6 +8,30 @@ from xrft import power_spectrum
 from .checks import is_xarray
 
 
+def rm_poly(ds, dim="time", deg=2, **kwargs):
+    """Remove degree polynomial along dimension dim from ds."""
+    coefficients = ds.polyfit(dim, deg=deg, **kwargs)
+    coord = ds[dim]
+    fits = []
+    if isinstance(ds, xr.Dataset):
+        for v in coefficients:
+            name = v.replace("_polyfit_coefficients", "")
+            fit = xr.polyval(coord, coefficients[v]).rename(name)
+            fits.append(fit)
+        fits = xr.merge(fits)
+    elif isinstance(ds, xr.DataArray):
+        name = ds.name
+        v = list(coefficients.data_vars)[0]
+        fits = xr.polyval(coord, coefficients[v]).rename(name)
+    ds_rm_poly = ds - fits
+    return ds_rm_poly
+
+
+def rm_trend(ds, dim="time", **kwargs):
+    """Remove degree polynomial along dimension dim from ds."""
+    return rm_poly(ds, dim=dim, deg=1, **kwargs)
+
+
 @is_xarray(0)
 def decorrelation_time(da, r=20, dim="time"):
     """Calculate the decorrelaton time of a time series.

@@ -39,6 +39,7 @@ extensions = [
     "sphinx.ext.imgmath",
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
+    "sphinx_copybutton",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
 ]

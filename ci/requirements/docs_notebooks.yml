@@ -19,6 +19,7 @@ dependencies:
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
+  - sphinx-copybutton
   - toolz
   - xarray>=0.16.1
   - xrft  # used for varweighted_mean_period

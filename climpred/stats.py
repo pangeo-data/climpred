@@ -3,8 +3,11 @@ import warnings
 import numpy as np
 import xarray as xr
 from esmtools.stats import corr
-from xrft import power_spectrum
 
+try:
+    from xrft import power_spectrum
+except ImportError:
+    power_spectrum = None
 from .checks import is_xarray
 
 
@@ -172,6 +175,11 @@ def varweighted_mean_period(da, dim="time", **kwargs):
     See also:
     https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
+    if power_spectrum is None:
+        raise ImportError(
+            "xrft is not installed; see"
+            "https://xrft.readthedocs.io/en/latest/installation.html"
+        )
     if isinstance(da, xr.Dataset):
         raise ValueError("require xr.Dataset")
     da = da.fillna(0.0)

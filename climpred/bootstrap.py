@@ -22,7 +22,12 @@ from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model
 from .reference import compute_persistence
-from .stats import dpp, varweighted_mean_period
+from .stats import dpp
+
+try:
+    from .stats import varweighted_mean_period
+except ImportError:
+    varweighted_mean_period = None
 from .utils import (
     _transpose_and_rechunk_to,
     assign_attrs,
@@ -1353,6 +1358,11 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
         * climpred.bootstrap._bootstrap_func
         * climpred.stats.varweighted_mean_period
     """
+    if varweighted_mean_period is None:
+        raise ImportError(
+            "xrft is not installed; see"
+            "https://xrft.readthedocs.io/en/latest/installation.html"
+        )
     return _bootstrap_func(
         varweighted_mean_period,
         control,

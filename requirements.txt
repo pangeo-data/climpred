@@ -5,7 +5,6 @@ ipython
 toolz
 cftime>=1.1.2
 esmtools>=1.1.3
-xrft
 xskillscore>=0.0.18
 netcdf4
 nc-time-axis

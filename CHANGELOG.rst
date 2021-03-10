@@ -52,6 +52,7 @@ Internals/Minor Fixes
 - Examples from documentation available via `Binder <https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb>`_.
   Find further examples in the ``examples`` folder.
   (:issue:`549`, :pr:`578`) `Aaron Spring`_.
+- Rename branch ``master`` to ``main``. (:pr:`579`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

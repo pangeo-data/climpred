@@ -49,7 +49,7 @@ Internals/Minor Fixes
   (:issue:`526`, :pr:`572`) `Aaron Spring`_.
 - Reduce dependencies to install climpred.
   (:issue:`454`, :pr:`572`) `Aaron Spring`_.
-- Examples from documentation available via `Binder <https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb>`_.
+- Examples from documentation available via `Binder <https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb>`_.
   Find further examples in the ``examples`` folder.
   (:issue:`549`, :pr:`578`) `Aaron Spring`_.
 

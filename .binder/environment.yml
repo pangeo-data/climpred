@@ -18,5 +18,5 @@ dependencies:
   - pip
   - pip:
     # Install latest version of climpred.
-    - -e ../..
+    - git+https://github.com/pangeo-data/climpred.git  # latest climpred version
     - nb_black

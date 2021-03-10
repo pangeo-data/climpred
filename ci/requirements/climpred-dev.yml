@@ -18,6 +18,7 @@ dependencies:
   # Miscellaneous
   - lxml
   - tqdm
+  - cftime>=1.1.2 # Optimization changes to make cftime fast.
   # Numerics
   - numpy
   - pandas
@@ -48,13 +49,12 @@ dependencies:
   - xesmf
   # Statistics
   - eofs
-  - esmtools>=1.1.3
   - xskillscore>=0.0.18
   # Visualization
   - matplotlib
   - nc-time-axis
   - pip
   - pip:
-      - cftime>=1.1.2 # Optimization changes to make cftime fast.
       - pytest-tldr
       - pytest-lazy-fixture
+      - nb_black  # notebook linting

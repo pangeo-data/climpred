@@ -33,14 +33,20 @@ Bug fixes
 
 Internals/Minor Fixes
 ---------------------
-- docstrings are now tested in GitHub actions continuous integration.
+- Docstrings are now tested in GitHub actions continuous integration.
   (:issue:`545`, :pr:`560`) `Aaron Spring`_.
 - Github actions now cancels previous commits, instead of running the full
   testing suite on every single commit. (:pr:`560`) `Aaron Spring`_.
 - `~climpred.classes.PerfectModelEnsemble.verify` does not add climpred
   attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
 - Drop ``python==3.6`` support. (:pr:`573`) `Aaron Spring`_.
-- Binderize examples. (:issue:`549`, :pr:`578`) `Aaron Spring`_.
+- Notebooks are now linted with
+  `nb_black <https://github.com/dnanhkhoa/nb_black>`_ using
+  ``%load_ext nb_black`` or ``%load_ext lab_black`` for
+  `Jupyter <https://jupyter.org/>`_ notebooks and
+  `Jupyter <https://jupyter.org/>`_lab. (:pr:`572`) `Aaron Spring`_.
+- Binderize examples [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb)
+. (:issue:`549`, :pr:`578`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

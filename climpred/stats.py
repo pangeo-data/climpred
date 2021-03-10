@@ -2,7 +2,7 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from esmtools.stats import corr
+from xskillscore import pearson_r
 
 try:
     from xrft import power_spectrum
@@ -36,15 +36,15 @@ def rm_trend(ds, dim="time", **kwargs):
 
 
 @is_xarray(0)
-def decorrelation_time(da, r=20, dim="time"):
+def decorrelation_time(da, iterations=20, dim="time"):
     """Calculate the decorrelaton time of a time series.
 
     .. math::
         \\tau_{d} = 1 + 2 * \\sum_{k=1}^{r}(\\alpha_{k})^{k}
 
     Args:
-        da (xarray object): Time series.
-        r (optional int): Number of iterations to run the above formula.
+        da (xarray object): input.
+        iterations (optional int): Number of iterations to run the above formula.
         dim (optional str): Time dimension for xarray object.
 
     Returns:
@@ -56,11 +56,21 @@ def decorrelation_time(da, r=20, dim="time"):
           p.373
 
     """
+
+    def _lag_correlate(x, y, dim, lead):
+        """Helper function to shift the two time series and correlate."""
+        N = x[dim].size
+        normal = x.isel({dim: slice(0, N - lead)})
+        shifted = y.isel({dim: slice(0 + lead, N)})
+        # Align dimensions for xarray operation.
+        shifted[dim] = normal[dim]
+        return pearson_r(normal, shifted, dim)
+
     one = xr.ones_like(da.isel({dim: 0}))
     one = one.where(da.isel({dim: 0}).notnull())
     return one + 2 * xr.concat(
-        [corr(da, da, dim=dim, lead=i) ** i for i in range(1, r)], "it"
-    ).sum("it")
+        [_lag_correlate(da, da, dim=dim, lead=i) ** i for i in range(1, iterations)], "iteration"
+    ).sum("iteration")
 
 
 def dpp(ds, dim="time", m=10, chunk=True):

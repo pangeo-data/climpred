@@ -63,7 +63,7 @@ climpred: verification of weather and climate forecasts
     :alt: Conda downloads
     :target: https://anaconda.org/conda-forge/climpred
 
-.. |gallery| image:: https://img.shields.io/badge/climpred-example_binder-ed7b0e.svg
+.. |gallery| image:: https://img.shields.io/badge/climpred-examples-ed7b0e.svg
     :alt: climpred gallery
     :target: https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb
 

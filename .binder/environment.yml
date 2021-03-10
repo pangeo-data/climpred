@@ -1,0 +1,22 @@
+name: climpred-docs-notebooks
+channels:
+  - conda-forge
+dependencies:
+  - python>=3.7
+  - xarray>=0.16.1
+  - dask
+  - xskillscore>=0.0.18
+  - xesmf
+  - esmpy
+  - pydap
+  - matplotlib
+  - nc-time-axis
+  - netcdf4==1.5.1  # see https://github.com/pydata/xarray/issues/4925
+  - toolz
+  - xrft  # used for varweighted_mean_period
+  - esmtools>=1.1.3
+  - pip
+  - pip:
+    # Install latest version of climpred.
+    - git+https://github.com/pangeo-data/climpred.git  # latest climpred version
+    - nb_black

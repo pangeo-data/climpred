@@ -17,6 +17,7 @@ dependencies:
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
+  - sphinx-copybutton
   - toolz
   - tqdm
   - xarray>=0.16.1

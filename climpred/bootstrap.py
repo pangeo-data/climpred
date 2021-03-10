@@ -20,7 +20,7 @@ from .comparisons import (
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
 from .prediction import compute_hindcast, compute_perfect_model
-from .reference import compute_persistence
+from .reference import compute_climatology, compute_persistence
 from .stats import dpp
 
 try:

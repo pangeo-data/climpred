@@ -66,7 +66,7 @@ Verification of weather and climate forecasts.
 
 .. |gallery| image:: https://img.shields.io/badge/climpred-examples-ed7b0e.svg
     :alt: climpred gallery
-    :target: https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb
+    :target: https://mybinder.org/v2/gh/pangeo-data/climpred/main?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb
 
 .. |workshop| image:: https://img.shields.io/badge/climpred-workshop-f5a252
     :alt: climpred workshop

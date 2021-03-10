@@ -120,7 +120,7 @@ Preparing Pull Requests
     $ git checkout -b your-bugfix-feature-branch-name master
 
    If you need some help with Git, follow this quick start
-   guide: https://git.wiki.kernel.org/index.php/QuickStart
+   `guide <https://git.wiki.kernel.org/index.php/QuickStart>`_.
 
 #. Install dependencies into a new conda environment::
 
@@ -136,14 +136,14 @@ Preparing Pull Requests
      $ pip install --user pre-commit
      $ pre-commit install
 
-   Afterwards ``pre-commit`` will run whenever you commit.
+  Afterwards ``pre-commit`` will run whenever you commit.
 
    https://pre-commit.com/ is a framework for managing and maintaining multi-language pre-commit
    hooks to ensure code-style and code formatting is consistent.
 
-    Now you have an environment called ``climpred-dev`` that you can work in.
-    You’ll need to make sure to activate that environment next time you want
-    to use it after closing the terminal or your system.
+   Now you have an environment called ``climpred-dev`` that you can work in.
+   You’ll need to make sure to activate that environment next time you want
+   to use it after closing the terminal or your system.
 
     You can now edit your local working copy and run/add tests as necessary. Please follow
     PEP-8 for naming. When committing, ``pre-commit`` will modify the files as needed, or
@@ -156,9 +156,15 @@ Preparing Pull Requests
 
 #. Run all the tests
 
-   Now running tests is as simple as issuing this command::
+   Once commits are pushed to ``origin``, GitHub Actions runs continuous
+   integration of all tests on all new commits. However, you are already
+   run tests locally::
 
     $ pytest climpred
+
+   Check that `doctests <https://docs.pytest.org/en/stable/doctest.html>`_ are passing::
+
+    $ pytest --doctest-modules climpred --ignore climpred/tests
 
    Check that your contribution is covered by tests and therefore increases the overall test coverage::
 

@@ -14,7 +14,6 @@ from climpred.utils import get_comparison_class, get_metric_class
 
 xr.set_options(display_style="text")
 
-# TODO: move to conftest.py
 ITERATIONS = 2
 
 comparison_dim_PM = [
@@ -93,47 +92,6 @@ def test_compute_perfect_model_different_dims_quite_close(
     ).mean(["init"])["tos"]
     # no more than 10% difference
     assert_allclose(stack_dims_true, stack_dims_false, rtol=0.1, atol=0.03)
-
-
-def test_bootstrap_pm_dim(perfectModelEnsemble_initialized_control):
-    """Test whether bootstrap_hindcast calcs skill over member dim and
-    returns init dim."""
-    actual = perfectModelEnsemble_initialized_control.bootstrap(
-        metric="rmse",
-        dim="member",
-        comparison="m2c",
-        iterations=ITERATIONS,
-        resample_dim="member",
-        reference=["uninitialized"],
-    )["tos"]
-    assert "init" in actual.dims
-    for skill in ["initialized", "uninitialized"]:
-        actualk = actual.sel(skill=skill, results="verify skill").isnull().any()
-        assert not actualk
-
-
-def test_bootstrap_hindcast_dim(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
-):
-    """Test whether bootstrap_hindcast calcs skill over member dim and
-    returns init dim."""
-    actual = bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        observations_da_1d,
-        metric="rmse",
-        dim="member",
-        comparison="m2o",
-        iterations=ITERATIONS,
-        resample_dim="member",
-    )
-    assert "init" in actual.dims
-    for skill in ["initialized", "uninitialized"]:
-        actualk = actual.sel(skill=skill, results="verify skill")
-        if "init" in actualk.coords:
-            actualk = actualk.mean("init")
-        actualk = actualk.isnull().any()
-        assert not actualk
 
 
 @pytest.mark.parametrize("metric", ["rmse", "pearson_r"])

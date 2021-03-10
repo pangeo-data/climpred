@@ -168,7 +168,8 @@ __m2e = Comparison(
 
 def _m2c(ds, metric=None):
     """
-    Compare all other member forecasts to a single member verification.
+    Compare all other member forecasts to a single member verification, which is the
+    first member.
     If the initialized dataset is concatinated in a way that the first member
     is taken from the control simulation, this compares all other member forecasts
     to the control simulation.

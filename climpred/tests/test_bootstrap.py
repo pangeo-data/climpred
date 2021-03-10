@@ -70,31 +70,24 @@ def test_bootstrap_PM_lazy_results(
 
 
 @pytest.mark.slow
-@pytest.mark.parametrize("comparison", HINDCAST_COMPARISONS)
 @pytest.mark.parametrize("chunk", [True, False])
 def test_bootstrap_hindcast_lazy(
-    hind_da_initialized_1d,
-    hist_da_uninitialized_1d,
-    observations_da_1d,
+    hindcast_hist_obs_1d,
     chunk,
-    comparison,
 ):
     """Test bootstrap_hindcast works lazily."""
+    he = hindcast_hist_obs_1d
     if chunk:
-        hind_da_initialized_1d = hind_da_initialized_1d.chunk({"lead": 2})
-        hist_da_uninitialized_1d = hist_da_uninitialized_1d.chunk({"time": -1})
-        observations_da_1d = observations_da_1d.chunk({"time": -1})
+        he = he.chunk({"lead": 2})
     else:
-        hind_da_initialized_1d = hind_da_initialized_1d.compute()
-        hist_da_uninitialized_1d = hist_da_uninitialized_1d.compute()
-        observations_da_1d = observations_da_1d.compute()
-    s = bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        observations_da_1d,
+        he = he.compute()
+
+    s = he.bootstrap(
         iterations=ITERATIONS,
-        comparison=comparison,
+        comparison="e2o",
         metric="mse",
+        alignment="same_verifs",
+        dim="init",
     )
     assert dask.is_dask_collection(s) == chunk
 
@@ -102,22 +95,18 @@ def test_bootstrap_hindcast_lazy(
 @pytest.mark.slow
 @pytest.mark.parametrize("resample_dim", ["member", "init"])
 def test_bootstrap_hindcast_resample_dim(
-    hind_da_initialized_1d,
-    hist_da_uninitialized_1d,
-    observations_da_1d,
+    hindcast_hist_obs_1d,
     resample_dim,
 ):
     """Test bootstrap_hindcast when resampling member or init and alignment
     same_inits."""
-    bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        observations_da_1d,
+    hindcast_hist_obs_1d.bootstrap(
         iterations=ITERATIONS,
         comparison="e2o",
         metric="mse",
         resample_dim=resample_dim,
         alignment="same_inits",
+        dim="init",
     )
 
 
@@ -313,23 +302,21 @@ def test_bootstrap_by_stacking_two_var_dataset(
 
 
 @pytest.mark.slow
+@pytest.mark.parametrize("comparison", ["m2o", "e2o"])
+@pytest.mark.parametrize("metric", ["rmse", "pearson_r"])
 @pytest.mark.parametrize("alignment", VALID_ALIGNMENTS)
 def test_bootstrap_hindcast_alignment(
-    hind_da_initialized_1d,
-    hist_da_uninitialized_1d,
-    observations_da_1d,
-    alignment,
+    hindcast_hist_obs_1d, alignment, metric, comparison
 ):
     """Test bootstrap_hindcast for all alginments when resampling member."""
-    bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        observations_da_1d,
+    dim = "init" if comparison == "e2o" else ["member", "init"]
+    hindcast_hist_obs_1d.isel(lead=[0, 1, 2]).bootstrap(
         iterations=ITERATIONS,
-        comparison="e2o",
-        metric="mse",
+        comparison=comparison,
+        metric=metric,
         resample_dim="member",
         alignment=alignment,
+        dim=dim,
     )
 
 

@@ -191,7 +191,7 @@ def varweighted_mean_period(da, dim="time", **kwargs):
             "https://xrft.readthedocs.io/en/latest/installation.html"
         )
     if isinstance(da, xr.Dataset):
-        raise ValueError("require xr.Dataset")
+        raise ValueError("require xr.DataArray, try xr.Dataset.map(func)")
     da = da.fillna(0.0)
     # dim should be list
     if isinstance(dim, str):

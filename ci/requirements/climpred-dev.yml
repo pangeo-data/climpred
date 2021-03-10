@@ -49,6 +49,7 @@ dependencies:
   - xesmf
   # Statistics
   - eofs
+  - esmtools>=1.1.3
   - xskillscore>=0.0.18
   # Visualization
   - matplotlib

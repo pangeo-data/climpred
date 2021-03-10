@@ -2,22 +2,49 @@ import warnings
 
 import numpy as np
 import xarray as xr
-from esmtools.stats import corr
-from xrft import power_spectrum
+from xskillscore import pearson_r
 
+try:
+    from xrft import power_spectrum
+except ImportError:
+    power_spectrum = None
 from .checks import is_xarray
 
 
+def rm_poly(ds, dim="time", deg=2, **kwargs):
+    """Remove degree polynomial along dimension dim from ds."""
+    coefficients = ds.polyfit(dim, deg=deg, **kwargs)
+    coord = ds[dim]
+    fits = []
+    if isinstance(ds, xr.Dataset):
+        for v in coefficients:
+            name = v.replace("_polyfit_coefficients", "")
+            fit = xr.polyval(coord, coefficients[v]).rename(name)
+            fits.append(fit)
+        fits = xr.merge(fits)
+    elif isinstance(ds, xr.DataArray):
+        name = ds.name
+        v = list(coefficients.data_vars)[0]
+        fits = xr.polyval(coord, coefficients[v]).rename(name)
+    ds_rm_poly = ds - fits
+    return ds_rm_poly
+
+
+def rm_trend(ds, dim="time", **kwargs):
+    """Remove degree polynomial along dimension dim from ds."""
+    return rm_poly(ds, dim=dim, deg=1, **kwargs)
+
+
 @is_xarray(0)
-def decorrelation_time(da, r=20, dim="time"):
+def decorrelation_time(da, iterations=20, dim="time"):
     """Calculate the decorrelaton time of a time series.
 
     .. math::
         \\tau_{d} = 1 + 2 * \\sum_{k=1}^{r}(\\alpha_{k})^{k}
 
     Args:
-        da (xarray object): Time series.
-        r (optional int): Number of iterations to run the above formula.
+        da (xarray object): input.
+        iterations (optional int): Number of iterations to run the above formula.
         dim (optional str): Time dimension for xarray object.
 
     Returns:
@@ -29,10 +56,20 @@ def decorrelation_time(da, r=20, dim="time"):
           p.373
 
     """
+
+    def _lag_corr(x, y, dim, lead):
+        """Helper function to shift the two time series and correlate."""
+        N = x[dim].size
+        normal = x.isel({dim: slice(0, N - lead)})
+        shifted = y.isel({dim: slice(0 + lead, N)})
+        # Align dimensions for xarray operation
+        shifted[dim] = normal[dim]
+        return pearson_r(normal, shifted, dim)
+
     one = xr.ones_like(da.isel({dim: 0}))
     one = one.where(da.isel({dim: 0}).notnull())
     return one + 2 * xr.concat(
-        [corr(da, da, dim=dim, lead=i) ** i for i in range(1, r)], "it"
+        [_lag_corr(da, da, dim=dim, lead=i) ** i for i in range(1, iterations)], "it"
     ).sum("it")
 
 
@@ -148,6 +185,11 @@ def varweighted_mean_period(da, dim="time", **kwargs):
     See also:
     https://xrft.readthedocs.io/en/latest/api.html#xrft.xrft.power_spectrum
     """
+    if power_spectrum is None:
+        raise ImportError(
+            "xrft is not installed; see"
+            "https://xrft.readthedocs.io/en/latest/installation.html"
+        )
     if isinstance(da, xr.Dataset):
         raise ValueError("require xr.DataArray, try xr.Dataset.map(func)")
     da = da.fillna(0.0)

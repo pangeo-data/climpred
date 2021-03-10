@@ -8,7 +8,7 @@ dependencies:
   - xskillscore>=0.0.18
   - xesmf
   - esmpy
-  - jupyterlab
+  - pydap
   - matplotlib
   - nc-time-axis
   - netcdf4==1.5.1  # see https://github.com/pydata/xarray/issues/4925

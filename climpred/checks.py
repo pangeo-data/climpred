@@ -4,7 +4,7 @@ from functools import wraps
 import dask
 import xarray as xr
 
-from .constants import VALID_LEAD_UNITS
+from .constants import VALID_LEAD_UNITS, VALID_REFERENCES
 from .exceptions import DatasetError, DimensionError, VariableError
 
 NCPU = dask.system.CPU_COUNT
@@ -255,3 +255,18 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
                 f"because of much more chunks than CPUs, found {number_of_chunks} "
                 f"chunks and {NCPU} CPUs."
             )
+
+
+def _check_valid_reference(reference):
+    """Enforce reference as list and check for valid entries."""
+    if reference is None:
+        reference = []
+    if isinstance(reference, str):
+        reference = [reference]
+    if not isinstance(reference, list):
+        reference = list(reference)
+    if not set(reference).issubset(set(VALID_REFERENCES)):
+        raise ValueError(
+            f"Specify reference from {VALID_REFERENCES}, found {reference}"
+        )
+    return reference

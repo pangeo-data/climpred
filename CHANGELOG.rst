@@ -11,6 +11,13 @@ Breaking changes
 
 New Features
 ------------
+- :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`
+  accept reference ``climatology``. Furthermore, reference ``persistence`` also allows
+  probabilistic metrics (:issue:`202`, :issue:`565`, :pr:`566`) `Aaron Spring`_.
+
 
 Bug fixes
 ---------
@@ -32,6 +39,7 @@ Internals/Minor Fixes
   testing suite on every single commit. (:pr:`560`) `Aaron Spring`_.
 - `~climpred.classes.PerfectModelEnsemble.verify` does not add climpred
   attributes by default anymore. (:pr:`560`) `Aaron Spring`_.
+- Drop python=3.6 support. (:pr:`573`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

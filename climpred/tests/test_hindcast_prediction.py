@@ -18,53 +18,6 @@ ITERATIONS = 2
 category_edges = np.array([0, 0.5, 1])
 
 
-@pytest.mark.skip(reason="less not properly implemented")
-def test_compute_hindcast_less_m2o(hind_da_initialized_1d, reconstruction_da_1d):
-    """Test LESS m2o runs through"""
-    actual = (
-        compute_hindcast(
-            hind_da_initialized_1d,
-            reconstruction_da_1d,
-            metric="less",
-            comparison="m2o",
-        )
-        .isnull()
-        .any()
-    )
-    assert not actual
-
-
-@pytest.mark.parametrize("metric", DETERMINISTIC_HINDCAST_METRICS)
-@pytest.mark.parametrize("comparison", HINDCAST_COMPARISONS)
-def test_compute_hindcast(
-    hind_ds_initialized_1d, reconstruction_ds_1d, metric, comparison
-):
-    """
-    Checks that compute hindcast works without breaking.
-    """
-    if metric == "contingency":
-        metric_kwargs = {
-            "forecast_category_edges": category_edges,
-            "observation_category_edges": category_edges,
-            "score": "accuracy",
-        }
-    else:
-        metric_kwargs = {}
-    res = (
-        compute_hindcast(
-            hind_ds_initialized_1d,
-            reconstruction_ds_1d,
-            metric=metric,
-            comparison=comparison,
-            **metric_kwargs
-        )
-        .isnull()
-        .any()
-    )
-    for var in res.data_vars:
-        assert not res[var]
-
-
 def test_compute_hindcast_lead0_lead1(
     hind_ds_initialized_1d, hind_ds_initialized_1d_lead0, reconstruction_ds_1d
 ):
@@ -87,29 +40,6 @@ def test_compute_hindcast_lead0_lead1(
     assert (res1.SST.values == res2.SST.values).all()
 
 
-@pytest.mark.parametrize("metric", DETERMINISTIC_HINDCAST_METRICS)
-def test_persistence(hind_da_initialized_1d, reconstruction_da_1d, metric):
-    """
-    Checks that compute persistence works without breaking.
-    """
-    if metric == "contingency":
-        metric_kwargs = {
-            "forecast_category_edges": category_edges,
-            "observation_category_edges": category_edges,
-            "score": "accuracy",
-        }
-    else:
-        metric_kwargs = {}
-    res = compute_persistence(
-        hind_da_initialized_1d, reconstruction_da_1d, metric=metric, **metric_kwargs
-    )
-    assert not res.isnull().any()
-    # check persistence metadata
-    assert res.attrs["metric"] == metric
-    assert res.attrs["skill_calculated_by_function"] == "compute_persistence"
-    assert "number of members" not in res.attrs
-
-
 def test_persistence_lead0_lead1(
     hind_ds_initialized_1d, hind_ds_initialized_1d_lead0, reconstruction_ds_1d
 ):
@@ -124,29 +54,6 @@ def test_persistence_lead0_lead1(
         hind_ds_initialized_1d_lead0, reconstruction_ds_1d, metric="rmse"
     )
     assert (res1.SST.values == res2.SST.values).all()
-
-
-def test_bootstrap_hindcast_da1d_not_nan(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, reconstruction_da_1d
-):
-    """
-    Checks that there are no NaNs on bootstrap hindcast of 1D da.
-    """
-    actual = bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        reconstruction_da_1d,
-        metric="rmse",
-        comparison="e2o",
-        sig=50,
-        iterations=ITERATIONS,
-    )
-    actual_init_skill = (
-        actual.sel(skill="initialized", results="verify skill").isnull().any()
-    )
-    assert not actual_init_skill
-    actual_uninit_p = actual.sel(skill="uninitialized", results="p").isnull().any()
-    assert not actual_uninit_p
 
 
 @pytest.mark.parametrize("metric", ("AnomCorr", "test", "None"))
@@ -203,29 +110,6 @@ def test_compute_hindcast_dask_spatial(
             assert res_chunked.chunks is not None
 
 
-@pytest.mark.skip(reason="not yet implemented")
-@pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
-def test_compute_hindcast_dask_climpred_dims(
-    hind_da_initialized_3d, reconstruction_da_3d, metric
-):
-    """Chunking along climpred dims if available."""
-    step = 5
-    for dim in CLIMPRED_DIMS:
-        if dim in hind_da_initialized_3d.dims:
-            hind_da_initialized_3d = hind_da_initialized_3d.chunk({dim: step})
-        if dim in reconstruction_da_3d.dims:
-            reconstruction_da_3d = reconstruction_da_3d.chunk({dim: step})
-        res_chunked = compute_hindcast(
-            hind_da_initialized_3d,
-            reconstruction_da_3d,
-            comparison="e2o",
-            metric=metric,
-        )
-        # check for chunks
-        assert dask.is_dask_collection(res_chunked)
-        assert res_chunked.chunks is not None
-
-
 def test_compute_hindcast_CESM_3D_keep_coords(
     hind_da_initialized_3d, reconstruction_da_3d
 ):
@@ -235,21 +119,15 @@ def test_compute_hindcast_CESM_3D_keep_coords(
         assert c in s.coords
 
 
-def test_bootstrap_hindcast_keeps_lead_units(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
-):
-    """Test that lead units is kept in compute."""
+def test_HindcastEnsemble_keeps_lead_units(hindcast_hist_obs_1d):
+    """Test that lead units is kept in bootstrap."""
     sig = 95
-    units = "years"
-    hind_da_initialized_1d["lead"].attrs["units"] = units
-    actual = bootstrap_hindcast(
-        hind_da_initialized_1d,
-        hist_da_uninitialized_1d,
-        observations_da_1d,
+    actual = hindcast_hist_obs_1d.bootstrap(
         metric="mse",
         iterations=ITERATIONS,
         comparison="e2o",
         sig=sig,
         dim="init",
+        alignment="same_verif",
     )
-    assert actual.lead.attrs["units"] == units
+    assert actual.lead.attrs["units"] == "years"

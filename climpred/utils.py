@@ -472,7 +472,7 @@ def add_time_from_init_lead(ds):
                 init_freq = f"{lead_freq_string}{anchor}"
                 logging.info("Guessed init freq: {init_freq}")
         else:
-            if lead_unit in ["years", "months", "seasons"]:  # todo better logic here
+            if lead_unit in ["years", "months", "seasons"] and False:  # todo better logic here
                 if init_freq[0] in ["A", "Y"] and lead_unit == "years":
                     pass
                 elif init_freq[0] in ["Q"] and lead_unit == "seasons":

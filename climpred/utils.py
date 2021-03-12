@@ -442,15 +442,14 @@ def my_shift(init, lead, init_freq, lead_unit):
             lead_unit = "D"
             lead = lead * 30
 
-    if lead_unit in ["years", "months"]:  # what about season
-        # check that lead unit and init_freq match: else convert init freq
-        # assert True
+    if lead_unit in ["years", "seasons", "months"]:
+        # use init_freq reconstructed from anchor and lead unit
         return init.shift(lead, init_freq)
     else:
         # what about pentads, weeks (W)
-        if lead_unit == "week":
+        if lead_unit == "weeks":
             lead_unit == "W"
-        elif lead_unit == "pentad":
+        elif lead_unit == "pentads":
             lead = lead * 5
             lead_unit = "D"
         return init + pd.Timedelta(lead, lead_unit)
@@ -472,6 +471,16 @@ def add_time_from_init_lead(ds):
                 anchor = anchor_check[-1].upper()  # S/E for start/end of month
                 init_freq = f"{lead_freq_string}{anchor}"
                 logging.info("Guessed init freq: {init_freq}")
+        else:
+            if lead_units in ["years", "months", "seasons"]:  # todo better logic here
+                if init_freq[0] in ["A", "Y"] and lead_units == "years":
+                    pass
+                elif init_freq[0] in ["Q"] and lead_units == "seasons":
+                    pass
+                elif init_freq[0] in ["M"] and lead_units == "months":
+                    pass
+                else:
+                    raise ValueError("init freq and lead unit doesnt match", init_freq, lead_unit)
         if init_freq is None and lead_units in ["years", "months", "seasons"] and "360" not in inits.calendar:
             raise ValueError("Couldnt infer freq from init", inits)
 

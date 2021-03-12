@@ -178,6 +178,20 @@ def hind_ds_initialized_1d_cftime(hind_ds_initialized_1d):
 
 
 @pytest.fixture()
+def hind_ds_initialized_1d_cftime_mm(hind_ds_initialized_1d_cftime):
+    """CESM-DPLE initialzed hindcast timeseries with cftime initializations faked for monthly leads."""
+    hind_ds_initialized_1d_cftime.lead.attrs["units"] = "months"
+    return hind_ds_initialized_1d_cftime
+
+
+@pytest.fixture()
+def hind_ds_initialized_1d_cftime_dm(hind_ds_initialized_1d_cftime):
+    """CESM-DPLE initialzed hindcast timeseries with cftime initializations faked for daily leads."""
+    hind_ds_initialized_1d_cftime.lead.attrs["units"] = "days"
+    return hind_ds_initialized_1d_cftime
+
+
+@pytest.fixture()
 def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset in lead-0
     framework."""
@@ -326,14 +340,19 @@ def hindcast_hist_obs_1d(
 
 
 @pytest.fixture()
-def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
+def reconstruction_ds_1d_mm(reconstruction_ds_1d):
+    """CESM-FOSI historical reconstruction timeseries members mean removed
+    xr.Dataset in monthly interpolated."""
+    return reconstruction_ds_1d.resample(time="1MS").interpolate("linear")
+
+
+@pytest.fixture()
+def hindcast_recon_1d_mm(hindcast_recon_1d_ym, reconstruction_ds_1d_mm):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
     time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970"))
     hindcast._datasets["initialized"].lead.attrs["units"] = "months"
-    hindcast._datasets["observations"] = (
-        hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")
-    )
+    hindcast._datasets["observations"] = reconstruction_ds_1d_mm
     return hindcast
 
 

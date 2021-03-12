@@ -458,7 +458,19 @@ def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, met
     assert actual.lead.attrs["units"] == "years"
 
 
-def test_PerfectModelEnsemble_init_time(PM_ds_initialized_1d):
-    """Test to see PerfectModelEnsemble can be initialized and creates time coordinate."""
-    pm = PerfectModelEnsemble(PM_ds_initialized_1d)
+@pytest.mark.parametrize(
+    "init",
+    [
+        pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+        pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+        pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+    ],
+    ids=["ym", "mm", "dm"],
+)
+def test_PerfectModelEnsemble_init_time(init):
+    """Test to see PerfectModelEnsemble can be initialized and creates time
+    coordinate depending on init and lead."""
+    pm = PerfectModelEnsemble(init)
     assert "validtime" in pm.get_initialized().coords
+    for d in ["init", "lead"]:
+        assert d in pm.get_initialized().validtime.coords

@@ -303,7 +303,19 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     assert len(actual_pers_ref.dims) == len(actual_clim_ref.dims)
 
 
-def test_hindcastEnsemble_init_time(hind_ds_initialized_1d):
-    """Test to see hindcast ensemble can be initialized and creates time coordinate."""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+@pytest.mark.parametrize(
+    "init",
+    [
+        pytest.lazy_fixture("hind_ds_initialized_1d_cftime"),
+        pytest.lazy_fixture("hind_ds_initialized_1d_cftime_mm"),
+        pytest.lazy_fixture("hind_ds_initialized_1d_cftime_dm"),
+    ],
+    ids=["ym", "mm", "dm"],
+)
+def test_hindcastEnsemble_init_time(init):
+    """Test to see hindcast ensemble can be initialized and creates time
+    coordinate depending on init and lead."""
+    hindcast = HindcastEnsemble(init)
     assert "validtime" in hindcast.get_initialized().coords
+    for d in ["init", "lead"]:
+        assert d in hindcast.get_initialized().validtime.coords

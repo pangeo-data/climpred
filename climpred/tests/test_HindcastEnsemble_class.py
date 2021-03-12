@@ -301,3 +301,9 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     assert len(actual_no_ref.dims) + 1 == len(actual_clim_ref.dims)
     assert len(actual_pers_ref.dims) == len(actual_uninit_ref.dims)
     assert len(actual_pers_ref.dims) == len(actual_clim_ref.dims)
+
+
+def test_hindcastEnsemble_init_time(hind_ds_initialized_1d):
+    """Test to see hindcast ensemble can be initialized and creates time coordinate."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
+    assert "validtime" in hindcast.get_initialized().coords

@@ -456,3 +456,9 @@ def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, met
     assert actual.tos.values < 2 * (1 - sig / 100)
     # lead units keep
     assert actual.lead.attrs["units"] == "years"
+
+
+def test_PerfectModelEnsemble_init_time(PM_ds_initialized_1d):
+    """Test to see PerfectModelEnsemble can be initialized and creates time coordinate."""
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d)
+    assert "validtime" in pm.get_initialized().coords

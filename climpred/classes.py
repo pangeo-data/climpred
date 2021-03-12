@@ -40,7 +40,7 @@ from .smoothing import (
     spatial_smoothing_xesmf,
     temporal_smoothing,
 )
-from .utils import convert_time_index
+from .utils import add_time_from_init_lead, convert_time_index
 
 
 def _display_metadata(self):
@@ -145,6 +145,7 @@ class PredictionEnsemble:
         # `init` dimension is a `float` or `int`.
         has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
+        xobj = add_time_from_init_lead(xobj)
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}
         self.kind = "prediction"

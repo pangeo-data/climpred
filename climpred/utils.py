@@ -1,4 +1,5 @@
 import datetime
+import logging
 import warnings
 
 import cftime
@@ -419,3 +420,76 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks
     )
+
+
+def my_shift(init, lead, init_freq, lead_unit):
+    """Shift CFTimeIndex init by amount lead in units lead_unit."""
+    init_calendar = init.calendar
+    if isinstance(lead, xr.DataArray):
+        lead = lead.values
+
+    assert int(lead) == float(lead)  # int check
+    lead = int(lead)
+
+    if "360" in init_calendar:
+        # use pd.Timedelta
+        if lead_unit == "years":
+            lead = lead * 360
+        elif lead_unit == "seasons":
+            lead = lead * 90
+            lead_unit = "D"
+        elif lead_unit == "months":
+            lead_unit = "D"
+            lead = lead * 30
+
+    if lead_unit in ["years", "months"]:  # what about season
+        # check that lead unit and init_freq match: else convert init freq
+        # assert True
+        return init.shift(lead, init_freq)
+    else:
+        # what about pentads, weeks (W)
+        if lead_unit == "week":
+            lead_unit == "W"
+        elif lead_unit == "pentad":
+            lead = lead * 5
+            lead_unit = "D"
+        return init + pd.Timedelta(lead, lead_unit)
+
+
+def add_time_from_init_lead(ds):
+    """time = init + lead"""
+    if "time" not in ds.coords and "time" not in ds.dims:
+        leads = ds.lead
+        lead_unit = leads.attrs["units"]
+        inits = ds.init.to_index()
+        init_freq = xr.infer_freq(inits)
+        if init_freq is None:
+            from xarray.coding.frequencies import month_anchor_check
+
+            anchor_check = month_anchor_check(inits)  # returns None, ce or cs
+            if anchor_check is not None:
+                lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
+                anchor = anchor_check[-1].upper()  # S/E for start/end of month
+                init_freq = f"{lead_freq_string}{anchor}"
+                logging.info("Guessed init freq: {init_freq}")
+        if init_freq is None:
+            raise ValueError("Couldnt infer freq from init", inits)
+
+        # create time = init + lead
+        times = xr.concat(
+            [
+                xr.DataArray(
+                    my_shift(inits, lead, init_freq, lead_unit),
+                    dims="init",
+                    coords={"init": inits},
+                )
+                for lead in leads
+            ],
+            dim="lead",
+            join="inner",
+            compat="broadcast_equals",
+        )
+        times["lead"] = leads
+        ds = ds.copy()  # otherwise inplace coords setting
+        ds.coords["validtime"] = times
+    return ds

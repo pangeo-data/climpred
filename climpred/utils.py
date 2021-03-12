@@ -448,7 +448,7 @@ def my_shift(init, lead, init_freq, lead_unit):
     else:
         # what about pentads, weeks (W)
         if lead_unit == "weeks":
-            lead_unit == "W"
+            lead_unit = "W"
         elif lead_unit == "pentads":
             lead = lead * 5
             lead_unit = "D"

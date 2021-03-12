@@ -163,6 +163,13 @@ class PredictionEnsemble:
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
         """Plot datasets from PredictionEnsemble.
 
+        .. note::
+            Alternatively inspect initialized datasets by
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x='validtime')``
+            to see ``validtime`` on x-axis or
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x='init')``
+            to see ``init`` on x-axis.
+
         Args:
             variable (str or None): `variable` to show. Defaults to first in data_vars.
             ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
@@ -177,7 +184,7 @@ class PredictionEnsemble:
         """
         if self.kind == "hindcast":
             if cmap is None:
-                cmap = "jet"
+                cmap = "viridis"
             return plot_lead_timeseries_hindcast(
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
@@ -677,6 +684,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
             self._datasets["initialized"], self._datasets["control"]
         )
+        if "validtime" in uninit.coords:
+            if "member" in uninit.validtime.dims:  # validtime not member dependent
+                uninit.coords["validtime"] = uninit.validtime.isel(member=0, drop=True)
         datasets = self._datasets.copy()
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="perfect")

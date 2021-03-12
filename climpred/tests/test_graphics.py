@@ -63,15 +63,14 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
     assert res_ax is not None
 
 
-@pytest.mark.parametrize("cmap", ["tab10", "jet"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["tos", None])
 def test_PerfectModelEnsemble_plot(
-    PM_ds_initialized_1d, PM_ds_control_1d, variable, show_members, cmap
+    PM_ds_initialized_1d, PM_ds_control_1d, variable, show_members
 ):
     """Test PredictionEnsemble.plot()."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
-    kws = {"cmap": cmap, "show_members": show_members, "variable": variable}
+    kws = {"show_members": show_members, "variable": variable}
     pm.plot(**kws)
     pm = pm.add_control(PM_ds_control_1d)
     pm.plot(**kws)

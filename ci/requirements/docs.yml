@@ -16,7 +16,7 @@ dependencies:
   - sphinx-copybutton
   - toolz
   - xarray>=0.16.1
-  - xskillscore>=0.0.19
+  - xskillscore>=0.0.18
   - pip
   - pip:
     # Install latest version of climpred.

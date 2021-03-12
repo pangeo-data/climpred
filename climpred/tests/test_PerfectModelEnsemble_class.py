@@ -22,14 +22,12 @@ comparison_dim_PM = [
 ]
 
 references = [
-    [],
     "uninitialized",
     "persistence",
     "climatology",
     ["climatology", "uninitialized", "persistence"],
 ]
 references_ids = [
-    "empty list",
     "uninitialized",
     "persistence",
     "climatology",
@@ -129,18 +127,7 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
     )
 
 
-@pytest.mark.parametrize(
-    "reference",
-    [
-        "uninitialized",
-        ["uninitialized"],
-        "persistence",
-        None,
-        [],
-        "climatology",
-        ["uninitialized", "persistence", "climatology"],
-    ],
-)
+@pytest.mark.parametrize("reference", references, ids=references_ids)
 def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
     """Test that verify works with references given."""
     pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
@@ -371,7 +358,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     """
     Checks that PerfectModel.verify() and PerfectModel.bootstrap() for deterministic metrics is not NaN.
     """
-    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
+    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1], init=[0, 1, 2])
     if isinstance(reference, str):
         reference = [reference]
     if metric == "contingency":
@@ -439,7 +426,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
 def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, metric):
     """Test that pvalue of initialized ensemble first lead is close to 0."""
     sig = 95
-    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
+    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1])
     actual = (
         pm.bootstrap(
             metric=metric,

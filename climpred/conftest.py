@@ -343,7 +343,7 @@ def hindcast_hist_obs_1d(
 def reconstruction_ds_1d_mm(reconstruction_ds_1d_cftime):
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.Dataset in monthly interpolated."""
-    return reconstruction_ds_1d.resample(time="1MS").interpolate("linear")
+    return reconstruction_ds_1d_cftime.resample(time="1MS").interpolate("linear")
 
 
 @pytest.fixture()

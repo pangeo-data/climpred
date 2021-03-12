@@ -462,7 +462,7 @@ def add_time_from_init_lead(ds):
         lead_unit = leads.attrs["units"]
         inits = ds.init.to_index()
         init_freq = xr.infer_freq(inits)
-        if init_freq is None:
+        if init_freq is None and "360" not in inits.calendar:
             from xarray.coding.frequencies import month_anchor_check
 
             anchor_check = month_anchor_check(inits)  # returns None, ce or cs

@@ -426,7 +426,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
 def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, metric):
     """Test that pvalue of initialized ensemble first lead is close to 0."""
     sig = 95
-    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1])
+    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
     actual = (
         pm.bootstrap(
             metric=metric,

@@ -316,6 +316,19 @@ def test_hindcastEnsemble_init_time(init):
     """Test to see hindcast ensemble can be initialized and creates time
     coordinate depending on init and lead."""
     hindcast = HindcastEnsemble(init)
-    assert "validtime" in hindcast.get_initialized().coords
+    initialized = hindcast.get_initialized()
+    print(initialized.coords["validtime"].isel(lead=2).to_index())
+    time_name = "validtime"
+    assert time_name in initialized.coords
+    # multi-dim coord time
     for d in ["init", "lead"]:
-        assert d in hindcast.get_initialized().validtime.coords
+        assert d in initialized[time_name].coords
+    # time and init have both freq
+    if (
+        initialized.lead.attrs["units"] != "days"
+    ):  # cannot find freq after days shift in ProlepticGregorian calendar
+        assert xr.infer_freq(initialized["init"]) == xr.infer_freq(
+            initialized.coords[time_name].isel(lead=0)
+        )
+    # time larger than init
+    assert initialized.init.max() < initialized.coords[time_name].isel(lead=2).max()

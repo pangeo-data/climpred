@@ -471,6 +471,9 @@ def test_PerfectModelEnsemble_init_time(init):
     """Test to see PerfectModelEnsemble can be initialized and creates time
     coordinate depending on init and lead."""
     pm = PerfectModelEnsemble(init)
-    assert "validtime" in pm.get_initialized().coords
+    initialized = pm.get_initialized()
+    print(initialized.coords)
+    time_name = "validtime"
+    assert time_name in initialized.coords
     for d in ["init", "lead"]:
-        assert d in pm.get_initialized().validtime.coords
+        assert d in initialized[time_name].coords

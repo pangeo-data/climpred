@@ -1,13 +1,14 @@
 name: climpred-docs
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python=3.8
   - bottleneck
   - cartopy>=0.18.0
   - importlib_metadata
   - jupyterlab
-  - matplotlib
+  - matplotlib-base
   - nbsphinx
   - nc-time-axis
   - netcdf4

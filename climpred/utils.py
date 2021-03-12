@@ -472,7 +472,7 @@ def add_time_from_init_lead(ds):
                 anchor = anchor_check[-1].upper()  # S/E for start/end of month
                 init_freq = f"{lead_freq_string}{anchor}"
                 logging.info("Guessed init freq: {init_freq}")
-        if init_freq is None:
+        if init_freq is None and lead_units in ["years", "months", "seasons"] and "360" not in inits.calendar:
             raise ValueError("Couldnt infer freq from init", inits)
 
         # create time = init + lead

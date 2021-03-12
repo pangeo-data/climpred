@@ -472,16 +472,16 @@ def add_time_from_init_lead(ds):
                 init_freq = f"{lead_freq_string}{anchor}"
                 logging.info("Guessed init freq: {init_freq}")
         else:
-            if lead_units in ["years", "months", "seasons"]:  # todo better logic here
-                if init_freq[0] in ["A", "Y"] and lead_units == "years":
+            if lead_unit in ["years", "months", "seasons"]:  # todo better logic here
+                if init_freq[0] in ["A", "Y"] and lead_unit == "years":
                     pass
-                elif init_freq[0] in ["Q"] and lead_units == "seasons":
+                elif init_freq[0] in ["Q"] and lead_unit == "seasons":
                     pass
-                elif init_freq[0] in ["M"] and lead_units == "months":
+                elif init_freq[0] in ["M"] and lead_unit == "months":
                     pass
                 else:
                     raise ValueError("init freq and lead unit doesnt match", init_freq, lead_unit)
-        if init_freq is None and lead_units in ["years", "months", "seasons"] and "360" not in inits.calendar:
+        if init_freq is None and lead_unit in ["years", "months", "seasons"] and "360" not in inits.calendar:
             raise ValueError("Couldnt infer freq from init", inits)
 
         # create time = init + lead

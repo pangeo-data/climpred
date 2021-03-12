@@ -969,6 +969,8 @@ def bootstrap_compute(
     results["lead"] = hind["lead"]
     if "units" in hind["lead"].attrs and "units" not in results["lead"].attrs:
         results["lead"].attrs["units"] = hind["lead"].attrs["units"]
+    if "validtime" in results.coords:
+        del results.coords["validtime"]
     return results
 
 

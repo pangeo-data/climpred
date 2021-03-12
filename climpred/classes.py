@@ -468,7 +468,7 @@ class PredictionEnsemble:
             >>> PerfectModelEnsemble.smooth({'lead':4}, how='sum').get_initialized().lead.size
             17
 
-            >>> HindcastEnsemble_3D.smooth({'lon':1, 'lat':1})
+            >>> HindcastEnsemble_3D.smooth({'lon':1, 'lat':1})  # doctest: +ELLIPSIS
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
                 SST      (init, lead, lat, lon) float64 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
@@ -481,16 +481,19 @@ class PredictionEnsemble:
 
             >>> HindcastEnsemble_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
             Coordinates:
-              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9
-              * lon      (lon) float64 250.8 254.8 258.8 262.8
-              * lat      (lat) float64 -9.75 -4.75
+              * init       (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead       (lead) int32 1 2 3 4 5 6 7 8 9
+                validtime  (lead, init) object 1956-01-01 00:00:00 ... 2027-01-01 00:00:00
+              * lon        (lon) float64 250.8 254.8 258.8 262.8
+              * lat        (lat) float64 -9.75 -4.75
+
             >>> HindcastEnsemble_3D.smooth('goddard2013').get_initialized().coords
             Coordinates:
-              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-              * lead     (lead) int32 1 2 3 4 5 6 7
-              * lon      (lon) float64 250.8 255.8 260.8 265.8
-              * lat      (lat) float64 -9.75 -4.75
+              * init       (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead       (lead) int32 1 2 3 4 5 6 7
+                validtime  (lead, init) object 1958-01-01 00:00:00 ... 2027-01-01 00:00:00
+              * lon        (lon) float64 250.8 255.8 260.8 265.8
+              * lat        (lat) float64 -9.75 -4.75
 
 
         """
@@ -791,6 +794,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             result = result.assign_coords(skill=["initialized"] + reference)
+        if "validtime" in result.coords:
+            del result.coords["validtime"]
         return result.squeeze()
 
     def _compute_uninitialized(
@@ -1384,6 +1389,8 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
+        if "validtime" in res.coords:
+            del res.coords["validtime"]
         return res
 
     def bootstrap(

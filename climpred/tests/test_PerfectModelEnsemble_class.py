@@ -5,6 +5,7 @@ import xarray as xr
 from climpred import PerfectModelEnsemble
 from climpred.exceptions import DatasetError
 from climpred.metrics import DETERMINISTIC_PM_METRICS
+from climpred.utils import convert_time_index
 
 xr.set_options(display_style="text")
 
@@ -458,6 +459,7 @@ def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, met
     assert actual.lead.attrs["units"] == "years"
 
 
+@pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
 @pytest.mark.parametrize(
     "init",
     [
@@ -467,9 +469,15 @@ def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, met
     ],
     ids=["ym", "mm", "dm"],
 )
-def test_PerfectModelEnsemble_init_time(init):
+def test_PerfectModelEnsemble_init_time(init, calendar):
     """Test to see PerfectModelEnsemble can be initialized and creates time
-    coordinate depending on init and lead."""
+    coordinate depending on init and lead for different calendars and lead units."""
+    init = convert_time_index(
+        init,
+        "init",
+        "init.init",
+        calendar=calendar,
+    )
     pm = PerfectModelEnsemble(init)
     initialized = pm.get_initialized()
     print(initialized.coords)

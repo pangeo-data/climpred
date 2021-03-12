@@ -2,6 +2,7 @@ import pytest
 import xarray as xr
 
 from climpred import HindcastEnsemble
+from climpred.utils import convert_time_index
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
@@ -303,6 +304,7 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     assert len(actual_pers_ref.dims) == len(actual_clim_ref.dims)
 
 
+@pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
 @pytest.mark.parametrize(
     "init",
     [
@@ -312,9 +314,15 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     ],
     ids=["ym", "mm", "dm"],
 )
-def test_hindcastEnsemble_init_time(init):
+def test_hindcastEnsemble_init_time(init, calendar):
     """Test to see hindcast ensemble can be initialized and creates time
-    coordinate depending on init and lead."""
+    coordinate depending on init and lead for different calendars and lead units."""
+    init = convert_time_index(
+        init,
+        "init",
+        "init.init",
+        calendar=calendar,
+    )
     hindcast = HindcastEnsemble(init)
     initialized = hindcast.get_initialized()
     print(initialized.coords["validtime"].isel(lead=2).to_index())

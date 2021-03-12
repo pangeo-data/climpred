@@ -197,34 +197,6 @@ def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
         )
 
 
-def test_verify_m2o_reference(hindcast_hist_obs_1d):
-    """Test that m2o comparison in references work."""
-    hindcast = hindcast_hist_obs_1d
-    # determinstic
-    hindcast.verify(
-        metric="mse",
-        comparison="m2o",
-        dim="init",
-        alignment="same_verif",
-        reference="uninitialized",
-    )
-    hindcast.verify(
-        metric="mse",
-        comparison="m2o",
-        dim="init",
-        alignment="same_verif",
-        reference="persistence",
-    )
-    # probabilistic
-    hindcast.verify(
-        metric="crps",
-        comparison="m2o",
-        reference="uninitialized",
-        dim="member",
-        alignment="same_verif",
-    )
-
-
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)

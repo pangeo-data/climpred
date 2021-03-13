@@ -36,6 +36,7 @@ jobs:
         run: conda list
       - name: Run tests
         run: |
+          python "import climpred; climpred.tutorial._cache_all()"
           if [[ ${{ matrix.python-version }} == 3.7 ]] ; then
             pytest --cov=climpred --cov-report=xml --verbose
           else

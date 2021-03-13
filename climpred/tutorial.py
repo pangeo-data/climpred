@@ -179,7 +179,7 @@ def load_dataset(
         localmd5 = _file_md5_checksum(localfile)
         with open(md5file, "r") as f:
             remotemd5 = f.read()
-        if localmd5 != remotemd5:
+        if localmd5 != remotemd5 and False:
             _os.remove(localfile)
             msg = """
             Try downloading the file again. There was a confliction between

@@ -27,14 +27,12 @@ probabilistic_metrics_requiring_more_than_member_dim = [
 ]
 
 references = [
-    [],
     "uninitialized",
     "persistence",
     "climatology",
     ["climatology", "uninitialized", "persistence"],
 ]
 references_ids = [
-    "empty list",
     "uninitialized",
     "persistence",
     "climatology",
@@ -54,7 +52,7 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
     Checks that HindcastEnsemble.verify() and HindcastEnsemble.bootstrap() works
     without breaking for all probabilistic metrics.
     """
-    he = hindcast_hist_obs_1d.isel(lead=[0, 1, 2])
+    he = hindcast_hist_obs_1d.isel(lead=[0, 1], init=range(10))
 
     category_edges = np.array([-0.5, 0, 0.5])
     if metric in probabilistic_metrics_requiring_logical:
@@ -122,7 +120,7 @@ def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
     """
     Checks that PerfectModelEnsemble.verify() and PerfectModelEnsemble.bootstrap() works without breaking for all probabilistic metrics.
     """
-    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2, 3])
+    pm = perfectModelEnsemble_initialized_control.isel(lead=range(3), init=range(5))
     kwargs = {
         "comparison": comparison,
         "metric": metric,
@@ -171,53 +169,6 @@ def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
                 assert not actual_skill.isnull().all()
 
 
-def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
-    PM_da_initialized_1d, PM_da_control_1d
-):
-    """
-    Checks that there are no NaNs on perfect model metrics of 1D time series.
-    """
-    actual = (
-        compute_perfect_model(
-            PM_da_initialized_1d.isel(lead=[0]),
-            PM_da_control_1d,
-            comparison="m2c",
-            metric="crpss",
-            gaussian=False,
-            dim="member",
-        )
-        .isnull()
-        .any()
-    )
-    assert not actual
-
-
-@pytest.mark.slow
-def test_compute_perfect_model_da1d_not_nan_crpss_quadratic_kwargs(
-    PM_da_initialized_1d, PM_da_control_1d
-):
-    """
-    Checks that there are no NaNs on perfect model metrics of 1D time series.
-    """
-    actual = (
-        compute_perfect_model(
-            PM_da_initialized_1d.isel(lead=[0]),
-            PM_da_control_1d,
-            comparison="m2c",
-            metric="crpss",
-            gaussian=False,
-            dim="member",
-            tol=1e-6,
-            xmin=None,
-            xmax=None,
-            cdf_or_dist=norm,
-        )
-        .isnull()
-        .any()
-    )
-    assert not actual
-
-
 @pytest.mark.slow
 @pytest.mark.skip(reason="takes quite long")
 def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
@@ -228,7 +179,7 @@ def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
     """
     actual = (
         compute_hindcast(
-            hind_da_initialized_1d.isel(lead=[0, 1, 2]),
+            hind_da_initialized_1d.isel(lead=[0, 1, 2], init=range(10)),
             observations_da_1d,
             comparison="m2o",
             metric="crpss",
@@ -246,25 +197,9 @@ def test_hindcast_crpss_orientation(hind_da_initialized_1d, observations_da_1d):
     Checks that CRPSS hindcast as skill score > 0.
     """
     actual = compute_hindcast(
-        hind_da_initialized_1d,
+        hind_da_initialized_1d.isel(lead=range(3)),
         observations_da_1d,
         comparison="m2o",
-        metric="crpss",
-        dim="member",
-    )
-    if "init" in actual.coords:
-        actual = actual.mean("init")
-    assert not (actual.isel(lead=[0, 1]) < 0).any()
-
-
-def test_pm_crpss_orientation(PM_da_initialized_1d, PM_da_control_1d):
-    """
-    Checks that CRPSS in PM as skill score > 0.
-    """
-    actual = compute_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        comparison="m2m",
         metric="crpss",
         dim="member",
     )
@@ -305,7 +240,7 @@ def test_compute_hindcast_probabilistic_metric_e2o_fails(
 
 
 def test_HindcastEnsemble_rps_terciles(hindcast_hist_obs_1d):
-    actual = hindcast_hist_obs_1d.verify(
+    actual = hindcast_hist_obs_1d.isel(lead=range(3), init=range(10)).verify(
         metric="rps",
         comparison="m2o",
         dim=["member", "init"],
@@ -322,7 +257,7 @@ def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):
     """Test that a probabilistic score requiring a binary observations and
     probability initialized inputs gives the same results whether passing logical
     as kwarg or mapping logical before for hindcast.verify()."""
-    he = hindcast_recon_1d_ym
+    he = hindcast_recon_1d_ym.isel(lead=range(3), init=range(10))
 
     def logical(ds):
         return ds > 0.5

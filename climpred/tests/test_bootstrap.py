@@ -55,7 +55,7 @@ def test_bootstrap_PM_lazy_results(
     perfectModelEnsemble_initialized_control, chunk, comparison, dim
 ):
     """Test bootstrap_perfect_model works lazily."""
-    pm = perfectModelEnsemble_initialized_control
+    pm = perfectModelEnsemble_initialized_control.isel(lead=range(3))
     if chunk:
         pm = pm.chunk({"lead": 2}).chunk({"time": -1})
     else:
@@ -76,7 +76,7 @@ def test_bootstrap_hindcast_lazy(
     chunk,
 ):
     """Test bootstrap_hindcast works lazily."""
-    he = hindcast_hist_obs_1d
+    he = hindcast_hist_obs_1d.isel(lead=range(3), init=range(10))
     if chunk:
         he = he.chunk({"lead": 2})
     else:
@@ -100,7 +100,7 @@ def test_bootstrap_hindcast_resample_dim(
 ):
     """Test bootstrap_hindcast when resampling member or init and alignment
     same_inits."""
-    hindcast_hist_obs_1d.bootstrap(
+    hindcast_hist_obs_1d.isel(lead=range(3), init=range(10)).bootstrap(
         iterations=ITERATIONS,
         comparison="e2o",
         metric="mse",
@@ -232,6 +232,7 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical_da(
 )
 def test_bootstrap_uninit_pm_ensemble_from_control_cftime_all_freq(init, control):
     """Test bootstrap_uninit_pm_ensemble_from_control_cftime for all freq data."""
+    init = init.isel(lead=range(3), init=range(5))
     uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(init, control)
     # lead and member identical
     for d in ["lead", "member"]:
@@ -301,25 +302,6 @@ def test_bootstrap_by_stacking_two_var_dataset(
     assert res["init"].size == res_cf["init"].size
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("comparison", ["m2o", "e2o"])
-@pytest.mark.parametrize("metric", ["rmse", "pearson_r"])
-@pytest.mark.parametrize("alignment", VALID_ALIGNMENTS)
-def test_bootstrap_hindcast_alignment(
-    hindcast_hist_obs_1d, alignment, metric, comparison
-):
-    """Test bootstrap_hindcast for all alginments when resampling member."""
-    dim = "init" if comparison == "e2o" else ["member", "init"]
-    hindcast_hist_obs_1d.isel(lead=[0, 1, 2]).bootstrap(
-        iterations=ITERATIONS,
-        comparison=comparison,
-        metric=metric,
-        resample_dim="member",
-        alignment=alignment,
-        dim=dim,
-    )
-
-
 def test_bootstrap_hindcast_raises_error(
     hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
 ):
@@ -366,7 +348,7 @@ def test_resample_size(PM_da_initialized_1d):
 @pytest.mark.parametrize("replace", [True, False])
 def test_resample_iterations_same(PM_da_initialized_1d, chunk, replace):
     """Test that both `resample_iterations` functions yield same result shape."""
-    ds = PM_da_initialized_1d
+    ds = PM_da_initialized_1d.isel(lead=range(3), init=range(5))
     if chunk:
         ds = ds.chunk()
     ds_r_idx = _resample_iterations_idx(ds, ITERATIONS, "member", replace=replace)
@@ -401,7 +383,7 @@ def test_chunk_before_resample_iterations_idx(PM_da_initialized_3d_full):
 @pytest.mark.parametrize("replace", [True, False])
 def test_resample_iterations_dim_max(PM_da_initialized_1d, chunk, replace):
     """Test that both `resample_iterations(dim_max=n)` gives n members."""
-    ds = PM_da_initialized_1d.copy()
+    ds = PM_da_initialized_1d.isel(lead=range(3), init=range(5))
     ds = ds.sel(member=list(ds.member.values) * 2)
     ds["member"] = np.arange(1, 1 + ds.member.size)
     if chunk:

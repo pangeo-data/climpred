@@ -22,14 +22,12 @@ comparison_dim_PM = [
 ]
 
 references = [
-    [],
     "uninitialized",
     "persistence",
     "climatology",
     ["climatology", "uninitialized", "persistence"],
 ]
 references_ids = [
-    "empty list",
     "uninitialized",
     "persistence",
     "climatology",
@@ -129,18 +127,7 @@ def test_verify_metric_kwargs(perfectModelEnsemble_initialized_control):
     )
 
 
-@pytest.mark.parametrize(
-    "reference",
-    [
-        "uninitialized",
-        ["uninitialized"],
-        "persistence",
-        None,
-        [],
-        "climatology",
-        ["uninitialized", "persistence", "climatology"],
-    ],
-)
+@pytest.mark.parametrize("reference", references, ids=references_ids)
 def test_verify_reference(perfectModelEnsemble_initialized_control, reference):
     """Test that verify works with references given."""
     pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
@@ -248,7 +235,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     PerfectModelEnsemble."""
     v = "SST"
     alignment = "maximize"
-    hindcast = hindcast_recon_1d_mm
+    hindcast = hindcast_recon_1d_mm.isel(lead=[0, 1])
     assert (
         not hindcast.verify(
             metric="acc", comparison="e2o", dim="init", alignment=alignment
@@ -267,34 +254,13 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
         .any()
     )
 
-    pm = pm.add_control(
-        init.isel(member=0, lead=0, drop=True)
-        .rename({"init": "time"})
-        .resample(time="1MS")
-        .interpolate("linear")
-    )
-
-    pm = pm.generate_uninitialized()
-    assert (
-        not pm.verify(
-            metric="acc",
-            comparison="m2e",
-            dim=["member", "init"],
-            reference=["uninitialized"],
-        )[v]
-        .isnull()
-        .any()
-    )
-
-    pm.bootstrap(iterations=2, metric="acc", comparison="m2e", dim=["member", "init"])
-
 
 def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     """Tests that no error is thrown when no control present
     when calling verify(reference=['uninitialized'])."""
     v = "tos"
     comparison = "m2e"
-    pm = PerfectModelEnsemble(PM_da_initialized_1d).load()
+    pm = PerfectModelEnsemble(PM_da_initialized_1d).isel(lead=[0, 1, 2])
     # verify needs to control
     skill = pm.verify(metric="mse", comparison=comparison, dim="init")
     assert not skill[v].isnull().any()
@@ -336,6 +302,7 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
 def test_verify_reference_same_dims(perfectModelEnsemble_initialized_control):
     """Test that verify returns the same dimensionality regardless of reference."""
     pm = perfectModelEnsemble_initialized_control.generate_uninitialized()
+    pm = pm.isel(lead=[0, 1, 2], init=[0, 1, 2])
     metric = "mse"
     comparison = "m2e"
     dim = "init"
@@ -369,9 +336,10 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     perfectModelEnsemble_initialized_control, comparison, metric, dim, reference
 ):
     """
-    Checks that PerfectModel.verify() and PerfectModel.bootstrap() for deterministic metrics is not NaN.
+    Checks that PerfectModel.verify() and PerfectModel.bootstrap() for
+    deterministic metrics is not NaN.
     """
-    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2])
+    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2], init=range(6))
     if isinstance(reference, str):
         reference = [reference]
     if metric == "contingency":

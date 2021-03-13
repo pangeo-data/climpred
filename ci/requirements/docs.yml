@@ -1,26 +1,22 @@
 name: climpred-docs
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python=3.8
-  - bottleneck
-  - cartopy>=0.18.0
   - importlib_metadata
-  - jupyterlab
-  - matplotlib
+  - matplotlib-base
   - nbsphinx
   - nc-time-axis
   - netcdf4
-  - numpy
-  - pandas
   - pygments==2.6.1
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
   - sphinx-copybutton
   - toolz
-  - tqdm
   - xarray>=0.16.1
+  - xskillscore>=0.0.18
   - pip
   - pip:
     # Install latest version of climpred.

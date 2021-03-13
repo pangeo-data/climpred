@@ -169,27 +169,6 @@ def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
                 assert not actual_skill.isnull().all()
 
 
-def test_compute_perfect_model_da1d_not_nan_crpss_quadratic(
-    PM_da_initialized_1d, PM_da_control_1d
-):
-    """
-    Checks that there are no NaNs on perfect model metrics of 1D time series.
-    """
-    actual = (
-        compute_perfect_model(
-            PM_da_initialized_1d.isel(lead=[0]),
-            PM_da_control_1d,
-            comparison="m2c",
-            metric="crpss",
-            gaussian=False,
-            dim="member",
-        )
-        .isnull()
-        .any()
-    )
-    assert not actual
-
-
 @pytest.mark.slow
 @pytest.mark.skip(reason="takes quite long")
 def test_compute_hindcast_da1d_not_nan_crpss_quadratic(
@@ -218,7 +197,7 @@ def test_hindcast_crpss_orientation(hind_da_initialized_1d, observations_da_1d):
     Checks that CRPSS hindcast as skill score > 0.
     """
     actual = compute_hindcast(
-        hind_da_initialized_1d.isel(lead=range(3), init=range(10)),
+        hind_da_initialized_1d.isel(lead=range(3)),
         observations_da_1d,
         comparison="m2o",
         metric="crpss",

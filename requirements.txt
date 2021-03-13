@@ -1,9 +1,9 @@
 xarray>=0.16.1
-dask
+dask<=2021.02.0
 matplotlib
 ipython
 toolz
 cftime>=1.1.2
-xskillscore>=0.0.18
+xskillscore>=0.0.19
 netcdf4
 nc-time-axis

@@ -82,10 +82,12 @@ def _get_datasets():
     for key in FILE_DESCRIPTIONS.keys():
         print(f"'{key}': {FILE_DESCRIPTIONS[key]}")
 
+
 def _cache_all():
     """Cache all datasets for pytest -n 4 woth pytest-xdist."""
     for d in aliases:
         load_dataset(d)
+
 
 def _initialize_proxy(proxy_dict):
     """Opens a proxy for firewalled servers so that the downloads can go
@@ -183,7 +185,7 @@ def load_dataset(
         localmd5 = _file_md5_checksum(localfile)
         with open(md5file, "r") as f:
             remotemd5 = f.read()
-        if localmd5 != remotemd5 and False:
+        if localmd5 != remotemd5:
             _os.remove(localfile)
             msg = """
             Try downloading the file again. There was a confliction between

@@ -37,7 +37,7 @@ jobs:
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
-        run: pytest -n 4 --durations=20--cov=climpred --cov-report=xml --verbose
+        run: pytest -n 4 --durations=20 --cov=climpred --cov-report=xml --verbose
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1.0.7
         with:

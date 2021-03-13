@@ -235,7 +235,7 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     PerfectModelEnsemble."""
     v = "SST"
     alignment = "maximize"
-    hindcast = hindcast_recon_1d_mm.isel(lead=[0, 1], init=slice(None, 10))
+    hindcast = hindcast_recon_1d_mm.isel(lead=[0, 1])
     assert (
         not hindcast.verify(
             metric="acc", comparison="e2o", dim="init", alignment=alignment

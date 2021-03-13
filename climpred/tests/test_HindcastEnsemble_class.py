@@ -108,7 +108,7 @@ def test_inplace(
 def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     """Test verify and bootstrap for different dim types."""
     kw = dict(iterations=2) if call == "bootstrap" else {}
-    assert getattr(hindcast_hist_obs_1d, call)(
+    assert getattr(hindcast_hist_obs_1d.isel(lead=range(3)), call)(
         metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
     )
 
@@ -120,7 +120,7 @@ def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
     metric = "rmse"
     dim = "init"
     comparison = "e2o"
-    hindcast = hindcast_hist_obs_1d
+    hindcast = hindcast_hist_obs_1d.isel(lead=range(3))
     hindcast._datasets["initialized"].attrs["test"] = "test"
     hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
     verify_kwargs = dict(
@@ -228,7 +228,7 @@ def test_calendar_matching_uninitialized(
 @pytest.mark.parametrize("metric", ["mse", "crps"])
 def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     """Test that verify returns the same dimensionality regardless of reference."""
-    hindcast = hindcast_hist_obs_1d
+    hindcast = hindcast_hist_obs_1d.isel(lead=range(3), init=range(10))
     if metric == "mse":
         comparison = "e2o"
         dim = "init"

@@ -36,7 +36,11 @@ jobs:
         run: conda list
       - name: Run tests
         run: |
-          pytest -n 4 --cov=climpred --cov-report=xml --verbose
+          if [[ ${{ matrix.python-version }} == 3.7 ]] ; then
+            pytest --cov=climpred --cov-report=xml --verbose
+          else
+            pytest -n 4 --cov=climpred --cov-report=xml --verbose
+          fi
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v1.0.7
         with:

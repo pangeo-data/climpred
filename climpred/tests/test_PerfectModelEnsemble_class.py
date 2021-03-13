@@ -339,7 +339,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     Checks that PerfectModel.verify() and PerfectModel.bootstrap() for
     deterministic metrics is not NaN.
     """
-    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2], init=[0, 1, 2])
+    pm = perfectModelEnsemble_initialized_control.isel(lead=[0, 1, 2], init=range(6))
     if isinstance(reference, str):
         reference = [reference]
     if metric == "contingency":

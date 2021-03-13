@@ -2130,6 +2130,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            threshold  float64 0.2
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
@@ -2141,7 +2142,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:    (lead: 10, threshold: 2)
         Coordinates:
           * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * threshold  (threshold) int64 1 2
+          * threshold  (threshold) float64 0.2 0.3
             skill      <U11 'initialized'
         Data variables:
             SST        (lead, threshold) float64 0.08712 0.005769 ... 0.1312 0.01923

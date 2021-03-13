@@ -93,7 +93,7 @@ def test_HindcastEnsemble_constant_forecasts(
 ):
     """Test that HindcastEnsemble.verify() returns a perfect score for a perfectly
     identical forecasts."""
-    he = hindcast_hist_obs_1d.isel(lead=[0, 1])
+    he = hindcast_hist_obs_1d.isel(lead=[0, 1], init=range(10))
     if how == "constant":  # replaces the variable with all 1's
         he = he.map(xr.ones_like)
     elif (

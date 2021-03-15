@@ -126,13 +126,14 @@ def test_bootstrap_pm_assign_attrs():
         assert actual["units"] == "None"
 
 
-def test_hindcast_assign_attrs():
+def test_hindcast_assign_attrs_old():
     """Test assigning attrs for compute_hindcast."""
     metric = "pearson_r"
     comparison = "e2o"
     da = load_dataset("CESM-DP-SST")
     control = load_dataset("ERSST")
     actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
+    # print(da.init.min().values, da.init.max().values)
     assert actual["metric"] == metric
     assert actual["comparison"] == comparison
     if metric == "pearson_r":

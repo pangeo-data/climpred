@@ -137,6 +137,8 @@ def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
     hindcast_bias_removed = hindcast.remove_bias(
         how=how, alignment=alignment, cross_validate=False
     )
+    assert "dayofyear" not in hindcast_bias_removed.get_initialized().coords
+    assert "skill" not in hindcast_bias_removed.get_initialized().coords
     bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
     hindcast_bias_removed_properly = hindcast.remove_bias(

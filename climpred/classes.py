@@ -567,6 +567,13 @@ class PredictionEnsemble:
             self._temporally_smoothed = tsmooth_kws
         return self
 
+    def _eager_coords(self):
+        """inplace"""
+        self._datasets["initialized"]["validtime"] = self._datasets["initialized"][
+            "validtime"
+        ].compute()
+        return self
+
 
 class PerfectModelEnsemble(PredictionEnsemble):
     """An object for "perfect model" climate prediction ensembles.

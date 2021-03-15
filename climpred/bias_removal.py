@@ -116,8 +116,9 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
 
     bias_removed_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
     bias_removed_hind = bias_removed_hind.squeeze()
-    if "dayofyear" in bias_removed_hind.coords:
-        del bias_removed_hind["dayofyear"]
+    for c in ["dayofyear", "skill"]:
+        if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
+            del bias_removed_hind[c]
     hindcast_bias_removed = hindcast.copy()
     hindcast_bias_removed._datasets["initialized"] = bias_removed_hind
     return hindcast_bias_removed

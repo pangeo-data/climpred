@@ -66,7 +66,7 @@ def _apply_metric_at_given_lead(
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
         lforecast = (
-            hind.sel(lead=lead)
+            hind.sel(lead=lead, drop=False)  # no drop before
             .where(hind["time"].isin(inits[lead]), drop=True)
             .drop_vars("lead")
         )
@@ -82,9 +82,34 @@ def _apply_metric_at_given_lead(
             lforecast, lverif, metric, comparison, dim
         )
 
-    lforecast["time"] = lverif[
-        "time"
-    ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
+    # print(lead)
+    # print(lforecast.coords)
+    # print(lverif.coords)
+    # use new time
+    if "validtime" in lforecast.coords:
+        lforecast = (
+            lforecast.swap_dims({"time": "validtime"})
+            .drop("time")
+            .rename({"validtime": "time"})
+        )
+        # print('lforecast',lforecast.time[:5], 'lverif',lverif)
+
+        # print('reference',reference)
+        if reference == "uninitialized":
+            pass
+            # print('equalized time')
+            # lforecast["time"] = lverif[
+            #    "time"
+            # ]
+    else:  # compute_hindcast line
+        lforecast["time"] = lverif[
+            "time"
+        ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
+
+    xr.testing.assert_identical(lforecast.time, lverif.time)
+
+    # xr.testing.assert_identical(lforecast.time,lverif.time)#, print(lforecast.time[:5], lverif.time[:5])
+
     dim = _rename_dim(
         dim, hind, verif
     )  # dim should be much clearer once time in initialized.coords

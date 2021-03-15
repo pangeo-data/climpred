@@ -32,6 +32,7 @@ from .utils import (
 def persistence(verif, inits, verif_dates, lead):
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])
+    lforecast["time"] = lverif.time
     return lforecast, lverif
 
 
@@ -51,13 +52,16 @@ def climatology(verif, inits, verif_dates, lead):
         climatology_forecast.time.isin(inits[lead]), drop=True
     )
     lverif = verif.sel(time=verif_dates[lead])
+    lforecast["time"] = lverif.time
     return lforecast, lverif
 
 
 def uninitialized(hist, verif, verif_dates, lead):
     """also called historical in some communities."""
+    # print(hist.coords)
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
+    # lforecast['time']=lverif.time
     return lforecast, lverif
 
 

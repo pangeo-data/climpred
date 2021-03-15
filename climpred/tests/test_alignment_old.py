@@ -1,4 +1,4 @@
-"""Identical to test_alignment_old.py but new implementation for HindcastEnsemble.verify()."""
+"""Identical to test_alignment.py but previous implementation for compute_hindcast."""
 
 import logging
 
@@ -10,30 +10,36 @@ from climpred import HindcastEnsemble
 from climpred.exceptions import CoordinateError
 from climpred.prediction import compute_hindcast
 
-verify_kw = dict(metric="mse", comparison="e2o", dim="init")
 
-
-def test_same_inits_initializations(hindcast_obs_1d_for_alignment, caplog):
+def test_same_inits_initializations_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime, caplog
+):
     """Tests that inits are identical at all leads for `same_inits` alignment."""
     with caplog.at_level(logging.INFO):
-        hindcast_obs_1d_for_alignment.verify(alignment="same_inits", **verify_kw)
+        compute_hindcast(
+            hind_ds_initialized_1d_cftime,
+            reconstruction_ds_1d_cftime,
+            alignment="same_inits",
+        )
         for i, record in enumerate(caplog.record_tuples):
             if i >= 2:
                 print(record)
                 assert "inits: 1954-01-01 00:00:00-2007-01-01 00:00:00" in record[2]
 
 
-def test_same_inits_verification_dates(hindcast_obs_1d_for_alignment, caplog):
+def test_same_inits_verification_dates_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime, caplog
+):
     """Tests that appropriate verifs are being used at each lead for `same_inits`
     alignment."""
     with caplog.at_level(logging.INFO):
         FIRST_INIT, LAST_INIT = 1954, 2007
-        hindcast_obs_1d_for_alignment.verify(
+        compute_hindcast(
+            hind_ds_initialized_1d_cftime,
+            reconstruction_ds_1d_cftime,
             alignment="same_inits",
-            **verify_kw,
         )
-        print(caplog.record_tuples)
-        nleads = hindcast_obs_1d_for_alignment.get_initialized()["lead"].size
+        nleads = hind_ds_initialized_1d_cftime["lead"].size
         for i, record in zip(
             np.arange(nleads + 2),
             caplog.record_tuples,
@@ -41,20 +47,19 @@ def test_same_inits_verification_dates(hindcast_obs_1d_for_alignment, caplog):
             if i >= 2:
                 print(record)
                 assert (
-                    f"verifs: {FIRST_INIT+i+1}-01-01 00:00:00-{LAST_INIT+i+1}-01-01"
+                    f"verifs: {FIRST_INIT+i}-01-01 00:00:00-{LAST_INIT+i}-01-01"
                     in record[2]
                 )
 
 
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs"])
-def test_disjoint_verif_time(small_initialized_da, small_verif_da, alignment):
+def test_disjoint_verif_time_old(small_initialized_da, small_verif_da, alignment):
     """Tests that alignment works with disjoint time in the verification
     data, i.e., non-continuous time sampling to verify against."""
-    hind = small_initialized_da.to_dataset(name="SST")
-    verif = small_verif_da.drop_sel(time=1992).to_dataset(name="SST")
-    hindcast = HindcastEnsemble(hind).add_observations(verif)
-    actual = hindcast.verify(alignment=alignment, **verify_kw)
-    assert actual.SST.notnull().all()
+    hind = small_initialized_da
+    verif = small_verif_da.drop_sel(time=1992)
+    actual = compute_hindcast(hind, verif, alignment=alignment, metric="mse")
+    assert actual.notnull().all()
     # hindcast inits: [1990, 1991, 1992, 1993]
     # verif times: [1990, 1991, 1993, 1994]
     a = hind.sel(init=[1990, 1992, 1993]).rename({"init": "time"})
@@ -65,14 +70,13 @@ def test_disjoint_verif_time(small_initialized_da, small_verif_da, alignment):
 
 
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs"])
-def test_disjoint_inits(small_initialized_da, small_verif_da, alignment):
+def test_disjoint_inits_old(small_initialized_da, small_verif_da, alignment):
     """Tests that alignment works with disjoint inits in the verification
     data, i.e., non-continuous initializing to verify with."""
-    hind = small_initialized_da.drop_sel(init=1991).to_dataset(name="SST")
-    verif = small_verif_da.to_dataset(name="SST")
-    hindcast = HindcastEnsemble(hind).add_observations(verif)
-    actual = hindcast.verify(alignment=alignment, **verify_kw)
-    assert actual.SST.notnull().all()
+    hind = small_initialized_da.drop_sel(init=1991)
+    verif = small_verif_da
+    actual = compute_hindcast(hind, verif, alignment=alignment, metric="mse")
+    assert actual.notnull().all()
     # hindcast inits: [1990, 1992, 1993]
     # verif times: [1990, 1991, 1992, 1993, 1994]
     a = hind.rename({"init": "time"})
@@ -82,23 +86,35 @@ def test_disjoint_inits(small_initialized_da, small_verif_da, alignment):
     assert actual == expected
 
 
-def test_same_verifs_verification_dates(hindcast_obs_1d_for_alignment, caplog):
+def test_same_verifs_verification_dates_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime, caplog
+):
     """Tests that verifs are identical at all leads for `same_verifs` alignment."""
     with caplog.at_level(logging.INFO):
-        hindcast_obs_1d_for_alignment.verify(alignment="same_verifs", **verify_kw)
+        compute_hindcast(
+            hind_ds_initialized_1d_cftime,
+            reconstruction_ds_1d_cftime,
+            alignment="same_verifs",
+        )
         for i, record in enumerate(caplog.record_tuples):
             if i >= 2:
                 print(record)
                 assert "verifs: 1964-01-01 00:00:00-2017-01-01 00:00:00" in record[2]
 
 
-def test_same_verifs_initializations(hindcast_obs_1d_for_alignment, caplog):
+def test_same_verifs_initializations_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime, caplog
+):
     """Tests that appropriate verifs are being used at each lead for `same_inits`
     alignment."""
     with caplog.at_level(logging.INFO):
         FIRST_INIT, LAST_INIT = 1964, 2017
-        hindcast_obs_1d_for_alignment.verify(alignment="same_verifs", **verify_kw)
-        nleads = hindcast_obs_1d_for_alignment.get_initialized()["lead"].size
+        compute_hindcast(
+            hind_ds_initialized_1d_cftime,
+            reconstruction_ds_1d_cftime,
+            alignment="same_verifs",
+        )
+        nleads = hind_ds_initialized_1d_cftime["lead"].size
         for i, record in zip(
             np.arange(nleads + 2),
             caplog.record_tuples,
@@ -106,51 +122,60 @@ def test_same_verifs_initializations(hindcast_obs_1d_for_alignment, caplog):
             if i >= 2:
                 print(record)
                 assert (
-                    f"inits: {FIRST_INIT-i-1}-01-01 00:00:00-{LAST_INIT-i-1}-01-01 00:00:00"
+                    f"inits: {FIRST_INIT-i}-01-01 00:00:00-{LAST_INIT-i}-01-01 00:00:00"
                     in record[2]
                 )
 
 
-def test_same_verifs_raises_error_when_not_possible(hindcast_obs_1d_for_alignment):
+def test_same_verifs_raises_error_when_not_possible_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime
+):
     """Tests that appropriate error is raised when a common set of verification dates
     cannot be found with the supplied initializations."""
-    hind = hindcast_obs_1d_for_alignment.isel(lead=slice(0, 3), init=[1, 3, 5, 7, 9])
+    hind = hind_ds_initialized_1d_cftime.isel(lead=slice(0, 3), init=[1, 3, 5, 7, 9])
     with pytest.raises(CoordinateError):
-        hind.verify(alignment="same_verifs", **verify_kw)
+        compute_hindcast(hind, reconstruction_ds_1d_cftime, alignment="same_verifs")
 
 
-def test_maximize_alignment_inits(hindcast_obs_1d_for_alignment, caplog):
+def test_maximize_alignment_inits_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime, caplog
+):
     """Tests that appropriate inits are selected for `maximize` alignment."""
     with caplog.at_level(logging.INFO):
-        hindcast_obs_1d_for_alignment.verify(alignment="maximize", **verify_kw)
+        compute_hindcast(
+            hind_ds_initialized_1d_cftime,
+            reconstruction_ds_1d_cftime,
+            alignment="maximize",
+        )
         # Add dummy values for the first two lines since they are just metadata.
         for i, record in zip(
-            np.concatenate(
-                ([0, 0], hindcast_obs_1d_for_alignment.get_initialized().lead.values)
-            ),
+            np.concatenate(([0, 0], hind_ds_initialized_1d_cftime.lead.values)),
             caplog.record_tuples,
         ):
             if i >= 1:
                 print(record)
                 assert (
-                    f"inits: 1954-01-01 00:00:00-{2016-i-1}-01-01 00:00:00" in record[2]
+                    f"inits: 1954-01-01 00:00:00-{2016-i}-01-01 00:00:00" in record[2]
                 )
 
 
-def test_maximize_alignment_verifs(hindcast_obs_1d_for_alignment, caplog):
+def test_maximize_alignment_verifs_old(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime, caplog
+):
     """Tests that appropriate verifs are selected for `maximize` alignment."""
     with caplog.at_level(logging.INFO):
-        hindcast_obs_1d_for_alignment.verify(alignment="maximize", **verify_kw)
+        compute_hindcast(
+            hind_ds_initialized_1d_cftime,
+            reconstruction_ds_1d_cftime,
+            alignment="maximize",
+        )
         # Add dummy values for the first two lines since they are just metadata.
         for i, record in zip(
-            np.concatenate(
-                ([0, 0], hindcast_obs_1d_for_alignment.get_initialized().lead.values)
-            ),
+            np.concatenate(([0, 0], hind_ds_initialized_1d_cftime.lead.values)),
             caplog.record_tuples,
         ):
             if i >= 1:
                 print(record)
                 assert (
-                    f"verifs: {1955+i+1}-01-01 00:00:00-2017-01-01 00:00:00"
-                    in record[2]
+                    f"verifs: {1955+i}-01-01 00:00:00-2017-01-01 00:00:00" in record[2]
                 )

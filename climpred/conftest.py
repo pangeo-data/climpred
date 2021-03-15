@@ -340,6 +340,16 @@ def hindcast_hist_obs_1d(
 
 
 @pytest.fixture()
+def hindcast_obs_1d_for_alignment(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime
+):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d_cftime)
+    hindcast = hindcast.add_observations(reconstruction_ds_1d_cftime)
+    return hindcast
+
+
+@pytest.fixture()
 def reconstruction_ds_1d_mm(reconstruction_ds_1d_cftime):
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.Dataset in monthly interpolated."""

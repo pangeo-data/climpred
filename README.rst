@@ -35,11 +35,11 @@ Verification of weather and climate forecasts.
 .. |ci|  image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
     :target: https://github.com/pangeo-data/climpred/actions/workflows/climpred_testing.yml
 
-.. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=master
-     :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=master
+.. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=main
+     :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=main
      :alt: Requirements Status
 
-.. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/master/graph/badge.svg
+.. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg
       :target: https://codecov.io/gh/pangeo-data/climpred
 
 .. |conda| image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
@@ -66,7 +66,7 @@ Verification of weather and climate forecasts.
 
 .. |gallery| image:: https://img.shields.io/badge/climpred-examples-ed7b0e.svg
     :alt: climpred gallery
-    :target: https://mybinder.org/v2/gh/pangeo-data/climpred/master?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb
+    :target: https://mybinder.org/v2/gh/pangeo-data/climpred/main?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb
 
 .. |workshop| image:: https://img.shields.io/badge/climpred-workshop-f5a252
     :alt: climpred workshop

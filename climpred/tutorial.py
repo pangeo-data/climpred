@@ -83,6 +83,12 @@ def _get_datasets():
         print(f"'{key}': {FILE_DESCRIPTIONS[key]}")
 
 
+def _cache_all():
+    """Cache all datasets for pytest -n 4 woth pytest-xdist."""
+    for d in aliases:
+        load_dataset(d)
+
+
 def _initialize_proxy(proxy_dict):
     """Opens a proxy for firewalled servers so that the downloads can go
     through.

@@ -109,7 +109,7 @@ def test_inplace(
 def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     """Test verify and bootstrap for different dim types."""
     kw = dict(iterations=2) if call == "bootstrap" else {}
-    assert getattr(hindcast_hist_obs_1d, call)(
+    assert getattr(hindcast_hist_obs_1d.isel(lead=range(3)), call)(
         metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
     )
 
@@ -121,7 +121,7 @@ def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
     metric = "rmse"
     dim = "init"
     comparison = "e2o"
-    hindcast = hindcast_hist_obs_1d
+    hindcast = hindcast_hist_obs_1d.isel(lead=range(3))
     hindcast._datasets["initialized"].attrs["test"] = "test"
     hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
     verify_kwargs = dict(
@@ -201,34 +201,6 @@ def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
         )
 
 
-def test_verify_m2o_reference(hindcast_hist_obs_1d):
-    """Test that m2o comparison in references work."""
-    hindcast = hindcast_hist_obs_1d
-    # determinstic
-    hindcast.verify(
-        metric="mse",
-        comparison="m2o",
-        dim="init",
-        alignment="same_verif",
-        reference="uninitialized",
-    )
-    hindcast.verify(
-        metric="mse",
-        comparison="m2o",
-        dim="init",
-        alignment="same_verif",
-        reference="persistence",
-    )
-    # probabilistic
-    hindcast.verify(
-        metric="crps",
-        comparison="m2o",
-        reference="uninitialized",
-        dim="member",
-        alignment="same_verif",
-    )
-
-
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
@@ -260,7 +232,7 @@ def test_calendar_matching_uninitialized(
 @pytest.mark.parametrize("metric", ["mse", "crps"])
 def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     """Test that verify returns the same dimensionality regardless of reference."""
-    hindcast = hindcast_hist_obs_1d
+    hindcast = hindcast_hist_obs_1d.isel(lead=range(3), init=range(10))
     if metric == "mse":
         comparison = "e2o"
         dim = "init"

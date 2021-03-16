@@ -110,6 +110,22 @@ def test_bootstrap_hindcast_resample_dim(
     )
 
 
+@pytest.mark.parametrize("reference", [None, "uninitialized"])
+@pytest.mark.parametrize("resample_dim", ["member", "init"])
+def test_bootstrap_hindcast_(hindcast_hist_obs_1d, resample_dim, reference):
+    """Test bootstrap_hindcast when resampling member or init and alignment
+    same_inits."""
+    hindcast_hist_obs_1d.bootstrap(
+        iterations=ITERATIONS,
+        comparison="e2o",
+        metric="mse",
+        resample_dim=resample_dim,
+        alignment="same_inits",
+        dim="init",
+        reference=reference,
+    )
+
+
 def bootstrap_uninit_pm_ensemble_from_control(init_pm, control):
     """
     Create a pseudo-ensemble from control run. Deprecated in favor of

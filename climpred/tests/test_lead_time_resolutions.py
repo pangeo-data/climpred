@@ -106,7 +106,15 @@ def test_seasonal_resolution_hindcast(monthly_initialized, monthly_obs):
     seasonal_hindcast = seasonal_hindcast.isel(lead=slice(0, None, 3))
     seasonal_obs = monthly_obs.rolling(time=3, center=True).mean().dropna(dim="time")
     seasonal_hindcast.lead.attrs["units"] = "seasons"
-    assert compute_hindcast(seasonal_hindcast, seasonal_obs).all()
+    from climpred import HindcastEnsemble
+
+    he = HindcastEnsemble(seasonal_hindcast.to_dataset(name="var")).add_observations(
+        seasonal_obs.to_dataset(name="var")
+    )
+    assert he.verify(
+        metric="acc", comparison="e2o", dim="init", alignment="same_verifs"
+    )["var"].all()
+    # assert compute_hindcast(seasonal_hindcast, seasonal_obs).all()
 
 
 def test_seasonal_resolution_perfect_model(monthly_initialized, monthly_obs):

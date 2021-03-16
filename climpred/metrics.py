@@ -1727,8 +1727,9 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 4.12e-05 -9.068e-06 ... -0.0002959 -0.0002645
+            SST      (lead) float64 0.0 5.06e-06 -2.2e-05 ... -0.0002526 -0.0002661
     """
+    # unsure by numbers changed here
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
 
@@ -1919,8 +1920,9 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.8275 0.8342 0.8272 0.8514 ... 0.8469 0.8131 0.8085
+            SST      (lead) float64 0.8239 0.8326 0.8281 0.8515 ... 0.8461 0.8126 0.8101
     """
+    # unsure why bias had to change
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
         forecast, verif, dim=dim, **metric_kwargs
@@ -2129,7 +2131,8 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            time     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1963-01-01 00:00:00 ... 2014-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
@@ -2228,7 +2231,8 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            time     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1963-01-01 00:00:00 ... 2014-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 0.1703 0.03346 0.06889 ... 0.05428 0.1638
@@ -2236,6 +2240,12 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
     """
     dim = _remove_member_from_dim_or_raise(dim)
     # switch positions because xskillscore.crps_ensemble(verif, forecasts)
+    # import xarray as xr
+    # print('inside crps',verif.dims, forecast.dims, dim)
+    # print(verif.coords, '\n',forecast.coords)
+    # if 'lead' in forecast.coords and 'lead' not in verif.coords:
+    # forecast, verif = xr.broadcast(forecast,verif, exclude=('member'))
+    #    verif = verif.isel(lead=[0]*forecast.lead.size).assign_coords(lead=forecast.lead)
     return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2335,7 +2345,8 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            time     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1963-01-01 00:00:00 ... 2014-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 0.3291 0.8421 0.6092 ... 0.7526 0.7702 0.5126
@@ -2450,7 +2461,8 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            time     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1963-01-01 00:00:00 ... 2014-01-01 00:00:00
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
@@ -2476,8 +2488,8 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         verif, mu, ensemble_spread, dim=dim_no_member, **metric_kwargs
     )
     res = 1 - crps_h / crps_r
-    if "time" in res.dims:
-        res = res.rename({"time": "init"})
+    # if "time" in res.dims:
+    #    res = res.rename({"time": "init"})
     return res
 
 
@@ -2699,6 +2711,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
     assert "member" not in forecast.dims  # requires probabilities
+    # print('for xs.reliability',forecast.dims,verif.dims,dim)
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2811,6 +2824,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill    <U11 'initialized'
+            time     (lead, init) object 1965-01-01 00:00:00 ... 2025-01-01 00:00:00
         Data variables:
             SST      (lead, init) float64 0.2696 0.2696 0.2696 ... 0.2311 0.2311 0.2311
 

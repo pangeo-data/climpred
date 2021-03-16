@@ -43,7 +43,7 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
     leads = forecast["lead"].values
 
     # `init` renamed to `time` in compute functions.
-    all_inits = forecast["time"]
+    all_inits = forecast["init"]
     all_verifs = verif["time"]
 
     # If aligning reference='uninitialized', need to account for potential differences
@@ -53,21 +53,31 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
         all_verifs = np.sort(list(set(all_verifs.data) & set(hist["time"].data)))
         all_verifs = xr.DataArray(all_verifs, dims=["time"], coords=[all_verifs])
 
+    # print('all_verifs',all_verifs)
+    # print('all_inits',all_inits)
+
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
 
-    if "validtime" not in forecast.coords:
+    if "time" not in forecast.coords:
+        # print('_construct_init_lead_matrix')
         init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
+        init_lead_matrix["lead"].attrs = forecast.lead.attrs
         # print(init_lead_matrix)
     else:
-        init_lead_matrix_new = forecast["validtime"].drop(
-            "validtime"
-        )  # .rename({'init':'time'})
+        # print('dont _construct_init_lead_matrix, use existing')
+        # dim = "time"
+        # not_dim = "init"
+        init_lead_matrix_new = forecast["time"].drop(
+            "time"
+        )  # .drop(not_dim)  # .rename({'init':'time'})
         # print(init_lead_matrix_new)
-        init_lead_matrix_new["lead"].attrs = {}  # init_lead_matrix.lead
+        # init_lead_matrix_new["lead"].attrs = forecast.lead.attrs
         init_lead_matrix_new = init_lead_matrix_new.rename(None)
         init_lead_matrix = init_lead_matrix_new
         # print(init_lead_matrix_new.name,'\n', init_lead_matrix.name)
+    # dim = 'time'
+    # print('ilm',init_lead_matrix.coords, init_lead_matrix.dims)
 
     if dask.is_dask_collection(init_lead_matrix):
         init_lead_matrix = init_lead_matrix.compute()
@@ -78,7 +88,7 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
     if "persistence" in reference:
         union_with_verifs = all_inits.isin(all_verifs)
         init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
-    valid_inits = init_lead_matrix["time"]
+    valid_inits = init_lead_matrix["init"]
 
     if "same_init" in alignment:
         return _same_inits_alignment(
@@ -100,16 +110,17 @@ def _maximize_alignment(init_lead_matrix, all_verifs, leads):
     """
     # Move row-wise and find all forecasted times that align with verification dates at
     # the given lead.
+    dim = "init"  # was time
     verify_with_observations = init_lead_matrix.isin(all_verifs)
     lead_dependent_verif_dates = init_lead_matrix.where(verify_with_observations)
     # Probably a way to do this more efficiently since we're doing essentially
     # the same thing at each step.
     verif_dates = {
-        lead: lead_dependent_verif_dates.sel(lead=lead).dropna("time").to_index()
+        lead: lead_dependent_verif_dates.sel(lead=lead).dropna(dim).to_index()
         for lead in leads
     }
     inits = {
-        lead: lead_dependent_verif_dates.sel(lead=lead).dropna("time")["time"]
+        lead: lead_dependent_verif_dates.sel(lead=lead).dropna(dim)[dim]
         for lead in leads
     }
     return inits, verif_dates
@@ -121,11 +132,12 @@ def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, f
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
+    dim = "init"  # was time
     verifies_at_all_leads = init_lead_matrix.isin(all_verifs).all("lead")
     inits = valid_inits.where(verifies_at_all_leads, drop=True)
     inits = {lead: inits for lead in leads}
     verif_dates = {
-        lead: shift_cftime_index(inits[lead], "time", n, freq)
+        lead: shift_cftime_index(inits[lead], dim, n, freq)
         for (lead, n) in zip(leads, n)
     }
     return inits, verif_dates
@@ -137,8 +149,9 @@ def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, 
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
+    dim = "init"  # was time
     common_set_of_verifs = [
-        i for i in all_verifs if (i == init_lead_matrix).any("time").all("lead")
+        i for i in all_verifs if (i == init_lead_matrix).any(dim).all("lead")
     ]
     if not common_set_of_verifs:
         raise CoordinateError(
@@ -147,7 +160,7 @@ def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, 
             "'same_inits' or 'maximize'."
         )
     # Force to CFTimeIndex for consistency with `same_inits`
-    verif_dates = xr.concat(common_set_of_verifs, "time").to_index()
+    verif_dates = xr.concat(common_set_of_verifs, dim).to_index()
     inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
     inits = {
         lead: valid_inits.where(
@@ -177,12 +190,13 @@ def _construct_init_lead_matrix(forecast, n, freq, leads):
             leads.
     """
     # Note that `init` is renamed to `time` in compute functions.
+    dim = "init"  # was time
     init_lead_matrix = xr.concat(
         [
             xr.DataArray(
-                shift_cftime_index(forecast, "time", n, freq),
-                dims=["time"],
-                coords=[forecast["time"]],
+                shift_cftime_index(forecast, dim, n, freq),
+                dims=[dim],
+                coords=[forecast[dim]],
             )
             for n in n
         ],

@@ -52,6 +52,7 @@ def _mean_bias_removal_cross_validate(hind, bias, dim):
     logging.info("mean bias removal:")
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init
+        # print('bias.init',bias.init)
         hind_drop_init_where_bias = hind_drop_init.where(bias.init)
         logging.info(
             f"initialization {init}: remove bias from"
@@ -101,13 +102,18 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
 
     bias_metric = Metric("bias", bias_func, True, False, 1)
 
-    bias = hindcast.verify(
-        metric=bias_metric,
-        comparison="e2o",
-        dim="init",
-        alignment=alignment,
-        **metric_kwargs,
-    ).squeeze()
+    bias = (
+        hindcast.verify(
+            metric=bias_metric,
+            comparison="e2o",
+            dim="init",
+            alignment=alignment,
+            **metric_kwargs,
+        )
+        .squeeze()
+        .drop("skill")
+    )
+    bias = bias.drop("time").dropna("init")  # time distracts here
 
     if cross_validate:
         mean_bias_func = _mean_bias_removal_cross_validate

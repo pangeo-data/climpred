@@ -160,7 +160,7 @@ class PredictionEnsemble:
         else:
             return _display_metadata(self)
 
-    def plot(self, variable=None, ax=None, show_members=False, cmap=None):
+    def plot(self, variable=None, ax=None, show_members=False, cmap=None, x="time"):
         """Plot datasets from PredictionEnsemble.
 
         .. note::
@@ -186,13 +186,23 @@ class PredictionEnsemble:
             if cmap is None:
                 cmap = "viridis"
             return plot_lead_timeseries_hindcast(
-                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+                self,
+                variable=variable,
+                ax=ax,
+                show_members=show_members,
+                cmap=cmap,
+                x=x,
             )
         elif self.kind == "perfect":
             if cmap is None:
                 cmap = "tab10"
             return plot_ensemble_perfect_model(
-                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+                self,
+                variable=variable,
+                ax=ax,
+                show_members=show_members,
+                cmap=cmap,
+                x=x,
             )
 
     def _math(self, other, operator):
@@ -481,20 +491,19 @@ class PredictionEnsemble:
 
             >>> HindcastEnsemble_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
             Coordinates:
-              * init       (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-              * lead       (lead) int32 1 2 3 4 5 6 7 8 9
-                validtime  (lead, init) object 1956-01-01 00:00:00 ... 2027-01-01 00:00:00
-              * lon        (lon) float64 250.8 254.8 258.8 262.8
-              * lat        (lat) float64 -9.75 -4.75
+              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9
+                time     (lead, init) object 1956-01-01 00:00:00 ... 2027-01-01 00:00:00
+              * lon      (lon) float64 250.8 254.8 258.8 262.8
+              * lat      (lat) float64 -9.75 -4.75
 
             >>> HindcastEnsemble_3D.smooth('goddard2013').get_initialized().coords
             Coordinates:
-              * init       (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-              * lead       (lead) int32 1 2 3 4 5 6 7
-                validtime  (lead, init) object 1958-01-01 00:00:00 ... 2027-01-01 00:00:00
-              * lon        (lon) float64 250.8 255.8 260.8 265.8
-              * lat        (lat) float64 -9.75 -4.75
-
+              * init     (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead     (lead) int32 1 2 3 4 5 6 7
+                time     (lead, init) object 1958-01-01 00:00:00 ... 2027-01-01 00:00:00
+              * lon      (lon) float64 250.8 255.8 260.8 265.8
+              * lat      (lat) float64 -9.75 -4.75
 
         """
         if not smooth_kws:
@@ -668,7 +677,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         # NOTE: These should all be decorators.
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets["initialized"], xobj)
+        # match_initialized_dims(self._datasets["initialized"], xobj)
         match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
@@ -694,9 +703,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
             self._datasets["initialized"], self._datasets["control"]
         )
-        if "validtime" in uninit.coords:
-            if "member" in uninit.validtime.dims:  # validtime not member dependent
-                uninit.coords["validtime"] = uninit.validtime.isel(member=0, drop=True)
+        # uninit = add_time_from_init_lead(uninit)
+        uninit.coords["time"] = self.get_initialized().coords["time"]
+        # if "time" in uninit.coords:
+        #    if "member" in uninit.time.dims:  # time not member dependent
+        #        uninit.coords["time"] = uninit.time.isel(member=0, drop=True)
         datasets = self._datasets.copy()
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="perfect")
@@ -1150,7 +1161,7 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets["initialized"], xobj)
+        # match_initialized_dims(self._datasets["initialized"], xobj)
         match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
@@ -1172,7 +1183,7 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if isinstance(xobj, xr.DataArray):
             xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets["initialized"], xobj, uninitialized=True)
+        # match_initialized_dims(self._datasets["initialized"], xobj, uninitialized=True)
         match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
@@ -1303,7 +1314,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 hind, metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
-            forecast = forecast.rename({"init": "time"})
+            # forecast = forecast.rename({"init": "time"})
             inits, verif_dates = return_inits_and_verif_dates(
                 forecast,
                 verif,
@@ -1363,8 +1374,8 @@ class HindcastEnsemble(PredictionEnsemble):
                         ref = ref.mean("member")
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
-            if "time" in result.dims:
-                result = result.rename({"time": "init"})
+            if "time" in result.dims and "init" in result.coords:
+                result = result.swap_dims({"time": "init"})  # .rename({"time": "init"})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=["initialized"] + reference)
             return result.squeeze()
@@ -1396,8 +1407,13 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
-        if "validtime" in res.coords:
-            del res.coords["validtime"]
+        # if "validtime" in res.coords:
+        #    del res.coords["validtime"]
+        if "time" in res.dims and "init" in res.coords:
+            res = res.swap_dims({"time": "init"})
+        if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
+            res = res.rename({"time": "init"})
+            res.coords["time"] = self.get_initialized().time
         return res
 
     def bootstrap(
@@ -1496,7 +1512,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
+                SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.9221 0.9221
             Attributes:
                 prediction_skill:            calculated by climpred https://climpred.read...
                 number_of_initializations:   61

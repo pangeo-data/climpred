@@ -139,6 +139,7 @@ def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
     )
     assert "dayofyear" not in hindcast_bias_removed.get_initialized().coords
     assert "skill" not in hindcast_bias_removed.get_initialized().coords
+
     bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
     hindcast_bias_removed_properly = hindcast.remove_bias(
@@ -327,8 +328,8 @@ def test_hindcastEnsemble_init_time(init, calendar):
     )
     hindcast = HindcastEnsemble(init)
     initialized = hindcast.get_initialized()
-    print(initialized.coords["validtime"].isel(lead=2).to_index())
-    time_name = "validtime"
+    time_name = "time"
+    print(initialized.coords[time_name].isel(lead=2).to_index())
     assert time_name in initialized.coords
     # multi-dim coord time
     for d in ["init", "lead"]:

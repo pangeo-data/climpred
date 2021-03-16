@@ -496,5 +496,5 @@ def add_time_from_init_lead(ds):
         ds = ds.copy()  # otherwise inplace coords setting
         if dask.is_dask_collection(times):
             times = times.compute()
-        ds.coords["validtime"] = times
+        ds.coords["time"] = times
     return ds

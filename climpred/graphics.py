@@ -205,7 +205,7 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, ax=None, show_members=False, cmap="viridis"
+    he, variable=None, ax=None, show_members=False, cmap="viridis", x="time"
 ):
     """Plot datasets from HindcastEnsemble.
 
@@ -262,7 +262,7 @@ def plot_lead_timeseries_hindcast(
             lead_alpha = 0.5
         h.plot(
             ax=ax,
-            x="validtime",
+            x=x,
             hue="member",
             color=cmap(i),
             label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
@@ -291,7 +291,7 @@ def plot_lead_timeseries_hindcast(
 
 
 def plot_ensemble_perfect_model(
-    pm, variable=None, ax=None, show_members=False, cmap="tab10"
+    pm, variable=None, ax=None, show_members=False, cmap="tab10", x="time"
 ):
     """Plot datasets from PerfectModelEnsemble.
 
@@ -349,21 +349,17 @@ def plot_ensemble_perfect_model(
             # plot ensemble mean, first white then color to highlight ensemble mean
             if uninitialized_present:
                 dsu.mean("member").plot(
-                    x="validtime", ax=ax, color="white", lw=3, zorder=8, alpha=0.6
+                    x=x, ax=ax, color="white", lw=3, zorder=8, alpha=0.6
                 )
                 dsu.mean("member").plot(
-                    x="validtime", ax=ax, color=control_color, lw=2, zorder=9, alpha=0.6
+                    x=x, ax=ax, color=control_color, lw=2, zorder=9, alpha=0.6
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
-            dsi.mean("member").plot(
-                x="validtime", ax=ax, color="white", lw=3, zorder=10
-            )
-            dsi.mean("member").plot(
-                x="validtime", ax=ax, color=cmap(ii), lw=2, zorder=11
-            )
+            dsi.mean("member").plot(x=x, ax=ax, color="white", lw=3, zorder=10)
+            dsi.mean("member").plot(x=x, ax=ax, color=cmap(ii), lw=2, zorder=11)
         dsi.plot(
             ax=ax,
-            x="validtime",
+            x=x,
             hue="member",
             color=cmap(ii),
             alpha=member_alpha,
@@ -373,7 +369,7 @@ def plot_ensemble_perfect_model(
         if uninitialized_present:
             dsu.plot(
                 ax=ax,
-                x="validtime",
+                x=x,
                 hue="member",
                 color=control_color,
                 alpha=member_alpha / 2,

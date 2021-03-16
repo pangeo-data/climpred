@@ -464,6 +464,7 @@ def _bootstrap_hindcast_over_init_dim(
         if "uninitialized" in reference:
             # generate uninitialized ensemble from hist
             uninit_hind = resample_uninit(hind, hist)
+            # create time coords anew?
             # compute uninit skill
             bootstrapped_uninit_skill.append(
                 compute(
@@ -476,6 +477,7 @@ def _bootstrap_hindcast_over_init_dim(
                     **metric_kwargs,
                 )
             )
+            # print(bootstrapped_uninit_skill[-1].init.size)
         if "persistence" in reference:
             pers_skill.append(
                 compute_persistence(
@@ -785,34 +787,63 @@ def bootstrap_compute(
                     )
         else:  # hindcast
             if "uninitialized" in reference:
+                if "member" not in hist.coords:
+                    hist["member"] = np.arange(hist.member.size)
+
                 uninit_hind = resample_uninit(hind, hist)
                 if dask.is_dask_collection(uninit_hind):
                     # too minimize tasks: ensure uninit_hind get pre-computed
                     # maybe not needed
                     uninit_hind = uninit_hind.compute().chunk()
-                bootstrapped_uninit = resample_func(
-                    uninit_hind, iterations, resample_dim
-                )
-                bootstrapped_uninit = bootstrapped_uninit.isel(
-                    member=slice(None, hind.member.size)
-                )
-                bootstrapped_uninit["lead"] = hind["lead"]
-                if dask.is_dask_collection(bootstrapped_uninit):
-                    bootstrapped_uninit = _maybe_auto_chunk(
-                        bootstrapped_uninit.chunk({"lead": 1}),
-                        ["iteration"] + chunking_dims,
+                if isHindcast:
+                    # print('resample hist', resample_dim)
+                    bootstrapped_uninit = resample_func(hist, iterations, resample_dim)
+                if not isHindcast:
+                    bootstrapped_uninit = resample_func(
+                        uninit_hind, iterations, resample_dim
                     )
+                    bootstrapped_uninit = bootstrapped_uninit.isel(
+                        member=slice(None, hind.member.size)
+                    )
+                    bootstrapped_uninit["lead"] = hind["lead"]
+                    bootstrapped_uninit.coords["time"] = hind.coords["time"]
+                    if dask.is_dask_collection(bootstrapped_uninit):
+                        bootstrapped_uninit = _maybe_auto_chunk(
+                            bootstrapped_uninit.chunk({"lead": 1}),
+                            ["iteration"] + chunking_dims,
+                        )
 
         if "uninitialized" in reference:
-            bootstrapped_uninit_skill = compute(
-                bootstrapped_uninit,
-                verif,
-                metric=metric,
-                comparison="m2o" if isHindcast else comparison,
-                dim=dim,
-                add_attrs=False,
-                **metric_kwargs,
-            )
+            if not isHindcast:
+                # print('bootstrapped_uninit',bootstrapped_uninit.dims, bootstrapped_uninit.coords)
+                bootstrapped_uninit_skill = compute(
+                    bootstrapped_uninit,
+                    verif,
+                    metric=metric,
+                    comparison="m2o" if isHindcast else comparison,
+                    dim=dim,
+                    add_attrs=False,
+                    **metric_kwargs,
+                )
+            if isHindcast:
+                from climpred.reference import compute_uninitialized
+
+                # print('\n\n bootstrapped_uninit',bootstrapped_uninit.coords, 'dim', dim)
+                bootstrapped_uninit_skill = compute_uninitialized(
+                    hind,
+                    bootstrapped_uninit,
+                    verif,
+                    metric=metric,
+                    comparison="m2o",
+                    dim=dim,
+                    **metric_kwargs,
+                )
+                if "time" in bootstrapped_uninit_skill.dims:
+                    bootstrapped_uninit_skill = bootstrapped_uninit_skill.sortby(
+                        bootstrapped_uninit_skill.time
+                    )
+                # print('bootstrapped_uninit_skill',bootstrapped_uninit_skill.coords)
+            # print('\n bootstrapped_uninit_skill.init.size',bootstrapped_uninit_skill.init.size,'\n')
             # take mean if 'm2o' comparison forced before
             if isHindcast and comparison != __m2o:
                 bootstrapped_uninit_skill = bootstrapped_uninit_skill.mean("member")
@@ -820,7 +851,7 @@ def bootstrap_compute(
         bootstrapped_hind = resample_func(hind, iterations, resample_dim)
         if dask.is_dask_collection(bootstrapped_hind):
             bootstrapped_hind = bootstrapped_hind.chunk({"member": -1})
-
+        # print('compute bootstrapped_init_skill', metric_kwargs)
         bootstrapped_init_skill = compute(
             bootstrapped_hind,
             verif,
@@ -830,6 +861,7 @@ def bootstrap_compute(
             dim=dim,
             **metric_kwargs,
         )
+        # print('\n bootstrapped_init_skill.init.size',bootstrapped_init_skill.init.size,'\n')
         if "persistence" in reference:
             pers_skill = compute_persistence(
                 hind,
@@ -847,6 +879,32 @@ def bootstrap_compute(
                     **metric_kwargs_reference,
                 )
             else:  # member no need to calculate all again
+                # print('pers_skill',pers_skill.dims,pers_skill.coords,'\n bootstrapped_init_skill', bootstrapped_init_skill.dims,bootstrapped_init_skill.coords)
+                # print(bootstrapped_init_skill.init)
+                # print(bootstrapped_init_skill.swap_dims({'init':'time'}))
+                if "init" in pers_skill.dims and "init" in bootstrapped_init_skill.dims:
+                    if pers_skill.init.size != bootstrapped_init_skill.init.size:
+                        pers_skill["init"] = pers_skill.coords["time"]
+                        assert isinstance(
+                            pers_skill.init.to_index(),
+                            xr.coding.cftimeindex.CFTimeIndex,
+                        )
+                        bootstrapped_init_skill[
+                            "init"
+                        ] = bootstrapped_init_skill.coords["time"]
+                        assert isinstance(
+                            bootstrapped_init_skill.init.to_index(),
+                            xr.coding.cftimeindex.CFTimeIndex,
+                        )
+                        # print('init',bootstrapped_init_skill.init.to_index())#,bootstrapped_init_skill.time.to_index())
+                        # print('pers',pers_skill.init.to_index())
+                        union = bootstrapped_init_skill.init.to_index().intersection(
+                            pers_skill.init.to_index()
+                        )
+                        # print('union',union)
+                        # print('init',bootstrapped_init_skill.init.to_index())
+                        # print('pers',pers_skill.init.to_index())
+                        pers_skill = pers_skill.sel(init=union)
                 bootstrapped_pers_skill, _ = xr.broadcast(
                     pers_skill, bootstrapped_init_skill
                 )
@@ -888,6 +946,7 @@ def bootstrap_compute(
             bootstrapped_pers_skill, ci_low_pers, ci_high_pers
         )
 
+    # assert bootstrapped_uninit_skill.coords.to_dataset().identical(bootstrapped_init_skill.coords.to_dataset()), print('uninit',bootstrapped_uninit_skill.dims,bootstrapped_uninit_skill.coords,'\n init', bootstrapped_init_skill.dims, bootstrapped_init_skill.coords)
     # pvalue whether uninit or pers better than init forecast
     if "uninitialized" in reference:
         p_unin_over_init = _pvalue_from_distributions(  # noqa: F841
@@ -919,10 +978,12 @@ def bootstrap_compute(
         results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
         skill="initialized",
     )
+    # print(init_skill.init.size)
 
     if reference != []:
         for r in reference:
             ref_skill = eval(f"{r[:4]}_skill")
+            # print(r,ref_skill.init.size)
             ref_p = eval(f"p_{r[:4]}_over_init")
             ref_ci_low = eval(f"{r[:4]}_ci").isel(quantile=0, drop=True)
             ref_ci_high = eval(f"{r[:4]}_ci").isel(quantile=1, drop=True)

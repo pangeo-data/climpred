@@ -225,7 +225,7 @@ def test_persistence_dim(perfectModelEnsemble_initialized_control):
 
     actual = pm._compute_persistence(metric=metric, dim=dim)
     assert "lon" not in actual.dims
-    assert "init" in actual.dims
+    assert "init" in actual.dims or "time" in actual.dims, print(actual.dims)
 
     actual = pm.verify(
         metric=metric,
@@ -270,12 +270,14 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
 
     pm = pm.add_control(
         init.isel(member=0, lead=0, drop=True)
-        .rename({"init": "time"})
+        .swap_dims({"init": "time"})
+        .drop("init")
         .resample(time="1MS")
         .interpolate("linear")
     )
 
     pm = pm.generate_uninitialized()
+    print(pm.get_uninitialized().coords)
     assert (
         not pm.verify(
             metric="acc",
@@ -481,7 +483,7 @@ def test_PerfectModelEnsemble_init_time(init, calendar):
     pm = PerfectModelEnsemble(init)
     initialized = pm.get_initialized()
     print(initialized.coords)
-    time_name = "validtime"
+    time_name = "time"
     assert time_name in initialized.coords
     for d in ["init", "lead"]:
         assert d in initialized[time_name].coords

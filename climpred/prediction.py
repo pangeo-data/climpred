@@ -111,11 +111,11 @@ def _apply_metric_at_given_lead(
 
     # if 'time' in lforecast.dims and 'init' in lforecast.dims:
     #    assert False, print(lforecast.dims, lverif.dims)
-    # if "init" in lforecast.coords:
-    #    llforecast = lforecast.drop("init")
-    # else:
-    #    llforecast = lforecast
-    # xr.testing.assert_identical(llforecast.time, lverif.time)
+    if "init" in lforecast.coords:
+        llforecast = lforecast.drop("init")
+    else:
+        llforecast = lforecast
+    xr.testing.assert_identical(llforecast.time, lverif.time)
 
     # xr.testing.assert_identical(lforecast.time,lverif.time)#, print(lforecast.time[:5], lverif.time[:5])
     dim = _rename_dim(

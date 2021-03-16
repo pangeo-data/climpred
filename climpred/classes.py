@@ -165,7 +165,7 @@ class PredictionEnsemble:
 
         .. note::
             Alternatively inspect initialized datasets by
-            ``PredictionEnsemble.get_initialized()[v].plot.line(x='validtime')``
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x='time')``
             to see ``validtime`` on x-axis or
             ``PredictionEnsemble.get_initialized()[v].plot.line(x='init')``
             to see ``init`` on x-axis.
@@ -175,8 +175,13 @@ class PredictionEnsemble:
             ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
             show_members (bool): whether to display all members individually.
                 Defaults to False.
-            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `jet` for
-                `HindcastEnsemble` and `tab10` for `PerfectModelEnsemble`.
+            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `viridis`
+                for :py:class:`~climpred.classes.HindcastEnsemble`
+                and ``tab10`` for :py:class:`~climpred.classes.PerfectModelEnsemble`.
+            x (str): Name of x-axis. Use ``'time'`` to show observations and
+                hindcasts in real time. Use ``'init'`` to see hindcasts as
+                initializations. For ``x='init'`` only initialized is shown and only
+                works for :py:class:`~climpred.classes.HindcastEnsemble`.
 
         Returns:
             ax: plt.axes
@@ -202,7 +207,6 @@ class PredictionEnsemble:
                 ax=ax,
                 show_members=show_members,
                 cmap=cmap,
-                x=x,
             )
 
     def _math(self, other, operator):

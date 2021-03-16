@@ -235,7 +235,7 @@ def plot_lead_timeseries_hindcast(
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
-    if isinstance(hist, xr.DataArray):
+    if isinstance(hist, xr.DataArray) and x == "time":
         if "member" in hist.dims and not show_members:
             hist = hist.mean("member")
             member_alpha = 1
@@ -270,7 +270,7 @@ def plot_lead_timeseries_hindcast(
             zorder=hind.lead.size - i,
         )
 
-    if isinstance(obs, xr.DataArray):
+    if isinstance(obs, xr.DataArray) and x == "time":
         obs.plot(
             ax=ax,
             color="k",
@@ -287,11 +287,12 @@ def plot_lead_timeseries_hindcast(
         by_label.values(), by_label.keys(), loc="center left", bbox_to_anchor=(1, 0.5)
     )
     ax.set_title("")
+    ax.set_xlabel(x)
     return ax
 
 
 def plot_ensemble_perfect_model(
-    pm, variable=None, ax=None, show_members=False, cmap="tab10", x="time"
+    pm, variable=None, ax=None, show_members=False, cmap="tab10"
 ):
     """Plot datasets from PerfectModelEnsemble.
 
@@ -307,7 +308,7 @@ def plot_ensemble_perfect_model(
         ax: plt.axes
 
     """
-
+    x = "time"
     _check_only_climpred_dims(pm)
     if variable is None:
         variable = list(pm.get_initialized().data_vars)[0]

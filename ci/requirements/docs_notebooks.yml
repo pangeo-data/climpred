@@ -1,6 +1,7 @@
 name: climpred-docs-notebooks
 channels:
   - conda-forge
+  - nodefaults
 dependencies:
   - python>=3.7
   - xesmf
@@ -8,7 +9,7 @@ dependencies:
   - bottleneck
   - importlib_metadata
   - jupyterlab
-  - matplotlib
+  - matplotlib-base
   - nbsphinx
   - nbstripout
   - nc-time-axis
@@ -19,6 +20,7 @@ dependencies:
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
+  - sphinx-copybutton
   - toolz
   - xarray>=0.16.1
   - xrft  # used for varweighted_mean_period

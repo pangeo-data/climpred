@@ -1411,14 +1411,12 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
-        # if "validtime" in res.coords:
-        #    del res.coords["validtime"]
         if "time" in res.dims and "init" in res.coords:
             res = res.swap_dims({"time": "init"})
+            assert False
         if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
             res = res.rename({"time": "init"})
             res.coords["time"] = self.get_initialized().time
-            assert False
         return res
 
     def bootstrap(

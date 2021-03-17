@@ -28,6 +28,7 @@ from .utils import (
 
 
 def persistence(verif, inits, verif_dates, lead):
+    """Persistence forecast prescribes values from initialization into the future."""
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])
     lforecast["time"] = lverif.time
@@ -35,12 +36,12 @@ def persistence(verif, inits, verif_dates, lead):
 
 
 def climatology(verif, inits, verif_dates, lead):
+    """Climatology forecasts climatological mean in the future."""
     climatology_day = verif.groupby("time.dayofyear").mean()
     # enlarge times to get climatology_forecast times
     # this prevents errors if verification.time and hindcast.init are too much apart
-    init_dim = "init"  # was time
     verif_hind_union = xr.DataArray(
-        verif.time.to_index().union(inits[lead][init_dim].to_index()), dims="time"
+        verif.time.to_index().union(inits[lead]["init"].to_index()), dims="time"
     )
 
     climatology_forecast = climatology_day.sel(
@@ -56,11 +57,9 @@ def climatology(verif, inits, verif_dates, lead):
 
 
 def uninitialized(hist, verif, verif_dates, lead):
-    """also called historical in some communities."""
-    # print(hist.coords)
+    """Uninitialized forecast uses a simulation without any initialization (assimilation/nudging). Also called historical in some communities."""
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
-    # lforecast['time']=lverif.time
     return lforecast, lverif
 
 
@@ -92,8 +91,7 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
                 dim = dim.copy()
                 dim.append("member")
         assert "member" in lforecast.dims and "member" not in lverif.dims
-    # member not required by metric and not in dim but present in forecast
-    if not metric.requires_member_dim:
+    else:  # member not required by metric and not in dim but present in forecast
         if "member" in lforecast.dims and "member" not in dim:
             lforecast = lforecast.mean("member")
     # multi member comparisons expect member dim
@@ -101,7 +99,7 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
         comparison.name in ["m2o", "m2m", "m2c", "m2e"]
         and "member" not in lforecast.dims
         and metric.requires_member_dim
-    ):
+    ):  # not triggered in any test
         lforecast = lforecast.expand_dims("member")  # add fake member dim
     return lforecast, dim
 
@@ -112,7 +110,6 @@ def compute_climatology(
     metric="pearson_r",
     comparison="m2e",
     alignment="same_inits",
-    add_attrs=True,
     dim="init",
     **metric_kwargs,
 ):
@@ -123,9 +120,7 @@ def compute_climatology(
         verif (xarray object): control data, not needed
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
-        dim (str or list of str): dimension to apply metric over.
-        add_attrs (bool): write climpred compute_persistence args to attrs.
-            default: True
+        dim (str or list of str): dimension to apply metric over
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -152,10 +147,7 @@ def compute_climatology(
     if "iteration" in hind.dims:
         hind = hind.isel(iteration=0, drop=True)
 
-    if comparison.hindcast:
-        kind = "hindcast"
-    else:
-        kind = "perfect"
+    kind = "hindcast" if comparison.hindcast else "perfect"
 
     if kind == "perfect":
         forecast, verif = comparison.function(hind, metric=metric)
@@ -168,8 +160,6 @@ def compute_climatology(
         dayofyear=forecast["time"].dt.dayofyear, method="nearest"
     ).drop("dayofyear")
 
-    # dont need return_inits_and_verif_dates?
-
     # ensure overlap
     if kind == "hindcast":
         climatology_day_forecast = (
@@ -178,23 +168,17 @@ def compute_climatology(
             .sel(time=verif.time)
         )
 
-    # print(climatology_day_forecast.dims,verif.dims, dim)
-
-    if kind == "hindcast":
-        climatology_day_forecast = climatology_day_forecast  # .rename({"init": "time"})
     dim = _rename_dim(dim, climatology_day_forecast, verif)
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
 
-    # print(climatology_day_forecast.dims,verif.dims, dim)
-
     climatology_day_forecast, dim = _adapt_member_for_reference_forecast(
         climatology_day_forecast, verif, metric, comparison, dim
     )
-    # print(climatology_day_forecast.dims,verif.dims, dim)
-    # print(climatology_day_forecast.time,verif.time)
 
-    if "lead" in climatology_day_forecast.dims and "lead" not in verif.dims:
+    if (
+        "lead" in climatology_day_forecast.dims and "lead" not in verif.dims
+    ):  # issue: https://github.com/pangeo-data/climpred/issues/528
         verif = (
             verif.expand_dims("lead")
             .isel(lead=[0] * climatology_day_forecast.lead.size)
@@ -214,7 +198,6 @@ def compute_persistence(
     verif,
     metric="pearson_r",
     alignment="same_verifs",
-    add_attrs=True,
     dim="init",
     comparison="m2o",
     **metric_kwargs,
@@ -236,8 +219,6 @@ def compute_persistence(
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
         dim (str or list of str): dimension to apply metric over.
-        add_attrs (bool): write climpred compute_persistence args to attrs.
-            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -263,13 +244,9 @@ def compute_persistence(
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
-
-    # kind = "hindcast" if comparison.hindcast else "perfect"
-
-    # get class metric(Metric)
     metric = get_metric_class(metric, ALL_METRICS)
+
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
     if [0] in hind.lead.values:
@@ -279,9 +256,6 @@ def compute_persistence(
         n, freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
         # Shift backwards shift for lead zero.
         hind["init"] = shift_cftime_index(hind, "init", -1 * n, freq)
-        # assert False
-    # temporarily change `init` to `time` for comparison to verification data time.
-    # hind = hind.rename({"init": "time"})
 
     inits, verif_dates = return_inits_and_verif_dates(
         hind, verif, alignment=alignment, reference="persistence"
@@ -305,31 +279,15 @@ def compute_persistence(
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
-        # print('\n','lead',i,lforecast.coords, lverif.coords, dim)
-        # lverif["time"] = lforecast["time"]
-        # lforecast['time'] = lverif['time']
-        if "time" in lforecast.dims and "time" in lverif.dims and "init" in dim:
-            dim = dim.copy()
-            dim.remove("init")
-            dim = dim + ["time"]
+        dim = _rename_dim(dim, lforecast, lverif)
         # comparison expected for normalized metrics
-        # print('\n',lforecast.coords, lverif.coords, dim)
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
 
-    # print(plag[:2])
-    pers = xr.concat(plag, "lead")
-    # if "time" in pers.dims and kind=='hindcast':
-    #    pers = pers.swap_dims({'time':'init'})#.dropna(dim="time").rename({"time": "init"})
-    pers["lead"] = hind.lead.values
-    if add_attrs:
-        pers = assign_attrs(
-            pers,
-            hind,
-            alignment=alignment,
-            metric=metric,
-            metadata_dict=metric_kwargs,
-        )
-    return pers
+    pers_skill = xr.concat(plag, "lead")
+    pers_skill["lead"] = hind.lead.values
+    if M2M_MEMBER_DIM in pers_skill.dims:
+        pers_skill = pers_skill.mean(M2M_MEMBER_DIM)
+    return pers_skill
 
 
 @is_xarray([0, 1])
@@ -341,7 +299,6 @@ def compute_uninitialized(
     comparison="e2o",
     dim="time",
     alignment="same_verifs",
-    add_attrs=True,
     **metric_kwargs,
 ):
     """Verify an uninitialized ensemble against verification data.
@@ -372,7 +329,6 @@ def compute_uninitialized(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
@@ -390,19 +346,20 @@ def compute_uninitialized(
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
     comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
-    comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
-    metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
+    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
+    metric = get_metric_class(metric, ALL_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
 
-    # hind = hind.rename({"init": "time"}) #todo?
-
-    _, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
+    _, verif_dates = return_inits_and_verif_dates(
+        hind, verif, alignment=alignment, reference="uninitialized", hist=uninit
+    )
 
     if metric.normalize:
         metric_kwargs["comparison"] = comparison
 
-    if "iteration" in forecast.dims and "iteration" not in verif.dims:
+    if (
+        "iteration" in forecast.dims and "iteration" not in verif.dims
+    ):  # issue: https://github.com/pangeo-data/climpred/issues/528
         verif = (
             verif.expand_dims("iteration")
             .isel(iteration=[0] * forecast.iteration.size)
@@ -421,21 +378,12 @@ def compute_uninitialized(
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
-        # if 'init' in dim and 'time' in lforecast.dims and 'time' in lverif.dims:
         dim = _rename_dim(dim, lforecast, lverif)
         lforecast["time"] = lverif["time"]
         # comparison expected for normalized metrics
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
     uninit_skill["lead"] = hind.lead.values
-
-    # Attach climpred compute information to skill
-    if add_attrs:
-        uninit_skill = assign_attrs(
-            uninit_skill,
-            uninit,
-            metric=metric,
-            comparison=comparison,
-            metadata_dict=metric_kwargs,
-        )
+    if M2M_MEMBER_DIM in uninit_skill.dims:
+        uninit_skill = uninit_skill.mean(M2M_MEMBER_DIM)
     return uninit_skill

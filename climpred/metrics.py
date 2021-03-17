@@ -2239,13 +2239,6 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
-    # switch positions because xskillscore.crps_ensemble(verif, forecasts)
-    # import xarray as xr
-    # print('inside crps',verif.dims, forecast.dims, dim)
-    # print(verif.coords, '\n',forecast.coords)
-    # if 'lead' in forecast.coords and 'lead' not in verif.coords:
-    # forecast, verif = xr.broadcast(forecast,verif, exclude=('member'))
-    #    verif = verif.isel(lead=[0]*forecast.lead.size).assign_coords(lead=forecast.lead)
     return crps_ensemble(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -2711,7 +2704,6 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
     assert "member" not in forecast.dims  # requires probabilities
-    # print('for xs.reliability',forecast.dims,verif.dims,dim)
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 

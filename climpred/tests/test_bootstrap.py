@@ -92,29 +92,10 @@ def test_bootstrap_hindcast_lazy(
     assert dask.is_dask_collection(s) == chunk
 
 
-@pytest.mark.slow
-@pytest.mark.parametrize("resample_dim", ["member", "init"])
-def test_bootstrap_hindcast_resample_dim(
-    hindcast_hist_obs_1d,
-    resample_dim,
-):
-    """Test bootstrap_hindcast when resampling member or init and alignment
-    same_inits."""
-    hindcast_hist_obs_1d.isel(lead=range(3), init=range(10)).bootstrap(
-        iterations=ITERATIONS,
-        comparison="e2o",
-        metric="mse",
-        resample_dim=resample_dim,
-        alignment="same_inits",
-        dim="init",
-    )
-
-
 @pytest.mark.parametrize("reference", [None, "uninitialized"])
 @pytest.mark.parametrize("resample_dim", ["member", "init"])
-def test_bootstrap_hindcast_(hindcast_hist_obs_1d, resample_dim, reference):
-    """Test bootstrap_hindcast when resampling member or init and alignment
-    same_inits."""
+def test_bootstrap_hindcast_resample_dim(hindcast_hist_obs_1d, resample_dim, reference):
+    """Test HindcastEnsemble.bootstrap with resample_dim and reference."""
     hindcast_hist_obs_1d.bootstrap(
         iterations=ITERATIONS,
         comparison="e2o",
@@ -424,6 +405,5 @@ def test_resample_iterations_dix_no_squeeze(PM_da_initialized_1d):
     is not critical and can be circumvented when using squeeze before climpred.).
     """
     da = PM_da_initialized_1d.expand_dims("test_dim")
-    print(da)
     actual = _resample_iterations_idx(da, iterations=ITERATIONS)
     assert "test_dim" in actual.dims

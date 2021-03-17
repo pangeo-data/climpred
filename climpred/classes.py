@@ -1318,7 +1318,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 hind, metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
-            # forecast = forecast.rename({"init": "time"})
+
             inits, verif_dates = return_inits_and_verif_dates(
                 forecast,
                 verif,
@@ -1379,7 +1379,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
             if "time" in result.dims and "init" in result.coords:
-                result = result.swap_dims({"time": "init"})  # .rename({"time": "init"})
+                result = result.swap_dims({"time": "init"})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=["initialized"] + reference)
             return result.squeeze()
@@ -1418,6 +1418,7 @@ class HindcastEnsemble(PredictionEnsemble):
         if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
             res = res.rename({"time": "init"})
             res.coords["time"] = self.get_initialized().time
+            assert False
         return res
 
     def bootstrap(

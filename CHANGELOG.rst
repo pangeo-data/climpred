@@ -17,6 +17,8 @@ New Features
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`
   accept reference ``climatology``. Furthermore, reference ``persistence`` also allows
   probabilistic metrics (:issue:`202`, :issue:`565`, :pr:`566`) `Aaron Spring`_.
+- (:issue:`257`, :pr:`583`) `Aaron Spring`_.
+- Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble generates new 2-dimensional coordinate ``time`` for ``initialized`` from ``init`` and ``lead``, which is matched with ``time`` from ``verification`` during alignment. (:issue:`575`, :pr:`583`) `Aaron Spring`_.
 
 
 Bug fixes
@@ -53,6 +55,8 @@ Internals/Minor Fixes
   Find further examples in the ``examples`` folder.
   (:issue:`549`, :pr:`578`) `Aaron Spring`_.
 - Rename branch ``master`` to ``main``. (:pr:`579`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` now uses ``climpred.reference.compute_uninitialized`` for reference ``'uninitialized'``. Before uninitialized lead-time dependent distribution was resampled from the uninitialized member, now the skill is independent of lead time (:issue:`257`, :pr:`583`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.PredictionEnsemble.plot` uses new coordinate ``time(init, lead)`` for x-axis. (:issue:`575`, :pr:`583`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

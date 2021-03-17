@@ -84,49 +84,24 @@ def _apply_metric_at_given_lead(
             lforecast, lverif, metric, comparison, dim
         )
 
-    # print(reference,'lead',lead)
-    # print(lforecast.dims, lverif.dims, dim)
-    # print(lforecast.coords)
-    # print(lverif.coords)
-    # use new time
-    if "time" in lforecast.coords and "time" not in lforecast.dims:
-        lforecast = (
-            lforecast.swap_dims({"init": "time"})
-            # .drop("time")
-            # .rename({"validtime": "time"})
-        )
-        # print('lforecast',lforecast.coords)#, 'lverif',lverif)
-
-        # print('reference',reference)
-        if reference == "uninitialized":
-            pass
-            # print('equalized time')
-            # lforecast["time"] = lverif[
-            #    "time"
-            # ]
+    if (
+        "time" in lforecast.coords and "time" not in lforecast.dims
+    ):  # use time(init, lead)
+        lforecast = lforecast.swap_dims({"init": "time"})
     else:  # compute_hindcast line
         lforecast["time"] = lverif[
             "time"
-        ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
+        ]  # a bit dangerous because we dont know what times were before TODO
 
-    # if 'time' in lforecast.dims and 'init' in lforecast.dims:
-    #    assert False, print(lforecast.dims, lverif.dims)
-    if "init" in lforecast.coords:
-        llforecast = lforecast.drop("init")
-    else:
-        llforecast = lforecast
-    xr.testing.assert_identical(llforecast.time, lverif.time)
+    xr.testing.assert_identical(
+        lforecast.drop("init").time if "init" in lforecast.coords else lforecast.time,
+        lverif.time,
+    )
 
-    # xr.testing.assert_identical(lforecast.time,lverif.time)#, print(lforecast.time[:5], lverif.time[:5])
-    dim = _rename_dim(
-        dim, lforecast, lverif
-    )  # dim should be much clearer once time in initialized.coords
+    dim = _rename_dim(dim, lforecast, lverif)
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
 
-    # if reference:
-    # print(reference,'for metric.function',lforecast.dims,lverif.dims,dim)
-    # print('for metric.function',lforecast.coords,'\n',lverif.coords,dim)
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     return result

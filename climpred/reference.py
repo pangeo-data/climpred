@@ -223,7 +223,15 @@ def compute_climatology(
         if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
             climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
         verif=verif.sel(time=time_intersection)
-
+        verif=xr.concat(
+                [
+                    verif.sel(time=verif_dates[lead]).assign_coords(
+                        init=(("lead", "time"), inits[lead].expand_dims("lead"))
+                    )
+                    for lead in forecast.lead.values
+                ],
+                "lead",
+            ).assign_coords(lead=forecast.lead)
 
     #print('climatology_day_forecast',climatology_day_forecast.sel(lead=[1,2]).SST)
     #print('verif',verif.time)

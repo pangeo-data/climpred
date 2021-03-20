@@ -625,7 +625,7 @@ def bootstrap_compute(
     hind,
     verif,
     hist=None,
-    alignment="same_verifs",
+    alignment="same_verif",
     metric="pearson_r",
     comparison="m2e",
     dim="init",
@@ -727,9 +727,9 @@ def bootstrap_compute(
     # get comparison function
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    # Perfect Model requires `same_inits` setup
+    # Perfect Model requires `same_init` setup
     isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
-    reference_alignment = alignment if isHindcast else "same_inits"
+    reference_alignment = alignment if isHindcast else "same_init"
     chunking_dims = [d for d in hind.dims if d not in CLIMPRED_DIMS]
 
     # carry alignment for compute_reference separately
@@ -1040,7 +1040,7 @@ def bootstrap_hindcast(
     hind,
     hist,
     verif,
-    alignment="same_verifs",
+    alignment="same_verif",
     metric="pearson_r",
     comparison="e2o",
     dim="init",

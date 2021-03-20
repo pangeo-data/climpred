@@ -26,7 +26,7 @@ def test_compute_uninitialized_alignment(
         assert not res[var]
 
 
-def test_compute_uninitialized_same_verifs(
+def test_compute_uninitialized_same_verif(
     hind_da_initialized_1d, reconstruction_da_1d, hist_da_uninitialized_1d
 ):
     """Tests that uninitialized skill is same at all leads for `same_verifs`
@@ -37,6 +37,6 @@ def test_compute_uninitialized_same_verifs(
         reconstruction_da_1d,
         metric="pr",
         comparison="e2o",
-        alignment="same_verifs",
+        alignment="same_verif",
     )
     assert ((res - res[0]) == 0).all()

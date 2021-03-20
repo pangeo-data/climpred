@@ -911,7 +911,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             compute_persistence,
             input_dict=input_dict,
             metric=metric,
-            alignment="same_inits",
+            alignment="same_init",
             dim=dim,
             **metric_kwargs,
         )

@@ -148,7 +148,7 @@ def compute_climatology(
     verif=None,
     metric="pearson_r",
     comparison="m2e",
-    alignment="same_inits",
+    alignment="same_init",
     dim="init",
     **metric_kwargs,
 ):
@@ -203,6 +203,7 @@ def compute_climatology(
         dayofyear=forecast["time"].dt.dayofyear, method="nearest"
     ).drop("dayofyear")
 
+
     # ensure overlap
     if kind == "hindcast" and False:
         climatology_day_forecast = (
@@ -213,7 +214,8 @@ def compute_climatology(
     if kind == 'hindcast':
         if alignment=='same_init':
             climatology_day_forecast = climatology_day_forecast.sel(init=inits[1])
-        climatology_day_forecast = init_to_time_dim(climatology_day_forecast)
+        elif alignment=='same_verif':
+            climatology_day_forecast = init_to_time_dim(climatology_day_forecast)
         assert 'time' in climatology_day_forecast.dims
         if alignment=='same_verif':
             time_intersection = verif_dates[1]
@@ -224,15 +226,7 @@ def compute_climatology(
         if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
             climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
         verif=verif.sel(time=time_intersection)
-        #verif=xr.concat(
-        #        [
-        #            verif.sel(time=verif_dates[lead]).assign_coords(
-        #                init=(("lead", "time"), inits[lead].expand_dims("lead"))
-        #            )
-        #            for lead in forecast.lead.values
-        #        ],
-        #        "lead",
-        #    ).assign_coords(lead=forecast.lead)
+
         verif=verif.sel(time=climatology_day_forecast.time, method='nearest')
         climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection,method='nearest')
 
@@ -266,7 +260,11 @@ def compute_climatology(
     #print('clim_skill',clim_skill.dims,clim_skill.coords,clim_skill.SST)
     if "time" in clim_skill.dims and 'init' in clim_skill.coords:
         #clim_skill = clim_skill.swap_dims({'time':'init'})
-        clim_skill = time_to_init_dim_2(clim_skill)
+        #print('clim_skill',clim_skill.coords,clim_skill.dims,clim_skill.SST)
+        try:
+            clim_skill = time_to_init_dim_2(clim_skill)
+        except:
+            clim_skill = time_to_init_dim(clim_skill)
     if 'time' in clim_skill.dims and 'init' not in clim_skill.coords:
         clim_skill = clim_skill.rename({'time':'init'}) # TODO cehck required?
     if M2M_MEMBER_DIM in clim_skill.dims:
@@ -280,7 +278,7 @@ def compute_persistence(
     hind,
     verif,
     metric="pearson_r",
-    alignment="same_verifs",
+    alignment="same_verif",
     dim="init",
     comparison="m2o",
     **metric_kwargs,
@@ -397,7 +395,7 @@ def compute_uninitialized(
     metric="pearson_r",
     comparison="e2o",
     dim="time",
-    alignment="same_verifs",
+    alignment="same_verif",
     **metric_kwargs,
 ):
     """Verify an uninitialized ensemble against verification data.

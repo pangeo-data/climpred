@@ -301,7 +301,7 @@ def compute_hindcast(
     metric="pearson_r",
     comparison="e2o",
     dim="init",
-    alignment="same_verifs",
+    alignment="same_verif",
     add_attrs=True,
     **metric_kwargs,
 ):

@@ -1108,6 +1108,8 @@ def bootstrap_hindcast(
 
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
+    from .alignment import ALIGNMENT_ALIASES
+    alignment = ALIGNMENT_ALIASES.get(alignment)
     hind = convert_time_index(hind, "init", "hind[init]")
     if isinstance(hist, xr.Dataset):
         hist = convert_time_index(hist, "time", "uninitialized[time]")

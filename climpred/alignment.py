@@ -7,6 +7,13 @@ from .constants import VALID_ALIGNMENTS
 from .exceptions import CoordinateError
 from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 
+ALIGNMENT_ALIASES = {
+    "same_init": "same_init",
+    "same_verif": "same_verif",
+    "same_inits": "same_init",
+    "same_verifs": "same_verif",
+    "maximize": "maximize",
+}
 
 def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, hist=None):
     """Returns initializations and verification dates for an arbitrary number of leads
@@ -39,6 +46,8 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
         reference = []
 
     is_in_list(alignment, VALID_ALIGNMENTS, "alignment")
+    alignment = ALIGNMENT_ALIASES.get(alignment)
+    print('alignment =',alignment)
     units = forecast["lead"].attrs["units"]
     leads = forecast["lead"].values
 

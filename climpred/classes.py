@@ -33,6 +33,7 @@ from .prediction import (
     _get_metric_comparison_dim,
     compute_perfect_model,
 )
+from .alignment import ALIGNMENT_ALIASES
 from .reference import compute_climatology, compute_persistence
 from .smoothing import (
     _reset_temporal_axis,
@@ -1290,6 +1291,7 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
+        alignment = ALIGNMENT_ALIASES.get(alignment)
         if dim is None:
             viable_dims = list(self.get_initialized().isel(lead=0).dims)
             raise ValueError(

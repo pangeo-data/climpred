@@ -70,7 +70,8 @@ def climatology(verif, inits, verif_dates, lead):
 
 def uninitialized(hist, verif, inits, verif_dates, lead, alignment):
     """Uninitialized forecast uses a simulation without any initialization (assimilation/nudging). Also called historical in some communities."""
-    if alignment=='same_verifs':
+    print('alignemnt',alignment)
+    if alignment=='same_verif':
         #print('use same_verifs')
         #lforecast = hist.sel(time=verif_dates[lead])
         #lverif = verif.sel(time=verif_dates[lead])
@@ -80,7 +81,7 @@ def uninitialized(hist, verif, inits, verif_dates, lead, alignment):
         lverif = (verif.sel(time=verif_dates[lead]).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead")))
         .assign_coords(lead=[lead])
     )
-    elif alignment in ['same_inits','maximize']:
+    elif alignment in ['same_init','maximize']:
         #print('use same_inits')
         #print('hist',hist.coords)
         #print('verif',verif.coords)
@@ -210,28 +211,30 @@ def compute_climatology(
             .sel(time=verif.time)
         )
     if kind == 'hindcast':
-        if alignment=='same_inits':
+        if alignment=='same_init':
             climatology_day_forecast = climatology_day_forecast.sel(init=inits[1])
         climatology_day_forecast = init_to_time_dim(climatology_day_forecast)
         assert 'time' in climatology_day_forecast.dims
-        if alignment=='same_verifs':
+        if alignment=='same_verif':
             time_intersection = verif_dates[1]
-        elif alignment in ['same_inits','maximize']:
+        elif alignment in ['same_init','maximize']:
             time_intersection = climatology_day_forecast.time.to_index().intersection(verif.time.to_index())
             #time_intersection = time_intersection.intersection(verif_dates[1])
         climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection)
         if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
             climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
         verif=verif.sel(time=time_intersection)
-        verif=xr.concat(
-                [
-                    verif.sel(time=verif_dates[lead]).assign_coords(
-                        init=(("lead", "time"), inits[lead].expand_dims("lead"))
-                    )
-                    for lead in forecast.lead.values
-                ],
-                "lead",
-            ).assign_coords(lead=forecast.lead)
+        #verif=xr.concat(
+        #        [
+        #            verif.sel(time=verif_dates[lead]).assign_coords(
+        #                init=(("lead", "time"), inits[lead].expand_dims("lead"))
+        #            )
+        #            for lead in forecast.lead.values
+        #        ],
+        #        "lead",
+        #    ).assign_coords(lead=forecast.lead)
+        verif=verif.sel(time=climatology_day_forecast.time, method='nearest')
+        climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection,method='nearest')
 
     #print('climatology_day_forecast',climatology_day_forecast.sel(lead=[1,2]).SST)
     #print('verif',verif.time)
@@ -253,8 +256,9 @@ def compute_climatology(
             .isel(lead=[0] * climatology_day_forecast.lead.size)
             .assign_coords(lead=climatology_day_forecast.lead)
         )
-    #print('climatology_day_forecast',climatology_day_forecast.SST)
-    #print('verif',verif.SST)
+    if 'SST' in verif.data_vars:
+        print('climatology_day_forecast',climatology_day_forecast.SST)
+        print('verif',verif.SST)
     #climatology_day_forecast=climatology_day_forecast.fillna(0.)
     clim_skill = metric.function(
         climatology_day_forecast, verif, dim=dim, **metric_kwargs
@@ -464,16 +468,17 @@ def compute_uninitialized(
     plag = []
     # TODO: `same_verifs` does not need to go through the loop, since it's a fixed
     # skill over all leads
+    print(alignment,'alignment')
     for lead in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.
         dates = list(set(forecast["time"].values) & set(verif_dates[lead]))
         # select forecast and verification at lead
-        if alignment=='same_verifs':
+        if alignment=='same_verif':
             lforecast = forecast.sel(time=dates).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead"))).assign_coords(lead=[lead])
         # select verification at lead
             lverif = verif.sel(time=dates).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead"))).assign_coords(lead=[lead])
-        elif alignment in ['same_inits','maximize']:
+        elif alignment in ['same_init','maximize']:
             # work for maximize but not for same_inits TODO
             #sel_time = inits[lead].to_index().intersection(forecast.time.to_index())
             #lforecast = forecast.sel(time=sel_time)

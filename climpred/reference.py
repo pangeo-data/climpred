@@ -29,9 +29,19 @@ from .utils import (
 
 def persistence(verif, inits, verif_dates, lead):
     """Persistence forecast prescribes values from initialization into the future."""
+    #print('verif_dates',verif_dates[lead],'inits',inits[lead].init.to_index())
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
+    #lforecast = lforecast.assign_coords(
+    #    init=(("lead", "time"), inits[lead].expand_dims("lead"))
+    #)
     lverif = verif.sel(time=verif_dates[lead])
-    lforecast["time"] = lverif.time
+    #print(f'inside persistence lead {lead} forecast',lforecast.coords)
+    #print(f'inside persistence lead {lead} verif',lverif.coords)
+    # set time equal to compute lagged metric
+    # was before
+    #lforecast["time"] = lverif.time
+    # if dim is member
+    lverif["time"] = lforecast.time
     return lforecast, lverif
 
 
@@ -52,14 +62,42 @@ def climatology(verif, inits, verif_dates, lead):
         climatology_forecast.time.isin(inits[lead]), drop=True
     )
     lverif = verif.sel(time=verif_dates[lead])
-    lforecast["time"] = lverif.time
+    # was before
+    #lforecast["time"] = lverif.time
+    lverif['time']=lforecast['time']
     return lforecast, lverif
 
 
-def uninitialized(hist, verif, verif_dates, lead):
+def uninitialized(hist, verif, inits, verif_dates, lead, alignment):
     """Uninitialized forecast uses a simulation without any initialization (assimilation/nudging). Also called historical in some communities."""
-    lforecast = hist.sel(time=verif_dates[lead])
-    lverif = verif.sel(time=verif_dates[lead])
+    if alignment=='same_verifs':
+        #print('use same_verifs')
+        #lforecast = hist.sel(time=verif_dates[lead])
+        #lverif = verif.sel(time=verif_dates[lead])
+        lforecast = (hist.sel(time=verif_dates[lead]).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead")))
+        .assign_coords(lead=[lead])
+    )
+        lverif = (verif.sel(time=verif_dates[lead]).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead")))
+        .assign_coords(lead=[lead])
+    )
+    elif alignment in ['same_inits','maximize']:
+        #print('use same_inits')
+        #print('hist',hist.coords)
+        #print('verif',verif.coords)
+        #print('inits[lead]',inits[lead])
+        sel_time = verif_dates[lead].intersection(hist.time.to_index())
+        #print('sel_time',sel_time)
+        new_inits = inits[lead].expand_dims("lead").assign_coords(lead=[lead])
+        #print('hist',hist.coords)
+        #print('new_inits',new_inits.squeeze().to_index())
+        lforecast = hist.sel(time=sel_time).assign_coords(init=(("lead", "time"), new_inits)).assign_coords(lead=[lead])
+        #print('lforecast.coords',lforecast.coords)
+        lverif = verif.sel(time=sel_time).assign_coords(init=(("lead", "time"), new_inits)).assign_coords(lead=[lead])
+    #elif alignment=='maximize' and False:
+    #    verif_dates_inits_intersection = verif_dates[lead].intersection(inits[lead].to_index())
+    #    lforecast = hist.sel(time=verif_dates_inits_intersection)
+    #    lverif = verif.sel(time=verif_dates_inits_intersection)
+    #lverif['time']=lforecast['time'] #new
     return lforecast, lverif
 
 
@@ -149,6 +187,10 @@ def compute_climatology(
 
     kind = "hindcast" if comparison.hindcast else "perfect"
 
+    inits, verif_dates = return_inits_and_verif_dates(
+        hind, verif, alignment=alignment, reference="climatology"
+    )
+
     if kind == "perfect":
         forecast, verif = comparison.function(hind, metric=metric)
         climatology_day = verif.groupby("init.dayofyear").mean()
@@ -161,12 +203,31 @@ def compute_climatology(
     ).drop("dayofyear")
 
     # ensure overlap
-    if kind == "hindcast":
+    if kind == "hindcast" and False:
         climatology_day_forecast = (
             climatology_day_forecast.drop("time")
             .rename({"init": "time"})
             .sel(time=verif.time)
         )
+    if kind == 'hindcast':
+        if alignment=='same_inits':
+            climatology_day_forecast = climatology_day_forecast.sel(init=inits[1])
+        climatology_day_forecast = init_to_time_dim(climatology_day_forecast)
+        assert 'time' in climatology_day_forecast.dims
+        if alignment=='same_verifs':
+            time_intersection = verif_dates[1]
+        elif alignment in ['same_inits','maximize']:
+            time_intersection = climatology_day_forecast.time.to_index().intersection(verif.time.to_index())
+            #time_intersection = time_intersection.intersection(verif_dates[1])
+        climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection)
+        if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
+            climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
+        verif=verif.sel(time=time_intersection)
+
+
+    #print('climatology_day_forecast',climatology_day_forecast.sel(lead=[1,2]).SST)
+    #print('verif',verif.time)
+
 
     dim = _rename_dim(dim, climatology_day_forecast, verif)
     if metric.normalize:
@@ -176,7 +237,7 @@ def compute_climatology(
         climatology_day_forecast, verif, metric, comparison, dim
     )
 
-    if (
+    if ( # why is this needed? # TODO:
         "lead" in climatology_day_forecast.dims and "lead" not in verif.dims
     ):  # issue: https://github.com/pangeo-data/climpred/issues/528
         verif = (
@@ -184,11 +245,21 @@ def compute_climatology(
             .isel(lead=[0] * climatology_day_forecast.lead.size)
             .assign_coords(lead=climatology_day_forecast.lead)
         )
+    #print('climatology_day_forecast',climatology_day_forecast.SST)
+    #print('verif',verif.SST)
+    #climatology_day_forecast=climatology_day_forecast.fillna(0.)
     clim_skill = metric.function(
         climatology_day_forecast, verif, dim=dim, **metric_kwargs
     )
+    #print('clim_skill',clim_skill.dims,clim_skill.coords,clim_skill.SST)
+    if "time" in clim_skill.dims and 'init' in clim_skill.coords:
+        #clim_skill = clim_skill.swap_dims({'time':'init'})
+        clim_skill = time_to_init_dim_2(clim_skill)
+    if 'time' in clim_skill.dims and 'init' not in clim_skill.coords:
+        clim_skill = clim_skill.rename({'time':'init'}) # TODO cehck required?
     if M2M_MEMBER_DIM in clim_skill.dims:
         clim_skill = clim_skill.mean(M2M_MEMBER_DIM)
+    print('clim_skill',clim_skill.dims,clim_skill.coords)
     return clim_skill
 
 
@@ -260,6 +331,8 @@ def compute_persistence(
     inits, verif_dates = return_inits_and_verif_dates(
         hind, verif, alignment=alignment, reference="persistence"
     )
+    #print('inits',inits[1], '\n verif_dates',verif_dates[1])
+    #print('inits',inits[2], '\n verif_dates',verif_dates[2])
 
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
@@ -276,17 +349,31 @@ def compute_persistence(
         lverif["time"] = lforecast[
             "time"
         ]  # important to overwrite time here for xr.concat() alignment
+        #if 'member' in dim and 'init' in lforecast.dims and 'init' in lverif.dims:
+        #    lforecast['init']=lverif['init']
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
         dim = _rename_dim(dim, lforecast, lverif)
         # comparison expected for normalized metrics
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
-
     pers_skill = xr.concat(plag, "lead")
-    pers_skill["lead"] = hind.lead.values
+    pers_skill['lead']=hind.lead
+    print('pers_skill',pers_skill.dims,pers_skill.coords)
+    if 'time' in pers_skill.dims and 'init' not in pers_skill:
+        pers_skill = pers_skill.rename({'time':'init'})
+    if "time" in pers_skill.dims and False:
+        new_init= pers_skill.coords['init'].all('lead').rename({"time":'init'}).init.to_index()#.dropna('time')
+        #print('new_init',new_init)
+        pers_skill = pers_skill.drop('init').rename({'time':'init'})#.swap_dims({"time": "init"})#.dropna('init')
+        pers_skill=pers_skill.assign_coords(init=new_init)
+        #print('new',pers_skill.dims,pers_skill.coords)
+        #import pandas as pd
+        #assert isinstance(pers_skill.init, pd.RangeIndex)
     if M2M_MEMBER_DIM in pers_skill.dims:
         pers_skill = pers_skill.mean(M2M_MEMBER_DIM)
+    if 'member' not in pers_skill.dims and 'member' in pers_skill.coords:
+        del pers_skill.coords['member']
     return pers_skill
 
 
@@ -350,7 +437,7 @@ def compute_uninitialized(
     metric = get_metric_class(metric, ALL_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
 
-    _, verif_dates = return_inits_and_verif_dates(
+    inits, verif_dates = return_inits_and_verif_dates(
         hind, verif, alignment=alignment, reference="uninitialized", hist=uninit
     )
 
@@ -363,18 +450,35 @@ def compute_uninitialized(
         verif = (
             verif.expand_dims("iteration")
             .isel(iteration=[0] * forecast.iteration.size)
-            .assign_coords(iterations=forecast.iteration)
+            .assign_coords(iteration=forecast.iteration)
         )
 
     plag = []
     # TODO: `same_verifs` does not need to go through the loop, since it's a fixed
     # skill over all leads
-    for i in hind["lead"].values:
+    for lead in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.
-        dates = list(set(forecast["time"].values) & set(verif_dates[i]))
-        lforecast = forecast.sel(time=dates)
-        lverif = verif.sel(time=dates)
+        dates = list(set(forecast["time"].values) & set(verif_dates[lead]))
+        # select forecast and verification at lead
+        if alignment=='same_verifs':
+            lforecast = forecast.sel(time=dates).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead"))).assign_coords(lead=[lead])
+        # select verification at lead
+            lverif = verif.sel(time=dates).assign_coords(init=(("lead", "time"), inits[lead].expand_dims("lead"))).assign_coords(lead=[lead])
+        elif alignment in ['same_inits','maximize']:
+            # work for maximize but not for same_inits TODO
+            #sel_time = inits[lead].to_index().intersection(forecast.time.to_index())
+            #lforecast = forecast.sel(time=sel_time)
+            #lverif = verif.sel(time=sel_time)
+            sel_time = verif_dates[lead].intersection(forecast.time.to_index())
+            #print('sel_time',sel_time)
+            new_inits = inits[lead].expand_dims("lead").assign_coords(lead=[lead])
+            #print('hist',hist.coords)
+            #print('new_inits',new_inits.squeeze().to_index())
+            lforecast = forecast.sel(time=sel_time).assign_coords(init=(("lead", "time"), new_inits)).assign_coords(lead=[lead])
+            #print('lforecast.coords',lforecast.coords)
+            lverif = verif.sel(time=sel_time).assign_coords(init=(("lead", "time"), new_inits)).assign_coords(lead=[lead])
+
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
@@ -384,6 +488,54 @@ def compute_uninitialized(
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
     uninit_skill["lead"] = hind.lead.values
+    #print('uninit_skill',uninit_skill.dims, uninit_skill.coords)
+    #if "time" in uninit_skill.dims and 'init' in uninit_skill.coords:
+    #    uninit_skill = uninit_skill.swap_dims({'time':'init'})
+    if "time" in uninit_skill.dims:
+        if len(uninit_skill.time.coords)==1:
+            if not uninit_skill.time.to_index().is_monotonic_increasing:
+                # TODO: check if used at all
+                #print('uninit_skill',uninit_skill.dims, uninit_skill.coords)
+                uninit_skill = uninit_skill.sortby(
+                    uninit_skill.time
+                )
+                #print('sorted uninit_skill')
+                #print('uninit_skill',uninit_skill.dims, uninit_skill.coords)
+    if 'time' in uninit_skill.dims and 'time' in uninit_skill.coords and 'init' in uninit_skill.coords and 'init' not in uninit_skill.dims:
+        if len(uninit_skill.init.dims)==2:
+            #print('uninit_skill.time',uninit_skill.time)
+            #for i in uninit_skill.lead.values:
+            #    print('uninit_skill.init lead',i,uninit_skill.init.sel(lead=i))
+            uninit_skill = time_to_init_dim_2(uninit_skill)
+    if 'time' in uninit_skill and 'time' in uninit_skill.coords and 'init' not in uninit_skill.dims and 'init' not in uninit_skill.coords:
+        print('renaming uninit')
+        uninit_skill = uninit_skill.rename({'time':'init'})
     if M2M_MEMBER_DIM in uninit_skill.dims:
         uninit_skill = uninit_skill.mean(M2M_MEMBER_DIM)
+    #print('uninit_skill',uninit_skill.dims, uninit_skill.coords)
     return uninit_skill
+
+
+def time_to_init_dim(r):
+    return xr.concat(
+    [r.sel(lead=i).swap_dims({"time": "init"}) for i in r.lead],
+    dim="lead",
+        # compat="override",
+        # coords="minimal",
+    )
+
+def time_to_init_dim_2(r):
+    return xr.concat(
+    [r.sel(lead=i).swap_dims({"time": "init"}).dropna('init') for i in r.lead],
+    dim="lead",
+        # compat="override",
+        # coords="minimal",
+    )
+
+def init_to_time_dim(r):
+    return xr.concat(
+        [r.sel(lead=i).swap_dims({"init": "time"}) for i in r.lead],
+        dim="lead",
+        # compat="override",
+        # coords="minimal",
+    )

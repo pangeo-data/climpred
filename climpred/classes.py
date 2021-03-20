@@ -802,6 +802,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             add_attrs=False,
             **metric_kwargs,
         )
+        print('initialized', result.dims, result.coords)
         if self._temporally_smoothed:
             result = _reset_temporal_axis(result, self._temporally_smoothed, dim="lead")
             result["lead"].attrs = self.get_initialized().lead.attrs
@@ -1340,11 +1341,12 @@ class HindcastEnsemble(PredictionEnsemble):
                     metric=metric,
                     comparison=comparison,
                     dim=dim,
+                    alignment=alignment,
                     **metric_kwargs,
                 )
                 for lead in forecast["lead"].data
             ]
-            result = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
+            result = xr.concat(metric_over_leads, dim="lead")
             result["lead"] = forecast["lead"]
 
             if reference is not None:
@@ -1363,11 +1365,12 @@ class HindcastEnsemble(PredictionEnsemble):
                             metric=metric,
                             comparison=comparison,
                             dim=dim,
+                            alignment=alignment,
                             **metric_kwargs,
                         )
                         for lead in forecast["lead"].data
                     ]
-                    ref = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
+                    ref = xr.concat(metric_over_leads, dim="lead")#, **CONCAT_KWARGS)
                     ref["lead"] = forecast["lead"]
                     # fix to get no member dim for uninitialized e2o skill #477
                     if (
@@ -1376,10 +1379,16 @@ class HindcastEnsemble(PredictionEnsemble):
                         and "member" in ref.dims
                     ):
                         ref = ref.mean("member")
+                    #print('try to concat')
+                    #print('result',result.dims,result.coords)
+                    #print('ref',ref.dims,ref.coords)
+                    if 'time' in ref.dims and 'time' not in result.dims:
+                        #print('just renaming time->init')
+                        ref=ref.rename({'time':'init'})
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
-            if "time" in result.dims and "init" in result.coords:
-                result = result.swap_dims({"time": "init"})
+            #if "time" in result.dims and "init" in result.coords:
+            #    result = result.swap_dims({"time": "init"})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=["initialized"] + reference)
             return result.squeeze()
@@ -1411,12 +1420,9 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
-        if "time" in res.dims and "init" in res.coords:
-            res = res.swap_dims({"time": "init"})
-            assert False
-        if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
-            res = res.rename({"time": "init"})
-            res.coords["time"] = self.get_initialized().time
+        #if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
+        #    res = res.rename({"time": "init"})
+        #    res.coords["time"] = self.get_initialized().time
         return res
 
     def bootstrap(

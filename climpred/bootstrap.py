@@ -471,13 +471,11 @@ def _bootstrap_hindcast_over_init_dim(
             idx = np.random.randint(
                 0, times_for_resampling.size, times_for_resampling.size
             )
-            # set to normal time
-            resampled_hist = hist.sel(time=times_for_resampling[idx]).assign_coords(
-                time=times_for_resampling
-            )
-            resampled_verif = verif.sel(time=times_for_resampling[idx]).assign_coords(
-                time=times_for_resampling
-            )
+            # set to normal time #TODO unsure whether new correct here
+            resampled_hist = hist.sel(time=times_for_resampling[idx])#.assign_coords(time=times_for_resampling)
+            resampled_verif = verif.sel(time=times_for_resampling[idx])#.assign_coords(time=times_for_resampling)
+            resampled_verif['time']=times_for_resampling
+            resampled_hist['time']=times_for_resampling
             bootstrapped_uninit_skill.append(
                 compute_uninitialized(
                     smp_hind,
@@ -612,6 +610,15 @@ def _chunk_before_resample_iterations_idx(
         chunks[d] = chunksize
     ds = ds.chunk(chunks)
     return ds
+
+
+def _intersection_dim(bootstrapped_init_skill, pers_skill, dim='init'):
+    if dim in bootstrapped_init_skill.dims and dim in pers_skill.dims:
+        if bootstrapped_init_skill[dim].size!=pers_skill[dim].size:
+            intersection_dim = bootstrapped_init_skill[dim].to_index().intersection(pers_skill[dim].to_index())
+            pers_skill=pers_skill.sel({dim:intersection_dim})
+            bootstrapped_init_skill = bootstrapped_init_skill.sel({dim:intersection_dim})
+    return bootstrapped_init_skill, pers_skill
 
 
 def bootstrap_compute(
@@ -779,7 +786,7 @@ def bootstrap_compute(
                     uninit_hind,
                     iterations,
                     "member",
-                    replace=False,
+                    replace=False, # why not true?
                     dim_max=hind["member"].size,
                 )
                 bootstrapped_uninit["lead"] = hind["lead"]
@@ -800,7 +807,8 @@ def bootstrap_compute(
                 if "member" not in hist.coords:
                     hist["member"] = np.arange(hist.member.size)
                 if isHindcast:
-                    bootstrapped_uninit = resample_func(hist, iterations, resample_dim)
+                    bootstrapped_uninit = resample_func(hist, iterations, resample_dim, replace=True)
+                    #print('bootstrapped_uninit.time',bootstrapped_uninit.time)
 
                 if not isHindcast:  # perfect-model use lead-time uninitialized
                     uninit_hind = resample_uninit(hind, hist)
@@ -844,7 +852,7 @@ def bootstrap_compute(
                     dim=dim,
                     **metric_kwargs,
                 )
-                # somehow ordering is totally mixed up
+                # somehow ordering is totally mixed up # TODO: maybe somewhere copy is missing
                 if "time" in bootstrapped_uninit_skill.dims:
                     bootstrapped_uninit_skill = bootstrapped_uninit_skill.sortby(
                         bootstrapped_uninit_skill.time
@@ -874,6 +882,7 @@ def bootstrap_compute(
                 dim=dim,
                 **metric_kwargs_reference,
             )
+            #print('pers_skill.dims',pers_skill.dims)
             # bootstrap pers
             if resample_dim == "init":
                 bootstrapped_pers_skill = compute_persistence(
@@ -883,6 +892,10 @@ def bootstrap_compute(
                     **metric_kwargs_reference,
                 )
             else:  # member no need to calculate all again
+                #print('bootstrapped_init_skill',bootstrapped_init_skill.dims,bootstrapped_init_skill.coords,bootstrapped_init_skill.init)
+                #print('pers_skill',pers_skill.dims,pers_skill.coords,pers_skill.init)
+
+                bootstrapped_init_skill, pers_skill = _intersection_dim(bootstrapped_init_skill, pers_skill, 'time')
                 bootstrapped_pers_skill, _ = xr.broadcast(
                     pers_skill, bootstrapped_init_skill
                 )
@@ -896,6 +909,7 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
+    print('init_skill.dims',init_skill.dims,init_skill.coords)
     if "uninitialized" in reference:
         # uninit skill as mean resampled uninit skill
         unin_skill = bootstrapped_uninit_skill.mean("iteration")  # noqa: F841
@@ -903,10 +917,12 @@ def bootstrap_compute(
         pers_skill = compute_persistence(
             hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
         )
+        _,pers_skill=_intersection_dim(bootstrapped_init_skill, pers_skill, dim='time')
     if "climatology" in reference:
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
+        init_skill, clim_skill = _intersection_dim(init_skill, clim_skill, 'time')
         bootstrapped_clim_skill, _ = xr.broadcast(clim_skill, bootstrapped_init_skill)
 
     # get confidence intervals CI
@@ -938,6 +954,7 @@ def bootstrap_compute(
             bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
         )
 
+    # aggregate all skills if present with time dimension, not init
     # gather return
     # p defined as probability that reference better than
     # initialized, therefore not defined for initialized skill
@@ -955,26 +972,30 @@ def bootstrap_compute(
         results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
         skill="initialized",
     )
+    #print('init_skill', init_skill.dims, init_skill.coords)
 
     if reference != []:
         for r in reference:
             ref_skill = eval(f"{r[:4]}_skill")
+            #assert 'time' not in ref_skill.dims, print('found time in ',r,'_skill', ref_skill.dims, ref_skill.coords)
+            #print(f'{r}_skill', ref_skill.dims, ref_skill.coords)
             ref_p = eval(f"p_{r[:4]}_over_init")
             ref_ci_low = eval(f"{r[:4]}_ci").isel(quantile=0, drop=True)
             ref_ci_high = eval(f"{r[:4]}_ci").isel(quantile=1, drop=True)
             ref_results = xr.concat(
                 [ref_skill, ref_p, ref_ci_low, ref_ci_high],
-                dim="results",
+                dim="results", #join='inner'
                 **CONCAT_KWARGS,
             ).assign_coords(
                 skill=r, results=("results", ["verify skill", "p", "low_ci", "high_ci"])
             )
             if "member" in ref_results.dims:
                 if not ref_results["member"].identical(results["member"]):
-                    ref_results["member"] = results[
-                        "member"
-                    ]  # fixes m2c different member names in reference forecasts
-            results = xr.concat([results, ref_results], dim="skill", **CONCAT_KWARGS)
+                    if ref_results['member'].size == results['member'].size:
+                        ref_results["member"] = results[
+                            "member"
+                        ]  # fixes m2c different member names in reference forecasts
+            results = xr.concat([results, ref_results], dim="skill",**CONCAT_KWARGS)
         results = results.assign_coords(skill=["initialized"] + reference).squeeze()
     else:
         results = results.drop_sel(results="p")
@@ -1002,9 +1023,16 @@ def bootstrap_compute(
     )
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
+    print('results',results.dims, results.coords)
     results["lead"] = hind["lead"]
     if "units" in hind["lead"].attrs and "units" not in results["lead"].attrs:
         results["lead"].attrs["units"] = hind["lead"].attrs["units"]
+    #print('bootstrap results',results.dims,results.coords)
+    if "time" in results.dims and 'init' in results.coords:
+        results = results.swap_dims({"time": "init"})
+    elif "time" in results.dims and 'init' not in results.dims:
+        results = results.rename({'time':'init'})
+    #print('maybe renamed bootstrap results',results.dims,results.coords)
     return results
 
 

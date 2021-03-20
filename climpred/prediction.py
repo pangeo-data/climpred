@@ -39,6 +39,7 @@ def _apply_metric_at_given_lead(
     metric=None,
     comparison=None,
     dim=None,
+    alignment=None,
     **metric_kwargs,
 ):
     """Applies a metric between two time series at a given lead.
@@ -68,15 +69,15 @@ def _apply_metric_at_given_lead(
         # bootstrapping.
         init_dim = "init"
         lforecast = (
-            hind.sel(lead=lead, drop=False)  # no drop before
+            hind.sel(lead=lead)#, drop=False)  # no drop before
             .where(hind[init_dim].isin(inits[lead]), drop=True)
             .drop_vars("lead")
         )
         lverif = verif.sel(time=verif_dates[lead])
-    elif reference == "persistence":
+    if reference == "persistence":
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
-        lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
+        lforecast, lverif = uninitialized(hist, verif, inits, verif_dates, lead, alignment)
     elif reference == "climatology":
         lforecast, lverif = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
@@ -93,7 +94,8 @@ def _apply_metric_at_given_lead(
             "time"
         ]  # a bit dangerous because we dont know what times were before TODO
 
-    xr.testing.assert_identical(
+    if False:
+        xr.testing.assert_identical(
         lforecast.drop("init").time if "init" in lforecast.coords else lforecast.time,
         lverif.time,
     )
@@ -102,10 +104,28 @@ def _apply_metric_at_given_lead(
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
 
+    #print('into metric',reference, 'lead =',lead, lforecast.dims,lverif.dims, 'dim=',dim,'\n',lforecast.coords, '\n',lverif.coords)
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
+    if reference=='uninitialized':
+        pass#print('result',reference,result.coords, result.dims,'dim=',dim)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
+    if 'time' in result.dims and 'init' not in result.dims and 'init' in result.coords:
+        if 'lead' not in result:
+            result=result.swap_dims({'time':'init'})
+        else: # for uninitialized
+            result=time_to_init_dim(result)
+    elif 'time' in result.dims and 'init' not in result.dims and 'init' not in result.coords:
+        #print('reference',reference,'rename time->init')
+        result=result.rename({"time":'init'})
     return result
 
+def time_to_init_dim(r):
+    return xr.concat(
+    [r.sel(lead=i).swap_dims({"time": "init"}) for i in r.lead],
+    dim="lead",
+        # compat="override",
+        # coords="minimal",
+    )
 
 def _rename_dim(dim, forecast, verif):
     """rename `dim` to `time` or `init` if forecast and verif dims require to do so."""
@@ -337,7 +357,6 @@ def compute_hindcast(
     inits, verif_dates = return_inits_and_verif_dates(
         forecast, verif, alignment=alignment
     )
-    # print('ALIGNMENT')
     forecast = add_time_from_init_lead(forecast)  # add time afterwards
 
     if "iteration" in forecast.dims and "iteration" not in verif.dims:
@@ -366,10 +385,16 @@ def compute_hindcast(
     result = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
     result["lead"] = forecast["lead"]
     # rename back to 'init'
-    if "time" in result.dims:
-        result = result.swap_dims({"time": "init"})
+    #if "time" in result.dims:
+    #    result = result.swap_dims({"time": "init"})
     # These computations sometimes drop coordinates along the way. This appends them
     # back onto the results of the metric.
+
+    # dirty fix:
+    if 'init' in result.dims and 'init' in result.coords:
+        if 'time' in result.coords:
+            if 'lead' not in result.time.dims:
+                result = add_time_from_init_lead(result.drop('time'))
 
     # Attach climpred compute information to result
     if add_attrs:

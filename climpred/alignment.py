@@ -47,7 +47,6 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
 
     is_in_list(alignment, VALID_ALIGNMENTS, "alignment")
     alignment = ALIGNMENT_ALIASES.get(alignment)
-    print('alignment =',alignment)
     units = forecast["lead"].attrs["units"]
     leads = forecast["lead"].values
 

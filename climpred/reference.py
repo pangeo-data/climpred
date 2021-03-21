@@ -212,23 +212,40 @@ def compute_climatology(
             .sel(time=verif.time)
         )
     if kind == 'hindcast':
-        if alignment=='same_init':
+        if alignment in ['same_init']:
             climatology_day_forecast = climatology_day_forecast.sel(init=inits[1])
+            verif = verif.sel(time=hind.time, method="nearest").assign_coords(
+            time=hind.time).sel(init=inits[1]) # verif with init lead
+        elif alignment=='maximize':
+            climatology_day_forecast = climatology_day_forecast.sel(init=inits[1].drop('lead'))
+            verif = verif.sel(time=hind.time, method="nearest").assign_coords(
+            time=hind.time).sel(init=inits[1].drop('lead'))
         elif alignment=='same_verif':
             climatology_day_forecast = init_to_time_dim(climatology_day_forecast)
-        assert 'time' in climatology_day_forecast.dims
+        #assert 'time' in climatology_day_forecast.dims
         if alignment=='same_verif':
             time_intersection = verif_dates[1]
-        elif alignment in ['same_init','maximize']:
+        elif alignment in ['maximize'] and False:
             time_intersection = climatology_day_forecast.time.to_index().intersection(verif.time.to_index())
-            #time_intersection = time_intersection.intersection(verif_dates[1])
-        climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection)
-        if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
-            climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
-        verif=verif.sel(time=time_intersection)
+            time_intersection = time_intersection.intersection(verif_dates[1])
+        if alignment == 'same_verif':
+            climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection)
 
-        verif=verif.sel(time=climatology_day_forecast.time, method='nearest')
-        climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection,method='nearest')
+        if 'time' in climatology_day_forecast.dims and False:
+            if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
+                climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
+
+        if alignment =='same_verif':
+            verif=verif.sel(time=time_intersection)
+            verif=verif.sel(time=climatology_day_forecast.time, method='nearest')
+            climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection,method='nearest')
+        elif alignment == 'same_inits':
+            climatology_day_forecast = climatology_day_forecast.sel(init=inits[1])
+            verif=verif.sel(init=inits[1])
+        elif alignment=='maximize':
+            print('verif',verif.coords,verif.dims)
+            verif = xr.concat([verif.sel(lead=lead).sel(init=inits[lead]) for lead in hind.lead.values],'lead')
+            climatology_day_forecast = xr.concat([climatology_day_forecast.sel(lead=lead).sel(init=inits[lead]) for lead in hind.lead.values],'lead')
 
     #print('climatology_day_forecast',climatology_day_forecast.sel(lead=[1,2]).SST)
     #print('verif',verif.time)

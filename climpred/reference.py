@@ -231,9 +231,9 @@ def compute_climatology(
         if alignment == 'same_verif':
             climatology_day_forecast = climatology_day_forecast.sel(time=time_intersection)
 
-        if 'init' in climatology_day_forecast.dims:
-            if climatology_day_forecast.isnull().any('init') and 'init' in dim: ## TODO: investigate why needed
-                climatology_day_forecast = climatology_day_forecast.ffill('init').bfill('init')
+        if 'time' in climatology_day_forecast.dims and False:
+            if climatology_day_forecast.isnull().any('time') and 'init' in dim: ## TODO: investigate why needed
+                climatology_day_forecast = climatology_day_forecast.ffill('time').bfill('time')
 
         if alignment =='same_verif':
             verif=verif.sel(time=time_intersection)
@@ -243,6 +243,7 @@ def compute_climatology(
             climatology_day_forecast = climatology_day_forecast.sel(init=inits[1])
             verif=verif.sel(init=inits[1])
         elif alignment=='maximize':
+            print('verif',verif.coords,verif.dims)
             verif = xr.concat([verif.sel(lead=lead).sel(init=inits[lead]) for lead in hind.lead.values],'lead')
             climatology_day_forecast = xr.concat([climatology_day_forecast.sel(lead=lead).sel(init=inits[lead]) for lead in hind.lead.values],'lead')
 
@@ -482,7 +483,6 @@ def compute_uninitialized(
     plag = []
     # TODO: `same_verifs` does not need to go through the loop, since it's a fixed
     # skill over all leads
-    print(alignment,'alignment')
     for lead in hind["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.

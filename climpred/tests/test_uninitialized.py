@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from climpred.constants import VALID_ALIGNMENTS
+VALID_ALIGNMENTS = ["same_init", "same_verif", "maximize"]
 from climpred.reference import compute_uninitialized
 
 

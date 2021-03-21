@@ -19,7 +19,7 @@ CONCAT_KWARGS = {"coords": "minimal", "compat": "override"}
 M2M_MEMBER_DIM = "forecast_member"
 
 # Valid keywords for aligning inits and verification dates.
-VALID_ALIGNMENTS = ["same_init", "same_verif", "maximize"]
+VALID_ALIGNMENTS = ["same_init", "same_verif", "maximize", "same_inits", "same_verifs"]
 
 # Valid units for lead dimension
 VALID_LEAD_UNITS = ["years", "seasons", "months", "weeks", "pentads", "days"]

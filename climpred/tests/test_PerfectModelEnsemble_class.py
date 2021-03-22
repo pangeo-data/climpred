@@ -348,6 +348,8 @@ def test_PerfectModel_verify_bootstrap_deterministic(
             "observation_category_edges": category_edges,
             "score": "accuracy",
         }
+    elif metric == "roc":
+        metric_kwargs = {"bin_edges": category_edges}
     else:
         metric_kwargs = {}
     # acc on dim member only is ill defined

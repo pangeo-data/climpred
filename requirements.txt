@@ -1,5 +1,5 @@
 xarray>=0.16.1
-dask
+dask!=2021.03.0
 matplotlib
 ipython
 toolz

@@ -17,8 +17,8 @@ New Features
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap`
   accept reference ``climatology``. Furthermore, reference ``persistence`` also allows
   probabilistic metrics (:issue:`202`, :issue:`565`, :pr:`566`) `Aaron Spring`_.
-- Added new metric Receiver Operating Characteristic as ``metric='roc'``.
-  (:pr:`566`) `Aaron Spring`_.
+- Added new metric  :py:class:`~climpred.metrics._roc` Receiver Operating
+  Characteristic as ``metric='roc'``. (:pr:`566`) `Aaron Spring`_.
 
 
 Bug fixes

@@ -20,6 +20,7 @@ from xskillscore import (
     rank_histogram,
     reliability,
     rmse,
+    roc,
     rps,
     smape,
     spearman_r,
@@ -2929,32 +2930,31 @@ __contingency = Metric(
     unit_power=0,
 )
 
-from xskillscore import roc
-
 
 def _roc(forecast, verif, dim=None, **metric_kwargs):
-    """roc table.
+    """Receiver Operating Characteristic.
 
     Args:
-        observations : xarray.Dataset or xarray.DataArray
+        observations (xarray.object):
         Labeled array(s) over which to apply the function.
         If ``bin_edges=='continuous'``, observations are binary.
-    forecasts : xarray.Dataset or xarray.DataArray
+    forecasts (xarray.object):
         Labeled array(s) over which to apply the function.
         If ``bin_edges=='continuous'``, forecasts are probabilities.
-    bin_edges : array_like, str, default='continuous'
+    dim (str, list of str): The dimension(s) over which to aggregate. Defaults to None,
+        meaning aggregation over all dims other than ``lead``.
+    bin_edges (array_like, str): default='continuous'
         Bin edges for categorising observations and forecasts. Similar to np.histogram, \
         all but the last (righthand-most) bin include the left edge and exclude the \
         right edge. The last bin includes both edges. ``bin_edges`` will be sorted in \
         ascending order. If ``bin_edges=='continuous'``, calculate ``bin_edges`` from \
         forecasts, equal to ``sklearn.metrics.roc_curve(f_boolean, o_prob)``.
-    dim : str, list
-        The dimension(s) over which to compute the contingency table
-    drop_intermediate : bool, default=False
-        Whether to drop some suboptimal thresholds which would not appear on a plotted
-        ROC curve. This is useful in order to create lighter ROC curves.
-        Defaults to ``True`` in ``sklearn.metrics.roc_curve``.
-    return_results: str, default='area'
+        Passed via metric_kwargs.
+    drop_intermediate (bool): Whether to drop some suboptimal thresholds which would
+        not appear on a plotted ROC curve. This is useful in order to create lighter
+        ROC curves. Defaults to False. Defaults to ``True`` in
+        ``sklearn.metrics.roc_curve``. Passed via metric_kwargs.
+    return_results (str): Passed via metric_kwargs. Defaults to 'area'.
         Specify how return is structed:
             - 'area': return only the ``area under curve`` of ROC
             - 'all_as_tuple': return ``true positive rate`` and ``false positive rate``
@@ -2962,6 +2962,7 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
             - 'all_as_metric_dim': return ``true positive rate`` and
               ``false positive rate`` at each bin and ``area under curve`` of ROC
               concatinated into new ``metric`` dimension
+
     Returns
     -------
     xarray.Dataset or xarray.DataArray :
@@ -2969,8 +2970,19 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
         ``true positive rate`` and ``false positive rate`` contain
         ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
 
+    Details for area under curve:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | positive  |
+        +-----------------+-----------+
+
     See also:
-        * :py:class:`~xskillscore.roc`
+        * :py:func:`~xskillscore.rps`
 
     References
     ----------
@@ -2990,7 +3002,8 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
 
-        Get area under the curve, false positive rate and true positive rate as ``metric`` dimension:
+        Get area under the curve, false positive rate and true positive rate as ``metric`` dimension by specifying ``return_results='all_as_metric_dim'``:
+
         >>> def f(ds): return ds > 0
         >>> HindcastEnsemble.map(f).verify(metric='roc', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs',
@@ -3011,6 +3024,10 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
             skill            <U11 'initialized'
 
     """
+    if "logical" in metric_kwargs:
+        forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+            forecast, verif, metric_kwargs, dim
+        )
     # roc fails when given empty dimension, therefore add fake dimension
     if dim == []:
         forecast = forecast.expand_dims("member")

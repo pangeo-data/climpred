@@ -368,7 +368,6 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     if dim == "member" and metric in pearson_r_containing_metrics:
         dim = ["init", "member"]
 
-    # verify()
     actual = pm.verify(
         comparison=comparison,
         metric=metric,

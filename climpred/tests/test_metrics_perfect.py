@@ -21,11 +21,24 @@ probabilistic_metrics_requiring_more_than_member_dim = [
 
 xr.set_options(display_style="text")
 
+pearson_r_containing_metrics = [
+    "pearson_r",
+    "spearman_r",
+    "pearson_r_p_value",
+    "spearman_r_p_value",
+    "msess_murphy",
+    "bias_slope",
+    "conditional_bias",
+    "std_ratio",
+    "conditional_bias",
+    "uacc",
+]
+
 
 @pytest.mark.parametrize("how", ["constant", "increasing_by_lead"])
 @pytest.mark.parametrize("comparison", PM_COMPARISONS)
 @pytest.mark.parametrize("metric", PM_METRICS)
-def test_PerfectModelEnsemble_constant_forecasts(
+def test_PerfectModelEnsemble_perfect_forecasts(
     perfectModelEnsemble_initialized_control, metric, comparison, how
 ):
     """Test that PerfectModelEnsemble.verify() returns a perfect score for a perfectly
@@ -73,24 +86,30 @@ def test_PerfectModelEnsemble_constant_forecasts(
         comparison = "m2c"
         skill = pe.verify(
             metric=metric, comparison=comparison, dim=dim, **metric_kwargs
-        )
+        ).tos
     else:
         dim = "init" if comparison == "e2c" else ["init", "member"]
         skill = pe.verify(
             metric=metric, comparison=comparison, dim=dim, **metric_kwargs
-        )
-    # # TODO: test assert skill.variable == perfect).all()
-    if metric == "contingency":
+        ).tos
+
+    if metric == "contingency" and how == "constant":
         assert (skill == 1).all()  # checks Contingency.accuracy
+    elif metric in ["crpss", "msess"]:  # identical forecast lead to nans
+        pass
+    elif Metric.perfect and metric not in pearson_r_containing_metrics:
+        assert (skill == Metric.perfect).all(), print(
+            f"{metric} perfect", Metric.perfect, "found", skill
+        )
     else:
-        assert skill == Metric.perfect
+        pass
 
 
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verif", "maximize"])
 @pytest.mark.parametrize("how", ["constant", "increasing_by_lead"])
 @pytest.mark.parametrize("comparison", HINDCAST_COMPARISONS)
 @pytest.mark.parametrize("metric", HINDCAST_METRICS)
-def test_HindcastEnsemble_constant_forecasts(
+def test_HindcastEnsemble_perfect_forecasts(
     hindcast_hist_obs_1d, metric, comparison, how, alignment
 ):
     """Test that HindcastEnsemble.verify() returns a perfect score for a perfectly
@@ -152,8 +171,8 @@ def test_HindcastEnsemble_constant_forecasts(
             if metric in probabilistic_metrics_requiring_more_than_member_dim
             else "member",
             alignment=alignment,
-            **metric_kwargs
-        )
+            **metric_kwargs,
+        ).SST
     else:
         dim = "member" if comparison == "m2o" else "init"
         skill = he.verify(
@@ -161,9 +180,17 @@ def test_HindcastEnsemble_constant_forecasts(
             comparison=comparison,
             dim=dim,
             alignment=alignment,
-            **metric_kwargs
+            **metric_kwargs,
+        ).SST
+    if metric == "contingency" and how == "constant":
+        assert (skill.mean() == 1).all(), print(
+            f"{metric} found", skill
+        )  # checks Contingency.accuracy
+    elif metric in ["msess", "crpss"]:
+        pass  # identical forecasts produce NaNs
+    elif Metric.perfect and metric not in pearson_r_containing_metrics:
+        assert (skill == Metric.perfect).all(), print(
+            f"{metric} perfect", Metric.perfect, "found", skill
         )
-    if metric == "contingency":
-        assert (skill == 1).all()  # checks Contingency.accuracy
     else:
-        assert skill == Metric.perfect
+        pass

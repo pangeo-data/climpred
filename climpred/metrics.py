@@ -2869,9 +2869,6 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
     See also:
         * :py:class:`~xskillscore.Contingency`
-
-    References
-    ----------
         * http://www.cawcr.gov.au/projects/verification/
         * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics # noqa
 
@@ -2935,40 +2932,39 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
     """Receiver Operating Characteristic.
 
     Args:
-        observations (xarray.object):
-        Labeled array(s) over which to apply the function.
-        If ``bin_edges=='continuous'``, observations are binary.
-    forecasts (xarray.object):
-        Labeled array(s) over which to apply the function.
-        If ``bin_edges=='continuous'``, forecasts are probabilities.
-    dim (str, list of str): The dimension(s) over which to aggregate. Defaults to None,
-        meaning aggregation over all dims other than ``lead``.
-    bin_edges (array_like, str): default='continuous'
-        Bin edges for categorising observations and forecasts. Similar to np.histogram, \
-        all but the last (righthand-most) bin include the left edge and exclude the \
-        right edge. The last bin includes both edges. ``bin_edges`` will be sorted in \
-        ascending order. If ``bin_edges=='continuous'``, calculate ``bin_edges`` from \
-        forecasts, equal to ``sklearn.metrics.roc_curve(f_boolean, o_prob)``.
-        Passed via metric_kwargs.
-    drop_intermediate (bool): Whether to drop some suboptimal thresholds which would
-        not appear on a plotted ROC curve. This is useful in order to create lighter
-        ROC curves. Defaults to False. Defaults to ``True`` in
-        ``sklearn.metrics.roc_curve``. Passed via metric_kwargs.
-    return_results (str): Passed via metric_kwargs. Defaults to 'area'.
-        Specify how return is structed:
-            - 'area': return only the ``area under curve`` of ROC
-            - 'all_as_tuple': return ``true positive rate`` and ``false positive rate``
-              at each bin and area under the curve of ROC as tuple
-            - 'all_as_metric_dim': return ``true positive rate`` and
-              ``false positive rate`` at each bin and ``area under curve`` of ROC
-              concatinated into new ``metric`` dimension
+        observations (xarray.object): Labeled array(s) over which to apply the function.
+            If ``bin_edges=='continuous'``, observations are binary.
+        forecasts (xarray.object): Labeled array(s) over which to apply the function.
+            If ``bin_edges=='continuous'``, forecasts are probabilities.
+        dim (str, list of str): The dimension(s) over which to aggregate. Defaults to
+            None, meaning aggregation over all dims other than ``lead``.
+        logical (callable, optional): Function with bool result to be applied to
+            verification data and forecasts and then ``mean('member')`` to get
+            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        bin_edges (array_like, str): Bin edges for categorising observations and
+            forecasts. Similar to np.histogram, all but the last (righthand-most) bin
+            include the left edge and exclude the right edge. The last bin includes
+            both edges. ``bin_edges`` will be sorted in ascending order. If
+            ``bin_edges=='continuous'``, calculate ``bin_edges`` from forecasts, equal
+            to ``sklearn.metrics.roc_curve(f_boolean, o_prob)``. Passed via
+            metric_kwargs. Defaults to 'continuous'.
+        drop_intermediate (bool): Whether to drop some suboptimal thresholds which would
+            not appear on a plotted ROC curve. This is useful in order to create lighter
+            ROC curves. Defaults to False. Defaults to ``True`` in
+            ``sklearn.metrics.roc_curve``. Passed via metric_kwargs.
+        return_results (str): Passed via metric_kwargs. Defaults to 'area'.
+            Specify how return is structed:
+                - 'area': return only the ``area under curve`` of ROC
+                - 'all_as_tuple': return ``true positive rate`` and ``false positive rate``
+                  at each bin and area under the curve of ROC as tuple
+                - 'all_as_metric_dim': return ``true positive rate`` and
+                  ``false positive rate`` at each bin and ``area under curve`` of ROC
+                  concatinated into new ``metric`` dimension
 
-    Returns
-    -------
-    xarray.Dataset or xarray.DataArray :
-        reduced by dimensions ``dim``, see ``return_results`` parameter.
-        ``true positive rate`` and ``false positive rate`` contain
-        ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
+    Returns:
+        roc (xr.object): reduced by dimensions ``dim``, see ``return_results``
+            parameter. ``true positive rate`` and ``false positive rate`` contain
+            ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
 
     Details for area under curve:
         +-----------------+-----------+
@@ -2982,10 +2978,7 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.rps`
-
-    References
-    ----------
+        * :py:func:`~xskillscore.roc`
         * http://www.cawcr.gov.au/projects/verification/
         * https://xskillscore.readthedocs.io/en/stable/api.html#roc # noqa
 

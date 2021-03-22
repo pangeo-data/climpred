@@ -288,6 +288,7 @@ For a thorough look at our metrics library, please see the
     _reliability
     _rank_histogram
     _contingency
+    _roc
 
 Comparisons
 -----------

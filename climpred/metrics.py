@@ -20,6 +20,7 @@ from xskillscore import (
     rank_histogram,
     reliability,
     rmse,
+    roc,
     rps,
     smape,
     spearman_r,
@@ -2126,13 +2127,14 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
         ...     dim='member', threshold=.2, alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:  (init: 52, lead: 10)
+        Dimensions:    (init: 52, lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
-            skill    <U11 'initialized'
+          * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
+          * init       (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            threshold  float64 0.2
+            skill      <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
+            SST        (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
 
         >>> # multiple thresholds averaging over init dimension
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
@@ -2141,7 +2143,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:    (lead: 10, threshold: 2)
         Coordinates:
           * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * threshold  (threshold) int64 1 2
+          * threshold  (threshold) float64 0.2 0.3
             skill      <U11 'initialized'
         Data variables:
             SST        (lead, threshold) float64 0.08712 0.005769 ... 0.1312 0.01923
@@ -2867,9 +2869,6 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
     See also:
         * :py:class:`~xskillscore.Contingency`
-
-    References
-    ----------
         * http://www.cawcr.gov.au/projects/verification/
         * https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics # noqa
 
@@ -2929,6 +2928,116 @@ __contingency = Metric(
 )
 
 
+def _roc(forecast, verif, dim=None, **metric_kwargs):
+    """Receiver Operating Characteristic.
+
+    Args:
+        observations (xarray.object): Labeled array(s) over which to apply the function.
+            If ``bin_edges=='continuous'``, observations are binary.
+        forecasts (xarray.object): Labeled array(s) over which to apply the function.
+            If ``bin_edges=='continuous'``, forecasts are probabilities.
+        dim (str, list of str): The dimension(s) over which to aggregate. Defaults to
+            None, meaning aggregation over all dims other than ``lead``.
+        logical (callable, optional): Function with bool result to be applied to
+            verification data and forecasts and then ``mean('member')`` to get
+            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        bin_edges (array_like, str): Bin edges for categorising observations and
+            forecasts. Similar to np.histogram, all but the last (righthand-most) bin
+            include the left edge and exclude the right edge. The last bin includes
+            both edges. ``bin_edges`` will be sorted in ascending order. If
+            ``bin_edges=='continuous'``, calculate ``bin_edges`` from forecasts, equal
+            to ``sklearn.metrics.roc_curve(f_boolean, o_prob)``. Passed via
+            metric_kwargs. Defaults to 'continuous'.
+        drop_intermediate (bool): Whether to drop some suboptimal thresholds which would
+            not appear on a plotted ROC curve. This is useful in order to create lighter
+            ROC curves. Defaults to False. Defaults to ``True`` in
+            ``sklearn.metrics.roc_curve``. Passed via metric_kwargs.
+        return_results (str): Passed via metric_kwargs. Defaults to 'area'.
+            Specify how return is structed:
+                - 'area': return only the ``area under curve`` of ROC
+                - 'all_as_tuple': return ``true positive rate`` and ``false positive rate``
+                  at each bin and area under the curve of ROC as tuple
+                - 'all_as_metric_dim': return ``true positive rate`` and
+                  ``false positive rate`` at each bin and ``area under curve`` of ROC
+                  concatinated into new ``metric`` dimension
+
+    Returns:
+        roc (xr.object): reduced by dimensions ``dim``, see ``return_results``
+            parameter. ``true positive rate`` and ``false positive rate`` contain
+            ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
+
+    Details for area under curve:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | 1.0       |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | positive  |
+        +-----------------+-----------+
+
+    See also:
+        * :py:func:`~xskillscore.roc`
+        * http://www.cawcr.gov.au/projects/verification/
+        * https://xskillscore.readthedocs.io/en/stable/api.html#roc # noqa
+
+    Example:
+        >>> bin_edges = np.array([-0.5, 0.0, 0.5, 1.0])
+        >>> HindcastEnsemble.verify(metric='roc', comparison='m2o',
+        ...     dim=['member', 'init'], alignment='same_verifs',
+        ...     bin_edges=bin_edges,
+        ...     ).SST
+        <xarray.DataArray 'SST' (lead: 10)>
+        array([0.84385185, 0.82841667, 0.81358547, 0.8393463 , 0.82551752,
+               0.81987778, 0.80719573, 0.80081909, 0.79046553, 0.78037564])
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+
+        Get area under the curve, false positive rate and true positive rate as ``metric`` dimension by specifying ``return_results='all_as_metric_dim'``:
+
+        >>> def f(ds): return ds > 0
+        >>> HindcastEnsemble.map(f).verify(metric='roc', comparison='m2o',
+        ...     dim=['member', 'init'], alignment='same_verifs',
+        ...     bin_edges='continuous', return_results='all_as_metric_dim'
+        ...     ).SST.isel(lead=[0, 1])
+        <xarray.DataArray 'SST' (lead: 2, metric: 3, probability_bin: 3)>
+        array([[[0.        , 0.116     , 1.        ],
+                [0.        , 0.8037037 , 1.        ],
+                [0.84385185, 0.84385185, 0.84385185]],
+        <BLANKLINE>
+               [[0.        , 0.064     , 1.        ],
+                [0.        , 0.72222222, 1.        ],
+                [0.82911111, 0.82911111, 0.82911111]]])
+        Coordinates:
+          * lead             (lead) int32 1 2
+          * probability_bin  (probability_bin) float64 2.0 1.0 0.0
+          * metric           (metric) <U19 'false positive rate' ... 'area under curve'
+            skill            <U11 'initialized'
+
+    """
+    if "logical" in metric_kwargs:
+        forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
+            forecast, verif, metric_kwargs, dim
+        )
+    # roc fails when given empty dimension, therefore add fake dimension
+    if dim == []:
+        forecast = forecast.expand_dims("member")
+        verif = verif.expand_dims("member")
+        dim = "member"
+    return roc(verif, forecast, dim=dim, **metric_kwargs)
+
+
+__roc = Metric(
+    name="roc",
+    function=_roc,
+    positive=True,
+    probabilistic=False,
+    unit_power=0,
+)
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -2963,6 +3072,7 @@ __ALL_METRICS__ = [
     __discrimination,
     __reliability,
     __rps,
+    __roc,
 ]
 
 

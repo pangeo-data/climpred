@@ -429,6 +429,15 @@ A number of metrics can be derived from a `contingency table <https://www.cawcr.
 
 .. autofunction:: _contingency
 
+Receiver Operating Characteristic
+=================================
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['roc']}")
+
+.. autofunction:: _roc
 
 ********************
 User-defined metrics

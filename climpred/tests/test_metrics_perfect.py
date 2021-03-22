@@ -58,6 +58,8 @@ def test_PerfectModelEnsemble_constant_forecasts(
             "observation_category_edges": category_edges,
             "score": "accuracy",
         }
+    elif metric == "roc":
+        metric_kwargs = {"bin_edges": category_edges}
     elif metric == "rps":
         metric_kwargs = {"category_edges": category_edges}
     else:
@@ -136,6 +138,8 @@ def test_HindcastEnsemble_constant_forecasts(
             "observation_category_edges": category_edges,
             "score": "accuracy",
         }
+    elif metric == "roc":
+        metric_kwargs = {"bin_edges": category_edges}
     elif metric == "rps":
         metric_kwargs = {"category_edges": category_edges}
     else:

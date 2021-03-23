@@ -78,7 +78,7 @@ Verification of weather and climate forecasts.
 
 .. note::
   We are actively looking for new contributors for climpred! Riley moved to McKinsey's
-  Climate Analytics team. Aaron is finishing his PhD in Hamberg, Germany, but will stay
+  Climate Analytics team. Aaron is finishing his PhD in Hamburg, Germany, but will stay
   in academia.
   We especially hope for python enthusiasts from seasonal, subseasonal or weather
   prediction community. In our past coding journey, collaborative coding, feedbacking

@@ -77,9 +77,7 @@ climpred: verification of weather and climate forecasts
     :target: https://github.com/aaronspring/climpred-cloud-demo
 
 
-.. note::
-
-  We are actively looking for new contributors for climpred! Riley moved to McKinsey's
+.. note:: We are actively looking for new contributors for climpred! Riley moved to McKinsey's
   Climate Analytics team. Aaron is finishing his PhD, but will stay in academia.
   We especially hope for python enthusiasts from seasonal, subseasonal or weather
   prediction community. In our past coding journey, collaborative coding, feedbacking

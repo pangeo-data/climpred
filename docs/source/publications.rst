@@ -9,6 +9,14 @@ citable DOI, so this can be referenced in the future.
 
 Feel free to open a `Pull Request <contributing.html>`_ to add your publication to the list!
 
+2021
+####
+
+* Spring, A., Dunkl, I., Li, H., Brovkin, V., & Ilyina, T. (2021). Trivial improvements
+  of predictive skill due to direct reconstruction of global carbon cycle.
+  Earth System Dynamics Discussions, 1–36. https://doi.org/10/gh3tn3
+
+
 2020
 ####
 

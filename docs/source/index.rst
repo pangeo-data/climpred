@@ -89,7 +89,7 @@ climpred: verification of weather and climate forecasts
   implementing new features into climpred. Feel free to implement
   your own new feature or take a look at the
   `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
-  tag in the issues.
+  tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
 
 
 Version 2.1.3 Release

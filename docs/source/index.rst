@@ -76,6 +76,36 @@ climpred: verification of weather and climate forecasts
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
 
+
+.. note::
+  We are actively looking for new contributors for climpred! Riley moved to McKinsey's
+  Climate Analytics team. Aaron is finishing his PhD in Hamberg, Germany, but will stay
+  in academia.
+  We especially hope for python enthusiasts from seasonal, subseasonal or weather
+  prediction community. In our past coding journey, collaborative coding, feedbacking
+  issues and pull requests advanced our code and thinking about forecast verification
+  more than we could have ever expected.
+  Aaron (`github <https://github.com/aaronspring/>`__) can provide guidance on
+  implementing new features into climpred. Feel free to implement
+  your own new feature or take a look at the
+  `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
+  tag in the issues.
+
+
+Version 2.1.3 Release
+=====================
+
+*March 23th, 2021*
+
+After our `JOSS <https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef>`_
+paper is published, the climatology reference forecast was introduced and persistence
+forecasts are extended for all metrics (before probabilistic persistence skill was not
+calculated) (:pr:`566`).
+Furthermore, any errors in ``PredictionEnsemble.map(func)`` or
+``PredictionEnsemble.call()`` does not call silently anymore, but raises warnings
+instead (:pr:`552`).
+
+
 Version 2.1.1 Release
 =====================
 

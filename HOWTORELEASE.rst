@@ -4,19 +4,19 @@ Release Procedure
 We follow semantic versioning, e.g., v1.0.0. A major version causes incompatible API
 changes, a minor version adds functionality, and a patch covers bug fixes.
 
-#. Create a new branch ``release-vX.x.x`` with the version for the release.
+#. Create a new branch ``release-v1.0.0`` with the version for the release.
 
  * Update `CHANGELOG.rst`
  * Make sure all new changes and features are reflected in the documentation.
 
-#. Open a new pull request for this branch targeting `master`
+#. Open a new pull request for this branch targeting `main`
 
-#. After all tests pass and the PR has been approved, merge the PR into ``master``
+#. After all tests pass and the PR has been approved, merge the PR into ``main``
 
 #. Tag a release and push to github::
 
     $ git tag -a v1.0.0 -m "Version 1.0.0"
-    $ git push origin master --tags
+    $ git push upstream main --tags
 
 #. We use Github Actions to automate the new release being published to PyPI.
    Simply confirm that the new release is reflected at
@@ -28,13 +28,13 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
     $ python setup.py sdist bdist_wheel --universal  # build package
     $ twine upload dist/*  # register and push to pypi
 
-#. Next, update the stable branch with ``master``. This will trigger a stable build
+#. Next, update the stable branch with ``main``. This will trigger a stable build
    for ReadTheDocs::
 
     $ git checkout stable
-    $ git rebase master
-    $ git push -f origin stable
-    $ git checkout master
+    $ git rebase main
+    $ git push -f upstream stable
+    $ git checkout main
 
 #. Go to https://readthedocs.org and add the new version to "Active Versions"
    under the version tab. Force-build "stable" if it isn't already building.

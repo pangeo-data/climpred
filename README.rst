@@ -76,8 +76,9 @@ Verification of weather and climate forecasts.
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
 
+..
 
-.. warning::
+.. note::
 
     We are actively looking for new contributors for climpred! Riley moved to McKinsey's
     Climate Analytics team. Aaron is finishing his PhD, but will stay in academia.

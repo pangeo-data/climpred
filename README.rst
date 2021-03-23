@@ -84,7 +84,7 @@ Verification of weather and climate forecasts.
   prediction community. In our past coding journey, collaborative coding, feedbacking
   issues and pull requests advanced our code and thinking about forecast verification
   more than we could have ever expected.
-  Aaron (`github <https://github.com/aaronspring/>`__) can provide guidance on
+  `Aaron <https://github.com/aaronspring/>`_ can provide guidance on
   implementing new features into climpred. Feel free to implement
   your own new feature or take a look at the
   `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_

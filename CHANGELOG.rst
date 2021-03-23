@@ -3,7 +3,7 @@ What's New
 ==========
 
 
-climpred v2.1.3 (2021-xx-xx)
+climpred v2.1.3 (2021-03-23)
 ============================
 
 Breaking changes
@@ -20,7 +20,6 @@ New Features
 - Added new metric  :py:class:`~climpred.metrics._roc` Receiver Operating
   Characteristic as ``metric='roc'``. (:pr:`566`) `Aaron Spring`_.
 
-
 Bug fixes
 ---------
 - :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
@@ -32,6 +31,8 @@ Bug fixes
   raised. Furthermore, ``PredictionEnsemble.map(func, *args, **kwargs)``
   applies only function to Datasets with matching dims if ``dim="dim0_or_dim1"`` is
   passed as ``**kwargs``. (:issue:`417`, :issue:`437`, :pr:`552`) `Aaron Spring`_.
+- :py:class:`~climpred.metrics._rpc` was fixed in ``xskillscore>=0.0.19`` and hence is
+  not falsely limited to 1 anymore (:issue:`562`, :pr:`566`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------

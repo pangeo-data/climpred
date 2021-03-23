@@ -76,6 +76,20 @@ Verification of weather and climate forecasts.
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
 
+.. note::
+  We are actively looking for new contributors for climpred! Riley moved to McKinsey's
+  Climate Analytics team. Aaron is finishing his PhD in Hamberg, Germany, but will stay
+  in academia.
+  We especially hope for python enthusiasts from seasonal, subseasonal or weather
+  prediction community. In our past coding journey, collaborative coding, feedbacking
+  issues and pull requests advanced our code and thinking about forecast verification
+  more than we could have ever expected.
+  `Aaron <https://github.com/aaronspring/>`_ can provide guidance on
+  implementing new features into climpred. Feel free to implement
+  your own new feature or take a look at the
+  `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
+  tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
+
 Installation
 ============
 
@@ -90,7 +104,12 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
     conda install -c conda-forge climpred
 
 You can also install the bleeding edge (pre-release versions) by cloning this
-repository and running ``pip install . --upgrade`` in the main directory.
+repository and running ``pip install . --upgrade`` in the main directory or
+
+.. code-block:: bash
+
+    pip install git+https://github.com/pangeo-data/climpred.git
+
 
 Documentation
 =============

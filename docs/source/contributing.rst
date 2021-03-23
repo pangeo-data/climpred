@@ -102,7 +102,6 @@ If you need to add new functions to the API, run ``sphinx-autogen -o api api.rst
 Preparing Pull Requests
 -----------------------
 
-
 #. Fork the
    `climpred GitHub repository <https://github.com/pangeo-data/climpred>`__.  It's
    fine to use ``climpred`` as your fork repository name because it will live
@@ -136,7 +135,8 @@ Preparing Pull Requests
      $ pip install --user pre-commit
      $ pre-commit install
 
-  Afterwards ``pre-commit`` will run whenever you commit.
+   pre-commit automatically beautifies the code, makes it more maintainable and catches syntax errors.
+   Afterwards ``pre-commit`` will run whenever you commit.
 
    https://pre-commit.com/ is a framework for managing and maintaining multi-language pre-commit
    hooks to ensure code-style and code formatting is consistent.
@@ -145,9 +145,10 @@ Preparing Pull Requests
    You’ll need to make sure to activate that environment next time you want
    to use it after closing the terminal or your system.
 
-    You can now edit your local working copy and run/add tests as necessary. Please follow
-    PEP-8 for naming. When committing, ``pre-commit`` will modify the files as needed, or
-    will generally be quite clear about what you need to do to pass the commit test.
+   You can now edit your local working copy and run/add tests as necessary. Please try
+   to follow PEP-8 for naming. When committing, ``pre-commit`` will modify the files as
+   needed, or will generally be quite clear about what you need to do to pass the
+   commit test.
 
 #. Break your edits up into reasonably sized commits::
 
@@ -176,9 +177,9 @@ Preparing Pull Requests
 
 #. Running the performance test suite
 
-Performance matters and it is worth considering whether your code has introduced
-performance regressions. `climpred` is starting to write a suite of benchmarking tests
-using `asv <https://asv.readthedocs.io/en/stable/>`_
+If you considerabling changed to core of code of climpred, it is worth considering
+whether your code has introduced performance regressions. `climpred` has a suite of
+benchmarking tests using `asv <https://asv.readthedocs.io/en/stable/>`_
 to enable easy monitoring of the performance of critical `climpred` operations.
 These benchmarks are all found in the ``asv_bench`` directory.
 

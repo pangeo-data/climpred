@@ -2554,7 +2554,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
           * event                 (event) bool True False
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.1481 ...
+            SST                   (lead, event, forecast_probability) float64 0.07407...
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
@@ -2568,7 +2568,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
           * event                 (event) bool True False
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.1481 ...
+            SST                   (lead, event, forecast_probability) float64 0.07407...
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
@@ -2584,7 +2584,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
           * event                 (event) bool True False
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.1481 ...
+            SST                   (lead, event, forecast_probability) float64 0.07407...
 
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
@@ -2659,10 +2659,10 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 25.0 3.0 0.0 3.0 21.0
+            SST_samples           (forecast_probability) float64 22.0 5.0 1.0 3.0 21.0
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.16 ... 1.0
+            SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
@@ -2673,10 +2673,10 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 25.0 3.0 0.0 3.0 21.0
+            SST_samples           (forecast_probability) float64 22.0 5.0 1.0 3.0 21.0
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.16 ... 1.0
+            SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
@@ -2689,10 +2689,10 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 25.0 3.0 0.0 3.0 21.0
+            SST_samples           (forecast_probability) float64 22.0 5.0 1.0 3.0 21.0
             skill                 <U11 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.16 ... 1.0
+            SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
 
     """
     if "logical" in metric_kwargs:
@@ -2805,27 +2805,30 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-.5, 0., .5, 1.])
-        >>> HindcastEnsemble.verify(metric='rps', comparison='m2o', dim='member',
+        >>> HindcastEnsemble.verify(metric='rps', comparison='m2o', dim=['member', 'init'],
         ...     alignment='same_verifs', category_edges=category_edges)
         <xarray.Dataset>
-        Dimensions:  (init: 52, lead: 10)
+        Dimensions:                     (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
-            skill    <U11 'initialized'
+          * lead                        (lead) int32 1 2 3 4 5 6 7 8 9 10
+            observations_category_edge  <U67 '[-np.inf, -0.5), [-0.5, 0.0), [0.0, 0.5...
+            forecasts_category_edge     <U67 '[-np.inf, -0.5), [-0.5, 0.0), [0.0, 0.5...
+            skill                       <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.2696 0.2696 0.2696 ... 0.2311 0.2311 0.2311
+            SST                         (lead) float64 0.115 0.1123 ... 0.1687 0.1875
+
 
         >>> category_edges = np.array([9.5, 10., 10.5, 11.])
         >>> PerfectModelEnsemble.verify(metric='rps', comparison='m2c',
         ...     dim=['member','init'], category_edges=category_edges)
         <xarray.Dataset>
-        Dimensions:  (lead: 20)
+        Dimensions:                     (lead: 20)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+          * lead                        (lead) int64 1 2 3 4 5 6 7 ... 15 16 17 18 19 20
+            observations_category_edge  <U71 '[-np.inf, 9.5), [9.5, 10.0), [10.0, 10....
+            forecasts_category_edge     <U71 '[-np.inf, 9.5), [9.5, 10.0), [10.0, 10....
         Data variables:
-            tos      (lead) float64 0.1512 0.2726 0.1259 0.214 ... 0.2085 0.1427 0.2757
-
+            tos                         (lead) float64 0.08951 0.1615 ... 0.1399 0.2274
     """
     dim = _remove_member_from_dim_or_raise(dim)
     if "category_edges" in metric_kwargs:

@@ -76,32 +76,35 @@ climpred: verification of weather and climate forecasts
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
 
-Version 2.1.1 Release
+
+.. note::
+  We are actively looking for new contributors for climpred! Riley moved to McKinsey's
+  Climate Analytics team. Aaron is finishing his PhD in Hamberg, Germany, but will stay
+  in academia.
+  We especially hope for python enthusiasts from seasonal, subseasonal or weather
+  prediction community. In our past coding journey, collaborative coding, feedbacking
+  issues and pull requests advanced our code and thinking about forecast verification
+  more than we could have ever expected.
+  `Aaron <https://github.com/aaronspring/>`_ can provide guidance on
+  implementing new features into climpred. Feel free to implement
+  your own new feature or take a look at the
+  `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
+  tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
+
+
+Version 2.1.3 Release
 =====================
 
-*October 13th, 2020*
+*March 23th, 2021*
 
-The most recent release adds a few new features along with a few deprecations. We want
-users to think about methodology with every call of
-:py:meth:`~climpred.classes.HindcastEnsemble.verify`, so we now require explicit
-keywords for ``metric``, ``comparison``, ``dim``, and ``alignment``. We also require
-the explicit definition of ``iterations`` for
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
+After our `JOSS <https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef>`_
+paper is published, the climatology reference forecast was introduced and persistence
+forecasts are extended for all metrics (before probabilistic persistence skill was not
+calculated) (:pr:`566`).
+Furthermore, any errors in ``PredictionEnsemble.map(func)`` or
+``PredictionEnsemble.call()`` does not call silently anymore, but raises warnings
+instead (:pr:`552`).
 
-We've added a few new features as well (see key additions below). For a complete list,
-please see the `changelog <changelog.html>`__.
-
-* An early implementation of `bias correction <bias_removal.html>`__.
-* Spatial dimensions can now be used in metric calls, e.g. for pattern correlation.
-* New metrics have been added from ``xskillscore``, which are mostly based on the `Contingency
-  table <metrics.html#contingency-based-metrics>`__. We have also
-  added additional `probability metrics <metrics.html#probabilistic>`__:
-  the ranked probability score, reliability, discrimination, and ranked histogram.
-* Math operations can be used between :py:class:`~climpred.classes.PredictionEnsemble` objects
-  (see `example here <prediction-ensemble-object.html#Arithmetic-Operations-with-PredictionEnsemble-Objects>`__).
-* Users can now quick plot their prediction system (if there are no spatial dimensions) with
-  :py:meth:`~climpred.classes.HindcastEnsemble.plot`. See an example of this in the
-  `quick start <quick-start.html>`__.
 
 Installation
 ============
@@ -117,7 +120,13 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
     conda install -c conda-forge climpred
 
 You can also install the bleeding edge (pre-release versions) by cloning this
-repository and running ``pip install . --upgrade`` in the main directory
+repository and running ``pip install . --upgrade`` in the main directory or
+
+.. code-block:: bash
+
+    pip install git+https://github.com/pangeo-data/climpred.git
+
+
 
 **Getting Started**
 

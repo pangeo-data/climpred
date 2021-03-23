@@ -78,18 +78,19 @@ Verification of weather and climate forecasts.
 
 
 .. note::
-   We are actively looking for new contributors for climpred! Riley moved to McKinsey's
-   Climate Analytics team. Aaron is finishing his PhD in Hamburg, Germany, but will stay
-   in academia.
-   We especially hope for python enthusiasts from seasonal, subseasonal or weather
-   prediction community. In our past coding journey, collaborative coding, feedbacking
-   issues and pull requests advanced our code and thinking about forecast verification
-   more than we could have ever expected.
-   `Aaron <https://github.com/aaronspring/>`_ can provide guidance on
-   implementing new features into climpred. Feel free to implement
-   your own new feature or take a look at the
-   `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
-   tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
+
+    We are actively looking for new contributors for climpred! Riley moved to McKinsey's
+    Climate Analytics team. Aaron is finishing his PhD in Hamburg, Germany, but will stay
+    in academia.
+    We especially hope for python enthusiasts from seasonal, subseasonal or weather
+    prediction community. In our past coding journey, collaborative coding, feedbacking
+    issues and pull requests advanced our code and thinking about forecast verification
+    more than we could have ever expected.
+    `Aaron <https://github.com/aaronspring/>`_ can provide guidance on
+    implementing new features into climpred. Feel free to implement
+    your own new feature or take a look at the
+    `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
+    tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
 
 
 Installation

@@ -147,7 +147,12 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
     conda install -c conda-forge climpred
 
 You can also install the bleeding edge (pre-release versions) by cloning this
-repository and running ``pip install . --upgrade`` in the main directory
+repository and running ``pip install . --upgrade`` in the main directory or
+
+.. code-block:: bash
+
+    pip install git+https://github.com/pangeo-data/climpred.git
+
 
 **Getting Started**
 

@@ -31,7 +31,7 @@ dependencies:
   - coveralls
   - dataclasses  # to get black to not error
   - flake8
-  - importlib_metadata
+  #- importlib_metadata
   - isort
   - pre-commit
   - pylint

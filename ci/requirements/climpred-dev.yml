@@ -56,6 +56,7 @@ dependencies:
   - matplotlib-base
   - nc-time-axis
   - pip
+  - xrft==0.2
   - pip:
       - pytest-tldr
       - pytest-lazy-fixture

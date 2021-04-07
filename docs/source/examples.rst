@@ -1,8 +1,8 @@
 Examples
-#########
+########
 
 .. note::
-    Please use the ``climpred-dev`` enviroment
+    Please use the ``climpred-dev`` environment
 
         $ conda env create -f ci/requirements/climpred-dev.yml
 
@@ -29,6 +29,7 @@ Subseasonal
    :maxdepth: 1
 
    examples/subseasonal/daily-subx-example.ipynb
+   examples/subseasonal/daily-s2s-example.ipynb
    examples/subseasonal/weekly-subx-example.ipynb
 
 

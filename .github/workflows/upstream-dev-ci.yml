@@ -7,7 +7,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 0 * * 0" # Daily “At 00:00” UTC # do "0 0 * * 4" for thursdays
+    - cron: "0 0 * * 4" # Thursdays “At 00:00” UTC
   workflow_dispatch: # allows you to trigger the workflow run manually
 
 jobs:
@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.8"]
     outputs:
       artifacts_availability: ${{ steps.status.outputs.ARTIFACTS_AVAILABLE }}
     steps:

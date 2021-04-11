@@ -7,7 +7,7 @@ on:
     branches:
       - main
   schedule:
-    - cron: "0 0 * * 0" # Daily “At 00:00” UTC # do "0 0 * * 4" for  thursdays
+    - cron: "0 0 * * 0" # Daily “At 00:00” UTC # do "0 0 * * 4" for thursdays
   workflow_dispatch: # allows you to trigger the workflow run manually
 
 jobs:

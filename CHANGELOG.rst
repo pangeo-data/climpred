@@ -56,6 +56,9 @@ Internals/Minor Fixes
   Find further examples in the ``examples`` folder.
   (:issue:`549`, :pr:`578`) `Aaron Spring`_.
 - Rename branch ``master`` to ``main``. (:pr:`579`) `Aaron Spring`_.
+- Add weekly upstream CI, which raises issues for failures. Adapted from ``xarray``.
+  Manually trigger upstream by committing ``[test-upstream]``.
+  (:issue:`518`, :pr:`596`) `Aaron Spring`_.
 
 climpred v2.1.2 (2021-01-22)
 ============================

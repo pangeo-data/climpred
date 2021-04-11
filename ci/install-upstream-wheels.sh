@@ -34,4 +34,5 @@ python -m pip install \
     git+https://github.com/Unidata/cftime \
     git+https://github.com/pydata/xarray  \
     git+https://github.com/pydata/bottleneck  \
-    git+https://github.com/xarray-contrib/xskillscore
+    git+https://github.com/xarray-contrib/xskillscore \
+    git+https://github.com/xgcm/xrft

@@ -69,10 +69,9 @@ jobs:
         run: |
           conda info -a
           conda list
-          python -c 'import xarray as xr; xr.show_versions()'
       - name: import climpred
         run: |
-          python -c 'import climpred'
+          python -c 'import climpred; climpred.show_versions()'
       - name: Run Tests
         if: success()
         id: status

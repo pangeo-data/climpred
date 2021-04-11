@@ -2,6 +2,22 @@
 What's New
 ==========
 
+climpred v2.1.4 (2021-XX-XX)
+============================
+
+Breaking changes
+----------------
+
+New Features
+------------
+
+Internals/Minor Fixes
+---------------------
+- Add weekly upstream CI, which raises issues for failures. Adapted from ``xarray``.
+  Manually trigger by ``git commit -m '[test-upstream]'``. Skip climpred_testing CI by
+  ``git commit -m '[skip-ci]'``
+  (:issue:`518`, :pr:`596`) `Aaron Spring`_.
+
 
 climpred v2.1.3 (2021-03-23)
 ============================
@@ -56,6 +72,7 @@ Internals/Minor Fixes
   Find further examples in the ``examples`` folder.
   (:issue:`549`, :pr:`578`) `Aaron Spring`_.
 - Rename branch ``master`` to ``main``. (:pr:`579`) `Aaron Spring`_.
+
 
 climpred v2.1.2 (2021-01-22)
 ============================

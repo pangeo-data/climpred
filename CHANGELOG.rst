@@ -14,7 +14,8 @@ New Features
 Internals/Minor Fixes
 ---------------------
 - Add weekly upstream CI, which raises issues for failures. Adapted from ``xarray``.
-  Manually trigger by ``git commit -m '[test-upstream]'``.
+  Manually trigger by ``git commit -m '[test-upstream]'``. Skip climpred_testing CI by
+  ``git commit -m '[skip-ci]'``
   (:issue:`518`, :pr:`596`) `Aaron Spring`_.
 
 

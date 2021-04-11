@@ -32,7 +32,7 @@ jobs:
     needs: detect-ci-trigger
     if: |
       always()
-      && github.repository == 'aaronspring/climpred'
+      && github.repository == 'pangeo-data/climpred'
       && (
         (github.event_name == 'schedule' || github.event_name == 'workflow_dispatch')
         || needs.detect-ci-trigger.outputs.triggered == 'true'
@@ -86,7 +86,7 @@ jobs:
           failure()
           && steps.status.outcome == 'failure'
           && github.event_name == 'schedule'
-          && github.repository == 'aaronspring/climpred'
+          && github.repository == 'pangeo-data/climpred'
         uses: actions/upload-artifact@v2
         with:
           name: output-${{ matrix.python-version }}-log
@@ -99,7 +99,7 @@ jobs:
     if: |
       always()
       && github.event_name == 'schedule'
-      && github.repository == 'aaronspring/climpred'
+      && github.repository == 'pangeo-data/climpred'
       && needs.upstream-dev.outputs.artifacts_availability == 'true'
     runs-on: ubuntu-latest
     defaults:

@@ -2,7 +2,6 @@
 
 conda uninstall -y --force \
     numpy \
-    scipy \
     pandas \
     matplotlib \
     dask \
@@ -21,7 +20,6 @@ python -m pip install \
     --pre \
     --upgrade \
     numpy \
-    scipy \
     pandas
 python -m pip install \
     -f https://7933911d6844c6c53a7d-47bd50c35cd79bd838daf386af554a83.ssl.cf2.rackcdn.com \
@@ -34,6 +32,5 @@ python -m pip install \
     --upgrade \
     git+https://github.com/dask/dask \
     git+https://github.com/Unidata/cftime \
-    git+https://github.com/pydata/bottleneck \
     git+https://github.com/pydata/xarray  \
     git+https://github.com/xarray-contrib/xskillscore

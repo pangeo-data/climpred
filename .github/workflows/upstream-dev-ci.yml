@@ -69,7 +69,7 @@ jobs:
         run: |
           conda info -a
           conda list
-          python xarray/util/print_versions.py
+          python -c 'import xarray as xr; xr.show_versions()'
       - name: import climpred
         run: |
           python -c 'import climpred'

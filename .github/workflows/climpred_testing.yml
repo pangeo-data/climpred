@@ -2,7 +2,8 @@ name: climpred testing
 
 on: pull_request
 
-detect-ci-trigger:
+jobs:
+  detect-ci-trigger:
     name: detect ci trigger
     runs-on: ubuntu-latest
     if: github.event_name == 'push' || github.event_name == 'pull_request'
@@ -17,7 +18,6 @@ detect-ci-trigger:
         with:
           keyword: "[skip-ci]"
 
-jobs:
   test:  # Runs testing suite on various python versions.
     name: Test climpred, python ${{ matrix.python-version }}
     runs-on: ubuntu-latest

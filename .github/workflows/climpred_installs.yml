@@ -2,16 +2,33 @@ name: climpred installs
 
 on: pull_request
 
+detect-ci-trigger:
+    name: detect ci trigger
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    outputs:
+      triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 2
+      - uses: xarray-contrib/ci-trigger@v1.1
+        id: detect-trigger
+        with:
+          keyword: "[skip-ci]"
+
 jobs:
   install-climpred:  # Installs climpred on various OS.
     name: Install climpred, ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: detect-ci-trigger
+    if: needs.detect-ci-trigger.outputs.triggered == 'false'
     strategy:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
     steps:
     - name: Cancel previous runs
-      uses: styfle/cancel-workflow-action@0.6.0
+      uses: styfle/cancel-workflow-action@0.9.0
       with:
         access_token: ${{ github.token }}
     - uses: actions/checkout@v2

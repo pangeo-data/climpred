@@ -148,6 +148,7 @@ repository and running ``pip install . --upgrade`` in the main directory or
 **User Guide**
 
 * :doc:`setting-up-data`
+* :doc:`initialized-datasets`
 * :doc:`prediction-ensemble-object`
 * :doc:`alignment`
 * :doc:`metrics`
@@ -164,6 +165,7 @@ repository and running ``pip install . --upgrade`` in the main directory or
     :caption: User Guide
 
     setting-up-data
+    initialized-datasets
     prediction-ensemble-object.ipynb
     alignment.ipynb
     metrics

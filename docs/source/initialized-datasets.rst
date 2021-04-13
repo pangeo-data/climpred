@@ -18,4 +18,4 @@ Here, we list publicly available initialized datasets:
 +------------+-----------+------------+--------------+-------------+-------------+|  | weather | `<Pull Request <contributing.html>`_ | for numerical weather prediction dataset | highly appreciated  |
 +------------+-----------+------------+--------------+-------------+-------------+
 
-If you find or use another publicly available initialized datasets, please consider adding a `<Pull Request <contributing.html>`_.
+If you find or use another publicly available initialized datasets, please consider adding a `Pull Request <contributing.html>`_.

@@ -18,7 +18,7 @@ Here, we list publicly available initialized datasets and corresponding climpred
      - Example
    * - DCPP
      - decadal
-     - The Decadal Climate Prediction Project (DCPP) contribution to CMIP6
+     - Decadal Climate Prediction Project (DCPP) contribution to CMIP6 `Website <https://www.wcrp-climate.org/dcp-overview>`_
      - `ESGF <https://esgf-data.dkrz.de/search/cmip6-dkrz/>`_, `pangeo <https://pangeo-data.github.io/pangeo-cmip6-cloud/accessing_data.html#loading-an-esm-collection>`_
      - [Boer2016]_
      - `with intake-esm <examples/preprocessing/setup_your_own_data.html#intake-esm-for-cmorized-output>`_, `Anderson <https://github.com/andersy005>`_ at NOAA's 45th CDP Workshop: `slides <https://talks.andersonbanihirwe.dev/climpred-cdpw-2020.html>`_, `Notebook <https://nbviewer.jupyter.org/github/andersy005/talks/blob/gh-pages/notebooks/climpred-demo.ipynb>`_

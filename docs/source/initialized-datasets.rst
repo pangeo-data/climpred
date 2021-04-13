@@ -2,7 +2,7 @@
 Initialized Datasets
 ********************
 
-Probably the hardest part working with ``climpred`` is getting the initialized datasets complying to the expectations and data model of ``climpred``. For names, data types and conventions of ``xr.Dataset`` dimensions and coordinates, please refer to `Setting up your Dataset <setting-up-data.html>`_.
+Probably the hardest part in working with ``climpred`` is getting the initialized datasets complying to the expectations and data model of ``climpred``. For names, data types and conventions of ``xr.Dataset`` dimensions and coordinates, please refer to `Setting up your Dataset <setting-up-data.html>`_.
 
 Here, we list publicly available initialized datasets and corresponding climpred examples:
 

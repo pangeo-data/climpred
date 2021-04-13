@@ -18,7 +18,7 @@ Internals/Minor Fixes
   ``git commit -m '[skip-ci]'``
   (:issue:`518`, :pr:`596`) `Aaron Spring`_.
 - Add `documentation page about publicly available initialized datasets and
-  corresponding climpred examples: <initialized-datasets.html>`_.
+  corresponding climpred examples <initialized-datasets.html>`_.
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
 
 

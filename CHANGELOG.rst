@@ -17,6 +17,9 @@ Internals/Minor Fixes
   Manually trigger by ``git commit -m '[test-upstream]'``. Skip climpred_testing CI by
   ``git commit -m '[skip-ci]'``
   (:issue:`518`, :pr:`596`) `Aaron Spring`_.
+- Add documentation page about publicly available initialized datasets and
+  corresponding climpred examples: <initialized-datasets.html>`_.
+  (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
 
 
 climpred v2.1.3 (2021-03-23)

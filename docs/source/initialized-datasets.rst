@@ -30,7 +30,7 @@ Here, we list publicly available initialized datasets and corresponding climpred
      - many standard climpred `examples <quick-start.html>`_
    * - NMME
      - seasonal
-     - The North American Multimodel Ensemble: Phase-1 Seasonal-to-Interannual Prediction
+     - The North American Multimodel Ensemble: Phase-1 Seasonal-to-Interannual Prediction `Website <https://www.cpc.ncep.noaa.gov/products/NMME/>`_
      - `IRIDL <http://iridl.ldeo.columbia.edu/SOURCES/.Models/.NMME/>`_
      - [Kirtman2014]_
      - `seasonal SubX <examples.html#monthly-and-seasonal>`_

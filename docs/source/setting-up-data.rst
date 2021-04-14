@@ -47,7 +47,7 @@ that ``climpred`` supports for them.
      - ``int``
      - lead timestep after initialization ``init``
      - ``forecast_period``
-     - units (str) [years, seasons, months, weeks, pentads, days]
+     - units (str) [years, seasons, months, weeks, pentads, days, hours, minutes]
    * - ``init``
      - ``int``, ``pd.DatetimeIndex``, ``xr.CFTimeIndex``
      - initialization as start date of experiment

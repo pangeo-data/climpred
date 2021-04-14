@@ -3,7 +3,7 @@ CLIMPRED_ENSEMBLE_DIMS = ["init", "member", "lead"]
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ["time"]
 
 # List of frequencies to check to infer time series stride
-FREQ_LIST_TO_INFER_STRIDE = ["day", "month", "year"]
+FREQ_LIST_TO_INFER_STRIDE = ["day", "month", "year"]  # where used?
 
 # calendar type for perfect-model (PM) (needed for bootstrapping_uninit)
 # Leap also works, but changing Leap,NoLeap fails
@@ -22,7 +22,17 @@ M2M_MEMBER_DIM = "forecast_member"
 VALID_ALIGNMENTS = ["same_inits", "same_init", "same_verifs", "same_verif", "maximize"]
 
 # Valid units for lead dimension
-VALID_LEAD_UNITS = ["years", "seasons", "months", "weeks", "pentads", "days"]
+VALID_LEAD_UNITS = [
+    "years",
+    "seasons",
+    "months",
+    "weeks",
+    "pentads",
+    "days",
+    "minutes",
+    "hours",
+    "seconds",
+]
 
 # Valid keywords for reference forecast
 VALID_REFERENCES = ["uninitialized", "persistence", "climatology"]

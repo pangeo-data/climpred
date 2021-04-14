@@ -150,6 +150,13 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
     return xobj
 
 
+def convert_cftime_to_datetime_coords(ds, dim):
+    """Convert dimension coordinate dim from CFTimeIndex to pd.DatetimeIndex."""
+    return ds.assign_coords(
+        {dim: xr.DataArray(ds[dim].to_index().to_datetimeindex(), dims=dim)}
+    )
+
+
 def find_start_dates_for_given_init(control, single_init):
     """Find the same start dates for cftime single_init across different years in
     control. Return control.time. Requires calendar=Datetime(No)Leap for consistent

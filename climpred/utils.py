@@ -127,7 +127,7 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
                 "Change init to a datetime if it is another resolution."
             )
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
-            dates = [str(int(t)) + "-01-01-01-01" for t in time_index]
+            dates = [str(int(t)) + "-01-01-00-00-00" for t in time_index]
             split_dates = [d.split("-") for d in dates]
             if "lead" in xobj.dims:
                 # Probably the only case we can assume lead units, since `lead` does not

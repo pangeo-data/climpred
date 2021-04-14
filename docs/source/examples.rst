@@ -23,6 +23,14 @@ Pre-Processing
 
    examples/preprocessing/setup_your_own_data.ipynb
 
+Numerical Weather Prediction
+============================
+.. toctree::
+  :maxdepth: 1
+
+  examples/NWP/NWP_GEFS_6h_forecasts.ipynb
+
+
 Subseasonal
 ===========
 .. toctree::

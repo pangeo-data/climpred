@@ -1,4 +1,5 @@
 import logging
+import warnings
 
 import pandas as pd
 import xarray as xr
@@ -76,24 +77,15 @@ def _mean_bias_removal_cross_validate(hind, bias, dim):
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init
         hind_drop_init_where_bias = hind_drop_init.where(bias.init)
-        # logging.info(
-        #    f"initialization {init}: remove bias from"
-        #    f"{hind_drop_init_where_bias.min().values}-"
-        #    f"{hind_drop_init_where_bias.max().values}"
-        # )
+        logging.info(
+            f"initialization {init}: remove bias from"
+            f"{hind_drop_init_where_bias.min().values}-"
+            f"{hind_drop_init_where_bias.max().values}"
+        )
         with xr.set_options(keep_attrs=True):
             if seasonality_str == "weekofyear":
-                # hind_drop_init_where_bias = convert_cftime_to_datetime_coords(hind_drop_init_where_bias, 'init')
-                # print('init',init,type(init))
-                # print('hind',hind.coords,hind.init.to_index())
-                # print(init,'\n hind_drop_init_where_bias',hind_drop_init_where_bias.init.to_index())
-                # print('bias',bias.sel(init=hind_drop_init_where_bias)
-                # .groupby(bias.sel(init=hind_drop_init_where_bias).init.dt.isocalendar().week)
-                # .mean().coords)
                 init_bias_removed = (
-                    hind.sel(
-                        init=[init]
-                    )  # .groupby(hind.sel(init=[init]).init.dt.isocalendar().week)
+                    hind.sel(init=[init])
                     - bias.sel(init=hind_drop_init_where_bias)
                     .groupby(
                         bias.sel(init=hind_drop_init_where_bias)
@@ -102,17 +94,13 @@ def _mean_bias_removal_cross_validate(hind, bias, dim):
                     )
                     .mean()
                 )
-                print("init_bias_removed", init_bias_removed.coords, "\n")
             else:  # dayofyear month
-                print(hind.sel(init=init))
                 init_bias_removed = (
-                    hind.sel(init=[init])  # .groupby(f'init.{seasonality_str}')
+                    hind.sel(init=init)
                     - bias.sel(init=hind_drop_init_where_bias)
                     .groupby(f"init.{seasonality_str}")
                     .mean()
                 )
-            # if 'week' in init_bias_removed.dims:
-            #    init_bias_removed = init_bias_removed.mean('week', skipna=True)
         bias_removed_hind.append(init_bias_removed)
     bias_removed_hind = xr.concat(bias_removed_hind, "init")
     bias_removed_hind.attrs = hind.attrs
@@ -146,6 +134,10 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
         HindcastEnsemble: bias removed hindcast.
 
     """
+    if hindcast.get_initialized().lead.attrs["units"] != "years":
+        warnings.warn(
+            "HindcastEnsemble.remove_bias() is still experimental and is only tested for annual leads. Please consider contributing to https://github.com/pangeo-data/climpred/issues/605"
+        )
 
     def bias_func(a, b, **kwargs):
         return a - b

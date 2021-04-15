@@ -15,11 +15,12 @@ class set_options:
       Default: ``dayofyear``.
 
     You can use ``set_options`` either as a context manager:
-    >>> ds = xr.Dataset({"x": np.arange(1000)})
-    >>> with climpred.set_options(seasonality='monthofyear'):
-    ...     HindcastEnsemble.verify(metric='mse', comparison='e2o', dim='init', alignment='same_verifs',reference='climatology')
+    >>> kw = dict(metric='mse', comparison='e2o', dim='init', alignment='same_verifs',
+                  reference='climatology')
+    >>> with climpred.set_options(seasonality='month'):
+    ...     HindcastEnsemble.verify(**kw).SST
     >>> with climpred.set_options(seasonality='dayofyear'):
-    ...     HindcastEnsemble.verify(metric='mse', comparison='e2o', dim='init', alignment='same_verifs',reference='climatology')
+    ...     HindcastEnsemble.verify(**kw).SST
     """
 
     def __init__(self, **kwargs):

@@ -19,6 +19,7 @@ from .metrics import (
     PM_METRICS,
     _rename_dim,
 )
+from .options import OPTIONS
 from .utils import (
     assign_attrs,
     convert_time_index,
@@ -36,7 +37,10 @@ def persistence(verif, inits, verif_dates, lead):
 
 
 def climatology(verif, inits, verif_dates, lead):
-    climatology_day = verif.groupby("time.dayofyear").mean()
+    seasonality_str = OPTIONS["seasonality"]
+    if seasonality_str == "weekofyear":
+        raise NotImplementedError
+    climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
     # enlarge times to get climatology_forecast times
     # this prevents errors if verification.time and hindcast.init are too much apart
     verif_hind_union = xr.DataArray(
@@ -44,8 +48,9 @@ def climatology(verif, inits, verif_dates, lead):
     )
 
     climatology_forecast = climatology_day.sel(
-        dayofyear=verif_hind_union.time.dt.dayofyear, method="nearest"
-    ).drop("dayofyear")
+        {seasonality_str: getattr(verif_hind_union.time.dt, seasonality_str)},
+        method="nearest",
+    ).drop(seasonality_str)
 
     lforecast = climatology_forecast.where(
         climatology_forecast.time.isin(inits[lead]), drop=True
@@ -130,6 +135,8 @@ def compute_climatology(
         clim (xarray object): Results of climatology forecast with the input metric
             applied.
     """
+    seasonality_str = OPTIONS["seasonality"]
+
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
@@ -156,14 +163,14 @@ def compute_climatology(
 
     if kind == "perfect":
         forecast, verif = comparison.function(hind, metric=metric)
-        climatology_day = verif.groupby("init.dayofyear").mean()
+        climatology_day = verif.groupby(f"init.{seasonality_str}").mean()
     else:
         forecast, verif = comparison.function(hind, verif, metric=metric)
-        climatology_day = verif.groupby("time.dayofyear").mean()
+        climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
 
     climatology_day_forecast = climatology_day.sel(
-        dayofyear=forecast.init.dt.dayofyear, method="nearest"
-    ).drop("dayofyear")
+        {seasonality_str: getattr(forecast.init.dt, seasonality_str)}, method="nearest"
+    ).drop(seasonality_str)
 
     if kind == "hindcast":
         climatology_day_forecast = climatology_day_forecast.rename({"init": "time"})

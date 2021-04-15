@@ -126,6 +126,6 @@ jobs:
       - name: Test notebooks in docs
         run: |
           pushd docs
-          nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/subseasonal/*.ipynb
+          nbstripout source/*.ipynb source/examples/decadal/*.ipynb
           make -j4 html
           popd

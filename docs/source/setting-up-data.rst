@@ -13,7 +13,7 @@ be annual data.  A user warning is issues when this assumption is made.
 
 ``lead`` is the lead time of the forecasts from initialization. The units for the ``lead``
 dimension must be specified in as an attribute.  Valid options are
-``years, seasons, months, weeks, pentads, days``.
+``years, seasons, months, weeks, pentads, days, hours, minutes, seconds``.
 
 Another crucial dimension is ``member``, which holds the various ensemble members.
 Any additional dimensions will
@@ -47,7 +47,7 @@ that ``climpred`` supports for them.
      - ``int``
      - lead timestep after initialization ``init``
      - ``forecast_period``
-     - units (str) [years, seasons, months, weeks, pentads, days]
+     - units (str) [years, seasons, months, weeks, pentads, days, hours, minutes, seconds]
    * - ``init``
      - ``int``, ``pd.DatetimeIndex``, ``xr.CFTimeIndex``
      - initialization as start date of experiment

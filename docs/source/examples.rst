@@ -38,6 +38,7 @@ Subseasonal
 
    examples/subseasonal/daily-subx-example.ipynb
    examples/subseasonal/weekly-subx-example.ipynb
+   examples/subseasonal/daily-S2S-ECMWF.ipynb
 
 
 Monthly and Seasonal
@@ -50,7 +51,7 @@ Monthly and Seasonal
 
 
 Decadal
-===================
+=======
 .. toctree::
    :maxdepth: 1
 

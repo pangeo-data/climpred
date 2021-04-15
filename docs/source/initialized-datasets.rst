@@ -43,9 +43,9 @@ Here, we list publicly available initialized datasets and corresponding climpred
    * - S2S
      - subseasonal
      - The Subseasonal to Seasonal (S2S) Prediction Project Database `Website <http://wwww.s2sprediction.net/>`_
-     - `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_, `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-competition>`_
+     - `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_, `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_
      - [Vitart2017]_
-     - `PR <https://github.com/pangeo-data/climpred/pull/593>`_
+     - `IRIDL PR <https://github.com/pangeo-data/climpred/pull/593>`_, `ECMWF Cloud/climetlab <examples/daily-S2S-ECMWF.html>`_
    * - GEFS
      - weather
      - Global Ensemble Forecast System (GEFS), `Website <https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/global-ensemble-forecast-system-gefs>`_

@@ -136,7 +136,9 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
     """
     if hindcast.get_initialized().lead.attrs["units"] != "years":
         warnings.warn(
-            "HindcastEnsemble.remove_bias() is still experimental and is only tested for annual leads. Please consider contributing to https://github.com/pangeo-data/climpred/issues/605"
+            "HindcastEnsemble.remove_bias() is still experimental and is only tested "
+            "for annual leads. Please consider contributing to "
+            "https://github.com/pangeo-data/climpred/issues/605"
         )
 
     def bias_func(a, b, **kwargs):
@@ -144,11 +146,11 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
 
     bias_metric = Metric("bias", bias_func, True, False, 1)
 
-    # calculate bias
+    # calculate bias lead-time dependent
     bias = hindcast.verify(
         metric=bias_metric,
         comparison="e2o",
-        dim=[],  # not used therefore best to add [] here
+        dim=[],  # not used by bias func, therefore best to add [] here
         alignment=alignment,
         **metric_kwargs,
     ).squeeze()
@@ -161,6 +163,7 @@ def mean_bias_removal(hindcast, alignment, cross_validate=True, **metric_kwargs)
 
     bias_removed_hind = mean_bias_func(hindcast._datasets["initialized"], bias, "init")
     bias_removed_hind = bias_removed_hind.squeeze()
+    # remove groupby label from coords
     for c in ["dayofyear", "skill", "week", "month"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]

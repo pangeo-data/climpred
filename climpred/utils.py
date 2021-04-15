@@ -294,7 +294,7 @@ def get_lead_cftime_shift_args(units, lead):
         "pentads": (lead * 5, "D"),
         "days": (lead, "D"),
         "hours": (lead, "H"),
-        "minutes": (lead, "M"),
+        "minutes": (lead, "T"),
         "seconds": (lead, "S"),
     }
 

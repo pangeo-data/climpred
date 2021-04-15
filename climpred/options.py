@@ -9,14 +9,14 @@ _VALIDATORS = {
 
 class set_options:
     """Set options for climpred in a controlled context. Analogous to
-    `xarrayset_options(**option) <http://xarray.pydata.org/en/stable/generated/xarray.set_options.html>`_.
+    `xarray.set_options(**option) <http://xarray.pydata.org/en/stable/generated/xarray.set_options.html>`_.
 
     Currently supported options:
 
-        * ``seasonality``: Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
-            Used in ``reference=climatology`` and :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-                - Allowed: ["dayofyear", "weekofyear", "month"]
-                - Default: ``dayofyear``.
+    - ``seasonality``: Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
+      Used in ``reference=climatology`` and :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+        - Allowed: [``"dayofyear"``, ``"weekofyear"``, ``"month"``]
+        - Default: ``dayofyear``.
 
     Examples:
         You can use ``set_options`` either as a context manager:
@@ -31,6 +31,10 @@ class set_options:
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'climatology'
+
+        Or to set global options:
+        >>>  climpred.set_options(seasonality='month')  # doctest: +ELLIPSIS
+        <climpred.options.set_options object at 0x...>
     """
 
     def __init__(self, **kwargs):

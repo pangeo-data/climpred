@@ -5,18 +5,12 @@ climpred.options.set\_options
 
 .. autoclass:: set_options
 
-   
+
    .. automethod:: __init__
 
-   
+
    .. rubric:: Methods
 
    .. autosummary::
-   
-      ~set_options.__init__
-   
-   
 
-   
-   
-   
+      ~set_options.__init__

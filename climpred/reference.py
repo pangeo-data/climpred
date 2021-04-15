@@ -169,7 +169,7 @@ def compute_climatology(
         climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
 
     climatology_day_forecast = climatology_day.sel(
-        {seasonality_str:getattr(forecast.init.dt, seasonality_str)}, method="nearest"
+        {seasonality_str: getattr(forecast.init.dt, seasonality_str)}, method="nearest"
     ).drop(seasonality_str)
 
     if kind == "hindcast":

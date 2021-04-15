@@ -16,11 +16,15 @@ class set_options:
 
     You can use ``set_options`` either as a context manager:
     >>> kw = dict(metric='mse', comparison='e2o', dim='init', alignment='same_verifs',
-                  reference='climatology')
+    ...           reference='climatology')
     >>> with climpred.set_options(seasonality='month'):
-    ...     HindcastEnsemble.verify(**kw).SST
-    >>> with climpred.set_options(seasonality='dayofyear'):
-    ...     HindcastEnsemble.verify(**kw).SST
+    ...     HindcastEnsemble.verify(**kw).SST.sel(skill='climatology')
+    <xarray.DataArray 'SST' (lead: 10)>
+    array([0.03712573, 0.03712573, 0.03712573, 0.03712573, 0.03712573,
+           0.03712573, 0.03712573, 0.03712573, 0.03712573, 0.03712573])
+    Coordinates:
+      * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+        skill    <U11 'climatology'
     """
 
     def __init__(self, **kwargs):

@@ -11,9 +11,12 @@ Breaking changes
 New Features
 ------------
 - Allow ``hours``, ``minutes`` and ``seconds`` as ``lead.attrs['units']`` (:issue:`404`, :pr:`603`) `Aaron Spring`_.
-- Allow to set ``seasonality`` via ``climpred.set_options`` to specify how to compute
-  ``climatology`` or in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+- Allow to set ``seasonality`` via ``climpred.set_options`` to specify how to
+  ``verify(reference='climatology'`` or in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
   (:issue:`529`, :pr:`603`) `Aaron Spring`_.
+- Allow ``weekofyear`` via ``datetimeindex`` in
+  :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`, but not yet implemented in
+  ``verify(reference='climatology')``. (:issue:`529`, :pr:`603`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------

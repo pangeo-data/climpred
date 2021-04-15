@@ -10,6 +10,10 @@ Breaking changes
 
 New Features
 ------------
+- Allow ``hours``, ``minutes`` and ``seconds`` as ``lead.attrs['units']`` (:issue:`404`, :pr:`603`) `Aaron Spring`_.
+- Allow to set ``seasonality`` via ``climpred.set_options`` to specify how to compute
+  ``climatology`` or in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+  (:issue:`529`, :pr:`603`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
@@ -20,7 +24,11 @@ Internals/Minor Fixes
 - Add `documentation page about publicly available initialized datasets and
   corresponding climpred examples <initialized-datasets.html>`_.
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
-
+- Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
+  prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.
+- Add subseasonal `daily ECMWF example <examples/daily-S2S-ECMWF.html>`_ using
+  `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_ to access
+  hindcasts from ECMWF cloud.  (:issue:`587`, :pr:`603`) `Aaron Spring`_.
 
 climpred v2.1.3 (2021-03-23)
 ============================

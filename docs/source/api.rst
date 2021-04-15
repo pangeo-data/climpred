@@ -184,6 +184,7 @@ Reference
 
     compute_persistence
     compute_uninitialized
+    compute_climatology
 
 Horizon
 ~~~~~~~
@@ -231,6 +232,7 @@ Preprocessing
     :toctree: api/
 
     get_path
+
 
 Smoothing
 ~~~~~~~~~
@@ -308,3 +310,14 @@ For a thorough look at our metrics library, please see the
     _m2e
     _m2c
     _e2c
+
+Config
+------
+Set options analogous to `xarray <http://xarray.pydata.org/en/stable/generated/xarray.set_options.html>`_.
+
+.. currentmodule:: climpred.options
+
+.. autosummary::
+    :toctree: api/
+
+    set_options

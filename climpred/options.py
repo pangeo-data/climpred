@@ -33,7 +33,8 @@ class set_options:
             skill    <U11 'climatology'
 
         Or to set global options:
-        >>>  climpred.set_options(seasonality='month')  # doctest: +ELLIPSIS
+
+        >>> climpred.set_options(seasonality='month')  # doctest: +ELLIPSIS
         <climpred.options.set_options object at 0x...>
     """
 

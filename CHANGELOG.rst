@@ -36,7 +36,6 @@ Documentation
   working with "on-the-fly" reforecasts with ``hdate`` dimension.
   (:issue:`588`, :pr:`593`) `Aaron Spring`_.
 
-
 Internals/Minor Fixes
 ---------------------
 - Add weekly upstream CI, which raises issues for failures. Adapted from ``xarray``.

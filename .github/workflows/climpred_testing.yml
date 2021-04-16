@@ -1,6 +1,13 @@
-name: climpred testing
+name: climpred testing  # based on https://github.com/pydata/xarray/blob/master/.github/workflows/ci.yaml
 
-on: pull_request
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  workflow_dispatch: # allows you to trigger manually
 
 jobs:
   detect-ci-trigger:
@@ -32,10 +39,12 @@ jobs:
         python-version: [3.7, 3.8, 3.9]
     steps:
       - uses: actions/checkout@v2
+        with:
+            fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Set up conda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          auto-update-conda: true
+          auto-update-conda: false
           channels: conda-forge
           mamba-version: '*'
           activate-environment: climpred-minimum-tests
@@ -99,7 +108,7 @@ jobs:
       - name: Set up Conda
         uses: conda-incubator/setup-miniconda@v2
         with:
-          auto-update-conda: true
+          auto-update-conda: false
           channels: conda-forge
           mamba-version: '*'
           activate-environment: climpred-docs-notebooks

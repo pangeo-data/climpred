@@ -15,7 +15,7 @@ New Features
 - Allow to set ``seasonality`` via :py:class:`~climpred.options.set_options` to specify
   how to group in ``verify(reference='climatology'`` or in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-  (:issue:`529`, :pr:`603`) `Aaron Spring`_.
+  (:issue:`529`, :pr:`593`, :pr:`603`) `Aaron Spring`_.
 - Allow ``weekofyear`` via ``datetime`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`, but not yet implemented in
   ``verify(reference='climatology')``. (:issue:`529`, :pr:`603`) `Aaron Spring`_.

@@ -20,12 +20,8 @@ New Features
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`, but not yet implemented in
   ``verify(reference='climatology')``. (:issue:`529`, :pr:`603`) `Aaron Spring`_.
 
-Internals/Minor Fixes
----------------------
-- Add weekly upstream CI, which raises issues for failures. Adapted from ``xarray``.
-  Manually trigger by ``git commit -m '[test-upstream]'``. Skip climpred_testing CI by
-  ``git commit -m '[skip-ci]'``
-  (:issue:`518`, :pr:`596`) `Aaron Spring`_.
+Documentation
+-------------
 - Add `documentation page about publicly available initialized datasets and
   corresponding climpred examples <initialized-datasets.html>`_.
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
@@ -34,6 +30,20 @@ Internals/Minor Fixes
 - Add subseasonal `daily ECMWF example <examples/daily-S2S-ECMWF.html>`_ using
   `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_ to access
   hindcasts from ECMWF cloud.  (:issue:`587`, :pr:`603`) `Aaron Spring`_.
+- Add subseasonal `daily S2S example <examples/daily-S2S-ECMWF.html>`_ accessing
+  `S2S <http://s2sprediction.net/>`_ output on
+  `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_ with a cookie and
+  working with "on-the-fly" reforecasts with ``hdate`` dimension.
+  (:issue:`588`, :pr:`593`) `Aaron Spring`_.
+
+
+Internals/Minor Fixes
+---------------------
+- Add weekly upstream CI, which raises issues for failures. Adapted from ``xarray``.
+  Manually trigger by ``git commit -m '[test-upstream]'``. Skip climpred_testing CI by
+  ``git commit -m '[skip-ci]'``
+  (:issue:`518`, :pr:`596`) `Aaron Spring`_.
+
 
 climpred v2.1.3 (2021-03-23)
 ============================

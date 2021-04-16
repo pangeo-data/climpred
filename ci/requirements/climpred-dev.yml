@@ -30,7 +30,7 @@ dependencies:
   - black==19.10b0
   - coveralls
   - flake8
-  - importlib_metadata
+  #- importlib_metadata
   - isort
   - pre-commit
   - pylint

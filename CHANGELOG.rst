@@ -15,10 +15,26 @@ New Features
 - Allow to set ``seasonality`` via :py:class:`~climpred.options.set_options` to specify
   how to group in ``verify(reference='climatology'`` or in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-  (:issue:`529`, :pr:`603`) `Aaron Spring`_.
+  (:issue:`529`, :pr:`593`, :pr:`603`) `Aaron Spring`_.
 - Allow ``weekofyear`` via ``datetime`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`, but not yet implemented in
   ``verify(reference='climatology')``. (:issue:`529`, :pr:`603`) `Aaron Spring`_.
+
+Documentation
+-------------
+- Add `documentation page about publicly available initialized datasets and
+  corresponding climpred examples <initialized-datasets.html>`_.
+  (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
+- Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
+  prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.
+- Add subseasonal `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html>`_ using
+  `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_ to access
+  hindcasts from ECMWF cloud.  (:issue:`587`, :pr:`603`) `Aaron Spring`_.
+- Add subseasonal `daily S2S example <examples/subseasonal/daily-S2S-IRIDL.html>`_ accessing
+  `S2S <http://s2sprediction.net/>`_ output on
+  `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_ with a cookie and
+  working with "on-the-fly" reforecasts with ``hdate`` dimension.
+  (:issue:`588`, :pr:`593`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
@@ -26,14 +42,7 @@ Internals/Minor Fixes
   Manually trigger by ``git commit -m '[test-upstream]'``. Skip climpred_testing CI by
   ``git commit -m '[skip-ci]'``
   (:issue:`518`, :pr:`596`) `Aaron Spring`_.
-- Add `documentation page about publicly available initialized datasets and
-  corresponding climpred examples <initialized-datasets.html>`_.
-  (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
-- Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
-  prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.
-- Add subseasonal `daily ECMWF example <examples/daily-S2S-ECMWF.html>`_ using
-  `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_ to access
-  hindcasts from ECMWF cloud.  (:issue:`587`, :pr:`603`) `Aaron Spring`_.
+
 
 climpred v2.1.3 (2021-03-23)
 ============================

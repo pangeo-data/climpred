@@ -207,5 +207,5 @@ def varweighted_mean_period(da, dim="time", **kwargs):
         vwmp = vwmp.sum(f"freq_{d}") / ((vwmp * vwmp[f"freq_{d}"]).sum(f"freq_{d}"))
     for d in dim:
         if f"freq_{d}_spacing" in vwmp.coords:
-            del vwmp[f"freq_{d}_spacing"]
+            del vwmp.coords[f"freq_{d}_spacing"]
     return vwmp

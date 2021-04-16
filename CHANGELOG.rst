@@ -27,10 +27,10 @@ Documentation
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
 - Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
   prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.
-- Add subseasonal `daily ECMWF example <examples/daily-S2S-ECMWF.html>`_ using
+- Add subseasonal `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html>`_ using
   `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_ to access
   hindcasts from ECMWF cloud.  (:issue:`587`, :pr:`603`) `Aaron Spring`_.
-- Add subseasonal `daily S2S example <examples/daily-S2S-IRIDL.html>`_ accessing
+- Add subseasonal `daily S2S example <examples/subseasonal/daily-S2S-IRIDL.html>`_ accessing
   `S2S <http://s2sprediction.net/>`_ output on
   `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_ with a cookie and
   working with "on-the-fly" reforecasts with ``hdate`` dimension.

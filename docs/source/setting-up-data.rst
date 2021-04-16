@@ -13,7 +13,7 @@ be annual data.  A user warning is issues when this assumption is made.
 
 ``lead`` is the lead time of the forecasts from initialization. The units for the ``lead``
 dimension must be specified in as an attribute.  Valid options are
-``years, seasons, months, weeks, pentads, days``.
+``years, seasons, months, weeks, pentads, days, hours, minutes, seconds``.
 
 Another crucial dimension is ``member``, which holds the various ensemble members.
 Any additional dimensions will
@@ -34,12 +34,27 @@ is made. These products can also include additional dimensions, such as ``lat``,
 See the below table for a summary of dimensions used in ``climpred``, and data types
 that ``climpred`` supports for them.
 
-+------------+---------------------------------------------------+------------------------------------------------+------------------------------------------------------------+
-| Short Name | Types                                             | Long Name                                      | Attribute(s)                                               |
-+------------+---------------------------------------------------+------------------------------------------------+------------------------------------------------------------+
-| ``lead``   | ``int``                                           | lead timestep after initialization, [``init``] | units (str) [years, seasons, months, weeks, pentads, days] |
-+------------+---------------------------------------------------+------------------------------------------------+------------------------------------------------------------+
-| ``init``   | ``int``, ``pd.DatetimeIndex``, ``xr.CFTimeIndex`` | initialization: start date of experiment       | None                                                       |
-+------------+---------------------------------------------------+------------------------------------------------+------------------------------------------------------------+
-| ``member`` | ``int``, ``str``                                  | ensemble member                                | None                                                       |
-+------------+---------------------------------------------------+------------------------------------------------+------------------------------------------------------------+
+.. list-table:: List of ``climpred`` dimension and coordinates
+   :widths: 25 25 25 25 25
+   :header-rows: 1
+
+   * - Short Name
+     - Types
+     - Long name
+     - `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_
+     - Attribute(s)
+   * - ``lead``
+     - ``int``
+     - lead timestep after initialization ``init``
+     - ``forecast_period``
+     - units (str) [years, seasons, months, weeks, pentads, days, hours, minutes, seconds]
+   * - ``init``
+     - ``int``, ``pd.DatetimeIndex``, ``xr.CFTimeIndex``
+     - initialization as start date of experiment
+     - ``forecast_reference_time``
+     - None
+   * - ``member``
+     - ``int``, ``str``
+     - ensemble member
+     - ``realization``
+     - None

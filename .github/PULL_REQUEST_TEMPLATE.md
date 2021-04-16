@@ -18,6 +18,7 @@ Please delete options that are not relevant.
 -   [ ]  This change requires a documentation update
 -   [ ]  Performance (if you touched existing code run `asv` to detect performance changes)
 -   [ ]  Refactoring
+-   [ ]  Improved Documentation
 
 # How Has This Been Tested?
 
@@ -31,11 +32,6 @@ Please describe the tests that you ran to verify your changes. This could point 
 -   [ ]  I have updated the sphinx documentation, if necessary.
 -   [ ]  Any new functions are added to the API. (See contribution guide)
 -   [ ]  CHANGELOG is updated with reference to this PR.
-
-## Pre-Merge Checklist (final steps)
-
--   [ ]  I have rebased onto master or develop (wherever I am merging) and dealt with any conflicts.
--   [ ]  I have squashed commits to a reasonable amount, and force-pushed the squashed commits.
 
 ## References
 

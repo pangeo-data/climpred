@@ -19,7 +19,7 @@ dependencies:
   # Miscellaneous
   - lxml
   - tqdm
-  - cftime>=1.1.2 # Optimization changes to make cftime fast.
+  - cftime>=1.1.2 # Optimization changes to make cftime fast
   # Numerics
   - numpy
   - pandas
@@ -29,16 +29,12 @@ dependencies:
   - asv
   - black==19.10b0
   - coveralls
-  - dataclasses  # to get black to not error
   - flake8
   #- importlib_metadata
   - isort
   - pre-commit
   - pylint
-  # Currently 5.4.0 or greater breaks pytest-sugar. It looks like this will be fixed
-  # soon and we can revert back to the newest pytest.
-  # https://github.com/Teemu/pytest-sugar/issues/187
-  - pytest<5.4.0
+  - pytest
   - pytest-cov
   - pytest-sugar
   # Performance
@@ -51,12 +47,11 @@ dependencies:
   # Statistics
   - eofs
   - esmtools>=1.1.3
-  - xskillscore>=0.0.18
+  - xskillscore>=0.0.19
   # Visualization
   - matplotlib-base
   - nc-time-axis
   - pip
   - pip:
-      - pytest-tldr
       - pytest-lazy-fixture
       - nb_black  # notebook linting

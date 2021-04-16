@@ -9,14 +9,14 @@ how we use them in ``climpred``.
 Simulation Design
 #################
 
-*Hindcast Ensemble*: ``m`` ensemble members are initialized from a simulation
+*Hindcast Ensemble*: Ensemble members are initialized from a simulation
 (generally a reconstruction from reanalysis) or an analysis
 (representing the current state of the atmosphere, land, and ocean by assimilation of
-obsevations) at ``n`` initialization dates and integrated for ``l`` lead years
+obsevations) at initialization dates and integrated for some lead years
 [Boer2016]_ (:py:class:`~climpred.classes.HindcastEnsemble`).
 
-*Perfect Model Experiment*: ``m`` ensemble members are initialized from a control
-simulation at ``n`` randomly chosen initialization dates and integrated for ``l``
+*Perfect Model Experiment*: Ensemble members are initialized from a control
+simulation at randomly chosen initialization dates and integrated for some
 lead years [Griffies1997]_ (:py:class:`~climpred.classes.PerfectModelEnsemble`).
 
 *Reconstruction/Assimilation*: A "reconstruction" is a model solution that uses
@@ -59,12 +59,12 @@ rather than the current "capability to predict." One estimates this by computing
 metric (like the anomaly correlation coefficient (ACC)) between the prediction
 ensemble and a member (or collection of members) selected as the verification member(s)
 (in a perfect-model setup) or the reconstruction that initialized it
-(in a hindcast setup) [Meehl2013]_ [Pegion2017]_.
+(in a hindcast setup) [Meehl2013]_ [Pegion2019]_.
 
 *(Prediction) Skill*: This characterizes the current ability of the ensemble
 forecasting system to predict the real world. This is derived by computing a metric
 between the prediction ensemble and observations, reanalysis, or analysis of the real
-world [Meehl2013]_ [Pegion2017]_.
+world [Meehl2013]_ [Pegion2019]_.
 
 *Skill Score*: The most generic skill score can be defined as the following
 [Murphy1988]_:
@@ -77,7 +77,7 @@ forecast being assessed, the accuracy of a perfect forecast, and the accuracy of
 reference forecast (e.g. persistence), respectively [Murphy1985]_. Here, :math:`S`
 represents the improvement in accuracy of the forecasts over the reference forecasts
 relative to the total possible improvement in accuracy. They are typically designed to
-take a value of 1 for a perfect forecast and 0 for equivelant to the reference
+take a value of 1 for a perfect forecast and 0 for equivalent to the reference
 forecast [Jolliffe2011]_.
 
 Forecasting
@@ -85,14 +85,14 @@ Forecasting
 
 *Hindcast*: Retrospective forecasts of the past initialized from a reconstruction
 integrated forward in time, also called re-forcasts.  Depending on the length of time
-of the integeration, external forcings may or may not be included.  The longer the
-integeration (e.g. decadal vs. daily), the more important it is to include external
-forcnig.  [Boer2016]_.  Because they represent so-called forecasts over periods that
+of the integration, external forcings may or may not be included.  The longer the
+integration (e.g. decadal vs. daily), the more important it is to include external
+forcing.  [Boer2016]_.  Because they represent so-called forecasts over periods that
 already occurred, their prediction skill can be evaluated.
 
 *Prediction*: Forecasts initialized from a reconstruction integrated into the future.
-Depending on the length of time of the integeration, external forcings may or may not
-be included.  The longer the integeration (e.g. decadal vs. daily), the more important
+Depending on the length of time of the integration, external forcings may or may not
+be included.  The longer the integration (e.g. decadal vs. daily), the more important
 it is to include external forcing. [Boer2016]_  Because predictions are made into the
 future, it is necessary to wait until the forecast occurs before one can quantify the
 skill of the forecast.
@@ -104,16 +104,16 @@ volcanic eruptions [Meehl2013]_.
 References
 ##########
 
-.. [Griffies1997] Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4
+.. [Griffies1997] Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8 (1997): 459–87. https://doi.org/10/ch4kc4
 
 .. [Boer2016] Boer, G. J., Smith, D. M., Cassou, C., Doblas-Reyes, F., Danabasoglu, G., Kirtman, B., Kushnir, Y., Kimoto, M., Meehl, G. A., Msadek, R., Mueller, W. A., Taylor, K. E., Zwiers, F., Rixen, M., Ruprich-Robert, Y., and Eade, R.: The Decadal Climate Prediction Project (DCPP) contribution to CMIP6, Geosci. Model Dev., 9, 3751-3777, https://doi.org/10.5194/gmd-9-3751-2016, 2016.
 
-.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003.
+.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003.
 
 .. [Meehl2013] Meehl, G. A., Goddard, L., Boer, G., Burgman, R., Branstator, G., Cassou, C., ... & Karspeck, A. (2014). Decadal climate prediction: an update from the trenches. Bulletin of the American Meteorological Society, 95(2), 243-267. https://doi.org/10.1175/BAMS-D-12-00241.1.
 
-.. [Murphy1985] Murphy, Allan H., and Daan, H. "Forecast evaluation." Probability, Statistics, and Decision Making in the Atmospheric Sciences, A. H. Murphy and R. W. Katz, Eds., Westview Press, 379-437. https://doi.org.
+.. [Murphy1985] Murphy, Allan H., and Daan, H. "Forecast evaluation." Probability, Statistics, and Decision Making in the Atmospheric Sciences, A. H. Murphy and R. W. Katz, Eds., Westview Press, 379-437.
 
 .. [Murphy1988] Murphy, Allan H. “Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient.” Monthly Weather Review 116, no. 12 (December 1, 1988): 2417–24. https://doi.org/10/fc7mxd.
 
-.. [Pegion2017] Pegion, K., T. Delsole, E. Becker, and T. Cicerone (2019). "Assessing the Fidelity of Predictability Estimates.", Climate Dynamics, 53, 7251–7265 https://doi.org/10.1007/s00382-017-3903-7.
+.. [Pegion2019] Pegion, K., T. Delsole, E. Becker, and T. Cicerone (2019). "Assessing the Fidelity of Predictability Estimates", Climate Dynamics, 53, 7251–7265 https://doi.org/10.1007/s00382-017-3903-7.

@@ -114,6 +114,9 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
             # Extract year, month, day strings from datetime.
             time_strings = [str(t) for t in time_index]
             split_dates = [d.split(" ")[0].split("-") for d in time_strings]
+            split_dates = [
+                d.split("-") for d in time_index.strftime("%Y-%m-%d-%H-%M-%S")
+            ]
 
         # If Float64Index or Int64Index, assume annual and convert accordingly.
         elif isinstance(time_index, pd.Float64Index) | isinstance(
@@ -124,7 +127,7 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
                 "Change init to a datetime if it is another resolution."
             )
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
-            dates = [str(int(t)) + "-01-01" for t in time_index]
+            dates = [str(int(t)) + "-01-01-00-00-00" for t in time_index]
             split_dates = [d.split("-") for d in dates]
             if "lead" in xobj.dims:
                 # Probably the only case we can assume lead units, since `lead` does not
@@ -138,13 +141,20 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
                 "pd.DatetimeIndex."
             )
         cftime_dates = [
-            getattr(cftime, calendar)(int(y), int(m), int(d))
-            for (y, m, d) in split_dates
+            getattr(cftime, calendar)(int(y), int(m), int(d), int(H), int(M), int(S))
+            for (y, m, d, H, M, S) in split_dates
         ]
         time_index = xr.CFTimeIndex(cftime_dates)
         xobj[time_string] = time_index
 
     return xobj
+
+
+def convert_cftime_to_datetime_coords(ds, dim):
+    """Convert dimension coordinate dim from CFTimeIndex to pd.DatetimeIndex."""
+    return ds.assign_coords(
+        {dim: xr.DataArray(ds[dim].to_index().to_datetimeindex(), dims=dim)}
+    )
 
 
 def find_start_dates_for_given_init(control, single_init):
@@ -263,7 +273,7 @@ def get_lead_cftime_shift_args(units, lead):
 
     Args:
         units (str): Units associated with the lead dimension. Must be
-            years, seasons, months, weeks, pentads, days.
+            years, seasons, months, weeks, pentads, days, hours, minutes.
         lead (int): Increment of lead being computed.
 
     Returns:
@@ -283,6 +293,9 @@ def get_lead_cftime_shift_args(units, lead):
         "weeks": (lead * 7, "D"),
         "pentads": (lead * 5, "D"),
         "days": (lead, "D"),
+        "hours": (lead, "H"),
+        "minutes": (lead, "T"),
+        "seconds": (lead, "S"),
     }
 
     try:
@@ -299,11 +312,11 @@ def get_multiple_lead_cftime_shift_args(units, leads):
 
     Args:
         units (str): Units associated with the lead dimension. Must be one of
-            years, seasons, months, weeks, pentads, days.
+            years, seasons, months, weeks, pentads, days, hours, minutes.
         leads (list, array, xr.DataArray of ints): Leads to return offset for.
 
     Returns:
-        n (tuple of ints): Number of units to shift for ``leads``. ``value`` for
+        n (tuple of ints): Numbers of units to shift for ``leads``. ``value`` for
             ``CFTimeIndex.shift(value, str)``.
         freq (str): Pandas frequency alias. ``str`` for
             ``CFTimeIndex.shift(value, str)``.

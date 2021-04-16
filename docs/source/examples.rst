@@ -23,6 +23,14 @@ Pre-Processing
 
    examples/preprocessing/setup_your_own_data.ipynb
 
+Numerical Weather Prediction
+============================
+.. toctree::
+  :maxdepth: 1
+
+  examples/NWP/NWP_GEFS_6h_forecasts.ipynb
+
+
 Subseasonal
 ===========
 .. toctree::
@@ -31,6 +39,7 @@ Subseasonal
    examples/subseasonal/daily-subx-example.ipynb
    examples/subseasonal/daily-s2s-example.ipynb
    examples/subseasonal/weekly-subx-example.ipynb
+   examples/subseasonal/daily-S2S-ECMWF.ipynb
 
 
 Monthly and Seasonal
@@ -43,7 +52,7 @@ Monthly and Seasonal
 
 
 Decadal
-===================
+=======
 .. toctree::
    :maxdepth: 1
 

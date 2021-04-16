@@ -22,7 +22,17 @@ M2M_MEMBER_DIM = "forecast_member"
 VALID_ALIGNMENTS = ["same_inits", "same_init", "same_verifs", "same_verif", "maximize"]
 
 # Valid units for lead dimension
-VALID_LEAD_UNITS = ["years", "seasons", "months", "weeks", "pentads", "days"]
+VALID_LEAD_UNITS = [
+    "years",
+    "seasons",
+    "months",
+    "weeks",
+    "pentads",
+    "days",
+    "minutes",
+    "hours",
+    "seconds",
+]
 
 # Valid keywords for reference forecast
 VALID_REFERENCES = ["uninitialized", "persistence", "climatology"]

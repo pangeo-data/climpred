@@ -1,6 +1,13 @@
 name: climpred installs
 
-on: pull_request
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+    branches:
+      - "*"
+  workflow_dispatch: # allows you to trigger manually
 
 jobs:
   detect-ci-trigger:
@@ -24,10 +31,13 @@ jobs:
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
     strategy:
+      fail-fast: false
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
     steps:
     - uses: actions/checkout@v2
+      with:
+            fetch-depth: 0 # Fetch all history for all branches and tags.
     - name: Setup python
       uses: actions/setup-python@v2
       with:

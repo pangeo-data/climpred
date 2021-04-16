@@ -35,8 +35,9 @@ Documentation
   `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_ with a cookie and
   working with "on-the-fly" reforecasts with ``hdate`` dimension.
   (:issue:`588`, :pr:`593`) `Aaron Spring`_.
-- Added example `climpred on GPU <examples/misc/climpred_gpu.ipynb>`_ showing 10x
-  faster :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`.
+- Added example `climpred on GPU <examples/misc/climpred_gpu.ipynb>`_. Running
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` on GPU with `cupy-xarray
+  <https://github.com/xarray-contrib/cupy-xarray>`_ finishes 10x faster.
   (:issue:`592`, :pr:`607`) `Aaron Spring`_.
 
 Internals/Minor Fixes

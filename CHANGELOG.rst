@@ -35,6 +35,9 @@ Documentation
   `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_ with a cookie and
   working with "on-the-fly" reforecasts with ``hdate`` dimension.
   (:issue:`588`, :pr:`593`) `Aaron Spring`_.
+- Added example `climpred on GPU <examples/misc/climpred_gpu.ipynb>`_ showing 10x
+  faster :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`.
+  (:issue:`592`, :pr:`607`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------
@@ -400,9 +403,9 @@ Internals/Minor Fixes
 Documentation
 -------------
 - Added demo to setup your own raw model output compliant to ``climpred``
-  (:pr:`296`) `Aaron Spring`_. See (`here <examples/preprocessing/setup_your_own_data.html>`__).
+  (:pr:`296`) `Aaron Spring`_. See (`here <examples/misc/setup_your_own_data.html>`__).
 - Added demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
-  See (`here <examples/preprocessing/setup_your_own_data.html#intake-esm-for-cmorized-output>`__).
+  See (`here <examples/misc/setup_your_own_data.html#intake-esm-for-cmorized-output>`__).
 - Added `Verification Alignment <alignment.html>`_ page explaining how initializations
   are selected and aligned with verification data. (:pr:`328`) `Riley X. Brady`_.
   See (`here <alignment.html>`__).

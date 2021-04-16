@@ -9,19 +9,6 @@ Examples
     to ensure that all dependencies are installed to complete all example
     notebooks listed here.
 
-Dask
-====
-.. toctree::
-   :maxdepth: 1
-
-   examples/dask/efficient_dask.ipynb
-
-Pre-Processing
-==============
-.. toctree::
-   :maxdepth: 1
-
-   examples/preprocessing/setup_your_own_data.ipynb
 
 Numerical Weather Prediction
 ============================
@@ -60,3 +47,12 @@ Decadal
    examples/decadal/tropical-pacific-ssts.ipynb
    examples/decadal/diagnose-potential-predictability.ipynb
    examples/decadal/Significance.ipynb
+
+Misc
+====
+.. toctree::
+  :maxdepth: 1
+
+  examples/misc/efficient_dask.ipynb
+  examples/misc/climpred_gpu.ipynb
+  examples/misc/setup_your_own_data.ipynb

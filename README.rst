@@ -31,7 +31,7 @@ Verification of weather and climate forecasts.
     :alt: JOSS paper
 
 .. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4556085.svg
-    :target: https://doi.org/10.5281/zenodo.4556086
+    :target: https://doi.org/10.5281/zenodo.4556085
     :alt: DOI
 
 .. |ci| image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg

@@ -9,7 +9,7 @@ climpred: verification of weather and climate forecasts
     :widths: 10 90
 
     * - docs
-      - |docs| |joss| |DOI|
+      - |docs| |joss| |doi|
     * - tests
       - |ci| |requires| |codecov|
     * - package
@@ -27,33 +27,39 @@ climpred: verification of weather and climate forecasts
 
 .. |joss| image:: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef/status.svg
     :target: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef
+    :alt: JOSS paper
 
-.. |DOI| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4556086.svg
-   :target: https://doi.org/10.5281/zenodo.4556086
+.. |doi| image:: https://zenodo.org/badge/DOI/10.5281/zenodo.4556085.svg
+    :target: https://doi.org/10.5281/zenodo.4556085
+    :alt: DOI
 
 .. |ci|  image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
     :target: https://github.com/pangeo-data/climpred/actions/workflows/climpred_testing.yml
+    :alt: CI
 
 .. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=main
-     :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=main
-     :alt: Requirements Status
+    :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=main
+    :alt: Requirements Status
 
 .. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg
-      :target: https://codecov.io/gh/pangeo-data/climpred
+    :target: https://codecov.io/gh/pangeo-data/climpred
+    :alt: codecov
 
 .. |conda| image:: https://img.shields.io/conda/vn/conda-forge/climpred.svg
     :target: https://anaconda.org/conda-forge/climpred
     :alt: Conda Version
 
 .. |pypi| image:: https://img.shields.io/pypi/v/climpred.svg
-   :target: https://pypi.python.org/pypi/climpred/
+    :target: https://pypi.python.org/pypi/climpred/
+    :alt: pypi Version
 
 .. |license| image:: https://img.shields.io/github/license/pangeo-data/climpred.svg
-    :alt: license
     :target: ../../LICENSE.txt
+    :alt: license
 
 .. |gitter| image:: https://badges.gitter.im/Join%20Chat.svg
     :target: https://gitter.im/climpred
+    :alt: gitter chat
 
 .. |contributors| image:: https://img.shields.io/github/contributors/pangeo-data/climpred
     :alt: GitHub contributors
@@ -66,7 +72,6 @@ climpred: verification of weather and climate forecasts
 .. |gallery| image:: https://img.shields.io/badge/climpred-examples-ed7b0e.svg
     :alt: climpred gallery
     :target: https://mybinder.org/v2/gh/pangeo-data/climpred/main?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb
-
 
 .. |workshop| image:: https://img.shields.io/badge/climpred-workshop-f5a252
     :alt: climpred workshop

@@ -34,7 +34,7 @@ Verification of weather and climate forecasts.
     :target: https://doi.org/10.5281/zenodo.4556085
     :alt: DOI
 
-.. |ci|  image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
+.. |ci| image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
     :target: https://github.com/pangeo-data/climpred/actions/workflows/climpred_testing.yml
     :alt: CI
 

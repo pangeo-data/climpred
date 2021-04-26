@@ -122,7 +122,7 @@ jobs:
           wget https://raw.githubusercontent.com/pydata/xarray/master/.github/workflows/parse_logs.py
           python parse_logs.py logs/**/*-log
       - name: Report failures
-        uses: actions/github-script@v3
+        uses: actions/github-script@v4.0.2
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

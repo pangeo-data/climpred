@@ -8,7 +8,7 @@ from climpred.horizon import _last_item_cond_true, horizon
 @pytest.mark.parametrize("input", ["DataArray", "Dataset"])
 @pytest.mark.parametrize("threshold,expected", [(1, 1), (2, 3), (3, 6), (3.5, 6)])
 def test_least_item_cond_true(threshold, expected, input):
-    """"test `last_item_cond_true` on artificial data."""
+    """test `last_item_cond_true` on artificial data."""
     ds = xr.DataArray(
         [1, 2, 2, 3, 3, 1, 4], dims="lead", coords={"lead": np.arange(1, 1 + 7)}
     )
@@ -83,7 +83,7 @@ def test_horizon_smooth(perfectModelEnsemble_initialized_control, smooth):
 
 
 def test_horizon_weird_coords():
-    """"Test horizon for weird coords."""
+    """Test horizon for weird coords."""
     cond = xr.DataArray([True] * 10, dims="lead").to_dataset(name="SST")
     # Change leads to something weird
     cond["lead"] = [0.25, 0.75, 1, 3, 4, 5, 6, 7, 8, 9]

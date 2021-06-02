@@ -25,4 +25,5 @@ dependencies:
   - xskillscore>=0.0.18
   - pip:
     - pytest-lazy-fixture
+    - git+https://github.com/aulemahal/nc-time-axis.git@remove-utime
     - -e ../..

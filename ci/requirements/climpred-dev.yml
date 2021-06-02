@@ -55,3 +55,4 @@ dependencies:
   - pip:
       - pytest-lazy-fixture
       - nb_black  # notebook linting
+      - git+https://github.com/aulemahal/nc-time-axis.git@remove-utime

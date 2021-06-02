@@ -6,4 +6,4 @@ toolz
 cftime>=1.1.2
 xskillscore>=0.0.19
 netcdf4
--e git://github.com/aulemahal/nc-time-axis.git@remove-utime
+git+https://github.com/aulemahal/nc-time-axis.git@remove-utime

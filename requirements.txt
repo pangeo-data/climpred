@@ -1,4 +1,4 @@
-xarray<0.18
+xarray
 dask!=2021.03.0
 matplotlib
 ipython
@@ -6,4 +6,4 @@ toolz
 cftime>=1.1.2
 xskillscore>=0.0.19
 netcdf4
-nc-time-axis
+git+https://github.com/aulemahal/nc-time-axis.git@remove-utime

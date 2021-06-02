@@ -817,7 +817,8 @@ def bootstrap_compute(
             if isHindcast and comparison != __m2o:
                 bootstrapped_uninit_skill = bootstrapped_uninit_skill.mean("member")
 
-        bootstrapped_hind = resample_func(hind, iterations, resample_dim)
+        with xr.set_options(keep_attrs=True):
+            bootstrapped_hind = resample_func(hind, iterations, resample_dim)
         if dask.is_dask_collection(bootstrapped_hind):
             bootstrapped_hind = bootstrapped_hind.chunk({"member": -1})
 

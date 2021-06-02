@@ -180,7 +180,7 @@ def test_match_initialized_dims_fail(da1, da2):
     """Test if check works if the da does not have the proper dims."""
     with pytest.raises(DimensionError) as e:
         match_initialized_dims(da1.rename({"y": "init"}), da2.rename({"y": "not_time"}))
-    assert "Dimensions must match initialized prediction" in str(e.value)
+    assert "Verification contains more dimensions than initialized" in str(e.value)
 
 
 def test_match_initialized_vars(ds1, ds2):

@@ -1,4 +1,4 @@
-xarray<0.18
+xarray
 dask!=2021.03.0
 matplotlib
 ipython

@@ -181,11 +181,14 @@ def match_initialized_dims(init, verif, uninitialized=False):
         init_dims.remove("lead")
     if ("member" in init_dims) and not uninitialized:
         init_dims.remove("member")
-    if not (set(verif.dims) == set(init_dims)):
+    if (set(verif.dims) - set(init.dims)) != set():
         unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
-            "Dimensions must match initialized prediction ensemble "
-            f"dimensions; these dimensions do not match: {unmatch_dims}."
+            f"Verification contains more dimensions than initialized. These dimensions do not match: {unmatch_dims}."
+        )
+    if (set(init.dims) - set(verif.dims)) != set():
+        warnings.warn(
+            f"Initialized contains more dimensions than verification. Dimension(s) {set(init.dims) - set(verif.dims)} will be broadcasted."
         )
     return True
 

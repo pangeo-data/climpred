@@ -19,6 +19,10 @@ New Features
 - Allow ``weekofyear`` via ``datetime`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`, but not yet implemented in
   ``verify(reference='climatology')``. (:issue:`529`, :pr:`603`) `Aaron Spring`_.
+- Allow more dimensions in ``initialized`` than in ``observations``. This is particular
+  useful if you have forecasts from multiple models (in a ``model`` dimension) and want
+  to verify against the same observations.
+  (:issue:`129`, :issue:`528`, :pr:`619`) `Aaron Spring`_.
 
 Documentation
 -------------

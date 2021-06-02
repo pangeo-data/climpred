@@ -2,6 +2,7 @@ import pytest
 import xarray as xr
 
 from climpred import HindcastEnsemble
+from climpred.exceptions import DimensionError
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
@@ -273,3 +274,28 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
     assert len(actual_no_ref.dims) + 1 == len(actual_clim_ref.dims)
     assert len(actual_pers_ref.dims) == len(actual_uninit_ref.dims)
     assert len(actual_pers_ref.dims) == len(actual_clim_ref.dims)
+
+
+def test_HindcastEnsemble_multidim_initialized_lessdim_verif(hindcast_hist_obs_1d):
+    """Test to see if HindcastEnsemble allow broadcast over dimensions in initialized but not in observations, e.g. model dim which is not available in observations."""
+    initialized = hindcast_hist_obs_1d.get_initialized()
+    obs = hindcast_hist_obs_1d.get_observations()
+    hind = HindcastEnsemble(
+        initialized.expand_dims("model").isel(model=[0] * 2)
+    ).add_observations(obs)
+    skill = hind.verify(
+        metric="acc", dim="init", comparison="e2o", alignment="same_inits"
+    )
+    assert "model" in skill.dims
+
+
+def test_HindcastEnsemble_multidim_verif_lessdim_initialized(hindcast_hist_obs_1d):
+    """Test if HindcastEnsemble initialization fails if observations contains more dims than initialized."""
+    initialized = hindcast_hist_obs_1d.get_initialized()
+    obs = hindcast_hist_obs_1d.get_observations()
+    with pytest.raises(
+        DimensionError, match="Verification contains more dimensions than initialized"
+    ):
+        HindcastEnsemble(initialized).add_observations(
+            obs.expand_dims("model").isel(model=[0] * 2)
+        )

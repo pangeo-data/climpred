@@ -4,7 +4,12 @@ from functools import wraps
 import dask
 import xarray as xr
 
-from .constants import VALID_LEAD_UNITS, VALID_REFERENCES
+from .constants import (
+    CF_STANDARD_NAMES,
+    CLIMPRED_ENSEMBLE_DIMS,
+    VALID_LEAD_UNITS,
+    VALID_REFERENCES,
+)
 from .exceptions import DatasetError, DimensionError, VariableError
 
 NCPU = dask.system.CPU_COUNT
@@ -42,6 +47,7 @@ def has_dims(xobj, dims, kind):
         raise DimensionError(
             f"Your {kind} object must contain the "
             f"following dimensions at the minimum: {dims}"
+            f", found {list(xobj.dims)}."
         )
     return True
 
@@ -214,6 +220,24 @@ def match_initialized_vars(init, verif):
             f"got {init_vars} for init and {verif_vars} for verif."
         )
     return True
+
+
+def rename_to_climpred_dims(xobj):
+    """Rename initialized dataset to climpred dims if CF standard_names match."""
+    for climpred_d in CF_STANDARD_NAMES.keys():
+        cf_standard_name = CF_STANDARD_NAMES[climpred_d]
+        if climpred_d not in xobj.dims:
+            for d in xobj.dims:
+                if xobj[d].attrs.get("standard_name") == cf_standard_name:
+                    xobj = xobj.rename({d: climpred_d})
+                    warnings.warn(
+                        f'Did not find dimension "{climpred_d}", but renamed dimension {d} with CF-complying standard_name "{cf_standard_name}" to {climpred_d}.'
+                    )
+    if not set(["init", "lead"]).issubset(set(xobj)):
+        warnings.warn(
+            f'Could not find dimensions ["init", "lead"] in initialized, found dimension {xobj.dims}. Also searched coordinates for CF-complying standard_names {CF_STANDARD_NAMES}.'
+        )
+    return xobj
 
 
 def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):

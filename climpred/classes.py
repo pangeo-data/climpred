@@ -23,6 +23,7 @@ from .checks import (
     match_calendars,
     match_initialized_dims,
     match_initialized_vars,
+    rename_to_climpred_dims,
 )
 from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
 from .exceptions import DimensionError, VariableError
@@ -137,6 +138,7 @@ class PredictionEnsemble:
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
+        xobj = rename_to_climpred_dims(xobj)
         has_dims(xobj, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.

@@ -1,5 +1,11 @@
 # for general checks of climpred-required dimensions
 CLIMPRED_ENSEMBLE_DIMS = ["init", "member", "lead"]
+# corresponding CF-complying standard_names from http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html to rename from
+CF_STANDARD_NAMES = {
+    "init": "forecast_reference_time",
+    "member": "realization",
+    "lead": "forecast_period",
+}
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ["time"]
 
 # List of frequencies to check to infer time series stride

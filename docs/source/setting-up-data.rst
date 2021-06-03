@@ -9,16 +9,20 @@ This allows things to run more easily under-the-hood.
 ``init`` and ``lead``. ``init`` is the initialization dimension, that relays the time
 steps at which the ensemble was initialized. ``init`` must be of type ``int``,
 ``pd.DatetimeIndex``, or ``xr.cftimeIndex``. If ``init`` is of type ``int``, it is assumed to
-be annual data.  A user warning is issues when this assumption is made.
+be annual data. A user warning is issues when this assumption is made.
 
 ``lead`` is the lead time of the forecasts from initialization. The units for the ``lead``
-dimension must be specified in as an attribute.  Valid options are
+dimension must be specified in as an attribute. Valid options are
 ``years, seasons, months, weeks, pentads, days, hours, minutes, seconds``.
 
 Another crucial dimension is ``member``, which holds the various ensemble members.
 Any additional dimensions will
 be passed through ``climpred`` without issue: these could be things like ``lat``,
 ``lon``, ``depth``, etc.
+
+If the expected dimensions are not found, but the matching ``standard_name`` in a
+coordinate attribute, the dimension is renamed to the corresponding ``climpred``
+ensemble dimension.
 
 Check out the demo to setup a ``climpred``-ready prediction ensemble
 `from your own data <examples/misc/setup_your_own_data.html>`_ or via `intake-esm <https://intake-esm.readthedocs.io/>`_ from `CMIP DCPP <examples/misc/setup_your_own_data.html#intake-esm-for-cmorized-output>`_.

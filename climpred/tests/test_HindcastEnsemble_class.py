@@ -299,3 +299,37 @@ def test_HindcastEnsemble_multidim_verif_lessdim_initialized(hindcast_hist_obs_1
         HindcastEnsemble(initialized).add_observations(
             obs.expand_dims("model").isel(model=[0] * 2)
         )
+
+
+@pytest.mark.parametrize(
+    "dim,new_dim,cf_standard_name",
+    [
+        ("init", "forecast_time", "forecast_reference_time"),
+        ("lead", "lead_time", "forecast_period"),
+        ("member", "number", "realization"),
+    ],
+)
+def test_HindcastEnsemble_instantiating_standard_name(
+    da_lead, dim, new_dim, cf_standard_name
+):
+    """Instantiating a HindcastEnsemble without init dim only works if matching CF standard name is set."""
+    init = (
+        da_lead.to_dataset(name="var").expand_dims("member").assign_coords(member=[1])
+    )
+    init["init"] = xr.cftime_range(start="2000", periods=init.init.size, freq="YS")
+    init["lead"].attrs["units"] = "years"
+    # change to non CLIMPRED_DIMS
+    init = init.rename({dim: new_dim})
+
+    if dim != "member":  # member not required
+        with pytest.raises(
+            DimensionError,
+            match="Your PredictionEnsemble object must contain the following dimensions",
+        ):
+            HindcastEnsemble(init)
+
+    init[new_dim].attrs["standard_name"] = cf_standard_name
+    # find renamed after warning
+    with pytest.warns(UserWarning, match="but renamed dimension"):
+        init = HindcastEnsemble(init).get_initialized()
+        assert dim in init.dims, print(init.dims, init.coords)

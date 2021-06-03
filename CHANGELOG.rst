@@ -23,6 +23,14 @@ New Features
   useful if you have forecasts from multiple models (in a ``model`` dimension) and want
   to verify against the same observations.
   (:issue:`129`, :issue:`528`, :pr:`619`) `Aaron Spring`_.
+- Automatically rename dimensions to ``CLIMPRED_ENSEMBLE_DIMS``
+  [``"init"``, ``"member"``, ``"lead"``] if CF standard_names in coordinate attributes
+  match: (:issue:`613`, :pr:`622`) `Aaron Spring`_.
+
+    * ``"init"``: ``"forecast_reference_time"``
+    * ``"member"``: ``"realization"``
+    * ``"lead"``: ``"forecast_period"``
+
 
 Documentation
 -------------

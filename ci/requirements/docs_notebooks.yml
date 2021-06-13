@@ -28,6 +28,5 @@ dependencies:
   - pip
   - pip:
     # Install latest version of climpred.
-    - git+https://github.com/aulemahal/nc-time-axis.git@remove-utime
     - -e ../..
     - nb_black

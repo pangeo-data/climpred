@@ -244,6 +244,10 @@ def compute_perfect_model(
     )
 
     forecast, verif = comparison.function(init_pm, metric=metric)
+    if "aggregate" in forecast.lead.attrs:
+        if forecast.lead.attrs["aggregate"] == "cumsum":
+            forecast = forecast.cumsum(keep_attrs=True, skipna=False)
+            verif = verif.cumsum(keep_attrs=True, skipna=False)
 
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison

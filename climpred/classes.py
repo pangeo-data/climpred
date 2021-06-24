@@ -145,6 +145,9 @@ class PredictionEnsemble:
         xobj = convert_time_index(xobj, "init", "xobj[init]")
         # Put this after `convert_time_index` since it assigns 'years' attribute if the
         # `init` dimension is a `float` or `int`.
+        if xobj["lead"].dtype == "<m8[ns]":
+            xobj["lead"] = (xobj.lead * 1e-9).astype(int)
+            xobj["lead"].attrs["units"] = "seconds"
         has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.

@@ -90,7 +90,12 @@ def _apply_metric_at_given_lead(
     )  # dim should be much clearer once time in initialized.coords
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
-
+    if "aggregate" in lverif.time.attrs:
+        if lverif.time.attrs["aggregate"] == "cumsum":
+            # remove aggregation offset
+            lverif = lverif - lverif.isel(time=0, drop=True)
+    v = list(lforecast.data_vars)[0]
+    print("lead", lead, "forecast", lforecast[v].values, "verif", verif[v].values)
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     return result
@@ -246,8 +251,12 @@ def compute_perfect_model(
     forecast, verif = comparison.function(init_pm, metric=metric)
     if "aggregate" in forecast.lead.attrs:
         if forecast.lead.attrs["aggregate"] == "cumsum":
-            forecast = forecast.cumsum(keep_attrs=True, skipna=False)
-            verif = verif.cumsum(keep_attrs=True, skipna=False)
+            forecast = forecast.cumsum(
+                dim="lead", keep_attrs=True, skipna=False
+            ).assign_coords(lead=forecast.lead)
+            verif = verif.cumsum(
+                dim="lead", keep_attrs=True, skipna=False
+            ).assign_coords(lead=verif.lead)
 
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison

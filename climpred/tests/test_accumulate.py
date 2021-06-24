@@ -1,22 +1,31 @@
+import xarray as xr
+
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 
 
 def test_HindcastEnsemble_accumulate(hindcast_hist_obs_1d):
     """Test if HindcastEnsemble understands lead attribute aggregate set to cumsum."""
     hindcast_hist_obs_1d = hindcast_hist_obs_1d.rename({"SST": "pr"})
-    initialized = hindcast_hist_obs_1d.get_initialized()
-    obs = hindcast_hist_obs_1d.get_observations()
+    initialized = xr.ones_like(hindcast_hist_obs_1d.get_initialized())
+    obs = xr.ones_like(hindcast_hist_obs_1d.get_observations())
 
     he = HindcastEnsemble(initialized).add_observations(obs)
-    skill = he.verify(
-        metric="rmse", comparison="e2o", dim="init", alignment="same_verifs"
-    )
+    metric_kwargs = {
+        "metric": "mae",
+        "comparison": "e2o",
+        "dim": "init",
+        "alignment": "same_verifs",
+    }
+    skill = he.verify(**metric_kwargs)
 
     initialized.lead.attrs["aggregate"] = "cumsum"
+    obs.time.attrs["aggregate"] = "cumsum"
     he = HindcastEnsemble(initialized).add_observations(obs)
-    skill_accum = he.verify(
-        metric="rmse", comparison="e2o", dim="init", alignment="same_verifs"
-    )
+    skill_accum = he.verify(**metric_kwargs)
+    print(skill)
+    print(skill_accum)
+    print(skill - skill_accum)
+    assert False
     assert not skill_accum.equals(skill)
 
 

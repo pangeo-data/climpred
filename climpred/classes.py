@@ -1290,6 +1290,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 reference=reference,
                 hist=hist,
             )
+            if "aggregate" in forecast.lead.attrs:
+                print(forecast.lead)
+                if forecast.lead.attrs["aggregate"] == "cumsum":
+                    forecast = forecast.cumsum(
+                        dim="lead", keep_attrs=True, skipna=False
+                    ).assign_coords(lead=forecast.lead)
+                    print(forecast.lead)
+            if "aggregate" in verif.time.attrs:
+                if verif.time.attrs["aggregate"] == "cumsum":
+                    verif = verif  # .cumsum(dim='time', keep_attrs=True, skipna=False).assign_coords(time=verif.time)
             metric_over_leads = [
                 _apply_metric_at_given_lead(
                     verif,

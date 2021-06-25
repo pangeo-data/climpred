@@ -14,6 +14,9 @@ be annual data. A user warning is issues when this assumption is made.
 ``lead`` is the lead time of the forecasts from initialization. The units for the ``lead``
 dimension must be specified in as an attribute. Valid options are
 ``years, seasons, months, weeks, pentads, days, hours, minutes, seconds``.
+If ``lead`` is provided as ``pd.Timedelta`` up to weeks, ``lead`` is converted to
+``int`` and a corresponding ``lead.attrs['units']``. For larger ``lead`` as
+``pd.Timedelta`` (months or years), there is no conversion possible.
 
 Another crucial dimension is ``member``, which holds the various ensemble members.
 Any additional dimensions will
@@ -48,7 +51,7 @@ that ``climpred`` supports for them.
      - `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_
      - Attribute(s)
    * - ``lead``
-     - ``int``
+     - ``int`` (or ``pd.Timedelta`` for units up to weeks)
      - lead timestep after initialization ``init``
      - ``forecast_period``
      - units (str) [years, seasons, months, weeks, pentads, days, hours, minutes, seconds]

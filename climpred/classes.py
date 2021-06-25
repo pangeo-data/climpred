@@ -41,7 +41,7 @@ from .smoothing import (
     spatial_smoothing_xesmf,
     temporal_smoothing,
 )
-from .utils import convert_time_index
+from .utils import convert_time_index, convert_Timedelta_to_lead_units
 
 
 def _display_metadata(self):
@@ -145,9 +145,7 @@ class PredictionEnsemble:
         xobj = convert_time_index(xobj, "init", "xobj[init]")
         # Put this after `convert_time_index` since it assigns 'years' attribute if the
         # `init` dimension is a `float` or `int`.
-        if xobj["lead"].dtype == "<m8[ns]":
-            xobj["lead"] = (xobj.lead * 1e-9).astype(int)
-            xobj["lead"].attrs["units"] = "seconds"
+        xobj = convert_Timedelta_to_lead_units(xobj)
         has_valid_lead_units(xobj)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.

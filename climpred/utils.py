@@ -432,3 +432,27 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
         ori_chunk_ds.chunks
     )
+
+
+def convert_Timedelta_to_lead_units(ds):
+    """Convert lead as pd.Timedelta to lead as int and corresponding lead.attrs['units'] and convert to longest integer lead unit possible."""
+    if ds["lead"].dtype == "<m8[ns]":
+        ds["lead"] = (ds.lead * 1e-9).astype(int)
+        ds["lead"].attrs["units"] = "seconds"
+
+    if (ds["lead"] % 60 == 0).all() and ds["lead"].attrs["units"] == "seconds":
+        ds["lead"] = ds["lead"] / 60
+        ds["lead"].attrs["units"] = "minutes"
+    if (ds["lead"] % 60 == 0).all() and ds["lead"].attrs["units"] == "minutes":
+        ds["lead"] = ds["lead"] / 60
+        ds["lead"].attrs["units"] = "hours"
+    if (ds["lead"] % 24 == 0).all() and ds["lead"].attrs["units"] == "hours":
+        ds["lead"] = ds["lead"] / 24
+        ds["lead"].attrs["units"] = "days"
+    if (ds["lead"] % 5 == 0).all() and ds["lead"].attrs["units"] == "days":
+        ds["lead"] = ds["lead"] / 5
+        ds["lead"].attrs["units"] = "pentads"
+    if (ds["lead"] % 7 == 0).all() and ds["lead"].attrs["units"] == "days":
+        ds["lead"] = ds["lead"] / 7
+        ds["lead"].attrs["units"] = "weeks"
+    return ds

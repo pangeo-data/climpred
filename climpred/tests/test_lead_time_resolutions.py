@@ -80,6 +80,9 @@ def test_PerfectModelEnsemble_time_resolution_verify(HindcastEnsemble_time_resol
     assert pm.verify(**PerfectModelEnsemble_verify_kw).notnull().any()
 
 
+import pandas as pd
+
+
 @pytest.mark.parametrize(
     "lead_res", ["seconds", "minutes", "hours", "days", "pentads", "weeks"]
 )
@@ -90,10 +93,10 @@ def test_HindcastEnsemble_lead_pdTimedelta(hind_da_initialized_1d, lead_res):
     else:
         n, freq = 1, lead_res[0].lower()
     initialized = hind_da_initialized_1d
-    import pandas as pd
 
     initialized["lead"] = [
         pd.Timedelta(f"{i*n} {freq}") for i in initialized.lead.values
     ]
     hindcast = HindcastEnsemble(initialized)
+
     assert hindcast.get_initialized().lead.attrs["units"] == lead_res

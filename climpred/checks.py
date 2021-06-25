@@ -187,14 +187,14 @@ def match_initialized_dims(init, verif, uninitialized=False):
         init_dims.remove("lead")
     if ("member" in init_dims) and not uninitialized:
         init_dims.remove("member")
-    if (set(verif.dims) - set(init.dims)) != set():
+    if (set(verif.dims) - set(init_dims)) != set():
         unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
             f"Verification contains more dimensions than initialized. These dimensions do not match: {unmatch_dims}."
         )
-    if (set(init.dims) - set(verif.dims)) != set():
+    if (set(init_dims) - set(verif.dims)) != set():
         warnings.warn(
-            f"Initialized contains more dimensions than verification. Dimension(s) {set(init.dims) - set(verif.dims)} will be broadcasted."
+            f"Initialized contains more dimensions than verification. Dimension(s) {set(init_dims) - set(verif.dims)} will be broadcasted."
         )
     return True
 
@@ -230,10 +230,11 @@ def rename_to_climpred_dims(xobj):
             for d in xobj.dims:
                 if xobj[d].attrs.get("standard_name") == cf_standard_name:
                     xobj = xobj.rename({d: climpred_d})
+                    xobj[climpred_d].attrs["standard_name"] = cf_standard_name
                     warnings.warn(
                         f'Did not find dimension "{climpred_d}", but renamed dimension {d} with CF-complying standard_name "{cf_standard_name}" to {climpred_d}.'
                     )
-    if not set(["init", "lead"]).issubset(set(xobj)):
+    if not set(["init", "lead"]).issubset(set(xobj.dims)):
         warnings.warn(
             f'Could not find dimensions ["init", "lead"] in initialized, found dimension {xobj.dims}. Also searched coordinates for CF-complying standard_names {CF_STANDARD_NAMES}.'
         )

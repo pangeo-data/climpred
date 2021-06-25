@@ -30,7 +30,10 @@ New Features
     * ``"init"``: ``"forecast_reference_time"``
     * ``"member"``: ``"realization"``
     * ``"lead"``: ``"forecast_period"``
-
+- if `lead` coordinate is ``pd.Timedelta``,
+  :py:class:`~climpred.classes.PredictionEnsemble` converts `lead` coordinate upon
+  instantiation to integer `lead` and corresponding ``lead.attrs["units"]``.
+  (:issue:`606`, :pr:`627`) `Aaron Spring`_.
 
 Documentation
 -------------

@@ -6,6 +6,7 @@ import xarray as xr
 from IPython.display import display_html
 from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
+from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
 from .bias_removal import mean_bias_removal
@@ -166,6 +167,69 @@ class PredictionEnsemble:
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
+
+    @property
+    def coords(self):
+        """Dictionary of xarray.DataArray objects corresponding to coordinate
+        variables
+        """
+        pe_coords = self.get_initialized().coords
+        pe_coords.update(self.get_observations().coords)
+        return pe_coords
+
+    def __len__(self):
+        return len(self.data_vars)
+
+    def __iter__(self):
+        """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
+        return iter(self._datasets.values())
+
+    @property
+    def nbytes(self) -> int:
+        return sum(
+            [
+                sum(v.nbytes for v in ds.variables.values())
+                for ds in self._datasets.values()
+                if isinstance(ds, xr.Dataset)
+            ]
+        )
+
+    @property
+    def sizes(self):
+        """Mapping from dimension names to lengths.
+        Cannot be modified directly, but is updated when adding new variables.
+        This is an alias for `Dataset.dims` provided for the benefit of
+        consistency with `DataArray.sizes`.
+        See Also
+        --------
+        DataArray.sizes
+        """
+        pe_dims = dict(self.get_initialized().dims)
+        pe_dims.update(dict(self.get_observations().dims))
+        return pe_dims
+
+    @property
+    def dims(self):
+        """Mapping from dimension names to lengths.
+        Cannot be modified directly, but is updated when adding new variables.
+        Note that type of this object differs from `DataArray.dims`.
+        See `Dataset.sizes` and `DataArray.sizes` for consistently named
+        properties.
+        """
+        pe_dims = dict(self.get_initialized().dims)
+        pe_dims.update(dict(self.get_observations().dims))
+        return Frozen(pe_dims)
+
+    @property
+    def data_vars(self):
+        """Dictionary of DataArray objects corresponding to data variables"""
+        return self.get_initialized().data_vars  # , self.observations().data_vars
+
+    def __contains__(self, key):
+        """The 'in' operator will return true or false depending on whether
+        'key' is an array in the dataset or not.
+        """
+        return key in self.get_initialized()._variables
 
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
         """Plot datasets from PredictionEnsemble.

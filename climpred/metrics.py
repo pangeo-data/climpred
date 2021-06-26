@@ -2866,7 +2866,10 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         pass
     else:
         raise ValueError(
-            f"rps either expects multiple forecast members and `category_edges` or `category` in both forecast and observations. Found: category_edges={category_edges}, forecast.dims = {forecast.dims}, observations.dims = {verif.dims}"
+            "rps either expects multiple forecast members and `category_edges` or "
+            "`category` in both forecast and observations. Found: "
+            f"category_edges={category_edges}, forecast.dims = {forecast.dims}, "
+            f"observations.dims = {verif.dims}"
         )
 
     # get corresponding category_edges for lead
@@ -2881,7 +2884,9 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
                     init_freq = xr.infer_freq(forecast_edges.time)
                     if init_freq is None:
                         raise ValueError(
-                            "Could not shift category_edges by lead. Please use climpred.utils.broadcast_time_grouped_to_time on both category_edges before passing them to verify."
+                            "Could not shift category_edges by lead. Please use "
+                            "`climpred.utils.broadcast_time_grouped_to_time` on both "
+                            "category_edges before passing them to verify."
                         )
                     lead_freq = forecast.lead.attrs["units"][0].upper()
                     if init_freq[1] == "S":
@@ -2900,8 +2905,6 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
                 forecast_edges = forecast_edges.assign_coords(time=forecast.time)
                 verif_edges = category_edges[0]
                 category_edges = (verif_edges, forecast_edges)
-        elif isinstance(category_edges, xr.Dataset):
-            pass
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 

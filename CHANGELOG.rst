@@ -48,7 +48,7 @@ New Features
 Documentation
 -------------
 - Add `documentation page about publicly available initialized datasets and
-  corresponding ``climpred`` examples <initialized-datasets.html>`_.
+  corresponding `climpred` examples <initialized-datasets.html>`_.
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
 - Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
   prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.

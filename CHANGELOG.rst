@@ -34,7 +34,7 @@ New Features
   :py:class:`~climpred.classes.PredictionEnsemble` converts `lead` coordinate upon
   instantiation to integer `lead` and corresponding ``lead.attrs["units"]``.
   (:issue:`606`, :pr:`627`) `Aaron Spring`_.
-- Require ``xskillscore >= 0.0.21``.
+- Require ``xskillscore >= 0.0.20``.
   :py:func:`~climpred.metrics._rps` now works with different ``category_edges``
   for observations and forecasts, see
   `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`_.

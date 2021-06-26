@@ -460,7 +460,8 @@ def convert_Timedelta_to_lead_units(ds):
 
 
 def broadcast_time_grouped_to_time(forecast, category_edges, dim):
-    """Broadcast time.groupby('time.month/dayofyear/weekofyear').mean() back to dim."""
+    """Broadcast time.groupby('time.month/dayofyear/weekofyear').mean() from 
+    category_edges back to dim matching forecast."""
     category_edges_time_dim = [
         d for d in category_edges.dims if d in ["month", "dayofyear", "weekofyear"]
     ]

@@ -3,6 +3,7 @@ import pytest
 import xarray as xr
 from scipy.stats import norm
 
+from climpred import HindcastEnsemble
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.comparisons import (
     NON_PROBABILISTIC_PM_COMPARISONS,
@@ -285,13 +286,15 @@ def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):
     ).all()
 
 
-from climpred import HindcastEnsemble
-
-
-def test_rps_different_edges(hindcast_recon_1d_mm):
-    """Test that HindcastEnsemble.verify(metric='rps') can work with different category_edges for forecast and observations."""
+@pytest.mark.parametrize("aggregate", [True, False])
+def test_rps_different_edges(hindcast_recon_1d_mm, aggregate):
+    """Test that HindcastEnsemble.verify(metric='rps') can work with
+    different category_edges for forecast and observations."""
     he = hindcast_recon_1d_mm
-    # he = HindcastEnsemble(he.get_initialized().resample(init='1MS').mean()).add_observations(he.get_observations())
+
+    if aggregate:
+        he = he.smooth(dict(lead=3), how="mean")
+
     q = [1 / 3, 2 / 3]
     model_edges = (
         he.get_initialized()
@@ -299,7 +302,6 @@ def test_rps_different_edges(hindcast_recon_1d_mm):
         .quantile(q=q, dim=["init", "member"])
         .rename({"quantile": "category_edge"})
     )
-
     obs_edges = (
         he.get_observations()
         .groupby("time.month")
@@ -317,9 +319,15 @@ def test_rps_different_edges(hindcast_recon_1d_mm):
     assert list(rps.dims) == ["lead"]
 
 
-def test_rps_one_edge(hindcast_recon_1d_mm):
-    """Test that HindcastEnsemble.verify(metric='rps') can work with same category_edges for forecast and observations."""
+@pytest.mark.parametrize("aggregate", [True, False])
+def test_rps_one_edge(hindcast_recon_1d_mm, aggregate):
+    """Test that HindcastEnsemble.verify(metric='rps') can work with same
+    category_edges for forecast and observations."""
     he = hindcast_recon_1d_mm
+
+    if aggregate:
+        he = he.smooth(dict(lead=3), how="mean")
+
     q = [1 / 3, 2 / 3]
     obs_edges = (
         he.get_observations()

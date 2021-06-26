@@ -41,7 +41,11 @@ from .smoothing import (
     spatial_smoothing_xesmf,
     temporal_smoothing,
 )
-from .utils import convert_time_index, convert_Timedelta_to_lead_units
+from .utils import (
+    broadcast_metric_kwargs_for_rps,
+    convert_time_index,
+    convert_Timedelta_to_lead_units,
+)
 
 
 def _display_metadata(self):
@@ -1283,6 +1287,10 @@ class HindcastEnsemble(PredictionEnsemble):
                 hind, metric, comparison, dim, kind=self.kind
             )
             forecast, verif = comparison.function(hind, verif, metric=metric)
+            if metric.name == "rps":  # modify metric_kwargs for rps
+                metric_kwargs = broadcast_metric_kwargs_for_rps(
+                    forecast, verif, metric_kwargs
+                )
             forecast = forecast.rename({"init": "time"})
             inits, verif_dates = return_inits_and_verif_dates(
                 forecast,

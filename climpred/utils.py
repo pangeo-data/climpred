@@ -1,4 +1,5 @@
 import datetime
+import logging
 import warnings
 
 import cftime
@@ -456,3 +457,50 @@ def convert_Timedelta_to_lead_units(ds):
         ds["lead"] = ds["lead"] / 7
         ds["lead"].attrs["units"] = "weeks"
     return ds
+
+
+def broadcast_time_grouped_to_time(forecast, category_edges, dim):
+    """Broadcast time.groupby('time.month/dayofyear/weekofyear').mean() back to dim."""
+    category_edges_time_dim = [
+        d for d in category_edges.dims if d in ["month", "dayofyear", "weekofyear"]
+    ]
+    if isinstance(category_edges_time_dim, list):
+        if len(category_edges_time_dim) > 0:
+            category_edges_time_dim = category_edges_time_dim[0]
+            logging.debug(f"found category_edges_time_dim = {category_edges_time_dim}")
+            category_edges = category_edges.sel(
+                {
+                    category_edges_time_dim: getattr(
+                        forecast[dim].dt, category_edges_time_dim
+                    )
+                }
+            )
+    return category_edges
+
+
+def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
+    """Apply broadcast_time_grouped_to_time to category_edges in metric_kwargs."""
+    category_edges = metric_kwargs.get("category_edges", None)
+    logging.debug("enter climpred.utils.broadcast_metric_kwargs_for_rps")
+    if category_edges is not None:
+        if isinstance(category_edges, tuple):
+            logging.debug("category_edges is tuple")
+            verif_edges = category_edges[0]
+            verif_edges = broadcast_time_grouped_to_time(verif, verif_edges, dim="time")
+            forecast_edges = category_edges[1]
+            forecast_edges = broadcast_time_grouped_to_time(
+                forecast, forecast_edges, dim="init"
+            )
+            metric_kwargs["category_edges"] = (verif_edges, forecast_edges)
+        elif isinstance(category_edges, xr.Dataset):
+            logging.debug("category_edges is xr.Dataset")
+            metric_kwargs["category_edges"] = broadcast_time_grouped_to_time(
+                verif, category_edges, dim="time"
+            )
+        elif isinstance(category_edges, np.ndarray):
+            logging.debug("category_edges is np.array")
+        else:
+            raise ValueError(
+                f"excepted category edges as tuple, xr.Dataset or np.array, found {type(category_edges)}"
+            )
+        return metric_kwargs

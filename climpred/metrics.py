@@ -1,6 +1,8 @@
 import warnings
 
 import numpy as np
+import pandas as pd
+import xarray as xr
 from scipy.stats import norm
 from xskillscore import (
     Contingency,
@@ -2843,7 +2845,6 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         Dimensions:                     (lead: 10)
         Coordinates:
           * lead                        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            month                       int64 1
             observations_category_edge  <U101 '[-np.inf, 0.3333333333333333), [0.3333...
             forecasts_category_edge     <U101 '[-np.inf, 0.3333333333333333), [0.3333...
             skill                       <U11 'initialized'
@@ -2868,12 +2869,39 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             f"rps either expects multiple forecast members and `category_edges` or `category` in both forecast and observations. Found: category_edges={category_edges}, forecast.dims = {forecast.dims}, observations.dims = {verif.dims}"
         )
 
-    # select matching category_edges lead in HindcastEnsemble
+    # get corresponding category_edges for lead
     if "lead" not in forecast.dims and "lead" in forecast.coords and "lead":
         if isinstance(category_edges, tuple):
             if "lead" in category_edges[1].dims:
-                forecast_edges = category_edges[1].sel(lead=forecast.lead)
-                category_edges = (category_edges[0], forecast_edges)
+                forecast_edges = (
+                    category_edges[1].sel(lead=forecast.lead).rename({"init": "time"})
+                )
+                # shift category_edges by lead
+                if forecast.lead.attrs["units"] in ["months", "years", "seasons"]:
+                    init_freq = xr.infer_freq(forecast_edges.time)
+                    if init_freq is None:
+                        raise ValueError(
+                            "Could not shift category_edges by lead. Please use climpred.utils.broadcast_time_grouped_to_time on both category_edges before passing them to verify."
+                        )
+                    lead_freq = forecast.lead.attrs["units"][0].upper()
+                    if init_freq[1] == "S":
+                        lead_freq = lead_freq + "S"
+                    forecast_edges["time"] = (
+                        forecast_edges["time"]
+                        .to_index()
+                        .shift(int(forecast.lead), lead_freq)
+                    )
+                else:  # for smaller lead units pd.Timedelta is easier
+                    shift = pd.Timedelta(
+                        f'{float(forecast.lead.values)} {forecast.lead.attrs["units"][0]}'
+                    )
+                    forecast_edges["time"] = forecast_edges["time"] + shift
+                forecast_edges = forecast_edges.sel(time=forecast.time)
+                forecast_edges = forecast_edges.assign_coords(time=forecast.time)
+                verif_edges = category_edges[0]
+                category_edges = (verif_edges, forecast_edges)
+        elif isinstance(category_edges, xr.Dataset):
+            pass
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 

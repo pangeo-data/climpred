@@ -31,7 +31,7 @@ def _mean_bias_removal_quick(hind, bias, dim):
                 hind.groupby(hind[dim].dt.isocalendar().week)
                 - bias.groupby(bias[dim].dt.isocalendar().week).mean()
             )
-        else:  # dayofyear month
+        else:  # dayofyear month season
             bias_removed_hind = (
                 hind.groupby(f"{dim}.{seasonality_str}")
                 - bias.groupby(f"{dim}.{seasonality_str}").mean()

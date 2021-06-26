@@ -11,6 +11,7 @@ from .constants import (
     VALID_REFERENCES,
 )
 from .exceptions import DatasetError, DimensionError, VariableError
+from .options import OPTIONS
 
 NCPU = dask.system.CPU_COUNT
 
@@ -231,9 +232,10 @@ def rename_to_climpred_dims(xobj):
                 if xobj[d].attrs.get("standard_name") == cf_standard_name:
                     xobj = xobj.rename({d: climpred_d})
                     xobj[climpred_d].attrs["standard_name"] = cf_standard_name
-                    warnings.warn(
-                        f'Did not find dimension "{climpred_d}", but renamed dimension {d} with CF-complying standard_name "{cf_standard_name}" to {climpred_d}.'
-                    )
+                    if OPTIONS["warn_for_rename_to_climpred_dims"]:
+                        warnings.warn(
+                            f'Did not find dimension "{climpred_d}", but renamed dimension {d} with CF-complying standard_name "{cf_standard_name}" to {climpred_d}.'
+                        )
     if not set(["init", "lead"]).issubset(set(xobj.dims)):
         warnings.warn(
             f'Could not find dimensions ["init", "lead"] in initialized, found dimension {xobj.dims}. Also searched coordinates for CF-complying standard_names {CF_STANDARD_NAMES}.'

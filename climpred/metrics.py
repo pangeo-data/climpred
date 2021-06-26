@@ -2785,6 +2785,12 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         dim (list or str): Dimensions to aggregate.
         **metric_kwargs, see xs.rps
 
+    .. note::
+        If ``category_edges`` is xr.Dataset or tuple of xr.Datasets, climpred will
+        broadcast the grouped dimensions ``season``, ``month``, ``weekofyear``,
+        ``dayfofyear`` onto the dimensions ``init`` for forecast and ``time`` for
+        observations. see ``climpred.utils.broadcast_time_grouped_to_time``.
+
     Details:
         +-----------------+-----------+
         | **minimum**     | 0.0       |

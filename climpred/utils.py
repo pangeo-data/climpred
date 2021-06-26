@@ -14,6 +14,7 @@ from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .metrics import METRIC_ALIASES
+from .options import OPTIONS
 
 
 def assign_attrs(
@@ -123,11 +124,13 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
         elif isinstance(time_index, pd.Float64Index) | isinstance(
             time_index, pd.Int64Index
         ):
-            warnings.warn(
-                "Assuming annual resolution due to numeric inits. "
-                "Change init to a datetime if it is another resolution."
-            )
+            if OPTIONS["warn_for_init_coords_int_to_annual"]:
+                warnings.warn(
+                    "Assuming annual resolution due to numeric inits. "
+                    "Change init to a datetime if it is another resolution."
+                )
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
+            # hard to maintain a clear rule below seasonality
             dates = [str(int(t)) + "-01-01-00-00-00" for t in time_index]
             split_dates = [d.split("-") for d in dates]
             if "lead" in xobj.dims:
@@ -463,7 +466,9 @@ def broadcast_time_grouped_to_time(forecast, category_edges, dim):
     """Broadcast time.groupby('time.month/dayofyear/weekofyear').mean() from
     category_edges back to dim matching forecast."""
     category_edges_time_dim = [
-        d for d in category_edges.dims if d in ["month", "dayofyear", "weekofyear"]
+        d
+        for d in category_edges.dims
+        if d in ["season", "month", "weekofyear", "dayofyear"]
     ]
     if isinstance(category_edges_time_dim, list):
         if len(category_edges_time_dim) > 0:

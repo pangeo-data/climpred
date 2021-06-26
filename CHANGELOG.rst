@@ -30,8 +30,8 @@ New Features
     * ``"init"``: ``"forecast_reference_time"``
     * ``"member"``: ``"realization"``
     * ``"lead"``: ``"forecast_period"``
-- if `lead` coordinate is ``pd.Timedelta``,
-  :py:class:`~climpred.classes.PredictionEnsemble` converts `lead` coordinate upon
+- If ``lead`` coordinate is ``pd.Timedelta``,
+  :py:class:`~climpred.classes.PredictionEnsemble` converts ``lead`` coordinate upon
   instantiation to integer `lead` and corresponding ``lead.attrs["units"]``.
   (:issue:`606`, :pr:`627`) `Aaron Spring`_.
 - Require ``xskillscore >= 0.0.20``.
@@ -39,12 +39,16 @@ New Features
   for observations and forecasts, see
   `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`_.
   (:issue:`629`, :pr:`630`) `Aaron Spring`_.
+- Set options ``warn_for_failed_PredictionEnsemble_xr_call``,
+  ``warn_for_rename_to_climpred_dims``, ``warn_for_init_coords_int_to_annual``,
+  ``climpred_warnings`` via :py:class:`~climpred.options.set_options`.
+  (:issue:`628`, :pr:`631`) `Aaron Spring`_.
 
 
 Documentation
 -------------
 - Add `documentation page about publicly available initialized datasets and
-  corresponding climpred examples <initialized-datasets.html>`_.
+  corresponding `climpred` examples <initialized-datasets.html>`_.
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
 - Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
   prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.

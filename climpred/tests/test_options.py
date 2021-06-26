@@ -15,8 +15,7 @@ def test_seasonality_remove_bias(hindcast_recon_1d_dm, cross_validate):
     hindcast._datasets["initialized"] = (
         hindcast.get_initialized().resample(init="1MS").interpolate("linear")
     )
-    print(hindcast.get_initialized().init.to_index())
-    print(hindcast.get_observations().time.to_index())
+
     alignment = "maximize"
     kw = {
         "metric": "mse",
@@ -25,7 +24,7 @@ def test_seasonality_remove_bias(hindcast_recon_1d_dm, cross_validate):
         "alignment": alignment,
         "reference": None,
     }
-    print(hindcast.get_initialized().init.dt.dayofyear.values)
+
     with climpred.set_options(seasonality="dayofyear"):
         dayofyear_seasonality = hindcast.remove_bias(
             alignment=alignment, cross_validate=cross_validate
@@ -58,3 +57,25 @@ def test_seasonality_climatology(hindcast_recon_1d_dm):
     with climpred.set_options(seasonality="month"):
         month_seasonality = hindcast.verify(**kw).sel(skill="climatology")
     assert not month_seasonality.identical(dayofyear_seasonality)
+
+
+@pytest.mark.parametrize("option_bool", [False, True])
+def test_option_warn_for_failed_PredictionEnsemble_xr_call(
+    hindcast_recon_1d_dm, option_bool
+):
+    with climpred.set_options(warn_for_failed_PredictionEnsemble_xr_call=option_bool):
+        with pytest.warns(None if not option_bool else UserWarning) as record:
+            hindcast_recon_1d_dm.sel(lead=[1, 2])
+        if not option_bool:
+            assert len(record) == 0, print(record[0])
+
+
+@pytest.mark.parametrize("option_bool", [False, True])
+def test_climpred_warnings(hindcast_recon_1d_dm, option_bool):
+    with climpred.set_options(warn_for_failed_PredictionEnsemble_xr_call=True):
+        with climpred.set_options(climpred_warnings=option_bool):
+            print(climpred.options.OPTIONS)
+            with pytest.warns(UserWarning if option_bool else None) as record:
+                hindcast_recon_1d_dm.sel(lead=[1, 2])
+            if not option_bool:
+                assert len(record) == 0, print(record[0])

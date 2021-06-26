@@ -29,6 +29,7 @@ from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .logging import log_compute_hindcast_header
+from .options import OPTIONS
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -379,16 +380,19 @@ class PredictionEnsemble:
                         msg = f"xr.{name}({args}, {kwargs}) failed\n{error_type}: {e}"
                     if set(["lead", "init"]).issubset(set(v.dims)):  # initialized
                         if dim not in v.dims:
-                            warnings.warn(f"Error due to initialized:  {msg}")
+                            if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                                warnings.warn(f"Error due to initialized:  {msg}")
                     elif set(["time"]).issubset(
                         set(v.dims)
                     ):  # uninitialized, control, verification
                         if dim not in v.dims:
-                            warnings.warn(
-                                f"Error due to verification/control/uninitialized: {msg}"
-                            )
+                            if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                                warnings.warn(
+                                    f"Error due to verification/control/uninitialized: {msg}"
+                                )
                     else:
-                        warnings.warn(msg)
+                        if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                            warnings.warn(msg)
                     return v
 
             return self._apply_func(_apply_xr_func, name, *args, **kwargs)

@@ -1,9 +1,22 @@
-OPTIONS = {"seasonality": "dayofyear"}  # defaults
+OPTIONS = {
+    "seasonality": "dayofyear",
+    "warn_for_failed_PredictionEnsemble_xr_call": True,
+    "warn_for_rename_to_climpred_dims": True,
+    "warn_for_init_coords_int_to_annual": True,
+    "climpred_warnings": True,
+}  # defaults
 
 _SEASONALITY_OPTIONS = frozenset(["dayofyear", "weekofyear", "month"])
 
 _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,
+    "warn_for_PredictionEnsemble_xr_call": lambda choice: choice
+    in [True, False, "default"],
+    "warn_for_rename_to_climpred_dims": lambda choice: choice
+    in [True, False, "default"],
+    "warn_for_init_coords_int_to_annual": lambda choice: choice
+    in [True, False, "default"],
+    "climpred_warnings": lambda choice: choice in [True, False, "default"],
 }
 
 
@@ -13,16 +26,37 @@ class set_options:
 
     Currently supported options:
 
-    - ``seasonality``: Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
-      Used in ``reference=climatology`` and :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-        - Allowed: [``"dayofyear"``, ``"weekofyear"``, ``"month"``]
+    - ``seasonality``
+        - Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
+            Used in ``reference=climatology`` and
+            :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+        - Allowed: [``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``]
         - Default: ``dayofyear``.
+    - ``warn_for_failed_PredictionEnsemble_xr_call``
+        - Raise UserWarning when PredictionEnsemble.xr_call,
+            e.g. ``.sel(lead=[1])`` fails on one of the datasets.
+        - Allowed: [True, False]
+        - Default: True
+    - ``warn_for_rename_to_climpred_dims``
+        - Raise UserWarning when dimensions are renamed to ``CLIMPRED_DIMS`` when
+            PredictionEnsemble is instantiated.
+        - Allowed: [True, False]
+        - Default: True
+    - ``warn_for_init_coords_int_to_annual``
+        - Raise UserWarning when ``init`` coordinate is of type integer and gets
+            converted to annual cftime_range when PredictionEnsemble is instantiated.
+        - Allowed: [True, False]
+        - Default: True
+    - ``climpred_warnings``
+        - Overwrites all options containing ``"*warn*"``.
+        - Allowed: [True, False]
+        - Default: True
 
     Examples:
         You can use ``set_options`` either as a context manager:
 
-        >>> kw = dict(metric='mse', comparison='e2o', dim='init', alignment='same_verifs',
-        ...           reference='climatology')
+        >>> kw = dict(metric='mse', comparison='e2o', dim='init',
+        ...           alignment='same_verifs', reference='climatology')
         >>> with climpred.set_options(seasonality='month'):
         ...     HindcastEnsemble.verify(**kw).SST.sel(skill='climatology')
         <xarray.DataArray 'SST' (lead: 10)>
@@ -58,6 +92,12 @@ class set_options:
         self._apply_update(kwargs)
 
     def _apply_update(self, options_dict):
+        if (
+            "climpred_warnings" in options_dict
+        ):  # climpred_warnings == False overwrites all warnings options
+            if not options_dict["climpred_warnings"]:
+                for k in [o for o in OPTIONS.keys() if "warn" in o]:
+                    options_dict[k] = False
         OPTIONS.update(options_dict)
 
     def __enter__(self):

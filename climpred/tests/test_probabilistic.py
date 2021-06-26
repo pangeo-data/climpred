@@ -285,11 +285,28 @@ def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):
     ).all()
 
 
-def test_rps_different_edges(hindcast_recon_1d_ym):
-    """Test that rps can work with different category_edges for forecast and observations."""
-    he = hindcast_recon_1d_ym
-    q=[1/3, 2/3]
-    model_edges = he.get_initialized().groupby('init.month').quantile(q=q, dim='init').rename({'quantile':'category_edge'})
-    obs_edges = he.get_observations().groupby('time.month').quantile(q=q, dim='time').rename({'quantile':'category_edge'})
-    rps = he.verify(metric='rps', dim=['member','init'], alignment='maximize', comparison='m2o', category_edges=(obs_edges, model_edges))
-    assert 'month' not in rps.dims
+def test_rps_different_edges(hindcast_recon_1d_mm):
+    """Test that HindcastEnsemble.verify(metric='rps') can work with different category_edges for forecast and observations."""
+    he = hindcast_recon_1d_mm
+    q = [1 / 3, 2 / 3]
+    model_edges = (
+        he.get_initialized()
+        .groupby("init.month")
+        .quantile(q=q, dim=["init", "member"])
+        .rename({"quantile": "category_edge"})
+    )
+    obs_edges = (
+        he.get_observations()
+        .groupby("time.month")
+        .quantile(q=q, dim="time")
+        .rename({"quantile": "category_edge"})
+    )
+    rps = he.verify(
+        metric="rps",
+        dim=["member", "init"],
+        alignment="maximize",
+        comparison="m2o",
+        category_edges=(obs_edges, model_edges),
+    )
+    assert "month" not in rps.dims
+    assert list(rps.dims) == ["lead"]

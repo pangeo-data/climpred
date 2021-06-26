@@ -66,9 +66,8 @@ def _apply_metric_at_given_lead(
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
         lforecast = (
-            hind.sel(lead=lead)
-            .where(hind["time"].isin(inits[lead]), drop=True)
-            .drop_vars("lead")
+            hind.sel(lead=lead).where(hind["time"].isin(inits[lead]), drop=True)
+            # .drop_vars("lead")
         )
         lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":

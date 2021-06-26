@@ -1,6 +1,8 @@
 import warnings
 
 import numpy as np
+import pandas as pd
+import xarray as xr
 from scipy.stats import norm
 from xskillscore import (
     Contingency,
@@ -2083,13 +2085,13 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
     """Brier score of an ensemble for exceeding given thresholds.
 
     .. math::
-        CRPS = \int_f BS(F(f), H(f - o)) df,
+        CRPS = \\int_f BS(F(f), H(f - o)) df
 
-    where :math:`F(o) = \int_{f \leq o} p(f) df` is the cumulative distribution
+    where :math:`F(o) = \\int_{f \\leq o} p(f) df` is the cumulative distribution
     function (CDF) of the forecast distribution :math:`F`, :math:`o` is a point estimate
     of the true observation (observational error is neglected), :math:`BS` denotes the
     Brier score and :math:`H(x)` denotes the Heaviside step function, which we define
-    here as equal to 1 for :math:`x \geq 0` and 0 otherwise.
+    here as equal to 1 for :math:`x \\geq 0` and 0 otherwise.
 
     Args:
         forecast (xr.object): Forecast with ``member`` dim.
@@ -2129,8 +2131,8 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         <xarray.Dataset>
         Dimensions:    (init: 52, lead: 10)
         Coordinates:
-          * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
           * init       (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
             threshold  float64 0.2
             skill      <U11 'initialized'
         Data variables:
@@ -2229,8 +2231,8 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 0.1703 0.03346 0.06889 ... 0.05428 0.1638
@@ -2336,8 +2338,8 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 0.3291 0.8421 0.6092 ... 0.7526 0.7702 0.5126
@@ -2349,8 +2351,8 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         <xarray.Dataset>
         Dimensions:  (init: 12, lead: 2, member: 9)
         Coordinates:
-          * lead     (lead) int64 1 2
           * init     (init) object 3014-01-01 00:00:00 ... 3257-01-01 00:00:00
+          * lead     (lead) int64 1 2
           * member   (member) int64 1 2 3 4 5 6 7 8 9
         Data variables:
             tos      (lead, init, member) float64 0.9931 0.9932 0.9932 ... 0.9947 0.9947
@@ -2451,8 +2453,8 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
@@ -2777,17 +2779,11 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         RPS(p, k) = \\sum_{m=1}^{M} [(\\sum_{k=1}^{m} p_k) - (\\sum_{k=1}^{m} \
             o_k)]^{2}
 
-    .. note::
-        install xskillscore from source to use most recent xs.rps
-        function. xs=0.0.18 is erroneously limited to [0,1].
-
     Args:
-        forecast (xr.object): Raw forecasts with ``member`` dimension.
-        verif (xr.object): Verification data without ``member`` dim.
-        dim (list or str): Dimensions to aggregate. Requires to contain `member`.
-        category_edges (array_like): Category bin edges used to compute the CDFs.
-            Bins must span the limits of forecast and verification.
-            Passed via metric_kwargs.
+        forecast (xr.object): Forecasts.
+        verif (xr.object): Verification.
+        dim (list or str): Dimensions to aggregate.
+        **metric_kwargs, see xs.rps
 
     Details:
         +-----------------+-----------+
@@ -2818,7 +2814,11 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             SST                         (lead) float64 0.115 0.1123 ... 0.1687 0.1875
 
 
-        >>> category_edges = np.array([9.5, 10., 10.5, 11.])
+        Provide category_edges as `xr.Dataset` for category_edges varying along
+        dimensions.
+
+        >>> category_edges = xr.DataArray([9.5, 10., 10.5, 11.], dims='category_edge').assign_coords(category_edge=[9.5, 10., 10.5, 11.]).to_dataset(name='tos')
+        >>> # category_edges = np.array([9.5, 10., 10.5, 11.]) # identical
         >>> PerfectModelEnsemble.verify(metric='rps', comparison='m2c',
         ...     dim=['member','init'], category_edges=category_edges)
         <xarray.Dataset>
@@ -2829,13 +2829,82 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             forecasts_category_edge     <U71 '[-np.inf, 9.5), [9.5, 10.0), [10.0, 10....
         Data variables:
             tos                         (lead) float64 0.08951 0.1615 ... 0.1399 0.2274
+
+
+        Provide `category_edges` as tuple for different category_edges to categorize
+        forecasts and observations.
+
+        >>> q = [1 / 3, 2 / 3]
+        >>> forecast_edges = HindcastEnsemble.get_initialized().groupby('init.month').quantile(q=q, dim=['init','member']).rename({'quantile':'category_edge'})
+        >>> obs_edges = HindcastEnsemble.get_observations().groupby('time.month').quantile(q=q, dim='time').rename({'quantile':'category_edge'})
+        >>> category_edges = (obs_edges, forecast_edges)
+        >>> HindcastEnsemble.verify(metric='rps', comparison='m2o',
+        ...     dim=['member', 'init'], alignment='same_verifs',
+        ...     category_edges=category_edges)
+        <xarray.Dataset>
+        Dimensions:                     (lead: 10)
+        Coordinates:
+          * lead                        (lead) int32 1 2 3 4 5 6 7 8 9 10
+            observations_category_edge  <U101 '[-np.inf, 0.3333333333333333), [0.3333...
+            forecasts_category_edge     <U101 '[-np.inf, 0.3333333333333333), [0.3333...
+            skill                       <U11 'initialized'
+        Data variables:
+            SST                         (lead) float64 0.1248 0.1756 ... 0.3081 0.3413
     """
-    dim = _remove_member_from_dim_or_raise(dim)
+
     if "category_edges" in metric_kwargs:
         category_edges = metric_kwargs.pop("category_edges")
     else:
-        raise ValueError("require category_edges")
-    assert "member" in forecast.dims  # require member dim
+        category_edges = None
+    if (
+        category_edges is not None and "member" in forecast.dims
+    ):  # expect multiple member deterministic forecasts
+        dim = _remove_member_from_dim_or_raise(dim)
+    elif (
+        "category" in forecast.dims and "category" in verif.dims
+    ):  # expect multiple category in forecast and verif
+        pass
+    else:
+        raise ValueError(
+            "rps either expects multiple forecast members and `category_edges` or "
+            "`category` in both forecast and observations. Found: "
+            f"category_edges={category_edges}, forecast.dims = {forecast.dims}, "
+            f"observations.dims = {verif.dims}"
+        )
+
+    # get corresponding category_edges for lead
+    if "lead" not in forecast.dims and "lead" in forecast.coords and "lead":
+        if isinstance(category_edges, tuple):
+            if "lead" in category_edges[1].dims:
+                forecast_edges = (
+                    category_edges[1].sel(lead=forecast.lead).rename({"init": "time"})
+                )
+                # shift category_edges by lead
+                if forecast.lead.attrs["units"] in ["months", "years", "seasons"]:
+                    init_freq = xr.infer_freq(forecast_edges.time)
+                    if init_freq is None:
+                        raise ValueError(
+                            "Could not shift category_edges by lead. Please use "
+                            "`climpred.utils.broadcast_time_grouped_to_time` on both "
+                            "category_edges before passing them to verify."
+                        )
+                    lead_freq = forecast.lead.attrs["units"][0].upper()
+                    if init_freq[1] == "S":
+                        lead_freq = lead_freq + "S"
+                    forecast_edges["time"] = (
+                        forecast_edges["time"]
+                        .to_index()
+                        .shift(int(forecast.lead), lead_freq)
+                    )
+                else:  # for smaller lead units pd.Timedelta is easier
+                    shift = pd.Timedelta(
+                        f'{float(forecast.lead.values)} {forecast.lead.attrs["units"][0]}'
+                    )
+                    forecast_edges["time"] = forecast_edges["time"] + shift
+                forecast_edges = forecast_edges.sel(time=forecast.time)
+                forecast_edges = forecast_edges.assign_coords(time=forecast.time)
+                verif_edges = category_edges[0]
+                category_edges = (verif_edges, forecast_edges)
     return rps(verif, forecast, category_edges, dim=dim, **metric_kwargs)
 
 
@@ -3014,8 +3083,8 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
                 [0.        , 0.72222222, 1.        ],
                 [0.82911111, 0.82911111, 0.82911111]]])
         Coordinates:
-          * lead             (lead) int32 1 2
           * probability_bin  (probability_bin) float64 2.0 1.0 0.0
+          * lead             (lead) int32 1 2
           * metric           (metric) <U19 'false positive rate' ... 'area under curve'
             skill            <U11 'initialized'
 

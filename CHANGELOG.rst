@@ -34,6 +34,12 @@ New Features
   :py:class:`~climpred.classes.PredictionEnsemble` converts `lead` coordinate upon
   instantiation to integer `lead` and corresponding ``lead.attrs["units"]``.
   (:issue:`606`, :pr:`627`) `Aaron Spring`_.
+- Require ``xskillscore >= 0.0.20``.
+  :py:func:`~climpred.metrics._rps` now works with different ``category_edges``
+  for observations and forecasts, see
+  `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`_.
+  (:issue:`629`, :pr:`630`) `Aaron Spring`_.
+
 
 Documentation
 -------------
@@ -54,6 +60,10 @@ Documentation
   :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` on GPU with `cupy-xarray
   <https://github.com/xarray-contrib/cupy-xarray>`_ finishes 10x faster.
   (:issue:`592`, :pr:`607`) `Aaron Spring`_.
+- How to work with biweekly aggregates in ``climpred``, see
+  `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`_.
+  (:issue:`625`, :pr:`630`) `Aaron Spring`_.
+
 
 Internals/Minor Fixes
 ---------------------

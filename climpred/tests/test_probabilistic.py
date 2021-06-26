@@ -3,6 +3,7 @@ import pytest
 import xarray as xr
 from scipy.stats import norm
 
+from climpred import HindcastEnsemble
 from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.comparisons import (
     NON_PROBABILISTIC_PM_COMPARISONS,
@@ -283,3 +284,63 @@ def test_hindcast_verify_brier_logical(hindcast_recon_1d_ym):
     assert (
         brier_logical_mapped_before_no_member_mean == brier_logical_passed_as_kwarg
     ).all()
+
+
+@pytest.mark.parametrize("aggregate", [True, False])
+def test_rps_different_edges(hindcast_recon_1d_mm, aggregate):
+    """Test that HindcastEnsemble.verify(metric='rps') can work with
+    different category_edges for forecast and observations."""
+    he = hindcast_recon_1d_mm
+
+    if aggregate:
+        he = he.smooth(dict(lead=3), how="mean")
+
+    q = [1 / 3, 2 / 3]
+    model_edges = (
+        he.get_initialized()
+        .groupby("init.month")
+        .quantile(q=q, dim=["init", "member"])
+        .rename({"quantile": "category_edge"})
+    )
+    obs_edges = (
+        he.get_observations()
+        .groupby("time.month")
+        .quantile(q=q, dim="time")
+        .rename({"quantile": "category_edge"})
+    )
+    rps = he.verify(
+        metric="rps",
+        dim=["member", "init"],
+        alignment="maximize",
+        comparison="m2o",
+        category_edges=(obs_edges, model_edges),
+    )
+    assert "month" not in rps.dims
+    assert list(rps.dims) == ["lead"]
+
+
+@pytest.mark.parametrize("aggregate", [True, False])
+def test_rps_one_edge(hindcast_recon_1d_mm, aggregate):
+    """Test that HindcastEnsemble.verify(metric='rps') can work with same
+    category_edges for forecast and observations."""
+    he = hindcast_recon_1d_mm
+
+    if aggregate:
+        he = he.smooth(dict(lead=3), how="mean")
+
+    q = [1 / 3, 2 / 3]
+    obs_edges = (
+        he.get_observations()
+        .groupby("time.month")
+        .quantile(q=q, dim="time")
+        .rename({"quantile": "category_edge"})
+    )
+    rps = he.verify(
+        metric="rps",
+        dim=["member", "init"],
+        alignment="maximize",
+        comparison="m2o",
+        category_edges=obs_edges,
+    )
+    assert "month" not in rps.dims
+    assert list(rps.dims) == ["lead"]

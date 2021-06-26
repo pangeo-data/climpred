@@ -223,13 +223,41 @@ class PredictionEnsemble:
     @property
     def data_vars(self):
         """Dictionary of DataArray objects corresponding to data variables"""
-        return self.get_initialized().data_vars  # , self.observations().data_vars
+        return self.get_initialized().data_vars
+
+    def __delitem__(self, key):
+        """Remove a variable from this PredictionEnsemble."""
+        del self._datasets["initialized"][key]
+        if isinstance(self._datasets["uninitialized"], xr.Dataset):
+            del self._datasets["uninitialized"][key]
+        if self.kind == "hindcast":
+            if isinstance(self._datasets["observations"], xr.Dataset):
+                del self._datasets["observations"][key]
 
     def __contains__(self, key):
         """The 'in' operator will return true or false depending on whether
         'key' is an array in the dataset or not.
         """
-        return key in self.get_initialized()._variables
+        if self.kind == "hindcast":
+            in_init = key in self.get_initialized()._variables
+            if isinstance(self.get_uninitialized(), xr.Dataset):
+                in_uninit = key in self.get_uninitialized()._variables
+            else:
+                in_uninit = None
+            if isinstance(self.get_observations(), xr.Dataset):
+                in_obs = key in self.get_observations()._variables
+            else:
+                in_obs = None
+            # return
+            if in_obs is None and in_uninit is None:
+                return in_init
+            elif in_obs is None:
+                return in_init and in_uninit
+            elif in_uninit is None:
+                return in_init and in_obs
+
+        elif self.kind == "perfect":
+            return key in self.get_initialized()._variables
 
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
         """Plot datasets from PredictionEnsemble.

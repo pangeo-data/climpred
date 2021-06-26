@@ -26,27 +26,29 @@ class set_options:
 
     Currently supported options:
 
-    - ``seasonality``: Attribute to group dimension
-            ``groupby(f"{dim}.{seasonality}"")``.
+    - ``seasonality``
+        - Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
             Used in ``reference=climatology`` and
             :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
         - Allowed: [``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``]
         - Default: ``dayofyear``.
-    - ``warn_for_failed_PredictionEnsemble_xr_call``: Raise UserWarning when
-            PredictionEnsemble.xr_call, e.g. ``.sel(lead=[1])`` fails on one of the
-            datasets.
+    - ``warn_for_failed_PredictionEnsemble_xr_call``
+        - Raise UserWarning when PredictionEnsemble.xr_call,
+            e.g. ``.sel(lead=[1])`` fails on one of the datasets.
         - Allowed: [True, False]
         - Default: True
-    - ``warn_for_rename_to_climpred_dims``: Raise UserWarning when dimensions are
-            renamed to ``CLIMPRED_DIMS`` when PredictionEnsemble is instantiated.
+    - ``warn_for_rename_to_climpred_dims``
+        - Raise UserWarning when dimensions are renamed to ``CLIMPRED_DIMS`` when
+            PredictionEnsemble is instantiated.
         - Allowed: [True, False]
         - Default: True
-    - ``warn_for_init_coords_int_to_annual``: Raise UserWarning when ``init``
-            coordinate is of type integer and gets converted to annual cftime_range
-            when PredictionEnsemble is instantiated.
+    - ``warn_for_init_coords_int_to_annual``
+        - Raise UserWarning when ``init`` coordinate is of type integer and gets
+            converted to annual cftime_range when PredictionEnsemble is instantiated.
         - Allowed: [True, False]
         - Default: True
-    - ``climpred_warnings``: Overwrites all options containing ``"*warn*"``.
+    - ``climpred_warnings``
+        - Overwrites all options containing ``"*warn*"``.
         - Allowed: [True, False]
         - Default: True
 

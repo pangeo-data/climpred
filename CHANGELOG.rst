@@ -39,6 +39,10 @@ New Features
   for observations and forecasts, see
   `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`_.
   (:issue:`629`, :pr:`630`) `Aaron Spring`_.
+- Set options ``warn_for_failed_PredictionEnsemble_xr_call``,
+  ``warn_for_rename_to_climpred_dims``, ``warn_for_init_coords_int_to_annual``,
+  ``climpred_warnings`` via :py:class:`~climpred.options.set_options`.
+  (:issue:`628`, :pr:`631`) `Aaron Spring`_.
 
 
 Documentation

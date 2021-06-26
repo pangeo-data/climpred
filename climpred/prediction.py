@@ -67,7 +67,6 @@ def _apply_metric_at_given_lead(
         # bootstrapping.
         lforecast = (
             hind.sel(lead=lead).where(hind["time"].isin(inits[lead]), drop=True)
-            # .drop_vars("lead")
         )
         lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":

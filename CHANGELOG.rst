@@ -43,6 +43,10 @@ New Features
   ``warn_for_rename_to_climpred_dims``, ``warn_for_init_coords_int_to_annual``,
   ``climpred_warnings`` via :py:class:`~climpred.options.set_options`.
   (:issue:`628`, :pr:`631`) `Aaron Spring`_.
+- :py:class:`~climpred.classes.PredictionEnsemble` acts like ``xr.Dataset`` and
+  understands ``data_vars``, ``dims``, ``sizes``, ``coords``,``nbytes``,
+  ``equals``, ``identical``, ``__iter__``, ``__len__``, ``__contains__``,
+  ``__delitem__``. (:issue:`568`, :pr:`632`) `Aaron Spring`_.
 
 
 Documentation

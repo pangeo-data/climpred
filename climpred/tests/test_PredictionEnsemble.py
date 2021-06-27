@@ -391,3 +391,26 @@ def test_PredictionEnsemble_contains(pe):
     assert isinstance(v in pe, bool)
     assert v in pe
     assert not_v not in pe
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_equals(pe):
+    assert isinstance(pe.equals(pe), bool)
+    assert pe.equals(pe)
+    pe2 = pe.copy(deep=False)
+    pe2._datasets["initialized"].init.attrs["comment"] = "should not fail"
+    assert pe.equals(pe2)
+
+    pe2 = pe2 + 1
+    assert not pe.equals(pe2)
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_identical(pe):
+    assert isinstance(pe.identical(pe), bool)
+    assert pe.identical(pe)
+
+    v = list(pe.data_vars)[0]
+    pe2 = pe.copy(deep=False)
+    pe2._datasets["initialized"][v].attrs["comment"] = "should fail"
+    assert not pe.identical(pe2)

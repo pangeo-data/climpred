@@ -242,6 +242,42 @@ class PredictionEnsemble:
                     contained = False
         return contained
 
+    def equals(self, other):
+        """Two PredictionEnsembles are equal if they have matching variables and
+        coordinates, all of which are equal.
+        PredictionEnsembles can still be equal (like pandas objects) if they have NaN
+        values in the same locations.
+        This method is necessary because `v1 == v2` for ``PredictionEnsembles``
+        does element-wise comparisons (like numpy.ndarrays)."""
+        if not isinstance(other, PredictionEnsemble):
+            return False
+        if other.kind != self.kind:
+            return False
+        equal = True
+        try:
+            for ds_name in self._datasets.keys():
+                if not self._datasets[ds_name].equals(other._datasets[ds_name]):
+                    equal = False
+        except Exception:
+            return False
+        return equal
+
+    def identical(self, other):
+        """Like equals, but also checks all dataset attributes and the
+        attributes on all variables and coordinates."""
+        if not isinstance(other, PredictionEnsemble):
+            return False
+        if other.kind != self.kind:
+            return False
+        id = True
+        try:
+            for ds_name in self._datasets.keys():
+                if not self._datasets[ds_name].identical(other._datasets[ds_name]):
+                    id = False
+        except Exception:
+            return False
+        return id
+
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
         """Plot datasets from PredictionEnsemble.
 

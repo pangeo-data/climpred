@@ -160,32 +160,20 @@ class PredictionEnsemble:
         self._temporally_smoothed = None
         self._is_annual_lead = None
 
-    # when you just print it interactively
-    # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
-    def __repr__(self):
-        if XR_OPTIONS["display_style"] == "html":
-            return _display_metadata_html(self)
-        else:
-            return _display_metadata(self)
-
     @property
     def coords(self):
         """Dictionary of xarray.DataArray objects corresponding to coordinate
-        variables
+        variables available in all PredictionEnsemble._datasets.
         """
-        pe_coords = self.get_initialized().coords
-        pe_coords.update(self.get_observations().coords)
-        return pe_coords
-
-    def __len__(self):
-        return len(self.data_vars)
-
-    def __iter__(self):
-        """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
-        return iter(self._datasets.values())
+        pe_coords = self.get_initialized().coords.to_dataset()
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                pe_coords.update(ds.coords.to_dataset())
+        return pe_coords.coords
 
     @property
     def nbytes(self) -> int:
+        """Bytes sizes of all PredictionEnsemble._datasets."""
         return sum(
             [
                 sum(v.nbytes for v in ds.variables.values())
@@ -196,68 +184,63 @@ class PredictionEnsemble:
 
     @property
     def sizes(self):
-        """Mapping from dimension names to lengths.
-        Cannot be modified directly, but is updated when adding new variables.
-        This is an alias for `Dataset.dims` provided for the benefit of
-        consistency with `DataArray.sizes`.
-        See Also
-        --------
-        DataArray.sizes
-        """
+        """Mapping from dimension names to lengths for all PredictionEnsemble._datasets."""
         pe_dims = dict(self.get_initialized().dims)
-        pe_dims.update(dict(self.get_observations().dims))
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                pe_dims.update(dict(ds.dims))
         return pe_dims
 
     @property
     def dims(self):
-        """Mapping from dimension names to lengths.
-        Cannot be modified directly, but is updated when adding new variables.
-        Note that type of this object differs from `DataArray.dims`.
-        See `Dataset.sizes` and `DataArray.sizes` for consistently named
-        properties.
-        """
-        pe_dims = dict(self.get_initialized().dims)
-        pe_dims.update(dict(self.get_observations().dims))
-        return Frozen(pe_dims)
+        """Mapping from dimension names to lengths all PredictionEnsemble._datasets."""
+        return Frozen(self.sizes)
 
     @property
     def data_vars(self):
-        """Dictionary of DataArray objects corresponding to data variables"""
-        return self.get_initialized().data_vars
+        """Dictionary of DataArray objects corresponding to data variables available in all PredictionEnsemble._datasets."""
+        varset = set(self.get_initialized().data_vars)
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                # take union
+                varset = varset & set(ds.data_vars)
+        varlist = list(varset)
+        return self.get_initialized()[varlist].data_vars
+
+    # when you just print it interactively
+    # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
+    def __repr__(self):
+        if XR_OPTIONS["display_style"] == "html":
+            return _display_metadata_html(self)
+        else:
+            return _display_metadata(self)
+
+    def __len__(self):
+        """Number of all variables in all PredictionEnsemble._datasets."""
+        return len(self.data_vars)
+
+    def __iter__(self):
+        """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
+        return iter(self._datasets.values())
 
     def __delitem__(self, key):
         """Remove a variable from this PredictionEnsemble."""
         del self._datasets["initialized"][key]
-        if isinstance(self._datasets["uninitialized"], xr.Dataset):
-            del self._datasets["uninitialized"][key]
-        if self.kind == "hindcast":
-            if isinstance(self._datasets["observations"], xr.Dataset):
-                del self._datasets["observations"][key]
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                if key in ds.data_vars:
+                    del ds[key]
 
     def __contains__(self, key):
         """The 'in' operator will return true or false depending on whether
-        'key' is an array in the dataset or not.
+        'key' is an array in all PredictionEnsemble._datasets or not.
         """
-        if self.kind == "hindcast":
-            in_init = key in self.get_initialized()._variables
-            if isinstance(self.get_uninitialized(), xr.Dataset):
-                in_uninit = key in self.get_uninitialized()._variables
-            else:
-                in_uninit = None
-            if isinstance(self.get_observations(), xr.Dataset):
-                in_obs = key in self.get_observations()._variables
-            else:
-                in_obs = None
-            # return
-            if in_obs is None and in_uninit is None:
-                return in_init
-            elif in_obs is None:
-                return in_init and in_uninit
-            elif in_uninit is None:
-                return in_init and in_obs
-
-        elif self.kind == "perfect":
-            return key in self.get_initialized()._variables
+        contained = True
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                if key not in ds.data_vars:
+                    contained = False
+        return contained
 
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
         """Plot datasets from PredictionEnsemble.

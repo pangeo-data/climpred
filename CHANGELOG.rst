@@ -5,9 +5,6 @@ What's New
 climpred v2.1.4 (2021-06-28)
 ============================
 
-Breaking changes
-----------------
-
 New Features
 ------------
 - Allow ``hours``, ``minutes`` and ``seconds`` as ``lead.attrs['units']``.

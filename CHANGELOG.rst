@@ -2,11 +2,8 @@
 What's New
 ==========
 
-climpred v2.1.4 (2021-XX-XX)
+climpred v2.1.4 (2021-06-28)
 ============================
-
-Breaking changes
-----------------
 
 New Features
 ------------
@@ -32,7 +29,7 @@ New Features
     * ``"lead"``: ``"forecast_period"``
 - If ``lead`` coordinate is ``pd.Timedelta``,
   :py:class:`~climpred.classes.PredictionEnsemble` converts ``lead`` coordinate upon
-  instantiation to integer `lead` and corresponding ``lead.attrs["units"]``.
+  instantiation to integer ``lead`` and corresponding ``lead.attrs["units"]``.
   (:issue:`606`, :pr:`627`) `Aaron Spring`_.
 - Require ``xskillscore >= 0.0.20``.
   :py:func:`~climpred.metrics._rps` now works with different ``category_edges``

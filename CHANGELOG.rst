@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.1.4 (2021-XX-XX)
+climpred v2.1.4 (2021-06-28)
 ============================
 
 Breaking changes

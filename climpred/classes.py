@@ -1637,7 +1637,14 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
 
-    def remove_bias(self, alignment, how="mean", cross_validate=True, **metric_kwargs):
+    def remove_bias(
+        self,
+        alignment,
+        what="mean",
+        how="additive",
+        cross_validate=True,
+        **metric_kwargs,
+    ):
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
 
@@ -1655,8 +1662,9 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            how (str or list of str): what kind of bias removal to perform. Select
+            what (str or list of str): what kind of bias removal to perform. Select
                 from ['mean']. Defaults to 'mean'.
+            how (str): additive or multiplicative bias. Defaults to 'additive'.
             cross_validate (bool): Use properly defined mean bias removal function.
                 This excludes the given initialization from the bias calculation.
                 With False, include the given initialization in the calculation, which
@@ -1668,18 +1676,20 @@ class HindcastEnsemble(PredictionEnsemble):
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
-        if isinstance(how, str):
-            how = [how]
-        for h in how:
-            if h == "mean":
+        if isinstance(what, str):
+            what = [what]
+        for w in what:
+            if w == "mean":
                 func = mean_bias_removal
             else:
-                raise NotImplementedError(f"{h}_bias_removal is not implemented.")
+                # todo
+                raise NotImplementedError(f"{w}_bias_removal is not implemented.")
 
             self = func(
                 self,
                 alignment=alignment,
                 cross_validate=cross_validate,
+                how=how,
                 **metric_kwargs,
             )
         return self

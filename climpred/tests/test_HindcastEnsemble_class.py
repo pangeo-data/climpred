@@ -114,8 +114,9 @@ def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     )
 
 
+@pytest.mark.parametrize("how", ["additive", "multiplicative"])
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
-def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
+def test_remove_mean_bias(hindcast_hist_obs_1d, alignment, how):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
     how = "mean"
     metric = "rmse"

@@ -22,7 +22,7 @@ dependencies:
   - cftime>=1.1.2 # Optimization changes to make cftime fast
   # Numerics
   - numpy
-  - pandas
+  - pandas<1.3.0
   - scipy
   - xarray
   # Package Management

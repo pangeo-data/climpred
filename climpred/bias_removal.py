@@ -9,12 +9,12 @@ from .options import OPTIONS
 from .utils import convert_cftime_to_datetime_coords, convert_time_index
 
 
-def add(a, b):
+def sub(a, b):
     return a - b
 
 
-def mul(a, b):
-    return a * b
+def div(a, b):
+    return a / b
 
 
 def _mean_bias_removal_quick(hind, bias, dim, how):
@@ -29,7 +29,7 @@ def _mean_bias_removal_quick(hind, bias, dim, how):
         xr.object: bias removed hind
 
     """
-    how_operator = add if how == "additive" else mul
+    how_operator = sub if how == "additive" else div
     seasonality_str = OPTIONS["seasonality"]
     with xr.set_options(keep_attrs=True):
         if seasonality_str == "weekofyear":
@@ -75,7 +75,7 @@ def _mean_bias_removal_cross_validate(hind, bias, dim, how):
           Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
-    how_operator = add if how == "additive" else mul
+    how_operator = sub if how == "additive" else div
     seasonality_str = OPTIONS["seasonality"]
     bias = bias.rename({dim: "init"})
     bias_removed_hind = []
@@ -148,7 +148,11 @@ def mean_bias_removal(
         HindcastEnsemble: bias removed hindcast.
 
     """
-    if hindcast.get_initialized().lead.attrs["units"] not in ["years", "months"]:
+    if hindcast.get_initialized().lead.attrs["units"] not in [
+        "years",
+        "months",
+        "season",
+    ]:
         warnings.warn(
             "HindcastEnsemble.remove_bias() is still experimental and is only tested "
             "for annual and monthly leads. Please consider contributing to "
@@ -159,7 +163,7 @@ def mean_bias_removal(
         return a - b
 
     def multiplicative_bias_func(a, b, **kwargs):
-        return a - b
+        return a / b
 
     additive_bias_metric = Metric("additive_bias", additive_bias_func, True, False, 1)
 
@@ -190,7 +194,7 @@ def mean_bias_removal(
     )
     bias_removed_hind = bias_removed_hind.squeeze()
     # remove groupby label from coords
-    for c in ["dayofyear", "skill", "week", "month"]:
+    for c in ["season", "dayofyear", "skill", "week", "month"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]
 

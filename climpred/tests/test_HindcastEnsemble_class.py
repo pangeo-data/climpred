@@ -1,7 +1,7 @@
 import pytest
 import xarray as xr
 
-from climpred import HindcastEnsemble
+from climpred import HindcastEnsemble, set_options
 from climpred.exceptions import DimensionError
 
 
@@ -114,10 +114,12 @@ def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     )
 
 
+@pytest.mark.parametrize("seasonality", ["month", "season", "dayofyear"])  # weekofyear
 @pytest.mark.parametrize("how", ["additive", "multiplicative"])
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
-def test_remove_mean_bias(hindcast_hist_obs_1d, alignment, how):
+def test_remove_mean_bias(hindcast_hist_obs_1d, alignment, how, seasonality):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
+    set_options(seasonality=seasonality)
     how = "mean"
     metric = "rmse"
     dim = "init"
@@ -132,6 +134,18 @@ def test_remove_mean_bias(hindcast_hist_obs_1d, alignment, how):
         comparison=comparison,
         keep_attrs=True,
     )
+
+    # add how bias
+    if how == "additive":
+        with xr.set_options(keep_attrs=True):
+            hindcast._datasets["observations"] = (
+                hindcast._datasets["observations"] + 0.1
+            )
+    elif how == "multiplicative":
+        with xr.set_options(keep_attrs=True):
+            hindcast._datasets["observations"] = (
+                hindcast._datasets["observations"] * 1.1
+            )
 
     biased_skill = hindcast.verify(**verify_kwargs)
 

@@ -58,7 +58,7 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
 
     Args:
         hind (xr.object): hindcast.
-        spread (xr.object): spread.
+        spread (xr.object): model spread.
         dim (str): Time dimension name in bias.
         obs (xr.object): observations
 
@@ -68,19 +68,21 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
     """
     seasonality_str = OPTIONS["seasonality"]
     with xr.set_options(keep_attrs=True):
-        spread = spread.groupby(f"init.{seasonality}").mean()
-        model_member_mean = hind.mean("member").groupby(f"init.{seasonality}").mean()
+        model_spread = spread.groupby(f"init.{seasonality_str}").mean()
+        model_member_mean = (
+            hind.mean("member").groupby(f"init.{seasonality_str}").mean()
+        )
         # assume that no trend here
-        obs_spread = obs.groupby(f"time.{seasonality}").std()
+        obs_spread = obs.groupby(f"time.{seasonality_str}").std()
 
         # z distr
-        init_z = (
-            initialized.groupby(f"init.{seasonality}") - model_member_mean
-        ).groupby(f"init.{seasonality}") / model_spread
+        init_z = (hind.groupby(f"init.{seasonality_str}") - model_member_mean).groupby(
+            f"init.{seasonality_str}"
+        ) / model_spread
         # scale with obs_spread and model mean
         init_std_corrected = (
-            init_z.groupby(f"init.{seasonality}") * obs_spread
-        ).groupby(f"init.{seasonality}") + model_member_mean
+            init_z.groupby(f"init.{seasonality_str}") * obs_spread
+        ).groupby(f"init.{seasonality_str}") + model_member_mean
     init_std_corrected.attrs = hind.attrs
     return init_std_corrected
 
@@ -220,7 +222,7 @@ def mean_bias_removal(
         bias_metric = (
             additive_mean_bias_metric
             if how == "additive_mean"
-            else multiplicative_bias_metric
+            else multiplicative_mean_bias_metric
         )
 
         # calculate bias lead-time dependent
@@ -258,6 +260,101 @@ def mean_bias_removal(
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )
+    bias_removed_hind = bias_removed_hind.squeeze()
+    # remove groupby label from coords
+    for c in ["season", "dayofyear", "skill", "week", "month"]:
+        if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
+            del bias_removed_hind.coords[c]
+
+    # replace raw with bias reducted initialized dataset
+    hindcast_bias_removed = hindcast.copy()
+    hindcast_bias_removed._datasets["initialized"] = bias_removed_hind
+
+    return hindcast_bias_removed
+
+
+from .bias_correction import XBiasCorrection
+
+
+def _bias_correction(
+    hindcast, alignment, cross_validate=True, how="quantile_mapping", **metric_kwargs
+):
+    """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+
+    Args:
+        hindcast (HindcastEnsemble): hindcast.
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+            ``verif`` to a common time frame at each lead.
+            - same_inits: slice to a common init frame prior to computing
+            metric. This philosophy follows the thought that each lead should be
+            based on the same set of initializations.
+            - same_verif: slice to a common/consistent verification time frame prior
+            to computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of verification dates.
+        how (str): what kind of bias removal to perform. Select
+            from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
+        cross_validate (bool): Use properly defined mean bias removal function. This
+            excludes the given initialization from the bias calculation. With False,
+            include the given initialization in the calculation, which is much faster
+            but yields similar skill with a large N of initializations.
+            Defaults to True.
+
+    Returns:
+        HindcastEnsemble: bias removed hindcast.
+
+    Todo:
+    - groupby
+    """
+    if OPTIONS["seasonality"] not in ["month"]:
+        warnings.warn(
+            "HindcastEnsemble.remove_bias() is still experimental and is only tested "
+            "for seasonality in ['month']. Please consider contributing to "
+            "https://github.com/pangeo-data/climpred/issues/605"
+        )
+
+    # Todo: refactor into metrics
+    def additive_mean_bias_func(a, b, **kwargs):
+        return a - b
+
+    def bc_func(forecast, observations, dim=None, method=how, **metric_kwargs):
+        """Metrics are used after alignment.
+        Todo:
+        - nicer way to map to many variables?
+        """
+        if (
+            "member" in forecast.dims
+        ):  # broadcast member dim to observations, then stack to use all members for training
+            forecast, observations = xr.broadcast(forecast, observations)
+            forecast = forecast.stack(time2=["time", "member"])
+            observations = observations.stack(time2=["time", "member"])
+            dim = "time2"
+        else:
+            dim = "time"
+        reference = observations
+        # no cross val
+        model = forecast
+        data_to_be_corrected = forecast
+        # using bias-correction
+        bc = XBiasCorrection(reference, model, data_to_be_corrected, dim=dim)
+        corrected = bc.correct(method=method)
+        return corrected.unstack(dim)
+
+    bc = Metric(
+        "bias_correction", bc_func, positive=False, probabilistic=False, unit_power=1
+    )
+
+    # calculate bias lead-time dependent
+    bias_removed_hind = hindcast.verify(
+        metric=bc,
+        comparison="m2o" if "member" in hindcast.dims else "e2o",
+        dim=[],  # not used by bias func, therefore best to add [] here
+        alignment=alignment,
+        **metric_kwargs,
+    ).squeeze()
+    # todo: squeeze needed? replace with sel(skill='initialized')
+
+    # if cross_validate:  # more correct
     bias_removed_hind = bias_removed_hind.squeeze()
     # remove groupby label from coords
     for c in ["season", "dayofyear", "skill", "week", "month"]:

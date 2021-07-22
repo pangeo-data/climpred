@@ -9,7 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import mean_bias_removal
+from .bias_removal import mean_bias_removal, _bias_correction
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -29,7 +29,7 @@ from .checks import (
 from .constants import (
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
-    EXTERNAL_BIAS_CORRECTION_METHODS,
+    EXTERNAL_BIAS_CORRECTION_METHODS,INTERNAL_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
 )
 from .exceptions import DimensionError, VariableError
@@ -1685,12 +1685,12 @@ class HindcastEnsemble(PredictionEnsemble):
             func = mean_bias_removal
         elif how == "multiplicative_std":
             func = mean_bias_removal
-        # elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
-        #    func = None
+        elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
+            func = _bias_correction
         else:
             # todo
             raise NotImplementedError(
-                f"bias removal '{w}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
+                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
 
         self = func(

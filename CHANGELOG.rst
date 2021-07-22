@@ -2,7 +2,7 @@
 What's New
 ==========
 
-- Speed up `ENSO monthly example <examples/.html>`_ with IRIDL server-side preprocessing
+- Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_ with IRIDL server-side preprocessing
   (for context see https://twitter.com/realaaronspring/status/1406980080883150848?s=21
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 

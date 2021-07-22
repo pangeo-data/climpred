@@ -5,15 +5,26 @@ What's New
 climpred v2.1.5 (2021-0x-xx)
 ============================
 
-Breaking Change
----------------
-- rename ``how`` to ``what`` in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-  (:issue:`xxx`, :pr:`638`) `Aaron Spring`_.
-
 New Features
 ------------
-- allow multiplicative bias reduction in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` with ``how='multiplicative'``.
-  (:issue:`xxx`, :pr:`638`) `Aaron Spring`_.
+- allow more bias reduction methods in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
+
+    * ``how="multiplicative_mean"``: 
+    * ``how="multiplicative_std"``: 
+    * ``how="modified_quantile"``: 
+    * ``how="gamma_mapping"``: 
+    * ``how="basic_quantile"``: 
+    * ``how="normal_mapping"``:
+    
+  (:issue:`398`, :pr:`638`) `Aaron Spring`_.
+
+Documentation
+-------------
+- Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_ 
+  with IRIDL server-side preprocessing
+  (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
+  (:issue:`594`, :pr:`633`) `Aaron Spring`_.
+
 
 
 climpred v2.1.4 (2021-06-28)

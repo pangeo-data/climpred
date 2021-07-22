@@ -187,7 +187,7 @@ def test_remove_mean_bias(hindcast_hist_obs_1d, alignment, how, seasonality):
         hindcast_bias_removed.get_initialized().lead.attrs
         == hindcast.get_initialized().lead.attrs
     )
-    set_options(seasonality='dayofyear')
+    set_options(seasonality="dayofyear")
 
 
 def test_verify_metric_kwargs(hindcast_hist_obs_1d):

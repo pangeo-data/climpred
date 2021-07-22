@@ -8,12 +8,12 @@ climpred v2.1.5 (2021-0x-xx)
 Breaking Change
 ---------------
 - rename ``how`` to ``what`` in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-(:issue:`xxx`, :pr:`638`) `Aaron Spring`_.
+  (:issue:`xxx`, :pr:`638`) `Aaron Spring`_.
 
 New Features
 ------------
 - allow multiplicative bias reduction in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` with ``how='multiplicative'``.
-(:issue:`xxx`, :pr:`638`) `Aaron Spring`_.
+  (:issue:`xxx`, :pr:`638`) `Aaron Spring`_.
 
 
 climpred v2.1.4 (2021-06-28)

@@ -42,3 +42,17 @@ VALID_LEAD_UNITS = [
 
 # Valid keywords for reference forecast
 VALID_REFERENCES = ["uninitialized", "persistence", "climatology"]
+
+# https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
+EXTERNAL_BIAS_CORRECTION_METHODS = [
+    "modified_quantile",
+    "gamma_mapping",
+    "basic_quantile",
+    "normal_mapping",
+    "quantile_mapping",
+]  # quantile_mapping = modified_quantile (see else)
+INTERNAL_BIAS_CORRECTION_METHODS = [
+    "additive_mean",
+    "multiplicative_mean",
+    "multiplicative_std",
+]

@@ -1,5 +1,5 @@
 OPTIONS = {
-    "seasonality": "dayofyear",
+    "seasonality": "month",
     "warn_for_failed_PredictionEnsemble_xr_call": True,
     "warn_for_rename_to_climpred_dims": True,
     "warn_for_init_coords_int_to_annual": True,

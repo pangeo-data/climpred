@@ -26,7 +26,12 @@ from .checks import (
     match_initialized_vars,
     rename_to_climpred_dims,
 )
-from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
+from .constants import (
+    CLIMPRED_DIMS,
+    CONCAT_KWARGS,
+    EXTERNAL_BIAS_CORRECTION_METHODS,
+    M2M_MEMBER_DIM,
+)
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .logging import log_compute_hindcast_header
@@ -1374,7 +1379,7 @@ class HindcastEnsemble(PredictionEnsemble):
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
-            viable_dims = list(self.get_initialized().isel(lead=0).dims)
+            viable_dims = list(self.get_initialized().isel(lead=0).dims) + [[]]
             raise ValueError(
                 "Designate a dimension to reduce over when applying the "
                 f"metric. Got {dim}. Choose one or more of {viable_dims}"
@@ -1640,8 +1645,7 @@ class HindcastEnsemble(PredictionEnsemble):
     def remove_bias(
         self,
         alignment,
-        what="mean",
-        how="additive",
+        how="additive_mean",
         cross_validate=True,
         **metric_kwargs,
     ):
@@ -1662,9 +1666,8 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            what (str or list of str): what kind of bias removal to perform. Select
-                from ['mean']. Defaults to 'mean'.
-            how (str): additive or multiplicative bias. Defaults to 'additive'.
+            how (str): what kind of bias removal to perform. Select
+                from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
             cross_validate (bool): Use properly defined mean bias removal function.
                 This excludes the given initialization from the bias calculation.
                 With False, include the given initialization in the calculation, which
@@ -1676,20 +1679,25 @@ class HindcastEnsemble(PredictionEnsemble):
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
-        if isinstance(what, str):
-            what = [what]
-        for w in what:
-            if w == "mean":
-                func = mean_bias_removal
-            else:
-                # todo
-                raise NotImplementedError(f"{w}_bias_removal is not implemented.")
-
-            self = func(
-                self,
-                alignment=alignment,
-                cross_validate=cross_validate,
-                how=how,
-                **metric_kwargs,
+        if how == "mean":
+            how = "additive_mean"  # backwards compat
+        if how in ["additive_mean", "multiplicative_mean"]:
+            func = mean_bias_removal
+        elif how == "multiplicative_std":
+            func = mean_bias_removal
+        # elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
+        #    func = None
+        else:
+            # todo
+            raise NotImplementedError(
+                f"bias removal '{w}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
+
+        self = func(
+            self,
+            alignment=alignment,
+            cross_validate=cross_validate,
+            how=how,
+            **metric_kwargs,
+        )
         return self

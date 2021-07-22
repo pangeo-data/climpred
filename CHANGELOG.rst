@@ -5,6 +5,13 @@ What's New
 climpred v2.1.5 (2021-0x-xx)
 ============================
 
+Documentation
+-------------
+- Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_ 
+  with IRIDL server-side preprocessing
+  (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
+  (:issue:`594`, :pr:`633`) `Aaron Spring`_.
+
 
 climpred v2.1.4 (2021-06-28)
 ============================

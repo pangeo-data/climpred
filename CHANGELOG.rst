@@ -2,6 +2,10 @@
 What's New
 ==========
 
+- Speed up `ENSO monthly example <examples/.html>`_ with IRIDL server-side preprocessing
+  (for context see https://twitter.com/realaaronspring/status/1406980080883150848?s=21
+  (:issue:`594`, :pr:`633`) `Aaron Spring`_.
+
 climpred v2.1.4 (2021-XX-XX)
 ============================
 

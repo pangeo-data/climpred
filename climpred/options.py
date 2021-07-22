@@ -6,7 +6,7 @@ OPTIONS = {
     "climpred_warnings": True,
 }  # defaults
 
-_SEASONALITY_OPTIONS = frozenset(["dayofyear", "weekofyear", "month"])
+_SEASONALITY_OPTIONS = frozenset(["dayofyear", "weekofyear", "month", "season"])
 
 _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,

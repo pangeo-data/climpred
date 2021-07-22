@@ -2,15 +2,16 @@
 What's New
 ==========
 
+climpred v2.1.5 (2021-0x-xx)
+============================
+
 - Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_ with IRIDL server-side preprocessing
   (for context see https://twitter.com/realaaronspring/status/1406980080883150848?s=21
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 
-climpred v2.1.4 (2021-XX-XX)
-============================
 
-Breaking changes
-----------------
+climpred v2.1.4 (2021-06-28)
+============================
 
 New Features
 ------------
@@ -36,7 +37,7 @@ New Features
     * ``"lead"``: ``"forecast_period"``
 - If ``lead`` coordinate is ``pd.Timedelta``,
   :py:class:`~climpred.classes.PredictionEnsemble` converts ``lead`` coordinate upon
-  instantiation to integer `lead` and corresponding ``lead.attrs["units"]``.
+  instantiation to integer ``lead`` and corresponding ``lead.attrs["units"]``.
   (:issue:`606`, :pr:`627`) `Aaron Spring`_.
 - Require ``xskillscore >= 0.0.20``.
   :py:func:`~climpred.metrics._rps` now works with different ``category_edges``
@@ -47,6 +48,10 @@ New Features
   ``warn_for_rename_to_climpred_dims``, ``warn_for_init_coords_int_to_annual``,
   ``climpred_warnings`` via :py:class:`~climpred.options.set_options`.
   (:issue:`628`, :pr:`631`) `Aaron Spring`_.
+- :py:class:`~climpred.classes.PredictionEnsemble` acts like ``xr.Dataset`` and
+  understands ``data_vars``, ``dims``, ``sizes``, ``coords``, ``nbytes``,
+  ``equals``, ``identical``, ``__iter__``, ``__len__``, ``__contains__``,
+  ``__delitem__``. (:issue:`568`, :pr:`632`) `Aaron Spring`_.
 
 
 Documentation

@@ -6,6 +6,7 @@ import xarray as xr
 from IPython.display import display_html
 from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
+from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
 from .bias_removal import mean_bias_removal
@@ -159,6 +160,53 @@ class PredictionEnsemble:
         self._temporally_smoothed = None
         self._is_annual_lead = None
 
+    @property
+    def coords(self):
+        """Dictionary of xarray.DataArray objects corresponding to coordinate
+        variables available in all PredictionEnsemble._datasets.
+        """
+        pe_coords = self.get_initialized().coords.to_dataset()
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                pe_coords.update(ds.coords.to_dataset())
+        return pe_coords.coords
+
+    @property
+    def nbytes(self) -> int:
+        """Bytes sizes of all PredictionEnsemble._datasets."""
+        return sum(
+            [
+                sum(v.nbytes for v in ds.variables.values())
+                for ds in self._datasets.values()
+                if isinstance(ds, xr.Dataset)
+            ]
+        )
+
+    @property
+    def sizes(self):
+        """Mapping from dimension names to lengths for all PredictionEnsemble._datasets."""
+        pe_dims = dict(self.get_initialized().dims)
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                pe_dims.update(dict(ds.dims))
+        return pe_dims
+
+    @property
+    def dims(self):
+        """Mapping from dimension names to lengths all PredictionEnsemble._datasets."""
+        return Frozen(self.sizes)
+
+    @property
+    def data_vars(self):
+        """Dictionary of DataArray objects corresponding to data variables available in all PredictionEnsemble._datasets."""
+        varset = set(self.get_initialized().data_vars)
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                # take union
+                varset = varset & set(ds.data_vars)
+        varlist = list(varset)
+        return self.get_initialized()[varlist].data_vars
+
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self):
@@ -166,6 +214,69 @@ class PredictionEnsemble:
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
+
+    def __len__(self):
+        """Number of all variables in all PredictionEnsemble._datasets."""
+        return len(self.data_vars)
+
+    def __iter__(self):
+        """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
+        return iter(self._datasets.values())
+
+    def __delitem__(self, key):
+        """Remove a variable from this PredictionEnsemble."""
+        del self._datasets["initialized"][key]
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                if key in ds.data_vars:
+                    del ds[key]
+
+    def __contains__(self, key):
+        """The 'in' operator will return true or false depending on whether
+        'key' is an array in all PredictionEnsemble._datasets or not.
+        """
+        contained = True
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                if key not in ds.data_vars:
+                    contained = False
+        return contained
+
+    def equals(self, other):
+        """Two PredictionEnsembles are equal if they have matching variables and
+        coordinates, all of which are equal.
+        PredictionEnsembles can still be equal (like pandas objects) if they have NaN
+        values in the same locations.
+        This method is necessary because `v1 == v2` for ``PredictionEnsembles``
+        does element-wise comparisons (like numpy.ndarrays)."""
+        if not isinstance(other, PredictionEnsemble):
+            return False
+        if other.kind != self.kind:
+            return False
+        equal = True
+        try:
+            for ds_name in self._datasets.keys():
+                if not self._datasets[ds_name].equals(other._datasets[ds_name]):
+                    equal = False
+        except Exception:
+            return False
+        return equal
+
+    def identical(self, other):
+        """Like equals, but also checks all dataset attributes and the
+        attributes on all variables and coordinates."""
+        if not isinstance(other, PredictionEnsemble):
+            return False
+        if other.kind != self.kind:
+            return False
+        id = True
+        try:
+            for ds_name in self._datasets.keys():
+                if not self._datasets[ds_name].identical(other._datasets[ds_name]):
+                    id = False
+        except Exception:
+            return False
+        return id
 
     def plot(self, variable=None, ax=None, show_members=False, cmap=None):
         """Plot datasets from PredictionEnsemble.

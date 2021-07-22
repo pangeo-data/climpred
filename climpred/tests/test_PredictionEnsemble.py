@@ -337,3 +337,80 @@ def test_eq_ne(perfectModelEnsemble_3v_initialized_control_1d, equal):
         assert isinstance(pm == pm2, bool)
         assert pm != pm2
     assert isinstance(pm != pm2, bool)
+
+
+pe = [
+    pytest.lazy_fixture("hindcast_hist_obs_1d"),
+    pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+]
+pe_ids = ["HindcastEnsemble", "PerfectModelEnsemble"]
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_data_vars(pe):
+    assert isinstance(pe.data_vars, xr.core.dataset.DataVariables)
+    assert list(pe.data_vars) == list(pe.get_initialized().data_vars)
+    assert len(pe) == len(pe.data_vars)
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_delitem(pe):
+    v = list(pe.data_vars)[0]
+    del pe[v]
+    assert list(pe.data_vars) == []
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_nbytes(pe):
+    assert pe.nbytes > pe.get_initialized().nbytes
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_coords(pe):
+    assert isinstance(pe.coords, xr.core.coordinates.DatasetCoordinates)
+    assert "time" in pe.coords
+    assert "time" not in pe.get_initialized().coords
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_sizes(pe):
+    assert isinstance(pe.sizes, dict)
+    assert len(pe.sizes) > len(pe.get_initialized().sizes)
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_dims(pe):
+    assert isinstance(pe.dims, xr.core.utils.Frozen)
+    assert len(pe.dims) > len(pe.get_initialized().dims)
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_contains(pe):
+    v = list(pe.data_vars)[0]
+    not_v = v + "notVar"
+    assert isinstance(v in pe, bool)
+    assert v in pe
+    assert not_v not in pe
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_equals(pe):
+    assert isinstance(pe.equals(pe), bool)
+    assert pe.equals(pe)
+    pe2 = pe.copy(deep=False)
+    pe2._datasets["initialized"].init.attrs["comment"] = "should not fail"
+    assert pe.equals(pe2)
+
+    pe2 = pe2 + 1
+    assert not pe.equals(pe2)
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_identical(pe):
+    assert isinstance(pe.identical(pe), bool)
+    assert pe.identical(pe)
+
+    v = list(pe.data_vars)[0]
+    pe2 = pe.copy(deep=False)
+    pe2._datasets["initialized"][v].attrs["comment"] = "should fail"
+    assert not pe.identical(pe2)

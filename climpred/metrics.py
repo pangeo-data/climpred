@@ -856,10 +856,10 @@ __mse = Metric(
 
 
 def _spread(forecast, verif, dim=None, **metric_kwargs):
-    """Ensemble spread taking the standard deviation of the member dimension.
+    """Ensemble spread taking the standard deviation over the member dimension.
 
     .. math::
-        spread = \\overline{f^{2}}
+        spread = \\std{f}
 
     Args:
         forecast (xarray object): Forecast.
@@ -878,12 +878,6 @@ def _spread(forecast, verif, dim=None, **metric_kwargs):
         | **orientation** | negative  |
         +-----------------+-----------+
 
-
-    Reference:
-        * Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A
-          Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd,
-          Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
-          URL: http://doi.wiley.com/10.1002/9781119960003.
 
     Example:
         >>> HindcastEnsemble.verify(metric='spread', comparison='m2o', alignment='same_verifs',
@@ -1810,7 +1804,7 @@ def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
     """Multiplicative bias.
 
     .. math::
-        bias = f / o
+        multiplicative bias = f / o
 
     Args:
         forecast (xarray object): Forecast.

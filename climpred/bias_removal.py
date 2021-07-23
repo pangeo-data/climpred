@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
+from .bias_correction import XBiasCorrection
 from .constants import EXTERNAL_BIAS_CORRECTION_METHODS
 from .metrics import Metric
 from .options import OPTIONS
@@ -37,21 +38,22 @@ def _mean_additive_bias_removal_func(hind, bias, dim, how):
 
     """
     how_operator = sub if how == "additive" else div
-    seasonality_str = OPTIONS["seasonality"]
+    seasonality = OPTIONS["seasonality"]
     with xr.set_options(keep_attrs=True):
-        if seasonality_str == "weekofyear":
+        if seasonality == "weekofyear":
             # convert to datetime for weekofyear operations, now isocalendar().week
             hind = convert_cftime_to_datetime_coords(hind, dim)
             bias = convert_cftime_to_datetime_coords(bias, dim)
-            bias_removed_hind = how_operator(
-                hind.groupby(hind[dim].dt.isocalendar().week),
-                bias.groupby(bias[dim].dt.isocalendar().week).mean(),
-            )
-        else:  # dayofyear month season
-            bias_removed_hind = how_operator(
-                hind.groupby(f"{dim}.{seasonality_str}"),
-                bias.groupby(f"{dim}.{seasonality_str}").mean(),
-            )
+            hind_groupby = hind[dim].dt.isocalendar().week
+            bias_groupby = bias[dim].dt.isocalendar().week
+        else:
+            hind_groupby = f"{dim}.{seasonality}"
+            bias_groupby = f"{dim}.{seasonality}"
+
+        bias_removed_hind = how_operator(
+            hind.groupby(hind_groupby),
+            bias.groupby(bias_groupby).mean(),
+        )
     bias_removed_hind.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
     if isinstance(bias_removed_hind[dim].to_index(), pd.DatetimeIndex):
@@ -139,7 +141,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
     bias_removed_hind = []
     logging.info("mean bias removal:")
     if seasonality == "weekofyear":
-        # convert to datetime for weekofyear operations, now isocalendar().week
+        # convert to datetime for weekofyear operations to groupby isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
@@ -214,12 +216,12 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
     how_operator = sub if how == "additive" else div
-    seasonality_str = OPTIONS["seasonality"]
+    seasonality = OPTIONS["seasonality"]
     bias = bias.rename({dim: "init"})
     bias_removed_hind = []
     logging.info("mean bias removal:")
-    if seasonality_str == "weekofyear":
-        # convert to datetime for weekofyear operations, now isocalendar().week
+    if seasonality == "weekofyear":
+        # convert to datetime for weekofyear operations to groupby isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
         raise NotImplementedError
@@ -233,7 +235,7 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
             f"{hind_drop_init_where_bias.max().values}"
         )
         with xr.set_options(keep_attrs=True):
-            if seasonality_str == "weekofyear":
+            if seasonality == "weekofyear":
                 init_bias_removed = how_operator(
                     hind.sel(init=[init]),
                     bias.sel(init=hind_drop_init_where_bias)
@@ -248,7 +250,7 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
                 init_bias_removed = how_operator(
                     hind.sel(init=init),
                     bias.sel(init=hind_drop_init_where_bias)
-                    .groupby(f"init.{seasonality_str}")
+                    .groupby(f"init.{seasonality}")
                     .mean(),
                 )
         bias_removed_hind.append(init_bias_removed)
@@ -341,11 +343,7 @@ def mean_bias_removal(
     # replace raw with bias reducted initialized dataset
     hindcast_bias_removed = hindcast.copy()
     hindcast_bias_removed._datasets["initialized"] = bias_removed_hind
-
     return hindcast_bias_removed
-
-
-from .bias_correction import XBiasCorrection
 
 
 def _bias_correction(
@@ -385,14 +383,13 @@ def _bias_correction(
             "https://github.com/pangeo-data/climpred/issues/605"
         )
 
-    # Todo: refactor into metrics
-    def additive_mean_bias_func(a, b, **kwargs):
-        return a - b
-
     def bc_func(forecast, observations, dim=None, method=how, **metric_kwargs):
         """Wrapping https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
 
-        functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include [quantile mapping](https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168), [modified quantile mapping](https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub) , [scaled distribution mapping (Gamma and Normal Corrections)](https://www.hydrol-earth-syst-sci.net/21/2649/2017/).
+        Functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include:
+        - quantile mapping: https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168)
+        - modified quantile mapping: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
+        - scaled distribution mapping (Gamma and Normal Corrections): https://www.hydrol-earth-syst-sci.net/21/2649/2017/
         """
         corrected = []
         seasonality = OPTIONS["seasonality"]
@@ -403,7 +400,6 @@ def _bias_correction(
         dim = "time"
         dim2 = "time_member"
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
-            # print('label',label)
             reference = observations.sel({dim: group[dim]})
             # no cross val
             model = forecast.sel({dim: group[dim]})

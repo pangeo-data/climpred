@@ -1,12 +1,4 @@
 # https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
-
-import numpy as np
-import pandas as pd
-import xarray as xr
-from scipy.signal import detrend
-from scipy.stats import gamma, norm
-from statsmodels.distributions.empirical_distribution import ECDF
-
 """
 module for bias corrections.
 Available methods include:
@@ -15,6 +7,13 @@ Available methods include:
 - gamma_mapping
 - normal_mapping
 """
+
+import numpy as np
+import pandas as pd
+import xarray as xr
+from scipy.signal import detrend
+from scipy.stats import gamma, norm
+from statsmodels.distributions.empirical_distribution import ECDF
 
 
 def quantile_correction(obs_data, mod_data, sce_data, modified=True):
@@ -78,7 +77,7 @@ def gamma_correction(
         / gamma.ppf(sce_cdf, *mod_gamma)
     )
 
-    obs_frequency = 1.0 * obs_raindays.shape[0] / obs_data.shape[0]
+    # obs_frequency = 1.0 * obs_raindays.shape[0] / obs_data.shape[0]
     mod_frequency = 1.0 * mod_raindays.shape[0] / mod_data.shape[0]
     sce_frequency = 1.0 * sce_raindays.shape[0] / sce_data.shape[0]
 

@@ -72,25 +72,123 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
         xr.object: bias removed hind
 
     """
-    seasonality_str = OPTIONS["seasonality"]
+    seasonality = OPTIONS["seasonality"]
+    if seasonality == "weekofyear":
+        # convert to datetime for weekofyear operations, now isocalendar().week
+        hind = convert_cftime_to_datetime_coords(hind, "init")
+        spread = convert_cftime_to_datetime_coords(spread, "init")
+
     with xr.set_options(keep_attrs=True):
-        model_spread = spread.groupby(f"init.{seasonality_str}").mean()
+        if seasonality == "weekofyear":
+            hind_groupby = hind.init.dt.isocalendar().week
+            spread_groupby = spread.init.dt.isocalendar().week
+            obs_groupby = obs.time.dt.isocalendar().week
+        else:
+            hind_groupby = getattr(hind.init.dt, seasonality)
+            spread_groupby = getattr(spread.init.dt, seasonality)
+            obs_groupby = getattr(obs.time.dt, seasonality)
+
+        model_spread = spread.groupby(spread_groupby).mean()
         model_member_mean = (
-            hind.mean("member").groupby(f"init.{seasonality_str}").mean()
+            hind.mean("member").groupby(hind_groupby).mean()
         )
         # assume that no trend here
-        obs_spread = obs.groupby(f"time.{seasonality_str}").std()
+        obs_spread = obs.groupby(obs_groupby).std()
 
         # z distr
-        init_z = (hind.groupby(f"init.{seasonality_str}") - model_member_mean).groupby(
-            f"init.{seasonality_str}"
-        ) / model_spread
+        init_z = (hind.groupby(hind_groupby) - model_member_mean).groupby(hind_groupby) / model_spread
         # scale with obs_spread and model mean
         init_std_corrected = (
-            init_z.groupby(f"init.{seasonality_str}") * obs_spread
-        ).groupby(f"init.{seasonality_str}") + model_member_mean
+            init_z.groupby(hind_groupby) * obs_spread
+        ).groupby(hind_groupby) + model_member_mean
+
     init_std_corrected.attrs = hind.attrs
+    # convert back to CFTimeIndex if needed
+    if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
+        init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
     return init_std_corrected
+
+
+def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs):
+    """Remove std bias from all but the given initialization (cross-validation).
+
+    .. note::
+        This method follows Jolliffe 2011. For a given initialization, bias is computed
+        over all other initializations, excluding the one in question. This calculated
+        bias is removed from the given initialization, and then the process proceeds to
+        the following one.
+
+    Args:
+        hind (xr.object): hindcast.
+        bias (xr.object): bias.
+        dim (str): Time dimension name in bias.
+        how (str): additive or multiplicative bias.
+
+    Returns:
+        xr.object: bias removed hind
+
+    Reference:
+        * Jolliffe, Ian T., and David B. Stephenson. Forecast Verification: A
+          Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
+          Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
+    """
+    raise NotImplementedError
+    seasonality = OPTIONS["seasonality"]
+    spread = spread.rename({dim: "init"})
+    bias_removed_hind = []
+    logging.info("mean bias removal:")
+    if seasonality == "weekofyear":
+        # convert to datetime for weekofyear operations, now isocalendar().week
+        hind = convert_cftime_to_datetime_coords(hind, "init")
+        spread = convert_cftime_to_datetime_coords(spread, "init")
+        obs = convert_cftime_to_datetime_coords(obs, "time")
+
+    for init in hind.init.data:
+        hind_drop_init = hind.drop_sel(init=init).init
+        hind_drop_init_where_bias = hind_drop_init.where(spread.init)
+
+        logging.info(
+            f"initialization {init}: remove bias from"
+            f"{hind_drop_init_where_bias.min().values}-"
+            f"{hind_drop_init_where_bias.max().values}"
+        )
+        with xr.set_options(keep_attrs=True):
+            init_bias_removed = how_operator(
+                hind.sel(init=[init]),
+                bias.sel(init=hind_drop_init_where_bias)
+                .groupby(f'init.{seasonality}'
+                )
+                .mean(),
+            )
+
+            spread_ = spread.sel(init=[init])
+            hind_ = hind.sel(init=[init])
+            obs_ = obs.sel(init=[init])
+
+            model_spread = spread_.groupby(f"init.{seasonality}").mean()
+            model_member_mean = (
+                hind_.mean("member").groupby(f"init.{seasonality}").mean()
+            )
+            # assume that no trend here
+            obs_spread = obs_.groupby(f"time.{seasonality}").std()
+
+            # z distr
+            init_z = (hind.groupby(f"init.{seasonality}") - model_member_mean).groupby(
+                f"init.{seasonality}"
+            ) / model_spread
+            # scale with obs_spread and model mean
+            init_std_corrected = (
+                init_z.groupby(f"init.{seasonality}") * obs_spread
+            ).groupby(f"init.{seasonality}") + model_member_mean
+
+        bias_removed_hind.append(init_std_corrected)
+    init_std_corrected = xr.concat(bias_removed_hind, "init")
+    init_std_corrected.attrs = hind.attrs
+    # convert back to CFTimeIndex if needed
+    if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
+        init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
+    return init_std_corrected
+
 
 
 def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
@@ -258,7 +356,8 @@ def mean_bias_removal(
         bias_removal_func_kwargs = dict(how=how.split("_")[0])
     elif how == "multiplicative_std":
         if cross_validate:
-            raise NotImplementedError
+            bias_removal_func = _std_multiplicative_bias_removal_func_cross_validate
+            bias_removal_func_kwargs = dict(obs=hindcast.get_observations())
         else:
             bias_removal_func = _multiplicative_std_correction_quick
             bias_removal_func_kwargs = dict(obs=hindcast.get_observations())

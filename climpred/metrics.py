@@ -887,14 +887,14 @@ def _spread(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> HindcastEnsemble.verify(metric='spread', comparison='m2o', alignment='same_verifs',
-        ...     dim='init')
+        ...     dim=['member','init'])
         <xarray.Dataset>
         Dimensions:  (lead: 10)
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
+            SST      (lead) float64 0.1468 0.1738 0.1922 0.2096 ... 0.2142 0.2178 0.2098
     """
     return forecast.std(dim=dim, **metric_kwargs)
 
@@ -1832,7 +1832,7 @@ def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
 
-        >>> HindcastEnsemble.verify(metric='mumultiplicative_bias', comparison='e2o',
+        >>> HindcastEnsemble.verify(metric='multiplicative_bias', comparison='e2o',
         ...     alignment='same_verifs', dim='init')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
@@ -1840,7 +1840,7 @@ def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 4.12e-05 -9.068e-06 ... -0.0002959 -0.0002645
+            SST      (lead) float64 0.719 0.9991 1.072 1.434 ... 1.854 2.128 2.325 2.467
     """
     return (forecast / verif).mean(dim=dim, **metric_kwargs)
 

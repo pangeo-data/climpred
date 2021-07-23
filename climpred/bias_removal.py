@@ -262,7 +262,7 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
     return bias_removed_hind
 
 
-def mean_bias_removal(
+def gaussian_bias_removal(
     hindcast, alignment, cross_validate=True, how="additive_mean", **metric_kwargs
 ):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
@@ -305,8 +305,7 @@ def mean_bias_removal(
             dim=[],  # not used by bias func, therefore best to add [] here
             alignment=alignment,
             **metric_kwargs,
-        ).squeeze()
-        # todo: squeeze needed? replace with sel(skill='initialized')
+        )
 
     if how == "multiplicative_std":
         bias = hindcast.verify(
@@ -334,7 +333,7 @@ def mean_bias_removal(
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )
-    bias_removed_hind = bias_removed_hind.squeeze()
+
     # remove groupby label from coords
     for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
@@ -445,13 +444,10 @@ def _bias_correction(
         dim=[],  # set internally inside bc
         alignment=alignment,
         **metric_kwargs,
-    ).squeeze()
-    # todo: squeeze needed? replace with sel(skill='initialized')
+    )
 
-    # if cross_validate:  # more correct
-    bias_removed_hind = bias_removed_hind.squeeze()
     # remove groupby label from coords
-    for c in ["season", "dayofyear", "skill", "week", "month"]:
+    for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]
 

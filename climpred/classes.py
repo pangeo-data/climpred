@@ -9,7 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import _bias_correction, mean_bias_removal
+from .bias_removal import _bias_correction, gaussian_bias_removal
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -1683,9 +1683,9 @@ class HindcastEnsemble(PredictionEnsemble):
         if how == "mean":
             how = "additive_mean"  # backwards compat
         if how in ["additive_mean", "multiplicative_mean"]:
-            func = mean_bias_removal
+            func = gaussian_bias_removal
         elif how == "multiplicative_std":
-            func = mean_bias_removal
+            func = gaussian_bias_removal
         elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
             func = _bias_correction
         else:

@@ -295,43 +295,10 @@ def mean_bias_removal(
             "https://github.com/pangeo-data/climpred/issues/605"
         )
 
-    # Todo: refactor into metrics
-    def additive_mean_bias_func(a, b, **kwargs):
-        return a - b
-
-    additive_mean_bias_metric = Metric(
-        "additive_bias", additive_mean_bias_func, True, False, 1
-    )
-
-    def multiplicative_mean_bias_removal_func(a, b, **kwargs):
-        return a / b
-
-    multiplicative_mean_bias_metric = Metric(
-        "multiplicative_mean_bias",
-        multiplicative_mean_bias_removal_func,
-        True,
-        False,
-        1,
-    )
-
-    def multiplicative_std_bias_func(forecast, obs, dim=None, **metric_kwargs):
-        """Model spread"""
-        return forecast.std(dim, **metric_kwargs)
-
-    multiplicative_std_bias = Metric(
-        "multiplicative_std_bias", multiplicative_std_bias_func, True, False, 0
-    )
-
     if "mean" in how:
-        bias_metric = (
-            additive_mean_bias_metric
-            if how == "additive_mean"
-            else multiplicative_mean_bias_metric
-        )
-
         # calculate bias lead-time dependent
         bias = hindcast.verify(
-            metric=bias_metric,
+            metric='unconditional_bias' if how == "additive_mean" else 'mul_bias',
             comparison="e2o",
             dim=[],  # not used by bias func, therefore best to add [] here
             alignment=alignment,
@@ -341,15 +308,15 @@ def mean_bias_removal(
 
     if how == "multiplicative_std":
         bias = hindcast.verify(
-            metric=multiplicative_std_bias,
+            metric='spread',
             comparison="m2o",
             dim="member",
             alignment=alignment,
-        )  # model spread
+        )
 
     # how to remove bias
     if "mean" in how:
-        if cross_validate:  # more correct
+        if cross_validate:
             bias_removal_func = _mean_additive_bias_removal_func_cross_validate
         else:  # faster
             bias_removal_func = _mean_additive_bias_removal_func
@@ -433,7 +400,8 @@ def _bias_correction(
             forecast = convert_cftime_to_datetime_coords(forecast, "time")
             observations = convert_cftime_to_datetime_coords(observations, "time")
 
-        dim2 = "n"
+        dim='time'
+        dim2 = "time_member"
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
             # print('label',label)
             reference = observations.sel({dim: group[dim]})
@@ -478,7 +446,7 @@ def _bias_correction(
     bias_removed_hind = hindcast.verify(
         metric=bc,
         comparison="m2o" if "member" in hindcast.dims else "e2o",
-        dim=[],  # not used by bias func, therefore best to add [] here
+        dim=[],  # set internally inside bc
         alignment=alignment,
         **metric_kwargs,
     ).squeeze()

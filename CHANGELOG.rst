@@ -7,20 +7,25 @@ climpred v2.1.5 (2021-0x-xx)
 
 New Features
 ------------
-- allow more bias reduction methods in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
+- allow more `bias reduction <bias_removal.html>`_ methods in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
-    * ``how="multiplicative_mean"``: 
-    * ``how="multiplicative_std"``: 
-    * ``how="modified_quantile"``: 
-    * ``how="gamma_mapping"``: 
-    * ``how="basic_quantile"``: 
-    * ``how="normal_mapping"``:
-    
+    * ``how="additive_mean"``: already implemented
+    * ``how="multiplicative_mean"``:
+    * ``how="multiplicative_std"``:
+
+  Wrapped from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
+
+    * ``how="modified_quantile"``: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
+    * ``how="basic_quantile"``: https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168
+    * ``how="gamma_mapping"``: https://www.hydrol-earth-syst-sci.net/21/2649/2017/
+    * ``how="normal_mapping"``: https://www.hydrol-earth-syst-sci.net/21/2649/2017/
+
   (:issue:`398`, :pr:`638`) `Aaron Spring`_.
+- Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.
 
 Documentation
 -------------
-- Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_ 
+- Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_
   with IRIDL server-side preprocessing
   (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.

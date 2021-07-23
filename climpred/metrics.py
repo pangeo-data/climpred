@@ -855,6 +855,65 @@ __mse = Metric(
 )
 
 
+def _spread(forecast, verif, dim=None, **metric_kwargs):
+    """Ensemble spread taking the standard deviation of the member dimension.
+
+    .. math::
+        spread = \\overline{f^{2}}
+
+    Args:
+        forecast (xarray object): Forecast.
+        verif (xarray object): Verification data (not used).
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see :py:func:`~xr.std`
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | obs.std() |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+
+    Reference:
+        * Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A
+          Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd,
+          Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
+          URL: http://doi.wiley.com/10.1002/9781119960003.
+
+    Example:
+        >>> HindcastEnsemble.verify(metric='spread', comparison='m2o', alignment='same_verifs',
+        ...     dim='init')
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
+    """
+    return forecast.std(dim=dim, **metric_kwargs)
+
+
+__spread = Metric(
+    name="spread",
+    function=_spread,
+    positive=False,
+    probabilistic=False,
+    unit_power=1,
+    long_name="Ensemble spread",
+    minimum=0.0,
+    maximum=np.inf,
+    perfect='observations.std()',
+)
+
+
+
+
 def _rmse(forecast, verif, dim=None, **metric_kwargs):
     """Root Mean Sqaure Error (RMSE).
 
@@ -1681,7 +1740,7 @@ __std_ratio = Metric(
 
 
 def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
-    """Unconditional bias.
+    """Unconditional additive bias.
 
     .. math::
         bias = f - o
@@ -1741,11 +1800,64 @@ __unconditional_bias = Metric(
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name="Unconditional bias",
-    aliases=["u_b", "bias"],
+    long_name="Unconditional additive bias",
+    aliases=["u_b", 'a_b',"bias",'additive_bias'],
     minimum=-np.inf,
     maximum=np.inf,
     perfect=0.0,
+)
+
+
+def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
+    """Multiplicative bias.
+
+    .. math::
+        bias = f / o
+
+    Args:
+        forecast (xarray object): Forecast.
+        verif (xarray object): Verification data.
+        dim (str): Dimension(s) to perform metric over
+        metric_kwargs (dict): see xarray.mean
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | -∞        |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | None      |
+        +-----------------+-----------+
+
+
+    Example:
+
+        >>> HindcastEnsemble.verify(metric='mumultiplicative_bias', comparison='e2o',
+        ...     alignment='same_verifs', dim='init')
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 4.12e-05 -9.068e-06 ... -0.0002959 -0.0002645
+    """
+    return (forecast / verif).mean(dim=dim, **metric_kwargs)
+
+
+__mul_bias = Metric(
+    name="mul_bias",
+    function=_mul_bias,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name="Multiplicative bias",
+    aliases=["m_b", "multiplicative_bias"],
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=1.0,
 )
 
 
@@ -3151,6 +3263,8 @@ __ALL_METRICS__ = [
     __reliability,
     __rps,
     __roc,
+    __spread,
+    __mul_bias,
 ]
 
 

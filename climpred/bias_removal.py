@@ -8,7 +8,12 @@ import xarray as xr
 from .constants import EXTERNAL_BIAS_CORRECTION_METHODS
 from .metrics import Metric
 from .options import OPTIONS
-from .utils import convert_cftime_to_datetime_coords, convert_time_index
+from .utils import (
+    convert_cftime_to_datetime_coords,
+    convert_time_index,
+    get_lead_cftime_shift_args,
+    shift_cftime_singular,
+)
 
 
 def sub(a, b):
@@ -305,7 +310,7 @@ def _bias_correction(
         HindcastEnsemble: bias removed hindcast.
 
     Todo:
-    - groupby
+    - cross_validate
     """
     if OPTIONS["seasonality"] not in ["month"]:
         warnings.warn(
@@ -364,12 +369,16 @@ def _bias_correction(
                 data_to_be_corrected,
                 dim=dim2 if "member" in forecast.dims else dim,
             )
-            c = bc.correct(method=method)
+            c = bc.correct(method=method, **metric_kwargs)
             if dim2 in c.dims:
                 c = c.unstack(dim2)
             corrected.append(c)
         corrected = xr.concat(corrected, dim).sortby(dim)
-
+        # push back by lead
+        n, freq = get_lead_cftime_shift_args(
+            forecast.lead.attrs["units"], forecast.lead
+        )
+        corrected[dim] = shift_cftime_singular(corrected[dim], -n, freq)
         return corrected
 
     bc = Metric(

@@ -427,26 +427,11 @@ def _bias_correction(
 
         functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include [quantile mapping](https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168), [modified quantile mapping](https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub) , [scaled distribution mapping (Gamma and Normal Corrections)](https://www.hydrol-earth-syst-sci.net/21/2649/2017/).
         """
-        # does this now still uses all member?
-        if (
-            "member" in forecast.dims
-        ) and False:  # broadcast member dim to observations, then stack to use all members for training
-            forecast, observations = xr.broadcast(forecast, observations)
-            new_coord = np.repeat(forecast.time.values, forecast.member.size)
-            forecast = forecast.stack(time2=["time", "member"]).assign_coords(
-                time2=new_coord
-            )
-            observations = observations.stack(time2=["time", "member"]).assign_coords(
-                time2=new_coord
-            )
-            dim = "time2"
-        else:
-            dim = "time"
-
         corrected = []
         seasonality = OPTIONS["seasonality"]
         if seasonality == "weekofyear":
-            raise NotImplementedError
+            forecast = convert_cftime_to_datetime_coords(forecast, "time")
+            observations = convert_cftime_to_datetime_coords(observations, "time")
 
         dim2 = "n"
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
@@ -463,8 +448,7 @@ def _bias_correction(
                 data_to_be_corrected = data_to_be_corrected.stack(
                     {dim2: ["time", "member"]}
                 )
-            # print(dim,dim2,dim2 if 'member' in forecast.dims else dim)
-            # using bias-correction
+            # using bias-correction: https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
             bc = XBiasCorrection(
                 reference,
                 model,
@@ -476,6 +460,9 @@ def _bias_correction(
                 c = c.unstack(dim2)
             corrected.append(c)
         corrected = xr.concat(corrected, dim).sortby(dim)
+        # convert back to CFTimeIndex if needed
+        if isinstance(corrected[dim].to_index(), pd.DatetimeIndex):
+            corrected = convert_time_index(corrected, dim, "hindcast")
         # push back by lead
         n, freq = get_lead_cftime_shift_args(
             forecast.lead.attrs["units"], forecast.lead

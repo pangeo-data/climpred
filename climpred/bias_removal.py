@@ -1,6 +1,7 @@
 import logging
 import warnings
 
+import numpy as np
 import pandas as pd
 import xarray as xr
 
@@ -252,7 +253,7 @@ def mean_bias_removal(
         bias_removal_func_kwargs = dict(how=how.split("_")[0])
     elif how == "multiplicative_std":
         if cross_validate:
-            assert False
+            raise NotImplementedError
         else:
             bias_removal_func = _multiplicative_std_correction_quick
             bias_removal_func_kwargs = dict(obs=hindcast.get_observations())
@@ -277,7 +278,7 @@ from .bias_correction import XBiasCorrection
 
 
 def _bias_correction(
-    hindcast, alignment, cross_validate=True, how="quantile_mapping", **metric_kwargs
+    hindcast, alignment, cross_validate=True, how="normal_mapping", **metric_kwargs
 ):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
@@ -318,27 +319,58 @@ def _bias_correction(
         return a - b
 
     def bc_func(forecast, observations, dim=None, method=how, **metric_kwargs):
-        """Metrics are used after alignment.
-        Todo:
-        - nicer way to map to many variables?
+        """Wrapping https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
+
+        functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include [quantile mapping](https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168), [modified quantile mapping](https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub) , [scaled distribution mapping (Gamma and Normal Corrections)](https://www.hydrol-earth-syst-sci.net/21/2649/2017/).
         """
+        # does this now still uses all member?
         if (
             "member" in forecast.dims
-        ):  # broadcast member dim to observations, then stack to use all members for training
+        ) and False:  # broadcast member dim to observations, then stack to use all members for training
             forecast, observations = xr.broadcast(forecast, observations)
-            forecast = forecast.stack(time2=["time", "member"])
-            observations = observations.stack(time2=["time", "member"])
+            new_coord = np.repeat(forecast.time.values, forecast.member.size)
+            forecast = forecast.stack(time2=["time", "member"]).assign_coords(
+                time2=new_coord
+            )
+            observations = observations.stack(time2=["time", "member"]).assign_coords(
+                time2=new_coord
+            )
             dim = "time2"
         else:
             dim = "time"
-        reference = observations
-        # no cross val
-        model = forecast
-        data_to_be_corrected = forecast
-        # using bias-correction
-        bc = XBiasCorrection(reference, model, data_to_be_corrected, dim=dim)
-        corrected = bc.correct(method=method)
-        return corrected.unstack(dim)
+
+        corrected = []
+        seasonality = OPTIONS["seasonality"]
+        dim2 = "n"
+        for label, group in forecast.groupby(f"{dim}.{seasonality}"):
+            # print('label',label)
+            reference = observations.sel({dim: group[dim]})
+            # no cross val
+            model = forecast.sel({dim: group[dim]})
+            data_to_be_corrected = forecast.sel({dim: group[dim]})
+            if "member" in model.dims:
+                model, reference = xr.broadcast(model, reference)
+                model, data_to_be_corrected = xr.broadcast(model, data_to_be_corrected)
+                model = model.stack({dim2: ["time", "member"]})
+                reference = reference.stack({dim2: ["time", "member"]})
+                data_to_be_corrected = data_to_be_corrected.stack(
+                    {dim2: ["time", "member"]}
+                )
+            # print(dim,dim2,dim2 if 'member' in forecast.dims else dim)
+            # using bias-correction
+            bc = XBiasCorrection(
+                reference,
+                model,
+                data_to_be_corrected,
+                dim=dim2 if "member" in forecast.dims else dim,
+            )
+            c = bc.correct(method=method)
+            if dim2 in c.dims:
+                c = c.unstack(dim2)
+            corrected.append(c)
+        corrected = xr.concat(corrected, dim).sortby(dim)
+
+        return corrected
 
     bc = Metric(
         "bias_correction", bc_func, positive=False, probabilistic=False, unit_power=1
@@ -360,6 +392,11 @@ def _bias_correction(
     for c in ["season", "dayofyear", "skill", "week", "month"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]
+
+    # keep attrs
+    bias_removed_hind.attrs = hindcast.get_initialized().attrs
+    for v in bias_removed_hind.data_vars:
+        bias_removed_hind[v].attrs = hindcast.get_initialized()[v].attrs
 
     # replace raw with bias reducted initialized dataset
     hindcast_bias_removed = hindcast.copy()

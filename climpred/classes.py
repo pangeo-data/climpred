@@ -9,7 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import mean_bias_removal, _bias_correction
+from .bias_removal import _bias_correction, mean_bias_removal
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -29,7 +29,8 @@ from .checks import (
 from .constants import (
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
-    EXTERNAL_BIAS_CORRECTION_METHODS,INTERNAL_BIAS_CORRECTION_METHODS,
+    EXTERNAL_BIAS_CORRECTION_METHODS,
+    INTERNAL_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
 )
 from .exceptions import DimensionError, VariableError

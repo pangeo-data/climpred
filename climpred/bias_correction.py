@@ -209,7 +209,6 @@ class XBiasCorrection(object):
         vectorize=True,
         dask="parallelized",
     ):
-        print("method", method)
         dtype = self._set_dtype()
         dim = self.dim
         if method == "gamma_mapping":

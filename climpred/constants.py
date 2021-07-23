@@ -49,11 +49,12 @@ EXTERNAL_BIAS_CORRECTION_METHODS = [
     "gamma_mapping",
     "basic_quantile",
     "normal_mapping",
-    "quantile_mapping",
-]  # quantile_mapping = modified_quantile (see else)
+]
 INTERNAL_BIAS_CORRECTION_METHODS = [
     "additive_mean",
     "multiplicative_mean",
     "multiplicative_std",
 ]
-BIAS_CORRECTION_METHODS = EXTERNAL_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS
+BIAS_CORRECTION_METHODS = (
+    EXTERNAL_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS
+)

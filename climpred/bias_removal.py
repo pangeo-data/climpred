@@ -154,12 +154,12 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
             f"{hind_drop_init_where_bias.max().values}"
         )
         with xr.set_options(keep_attrs=True):
-            init_bias_removed = how_operator(
-                hind.sel(init=[init]),
-                bias.sel(init=hind_drop_init_where_bias)
-                .groupby(f"init.{seasonality}")
-                .mean(),
-            )
+            # init_bias_removed = how_operator(
+            #    hind.sel(init=[init]),
+            #    bias.sel(init=hind_drop_init_where_bias)
+            #    .groupby(f"init.{seasonality}")
+            #    .mean(),
+            # )
 
             spread_ = spread.sel(init=[init])
             hind_ = hind.sel(init=[init])
@@ -298,7 +298,7 @@ def mean_bias_removal(
     if "mean" in how:
         # calculate bias lead-time dependent
         bias = hindcast.verify(
-            metric='unconditional_bias' if how == "additive_mean" else 'mul_bias',
+            metric="unconditional_bias" if how == "additive_mean" else "mul_bias",
             comparison="e2o",
             dim=[],  # not used by bias func, therefore best to add [] here
             alignment=alignment,
@@ -308,7 +308,7 @@ def mean_bias_removal(
 
     if how == "multiplicative_std":
         bias = hindcast.verify(
-            metric='spread',
+            metric="spread",
             comparison="m2o",
             dim="member",
             alignment=alignment,
@@ -400,7 +400,7 @@ def _bias_correction(
             forecast = convert_cftime_to_datetime_coords(forecast, "time")
             observations = convert_cftime_to_datetime_coords(observations, "time")
 
-        dim='time'
+        dim = "time"
         dim2 = "time_member"
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
             # print('label',label)

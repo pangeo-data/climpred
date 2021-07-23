@@ -908,10 +908,8 @@ __spread = Metric(
     long_name="Ensemble spread",
     minimum=0.0,
     maximum=np.inf,
-    perfect='observations.std()',
+    perfect="observations.std()",
 )
-
-
 
 
 def _rmse(forecast, verif, dim=None, **metric_kwargs):
@@ -1801,7 +1799,7 @@ __unconditional_bias = Metric(
     probabilistic=False,
     unit_power=1,
     long_name="Unconditional additive bias",
-    aliases=["u_b", 'a_b',"bias",'additive_bias'],
+    aliases=["u_b", "a_b", "bias", "additive_bias"],
     minimum=-np.inf,
     maximum=np.inf,
     perfect=0.0,

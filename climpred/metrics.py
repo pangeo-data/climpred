@@ -908,7 +908,7 @@ __spread = Metric(
     long_name="Ensemble spread",
     minimum=0.0,
     maximum=np.inf,
-    perfect="observations.std()",
+    perfect=False,
 )
 
 
@@ -1855,7 +1855,7 @@ __mul_bias = Metric(
     aliases=["m_b", "multiplicative_bias"],
     minimum=-np.inf,
     maximum=np.inf,
-    perfect=1.0,
+    perfect=False,  # 1.0
 )
 
 

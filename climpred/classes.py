@@ -1689,7 +1689,6 @@ class HindcastEnsemble(PredictionEnsemble):
         elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
             func = _bias_correction
         else:
-            # todo
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )

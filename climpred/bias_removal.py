@@ -77,6 +77,7 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
         # convert to datetime for weekofyear operations, now isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         spread = convert_cftime_to_datetime_coords(spread, "init")
+        obs = convert_cftime_to_datetime_coords(obs, "time")
 
     with xr.set_options(keep_attrs=True):
         if seasonality == "weekofyear":
@@ -89,18 +90,18 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
             obs_groupby = getattr(obs.time.dt, seasonality)
 
         model_spread = spread.groupby(spread_groupby).mean()
-        model_member_mean = (
-            hind.mean("member").groupby(hind_groupby).mean()
-        )
+        model_member_mean = hind.mean("member").groupby(hind_groupby).mean()
         # assume that no trend here
         obs_spread = obs.groupby(obs_groupby).std()
 
         # z distr
-        init_z = (hind.groupby(hind_groupby) - model_member_mean).groupby(hind_groupby) / model_spread
+        init_z = (hind.groupby(hind_groupby) - model_member_mean).groupby(
+            hind_groupby
+        ) / model_spread
         # scale with obs_spread and model mean
-        init_std_corrected = (
-            init_z.groupby(hind_groupby) * obs_spread
-        ).groupby(hind_groupby) + model_member_mean
+        init_std_corrected = (init_z.groupby(hind_groupby) * obs_spread).groupby(
+            hind_groupby
+        ) + model_member_mean
 
     init_std_corrected.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
@@ -156,8 +157,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
             init_bias_removed = how_operator(
                 hind.sel(init=[init]),
                 bias.sel(init=hind_drop_init_where_bias)
-                .groupby(f'init.{seasonality}'
-                )
+                .groupby(f"init.{seasonality}")
                 .mean(),
             )
 
@@ -188,7 +188,6 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
     if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
         init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
     return init_std_corrected
-
 
 
 def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
@@ -223,6 +222,7 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
         # convert to datetime for weekofyear operations, now isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
+        raise NotImplementedError
 
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init
@@ -367,7 +367,7 @@ def mean_bias_removal(
     )
     bias_removed_hind = bias_removed_hind.squeeze()
     # remove groupby label from coords
-    for c in ["season", "dayofyear", "skill", "week", "month"]:
+    for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]
 
@@ -445,6 +445,9 @@ def _bias_correction(
 
         corrected = []
         seasonality = OPTIONS["seasonality"]
+        if seasonality == "weekofyear":
+            raise NotImplementedError
+
         dim2 = "n"
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
             # print('label',label)

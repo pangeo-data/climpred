@@ -15,10 +15,10 @@ New Features
 
   Wrapped from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
 
-    * ``how="modified_quantile"``: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
-    * ``how="basic_quantile"``: https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168
-    * ``how="gamma_mapping"``: https://www.hydrol-earth-syst-sci.net/21/2649/2017/
-    * ``how="normal_mapping"``: https://www.hydrol-earth-syst-sci.net/21/2649/2017/
+    * ``how="modified_quantile"``: `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
+    * ``how="basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
+    * ``how="gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+    * ``how="normal_mapping"``: 'Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
   (:issue:`398`, :pr:`638`) `Aaron Spring`_.
 - Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.

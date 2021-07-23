@@ -332,7 +332,7 @@ def gaussian_bias_removal(
 
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
-    )
+    ).squeeze(drop=True)
 
     # remove groupby label from coords
     for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:
@@ -444,7 +444,7 @@ def _bias_correction(
         dim=[],  # set internally inside bc
         alignment=alignment,
         **metric_kwargs,
-    )
+    ).squeeze(drop=True)
 
     # remove groupby label from coords
     for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:

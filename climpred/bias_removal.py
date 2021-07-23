@@ -135,7 +135,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
           Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
-    raise NotImplementedError
+    raise NotImplementedError("Try cross_val=False")
     seasonality = OPTIONS["seasonality"]
     spread = spread.rename({dim: "init"})
     bias_removed_hind = []
@@ -224,7 +224,7 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
         # convert to datetime for weekofyear operations to groupby isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
-        raise NotImplementedError
+        raise NotImplementedError("Try cross_val=False")
 
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init

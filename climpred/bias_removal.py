@@ -25,7 +25,7 @@ def div(a, b):
     return a / b
 
 
-def _mean_additive_bias_removal_func(hind, bias, dim, how):
+def _mean_bias_removal_func(hind, bias, dim, how):
     """Quick removal of mean bias over all initializations without cross validation.
 
     Args:
@@ -153,7 +153,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
     return init_std_corrected
 
 
-def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
+def _mean_bias_removal_func_cross_validate(hind, bias, dim, how):
     """Remove mean bias from all but the given initialization (cross-validation).
 
     .. note::
@@ -185,7 +185,7 @@ def _mean_additive_bias_removal_func_cross_validate(hind, bias, dim, how):
         # convert to datetime for weekofyear operations to groupby isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
-        raise NotImplementedError("Try cross_val=False")
+        # raise NotImplementedError("Try cross_val=False")
 
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init
@@ -279,9 +279,9 @@ def gaussian_bias_removal(
     # how to remove bias
     if "mean" in how:
         if cross_validate:
-            bias_removal_func = _mean_additive_bias_removal_func_cross_validate
+            bias_removal_func = _mean_bias_removal_func_cross_validate
         else:  # faster
-            bias_removal_func = _mean_additive_bias_removal_func
+            bias_removal_func = _mean_bias_removal_func
         bias_removal_func_kwargs = dict(how=how.split("_")[0])
     elif how == "multiplicative_std":
         if cross_validate:

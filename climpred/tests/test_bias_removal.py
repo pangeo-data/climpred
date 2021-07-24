@@ -15,6 +15,8 @@ from climpred.options import OPTIONS
         "multiplicative_std",
         "normal_mapping",
         "basic_quantile",
+        "modified_quantile",
+        "gamma_mapping"
     ],
 )
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
@@ -54,7 +56,15 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
 @pytest.mark.parametrize("seasonality", ["month", "season", "dayofyear", "weekofyear"])
 @pytest.mark.parametrize(
     "how",
-    ["additive_mean", "multiplicative_mean", "multiplicative_std", "normal_mapping"],
+    [
+        "additive_mean",
+        "multiplicative_mean",
+        "multiplicative_std",
+        "normal_mapping",
+        "basic_quantile",
+        "modified_quantile",
+        "gamma_mapping"
+    ],
 )
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
 def test_remove_bias(hindcast_hist_obs_1d, alignment, how, seasonality, cross_validate):

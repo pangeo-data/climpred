@@ -145,46 +145,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
         hind = convert_cftime_to_datetime_coords(hind, "init")
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
-
-    for init in hind.init.data:
-        hind_drop_init = hind.drop_sel(init=init).init
-        hind_drop_init_where_bias = hind_drop_init.where(spread.init)
-
-        logging.info(
-            f"initialization {init}: remove bias from"
-            f"{hind_drop_init_where_bias.min().values}-"
-            f"{hind_drop_init_where_bias.max().values}"
-        )
-        with xr.set_options(keep_attrs=True):
-            # init_bias_removed = how_operator(
-            #    hind.sel(init=[init]),
-            #    bias.sel(init=hind_drop_init_where_bias)
-            #    .groupby(f"init.{seasonality}")
-            #    .mean(),
-            # )
-
-            spread_ = spread.sel(init=[init])
-            hind_ = hind.sel(init=[init])
-            obs_ = obs.sel(init=[init])
-
-            model_spread = spread_.groupby(f"init.{seasonality}").mean()
-            model_member_mean = (
-                hind_.mean("member").groupby(f"init.{seasonality}").mean()
-            )
-            # assume that no trend here
-            obs_spread = obs_.groupby(f"time.{seasonality}").std()
-
-            # z distr
-            init_z = (hind.groupby(f"init.{seasonality}") - model_member_mean).groupby(
-                f"init.{seasonality}"
-            ) / model_spread
-            # scale with obs_spread and model mean
-            init_std_corrected = (
-                init_z.groupby(f"init.{seasonality}") * obs_spread
-            ).groupby(f"init.{seasonality}") + model_member_mean
-
-        bias_removed_hind.append(init_std_corrected)
-    init_std_corrected = xr.concat(bias_removed_hind, "init")
+  
     init_std_corrected.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
     if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):

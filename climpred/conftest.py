@@ -330,7 +330,9 @@ def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
     time series (no grid)."""
     # todo: resample init also
-    hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970"))
+    hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970")).sel(
+        init=slice("1964", "1970")
+    )
     hindcast._datasets["initialized"].lead.attrs["units"] = "months"
     hindcast._datasets["observations"] = (
         hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")

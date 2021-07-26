@@ -6,7 +6,7 @@ from climpred import set_options
 from climpred.options import OPTIONS
 
 
-@pytest.mark.skip()
+# @pytest.mark.skip()
 @pytest.mark.parametrize(
     "how",
     [
@@ -16,39 +16,43 @@ from climpred.options import OPTIONS
         "normal_mapping",
         "basic_quantile",
         "modified_quantile",
-        "gamma_mapping"
+        "gamma_mapping",
     ],
 )
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
     """Test HindcastEnsemble.remove_bias yields different results for different seasonality settings."""
     verify_kwargs = dict(
-        metric="rmse", dim="init", comparison="e2o", alignment="maximize", skipna=True
+        metric="rmse", dim="init", comparison="e2o", alignment="same_inits", skipna=True
     )
-    hindcast = hindcast_recon_1d_mm.isel(lead=range(3))
+    hindcast = hindcast_recon_1d_mm  # .isel(lead=range(3))
     v = "SST"
 
     bias_reduced_skill = []
-    seasonalities = ["month", "season"]  # weekofyear dayofyear
+    seasonalities = ["month", "season", "weekofyear"]  # weekofyear dayofyear
     for seasonality in seasonalities:
         with set_options(seasonality=seasonality):
-            bias_reduced_skill.append(
-                hindcast.remove_bias(
-                    how=how, alignment=verify_kwargs["alignment"], cross_validate=False
-                ).verify(**verify_kwargs)[v]
+            hindcast_rb = hindcast.remove_bias(
+                how=how, alignment=verify_kwargs["alignment"], cross_validate=False
             )
+            print("seasonality", seasonality, hindcast_rb.get_initialized()[v])
+            bias_reduced_skill.append(hindcast_rb.verify(**verify_kwargs)[v])
     bias_reduced_skill = xr.concat(bias_reduced_skill, "seasonality").assign_coords(
         seasonality=seasonalities
     )
 
-    # check identical
+    # check not identical
+    print(bias_reduced_skill)
     for s in seasonalities:
         print(s, bias_reduced_skill.sel(seasonality=s))
         assert bias_reduced_skill.sel(seasonality=s).notnull().all()
         for s2 in seasonalities:
             if s != s2:
                 print(s, s2)
-                assert not bias_reduced_skill.sel(seasonality=s, drop=True).equals(
-                    bias_reduced_skill.sel(seasonality=s2, drop=True)
+                assert (
+                    bias_reduced_skill.sel(seasonality=[s, s2])
+                    .diff("seasonality")
+                    .notnull()
+                    .any()
                 )
 
 
@@ -63,17 +67,17 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
         "normal_mapping",
         "basic_quantile",
         "modified_quantile",
-        "gamma_mapping"
+        "gamma_mapping",
     ],
 )
 @pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
-def test_remove_bias(hindcast_hist_obs_1d, alignment, how, seasonality, cross_validate):
+def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_validate):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
     with set_options(seasonality=seasonality):
         metric = "rmse"
         dim = "init"
         comparison = "e2o"
-        hindcast = hindcast_hist_obs_1d.isel(lead=range(3))
+        hindcast = hindcast_recon_1d_mm.isel(lead=range(3))
         hindcast._datasets["initialized"].attrs["test"] = "test"
         hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
         verify_kwargs = dict(

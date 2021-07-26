@@ -145,7 +145,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
         hind = convert_cftime_to_datetime_coords(hind, "init")
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
-  
+
     init_std_corrected.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
     if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
@@ -293,7 +293,9 @@ def gaussian_bias_removal(
 
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
-    ).squeeze(drop=True)
+    )
+    print("bias_removed_hind", bias_removed_hind)
+    bias_removed_hind = bias_removed_hind.squeeze(drop=True)
 
     # remove groupby label from coords
     for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:

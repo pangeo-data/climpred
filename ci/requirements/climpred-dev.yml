@@ -55,4 +55,3 @@ dependencies:
   - pip:
       - pytest-lazy-fixture
       - nb_black  # notebook linting
-      - git+https://github.com/pankajkarman/bias_correction.git

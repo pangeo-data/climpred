@@ -136,21 +136,21 @@ def _std_multiplicative_bias_removal_func_cross_validate(hind, spread, dim, obs)
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
     raise NotImplementedError("Try cross_val=False")
-    seasonality = OPTIONS["seasonality"]
-    spread = spread.rename({dim: "init"})
-    bias_removed_hind = []
-    logging.info("mean bias removal:")
-    if seasonality == "weekofyear":
-        # convert to datetime for weekofyear operations to groupby isocalendar().week
-        hind = convert_cftime_to_datetime_coords(hind, "init")
-        spread = convert_cftime_to_datetime_coords(spread, "init")
-        obs = convert_cftime_to_datetime_coords(obs, "time")
+    # seasonality = OPTIONS["seasonality"]
+    # spread = spread.rename({dim: "init"})
+    # bias_removed_hind = []
+    # logging.info("mean bias removal:")
+    # if seasonality == "weekofyear":
+    # convert to datetime for weekofyear operations to groupby isocalendar().week
+    #    hind = convert_cftime_to_datetime_coords(hind, "init")
+    #    spread = convert_cftime_to_datetime_coords(spread, "init")
+    #    obs = convert_cftime_to_datetime_coords(obs, "time")
 
-    init_std_corrected.attrs = hind.attrs
+    # init_std_corrected.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
-    if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
-        init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
-    return init_std_corrected
+    # if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
+    #    init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
+    # return init_std_corrected
 
 
 def _mean_bias_removal_func_cross_validate(hind, bias, dim, how):
@@ -294,7 +294,6 @@ def gaussian_bias_removal(
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )
-    # print("bias_removed_hind", bias_removed_hind)
     bias_removed_hind = bias_removed_hind.squeeze(drop=True)
 
     # remove groupby label from coords

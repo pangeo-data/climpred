@@ -3,22 +3,15 @@ import pytest
 import xarray as xr
 
 from climpred import set_options
+from climpred.constants import BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from climpred.options import OPTIONS
 
+BIAS_CORRECTION_METHODS.remove(
+    "gamma_mapping"
+)  # fails with these conftest files somehow
 
-# @pytest.mark.skip()
-@pytest.mark.parametrize(
-    "how",
-    [
-        "additive_mean",
-        "multiplicative_mean",
-        "multiplicative_std",
-        "normal_mapping",
-        "basic_quantile",
-        "modified_quantile",
-        # "gamma_mapping", # fails
-    ],
-)
+
+@pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
     """Test HindcastEnsemble.remove_bias yields different results for different seasonality settings."""
     verify_kwargs = dict(
@@ -28,20 +21,19 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
     v = "SST"
 
     bias_reduced_skill = []
-    seasonalities = ["month", "season", "weekofyear"]  # weekofyear dayofyear
+    seasonalities = GROUPBY_SEASONALITIES
     for seasonality in seasonalities:
         with set_options(seasonality=seasonality):
             hindcast_rb = hindcast.remove_bias(
                 how=how, alignment=verify_kwargs["alignment"], cross_validate=False
             )
-            print("seasonality", seasonality, hindcast_rb.get_initialized()[v])
+
             bias_reduced_skill.append(hindcast_rb.verify(**verify_kwargs)[v])
     bias_reduced_skill = xr.concat(bias_reduced_skill, "seasonality").assign_coords(
         seasonality=seasonalities
     )
 
     # check not identical
-    print(bias_reduced_skill)
     for s in seasonalities:
         print(s, bias_reduced_skill.sel(seasonality=s))
         assert bias_reduced_skill.sel(seasonality=s).notnull().all()
@@ -57,28 +49,27 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
 
 
 @pytest.mark.parametrize("cross_validate", [False])  # True])
-@pytest.mark.parametrize("seasonality", ["month", "season", "dayofyear", "weekofyear"])
+@pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
+@pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 @pytest.mark.parametrize(
-    "how",
-    [
-        "additive_mean",
-        "multiplicative_mean",
-        "multiplicative_std",
-        "normal_mapping",
-        "basic_quantile",
-        "modified_quantile",
-        # "gamma_mapping",
-    ],
-)
-@pytest.mark.parametrize("alignment", ["same_inits", "maximize"])  # same_verifs
+    "alignment", ["same_inits", "maximize"]
+)  # same_verifs  # no overlap here for same_verifs
 def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_validate):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
+
+    def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
+        # init only slighty cut due to alignment
+        for c in hindcast.coords:
+            if c == "init":
+                assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
+            else:
+                assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
+
     with set_options(seasonality=seasonality):
         metric = "rmse"
         dim = "init"
         comparison = "e2o"
         hindcast = hindcast_recon_1d_mm.isel(lead=range(3))
-        print(hindcast.coords)
         hindcast._datasets["initialized"].attrs["test"] = "test"
         hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
         verify_kwargs = dict(
@@ -106,8 +97,9 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         hindcast_bias_removed = hindcast.remove_bias(
             how=how, alignment=alignment, cross_validate=False
         )
-        for c in hindcast.coords:
-            assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
+
+        check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed)
+
         bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
         seasonality = OPTIONS["seasonality"]
@@ -115,11 +107,9 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
             hindcast_bias_removed_properly = hindcast.remove_bias(
                 how=how, cross_validate=True, alignment=alignment
             )
-            for c in hindcast.coords:
-                assert (
-                    hindcast.coords[c].size
-                    >= hindcast_bias_removed_properly.coords[c].size
-                )
+            check_hindcast_coords_maintained_except_init(
+                hindcast, hindcast_bias_removed_properly
+            )
 
             bias_removed_skill_properly = hindcast_bias_removed_properly.verify(
                 **verify_kwargs

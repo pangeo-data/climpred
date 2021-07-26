@@ -58,3 +58,6 @@ INTERNAL_BIAS_CORRECTION_METHODS = [
 BIAS_CORRECTION_METHODS = (
     EXTERNAL_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS
 )
+
+# seasonality: climpred.set_options(seasonality='...')
+GROUPBY_SEASONALITIES = ["dayofyear", "weekofyear", "month", "season"]

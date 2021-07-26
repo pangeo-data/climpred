@@ -1,3 +1,5 @@
+from .constants import GROUPBY_SEASONALITIES
+
 OPTIONS = {
     "seasonality": "month",
     "warn_for_failed_PredictionEnsemble_xr_call": True,
@@ -6,7 +8,7 @@ OPTIONS = {
     "climpred_warnings": True,
 }  # defaults
 
-_SEASONALITY_OPTIONS = frozenset(["dayofyear", "weekofyear", "month", "season"])
+_SEASONALITY_OPTIONS = frozenset(GROUPBY_SEASONALITIES)
 
 _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,

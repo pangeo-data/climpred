@@ -333,7 +333,7 @@ def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
         init=slice("1964", "1970")
     )
     # resample init also
-    # hindcast._datasets["initialized"]['init']=xr.cftime_range(start='1964', freq='MS', periods=hindcast.coords['init'].size)
+    # hindcast._datasets["initialized"]['init']=xr.cftime_range(start='1964', freq='MS', periods=hindcast.coords['init'].size) # takes too long
     hindcast._datasets["initialized"].lead.attrs["units"] = "months"
     hindcast._datasets["observations"] = (
         hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")

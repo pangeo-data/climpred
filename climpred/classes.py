@@ -870,7 +870,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ...     dim=['init', 'member'],
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 20, skill: 4)
+            Dimensions:  (skill: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
@@ -1129,7 +1129,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ...     dim=['init', 'member'], iterations=50, resample_dim='member',
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 20, results: 4, skill: 4)
+            Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
@@ -1370,7 +1370,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment='same_inits', dim='init',
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 10, skill: 4)
+            Dimensions:  (skill: 4, lead: 10)
             Coordinates:
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
@@ -1597,7 +1597,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment='same_verifs',
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 10, results: 4, skill: 4)
+            Dimensions:  (skill: 4, results: 4, lead: 10)
             Coordinates:
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'

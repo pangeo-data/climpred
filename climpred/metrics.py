@@ -2233,7 +2233,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
         ...     dim='member', threshold=.2, alignment='same_inits')
         <xarray.Dataset>
-        Dimensions:    (init: 52, lead: 10)
+        Dimensions:    (lead: 10, init: 52)
         Coordinates:
           * init       (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
@@ -2333,7 +2333,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='crps', comparison='m2o', dim='member',
         ...     alignment='same_inits')
         <xarray.Dataset>
-        Dimensions:  (init: 52, lead: 10)
+        Dimensions:  (lead: 10, init: 52)
         Coordinates:
           * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
@@ -2653,7 +2653,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='discrimination', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
-        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2667,7 +2667,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).verify(metric='discrimination',
         ...     comparison='m2o', dim=['member','init'], alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2683,7 +2683,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).mean('member').verify(metric='discrimination',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2761,7 +2761,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='reliability', comparison='m2o',
         ...     dim=['member','init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2775,7 +2775,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).verify(metric='reliability',
         ...     comparison='m2o', dim=['init', 'member'], alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2791,7 +2791,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).mean('member').verify(metric='reliability',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9

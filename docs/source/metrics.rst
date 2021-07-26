@@ -180,6 +180,30 @@ Median Absolute Error
 
 .. autofunction:: _median_absolute_error
 
+
+Spread
+------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['spread']}")
+
+.. autofunction:: _spread
+
+
+Multiplicative bias
+-------------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['mul_bias']}")
+
+.. autofunction:: _mul_bias
+
+
+
 Normalized Distance Metrics
 ===========================
 

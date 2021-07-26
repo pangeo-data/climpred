@@ -93,9 +93,7 @@ def _apply_metric_at_given_lead(
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     # push time (later renamed to init) back by lead
     if "time" in result.dims:
-        n, freq = get_lead_cftime_shift_args(
-            lforecast.lead.attrs["units"], lforecast.lead
-        )
+        n, freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], lead)
         result = result.assign_coords(time=shift_cftime_singular(result.time, -n, freq))
     return result
 

@@ -855,6 +855,57 @@ __mse = Metric(
 )
 
 
+def _spread(forecast, verif, dim=None, **metric_kwargs):
+    """Ensemble spread taking the standard deviation over the member dimension.
+
+    .. math::
+        spread = \\std{f}
+
+    Args:
+        forecast (xarray object): Forecast.
+        verif (xarray object): Verification data (not used).
+        dim (str): Dimension(s) to perform metric over.
+        metric_kwargs (dict): see :py:func:`~xr.std`
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | obs.std() |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+
+    Example:
+        >>> HindcastEnsemble.verify(metric='spread', comparison='m2o', alignment='same_verifs',
+        ...     dim=['member','init'])
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.1468 0.1738 0.1922 0.2096 ... 0.2142 0.2178 0.2098
+    """
+    return forecast.std(dim=dim, **metric_kwargs)
+
+
+__spread = Metric(
+    name="spread",
+    function=_spread,
+    positive=False,
+    probabilistic=False,
+    unit_power=1,
+    long_name="Ensemble spread",
+    minimum=0.0,
+    maximum=np.inf,
+    perfect=False,
+)
+
+
 def _rmse(forecast, verif, dim=None, **metric_kwargs):
     """Root Mean Sqaure Error (RMSE).
 
@@ -1681,7 +1732,7 @@ __std_ratio = Metric(
 
 
 def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
-    """Unconditional bias.
+    """Unconditional additive bias.
 
     .. math::
         bias = f - o
@@ -1730,7 +1781,7 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 4.12e-05 -9.068e-06 ... -0.0002959 -0.0002645
+            SST      (lead) float64 0.0 -4.27e-18 4.27e-18 ... 3.95e-17 -1.815e-17
     """
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
@@ -1741,11 +1792,64 @@ __unconditional_bias = Metric(
     positive=False,
     probabilistic=False,
     unit_power=1,
-    long_name="Unconditional bias",
-    aliases=["u_b", "bias"],
+    long_name="Unconditional additive bias",
+    aliases=["u_b", "a_b", "bias", "additive_bias"],
     minimum=-np.inf,
     maximum=np.inf,
     perfect=0.0,
+)
+
+
+def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
+    """Multiplicative bias.
+
+    .. math::
+        multiplicative bias = f / o
+
+    Args:
+        forecast (xarray object): Forecast.
+        verif (xarray object): Verification data.
+        dim (str): Dimension(s) to perform metric over
+        metric_kwargs (dict): see xarray.mean
+
+    Details:
+        +-----------------+-----------+
+        | **minimum**     | -∞        |
+        +-----------------+-----------+
+        | **maximum**     | ∞         |
+        +-----------------+-----------+
+        | **perfect**     | 1.0       |
+        +-----------------+-----------+
+        | **orientation** | None      |
+        +-----------------+-----------+
+
+
+    Example:
+
+        >>> HindcastEnsemble.verify(metric='multiplicative_bias', comparison='e2o',
+        ...     alignment='same_verifs', dim='init')
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.719 0.9991 1.072 1.434 ... 1.854 2.128 2.325 2.467
+    """
+    return (forecast / verif).mean(dim=dim, **metric_kwargs)
+
+
+__mul_bias = Metric(
+    name="mul_bias",
+    function=_mul_bias,
+    positive=False,
+    probabilistic=False,
+    unit_power=0,
+    long_name="Multiplicative bias",
+    aliases=["m_b", "multiplicative_bias"],
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=False,  # 1.0
 )
 
 
@@ -1922,7 +2026,7 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.8275 0.8342 0.8272 0.8514 ... 0.8469 0.8131 0.8085
+            SST      (lead) float64 0.8239 0.8286 0.8227 0.8474 ... 0.8411 0.8056 0.8022
     """
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
@@ -2127,11 +2231,11 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         >>> # get threshold brier score for each init
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
-        ...     dim='member', threshold=.2, alignment='same_verifs')
+        ...     dim='member', threshold=.2, alignment='same_inits')
         <xarray.Dataset>
-        Dimensions:    (init: 52, lead: 10)
+        Dimensions:    (lead: 10, init: 52)
         Coordinates:
-          * init       (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init       (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
             threshold  float64 0.2
             skill      <U11 'initialized'
@@ -2227,15 +2331,15 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> HindcastEnsemble.verify(metric='crps', comparison='m2o', dim='member',
-        ...     alignment='same_verifs')
+        ...     alignment='same_inits')
         <xarray.Dataset>
-        Dimensions:  (init: 52, lead: 10)
+        Dimensions:  (lead: 10, init: 52)
         Coordinates:
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.1703 0.03346 0.06889 ... 0.05428 0.1638
+            SST      (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2334,15 +2438,15 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> HindcastEnsemble.verify(metric='crpss', comparison='m2o',
-        ...     alignment='same_verifs', dim='member')
+        ...     alignment='same_inits', dim='member')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.3291 0.8421 0.6092 ... 0.7526 0.7702 0.5126
+            SST      (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7526 0.7702 0.5126
 
         >>> import scipy
         >>> PerfectModelEnsemble..isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
@@ -2549,7 +2653,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='discrimination', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
-        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2563,7 +2667,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).verify(metric='discrimination',
         ...     comparison='m2o', dim=['member','init'], alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2579,7 +2683,7 @@ def _discrimination(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).mean('member').verify(metric='discrimination',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (event: 2, forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2657,7 +2761,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='reliability', comparison='m2o',
         ...     dim=['member','init'], alignment='same_verifs', logical=pos)
         <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2671,7 +2775,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).verify(metric='reliability',
         ...     comparison='m2o', dim=['init', 'member'], alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -2687,7 +2791,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.map(pos).mean('member').verify(metric='reliability',
         ...     comparison='e2o', dim='init', alignment='same_verifs')
         <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10)
+        Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
@@ -3151,6 +3255,8 @@ __ALL_METRICS__ = [
     __reliability,
     __rps,
     __roc,
+    __spread,
+    __mul_bias,
 ]
 
 

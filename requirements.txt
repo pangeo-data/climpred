@@ -1,4 +1,4 @@
-xarray
+xarray>=0.19.0
 dask!=2021.03.0
 matplotlib
 ipython
@@ -7,3 +7,4 @@ cftime>=1.1.2
 xskillscore>=0.0.20
 netcdf4
 nc-time-axis
+bias-correction@git+https://github.com/pankajkarman/bias_correction.git

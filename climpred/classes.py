@@ -9,7 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import mean_bias_removal
+from .bias_removal import _bias_correction, gaussian_bias_removal
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -26,7 +26,13 @@ from .checks import (
     match_initialized_vars,
     rename_to_climpred_dims,
 )
-from .constants import CLIMPRED_DIMS, CONCAT_KWARGS, M2M_MEMBER_DIM
+from .constants import (
+    CLIMPRED_DIMS,
+    CONCAT_KWARGS,
+    EXTERNAL_BIAS_CORRECTION_METHODS,
+    INTERNAL_BIAS_CORRECTION_METHODS,
+    M2M_MEMBER_DIM,
+)
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .logging import log_compute_hindcast_header
@@ -864,7 +870,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ...     dim=['init', 'member'],
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 20, skill: 4)
+            Dimensions:  (skill: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
@@ -1123,7 +1129,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ...     dim=['init', 'member'], iterations=50, resample_dim='member',
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 20, results: 4, skill: 4)
+            Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
@@ -1364,7 +1370,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment='same_inits', dim='init',
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 10, skill: 4)
+            Dimensions:  (skill: 4, lead: 10)
             Coordinates:
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
@@ -1374,7 +1380,7 @@ class HindcastEnsemble(PredictionEnsemble):
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
-            viable_dims = list(self.get_initialized().isel(lead=0).dims)
+            viable_dims = list(self.get_initialized().isel(lead=0).dims) + [[]]
             raise ValueError(
                 "Designate a dimension to reduce over when applying the "
                 f"metric. Got {dim}. Choose one or more of {viable_dims}"
@@ -1591,7 +1597,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment='same_verifs',
             ...     reference=['persistence', 'climatology' ,'uninitialized'])
             <xarray.Dataset>
-            Dimensions:  (lead: 10, results: 4, skill: 4)
+            Dimensions:  (skill: 4, results: 4, lead: 10)
             Coordinates:
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
@@ -1637,9 +1643,16 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
 
-    def remove_bias(self, alignment, how="mean", cross_validate=True, **metric_kwargs):
+    def remove_bias(
+        self,
+        alignment,
+        how="additive_mean",
+        cross_validate=True,
+        **metric_kwargs,
+    ):
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
+        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`.
 
         Args:
             alignment (str): which inits or verification times should be aligned?
@@ -1655,8 +1668,16 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            how (str or list of str): what kind of bias removal to perform. Select
-                from ['mean']. Defaults to 'mean'.
+            how (str): what kind of bias removal to perform. Defaults to 'additive_mean'. Select from:
+
+                - 'additive_mean': correcting the mean forecast additively
+                - 'multiplicative_mean': correcting the mean forecast multiplicatively
+                - 'multiplicative_std': correcting the standard deviation multiplicatively
+                - 'modified_quantile': `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
+                - 'basic_quantile': `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
+                - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+
             cross_validate (bool): Use properly defined mean bias removal function.
                 This excludes the given initialization from the bias calculation.
                 With False, include the given initialization in the calculation, which
@@ -1668,18 +1689,24 @@ class HindcastEnsemble(PredictionEnsemble):
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
-        if isinstance(how, str):
-            how = [how]
-        for h in how:
-            if h == "mean":
-                func = mean_bias_removal
-            else:
-                raise NotImplementedError(f"{h}_bias_removal is not implemented.")
-
-            self = func(
-                self,
-                alignment=alignment,
-                cross_validate=cross_validate,
-                **metric_kwargs,
+        if how == "mean":
+            how = "additive_mean"  # backwards compat
+        if how in ["additive_mean", "multiplicative_mean"]:
+            func = gaussian_bias_removal
+        elif how == "multiplicative_std":
+            func = gaussian_bias_removal
+        elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
+            func = _bias_correction
+        else:
+            raise NotImplementedError(
+                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
+
+        self = func(
+            self,
+            alignment=alignment,
+            cross_validate=cross_validate,
+            how=how,
+            **metric_kwargs,
+        )
         return self

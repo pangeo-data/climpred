@@ -291,6 +291,8 @@ For a thorough look at our metrics library, please see the
     _rank_histogram
     _contingency
     _roc
+    _spread
+    _mul_bias
 
 Comparisons
 -----------

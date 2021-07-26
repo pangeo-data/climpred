@@ -42,3 +42,22 @@ VALID_LEAD_UNITS = [
 
 # Valid keywords for reference forecast
 VALID_REFERENCES = ["uninitialized", "persistence", "climatology"]
+
+# https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
+EXTERNAL_BIAS_CORRECTION_METHODS = [
+    "modified_quantile",
+    "gamma_mapping",
+    "basic_quantile",
+    "normal_mapping",
+]
+INTERNAL_BIAS_CORRECTION_METHODS = [
+    "additive_mean",
+    "multiplicative_mean",
+    "multiplicative_std",
+]
+BIAS_CORRECTION_METHODS = (
+    EXTERNAL_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS
+)
+
+# seasonality: climpred.set_options(seasonality='...')
+GROUPBY_SEASONALITIES = ["dayofyear", "weekofyear", "month", "season"]

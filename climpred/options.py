@@ -1,12 +1,14 @@
+from .constants import GROUPBY_SEASONALITIES
+
 OPTIONS = {
-    "seasonality": "dayofyear",
+    "seasonality": "month",
     "warn_for_failed_PredictionEnsemble_xr_call": True,
     "warn_for_rename_to_climpred_dims": True,
     "warn_for_init_coords_int_to_annual": True,
     "climpred_warnings": True,
 }  # defaults
 
-_SEASONALITY_OPTIONS = frozenset(["dayofyear", "weekofyear", "month"])
+_SEASONALITY_OPTIONS = frozenset(GROUPBY_SEASONALITIES)
 
 _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,

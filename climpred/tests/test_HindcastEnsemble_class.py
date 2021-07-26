@@ -1,8 +1,9 @@
 import pytest
 import xarray as xr
 
-from climpred import HindcastEnsemble
+from climpred import HindcastEnsemble, set_options
 from climpred.exceptions import DimensionError
+from climpred.options import OPTIONS
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
@@ -111,67 +112,6 @@ def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     kw = dict(iterations=2) if call == "bootstrap" else {}
     assert getattr(hindcast_hist_obs_1d.isel(lead=range(3)), call)(
         metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
-    )
-
-
-@pytest.mark.parametrize("alignment", ["same_inits", "same_verifs", "maximize"])
-def test_mean_remove_bias(hindcast_hist_obs_1d, alignment):
-    """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
-    how = "mean"
-    metric = "rmse"
-    dim = "init"
-    comparison = "e2o"
-    hindcast = hindcast_hist_obs_1d.isel(lead=range(3))
-    hindcast._datasets["initialized"].attrs["test"] = "test"
-    hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
-    verify_kwargs = dict(
-        metric=metric,
-        alignment=alignment,
-        dim=dim,
-        comparison=comparison,
-        keep_attrs=True,
-    )
-
-    biased_skill = hindcast.verify(**verify_kwargs)
-
-    hindcast_bias_removed = hindcast.remove_bias(
-        how=how, alignment=alignment, cross_validate=False
-    )
-    assert hindcast.sizes == hindcast_bias_removed.sizes  # sizes remaining?
-    bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
-
-    hindcast_bias_removed_properly = hindcast.remove_bias(
-        how=how, cross_validate=True, alignment=alignment
-    )
-    bias_removed_skill_properly = hindcast_bias_removed_properly.verify(**verify_kwargs)
-
-    assert "dayofyear" not in bias_removed_skill_properly.coords
-    assert biased_skill > bias_removed_skill
-    assert biased_skill > bias_removed_skill_properly
-    assert bias_removed_skill_properly >= bias_removed_skill
-    # keeps data_vars attrs
-    for v in hindcast_bias_removed.get_initialized().data_vars:
-        assert (
-            hindcast_bias_removed_properly.get_initialized()[v].attrs
-            == hindcast.get_initialized()[v].attrs
-        )
-        assert (
-            hindcast_bias_removed.get_initialized()[v].attrs
-            == hindcast.get_initialized()[v].attrs
-        )
-    # keeps dataset attrs
-    assert (
-        hindcast_bias_removed_properly.get_initialized().attrs
-        == hindcast.get_initialized().attrs
-    )
-    assert (
-        hindcast_bias_removed.get_initialized().attrs
-        == hindcast.get_initialized().attrs
-    )
-    # keep lead attrs
-    assert (
-        hindcast_bias_removed.get_initialized().lead.attrs
-        == hindcast.get_initialized().lead.attrs
     )
 
 

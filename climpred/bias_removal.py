@@ -185,7 +185,6 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how):
         # convert to datetime for weekofyear operations to groupby isocalendar().week
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
-        # raise NotImplementedError("Try cross_val=False")
 
     for init in hind.init.data:
         hind_drop_init = hind.drop_sel(init=init).init

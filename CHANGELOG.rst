@@ -2,6 +2,13 @@
 What's New
 ==========
 
+
+Bug Fixes
+---------
+- Shift back by ``lead`` after :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+  (:issue:`644`, :pr:`645`) `Aaron Spring`_.
+
+
 climpred v2.1.4 (2021-06-28)
 ============================
 

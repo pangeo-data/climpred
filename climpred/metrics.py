@@ -1781,7 +1781,7 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 4.12e-05 -9.068e-06 ... -0.0002959 -0.0002645
+            SST      (lead) float64 0.0 -4.27e-18 4.27e-18 ... 3.95e-17 -1.815e-17
     """
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
@@ -2026,7 +2026,7 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.8275 0.8342 0.8272 0.8514 ... 0.8469 0.8131 0.8085
+            SST      (lead) float64 0.8239 0.8286 0.8227 0.8474 ... 0.8411 0.8056 0.8022
     """
     acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = __conditional_bias.function(
@@ -2231,11 +2231,11 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
 
         >>> # get threshold brier score for each init
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
-        ...     dim='member', threshold=.2, alignment='same_verifs')
+        ...     dim='member', threshold=.2, alignment='same_inits')
         <xarray.Dataset>
         Dimensions:    (init: 52, lead: 10)
         Coordinates:
-          * init       (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init       (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
             threshold  float64 0.2
             skill      <U11 'initialized'
@@ -2331,15 +2331,15 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> HindcastEnsemble.verify(metric='crps', comparison='m2o', dim='member',
-        ...     alignment='same_verifs')
+        ...     alignment='same_inits')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.1703 0.03346 0.06889 ... 0.05428 0.1638
+            SST      (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2438,15 +2438,15 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> HindcastEnsemble.verify(metric='crpss', comparison='m2o',
-        ...     alignment='same_verifs', dim='member')
+        ...     alignment='same_inits', dim='member')
         <xarray.Dataset>
         Dimensions:  (init: 52, lead: 10)
         Coordinates:
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.3291 0.8421 0.6092 ... 0.7526 0.7702 0.5126
+            SST      (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7526 0.7702 0.5126
 
         >>> import scipy
         >>> PerfectModelEnsemble..isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',

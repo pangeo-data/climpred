@@ -1652,6 +1652,7 @@ class HindcastEnsemble(PredictionEnsemble):
     ):
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
+        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`.
 
         Args:
             alignment (str): which inits or verification times should be aligned?

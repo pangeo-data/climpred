@@ -328,11 +328,12 @@ def hindcast_hist_obs_1d(
 @pytest.fixture()
 def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
-    time series (no grid)."""
-    # todo: resample init also
+    observational and initialized time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970")).sel(
         init=slice("1964", "1970")
     )
+    # resample init also
+    # hindcast._datasets["initialized"]['init']=xr.cftime_range(start='1964', freq='MS', periods=hindcast.coords['init'].size)
     hindcast._datasets["initialized"].lead.attrs["units"] = "months"
     hindcast._datasets["observations"] = (
         hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")

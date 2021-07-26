@@ -294,7 +294,7 @@ def gaussian_bias_removal(
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )
-    print("bias_removed_hind", bias_removed_hind)
+    # print("bias_removed_hind", bias_removed_hind)
     bias_removed_hind = bias_removed_hind.squeeze(drop=True)
 
     # remove groupby label from coords
@@ -390,10 +390,10 @@ def _bias_correction(
         if isinstance(corrected[dim].to_index(), pd.DatetimeIndex):
             corrected = convert_time_index(corrected, dim, "hindcast")
         # push back by lead
-        n, freq = get_lead_cftime_shift_args(
-            forecast.lead.attrs["units"], forecast.lead
-        )
-        corrected[dim] = shift_cftime_singular(corrected[dim], -n, freq)
+        # n, freq = get_lead_cftime_shift_args(
+        #    forecast.lead.attrs["units"], forecast.lead
+        # )
+        # corrected[dim] = shift_cftime_singular(corrected[dim], -n, freq)
         return corrected
 
     bc = Metric(

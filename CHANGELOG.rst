@@ -5,6 +5,11 @@ What's New
 climpred v2.1.5 (2021-0x-xx)
 ============================
 
+Bug Fixes
+---------
+- Shift back ``init`` by ``lead`` after :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+  (:issue:`644`, :pr:`645`) `Aaron Spring`_.
+
 Documentation
 -------------
 - Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_

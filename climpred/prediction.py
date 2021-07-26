@@ -23,7 +23,9 @@ from .utils import (
     assign_attrs,
     convert_time_index,
     get_comparison_class,
+    get_lead_cftime_shift_args,
     get_metric_class,
+    shift_cftime_singular,
 )
 
 
@@ -89,6 +91,12 @@ def _apply_metric_at_given_lead(
 
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
     log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
+    # push time (later renamed to init) back by lead
+    if "time" in result.dims:
+        n, freq = get_lead_cftime_shift_args(
+            lforecast.lead.attrs["units"], lforecast.lead
+        )
+        result = result.assign_coords(time=shift_cftime_singular(result.time, -n, freq))
     return result
 
 

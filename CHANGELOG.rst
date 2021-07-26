@@ -5,7 +5,7 @@ What's New
 
 Bug Fixes
 ---------
-- Shift back by ``lead`` after :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+- Shift back ``init`` by ``lead`` after :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
   (:issue:`644`, :pr:`645`) `Aaron Spring`_.
 
 

@@ -5,7 +5,7 @@ import numpy as np
 import pandas as pd
 import xarray as xr
 
-from .bias_correction import XBiasCorrection
+from bias_correction import XBiasCorrection
 from .constants import EXTERNAL_BIAS_CORRECTION_METHODS
 from .metrics import Metric
 from .options import OPTIONS

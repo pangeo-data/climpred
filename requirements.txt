@@ -7,4 +7,4 @@ cftime>=1.1.2
 xskillscore>=0.0.20
 netcdf4
 nc-time-axis
-statsmodels
+git+https://github.com/pankajkarman/bias_correction.git

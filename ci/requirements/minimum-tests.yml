@@ -25,5 +25,4 @@ dependencies:
   - xskillscore>=0.0.18
   - pip:
     - pytest-lazy-fixture
-    - git+https://github.com/pankajkarman/bias_correction.git
     - -e ../..

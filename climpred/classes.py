@@ -1667,8 +1667,16 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            how (str): what kind of bias removal to perform. Select
-                from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
+            how (str): what kind of bias removal to perform. Defaults to 'additive_mean'. Select from:
+
+                - 'additive_mean': correcting the mean forecast additively
+                - 'multiplicative_mean': correcting the mean forecast multiplicatively
+                - 'multiplicative_std': correcting the standard deviation multiplicatively
+                - 'modified_quantile': `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
+                - 'basic_quantile': `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
+                - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+
             cross_validate (bool): Use properly defined mean bias removal function.
                 This excludes the given initialization from the bias calculation.
                 With False, include the given initialization in the calculation, which

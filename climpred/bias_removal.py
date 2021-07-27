@@ -25,7 +25,7 @@ def div(a, b):
     return a / b
 
 
-def _mean_bias_removal_func(hind, bias, dim, how):
+def _mean_bias_removal_func(hind, bias, dim, how, cross_val=False):
     """Quick removal of mean bias over all initializations without cross validation.
 
     Args:
@@ -39,6 +39,19 @@ def _mean_bias_removal_func(hind, bias, dim, how):
     """
     how_operator = sub if how == "additive" else div
     seasonality = OPTIONS["seasonality"]
+
+    def loo(bias, dim):
+        """Leave-one-out creating a new dimension sample."""
+        bias_nan = []
+        for i in range(bias[dim].size):
+            bias_nan.append(
+                bias.drop_sel({dim: bias[dim].isel({dim: [i]})})
+                .reindex_like(bias)
+                .rename({dim: "sample"})
+            )
+        bias_nan = xr.concat(bias_nan, dim).assign_coords({dim: bias[dim]})
+        return bias_nan
+
     with xr.set_options(keep_attrs=True):
         if seasonality == "weekofyear":
             # convert to datetime for weekofyear operations, now isocalendar().week
@@ -50,6 +63,8 @@ def _mean_bias_removal_func(hind, bias, dim, how):
             hind_groupby = f"{dim}.{seasonality}"
             bias_groupby = f"{dim}.{seasonality}"
 
+        if cross_val:
+            bias = loo(bias, dim).mean("sample")
         bias_removed_hind = how_operator(
             hind.groupby(hind_groupby),
             bias.groupby(bias_groupby).mean(),
@@ -277,11 +292,8 @@ def gaussian_bias_removal(
 
     # how to remove bias
     if "mean" in how:
-        if cross_validate:
-            bias_removal_func = _mean_bias_removal_func_cross_validate
-        else:  # faster
-            bias_removal_func = _mean_bias_removal_func
-        bias_removal_func_kwargs = dict(how=how.split("_")[0])
+        bias_removal_func = _mean_bias_removal_func
+        bias_removal_func_kwargs = dict(how=how.split("_")[0], cross_val=cross_validate)
     elif how == "multiplicative_std":
         if cross_validate:
             bias_removal_func = _std_multiplicative_bias_removal_func_cross_validate

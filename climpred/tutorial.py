@@ -91,6 +91,7 @@ def _get_datasets():
 def _cache_all():
     """Cache all datasets for pytest -n 4 woth pytest-xdist."""
     for d in aliases:
+        print(f'caching {d}')
         load_dataset(d)
 
 

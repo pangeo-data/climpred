@@ -45,7 +45,8 @@ true_file_names = [
     "FOSI.SSS.global",
     "FOSI.SST.eastern_pacific",
     "GMAO-GEOS-V2p1.RMM1",
-    "RMM1.observed.interannual.1974-06.2017-07" "ECMWF_S2S_Germany",
+    "RMM1.observed.interannual.1974-06.2017-07",
+    "ECMWF_S2S_Germany",
     "Observations_Germany",
 ]
 file_descriptions = [
@@ -67,7 +68,7 @@ file_descriptions = [
     "daily RMM1 from the GMAO-GEOS-V2p1 model for SubX",
     "observed RMM with interannual variablity included",
     "S2S ECMWF on-the-fly hindcasts from the S2S Project for Germany",
-    "CPC/ERA5 observations for Germany",
+    "CPC/ERA5 observations for S2S forecasts over Germany",
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))
@@ -91,7 +92,6 @@ def _get_datasets():
 def _cache_all():
     """Cache all datasets for pytest -n 4 woth pytest-xdist."""
     for d in aliases:
-        print(f'caching {d}')
         load_dataset(d)
 
 

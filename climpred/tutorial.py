@@ -25,6 +25,8 @@ aliases = [
     "FOSI-SST-3D",
     "GMAO-GEOS-RMM1",
     "RMM-INTERANN-OBS",
+    "ECMWF_S2S_Germany",
+    "Observations_Germany",
 ]
 true_file_names = [
     "PM_MPI-ESM-LR_control",
@@ -43,7 +45,8 @@ true_file_names = [
     "FOSI.SSS.global",
     "FOSI.SST.eastern_pacific",
     "GMAO-GEOS-V2p1.RMM1",
-    "RMM1.observed.interannual.1974-06.2017-07",
+    "RMM1.observed.interannual.1974-06.2017-07" "ECMWF_S2S_Germany",
+    "Observations_Germany",
 ]
 file_descriptions = [
     "area averages for the MPI control run of SST/SSS.",
@@ -63,6 +66,8 @@ file_descriptions = [
     "reconstruction of eastern Pacific SSTs",
     "daily RMM1 from the GMAO-GEOS-V2p1 model for SubX",
     "observed RMM with interannual variablity included",
+    "S2S ECMWF on-the-fly hindcasts from the S2S Project for Germany",
+    "CPC/ERA5 observations for Germany",
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))
@@ -110,7 +115,7 @@ def load_dataset(
     cache=True,
     cache_dir=_default_cache_dir,
     github_url="https://github.com/pangeo-data/climpred-data",
-    branch="master",
+    branch="AS_add_S2S",
     extension=None,
     proxy_dict=None,
     **kws,

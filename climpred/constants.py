@@ -59,5 +59,7 @@ BIAS_CORRECTION_METHODS = (
     EXTERNAL_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS
 )
 
+CROSS_VALIDATE_METHODS = ["LOO", False, True]
+
 # seasonality: climpred.set_options(seasonality='...')
 GROUPBY_SEASONALITIES = ["dayofyear", "weekofyear", "month", "season"]

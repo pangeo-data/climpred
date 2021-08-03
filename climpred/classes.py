@@ -29,6 +29,7 @@ from .checks import (
 from .constants import (
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
+    CROSS_VALIDATE_METHODS,
     EXTERNAL_BIAS_CORRECTION_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
@@ -1689,6 +1690,12 @@ class HindcastEnsemble(PredictionEnsemble):
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
+        if cross_validate == True:
+            cross_validate == "LOO"
+        if cross_validate not in CROSS_VALIDATE_METHODS:
+            raise NotImplementedError(
+                f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
+            )
         if how == "mean":
             how = "additive_mean"  # backwards compat
         if how in ["additive_mean", "multiplicative_mean"]:

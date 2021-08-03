@@ -48,7 +48,7 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
                 )
 
 
-@pytest.mark.parametrize("cross_validate", [False])  # True])
+@pytest.mark.parametrize("cross_validate", [False, "LOO"])
 @pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 @pytest.mark.parametrize(

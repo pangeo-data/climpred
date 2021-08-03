@@ -100,3 +100,32 @@ def test_HindcastEnsemble_lead_pdTimedelta(hind_da_initialized_1d, lead_res):
     hindcast = HindcastEnsemble(initialized)
 
     assert hindcast.get_initialized().lead.attrs["units"] == lead_res
+
+
+def test_monthly_leads_real_example(hindcast_NMME_Nino34):
+    skill = (
+        hindcast_NMME_Nino34.isel(lead=[0, 1, 2])
+        .sel(init=slice("2005", "2006"))
+        .verify(
+            metric="crps",
+            comparison="m2o",
+            dim=["init", "member"],
+            alignment="same_inits",
+        )
+    )
+    print(skill.sst)
+    assert skill.to_array().notnull().all()
+
+
+def test_daily_leads_real_example(hindcast_S2S_Germany):
+    skill = (
+        hindcast_S2S_Germany.isel(lead=[0, 1])
+        .sel(init=slice("2005", "2006"))
+        .verify(
+            metric="crps",
+            comparison="m2o",
+            dim=["init", "member"],
+            alignment="same_inits",
+        )
+    )
+    assert skill.to_array().notnull().all()

@@ -354,6 +354,24 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
 
 
 @pytest.fixture()
+def hindcast_S2S_Germany():
+    """S2S ECMWF on-the-fly hindcasts with daily leads and weekly inits and related observations from CPC (t2m, pr) and ERA5 (gh_500)."""
+    init = load_dataset("ECMWF_S2S_Germany")
+    obs = load_dataset("Observations_Germany")
+    return HindcastEnsemble(init).add_observations(obs)
+
+
+@pytest.fixture()
+def hindcast_NMME_Nino34():
+    """NMME hindcasts with monthly leads and monthly inits and related IOv2 observations for SST of the Nino34 region."""
+    init = load_dataset("NMME_hindcast_Nino34_sst")
+    obs = load_dataset("NMME_OIv2_Nino34_sst")
+    return HindcastEnsemble(init).add_observations(
+        obs.broadcast_like(init, exclude=("L", "S", "M"))
+    )
+
+
+@pytest.fixture()
 def ds1():
     """Small plain multi-dimensional coords xr.Dataset."""
     return xr.Dataset(

@@ -39,7 +39,7 @@ Documentation
   (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 - Add `CITATION.cff <https://github.com/pangeo-data/climpred/blob/main/CITATION.cff>`_.
-  (`pr <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
+  (`GH <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
 
 climpred v2.1.4 (2021-06-28)
 ============================

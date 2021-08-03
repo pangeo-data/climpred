@@ -27,6 +27,10 @@ New Features
 
   (:issue:`398`, :pr:`638`) `Aaron Spring`_.
 - Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.
+- Add new tutorial datasets: (:pr:`651`) `Aaron Spring`_.
+
+    * ``NMME_OIv2_Nino34_sst`` and ``NMME_hindcast_Nino34_sst`` with monthly leads
+    * ``Observations_Germany`` and ``ECMWF_S2S_Germany`` with daily leads
 
 Documentation
 -------------
@@ -34,7 +38,8 @@ Documentation
   with IRIDL server-side preprocessing
   (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
-
+- Add `CITATION.cff <https://github.com/pangeo-data/climpred/blob/main/CITATION.cff>`_.
+  (`pr <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
 
 climpred v2.1.4 (2021-06-28)
 ============================

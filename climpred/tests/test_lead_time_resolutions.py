@@ -113,7 +113,6 @@ def test_monthly_leads_real_example(hindcast_NMME_Nino34):
             alignment="same_inits",
         )
     )
-    print(skill.sst)
     assert skill.to_array().notnull().all()
 
 

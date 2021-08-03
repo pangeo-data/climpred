@@ -51,7 +51,7 @@ def leave_one_out_drop(bias, dim):
     return bias_nan
 
 
-def _mean_bias_removal_func(hind, bias, dim, how, cross_validate=False):
+def _mean_bias_removal_func(hind, bias, dim, how):
     """Quick removal of mean bias over all initializations without cross validation.
 
     Args:
@@ -73,8 +73,8 @@ def _mean_bias_removal_func(hind, bias, dim, how, cross_validate=False):
             bias = convert_cftime_to_datetime_coords(bias, dim)
         hind_groupby = f"{dim}.{seasonality}"
 
-        if cross_validate == "LOO":
-            bias = leave_one_out(bias, dim).mean("sample")
+        # if cross_validate == "LOO":
+        #    bias = leave_one_out(bias, dim).mean("sample")
         bias_removed_hind = how_operator(
             hind.groupby(hind_groupby),
             bias.groupby(hind_groupby).mean(),
@@ -86,9 +86,7 @@ def _mean_bias_removal_func(hind, bias, dim, how, cross_validate=False):
     return bias_removed_hind
 
 
-def _multiplicative_std_correction_quick(
-    hind, spread, dim, obs=None, cross_validate=False
-):
+def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
     """Quick removal of std bias over all initializations without cross validation.
 
     Args:
@@ -250,7 +248,7 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_validate=
             bias_removed_hind.append(init_bias_removed)
         bias_removed_hind = xr.concat(bias_removed_hind, "init")
     else:
-        raise NotImplementedError('only cross_validate="LOO"')
+        raise NotImplementedError(f'try cross_validate="LOO", found {cross_validate}')
     bias_removed_hind.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
     if isinstance(bias_removed_hind.init.to_index(), pd.DatetimeIndex):
@@ -276,11 +274,14 @@ def gaussian_bias_removal(
             should be based on the same set of verification dates.
         how (str): what kind of bias removal to perform. Select
             from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
-        cross_validate (bool): Use properly defined mean bias removal function. This
-            excludes the given initialization from the bias calculation. With False,
-            include the given initialization in the calculation, which is much faster
-            but yields similar skill with a large N of initializations.
-            Defaults to True.
+        cross_validate (bool or str): Defaults to True.
+
+            - True: Use properly defined mean bias removal function.
+                This excludes the given initialization from the bias calculation.
+            - 'LOO': see True
+            - False: include the given initialization in the calculation, which
+                is much faster and but yields similar skill with a large N of
+                initializations.
 
     Returns:
         HindcastEnsemble: bias removed hindcast.
@@ -312,15 +313,11 @@ def gaussian_bias_removal(
 
     # how to remove bias
     if "mean" in how:
-        if cross_validate == "LOO":
-            bias_removal_func = _mean_bias_removal_func_cross_validate
+        if cross_validate in [False, None]:
+            bias_removal_func = _mean_bias_removal_func
             bias_removal_func_kwargs = dict(how=how.split("_")[0])
         else:
-            bias_removal_func = _mean_bias_removal_func
-            bias_removal_func_kwargs = dict(how=how.split("_")[0])
-        if "use_new" in metric_kwargs:
-            _ = metric_kwargs.pop("use_new")
-            bias_removal_func = _mean_bias_removal_func
+            bias_removal_func = _mean_bias_removal_func_cross_validate
             bias_removal_func_kwargs = dict(
                 how=how.split("_")[0], cross_validate=cross_validate
             )
@@ -329,14 +326,14 @@ def gaussian_bias_removal(
         if cross_validate in [False, None]:
             bias_removal_func = _multiplicative_std_correction_quick
             bias_removal_func_kwargs = dict(
-                obs=hindcast.get_observations(), cross_validate=cross_validate
+                obs=hindcast.get_observations(),
             )
         else:
             bias_removal_func = _std_multiplicative_bias_removal_func_cross_validate
             bias_removal_func_kwargs = dict(
                 obs=hindcast.get_observations(), cross_validate=cross_validate
             )
-
+    print("bias_removal_func_kwargs", bias_removal_func_kwargs)
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )

@@ -1648,7 +1648,7 @@ class HindcastEnsemble(PredictionEnsemble):
         self,
         alignment,
         how="additive_mean",
-        cross_validate=True,
+        cross_validate="LOO",
         **metric_kwargs,
     ):
         """Calculate and remove bias from
@@ -1717,6 +1717,8 @@ class HindcastEnsemble(PredictionEnsemble):
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
+
+        print("cross_validate in classes", cross_validate)
 
         self = func(
             self,

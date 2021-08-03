@@ -25,6 +25,10 @@ aliases = [
     "FOSI-SST-3D",
     "GMAO-GEOS-RMM1",
     "RMM-INTERANN-OBS",
+    "ECMWF_S2S_Germany",
+    "Observations_Germany",
+    "NMME_hindcast_Nino34_sst",
+    "NMME_OIv2_Nino34_sst",
 ]
 true_file_names = [
     "PM_MPI-ESM-LR_control",
@@ -44,6 +48,10 @@ true_file_names = [
     "FOSI.SST.eastern_pacific",
     "GMAO-GEOS-V2p1.RMM1",
     "RMM1.observed.interannual.1974-06.2017-07",
+    "ECMWF_S2S_Germany",
+    "Observations_Germany",
+    "NMME_hindcast_Nino34_sst",
+    "NMME_OIv2_Nino34_sst",
 ]
 file_descriptions = [
     "area averages for the MPI control run of SST/SSS.",
@@ -63,6 +71,10 @@ file_descriptions = [
     "reconstruction of eastern Pacific SSTs",
     "daily RMM1 from the GMAO-GEOS-V2p1 model for SubX",
     "observed RMM with interannual variablity included",
+    "S2S ECMWF on-the-fly hindcasts from the S2S Project for Germany",
+    "CPC/ERA5 observations for S2S forecasts over Germany",
+    "monthly multi-member hindcasts of sea-surface temperature averaged over the Nino3.4 region from the NMME project from IRIDL",
+    "monthly Reyn_SmithOIv2 sea-surface temperature observations averaged over the Nino3.4 region",
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))

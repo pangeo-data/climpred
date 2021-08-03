@@ -1690,14 +1690,20 @@ class HindcastEnsemble(PredictionEnsemble):
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
-        if cross_validate == True:
-            cross_validate == "LOO"
+        if OPTIONS["seasonality"] not in ["month", "season"]:
+            warnings.warn(
+                "HindcastEnsemble.remove_bias() is still experimental and is only tested "
+                "for seasonality in ['month', 'season']. Please consider contributing to "
+                "https://github.com/pangeo-data/climpred/issues/605"
+            )
+        if cross_validate is True:
+            cross_validate == "LOO"  # backward compatibility
         if cross_validate not in CROSS_VALIDATE_METHODS:
             raise NotImplementedError(
                 f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
             )
         if how == "mean":
-            how = "additive_mean"  # backwards compat
+            how = "additive_mean"  # backwards compatibility
         if how in ["additive_mean", "multiplicative_mean"]:
             func = gaussian_bias_removal
         elif how == "multiplicative_std":

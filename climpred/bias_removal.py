@@ -6,7 +6,7 @@ import pandas as pd
 import xarray as xr
 from bias_correction import XBiasCorrection
 
-from .constants import EXTERNAL_BIAS_CORRECTION_METHODS
+from .constants import EXTERNAL_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from .metrics import Metric
 from .options import OPTIONS
 from .utils import (
@@ -62,34 +62,18 @@ def _mean_bias_removal_func(hind, bias, dim, how, cross_val=False):
     how_operator = sub if how == "additive" else div
     seasonality = OPTIONS["seasonality"]
 
-    def loo(bias, dim):
-        """Leave-one-out creating a new dimension sample."""
-        bias_nan = []
-        for i in range(bias[dim].size):
-            bias_nan.append(
-                bias.drop_sel({dim: bias[dim].isel({dim: [i]})})
-                .reindex_like(bias)
-                .rename({dim: "sample"})
-            )
-        bias_nan = xr.concat(bias_nan, dim).assign_coords({dim: bias[dim]})
-        return bias_nan
-
     with xr.set_options(keep_attrs=True):
         if seasonality == "weekofyear":
-            # convert to datetime for weekofyear operations, now isocalendar().week
+            # convert to datetime for weekofyear operations
             hind = convert_cftime_to_datetime_coords(hind, dim)
             bias = convert_cftime_to_datetime_coords(bias, dim)
-            hind_groupby = hind[dim].dt.isocalendar().week
-            bias_groupby = bias[dim].dt.isocalendar().week
-        else:
-            hind_groupby = f"{dim}.{seasonality}"
-            bias_groupby = f"{dim}.{seasonality}"
+        hind_groupby = f"{dim}.{seasonality}"
 
         if cross_val == "LOO":
-            bias = loo(bias, dim).mean("sample")
+            bias = leave_one_out(bias, dim).mean("sample")
         bias_removed_hind = how_operator(
             hind.groupby(hind_groupby),
-            bias.groupby(bias_groupby).mean(),
+            bias.groupby(hind_groupby).mean(),
         )
     bias_removed_hind.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
@@ -113,56 +97,28 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None, cross_val=
     """
     seasonality = OPTIONS["seasonality"]
     if seasonality == "weekofyear":
-        # convert to datetime for weekofyear operations, now isocalendar().week
+        # convert to datetime for weekofyear operations
         hind = convert_cftime_to_datetime_coords(hind, "init")
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
 
+    init_groupby = f"init.{seasonality}"
+    obs_groupby = f"time.{seasonality}"
+
     with xr.set_options(keep_attrs=True):
-        if seasonality == "weekofyear":
-            hind_groupby = hind.init.dt.isocalendar().week
-            spread_groupby = spread.init.dt.isocalendar().week
-            obs_groupby = obs.time.dt.isocalendar().week
-        else:
-            hind_groupby = getattr(hind.init.dt, seasonality)
-            spread_groupby = getattr(spread.init.dt, seasonality)
-            obs_groupby = getattr(obs.time.dt, seasonality)
+        model_mean_spread = spread.groupby(init_groupby).mean()
+        model_member_mean = hind.mean("member").groupby(init_groupby).mean()
+        # assume that no trend here
+        obs_spread = obs.groupby(obs_groupby).std()
 
-        if cross_val == "LOO":
-            raise NotImplementedError("try cross_validate=False")
-            sample_groupby = f"sample.{seasonality}"
-            model_mean_spread = (
-                leave_one_out(spread, dim).groupby(sample_groupby).mean("sample")
-            )
-            model_member_mean = (
-                leave_one_out(hind.mean("member"), dim)
-                .groupby(sample_groupby)
-                .mean()
-                .groupby(hind_groupby)
-                .mean()
-            )
-            obs_spread = (
-                leave_one_out(obs, "time").groupby(sample_groupby).std().mean("time")
-            )
-        else:
-            model_mean_spread = spread.groupby(spread_groupby).mean()
-            model_member_mean = hind.mean("member").groupby(hind_groupby).mean()
-            # assume that no trend here
-            obs_spread = obs.groupby(obs_groupby).std()
-
-        # print('hind',hind.sizes,hind.coords,hind.init.to_index())
-        # print('model_member_mean',model_member_mean.sizes, model_member_mean.coords)
         # z distr
-        init_z = (hind.groupby(hind_groupby) - model_member_mean).groupby(
-            hind_groupby
+        init_z = (hind.groupby(init_groupby) - model_member_mean).groupby(
+            init_groupby
         ) / model_mean_spread
-        # init_z = init_z.sortby('init')
-        # print("init_z", init_z.sizes, init_z.coords, init_z.init.to_index())
-        # print("obs_spread", obs_spread.sizes, obs_spread.coords)
-        # print("model_member_mean", model_member_mean.sizes, model_member_mean.coords)
+
         # scale with obs_spread and model mean
-        init_std_corrected = (init_z.groupby(hind_groupby) * obs_spread).groupby(
-            hind_groupby
+        init_std_corrected = (init_z.groupby(init_groupby) * obs_spread).groupby(
+            init_groupby
         ) + model_member_mean
 
     init_std_corrected.attrs = hind.attrs
@@ -199,7 +155,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(
     """
     seasonality = OPTIONS["seasonality"]
     if seasonality == "weekofyear":
-        # convert to datetime for weekofyear operations, now isocalendar().week
+        # convert to datetime for weekofyear operations
         hind = convert_cftime_to_datetime_coords(hind, "init")
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
@@ -209,48 +165,26 @@ def _std_multiplicative_bias_removal_func_cross_validate(
         hind_drop_init = hind.drop_sel(init=init).init
 
         with xr.set_options(keep_attrs=True):
-            if seasonality == "weekofyear":
-                hind_groupby = hind_drop_init.dt.isocalendar().week
-                spread_groupby = (
-                    spread.sel(init=hind_drop_init).init.dt.isocalendar().week
-                )
-                obs_groupby = obs.time.dt.isocalendar().week
-                hind_init_groupby = hind.sel(init=[init]).init.dt.isocalendar().week
-            else:
-                hind_groupby = getattr(hind_drop_init.dt, seasonality)
-                spread_groupby = getattr(
-                    spread.sel(init=hind_drop_init).init.dt, seasonality
-                )
-                obs_groupby = getattr(obs.time.dt, seasonality)
-                hind_init_groupby = getattr(hind.sel(init=[init]).init.dt, seasonality)
-
-            # init_bias_removed = how_operator(
-            #    hind.sel(init=[init]).groupby(init_groupby),
-            #    bias.sel(init=hind_drop_init).groupby(bias_groupby).mean())
+            init_groupby = f"init.{seasonality}"
+            time_groupby = f"time.{seasonality}"
 
             model_mean_spread = (
-                spread.sel(init=hind_drop_init).groupby(spread_groupby).mean()
+                spread.sel(init=hind_drop_init).groupby(init_groupby).mean()
             )
             model_member_mean = (
-                hind.drop_sel(init=init).mean("member").groupby(hind_groupby).mean()
+                hind.drop_sel(init=init).mean("member").groupby(init_groupby).mean()
             )
             # assume that no trend here
-            obs_spread = obs.groupby(obs_groupby).std()
+            obs_spread = obs.groupby(time_groupby).std()
 
-            # print('hind',hind.sizes,hind.coords,hind.init.to_index())
-            # print('model_member_mean',model_member_mean.sizes, model_member_mean.coords)
             # z distr
             init_z = (
-                hind.sel(init=[init]).groupby(hind_init_groupby) - model_member_mean
-            ).groupby(hind_init_groupby) / model_mean_spread
-            # init_z = init_z.sortby('init')
-            # print("init_z", init_z.sizes, init_z.coords, init_z.init.to_index())
-            # print("obs_spread", obs_spread.sizes, obs_spread.coords)
-            # print("model_member_mean", model_member_mean.sizes, model_member_mean.coords)
+                hind.sel(init=[init]).groupby(init_groupby) - model_member_mean
+            ).groupby(init_groupby) / model_mean_spread
             # scale with obs_spread and model mean
-            init_std_corrected = (
-                init_z.groupby(hind_init_groupby) * obs_spread
-            ).groupby(hind_init_groupby) + model_member_mean
+            init_std_corrected = (init_z.groupby(init_groupby) * obs_spread).groupby(
+                init_groupby
+            ) + model_member_mean
 
         bias_removed_hind.append(init_std_corrected)
 
@@ -261,22 +195,6 @@ def _std_multiplicative_bias_removal_func_cross_validate(
     if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
         init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
     return init_std_corrected
-
-    # seasonality = OPTIONS["seasonality"]
-    # spread = spread.rename({dim: "init"})
-    # bias_removed_hind = []
-    # logging.info("mean bias removal:")
-    # if seasonality == "weekofyear":
-    # convert to datetime for weekofyear operations to groupby isocalendar().week
-    #    hind = convert_cftime_to_datetime_coords(hind, "init")
-    #    spread = convert_cftime_to_datetime_coords(spread, "init")
-    #    obs = convert_cftime_to_datetime_coords(obs, "time")
-
-    # init_std_corrected.attrs = hind.attrs
-    # convert back to CFTimeIndex if needed
-    # if isinstance(init_std_corrected.init.to_index(), pd.DatetimeIndex):
-    #    init_std_corrected = convert_time_index(init_std_corrected, "init", "hindcast")
-    # return init_std_corrected
 
 
 def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"):
@@ -302,38 +220,27 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"
           Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
-    print("using old")
     how_operator = sub if how == "additive" else div
     seasonality = OPTIONS["seasonality"]
     bias = bias.rename({dim: "init"})
     bias_removed_hind = []
     logging.info(f"mean {how} bias removal with seasonality {seasonality}:")
     if seasonality == "weekofyear":
-        # convert to datetime for weekofyear operations to groupby isocalendar().week
+        # convert to datetime for weekofyear operations
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
 
     if cross_val == "LOO":
         for init in hind.init.data:
             hind_drop_init = hind.drop_sel(init=init).init
-            # hind_drop_init_where_bias = hind_drop_init#.where(bias.init)
-            logging.info(
-                f"initialization {init}: remove bias from "
-                f"{hind_drop_init.min().values}-"
-                f"{hind_drop_init.max().values}"
-            )
             with xr.set_options(keep_attrs=True):
                 init_groupby = f"init.{seasonality}"
-                if seasonality == "weekofyear":
-                    bias_groupby = (
-                        bias.sel(init=hind_drop_init).init.dt.isocalendar().week
-                    )
-                else:
-                    bias_groupby = init_groupby
                 init_bias_removed = how_operator(
                     hind.sel(init=[init]).groupby(init_groupby),
-                    bias.sel(init=hind_drop_init).groupby(bias_groupby).mean(),
+                    bias.sel(init=hind_drop_init).groupby(init_groupby).mean(),
                 )
+                if seasonality in init_bias_removed.coords:
+                    del init_bias_removed.coords[seasonality]
             bias_removed_hind.append(init_bias_removed)
         bias_removed_hind = xr.concat(bias_removed_hind, "init")
     else:
@@ -345,7 +252,7 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"
     return bias_removed_hind
 
 
-def gaussian_bias_removal(
+def gaussian_bias_removal(  # rename
     hindcast, alignment, cross_validate=True, how="additive_mean", **metric_kwargs
 ):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
@@ -373,13 +280,6 @@ def gaussian_bias_removal(
         HindcastEnsemble: bias removed hindcast.
 
     """
-    if OPTIONS["seasonality"] not in ["month", "season"]:
-        warnings.warn(
-            "HindcastEnsemble.remove_bias() is still experimental and is only tested "
-            "for seasonality in ['month', 'season']. Please consider contributing to "
-            "https://github.com/pangeo-data/climpred/issues/605"
-        )
-
     if "mean" in how:
         # calculate bias lead-time dependent
         bias = hindcast.verify(
@@ -398,7 +298,7 @@ def gaussian_bias_removal(
             alignment=alignment,
         )
 
-    # broadcast alignment from bias to initialized
+    # broadcast alignment from bias to initialized: todo: keep or delete?
     hindcast = hindcast.copy()
     hindcast._datasets["initialized"] = hindcast.get_initialized().reindex(
         init=bias.init
@@ -414,7 +314,6 @@ def gaussian_bias_removal(
             bias_removal_func_kwargs = dict(how=how.split("_")[0])
         if "use_new" in metric_kwargs:
             _ = metric_kwargs.pop("use_new")
-            print("use new")
             bias_removal_func = _mean_bias_removal_func
             bias_removal_func_kwargs = dict(
                 how=how.split("_")[0], cross_val=cross_validate
@@ -438,7 +337,7 @@ def gaussian_bias_removal(
     bias_removed_hind = bias_removed_hind.squeeze(drop=True)
 
     # remove groupby label from coords
-    for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:
+    for c in GROUPBY_SEASONALITIES + ["skill"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]
 
@@ -476,12 +375,6 @@ def _bias_correction(
         HindcastEnsemble: bias removed hindcast.
 
     """
-    if OPTIONS["seasonality"] not in ["month"]:  # remove warning here, use upstream
-        warnings.warn(
-            "HindcastEnsemble.remove_bias() is still experimental and is only tested "
-            "for seasonality in ['month']. Please consider contributing to "
-            "https://github.com/pangeo-data/climpred/issues/605"
-        )
 
     def bc_func(
         forecast,
@@ -511,28 +404,11 @@ def _bias_correction(
             # no cross val
             model = forecast.sel({dim: group[dim]})
             data_to_be_corrected = forecast.sel({dim: group[dim]})
-            # if forecast.lead == 1:
-            #    print('groupby',label,'lead',int(forecast.lead.values),reference.sizes, model.sizes, data_to_be_corrected.sizes)
 
             if cross_validate == "LOO":
                 reference = leave_one_out(reference, dim)
                 model = leave_one_out(model, dim)
-                # data_to_be_corrected = data_to_be_corrected.broadcast_like(model)
                 data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
-                import matplotlib.pyplot as plt
-
-                plot = False
-                if plot:
-                    reference.mean("member")["sst"].plot()
-
-                    plt.title("reference")
-                    plt.show()
-                    model.mean("member")["sst"].plot()
-                    plt.title("model")
-                    plt.show()
-                    data_to_be_corrected.mean("member")["sst"].plot()
-                    plt.title("data_to_be_corrected")
-                    plt.show()
 
             if "member" in model.dims:
                 reference = reference.broadcast_like(model)
@@ -554,9 +430,6 @@ def _bias_correction(
                     dim=dim_used,
                 )
                 c = bc.correct(method=method, **metric_kwargs)
-                if False:
-                    c.unstack(dim2).isel(member=0).sst.plot()
-                    plt.show()
             if dim2 in c.dims:
                 c = c.unstack(dim2)
             if cross_validate and dim in c.dims and "sample" in c.dims:
@@ -584,7 +457,7 @@ def _bias_correction(
     ).squeeze(drop=True)
 
     # remove groupby label from coords
-    for c in ["season", "dayofyear", "skill", "weekofyear", "month"]:
+    for c in GROUPBY_SEASONALITIES + ["skill"]:
         if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
             del bias_removed_hind.coords[c]
 

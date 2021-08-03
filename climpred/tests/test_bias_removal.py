@@ -5,6 +5,7 @@ import xarray as xr
 from climpred import set_options
 from climpred.constants import BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from climpred.options import OPTIONS
+from climpred.testing import assert_PredictionEnsemble
 
 BIAS_CORRECTION_METHODS.remove(
     "gamma_mapping"
@@ -147,3 +148,24 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
             hindcast_bias_removed.get_initialized().lead.attrs
             == hindcast.get_initialized().lead.attrs
         )
+
+
+@pytest.mark.parametrize(
+    "alignment", ["same_inits", "maximize"]
+)  # same_verifs  # no overlap here for same_verifs
+@pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
+@pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
+def test_monthly_leads_remove_bias_LOO(
+    hindcast_NMME_Nino34, how, seasonality, alignment
+):
+    """Get different HindcastEnsemble depending on CV or not."""
+    with set_options(seasonality=seasonality):
+        if how not in ["normal_mapping"]:
+            he = (
+                hindcast_NMME_Nino34.isel(lead=[0, 1])
+                .isel(model=2, drop=True)
+                .sel(init=slice("2005", "2008"))
+            )
+            assert not he.remove_bias(
+                how=how, alignment=alignment, cross_validate=False
+            ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))

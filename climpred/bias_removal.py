@@ -64,8 +64,6 @@ def _mean_bias_removal_func(hind, bias, dim, how, cross_val=False):
     how_operator = sub if how == "additive" else div
     seasonality = OPTIONS["seasonality"]
 
-    hind = hind.reindex(init=bias.init)
-
     with xr.set_options(keep_attrs=True):
         if seasonality == "weekofyear":
             # convert to datetime for weekofyear operations, now isocalendar().week
@@ -257,27 +255,13 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how):
                     )
                     .mean(),
                 )
-                #print(bias.sel(init=hind_drop_init_where_bias)
-                #.groupby(
-                #    bias.sel(init=hind_drop_init_where_bias)
-                #    .init.dt.isocalendar()
-                #    .week
-                #)
-                #.mean().coords)
             else:  # dayofyear month
-                #print(init)
-                #print(getattr(xr.DataArray([init],dims='init',coords={'init':[init]}).init.dt,seasonality))
                 init_bias_removed = how_operator(
                     hind.sel(init=[init]),
                     bias.sel(init=hind_drop_init_where_bias)
                     .groupby(f"init.{seasonality}")
                     .mean().sel({seasonality:getattr(xr.DataArray([init],dims='init',coords={'init':[init]}).init.dt,seasonality)}),
                 )
-                #print()
-                #print(bias.sel(init=hind_drop_init_where_bias).groupby(f"init.{seasonality}").mean().coords)
-                #print(bias.sel(init=hind_drop_init_where_bias)
-                #.groupby(f"init.{seasonality}")
-                #.mean().sel({seasonality:getattr(xr.DataArray([init],dims='init',coords={'init':[init]}).init.dt,seasonality)}))
         bias_removed_hind.append(init_bias_removed)
     bias_removed_hind = xr.concat(bias_removed_hind, "init")
     bias_removed_hind.attrs = hind.attrs

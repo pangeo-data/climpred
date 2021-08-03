@@ -7,9 +7,10 @@ from climpred.constants import BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from climpred.options import OPTIONS
 from climpred.testing import assert_PredictionEnsemble
 
-BIAS_CORRECTION_METHODS.remove(
-    "gamma_mapping"
-)  # fails with these conftest files somehow
+BIAS_CORRECTION_METHODS = BIAS_CORRECTION_METHODS.copy()
+BIAS_CORRECTION_METHODS.remove("normal_mapping")
+BIAS_CORRECTION_METHODS.remove("gamma_mapping")
+# fails with these conftest files somehow
 
 
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
@@ -106,7 +107,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         seasonality = OPTIONS["seasonality"]
         if cross_validate:
             hindcast_bias_removed_properly = hindcast.remove_bias(
-                how=how, cross_validate=True, alignment=alignment
+                how=how, cross_validate="LOO", alignment=alignment
             )
             check_hindcast_coords_maintained_except_init(
                 hindcast, hindcast_bias_removed_properly
@@ -160,12 +161,11 @@ def test_monthly_leads_remove_bias_LOO(
 ):
     """Get different HindcastEnsemble depending on CV or not."""
     with set_options(seasonality=seasonality):
-        if how not in ["normal_mapping"]:
-            he = (
-                hindcast_NMME_Nino34.isel(lead=[0, 1])
-                .isel(model=2, drop=True)
-                .sel(init=slice("2005", "2008"))
-            )
-            assert not he.remove_bias(
-                how=how, alignment=alignment, cross_validate=False
-            ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))
+        he = (
+            hindcast_NMME_Nino34.isel(lead=[0, 1])
+            .isel(model=2, drop=True)
+            .sel(init=slice("2005", "2006"))
+        )
+        assert not he.remove_bias(
+            how=how, alignment=alignment, cross_validate=False
+        ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))

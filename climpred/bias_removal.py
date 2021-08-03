@@ -26,7 +26,9 @@ def div(a, b):
 
 
 def leave_one_out(bias, dim):
-    """Leave-one-out creating a new dimension sample and fill with np.NaN."""
+    """Leave-one-out creating a new dimension 'sample' and fill with np.NaN.
+
+    See also: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html"""
     bias_nan = []
     for i in range(bias[dim].size):
         bias_nan.append(
@@ -37,7 +39,9 @@ def leave_one_out(bias, dim):
 
 
 def leave_one_out_drop(bias, dim):
-    """Leave-one-out creating a new dimension sample."""
+    """Leave-one-out creating a new dimension 'sample'.
+
+    See also: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html."""
     bias_nan = []
     for i in range(bias[dim].size):
         bias_nan.append(bias.drop_isel({dim: i}).rename({dim: "sample"}).drop("sample"))
@@ -47,7 +51,7 @@ def leave_one_out_drop(bias, dim):
     return bias_nan
 
 
-def _mean_bias_removal_func(hind, bias, dim, how, cross_val=False):
+def _mean_bias_removal_func(hind, bias, dim, how, cross_validate=False):
     """Quick removal of mean bias over all initializations without cross validation.
 
     Args:
@@ -69,7 +73,7 @@ def _mean_bias_removal_func(hind, bias, dim, how, cross_val=False):
             bias = convert_cftime_to_datetime_coords(bias, dim)
         hind_groupby = f"{dim}.{seasonality}"
 
-        if cross_val == "LOO":
+        if cross_validate == "LOO":
             bias = leave_one_out(bias, dim).mean("sample")
         bias_removed_hind = how_operator(
             hind.groupby(hind_groupby),
@@ -82,7 +86,9 @@ def _mean_bias_removal_func(hind, bias, dim, how, cross_val=False):
     return bias_removed_hind
 
 
-def _multiplicative_std_correction_quick(hind, spread, dim, obs=None, cross_val=False):
+def _multiplicative_std_correction_quick(
+    hind, spread, dim, obs=None, cross_validate=False
+):
     """Quick removal of std bias over all initializations without cross validation.
 
     Args:
@@ -129,7 +135,7 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None, cross_val=
 
 
 def _std_multiplicative_bias_removal_func_cross_validate(
-    hind, spread, dim, obs, cross_val="LOO"
+    hind, spread, dim, obs, cross_validate="LOO"
 ):
     """Remove std bias from all but the given initialization (cross-validation).
 
@@ -197,7 +203,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(
     return init_std_corrected
 
 
-def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"):
+def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_validate="LOO"):
     """Remove mean bias from all but the given initialization (cross-validation).
 
     .. note::
@@ -230,7 +236,7 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
 
-    if cross_val == "LOO":
+    if cross_validate == "LOO":
         for init in hind.init.data:
             hind_drop_init = hind.drop_sel(init=init).init
             with xr.set_options(keep_attrs=True):
@@ -244,7 +250,7 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"
             bias_removed_hind.append(init_bias_removed)
         bias_removed_hind = xr.concat(bias_removed_hind, "init")
     else:
-        raise NotImplementedError('only cross_val="LOO"')
+        raise NotImplementedError('only cross_validate="LOO"')
     bias_removed_hind.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
     if isinstance(bias_removed_hind.init.to_index(), pd.DatetimeIndex):
@@ -252,7 +258,7 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_val="LOO"
     return bias_removed_hind
 
 
-def gaussian_bias_removal(  # rename
+def gaussian_bias_removal(
     hindcast, alignment, cross_validate=True, how="additive_mean", **metric_kwargs
 ):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
@@ -316,19 +322,19 @@ def gaussian_bias_removal(  # rename
             _ = metric_kwargs.pop("use_new")
             bias_removal_func = _mean_bias_removal_func
             bias_removal_func_kwargs = dict(
-                how=how.split("_")[0], cross_val=cross_validate
+                how=how.split("_")[0], cross_validate=cross_validate
             )
 
     elif how == "multiplicative_std":
         if cross_validate in [False, None]:
             bias_removal_func = _multiplicative_std_correction_quick
             bias_removal_func_kwargs = dict(
-                obs=hindcast.get_observations(), cross_val=cross_validate
+                obs=hindcast.get_observations(), cross_validate=cross_validate
             )
         else:
             bias_removal_func = _std_multiplicative_bias_removal_func_cross_validate
             bias_removal_func_kwargs = dict(
-                obs=hindcast.get_observations(), cross_val=cross_validate
+                obs=hindcast.get_observations(), cross_validate=cross_validate
             )
 
     bias_removed_hind = bias_removal_func(

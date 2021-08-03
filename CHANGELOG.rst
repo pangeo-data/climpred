@@ -25,7 +25,8 @@ New Features
     * ``how="gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
     * ``how="normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-  (:issue:`398`, :pr:`638`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` now does `leave-one-out cross validation <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html>`_ when passing ``cross_validate='LOO'`` (:issue:`398`, :pr:`638`) `Aaron Spring`_.
+- (:issue:`643`, :pr:`646`) `Aaron Spring`_.
 - Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.
 - Add new tutorial datasets: (:pr:`651`) `Aaron Spring`_.
 

@@ -1679,21 +1679,24 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-            cross_validate (bool): Use properly defined mean bias removal function.
-                This excludes the given initialization from the bias calculation.
-                With False, include the given initialization in the calculation, which
-                is much faster and but yields similar skill with a large N of
-                initializations. Defaults to True.
-            metric_kwargs (dict): kwargs to be passed to bias.
+            cross_validate (bool or str): Defaults to True.
+
+                - True: Use properly defined mean bias removal function.
+                    This excludes the given initialization from the bias calculation.
+                - 'LOO': see True
+                - False: include the given initialization in the calculation, which
+                    is much faster and but yields similar skill with a large N of
+                    initializations.
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
-        if OPTIONS["seasonality"] not in ["month", "season"]:
+        warn_seasonalities = ["month", "season"]
+        if OPTIONS["seasonality"] not in warn_seasonalities:
             warnings.warn(
                 "HindcastEnsemble.remove_bias() is still experimental and is only tested "
-                "for seasonality in ['month', 'season']. Please consider contributing to "
+                f"for seasonality in {warn_seasonalities}. Please consider contributing to "
                 "https://github.com/pangeo-data/climpred/issues/605"
             )
         if cross_validate is True:

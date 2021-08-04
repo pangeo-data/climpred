@@ -1701,6 +1701,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 f"for seasonality in {warn_seasonalities}. Please consider contributing to "
                 "https://github.com/pangeo-data/climpred/issues/605"
             )
+
         BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS = ["unfair", "unfair-cv", "fair"]
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(

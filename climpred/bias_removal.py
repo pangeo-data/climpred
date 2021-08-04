@@ -420,22 +420,19 @@ def _bias_correction(
         """
         corrected = []
         seasonality = OPTIONS["seasonality"]
-        if seasonality == "weekofyear":
-            forecast = convert_cftime_to_datetime_coords(forecast, "time")
-            observations = convert_cftime_to_datetime_coords(observations, "time")
-
         dim = "time"
-        dim2 = "time_member"
+        if seasonality == "weekofyear":
+            forecast = convert_cftime_to_datetime_coords(forecast, dim)
+            observations = convert_cftime_to_datetime_coords(observations, dim)
 
         if train_test_split in ["fair"]:
+            # todo: what for same_inits or max?
             train_dim = train_init.rename({"init": dim})
-            # print(train_dim.to_index())
             # shift init to time
             n, freq = get_lead_cftime_shift_args(
                 forecast.lead.attrs["units"], forecast.lead
             )
             train_dim = shift_cftime_singular(train_dim[dim], n, freq)
-            # print('shifted',n,freq,train_dim.to_index())
             data_to_be_corrected = forecast.drop_sel({dim: train_dim})
             forecast = forecast.sel({dim: train_dim})
             reference = observations.sel({dim: train_dim})
@@ -449,54 +446,26 @@ def _bias_correction(
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
             reference = observations.sel({dim: group[dim]})
             model = forecast.sel({dim: group[dim]})
-            if train_test_split == "unfair":
+            if train_test_split in ["unfair", "unfair-cv"]:
+                # take all
                 data_to_be_corrected = forecast.sel({dim: group[dim]})
             else:
-                # print("data_to_be_corrected", data_to_be_corrected[dim].to_index())
-                # print(label)
                 group_dim_data_to_be_corrected = (
                     getattr(data_to_be_corrected_ori[dim].dt, seasonality) == label
                 )
-                # print("group_dim_data_to_be_corrected", group_dim_data_to_be_corrected)
                 data_to_be_corrected = data_to_be_corrected_ori.sel(
                     {dim: group_dim_data_to_be_corrected}
                 )
-                print("data_to_be_corrected", data_to_be_corrected[dim].to_index())
+
+            if cross_validate == "LOO" and train_test_split == "unfair-cv":
+                reference = leave_one_out(reference, dim)
+                model = leave_one_out(model, dim)
+                data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
             if label == 1 and forecast.lead == 0 and False:
                 print("model", model[dim].to_index())
                 print("reference", reference[dim].to_index())
                 print("data_to_be_corrected", data_to_be_corrected[dim].to_index())
-                print(forecast.lead.values)
-
-            if cross_validate == "LOO":
-                reference = leave_one_out(reference, dim)
-                model = leave_one_out(model, dim)
-                data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
-
-            if "member" in model.dims and False:
-                reference = reference.broadcast_like(model)
-                if train_test_split == "unfair":
-                    data_to_be_corrected = data_to_be_corrected.broadcast_like(model)
-                elif False:
-                    data_to_be_corrected_ori_dim = data_to_be_corrected[dim]
-                    data_to_be_corrected = data_to_be_corrected.assign_coords(
-                        {dim: reference[dim]}
-                    )
-                    print(data_to_be_corrected_ori_dim.to_index())
-                    print(data_to_be_corrected[dim].to_index())
-                model = model.stack({dim2: ["time", "member"]})
-                reference = reference.stack({dim2: ["time", "member"]})
-                data_to_be_corrected = data_to_be_corrected.stack(
-                    {dim2: ["time", "member"]}
-                )
-            dim_used = dim2 if "member" in forecast.dims else dim
-            dim_used = dim
-
-            if label == 1 and forecast.lead == 0 and False:
-                print("model", model[dim_used].to_index())
-                print("reference", reference[dim_used].to_index())
-                print("data_to_be_corrected", data_to_be_corrected[dim_used].to_index())
             # using bias-correction: https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -504,27 +473,14 @@ def _bias_correction(
                     reference,
                     model,
                     data_to_be_corrected,
-                    dim=dim_used,
+                    dim=dim,
                 )
                 c = bc.correct(method=method, join="outer", **metric_kwargs)
-            if dim2 in c.dims:
-                c = c.unstack(dim2)
             if cross_validate and dim in c.dims and "sample" in c.dims:
                 c = c.mean(dim)
                 c = c.rename({"sample": dim})
-            if train_test_split not in ["unfair", "unfair-cv"] and False:
-                print(
-                    "overwrite",
-                    c[dim].to_index(),
-                    "with",
-                    data_to_be_corrected_ori_dim.to_index(),
-                )
-                c = c.assign_coords({dim: data_to_be_corrected_ori_dim})
-            if train_test_split not in ["unfair", "unfair-cv"]:
-                print("before", data_to_be_corrected[dim].to_index())
-                print("after", c[dim].to_index())
-                c = c.sel({dim: data_to_be_corrected[dim]})
-                print("after after", c[dim].to_index())
+            # select only where data_to_be_corrected was input
+            c = c.sel({dim: data_to_be_corrected[dim]})
             corrected.append(c)
         corrected = xr.concat(corrected, dim).sortby(dim)
         # convert back to CFTimeIndex if needed

@@ -29,6 +29,7 @@ New Features
   `leave-one-out cross validation <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html>`_ when passing ``cross_validate='LOO'``.
   ``cross_validate=True`` falls  back to ``cross_validate='LOO'``.
   (:issue:`643`, :pr:`646`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` accepts new keyword ``train_test_split='fair'/'unfair(default)'/'unfair-cv'`` following `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_.  (:issue:648, :pr:`655`) `Aaron Spring`_.
 - Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.
 - Add new tutorial datasets: (:pr:`651`) `Aaron Spring`_.
 

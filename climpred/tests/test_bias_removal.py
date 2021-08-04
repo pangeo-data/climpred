@@ -167,3 +167,36 @@ def test_monthly_leads_remove_bias_LOO(
         assert not he.remove_bias(
             how=how, alignment=alignment, cross_validate=False
         ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))
+
+
+@pytest.mark.parametrize(
+    "alignment", ["same_inits", "maximize"]
+)  # same_verifs  # no overlap here for same_verifs
+@pytest.mark.parametrize("seasonality", ["month", "season"])
+@pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
+def test_remove_bias_unfair_artificial_skill_over_fair(
+    hindcast_NMME_Nino34, how, seasonality, alignment
+):
+    """Show how method unfair better skill than fair."""
+    with set_options(seasonality=seasonality):
+        he = (
+            hindcast_NMME_Nino34.isel(lead=[0, 1])
+            .isel(model=2, drop=True)
+            .sel(init=slice("2000", "2009"))
+        )
+        print("\n unfair \n")
+        unfair_skill = he.remove_bias(
+            how=how, alignment=alignment, train_test_split="unfair"
+        ).verify(metric="rmse", comparison="e2o", dim="init", alignment=alignment)
+
+        print("\n fair \n")
+        fair_skill = he.remove_bias(
+            how=how,
+            alignment=alignment,
+            train_test_split="fair",
+            train_init=slice("2000", "2004"),
+        ).verify(metric="rmse", comparison="e2o", dim="init", alignment=alignment)
+
+        assert not (fair_skill > unfair_skill).sst.isnull().all()
+        assert (fair_skill > unfair_skill).sst.all()
+        # assert False

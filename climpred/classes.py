@@ -1649,6 +1649,8 @@ class HindcastEnsemble(PredictionEnsemble):
         alignment,
         how="additive_mean",
         cross_validate="LOO",
+        train_test_split="fair",
+        train_init=None,
         **metric_kwargs,
     ):
         """Calculate and remove bias from
@@ -1699,12 +1701,21 @@ class HindcastEnsemble(PredictionEnsemble):
                 f"for seasonality in {warn_seasonalities}. Please consider contributing to "
                 "https://github.com/pangeo-data/climpred/issues/605"
             )
-        if cross_validate is True:
-            cross_validate = "LOO"  # backward compatibility
-        if cross_validate not in CROSS_VALIDATE_METHODS:
+        BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS = ["unfair", "unfair-cv", "fair"]
+        if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
-                f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
+                f"train_test_split {train_test_split} not implemented. Please choose train_test_split from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description."
             )
+
+        if train_test_split in ["fair"] and (
+            (train_init is None) or not isinstance(train_init, (slice, xr.DataArray))
+        ):
+            raise ValueError(
+                f'Please provide train_init as xr.DataArray, e.g. hindcast.coords["init"].slice(start, end) or slice, e.g. slice(start, end), got train_init = {train_init}'
+            )
+        if train_test_split in ["fair"] and isinstance(train_init, slice):
+            train_init = self.coords["init"].sel(init=train_init)
+
         if how == "mean":
             how = "additive_mean"  # backwards compatibility
         if how in ["additive_mean", "multiplicative_mean"]:
@@ -1718,11 +1729,25 @@ class HindcastEnsemble(PredictionEnsemble):
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
 
+        if train_test_split in ["unfair-cv"]:
+            if cross_validate not in [True, "LOO"]:
+                raise ValueError(
+                    'require cross_validate == "LOO" when train_test_split="unfair-cv"'
+                )
+            else:
+                cross_validate = "LOO"  # backward compatibility
+            if cross_validate not in CROSS_VALIDATE_METHODS:
+                raise NotImplementedError(
+                    f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
+                )
+            metric_kwargs["cross_validate"] = cross_validate
+
         self = func(
             self,
             alignment=alignment,
-            cross_validate=cross_validate,
             how=how,
+            train_test_split=train_test_split,
+            train_init=train_init,
             **metric_kwargs,
         )
         return self

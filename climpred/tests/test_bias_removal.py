@@ -37,11 +37,9 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
 
     # check not identical
     for s in seasonalities:
-        print(s, bias_reduced_skill.sel(seasonality=s))
         assert bias_reduced_skill.sel(seasonality=s).notnull().all()
         for s2 in seasonalities:
             if s != s2:
-                print(s, s2)
                 assert (
                     bias_reduced_skill.sel(seasonality=[s, s2])
                     .diff("seasonality")

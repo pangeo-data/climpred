@@ -1700,7 +1700,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 "https://github.com/pangeo-data/climpred/issues/605"
             )
         if cross_validate is True:
-            cross_validate == "LOO"  # backward compatibility
+            cross_validate = "LOO"  # backward compatibility
         if cross_validate not in CROSS_VALIDATE_METHODS:
             raise NotImplementedError(
                 f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
@@ -1717,8 +1717,6 @@ class HindcastEnsemble(PredictionEnsemble):
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
-
-        print("cross_validate in classes", cross_validate)
 
         self = func(
             self,

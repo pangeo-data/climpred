@@ -333,7 +333,7 @@ def gaussian_bias_removal(
             bias_removal_func_kwargs = dict(
                 obs=hindcast.get_observations(), cross_validate=cross_validate
             )
-    print("bias_removal_func_kwargs", bias_removal_func_kwargs)
+
     bias_removed_hind = bias_removal_func(
         hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )

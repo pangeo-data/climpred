@@ -1648,8 +1648,8 @@ class HindcastEnsemble(PredictionEnsemble):
         self,
         alignment,
         how="additive_mean",
-        cross_validate="LOO",
-        train_test_split="fair",
+        cross_validate=False,
+        train_test_split="unfair",
         train_init=None,
         **metric_kwargs,
     ):

@@ -1651,6 +1651,7 @@ class HindcastEnsemble(PredictionEnsemble):
         cv=False,
         train_test_split="unfair",
         train_init=None,
+        train_time=None,
         **metric_kwargs,
     ):
         """Calculate and remove bias from
@@ -1708,14 +1709,45 @@ class HindcastEnsemble(PredictionEnsemble):
                 f"train_test_split {train_test_split} not implemented. Please choose train_test_split from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description."
             )
 
-        if train_test_split in ["fair"] and (
-            (train_init is None) or not isinstance(train_init, (slice, xr.DataArray))
-        ):
+        alignments = [
+            "same_inits",
+            "same_init",
+            "same_verifs",
+            "same_verif",
+            "maximize",
+        ]
+        if alignment not in alignments:
             raise ValueError(
-                f'Please provide train_init as xr.DataArray, e.g. hindcast.coords["init"].slice(start, end) or slice, e.g. slice(start, end), got train_init = {train_init}'
+                f"Please provide alignment from {alignments}, found {alignment}."
             )
-        if train_test_split in ["fair"] and isinstance(train_init, slice):
-            train_init = self.coords["init"].sel(init=train_init)
+        else:
+            if alignment == "same_init":
+                alignment = "same_inits"
+            elif alignment == "same_verifs":
+                alignment = "same_verif"
+
+        if train_test_split in ["fair"]:
+            if (
+                (train_init is None)
+                and not isinstance(train_init, (slice, xr.DataArray))
+                and (alignment in ["same_inits", "maximize"])
+            ):
+                raise ValueError(
+                    f'When alignment="{alignment}", please provide train_init as xr.DataArray, e.g. hindcast.coords["init"].slice(start, end) or slice, e.g. slice(start, end), got train_init = {train_init}.'
+                )
+            if (
+                (train_time is None)
+                and not isinstance(train_time, (slice, xr.DataArray))
+                and (alignment in ["same_verif"])
+            ):
+                raise ValueError(
+                    f'When alignment="{alignment}" provide train_time as xr.DataArray, e.g. hindcast.coords["time"].slice(start, end) or slice, e.g. slice(start, end), got train_time = {train_time}'
+                )
+
+            if isinstance(train_init, slice):
+                train_init = self.coords["init"].sel(init=train_init)
+            if isinstance(train_time, slice):
+                train_time = self.coords["time"].sel(time=train_time)
 
         if how == "mean":
             how = "additive_mean"  # backwards compatibility
@@ -1749,6 +1781,7 @@ class HindcastEnsemble(PredictionEnsemble):
             how=how,
             train_test_split=train_test_split,
             train_init=train_init,
+            train_time=train_time,
             **metric_kwargs,
         )
         return self

@@ -170,7 +170,7 @@ def test_monthly_leads_remove_bias_LOO(
 
 
 @pytest.mark.parametrize(
-    "alignment", ["same_inits", "maximize"]
+    "alignment", ["same_inits", "maximize", "same_verifs"]
 )  # same_verifs  # no overlap here for same_verifs
 @pytest.mark.parametrize("seasonality", ["month", "season"])
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
@@ -212,11 +212,16 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         )
 
         print("\n fair \n")
+        kw = (
+            dict(train_time=slice("2000", "2003"))
+            if alignment == "same_verifs"
+            else dict(train_init=slice("2000", "2003"))
+        )
         he_fair = he.remove_bias(
             how=how,
             alignment=alignment,
             train_test_split="fair",
-            train_init=slice("2000", "2003"),
+            **kw,
         )
         assert "2000" not in he_fair.coords["init"]
 
@@ -229,14 +234,14 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         )
 
         assert not unfair_skill.sst.isnull().all()
-        if how != "modified_quantile":
+        if how not in ["multiplicative_std", "modified_quantile"]:
             assert not unfair_cv_skill.sst.isnull().all()
         assert not fair_skill.sst.isnull().all()
 
         assert (fair_skill > unfair_skill).sst.all(), print(
             fair_skill.sst, unfair_skill.sst
         )
-        if how != "modified_quantile":
+        if how not in ["multiplicative_std", "modified_quantile"]:
             assert (fair_skill > unfair_cv_skill).sst.all(), print(
                 fair_skill.sst, unfair_cv_skill.sst
             )

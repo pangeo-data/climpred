@@ -260,6 +260,7 @@ def gaussian_bias_removal(
     cv=False,
     how="additive_mean",
     train_test_split="fair",
+    train_time=None,
     train_init=None,
     **metric_kwargs,
 ):
@@ -316,10 +317,25 @@ def gaussian_bias_removal(
     )
 
     if train_test_split == "fair":
-        bias = bias.sel(init=train_init)
-        hindcast._datasets["initialized"] = hindcast._datasets["initialized"].drop_sel(
-            init=train_init
-        )
+        if alignment in ["same_inits", "maximize"]:
+            bias = bias.sel(init=train_init)
+            hindcast._datasets["initialized"] = hindcast._datasets[
+                "initialized"
+            ].drop_sel(init=train_init)
+        if alignment in ["same_verif"]:
+            # Todo: not proper selection of same_verif in init dim
+            train_dim = train_time.rename({"time": "init"})
+            bias = bias.sel(init=train_dim)
+            hindcast._datasets["initialized"] = hindcast._datasets[
+                "initialized"
+            ].drop_sel(init=train_dim)
+
+            # shift init to time
+            # n, freq = get_lead_cftime_shift_args(
+            #    forecast.lead.attrs["units"], forecast.lead
+            # )
+            # train_dim = shift_cftime_singular(train_dim[dim], n, freq)
+
     elif train_test_split == "unfair":
         pass
     elif train_test_split == "unfair-cv":
@@ -368,6 +384,7 @@ def _bias_correction(
     cv=False,
     how="normal_mapping",
     train_test_split="fair",
+    train_time=None,
     train_init=None,
     **metric_kwargs,
 ):
@@ -420,16 +437,39 @@ def _bias_correction(
             observations = convert_cftime_to_datetime_coords(observations, dim)
 
         if train_test_split in ["fair"]:
-            # todo: what for same_inits or max?
-            train_dim = train_init.rename({"init": dim})
-            # shift init to time
-            n, freq = get_lead_cftime_shift_args(
-                forecast.lead.attrs["units"], forecast.lead
+            if alignment in ["same_inits", "maximize"]:
+                train_dim = train_init.rename({"init": "time"})
+                # shift init to time
+                n, freq = get_lead_cftime_shift_args(
+                    forecast.lead.attrs["units"], forecast.lead
+                )
+                train_dim = shift_cftime_singular(train_dim[dim], n, freq)
+                data_to_be_corrected = forecast.drop_sel({dim: train_dim})
+            elif alignment in ["same_verif"]:
+                # todo: train_time should be constant, fix by taking lead units more inits
+                warnings.warn(
+                    f'alignment="{alignment}" with train_test_split="{train_test_split}" might miss the first few inits.'
+                )
+                train_dim = train_time
+                # shift init to time
+                # n, freq = get_lead_cftime_shift_args(
+                #    forecast.lead.attrs["units"], forecast.lead
+                # )
+                # train_dim = shift_cftime_singular(train_dim[dim], n, freq)
+                # dirty fix, disregarding a few inits/leads
+                intersection = (
+                    train_dim[dim].to_index().intersection(forecast[dim].to_index())
+                )
+                data_to_be_corrected = forecast.drop_sel({dim: intersection})
+                # data_to_be_corrected = forecast.drop_sel({dim: train_dim})
+
+            intersection = (
+                train_dim[dim].to_index().intersection(forecast[dim].to_index())
             )
-            train_dim = shift_cftime_singular(train_dim[dim], n, freq)
-            data_to_be_corrected = forecast.drop_sel({dim: train_dim})
-            forecast = forecast.sel({dim: train_dim})
-            reference = observations.sel({dim: train_dim})
+            # forecast = forecast.sel({dim: train_dim})
+            # reference = observations.sel({dim: train_dim})
+            forecast = forecast.sel({dim: intersection})
+            reference = observations.sel({dim: intersection})
         else:
             model = forecast
             data_to_be_corrected = forecast
@@ -456,10 +496,6 @@ def _bias_correction(
                 model = leave_one_out(model, dim)
                 data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
-            if label == 1 and forecast.lead == 0 and False:
-                print("model", model[dim].to_index())
-                print("reference", reference[dim].to_index())
-                print("data_to_be_corrected", data_to_be_corrected[dim].to_index())
             # using bias-correction: https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)

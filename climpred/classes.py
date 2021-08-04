@@ -29,6 +29,7 @@ from .checks import (
 from .constants import (
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
+    CROSS_VALIDATE_METHODS,
     EXTERNAL_BIAS_CORRECTION_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
@@ -1647,7 +1648,7 @@ class HindcastEnsemble(PredictionEnsemble):
         self,
         alignment,
         how="additive_mean",
-        cross_validate=True,
+        cross_validate="LOO",
         **metric_kwargs,
     ):
         """Calculate and remove bias from
@@ -1678,19 +1679,34 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-            cross_validate (bool): Use properly defined mean bias removal function.
-                This excludes the given initialization from the bias calculation.
-                With False, include the given initialization in the calculation, which
-                is much faster and but yields similar skill with a large N of
-                initializations. Defaults to True.
-            metric_kwargs (dict): kwargs to be passed to bias.
+            cross_validate (bool or str): Defaults to True.
+
+                - True: Use properly defined mean bias removal function.
+                    This excludes the given initialization from the bias calculation.
+                - 'LOO': see True
+                - False: include the given initialization in the calculation, which
+                    is much faster and but yields similar skill with a large N of
+                    initializations.
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
 
         """
+        warn_seasonalities = ["month", "season"]
+        if OPTIONS["seasonality"] not in warn_seasonalities:
+            warnings.warn(
+                "HindcastEnsemble.remove_bias() is still experimental and is only tested "
+                f"for seasonality in {warn_seasonalities}. Please consider contributing to "
+                "https://github.com/pangeo-data/climpred/issues/605"
+            )
+        if cross_validate is True:
+            cross_validate = "LOO"  # backward compatibility
+        if cross_validate not in CROSS_VALIDATE_METHODS:
+            raise NotImplementedError(
+                f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
+            )
         if how == "mean":
-            how = "additive_mean"  # backwards compat
+            how = "additive_mean"  # backwards compatibility
         if how in ["additive_mean", "multiplicative_mean"]:
             func = gaussian_bias_removal
         elif how == "multiplicative_std":

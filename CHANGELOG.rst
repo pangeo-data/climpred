@@ -25,7 +25,10 @@ New Features
     * ``how="gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
     * ``how="normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-  (:issue:`398`, :pr:`638`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` now does
+  `leave-one-out cross validation <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html>`_ when passing ``cross_validate='LOO'``.
+  ``cross_validate=True`` falls  back to ``cross_validate='LOO'``.
+  (:issue:`643`, :pr:`646`) `Aaron Spring`_.
 - Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.
 - Add new tutorial datasets: (:pr:`651`) `Aaron Spring`_.
 
@@ -40,6 +43,11 @@ Documentation
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 - Add `CITATION.cff <https://github.com/pangeo-data/climpred/blob/main/CITATION.cff>`_.
   (`GH <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
+- Use ``NMME_OIv2_Nino34_sst`` and ``NMME_hindcast_Nino34_sst`` with monthly leads for
+  `bias reduction <bias_removal.html>`_ demonstrating
+  :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+  (:pr:`646`) `Aaron Spring`_.
+
 
 climpred v2.1.4 (2021-06-28)
 ============================

@@ -5,10 +5,12 @@ import xarray as xr
 from climpred import set_options
 from climpred.constants import BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from climpred.options import OPTIONS
+from climpred.testing import assert_PredictionEnsemble
 
-BIAS_CORRECTION_METHODS.remove(
-    "gamma_mapping"
-)  # fails with these conftest files somehow
+BIAS_CORRECTION_METHODS = BIAS_CORRECTION_METHODS.copy()
+BIAS_CORRECTION_METHODS.remove("normal_mapping")
+BIAS_CORRECTION_METHODS.remove("gamma_mapping")
+# fails with these conftest files somehow
 
 
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
@@ -35,11 +37,9 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
 
     # check not identical
     for s in seasonalities:
-        print(s, bias_reduced_skill.sel(seasonality=s))
         assert bias_reduced_skill.sel(seasonality=s).notnull().all()
         for s2 in seasonalities:
             if s != s2:
-                print(s, s2)
                 assert (
                     bias_reduced_skill.sel(seasonality=[s, s2])
                     .diff("seasonality")
@@ -48,7 +48,7 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
                 )
 
 
-@pytest.mark.parametrize("cross_validate", [False])  # True])
+@pytest.mark.parametrize("cross_validate", [False, "LOO"])
 @pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 @pytest.mark.parametrize(
@@ -105,7 +105,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         seasonality = OPTIONS["seasonality"]
         if cross_validate:
             hindcast_bias_removed_properly = hindcast.remove_bias(
-                how=how, cross_validate=True, alignment=alignment
+                how=how, cross_validate="LOO", alignment=alignment
             )
             check_hindcast_coords_maintained_except_init(
                 hindcast, hindcast_bias_removed_properly
@@ -147,3 +147,23 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
             hindcast_bias_removed.get_initialized().lead.attrs
             == hindcast.get_initialized().lead.attrs
         )
+
+
+@pytest.mark.parametrize(
+    "alignment", ["same_inits", "maximize"]
+)  # same_verifs  # no overlap here for same_verifs
+@pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
+@pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
+def test_monthly_leads_remove_bias_LOO(
+    hindcast_NMME_Nino34, how, seasonality, alignment
+):
+    """Get different HindcastEnsemble depending on CV or not."""
+    with set_options(seasonality=seasonality):
+        he = (
+            hindcast_NMME_Nino34.isel(lead=[0, 1])
+            .isel(model=2, drop=True)
+            .sel(init=slice("2005", "2006"))
+        )
+        assert not he.remove_bias(
+            how=how, alignment=alignment, cross_validate=False
+        ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))

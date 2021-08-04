@@ -185,18 +185,37 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
             .sel(init=slice("2000", "2009"))
         )
         print("\n unfair \n")
-        unfair_skill = he.remove_bias(
+        he_unfair = he.remove_bias(
             how=how, alignment=alignment, train_test_split="unfair"
-        ).verify(metric="rmse", comparison="e2o", dim="init", alignment=alignment)
+        )
+        unfair_skill = he_unfair.verify(
+            metric="rmse",
+            comparison="e2o",
+            dim="init",
+            alignment=alignment,
+            skipna=False,
+        )
 
         print("\n fair \n")
-        fair_skill = he.remove_bias(
+        he_fair = he.remove_bias(
             how=how,
             alignment=alignment,
             train_test_split="fair",
             train_init=slice("2000", "2004"),
-        ).verify(metric="rmse", comparison="e2o", dim="init", alignment=alignment)
+        )
 
-        assert not (fair_skill > unfair_skill).sst.isnull().all()
-        assert (fair_skill > unfair_skill).sst.all()
+        fair_skill = he_fair.verify(
+            metric="rmse",
+            comparison="e2o",
+            dim="init",
+            alignment=alignment,
+            skipna=False,
+        )
+
+        assert not unfair_skill.sst.isnull().all()
+        assert not fair_skill.sst.isnull().all()
+
+        assert (fair_skill > unfair_skill).sst.all(), print(
+            fair_skill.sst, unfair_skill.sst
+        )
         # assert False

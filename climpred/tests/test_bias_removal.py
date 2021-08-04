@@ -27,7 +27,7 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
     for seasonality in seasonalities:
         with set_options(seasonality=seasonality):
             hindcast_rb = hindcast.remove_bias(
-                how=how, alignment=verify_kwargs["alignment"], cross_validate=False
+                how=how, alignment=verify_kwargs["alignment"], cv=False
             )
 
             bias_reduced_skill.append(hindcast_rb.verify(**verify_kwargs)[v])
@@ -48,13 +48,13 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
                 )
 
 
-@pytest.mark.parametrize("cross_validate", [False, "LOO"])
+@pytest.mark.parametrize("cv", [False, "LOO"])
 @pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 @pytest.mark.parametrize(
     "alignment", ["same_inits", "maximize"]
 )  # same_verifs  # no overlap here for same_verifs
-def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_validate):
+def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
 
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
@@ -95,7 +95,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         biased_skill = hindcast.verify(**verify_kwargs)
 
         hindcast_bias_removed = hindcast.remove_bias(
-            how=how, alignment=alignment, cross_validate=False
+            how=how, alignment=alignment, cv=False
         )
 
         check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed)
@@ -103,9 +103,9 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
         seasonality = OPTIONS["seasonality"]
-        if cross_validate:
+        if cv:
             hindcast_bias_removed_properly = hindcast.remove_bias(
-                how=how, cross_validate="LOO", alignment=alignment
+                how=how, cv="LOO", alignment=alignment
             )
             check_hindcast_coords_maintained_except_init(
                 hindcast, hindcast_bias_removed_properly
@@ -123,7 +123,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         assert seasonality not in bias_removed_skill.coords
         # keeps data_vars attrs
         for v in hindcast_bias_removed.get_initialized().data_vars:
-            if cross_validate:
+            if cv:
                 assert (
                     hindcast_bias_removed_properly.get_initialized()[v].attrs
                     == hindcast.get_initialized()[v].attrs
@@ -133,7 +133,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
                 == hindcast.get_initialized()[v].attrs
             )
         # keeps dataset attrs
-        if cross_validate:
+        if cv:
             assert (
                 hindcast_bias_removed_properly.get_initialized().attrs
                 == hindcast.get_initialized().attrs
@@ -164,9 +164,9 @@ def test_monthly_leads_remove_bias_LOO(
             .isel(model=2, drop=True)
             .sel(init=slice("2005", "2006"))
         )
-        assert not he.remove_bias(
-            how=how, alignment=alignment, cross_validate=False
-        ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))
+        assert not he.remove_bias(how=how, alignment=alignment, cv=False).equals(
+            he.remove_bias(how=how, alignment=alignment, cv="LOO")
+        )
 
 
 @pytest.mark.parametrize(
@@ -201,7 +201,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
             how=how,
             alignment=alignment,
             train_test_split="unfair-cv",
-            cross_validate="LOO",
+            cv="LOO",
         )
         unfair_cv_skill = he_unfair_cv.verify(
             metric="rmse",

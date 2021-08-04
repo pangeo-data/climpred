@@ -1648,7 +1648,7 @@ class HindcastEnsemble(PredictionEnsemble):
         self,
         alignment,
         how="additive_mean",
-        cross_validate=False,
+        cv=False,
         train_test_split="unfair",
         train_init=None,
         **metric_kwargs,
@@ -1681,7 +1681,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-            cross_validate (bool or str): Defaults to True.
+            cv (bool or str): Defaults to True.
 
                 - True: Use properly defined mean bias removal function.
                     This excludes the given initialization from the bias calculation.
@@ -1731,17 +1731,17 @@ class HindcastEnsemble(PredictionEnsemble):
             )
 
         if train_test_split in ["unfair-cv"]:
-            if cross_validate not in [True, "LOO"]:
+            if cv not in [True, "LOO"]:
                 raise ValueError(
-                    'require cross_validate == "LOO" when train_test_split="unfair-cv"'
+                    'require cv == "LOO" when train_test_split="unfair-cv"'
                 )
             else:
-                cross_validate = "LOO"  # backward compatibility
-            if cross_validate not in CROSS_VALIDATE_METHODS:
+                cv = "LOO"  # backward compatibility
+            if cv not in CROSS_VALIDATE_METHODS:
                 raise NotImplementedError(
-                    f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
+                    f"cross validation method {cv} not implemented. Please choose cv from {CROSS_VALIDATE_METHODS}."
                 )
-            metric_kwargs["cross_validate"] = cross_validate
+            metric_kwargs["cv"] = cv
 
         self = func(
             self,

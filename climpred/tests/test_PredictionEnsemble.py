@@ -447,6 +447,18 @@ def test_warn_if_chunked_along_init_member_time(
             he.get_observations()
         )
 
+    with pytest.warns(UserWarning, match="is chunked along dimensions"):
+        HindcastEnsemble(he.get_initialized()).add_observations(
+            he.get_observations().chunk({"time": 10})
+        )
+
+    with pytest.raises(
+        ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
+    ):
+        HindcastEnsemble(he.get_initialized()).add_observations(
+            he.get_observations().chunk({"time": 10})
+        ).verify(metric="rmse", dim="init", comparison="e2o", alignment="same_inits")
+
     with pytest.raises(
         ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
     ):

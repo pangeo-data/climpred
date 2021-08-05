@@ -171,6 +171,7 @@ class PredictionEnsemble:
         xobj = xobj.cf.add_canonical_attributes(
             verbose=False, override=True, skip="units"
         )
+        del xobj.attrs["history"]
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}

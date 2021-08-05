@@ -247,7 +247,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
 
 
 def test_remove_bias_errors(hindcast_NMME_Nino34):
-    """Show how method unfair better skill than fair."""
+    """Test remove_bias error messaging."""
     how = "additive_mean"
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])

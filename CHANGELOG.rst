@@ -56,6 +56,7 @@ New Features
   user how to circumvent ``xskillscore`` chunking ``ValueError`` when passing these
   dimensions as dim in ``verify`` or ``bootstrap``.
   (:issue:`509`, :pr:`658`) `Aaron Spring`_.
+- Implement ``PredictionEnsemble.chunks``. (:pr:`658`) `Aaron Spring`_.
 
 
 Documentation

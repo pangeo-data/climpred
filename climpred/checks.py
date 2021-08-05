@@ -7,6 +7,7 @@ import xarray as xr
 from .constants import (
     CF_STANDARD_NAMES,
     CLIMPRED_ENSEMBLE_DIMS,
+    VALID_ALIGNMENTS,
     VALID_LEAD_UNITS,
     VALID_REFERENCES,
 )
@@ -300,3 +301,16 @@ def _check_valid_reference(reference):
             f"Specify reference from {VALID_REFERENCES}, found {reference}"
         )
     return reference
+
+
+def _check_valud_alignment(alignment):
+    if alignment not in VALID_ALIGNMENTS:
+        raise ValueError(
+            f"Please provide alignment from {VALID_ALIGNMENTS}, found alignment='{alignment}'."
+        )
+    else:
+        if alignment == "same_init":
+            alignment = "same_inits"
+        elif alignment == "same_verifs":
+            alignment = "same_verif"
+    return alignment

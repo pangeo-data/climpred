@@ -73,8 +73,6 @@ def _mean_bias_removal_func(hind, bias, dim, how):
             bias = convert_cftime_to_datetime_coords(bias, dim)
         hind_groupby = f"{dim}.{seasonality}"
 
-        # if cross_validate == "LOO":
-        #    bias = leave_one_out(bias, dim).mean("sample")
         bias_removed_hind = how_operator(
             hind.groupby(hind_groupby),
             bias.groupby(hind_groupby).mean(),
@@ -86,7 +84,7 @@ def _mean_bias_removal_func(hind, bias, dim, how):
     return bias_removed_hind
 
 
-def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
+def _multiplicative_std_correction(hind, spread, dim, obs=None):
     """Quick removal of std bias over all initializations without cross validation.
 
     Args:
@@ -132,9 +130,7 @@ def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
     return init_std_corrected
 
 
-def _std_multiplicative_bias_removal_func_cross_validate(
-    hind, spread, dim, obs, cross_validate="LOO"
-):
+def _std_multiplicative_bias_removal_func_cv(hind, spread, dim, obs, cv="LOO"):
     """Remove std bias from all but the given initialization (cross-validation).
 
     .. note::
@@ -201,7 +197,7 @@ def _std_multiplicative_bias_removal_func_cross_validate(
     return init_std_corrected
 
 
-def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_validate="LOO"):
+def _mean_bias_removal_func_cv(hind, bias, dim, how, cv="LOO"):
     """Remove mean bias from all but the given initialization (cross-validation).
 
     .. note::
@@ -234,21 +230,27 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_validate=
         hind = convert_cftime_to_datetime_coords(hind, "init")
         bias = convert_cftime_to_datetime_coords(bias, "init")
 
-    if cross_validate == "LOO":
+    if cv == "LOO":
         for init in hind.init.data:
             hind_drop_init = hind.drop_sel(init=init).init
             with xr.set_options(keep_attrs=True):
                 init_groupby = f"init.{seasonality}"
                 init_bias_removed = how_operator(
                     hind.sel(init=[init]).groupby(init_groupby),
-                    bias.sel(init=hind_drop_init).groupby(init_groupby).mean(),
+                    bias.sel(
+                        init=hind_drop_init.to_index().intersection(
+                            bias.init.to_index()
+                        )
+                    )
+                    .groupby(init_groupby)
+                    .mean(),
                 )
                 if seasonality in init_bias_removed.coords:
                     del init_bias_removed.coords[seasonality]
             bias_removed_hind.append(init_bias_removed)
         bias_removed_hind = xr.concat(bias_removed_hind, "init")
     else:
-        raise NotImplementedError(f'try cross_validate="LOO", found {cross_validate}')
+        raise NotImplementedError(f'try cv="LOO", found {cv}')
     bias_removed_hind.attrs = hind.attrs
     # convert back to CFTimeIndex if needed
     if isinstance(bias_removed_hind.init.to_index(), pd.DatetimeIndex):
@@ -257,7 +259,14 @@ def _mean_bias_removal_func_cross_validate(hind, bias, dim, how, cross_validate=
 
 
 def gaussian_bias_removal(
-    hindcast, alignment, cross_validate=True, how="additive_mean", **metric_kwargs
+    hindcast,
+    alignment,
+    cv=False,
+    how="additive_mean",
+    train_test_split="fair",
+    train_time=None,
+    train_init=None,
+    **metric_kwargs,
 ):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
@@ -274,7 +283,7 @@ def gaussian_bias_removal(
             should be based on the same set of verification dates.
         how (str): what kind of bias removal to perform. Select
             from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
-        cross_validate (bool or str): Defaults to True.
+        cv (bool or str): Defaults to True.
 
             - True: Use properly defined mean bias removal function.
                 This excludes the given initialization from the bias calculation.
@@ -287,9 +296,41 @@ def gaussian_bias_removal(
         HindcastEnsemble: bias removed hindcast.
 
     """
+    if train_test_split == "fair":
+        hindcast_train = hindcast.copy()
+        hindcast_test = hindcast.copy()
+        if alignment in ["same_inits", "maximize"]:
+            hindcast_train._datasets["initialized"] = hindcast.get_initialized().sel(
+                init=train_init
+            )  # for bias
+            hindcast_test._datasets[
+                "initialized"
+            ] = hindcast.get_initialized().drop_sel(
+                init=train_init
+            )  # to reduce bias
+        if alignment in ["same_verif"]:
+            train_time = hindcast.coords["time"].sel(time=train_time).to_index()
+            # add inits before lead.max()
+            n, freq = get_lead_cftime_shift_args(
+                hindcast.coords["lead"].attrs["units"], hindcast.coords["lead"].max()
+            )
+            train_time_init = train_time.union(train_time.shift(-n, freq)).intersection(
+                hindcast.coords["init"].to_index()
+            )
+            hindcast_train._datasets["initialized"] = hindcast.get_initialized().sel(
+                init=train_time_init
+            )
+            hindcast_test._datasets[
+                "initialized"
+            ] = hindcast.get_initialized().drop_sel(init=train_time_init)
+    else:
+        assert train_test_split in ["unfair", "unfair-cv"]
+        hindcast_train = hindcast
+        hindcast_test = hindcast
+
     if "mean" in how:
         # calculate bias lead-time dependent
-        bias = hindcast.verify(
+        bias = hindcast_train.verify(
             metric="unconditional_bias" if how == "additive_mean" else "mul_bias",
             comparison="e2o",
             dim=[],  # not used by bias func, therefore best to add [] here
@@ -298,44 +339,34 @@ def gaussian_bias_removal(
         )
 
     if how == "multiplicative_std":
-        bias = hindcast.verify(
+        bias = hindcast_train.verify(
             metric="spread",
             comparison="m2o",
             dim="member",
             alignment=alignment,
         )
 
-    # broadcast alignment from bias to initialized: todo: keep or delete?
-    hindcast = hindcast.copy()
-    hindcast._datasets["initialized"] = hindcast.get_initialized().reindex(
-        init=bias.init
-    )
-
     # how to remove bias
     if "mean" in how:
-        if cross_validate in [False, None]:
+        if cv in [False, None]:
             bias_removal_func = _mean_bias_removal_func
             bias_removal_func_kwargs = dict(how=how.split("_")[0])
         else:
-            bias_removal_func = _mean_bias_removal_func_cross_validate
-            bias_removal_func_kwargs = dict(
-                how=how.split("_")[0], cross_validate=cross_validate
-            )
+            bias_removal_func = _mean_bias_removal_func_cv
+            bias_removal_func_kwargs = dict(how=how.split("_")[0], cv=cv)
 
     elif how == "multiplicative_std":
-        if cross_validate in [False, None]:
-            bias_removal_func = _multiplicative_std_correction_quick
+        if cv in [False, None]:
+            bias_removal_func = _multiplicative_std_correction
             bias_removal_func_kwargs = dict(
                 obs=hindcast.get_observations(),
             )
         else:
-            bias_removal_func = _std_multiplicative_bias_removal_func_cross_validate
-            bias_removal_func_kwargs = dict(
-                obs=hindcast.get_observations(), cross_validate=cross_validate
-            )
+            bias_removal_func = _std_multiplicative_bias_removal_func_cv
+            bias_removal_func_kwargs = dict(obs=hindcast.get_observations(), cv=cv)
 
     bias_removed_hind = bias_removal_func(
-        hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
+        hindcast_test.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )
     bias_removed_hind = bias_removed_hind.squeeze(drop=True)
 
@@ -350,8 +381,15 @@ def gaussian_bias_removal(
     return hindcast_bias_removed
 
 
-def _bias_correction(
-    hindcast, alignment, cross_validate=True, how="normal_mapping", **metric_kwargs
+def bias_correction(
+    hindcast,
+    alignment,
+    cv=False,
+    how="normal_mapping",
+    train_test_split="fair",
+    train_time=None,
+    train_init=None,
+    **metric_kwargs,
 ):
     """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
@@ -368,7 +406,7 @@ def _bias_correction(
             should be based on the same set of verification dates.
         how (str): what kind of bias removal to perform. Select
             from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
-        cross_validate (bool): Use properly defined mean bias removal function. This
+        cv (bool): Use properly defined mean bias removal function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
             but yields similar skill with a large N of initializations.
@@ -384,7 +422,7 @@ def _bias_correction(
         observations,
         dim=None,
         method=how,
-        cross_validate=False,
+        cv=False,
         **metric_kwargs,
     ):
         """Wrapping https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
@@ -396,32 +434,57 @@ def _bias_correction(
         """
         corrected = []
         seasonality = OPTIONS["seasonality"]
-        if seasonality == "weekofyear":
-            forecast = convert_cftime_to_datetime_coords(forecast, "time")
-            observations = convert_cftime_to_datetime_coords(observations, "time")
-
         dim = "time"
-        dim2 = "time_member"
+        if seasonality == "weekofyear":
+            forecast = convert_cftime_to_datetime_coords(forecast, dim)
+            observations = convert_cftime_to_datetime_coords(observations, dim)
+
+        if train_test_split in ["fair"]:
+            if alignment in ["same_inits", "maximize"]:
+                train_dim = train_init.rename({"init": "time"})
+                # shift init to time
+                n, freq = get_lead_cftime_shift_args(
+                    forecast.lead.attrs["units"], forecast.lead
+                )
+                train_dim = shift_cftime_singular(train_dim[dim], n, freq)
+                data_to_be_corrected = forecast.drop_sel({dim: train_dim})
+            elif alignment in ["same_verif"]:
+                train_dim = train_time
+                intersection = (
+                    train_dim[dim].to_index().intersection(forecast[dim].to_index())
+                )
+                data_to_be_corrected = forecast.drop_sel({dim: intersection})
+
+            intersection = (
+                train_dim[dim].to_index().intersection(forecast[dim].to_index())
+            )
+            forecast = forecast.sel({dim: intersection})
+            reference = observations.sel({dim: intersection})
+        else:
+            model = forecast
+            data_to_be_corrected = forecast
+            reference = observations
+
+        data_to_be_corrected_ori = data_to_be_corrected.copy()
+
         for label, group in forecast.groupby(f"{dim}.{seasonality}"):
             reference = observations.sel({dim: group[dim]})
-            # no cross val
             model = forecast.sel({dim: group[dim]})
-            data_to_be_corrected = forecast.sel({dim: group[dim]})
+            if train_test_split in ["unfair", "unfair-cv"]:
+                # take all
+                data_to_be_corrected = forecast.sel({dim: group[dim]})
+            else:
+                group_dim_data_to_be_corrected = (
+                    getattr(data_to_be_corrected_ori[dim].dt, seasonality) == label
+                )
+                data_to_be_corrected = data_to_be_corrected_ori.sel(
+                    {dim: group_dim_data_to_be_corrected}
+                )
 
-            if cross_validate == "LOO":
+            if cv == "LOO" and train_test_split == "unfair-cv":
                 reference = leave_one_out(reference, dim)
                 model = leave_one_out(model, dim)
                 data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
-
-            if "member" in model.dims:
-                reference = reference.broadcast_like(model)
-                data_to_be_corrected = data_to_be_corrected.broadcast_like(model)
-                model = model.stack({dim2: ["time", "member"]})
-                reference = reference.stack({dim2: ["time", "member"]})
-                data_to_be_corrected = data_to_be_corrected.stack(
-                    {dim2: ["time", "member"]}
-                )
-            dim_used = dim2 if "member" in forecast.dims else dim
 
             # using bias-correction: https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
             with warnings.catch_warnings():
@@ -430,14 +493,14 @@ def _bias_correction(
                     reference,
                     model,
                     data_to_be_corrected,
-                    dim=dim_used,
+                    dim=dim,
                 )
-                c = bc.correct(method=method, **metric_kwargs)
-            if dim2 in c.dims:
-                c = c.unstack(dim2)
-            if cross_validate and dim in c.dims and "sample" in c.dims:
+                c = bc.correct(method=method, join="outer", **metric_kwargs)
+            if cv and dim in c.dims and "sample" in c.dims:
                 c = c.mean(dim)
                 c = c.rename({"sample": dim})
+            # select only where data_to_be_corrected was input
+            c = c.sel({dim: data_to_be_corrected[dim]})
             corrected.append(c)
         corrected = xr.concat(corrected, dim).sortby(dim)
         # convert back to CFTimeIndex if needed
@@ -455,7 +518,7 @@ def _bias_correction(
         comparison="m2o" if "member" in hindcast.dims else "e2o",
         dim=[],  # set internally inside bc
         alignment=alignment,
-        cross_validate=cross_validate,
+        cv=cv,
         **metric_kwargs,
     ).squeeze(drop=True)
 

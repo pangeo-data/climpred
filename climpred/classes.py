@@ -9,7 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import _bias_correction, gaussian_bias_removal
+from .bias_removal import bias_correction, gaussian_bias_removal
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -17,6 +17,7 @@ from .bootstrap import (
 )
 from .checks import (
     _check_valid_reference,
+    _check_valud_alignment,
     has_dataset,
     has_dims,
     has_valid_lead_units,
@@ -27,6 +28,7 @@ from .checks import (
     rename_to_climpred_dims,
 )
 from .constants import (
+    BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
     CROSS_VALIDATE_METHODS,
@@ -1646,9 +1648,12 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def remove_bias(
         self,
-        alignment,
+        alignment=None,
         how="additive_mean",
-        cross_validate="LOO",
+        train_test_split="unfair",
+        train_init=None,
+        train_time=None,
+        cv=False,
         **metric_kwargs,
     ):
         """Calculate and remove bias from
@@ -1679,17 +1684,77 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-            cross_validate (bool or str): Defaults to True.
+            train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
-                - True: Use properly defined mean bias removal function.
-                    This excludes the given initialization from the bias calculation.
-                - 'LOO': see True
-                - False: include the given initialization in the calculation, which
+                - `fair`: no overlap between `train` and `test` (recommended).
+                    Set either `train_init` or `train_time`.
+                - `unfair`: completely overlapping `train` and `test`
+                    (climpred default).
+                - `unfair-cv`: overlapping `train` and `test` except for current
+                    `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                    (set `cv='LOO'`).
+
+            train_init (xr.DataArray, slice): Define initializations for training
+                when ``alignment='same_inits/maximize'``.
+            train_time (xr.DataArray, slice): Define time for training
+                when ``alignment='same_verif'``.
+            cv (bool or str): Only relevant when `train_test_split='unfair-cv'`. Defaults to False.
+
+                - True/'LOO': Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
+
+        Example:
+
+            Skill from raw model output without bias reduction:
+
+            >>> HindcastEnsemble.verify(metric='rmse', comparison='e2o',
+            ...     alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.08359 0.08141 0.08362 ... 0.1361 0.1552 0.1664
+
+            Note that this HindcastEnsemble is already bias reduced, therefore
+            ``train_test_split='unfair'`` has hardly any effect. Use all
+            initializations to calculate bias and verify skill:
+
+            >>> HindcastEnsemble.remove_bias(alignment='maximize',
+            ...     how='additive_mean', test_train_split='unfair'
+            ... ).verify(metric='rmse', comparison='e2o', alignment='maximize',
+            ... dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.08349 0.08039 0.07522 ... 0.07305 0.08107 0.08255
+
+            Separate initializations 1954 - 1980 to calculate bias. Note that
+            this HindcastEnsemble is already bias reduced, therefore
+            ``train_test_split='fair'`` worsens skill here. Generally,
+            ``train_test_split='fair'`` is recommended to use for a fair
+            comparison against real-time forecasts.
+
+            >>> HindcastEnsemble.remove_bias(alignment='maximize',
+            ...     how='additive_mean', train_test_split='fair',
+            ...     train_init=slice('1954', '1980')).verify(metric='rmse',
+            ...     comparison='e2o', alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
 
         """
         warn_seasonalities = ["month", "season"]
@@ -1699,30 +1764,66 @@ class HindcastEnsemble(PredictionEnsemble):
                 f"for seasonality in {warn_seasonalities}. Please consider contributing to "
                 "https://github.com/pangeo-data/climpred/issues/605"
             )
-        if cross_validate is True:
-            cross_validate = "LOO"  # backward compatibility
-        if cross_validate not in CROSS_VALIDATE_METHODS:
+
+        if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
-                f"cross validation method {cross_validate} not implemented. Please choose cross_validate from {CROSS_VALIDATE_METHODS}."
+                f"train_test_split='{train_test_split}' not implemented. Please choose `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description and https://github.com/pangeo-data/climpred/issues/648 for implementation status."
             )
+
+        alignment = _check_valud_alignment(alignment)
+
+        if train_test_split in ["fair"]:
+            if (
+                (train_init is None)
+                or not isinstance(train_init, (slice, xr.DataArray))
+            ) and (alignment in ["same_inits", "maximize"]):
+                raise ValueError(
+                    f'When alignment="{alignment}", please provide `train_init` as xr.DataArray, e.g. `hindcast.coords["init"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_init={train_init}`.'
+                )
+            if (
+                (train_time is None)
+                or not isinstance(train_time, (slice, xr.DataArray))
+            ) and (alignment in ["same_verif"]):
+                raise ValueError(
+                    f'When alignment="{alignment}", please provide `train_time` as xr.DataArray, e.g. `hindcast.coords["time"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_time={train_time}`'
+                )
+
+            if isinstance(train_init, slice):
+                train_init = self.coords["init"].sel(init=train_init)
+            if isinstance(train_time, slice):
+                train_time = self.coords["time"].sel(time=train_time)
+
         if how == "mean":
             how = "additive_mean"  # backwards compatibility
-        if how in ["additive_mean", "multiplicative_mean"]:
-            func = gaussian_bias_removal
-        elif how == "multiplicative_std":
+        if how in ["additive_mean", "multiplicative_mean", "multiplicative_std"]:
             func = gaussian_bias_removal
         elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
-            func = _bias_correction
+            func = bias_correction
         else:
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
             )
 
+        if train_test_split in ["unfair-cv"]:
+            if cv not in [True, "LOO"]:
+                raise ValueError(
+                    f"Please provide `cv='LOO'` when train_test_split='unfair-cv', found `cv='{cv}'`"
+                )
+            else:
+                cv = "LOO"  # backward compatibility
+            if cv not in CROSS_VALIDATE_METHODS:
+                raise NotImplementedError(
+                    f"cross validation method {cv} not implemented. Please choose cv from {CROSS_VALIDATE_METHODS}."
+                )
+            metric_kwargs["cv"] = cv
+
         self = func(
             self,
             alignment=alignment,
-            cross_validate=cross_validate,
             how=how,
+            train_test_split=train_test_split,
+            train_init=train_init,
+            train_time=train_time,
             **metric_kwargs,
         )
         return self

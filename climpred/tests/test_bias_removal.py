@@ -27,7 +27,7 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
     for seasonality in seasonalities:
         with set_options(seasonality=seasonality):
             hindcast_rb = hindcast.remove_bias(
-                how=how, alignment=verify_kwargs["alignment"], cross_validate=False
+                how=how, alignment=verify_kwargs["alignment"], cv=False
             )
 
             bias_reduced_skill.append(hindcast_rb.verify(**verify_kwargs)[v])
@@ -48,13 +48,13 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
                 )
 
 
-@pytest.mark.parametrize("cross_validate", [False, "LOO"])
+@pytest.mark.parametrize("cv", [False, "LOO"])
 @pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 @pytest.mark.parametrize(
     "alignment", ["same_inits", "maximize"]
 )  # same_verifs  # no overlap here for same_verifs
-def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_validate):
+def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     """Test remove mean bias, ensure than skill doesnt degrade and keeps attrs."""
 
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
@@ -95,7 +95,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         biased_skill = hindcast.verify(**verify_kwargs)
 
         hindcast_bias_removed = hindcast.remove_bias(
-            how=how, alignment=alignment, cross_validate=False
+            how=how, alignment=alignment, cv=False
         )
 
         check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed)
@@ -103,9 +103,9 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
         seasonality = OPTIONS["seasonality"]
-        if cross_validate:
+        if cv:
             hindcast_bias_removed_properly = hindcast.remove_bias(
-                how=how, cross_validate="LOO", alignment=alignment
+                how=how, cv="LOO", alignment=alignment
             )
             check_hindcast_coords_maintained_except_init(
                 hindcast, hindcast_bias_removed_properly
@@ -123,7 +123,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
         assert seasonality not in bias_removed_skill.coords
         # keeps data_vars attrs
         for v in hindcast_bias_removed.get_initialized().data_vars:
-            if cross_validate:
+            if cv:
                 assert (
                     hindcast_bias_removed_properly.get_initialized()[v].attrs
                     == hindcast.get_initialized()[v].attrs
@@ -133,7 +133,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cross_va
                 == hindcast.get_initialized()[v].attrs
             )
         # keeps dataset attrs
-        if cross_validate:
+        if cv:
             assert (
                 hindcast_bias_removed_properly.get_initialized().attrs
                 == hindcast.get_initialized().attrs
@@ -164,6 +164,121 @@ def test_monthly_leads_remove_bias_LOO(
             .isel(model=2, drop=True)
             .sel(init=slice("2005", "2006"))
         )
-        assert not he.remove_bias(
-            how=how, alignment=alignment, cross_validate=False
-        ).equals(he.remove_bias(how=how, alignment=alignment, cross_validate="LOO"))
+        assert not he.remove_bias(how=how, alignment=alignment, cv=False).equals(
+            he.remove_bias(how=how, alignment=alignment, cv="LOO")
+        )
+
+
+@pytest.mark.parametrize(
+    "alignment", ["same_inits", "maximize", "same_verifs"]
+)  # same_verifs  # no overlap here for same_verifs
+@pytest.mark.parametrize("seasonality", ["month", "season"])
+@pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
+def test_remove_bias_unfair_artificial_skill_over_fair(
+    hindcast_NMME_Nino34, how, seasonality, alignment
+):
+    """Show how method unfair better skill than fair."""
+    with set_options(seasonality=seasonality):
+        he = (
+            hindcast_NMME_Nino34.sel(lead=[4, 5])
+            .sel(model="GEM-NEMO")
+            .sel(init=slice("2000", "2009"))
+        )
+        print("\n unfair \n")
+        he_unfair = he.remove_bias(
+            how=how, alignment=alignment, train_test_split="unfair"
+        )
+        unfair_skill = he_unfair.verify(
+            metric="rmse",
+            comparison="e2o",
+            dim="init",
+            alignment=alignment,
+            skipna=False,
+        )
+
+        print("\n unfair-cv \n")
+        he_unfair_cv = he.remove_bias(
+            how=how,
+            alignment=alignment,
+            train_test_split="unfair-cv",
+            cv="LOO",
+        )
+        unfair_cv_skill = he_unfair_cv.verify(
+            metric="rmse",
+            comparison="e2o",
+            dim="init",
+            alignment=alignment,
+            skipna=False,
+        )
+
+        print("\n fair \n")
+        kw = (
+            dict(train_time=slice("2000", "2003"))
+            if alignment == "same_verifs"
+            else dict(train_init=slice("2000", "2003"))
+        )
+        he_fair = he.remove_bias(
+            how=how,
+            alignment=alignment,
+            train_test_split="fair",
+            **kw,
+        )
+
+        fair_skill = he_fair.verify(
+            metric="rmse",
+            comparison="e2o",
+            dim="init",
+            alignment=alignment,
+            skipna=False,
+        )
+
+        assert not unfair_skill.sst.isnull().all()
+        assert not fair_skill.sst.isnull().all()
+
+        assert (fair_skill > unfair_skill).sst.all(), print(
+            fair_skill.sst, unfair_skill.sst
+        )
+        print("checking unfair-cv")
+        if how not in ["multiplicative_std", "modified_quantile"]:
+            assert not unfair_cv_skill.sst.isnull().all()
+            assert (fair_skill > unfair_cv_skill).sst.all(), print(
+                fair_skill.sst, unfair_cv_skill.sst
+            )
+
+
+def test_remove_bias_errors(hindcast_NMME_Nino34):
+    """Test remove_bias error messaging."""
+    how = "additive_mean"
+    he = (
+        hindcast_NMME_Nino34.sel(lead=[4, 5])
+        .sel(model="GEM-NEMO")
+        .sel(init=slice("2000", "2009"))
+    )
+
+    with pytest.raises(ValueError, match="please provide `train_init`"):
+        he.remove_bias(how=how, alignment="same_inits", train_test_split="fair")
+
+    with pytest.raises(ValueError, match="please provide `train_init`"):
+        he.remove_bias(
+            how=how, alignment="same_inits", train_test_split="fair", train_init=2000
+        )
+
+    with pytest.raises(ValueError, match="please provide `train_time`"):
+        he.remove_bias(how=how, alignment="same_verif", train_test_split="fair")
+
+    with pytest.raises(ValueError, match="please provide `train_time`"):
+        he.remove_bias(
+            how=how, alignment="same_verif", train_test_split="fair", train_time=2000
+        )
+
+    with pytest.raises(ValueError, match="Please provide `cv="):
+        he.remove_bias(how=how, alignment="same_verif", train_test_split="unfair-cv")
+
+    with pytest.raises(NotImplementedError, match="please choose from"):
+        he.remove_bias(how="new", alignment="same_verif", train_test_split="unfair-cv")
+
+    for tts in ["fair-sliding", "fair-all"]:
+        with pytest.raises(
+            NotImplementedError, match="Please choose `train_test_split` from"
+        ):
+            he.remove_bias(how="new", alignment="same_verif", train_test_split="tts")

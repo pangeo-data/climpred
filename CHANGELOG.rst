@@ -2,16 +2,29 @@
 What's New
 ==========
 
-climpred v2.1.5 (2021-0x-xx)
-============================
+climpred v2.1.5 *unreleased* (2021-0x-xx)
+=========================================
+
+While ``climpred`` has used in the `ASP summer colloquium 2021 <https://asp.ucar.edu/asp-colloquia>`_, many new features in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` were implemented.
+
+Breaking changes
+----------------
+- renamed ``cross_validate`` to ``cv=False`` in
+  :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+  Only used when ``train_test_split='unfair-cv'``.
+  (:issue:`648`, :pr:`655`). `Aaron Spring`_.
 
 Bug Fixes
 ---------
-- Shift back ``init`` by ``lead`` after :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+- Shift back ``init`` by ``lead`` after
+  :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
   (:issue:`644`, :pr:`645`) `Aaron Spring`_.
 
 New Features
 ------------
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` accepts new keyword
+  ``train_test_split='fair/unfair/unfair-cv'`` (default ``unfair``) following `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_.
+  (:issue:`648`, :pr:`655`) `Aaron Spring`_.
 - allow more `bias reduction <bias_removal.html>`_ methods in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
     * ``how="additive_mean"``: correcting the mean forecast additively (already implemented)
@@ -26,9 +39,9 @@ New Features
     * ``how="normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` now does
-  `leave-one-out cross validation <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html>`_ when passing ``cross_validate='LOO'``.
-  ``cross_validate=True`` falls  back to ``cross_validate='LOO'``.
-  (:issue:`643`, :pr:`646`) `Aaron Spring`_.
+  `leave-one-out cross validation <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html>`_
+  when passing ``cv='LOO'`` and ``train_test_split='unfair-cv'``.
+  ``cv=True`` falls  back to ``cv='LOO'``. (:issue:`643`, :pr:`646`) `Aaron Spring`_.
 - Add new metrics :py:func:`~climpred.metrics._spread` and :py:func:`~climpred.metrics._mul_bias` (:pr:`638`) `Aaron Spring`_.
 - Add new tutorial datasets: (:pr:`651`) `Aaron Spring`_.
 

@@ -553,6 +553,7 @@ class PredictionEnsemble:
         obj = object.__new__(cls)
         obj._datasets = datasets
         obj.kind = kind
+        obj._warn_if_chunked_along_init_member_time()
         return obj
 
     def _apply_func(self, func, *args, **kwargs):
@@ -714,8 +715,9 @@ class PredictionEnsemble:
         """Warn when climpred dims are chunked to show how to circumvent xskillscore chunking ValueError."""
         suggest_one_chunk = []
         for d in self.chunks:
-            if len(self.chunks[d]) > 1 and d in ["time", "init", "member"]:
-                suggest_one_chunk.append(d)
+            if d in ["time", "init", "member"]:
+                if len(self.chunks[d]) > 1:
+                    suggest_one_chunk.append(d)
         if len(suggest_one_chunk) > 0:
             name = (
                 str(type(self))
@@ -725,7 +727,7 @@ class PredictionEnsemble:
             # init cannot be dim when time chunked
             suggest_one_chunk_time_to_init = suggest_one_chunk.copy()
             if "time" in suggest_one_chunk_time_to_init:
-                del suggest_one_chunk_time_to_init["time"]
+                suggest_one_chunk_time_to_init.remove("time")
                 suggest_one_chunk_time_to_init.append("init")
             msg = f"{name} is chunked along dimensions {suggest_one_chunk} with more than one chunk. `{name}.chunks={self.chunks}`.\nYou cannot call `{name}.verify` or `{name}.bootstrap` in combination with any of {suggest_one_chunk_time_to_init} passed as `dim`. In order to do so, please rechunk {suggest_one_chunk} with `{name}.chunk({{dim:-1}}).verify(dim=dim).`\nIf you do not want to use dimensions {suggest_one_chunk_time_to_init} in `{name}.verify(dim=dim)`, you can disregard this warning."
             # chunk lead:1 in HindcastEnsemble

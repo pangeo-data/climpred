@@ -258,8 +258,18 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
     with pytest.raises(ValueError, match="please provide `train_init`"):
         he.remove_bias(how=how, alignment="same_inits", train_test_split="fair")
 
+    with pytest.raises(ValueError, match="please provide `train_init`"):
+        he.remove_bias(
+            how=how, alignment="same_inits", train_test_split="fair", train_init=2000
+        )
+
     with pytest.raises(ValueError, match="please provide `train_time`"):
         he.remove_bias(how=how, alignment="same_verif", train_test_split="fair")
+
+    with pytest.raises(ValueError, match="please provide `train_time`"):
+        he.remove_bias(
+            how=how, alignment="same_verif", train_test_split="fair", train_time=2000
+        )
 
     with pytest.raises(ValueError, match="Please provide `cv="):
         he.remove_bias(how=how, alignment="same_verif", train_test_split="unfair-cv")

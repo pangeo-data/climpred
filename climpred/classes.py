@@ -1778,13 +1778,14 @@ class HindcastEnsemble(PredictionEnsemble):
                 or not isinstance(train_init, (slice, xr.DataArray))
             ) and (alignment in ["same_inits", "maximize"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide `train_init` as xr.DataArray, e.g. `hindcast.coords["init"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_init = "{train_init}"`.'
+                    f'When alignment="{alignment}", please provide `train_init` as xr.DataArray, e.g. `hindcast.coords["init"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_init={train_init}`.'
                 )
             if (
-                (train_time is None) or isinstance(train_time, (slice, xr.DataArray))
+                (train_time is None)
+                or not isinstance(train_time, (slice, xr.DataArray))
             ) and (alignment in ["same_verif"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide `train_time` as xr.DataArray, e.g. `hindcast.coords["time"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_time= "{train_time}"`'
+                    f'When alignment="{alignment}", please provide `train_time` as xr.DataArray, e.g. `hindcast.coords["time"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_time={train_time}`'
                 )
 
             if isinstance(train_init, slice):

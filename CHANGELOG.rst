@@ -12,7 +12,7 @@ Breaking changes
 - renamed ``cross_validate`` to ``cv=False`` in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
   Only used when ``train_test_split='unfair-cv'``.
-  (:issue:648, :pr:`655`). `Aaron Spring`_.
+  (:issue:`648`, :pr:`655`). `Aaron Spring`_.
 
 Bug Fixes
 ---------

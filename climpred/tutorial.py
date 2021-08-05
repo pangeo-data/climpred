@@ -51,7 +51,7 @@ true_file_names = [
     "ECMWF_S2S_Germany",
     "Observations_Germany",
     "NMME_hindcast_Nino34_sst",
-    "NMME_OIv2_Nino34_sst",
+    "NMME_Reyn_SmithOIv2_Nino34_sst",
 ]
 file_descriptions = [
     "area averages for the MPI control run of SST/SSS.",

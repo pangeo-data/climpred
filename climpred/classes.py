@@ -1646,12 +1646,12 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def remove_bias(
         self,
-        alignment,
+        alignment=None,
         how="additive_mean",
-        cv=False,
         train_test_split="unfair",
         train_init=None,
         train_time=None,
+        cv=False,
         **metric_kwargs,
     ):
         """Calculate and remove bias from
@@ -1682,17 +1682,77 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
-            cv (bool or str): Defaults to True.
+            train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
-                - True: Use properly defined mean bias removal function.
-                    This excludes the given initialization from the bias calculation.
-                - 'LOO': see True
-                - False: include the given initialization in the calculation, which
+                - `fair`: no overlap between `train` and `test` (recommended).
+                    Set either `train_init` or `train_time`.
+                - `unfair`: completely overlapping `train` and `test`
+                    (climpred default).
+                - `unfair-cv`: overlapping `train` and `test` except for current
+                    `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                    (set `cv='LOO'`).
+
+            train_init (xr.DataArray, slice): Define initializations for training
+                when ``alignment='same_inits/maximize'``.
+            train_time (xr.DataArray, slice): Define time for training
+                when ``alignment='same_verif'``.
+            cv (bool or str): Only relevant when `train_test_split='unfair-cv'`. Defaults to False.
+
+                - True/'LOO': Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
+
+        Example:
+
+            Skill from raw model output without bias reduction:
+
+            >>> HindcastEnsemble.verify(metric='rmse', comparison='e2o',
+            ...     alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.08359 0.08141 0.08362 ... 0.1361 0.1552 0.1664
+
+            Note that this HindcastEnsemble is already bias reduced, therefore
+            ``train_test_split='unfair'`` has hardly any effect. Use all
+            initializations to calculate bias and verify skill:
+
+            >>> HindcastEnsemble.remove_bias(alignment='maximize',
+            ...     how='additive_mean', test_train_split='unfair'
+            ... ).verify(metric='rmse', comparison='e2o', alignment='maximize',
+            ... dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.08349 0.08039 0.07522 ... 0.07305 0.08107 0.08255
+
+            Separate initializations 1954 - 1980 to calculate bias. Note that
+            this HindcastEnsemble is already bias reduced, therefore
+            ``train_test_split='fair'`` worsens skill here. Generally,
+            ``train_test_split='fair'`` is recommended to use for a fair
+            comparison against real-time forecasts.
+
+            >>> HindcastEnsemble.remove_bias(alignment='maximize',
+            ...     how='additive_mean', train_test_split='fair',
+            ...     train_init=slice('1954', '1980')).verify(metric='rmse',
+            ...     comparison='e2o', alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
 
         """
         warn_seasonalities = ["month", "season"]
@@ -1715,7 +1775,7 @@ class HindcastEnsemble(PredictionEnsemble):
             "same_verifs",
             "same_verif",
             "maximize",
-        ]
+        ]  # refactor
         if alignment not in alignments:
             raise ValueError(
                 f"Please provide alignment from {alignments}, found {alignment}."

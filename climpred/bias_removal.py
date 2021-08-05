@@ -73,8 +73,6 @@ def _mean_bias_removal_func(hind, bias, dim, how):
             bias = convert_cftime_to_datetime_coords(bias, dim)
         hind_groupby = f"{dim}.{seasonality}"
 
-        # if cv == "LOO":
-        #    bias = leave_one_out(bias, dim).mean("sample")
         bias_removed_hind = how_operator(
             hind.groupby(hind_groupby),
             bias.groupby(hind_groupby).mean(),
@@ -86,7 +84,7 @@ def _mean_bias_removal_func(hind, bias, dim, how):
     return bias_removed_hind
 
 
-def _multiplicative_std_correction_quick(hind, spread, dim, obs=None):
+def _multiplicative_std_correction(hind, spread, dim, obs=None):
     """Quick removal of std bias over all initializations without cross validation.
 
     Args:
@@ -305,7 +303,9 @@ def gaussian_bias_removal(
             hindcast_train._datasets["initialized"] = hindcast.get_initialized().sel(
                 init=train_init
             )  # for bias
-            hindcast_test._datasets["initialized"] = hindcast.drop_sel(
+            hindcast_test._datasets[
+                "initialized"
+            ] = hindcast.get_initialized().drop_sel(
                 init=train_init
             )  # to reduce bias
         if alignment in ["same_verif"]:
@@ -363,7 +363,7 @@ def gaussian_bias_removal(
 
     elif how == "multiplicative_std":
         if cv in [False, None]:
-            bias_removal_func = _multiplicative_std_correction_quick
+            bias_removal_func = _multiplicative_std_correction
             bias_removal_func_kwargs = dict(
                 obs=hindcast.get_observations(),
             )

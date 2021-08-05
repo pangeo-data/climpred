@@ -1,6 +1,7 @@
 .DS_Store
 .*.un~
 .fuse_hidden*
+*.nc # use github.com/pangeo-data/climpred-data
 
 # Created by https://www.gitignore.io/api/python
 

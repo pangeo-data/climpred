@@ -5,7 +5,7 @@ from xarray.testing import assert_equal
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.classes import PredictionEnsemble
-from climpred.constants import CLIMPRED_DIMS
+from climpred.constants import CF_LONG_NAMES, CF_STANDARD_NAMES, CLIMPRED_DIMS
 from climpred.exceptions import VariableError
 from climpred.testing import assert_PredictionEnsemble, check_dataset_dims_and_data_vars
 
@@ -414,3 +414,23 @@ def test_PredictionEnsemble_identical(pe):
     pe2 = pe.copy(deep=False)
     pe2._datasets["initialized"][v].attrs["comment"] = "should fail"
     assert not pe.identical(pe2)
+
+
+@pytest.mark.parametrize("pe", pe, ids=pe_ids)
+def test_PredictionEnsemble_cf(pe):
+    """Test that cf_xarray added metadata."""
+
+    # standard_names
+    for k, v in CF_STANDARD_NAMES.items():
+        if k in pe.coords:
+            assert v == pe.get_initialized().coords[k].attrs["standard_name"]
+
+    # long_names
+    for k, v in CF_LONG_NAMES.items():
+        if k in pe.coords:
+            assert v == pe.get_initialized().coords[k].attrs["long_name"]
+
+    # description
+    for k, v in CF_LONG_NAMES.items():
+        if k in pe.coords:
+            assert len(pe.get_initialized().coords[k].attrs["description"]) > 5

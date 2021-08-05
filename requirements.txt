@@ -8,3 +8,4 @@ xskillscore>=0.0.20
 netcdf4
 nc-time-axis
 bias-correction@git+https://github.com/pankajkarman/bias_correction.git
+cf_xarray>=0.6.0

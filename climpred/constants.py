@@ -6,6 +6,11 @@ CF_STANDARD_NAMES = {
     "member": "realization",
     "lead": "forecast_period",
 }
+CF_LONG_NAMES = {
+    "init": "Initialization",
+    "member": "Member",
+    "lead": "Lead",
+}
 CLIMPRED_DIMS = CLIMPRED_ENSEMBLE_DIMS + ["time"]
 
 # List of frequencies to check to infer time series stride

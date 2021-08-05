@@ -5,6 +5,7 @@ import dask
 import xarray as xr
 
 from .constants import (
+    CF_LONG_NAMES,
     CF_STANDARD_NAMES,
     CLIMPRED_ENSEMBLE_DIMS,
     VALID_ALIGNMENTS,
@@ -222,6 +223,24 @@ def match_initialized_vars(init, verif):
             f"got {init_vars} for init and {verif_vars} for verif."
         )
     return True
+
+
+def attach_long_names(xobj):
+    """Attach long_name for all CLIMPRED_ENSEMBLE_DIMS."""
+    xobj2 = xobj.copy()
+    for key, value in CF_LONG_NAMES.items():
+        if key in xobj2.coords:
+            xobj2.coords[key].attrs["long_name"] = value
+    return xobj2
+
+
+def attach_standard_names(xobj):
+    """Attach standard_name for all CLIMPRED_ENSEMBLE_DIMS."""
+    xobj2 = xobj.copy()
+    for key, value in CF_STANDARD_NAMES.items():
+        if key in xobj2.coords:
+            xobj2.coords[key].attrs["standard_name"] = value
+    return xobj2
 
 
 def rename_to_climpred_dims(xobj):

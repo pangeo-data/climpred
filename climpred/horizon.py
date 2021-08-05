@@ -76,7 +76,11 @@ def horizon(cond):
         Data variables:
             tos      float64 15.0
         Attributes:
-            units:    years
+            units:          years
+            standard_name:  forecast_period
+            long_name:      Lead
+            description:    Forecast period is the time interval between the forecast...
+
 
         >>> bskill = PerfectModelEnsemble.bootstrap(metric='acc', comparison='m2e',
         ...     dim=['init','member'], reference='uninitialized', iterations=201)
@@ -89,7 +93,10 @@ def horizon(cond):
         Data variables:
             tos      float64 10.0
         Attributes:
-            units:    years
+            units:          years
+            standard_name:  forecast_period
+            long_name:      Lead
+            description:    Forecast period is the time interval between the forecast...
 
     """
     ph = _last_item_cond_true(cond, "lead")

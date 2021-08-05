@@ -1,6 +1,7 @@
 import warnings
 from copy import deepcopy
 
+import cf_xarray
 import numpy as np
 import xarray as xr
 from IPython.display import display_html
@@ -18,6 +19,8 @@ from .bootstrap import (
 from .checks import (
     _check_valid_reference,
     _check_valud_alignment,
+    attach_long_names,
+    attach_standard_names,
     has_dataset,
     has_dims,
     has_valid_lead_units,
@@ -162,6 +165,13 @@ class PredictionEnsemble:
         # `init` dimension is a `float` or `int`.
         xobj = convert_Timedelta_to_lead_units(xobj)
         has_valid_lead_units(xobj)
+        # add metadata
+        xobj = attach_standard_names(xobj)
+        xobj = attach_long_names(xobj)
+        xobj = xobj.cf.add_canonical_attributes(
+            verbose=False, override=True, skip="units"
+        )
+        del xobj.attrs["history"]
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}

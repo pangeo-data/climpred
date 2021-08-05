@@ -434,3 +434,25 @@ def test_PredictionEnsemble_cf(pe):
     for k, v in CF_LONG_NAMES.items():
         if k in pe.coords:
             assert len(pe.get_initialized().coords[k].attrs["description"]) > 5
+
+
+def test_warn_if_chunked_along_init_member_time(
+    hindcast_hist_obs_1d, perfectModelEnsemble_initialized_control
+):
+    """Test that _warn_if_chunked_along_init_member_time warns."""
+    he = hindcast_hist_obs_1d
+    pm = perfectModelEnsemble_initialized_control
+    with pytest.warns(UserWarning, match="is chunked along dimensions"):
+        HindcastEnsemble(he.get_initialized().chunk({"init": 10})).add_observations(
+            he.get_observations()
+        )
+
+    with pytest.raises(
+        ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
+    ):
+        HindcastEnsemble(he.get_initialized().chunk({"init": 10})).add_observations(
+            he.get_observations()
+        ).verify(metric="rmse", dim="init", comparison="e2o", alignment="same_inits")
+
+    with pytest.warns(UserWarning, match="is chunked along dimensions"):
+        PerfectModelEnsemble(pm.get_initialized().chunk({"init": 10}))

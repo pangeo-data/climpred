@@ -239,7 +239,13 @@ def _mean_bias_removal_func_cv(hind, bias, dim, how, cv="LOO"):
                 init_groupby = f"init.{seasonality}"
                 init_bias_removed = how_operator(
                     hind.sel(init=[init]).groupby(init_groupby),
-                    bias.sel(init=hind_drop_init).groupby(init_groupby).mean(),
+                    bias.sel(
+                        init=hind_drop_init.to_index().intersection(
+                            bias.init.to_index()
+                        )
+                    )
+                    .groupby(init_groupby)
+                    .mean(),
                 )
                 if seasonality in init_bias_removed.coords:
                     del init_bias_removed.coords[seasonality]
@@ -293,9 +299,15 @@ def gaussian_bias_removal(
 
     """
     if train_test_split == "fair":
+        hindcast_train = hindcast.copy()
+        hindcast_test = hindcast.copy()
         if alignment in ["same_inits", "maximize"]:
-            hindcast_train = hindcast.sel(init=train_init)  # for bias
-            hindcast_test = hindcast.drop_sel(init=train_init)  # to reduce bias
+            hindcast_train._datasets["initialized"] = hindcast.get_initialized().sel(
+                init=train_init
+            )  # for bias
+            hindcast_test._datasets["initialized"] = hindcast.drop_sel(
+                init=train_init
+            )  # to reduce bias
         if alignment in ["same_verif"]:
             train_time = hindcast.coords["time"].sel(time=train_time).to_index()
             # add inits before lead.max()
@@ -305,8 +317,12 @@ def gaussian_bias_removal(
             train_time_init = train_time.union(train_time.shift(-n, freq)).intersection(
                 hindcast.coords["init"].to_index()
             )
-            hindcast_train = hindcast.sel(init=train_time_init)
-            hindcast_test = hindcast.drop_sel(init=train_time_init)
+            hindcast_train._datasets["initialized"] = hindcast.get_initialized().sel(
+                init=train_time_init
+            )
+            hindcast_test._datasets[
+                "initialized"
+            ] = hindcast.get_initialized().drop_sel(init=train_time_init)
     else:
         assert train_test_split in ["unfair", "unfair-cv"]
         hindcast_train = hindcast

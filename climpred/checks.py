@@ -243,14 +243,6 @@ def attach_standard_names(xobj):
     return xobj2
 
 
-def add_canonical_attributes(xobj):
-    """Using cf.add_canonical_attributes."""
-    xobj_new = xobj.cf.add_canonical_attributes(
-        verbose=False, override=True, skip="units"
-    )
-    return xobj_new
-
-
 def rename_to_climpred_dims(xobj):
     """Rename initialized dataset to climpred dims if CF standard_names match."""
     for climpred_d in CF_STANDARD_NAMES.keys():

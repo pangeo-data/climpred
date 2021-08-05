@@ -19,7 +19,6 @@ from .bootstrap import (
 from .checks import (
     _check_valid_reference,
     _check_valud_alignment,
-    add_canonical_attributes,
     attach_long_names,
     attach_standard_names,
     has_dataset,
@@ -169,7 +168,9 @@ class PredictionEnsemble:
         # add metadata
         xobj = attach_standard_names(xobj)
         xobj = attach_long_names(xobj)
-        xobj = add_canonical_attributes(xobj)
+        xobj = xobj.cf.add_canonical_attributes(
+            verbose=False, override=True, skip="units"
+        )
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}

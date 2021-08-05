@@ -48,6 +48,11 @@ New Features
     * ``NMME_OIv2_Nino34_sst`` and ``NMME_hindcast_Nino34_sst`` with monthly leads
     * ``Observations_Germany`` and ``ECMWF_S2S_Germany`` with daily leads
 
+- Metadata from `CF convenctions <http://cfconventions.org/Data/cf-conventions/cf-conventions-1.8/cf-conventions.html>`_
+  are automatically attached by
+  `cf_xarray <https://cf-xarray.readthedocs.io/en/latest/generated/xarray.DataArray.cf.add_canonical_attributes.html#xarray.DataArray.cf.add_canonical_attributes>`_.
+  (:issue:`639`, :pr:`656`) `Aaron Spring`_.
+
 Documentation
 -------------
 - Speed up `ENSO monthly example <examples/monseas/monthly-enso-subx-example.ipynb>`_
@@ -55,6 +60,7 @@ Documentation
   (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 - Add `CITATION.cff <https://github.com/pangeo-data/climpred/blob/main/CITATION.cff>`_.
+  Please cite `Brady and Spring, 2020 <https://joss.theoj.org/papers/10.21105/joss.02781>_`.
   (`GH <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
 - Use ``NMME_OIv2_Nino34_sst`` and ``NMME_hindcast_Nino34_sst`` with monthly leads for
   `bias reduction <bias_removal.html>`_ demonstrating

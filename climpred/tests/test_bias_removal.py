@@ -180,8 +180,8 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
     """Show how method unfair better skill than fair."""
     with set_options(seasonality=seasonality):
         he = (
-            hindcast_NMME_Nino34.isel(lead=[0, 1])
-            .isel(model=2, drop=True)
+            hindcast_NMME_Nino34.sel(lead=[4, 5])
+            .sel(model="GEM-NEMO")
             .sel(init=slice("2000", "2009"))
         )
         print("\n unfair \n")
@@ -223,7 +223,6 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
             train_test_split="fair",
             **kw,
         )
-        assert "2000" not in he_fair.coords["init"]
 
         fair_skill = he_fair.verify(
             metric="rmse",
@@ -234,14 +233,14 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         )
 
         assert not unfair_skill.sst.isnull().all()
-        if how not in ["multiplicative_std", "modified_quantile"]:
-            assert not unfair_cv_skill.sst.isnull().all()
         assert not fair_skill.sst.isnull().all()
 
         assert (fair_skill > unfair_skill).sst.all(), print(
             fair_skill.sst, unfair_skill.sst
         )
+        print("checking unfair-cv")
         if how not in ["multiplicative_std", "modified_quantile"]:
+            assert not unfair_cv_skill.sst.isnull().all()
             assert (fair_skill > unfair_cv_skill).sst.all(), print(
                 fair_skill.sst, unfair_cv_skill.sst
             )

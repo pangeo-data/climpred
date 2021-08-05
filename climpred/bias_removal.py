@@ -292,9 +292,29 @@ def gaussian_bias_removal(
         HindcastEnsemble: bias removed hindcast.
 
     """
+    if train_test_split == "fair":
+        if alignment in ["same_inits", "maximize"]:
+            hindcast_train = hindcast.sel(init=train_init)  # for bias
+            hindcast_test = hindcast.drop_sel(init=train_init)  # to reduce bias
+        if alignment in ["same_verif"]:
+            train_time = hindcast.coords["time"].sel(time=train_time).to_index()
+            # add inits before lead.max()
+            n, freq = get_lead_cftime_shift_args(
+                hindcast.coords["lead"].attrs["units"], hindcast.coords["lead"].max()
+            )
+            train_time_init = train_time.union(train_time.shift(-n, freq)).intersection(
+                hindcast.coords["init"].to_index()
+            )
+            hindcast_train = hindcast.sel(init=train_time_init)
+            hindcast_test = hindcast.drop_sel(init=train_time_init)
+    else:
+        assert train_test_split in ["unfair", "unfair-cv"]
+        hindcast_train = hindcast
+        hindcast_test = hindcast
+
     if "mean" in how:
         # calculate bias lead-time dependent
-        bias = hindcast.verify(
+        bias = hindcast_train.verify(
             metric="unconditional_bias" if how == "additive_mean" else "mul_bias",
             comparison="e2o",
             dim=[],  # not used by bias func, therefore best to add [] here
@@ -303,7 +323,7 @@ def gaussian_bias_removal(
         )
 
     if how == "multiplicative_std":
-        bias = hindcast.verify(
+        bias = hindcast_train.verify(
             metric="spread",
             comparison="m2o",
             dim="member",
@@ -315,33 +335,6 @@ def gaussian_bias_removal(
     hindcast._datasets["initialized"] = hindcast.get_initialized().reindex(
         init=bias.init
     )
-
-    if train_test_split == "fair":
-        if alignment in ["same_inits", "maximize"]:
-            bias = bias.sel(init=train_init)
-            hindcast._datasets["initialized"] = hindcast._datasets[
-                "initialized"
-            ].drop_sel(init=train_init)
-        if alignment in ["same_verif"]:
-            # Todo: not proper selection of same_verif in init dim
-            train_dim = train_time.rename({"time": "init"})
-            bias = bias.sel(init=train_dim)
-            hindcast._datasets["initialized"] = hindcast._datasets[
-                "initialized"
-            ].drop_sel(init=train_dim)
-
-            # shift init to time
-            # n, freq = get_lead_cftime_shift_args(
-            #    forecast.lead.attrs["units"], forecast.lead
-            # )
-            # train_dim = shift_cftime_singular(train_dim[dim], n, freq)
-
-    elif train_test_split == "unfair":
-        pass
-    elif train_test_split == "unfair-cv":
-        pass
-    else:
-        assert False
 
     # how to remove bias
     if "mean" in how:
@@ -363,7 +356,7 @@ def gaussian_bias_removal(
             bias_removal_func_kwargs = dict(obs=hindcast.get_observations(), cv=cv)
 
     bias_removed_hind = bias_removal_func(
-        hindcast.get_initialized(), bias, "init", **bias_removal_func_kwargs
+        hindcast_test.get_initialized(), bias, "init", **bias_removal_func_kwargs
     )
     bias_removed_hind = bias_removed_hind.squeeze(drop=True)
 
@@ -446,28 +439,15 @@ def _bias_correction(
                 train_dim = shift_cftime_singular(train_dim[dim], n, freq)
                 data_to_be_corrected = forecast.drop_sel({dim: train_dim})
             elif alignment in ["same_verif"]:
-                # todo: train_time should be constant, fix by taking lead units more inits
-                warnings.warn(
-                    f'alignment="{alignment}" with train_test_split="{train_test_split}" might miss the first few inits.'
-                )
                 train_dim = train_time
-                # shift init to time
-                # n, freq = get_lead_cftime_shift_args(
-                #    forecast.lead.attrs["units"], forecast.lead
-                # )
-                # train_dim = shift_cftime_singular(train_dim[dim], n, freq)
-                # dirty fix, disregarding a few inits/leads
                 intersection = (
                     train_dim[dim].to_index().intersection(forecast[dim].to_index())
                 )
                 data_to_be_corrected = forecast.drop_sel({dim: intersection})
-                # data_to_be_corrected = forecast.drop_sel({dim: train_dim})
 
             intersection = (
                 train_dim[dim].to_index().intersection(forecast[dim].to_index())
             )
-            # forecast = forecast.sel({dim: train_dim})
-            # reference = observations.sel({dim: train_dim})
             forecast = forecast.sel({dim: intersection})
             reference = observations.sel({dim: intersection})
         else:

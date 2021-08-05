@@ -17,6 +17,7 @@ from .bootstrap import (
 )
 from .checks import (
     _check_valid_reference,
+    _check_valud_alignment,
     has_dataset,
     has_dims,
     has_valid_lead_units,
@@ -1769,22 +1770,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 f"train_test_split {train_test_split} not implemented. Please choose train_test_split from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description."
             )
 
-        alignments = [
-            "same_inits",
-            "same_init",
-            "same_verifs",
-            "same_verif",
-            "maximize",
-        ]  # refactor
-        if alignment not in alignments:
-            raise ValueError(
-                f"Please provide alignment from {alignments}, found {alignment}."
-            )
-        else:
-            if alignment == "same_init":
-                alignment = "same_inits"
-            elif alignment == "same_verifs":
-                alignment = "same_verif"
+        alignment = _check_valud_alignment(alignment)
 
         if train_test_split in ["fair"]:
             if (

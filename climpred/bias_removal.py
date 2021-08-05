@@ -346,12 +346,6 @@ def gaussian_bias_removal(
             alignment=alignment,
         )
 
-    # broadcast alignment from bias to initialized: todo: keep or delete? ##
-    hindcast = hindcast.copy()
-    hindcast._datasets["initialized"] = hindcast.get_initialized().reindex(
-        init=bias.init
-    )
-
     # how to remove bias
     if "mean" in how:
         if cv in [False, None]:
@@ -387,7 +381,7 @@ def gaussian_bias_removal(
     return hindcast_bias_removed
 
 
-def _bias_correction(
+def bias_correction(
     hindcast,
     alignment,
     cv=False,

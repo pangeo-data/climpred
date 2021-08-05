@@ -244,3 +244,31 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
             assert (fair_skill > unfair_cv_skill).sst.all(), print(
                 fair_skill.sst, unfair_cv_skill.sst
             )
+
+
+def test_remove_bias_errors(hindcast_NMME_Nino34):
+    """Show how method unfair better skill than fair."""
+    how = "additive_mean"
+    he = (
+        hindcast_NMME_Nino34.sel(lead=[4, 5])
+        .sel(model="GEM-NEMO")
+        .sel(init=slice("2000", "2009"))
+    )
+
+    with pytest.raises(ValueError, match="please provide `train_init`"):
+        he.remove_bias(how=how, alignment="same_inits", train_test_split="fair")
+
+    with pytest.raises(ValueError, match="please provide `train_time`"):
+        he.remove_bias(how=how, alignment="same_verif", train_test_split="fair")
+
+    with pytest.raises(ValueError, match="Please provide `cv="):
+        he.remove_bias(how=how, alignment="same_verif", train_test_split="unfair-cv")
+
+    with pytest.raises(NotImplementedError, match="please choose from"):
+        he.remove_bias(how="new", alignment="same_verif", train_test_split="unfair-cv")
+
+    for tts in ["fair-sliding", "fair-all"]:
+        with pytest.raises(
+            NotImplementedError, match="Please choose `train_test_split` from"
+        ):
+            he.remove_bias(how="new", alignment="same_verif", train_test_split="tts")

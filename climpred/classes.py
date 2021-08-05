@@ -9,7 +9,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import _bias_correction, gaussian_bias_removal
+from .bias_removal import bias_correction, gaussian_bias_removal
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -28,6 +28,7 @@ from .checks import (
     rename_to_climpred_dims,
 )
 from .constants import (
+    BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
     CROSS_VALIDATE_METHODS,
@@ -1764,10 +1765,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 "https://github.com/pangeo-data/climpred/issues/605"
             )
 
-        BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS = ["unfair", "unfair-cv", "fair"]
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
-                f"train_test_split {train_test_split} not implemented. Please choose train_test_split from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description."
+                f"train_test_split='{train_test_split}' not implemented. Please choose `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description and https://github.com/pangeo-data/climpred/issues/648 for implementation status."
             )
 
         alignment = _check_valud_alignment(alignment)
@@ -1775,19 +1775,16 @@ class HindcastEnsemble(PredictionEnsemble):
         if train_test_split in ["fair"]:
             if (
                 (train_init is None)
-                and not isinstance(train_init, (slice, xr.DataArray))
-                and (alignment in ["same_inits", "maximize"])
-            ):
+                or not isinstance(train_init, (slice, xr.DataArray))
+            ) and (alignment in ["same_inits", "maximize"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide train_init as xr.DataArray, e.g. hindcast.coords["init"].slice(start, end) or slice, e.g. slice(start, end), got train_init = {train_init}.'
+                    f'When alignment="{alignment}", please provide `train_init` as xr.DataArray, e.g. `hindcast.coords["init"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_init = "{train_init}"`.'
                 )
             if (
-                (train_time is None)
-                and not isinstance(train_time, (slice, xr.DataArray))
-                and (alignment in ["same_verif"])
-            ):
+                (train_time is None) or isinstance(train_time, (slice, xr.DataArray))
+            ) and (alignment in ["same_verif"]):
                 raise ValueError(
-                    f'When alignment="{alignment}" provide train_time as xr.DataArray, e.g. hindcast.coords["time"].slice(start, end) or slice, e.g. slice(start, end), got train_time = {train_time}'
+                    f'When alignment="{alignment}", please provide `train_time` as xr.DataArray, e.g. `hindcast.coords["time"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_time= "{train_time}"`'
                 )
 
             if isinstance(train_init, slice):
@@ -1797,12 +1794,10 @@ class HindcastEnsemble(PredictionEnsemble):
 
         if how == "mean":
             how = "additive_mean"  # backwards compatibility
-        if how in ["additive_mean", "multiplicative_mean"]:
-            func = gaussian_bias_removal
-        elif how == "multiplicative_std":
+        if how in ["additive_mean", "multiplicative_mean", "multiplicative_std"]:
             func = gaussian_bias_removal
         elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
-            func = _bias_correction
+            func = bias_correction
         else:
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
@@ -1811,7 +1806,7 @@ class HindcastEnsemble(PredictionEnsemble):
         if train_test_split in ["unfair-cv"]:
             if cv not in [True, "LOO"]:
                 raise ValueError(
-                    'require cv == "LOO" when train_test_split="unfair-cv"'
+                    f"Please provide `cv='LOO'` when train_test_split='unfair-cv', found `cv='{cv}'`"
                 )
             else:
                 cv = "LOO"  # backward compatibility

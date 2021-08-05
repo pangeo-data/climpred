@@ -2,8 +2,8 @@
 What's New
 ==========
 
-climpred v2.1.5 (2021-0x-xx)
-============================
+climpred v2.1.5 *unreleased* (2021-0x-xx)
+=========================================
 
 While ``climpred`` has used in the `ASP summer colloquium 2021 <https://asp.ucar.edu/asp-colloquia>`_, many new features in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` were implemented.
 

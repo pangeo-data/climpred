@@ -52,6 +52,11 @@ New Features
   are automatically attached by
   `cf_xarray <https://cf-xarray.readthedocs.io/en/latest/generated/xarray.DataArray.cf.add_canonical_attributes.html#xarray.DataArray.cf.add_canonical_attributes>`_.
   (:issue:`639`, :pr:`656`) `Aaron Spring`_.
+- Raise warning when dimensions ``time``, ``init`` or ``member`` are chunked to show
+  user how to circumvent ``xskillscore`` chunking ``ValueError`` when passing these
+  dimensions as dim in ``verify`` or ``bootstrap``.
+  (:issue:`509`, :pr:`658`) `Aaron Spring`_.
+
 
 Documentation
 -------------

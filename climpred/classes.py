@@ -694,7 +694,9 @@ class PredictionEnsemble:
         return self
 
     def _warn_if_chunked_along_init_member_time(self):
-        """Warn when ``climpred`` dims except ``lead`` are chunked with more than one chunk to show how to circumvent ``xskillscore`` chunking ``ValueError``."""
+        """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
+        more than one chunk to show how to circumvent ``xskillscore`` chunking
+        ``ValueError``."""
         suggest_one_chunk = []
         for d in self.chunks:
             if d in ["time", "init", "member"]:

@@ -54,7 +54,8 @@ New Features
   (:issue:`639`, :pr:`656`) `Aaron Spring`_.
 - Raise warning when dimensions ``time``, ``init`` or ``member`` are chunked to show
   user how to circumvent ``xskillscore`` chunking ``ValueError`` when passing these
-  dimensions as dim in ``verify`` or ``bootstrap``.
+  dimensions as ``dim`` in :py:meth:`~climpred.classes.HindcastEnsemble.verify` or
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`.
   (:issue:`509`, :pr:`658`) `Aaron Spring`_.
 - Implement ``PredictionEnsemble.chunks``. (:pr:`658`) `Aaron Spring`_.
 

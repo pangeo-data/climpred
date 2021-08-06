@@ -441,30 +441,28 @@ def test_warn_if_chunked_along_init_member_time(
 ):
     """Test that _warn_if_chunked_along_init_member_time warns."""
     he = hindcast_hist_obs_1d
+    with pytest.warns(UserWarning, match="is chunked along dimensions"):
+        he_chunked = HindcastEnsemble(
+            he.get_initialized().chunk({"init": 10})
+        ).add_observations(he.get_observations())
+        with pytest.raises(
+            ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
+        ):
+            he_chunked.verify(
+                metric="rmse", dim="init", comparison="e2o", alignment="same_inits"
+            )
+
+    with pytest.warns(UserWarning, match="is chunked along dimensions"):
+        he_chunked = HindcastEnsemble(he.get_initialized()).add_observations(
+            he.get_observations().chunk({"time": 10})
+        )
+        with pytest.raises(
+            ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
+        ):
+            he_chunked.verify(
+                metric="rmse", dim="init", comparison="e2o", alignment="same_inits"
+            )
+
     pm = perfectModelEnsemble_initialized_control
-    with pytest.warns(UserWarning, match="is chunked along dimensions"):
-        HindcastEnsemble(he.get_initialized().chunk({"init": 10})).add_observations(
-            he.get_observations()
-        )
-
-    with pytest.warns(UserWarning, match="is chunked along dimensions"):
-        HindcastEnsemble(he.get_initialized()).add_observations(
-            he.get_observations().chunk({"time": 10})
-        )
-
-    with pytest.raises(
-        ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
-    ):
-        HindcastEnsemble(he.get_initialized()).add_observations(
-            he.get_observations().chunk({"time": 10})
-        ).verify(metric="rmse", dim="init", comparison="e2o", alignment="same_inits")
-
-    with pytest.raises(
-        ValueError, match="pass ``allow_rechunk=True`` in ``dask_gufunc_kwargs``"
-    ):
-        HindcastEnsemble(he.get_initialized().chunk({"init": 10})).add_observations(
-            he.get_observations()
-        ).verify(metric="rmse", dim="init", comparison="e2o", alignment="same_inits")
-
     with pytest.warns(UserWarning, match="is chunked along dimensions"):
         PerfectModelEnsemble(pm.get_initialized().chunk({"init": 10}))

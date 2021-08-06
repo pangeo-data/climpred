@@ -172,6 +172,17 @@ def test_hindcastEnsemble_plus_broadcast(hind_ds_initialized_3d, operator):
     assert_PredictionEnsemble(he2, he3)
 
 
+def test_hindcastEnsemble_operator_different_datasets(
+    hind_ds_initialized_1d, observations_ds_1d
+):
+    """Test that HindcastEnsemble math operator (+-*/) on different datasets attached to HindcastEnsemble."""
+    he = HindcastEnsemble(hind_ds_initialized_1d)
+    he = he.add_observations(observations_ds_1d)
+    he2 = HindcastEnsemble(hind_ds_initialized_1d)
+    assert not (he2 - he).equals(he2)
+    assert not (he - he2).equals(he)
+
+
 def test_HindcastEnsemble_area_weighted_mean(hind_ds_initialized_3d):
     """Test area weighted mean HindcastEnsemble."""
     he = HindcastEnsemble(hind_ds_initialized_3d)

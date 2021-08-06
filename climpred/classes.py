@@ -397,7 +397,7 @@ class PredictionEnsemble:
                     f"{operator} {type(other)} only with same `data_vars`. Found "
                     f"initialized.data_vars = "
                     f' {list(self._datasets["initialized"].data_vars)} vs. '
-                    f"other.data_vars = { list(other.data_vars)}."
+                    f"other.data_vars = {list(other.data_vars)}."
                 )
 
         operator = eval(operator)
@@ -406,31 +406,13 @@ class PredictionEnsemble:
             # Create temporary copy to modify to avoid inplace operation.
             datasets = self._datasets.copy()
             for dataset in datasets:
-                other_dataset = other._datasets[dataset]
                 # Some pre-allocated entries might be empty, such as 'uninitialized'
-                if self._datasets[dataset]:
-                    # Loop through observations if there are multiple: TODO: not needed anymore
-                    if dataset == "observations" and isinstance(
-                        self._datasets[dataset], dict
-                    ):
-                        obs_datasets = self._datasets["observations"].copy()
-                        for obs_dataset in obs_datasets:
-                            other_obs_dataset = other._datasets["observations"][
-                                obs_dataset
-                            ]
-                            obs_datasets.update(
-                                {
-                                    obs_dataset: operator(
-                                        obs_datasets[obs_dataset], other_obs_dataset
-                                    )
-                                }
-                            )
-                            datasets.update({"observations": obs_datasets})
-                    else:
-                        if datasets[dataset]:
-                            datasets.update(
-                                {dataset: operator(datasets[dataset], other_dataset)}
-                            )
+                if isinstance(other._datasets[dataset], xr.Dataset) and isinstance(
+                    self._datasets[dataset], xr.Dataset
+                ):
+                    datasets[dataset] = operator(
+                        datasets[dataset], other._datasets[dataset]
+                    )
             return self._construct_direct(datasets, kind=self.kind)
         else:
             return self._apply_func(operator, other)

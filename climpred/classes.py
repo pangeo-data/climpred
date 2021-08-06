@@ -4,6 +4,7 @@ from copy import deepcopy
 import cf_xarray
 import numpy as np
 import xarray as xr
+from dask import is_dask_collection
 from IPython.display import display_html
 from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
@@ -178,6 +179,7 @@ class PredictionEnsemble:
         self.kind = "prediction"
         self._temporally_smoothed = None
         self._is_annual_lead = None
+        self._warn_if_chunked_along_init_member_time()
 
     @property
     def coords(self):
@@ -214,6 +216,17 @@ class PredictionEnsemble:
     def dims(self):
         """Mapping from dimension names to lengths all PredictionEnsemble._datasets."""
         return Frozen(self.sizes)
+
+    @property
+    def chunks(self):
+        """Mapping from chunks all PredictionEnsemble._datasets."""
+        pe_chunks = dict(self.get_initialized().chunks)
+        for ds in self._datasets.values():
+            if isinstance(ds, xr.Dataset):
+                for d in ds.chunks:
+                    if d not in pe_chunks:
+                        pe_chunks.update({d: ds.chunks[d]})
+        return Frozen(pe_chunks)
 
     @property
     def data_vars(self):
@@ -384,7 +397,7 @@ class PredictionEnsemble:
                     f"{operator} {type(other)} only with same `data_vars`. Found "
                     f"initialized.data_vars = "
                     f' {list(self._datasets["initialized"].data_vars)} vs. '
-                    f"other.data_vars = { list(other.data_vars)}."
+                    f"other.data_vars = {list(other.data_vars)}."
                 )
 
         operator = eval(operator)
@@ -393,31 +406,13 @@ class PredictionEnsemble:
             # Create temporary copy to modify to avoid inplace operation.
             datasets = self._datasets.copy()
             for dataset in datasets:
-                other_dataset = other._datasets[dataset]
                 # Some pre-allocated entries might be empty, such as 'uninitialized'
-                if self._datasets[dataset]:
-                    # Loop through observations if there are multiple
-                    if dataset == "observations" and isinstance(
-                        self._datasets[dataset], dict
-                    ):
-                        obs_datasets = self._datasets["observations"].copy()
-                        for obs_dataset in obs_datasets:
-                            other_obs_dataset = other._datasets["observations"][
-                                obs_dataset
-                            ]
-                            obs_datasets.update(
-                                {
-                                    obs_dataset: operator(
-                                        obs_datasets[obs_dataset], other_obs_dataset
-                                    )
-                                }
-                            )
-                            datasets.update({"observations": obs_datasets})
-                    else:
-                        if datasets[dataset]:
-                            datasets.update(
-                                {dataset: operator(datasets[dataset], other_dataset)}
-                            )
+                if isinstance(other._datasets[dataset], xr.Dataset) and isinstance(
+                    self._datasets[dataset], xr.Dataset
+                ):
+                    datasets[dataset] = operator(
+                        datasets[dataset], other._datasets[dataset]
+                    )
             return self._construct_direct(datasets, kind=self.kind)
         else:
             return self._apply_func(operator, other)
@@ -540,6 +535,7 @@ class PredictionEnsemble:
         obj = object.__new__(cls)
         obj._datasets = datasets
         obj.kind = kind
+        obj._warn_if_chunked_along_init_member_time()
         return obj
 
     def _apply_func(self, func, *args, **kwargs):
@@ -696,6 +692,39 @@ class PredictionEnsemble:
         if smooth_fct == smooth_goddard_2013 or smooth_fct == temporal_smoothing:
             self._temporally_smoothed = tsmooth_kws
         return self
+
+    def _warn_if_chunked_along_init_member_time(self):
+        """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
+        more than one chunk to show how to circumvent ``xskillscore`` chunking
+        ``ValueError``."""
+        suggest_one_chunk = []
+        for d in self.chunks:
+            if d in ["time", "init", "member"]:
+                if len(self.chunks[d]) > 1:
+                    suggest_one_chunk.append(d)
+        if len(suggest_one_chunk) > 0:
+            name = (
+                str(type(self))
+                .replace("<class 'climpred.classes.", "")
+                .replace("'>", "")
+            )
+            # init cannot be dim when time chunked
+            suggest_one_chunk_time_to_init = suggest_one_chunk.copy()
+            if "time" in suggest_one_chunk_time_to_init:
+                suggest_one_chunk_time_to_init.remove("time")
+                suggest_one_chunk_time_to_init.append("init")
+            msg = f"{name} is chunked along dimensions {suggest_one_chunk} with more than one chunk. `{name}.chunks={self.chunks}`.\nYou cannot call `{name}.verify` or `{name}.bootstrap` in combination with any of {suggest_one_chunk_time_to_init} passed as `dim`. In order to do so, please rechunk {suggest_one_chunk} with `{name}.chunk({{dim:-1}}).verify(dim=dim).`\nIf you do not want to use dimensions {suggest_one_chunk_time_to_init} in `{name}.verify(dim=dim)`, you can disregard this warning."
+            # chunk lead:1 in HindcastEnsemble
+            if self.kind == "hindcast":
+                msg += '\nIn `HindcastEnsemble`s you may also create one chunk per lead, as the `climpred` internally loops over lead, e.g. `.chunk({{"lead": 1}}).verify().`'
+            # chunk auto on non-climpred dims
+            ndims = list(self.sizes)
+            for d in CLIMPRED_DIMS:
+                if d in ndims:
+                    ndims.remove(d)
+            if len(ndims) > 0:
+                msg += f'\nConsider chunking embarassingly parallel dimensions such as {ndims} automatically, i.e. `{name}.chunk({ndims[0]}="auto").verify(...).'
+            warnings.warn(msg)
 
 
 class PerfectModelEnsemble(PredictionEnsemble):

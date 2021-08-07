@@ -434,17 +434,17 @@ def test_PredictionEnsemble_cf(pe):
     # standard_names
     for k, v in CF_STANDARD_NAMES.items():
         if k in pe.coords:
-            assert v == pe.get_initialized().coords[k].attrs["standard_name"]
+            assert v == pe.coords[k].attrs["standard_name"]
 
     # long_names
     for k, v in CF_LONG_NAMES.items():
         if k in pe.coords:
-            assert v == pe.get_initialized().coords[k].attrs["long_name"]
+            assert v == pe.coords[k].attrs["long_name"]
 
     # description
     for k, v in CF_LONG_NAMES.items():
         if k in pe.coords:
-            assert len(pe.get_initialized().coords[k].attrs["description"]) > 5
+            assert len(pe.coords[k].attrs["description"]) > 5
 
 
 def test_warn_if_chunked_along_init_member_time(

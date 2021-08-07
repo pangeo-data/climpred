@@ -186,10 +186,10 @@ class PredictionEnsemble:
         """Dictionary of xarray.DataArray objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
         """
-        pe_coords = self.get_initialized().coords.to_dataset()
+        pe_coords = self.get_initialized().coords.to_dataset(promote_attrs=True)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
-                pe_coords.update(ds.coords.to_dataset())
+                pe_coords.update(ds.coords.to_dataset(promote_attrs=True))
         return pe_coords.coords
 
     @property

@@ -96,20 +96,6 @@ climpred: verification of weather and climate forecasts
     tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
 
 
-Version 2.1.3 Release
-=====================
-
-*March 23th, 2021*
-
-After our `JOSS <https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef>`_
-paper is published, the climatology reference forecast was introduced and persistence
-forecasts are extended for all metrics (before probabilistic persistence skill was not
-calculated) (:pr:`566`).
-Furthermore, any errors in ``PredictionEnsemble.map(func)`` or
-``PredictionEnsemble.call()`` does not call silently anymore, but raises warnings
-instead (:pr:`552`).
-
-
 Installation
 ============
 

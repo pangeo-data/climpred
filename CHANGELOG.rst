@@ -2,10 +2,11 @@
 What's New
 ==========
 
-climpred v2.1.5 *unreleased* (2021-0x-xx)
-=========================================
+climpred v2.1.5 (2021-08-12)
+============================
 
-While ``climpred`` has used in the `ASP summer colloquium 2021 <https://asp.ucar.edu/asp-colloquia>`_, many new features in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` were implemented.
+While ``climpred`` has used in the `ASP summer colloquium 2021 <https://asp.ucar.edu/asp-colloquia>`_,
+many new features in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` were implemented.
 
 Breaking changes
 ----------------
@@ -23,7 +24,8 @@ Bug Fixes
 New Features
 ------------
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` accepts new keyword
-  ``train_test_split='fair/unfair/unfair-cv'`` (default ``unfair``) following `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_.
+  ``train_test_split='fair/unfair/unfair-cv'`` (default ``unfair``) following
+  `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_.
   (:issue:`648`, :pr:`655`) `Aaron Spring`_.
 - allow more `bias reduction <bias_removal.html>`_ methods in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
@@ -67,7 +69,7 @@ Documentation
   (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 - Add `CITATION.cff <https://github.com/pangeo-data/climpred/blob/main/CITATION.cff>`_.
-  Please cite `Brady and Spring, 2020 <https://joss.theoj.org/papers/10.21105/joss.02781>_`.
+  Please cite `Brady and Spring, 2020 <https://joss.theoj.org/papers/10.21105/joss.02781>`_.
   (`GH <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
 - Use ``NMME_OIv2_Nino34_sst`` and ``NMME_hindcast_Nino34_sst`` with monthly leads for
   `bias reduction <bias_removal.html>`_ demonstrating

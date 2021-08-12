@@ -27,7 +27,7 @@ New Features
   (:issue:`648`, :pr:`655`) `Aaron Spring`_.
 - allow more `bias reduction <bias_removal.html>`_ methods in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
-    * ``how="additive_mean"``: correcting the mean forecast additively
+    * ``how="additive_mean"``: correcting the mean forecast additively (already implemented)
     * ``how="multiplicative_mean"``: correcting the mean forecast multiplicatively
     * ``how="multiplicative_std"``: correcting the standard deviation multiplicatively
 
@@ -67,7 +67,7 @@ Documentation
   (see `context <https://twitter.com/realaaronspring/status/1406980080883150848?s=21>`_)
   (:issue:`594`, :pr:`633`) `Aaron Spring`_.
 - Add `CITATION.cff <https://github.com/pangeo-data/climpred/blob/main/CITATION.cff>`_.
-  Please cite `Brady and Spring, 2020 <https://joss.theoj.org/papers/10.21105/joss.02781>`_.
+  Please cite `Brady and Spring, 2020 <https://joss.theoj.org/papers/10.21105/joss.02781>_`.
   (`GH <https://github.com/pangeo-data/climpred/commit/eceb3f46d78c7dd8eb25243b2e0b673ddd78a4b2>`_) `Aaron Spring`_.
 - Use ``NMME_OIv2_Nino34_sst`` and ``NMME_hindcast_Nino34_sst`` with monthly leads for
   `bias reduction <bias_removal.html>`_ demonstrating

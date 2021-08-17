@@ -644,9 +644,17 @@ def xclim_sdba(
                 reference = leave_one_out(reference, dim)
                 model = leave_one_out(model, dim)
                 data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
+
             dqm = sdba.adjustment.DetrendedQuantileMapping()
-            dqm.train(reference, model)
-            c = dqm.adjust(data_to_be_corrected)
+            
+            def adjust(reference, model, data_to_be_corrected):
+                dqm.train(reference, model)
+                return dqm.adjust(data_to_be_corrected)
+
+            c = xr.Dataset()
+            for v in model.data_vars:
+                c[v] = adjust(reference[v], model[v], data_to_be_corrected[v])
+
             if cv and dim in c.dims and "sample" in c.dims:
                 c = c.mean(dim)
                 c = c.rename({"sample": dim})

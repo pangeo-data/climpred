@@ -4,6 +4,7 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
+from xclim import sdba
 from bias_correction import XBiasCorrection
 
 from .constants import EXTERNAL_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
@@ -537,3 +538,7 @@ def bias_correction(
     hindcast_bias_removed._datasets["initialized"] = bias_removed_hind
 
     return hindcast_bias_removed
+
+
+def xclim_sdba():
+    pass

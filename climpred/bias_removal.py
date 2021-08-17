@@ -540,5 +540,152 @@ def bias_correction(
     return hindcast_bias_removed
 
 
-def xclim_sdba():
-    pass
+def xclim_sdba(
+    hindcast,
+    alignment,
+    cv=False,
+    how="DetrendedQuantileMapping",
+    train_test_split="fair",
+    train_time=None,
+    train_init=None,
+    **metric_kwargs,
+):
+    """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+
+    Args:
+        hindcast (HindcastEnsemble): hindcast.
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+            ``verif`` to a common time frame at each lead.
+            - same_inits: slice to a common init frame prior to computing
+            metric. This philosophy follows the thought that each lead should be
+            based on the same set of initializations.
+            - same_verif: slice to a common/consistent verification time frame prior
+            to computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of verification dates.
+        how (str): what kind of bias removal to perform. Select
+            from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
+        cv (bool): Use properly defined mean bias removal function. This
+            excludes the given initialization from the bias calculation. With False,
+            include the given initialization in the calculation, which is much faster
+            but yields similar skill with a large N of initializations.
+            Defaults to True.
+
+    Returns:
+        HindcastEnsemble: bias removed hindcast.
+
+    """
+
+    def bc_func(
+        forecast,
+        observations,
+        dim=None,
+        method=how,
+        cv=False,
+        **metric_kwargs,
+    ):
+        """Wrapping https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
+
+        Functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include:
+        - quantile mapping: https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168)
+        - modified quantile mapping: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
+        - scaled distribution mapping (Gamma and Normal Corrections): https://www.hydrol-earth-syst-sci.net/21/2649/2017/
+        """
+        corrected = []
+        seasonality = OPTIONS["seasonality"]
+        dim = "time"
+        if seasonality == "weekofyear":
+            forecast = convert_cftime_to_datetime_coords(forecast, dim)
+            observations = convert_cftime_to_datetime_coords(observations, dim)
+
+        if train_test_split in ["fair"]:
+            if alignment in ["same_inits", "maximize"]:
+                train_dim = train_init.rename({"init": "time"})
+                # shift init to time
+                n, freq = get_lead_cftime_shift_args(
+                    forecast.lead.attrs["units"], forecast.lead
+                )
+                train_dim = shift_cftime_singular(train_dim[dim], n, freq)
+                data_to_be_corrected = forecast.drop_sel({dim: train_dim})
+            elif alignment in ["same_verif"]:
+                train_dim = train_time
+                intersection = (
+                    train_dim[dim].to_index().intersection(forecast[dim].to_index())
+                )
+                data_to_be_corrected = forecast.drop_sel({dim: intersection})
+
+            intersection = (
+                train_dim[dim].to_index().intersection(forecast[dim].to_index())
+            )
+            forecast = forecast.sel({dim: intersection})
+            reference = observations.sel({dim: intersection})
+        else:
+            model = forecast
+            data_to_be_corrected = forecast
+            reference = observations
+
+        data_to_be_corrected_ori = data_to_be_corrected.copy()
+
+        for label, group in forecast.groupby(f"{dim}.{seasonality}"):
+            reference = observations.sel({dim: group[dim]})
+            model = forecast.sel({dim: group[dim]})
+            if train_test_split in ["unfair", "unfair-cv"]:
+                # take all
+                data_to_be_corrected = forecast.sel({dim: group[dim]})
+            else:
+                group_dim_data_to_be_corrected = (
+                    getattr(data_to_be_corrected_ori[dim].dt, seasonality) == label
+                )
+                data_to_be_corrected = data_to_be_corrected_ori.sel(
+                    {dim: group_dim_data_to_be_corrected}
+                )
+
+            if cv == "LOO" and train_test_split == "unfair-cv":
+                reference = leave_one_out(reference, dim)
+                model = leave_one_out(model, dim)
+                data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
+            dqm = sdba.adjustment.DetrendedQuantileMapping()
+            dqm.train(reference, model)
+            c = dqm.adjust(data_to_be_corrected)
+            if cv and dim in c.dims and "sample" in c.dims:
+                c = c.mean(dim)
+                c = c.rename({"sample": dim})
+            # select only where data_to_be_corrected was input
+            c = c.sel({dim: data_to_be_corrected[dim]})
+            corrected.append(c)
+        corrected = xr.concat(corrected, dim).sortby(dim)
+        # convert back to CFTimeIndex if needed
+        if isinstance(corrected[dim].to_index(), pd.DatetimeIndex):
+            corrected = convert_time_index(corrected, dim, "hindcast")
+        return corrected
+
+    bc = Metric(
+        "bias_correction", bc_func, positive=False, probabilistic=False, unit_power=1
+    )
+
+    # calculate bias lead-time dependent
+    bias_removed_hind = hindcast.verify(
+        metric=bc,
+        comparison="m2o" if "member" in hindcast.dims else "e2o",
+        dim=[],  # set internally inside bc
+        alignment=alignment,
+        cv=cv,
+        **metric_kwargs,
+    ).squeeze(drop=True)
+
+    # remove groupby label from coords
+    for c in GROUPBY_SEASONALITIES + ["skill"]:
+        if c in bias_removed_hind.coords and c not in bias_removed_hind.dims:
+            del bias_removed_hind.coords[c]
+
+    # keep attrs
+    bias_removed_hind.attrs = hindcast.get_initialized().attrs
+    for v in bias_removed_hind.data_vars:
+        bias_removed_hind[v].attrs = hindcast.get_initialized()[v].attrs
+
+    # replace raw with bias reducted initialized dataset
+    hindcast_bias_removed = hindcast.copy()
+    hindcast_bias_removed._datasets["initialized"] = bias_removed_hind
+
+    return hindcast_bias_removed
+    

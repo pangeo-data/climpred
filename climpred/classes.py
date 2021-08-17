@@ -11,7 +11,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import bias_correction, gaussian_bias_removal
+from .bias_removal import bias_correction, gaussian_bias_removal, xclim_sdba
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -38,6 +38,7 @@ from .constants import (
     CROSS_VALIDATE_METHODS,
     EXTERNAL_BIAS_CORRECTION_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
+    XCLIM_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
 )
 from .exceptions import DimensionError, VariableError
@@ -1838,6 +1839,8 @@ class HindcastEnsemble(PredictionEnsemble):
             func = gaussian_bias_removal
         elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
             func = bias_correction
+        elif how in XCLIM_BIAS_CORRECTION_METHODS:
+            func = xclim_sdba
         else:
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."

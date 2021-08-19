@@ -1,9 +1,6 @@
 name: climpred installs
 
 on:
-  push:
-    branches:
-      - "*"
   pull_request:
     branches:
       - "*"

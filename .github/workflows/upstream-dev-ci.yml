@@ -1,8 +1,5 @@
 name: CI Upstream
 on:
-  push:
-    branches:
-      - main
   pull_request:
     branches:
       - main

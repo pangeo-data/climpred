@@ -1,9 +1,6 @@
 name: climpred testing  # based on https://github.com/pydata/xarray/blob/master/.github/workflows/ci.yaml
 
 on:
-  push:
-    branches:
-      - "*"
   pull_request:
     branches:
       - "*"

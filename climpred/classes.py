@@ -1750,7 +1750,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     is much faster and but yields similar skill with a large N of
                     initializations.
 
-            **metric_kwargs (dict): passed to xclim.sdba / XBias_Correction
+            **metric_kwargs (dict): passed to ``xclim.sdba`` (including ``group``) or ``XBias_Correction``
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
@@ -1803,11 +1803,11 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
 
+            Wrapping methods ``how`` from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and providing ``group`` for ``groupby``:
 
-
-            >>> HindcastEnsemble.remove_bias(alignment='maximize',
-            ...     how='DetrendedQuantileMapping', train_test_split='fair',
-            ...     train_init=slice('1954', '1980')).verify(metric='rmse',
+            >>> HindcastEnsemble.remove_bias(alignment='same_init', group='init',
+            ...     how='DetrendedQuantileMapping', train_test_split='unfair',
+            ...     ).verify(metric='rmse',
             ...     comparison='e2o', alignment='maximize', dim='init')
             <xarray.Dataset>
             Dimensions:  (lead: 10)
@@ -1815,8 +1815,21 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
                 skill    <U11 'initialized'
             Data variables:
-                SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
+                SST      (lead) float64 0.09978 0.09851 0.0839 ... 0.07654 0.08207 0.08174
 
+            Wrapping methods ``how`` from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
+
+            >>> HindcastEnsemble.remove_bias(alignment='same_init',
+            ...     how='modified_quantile', train_test_split='unfair',
+            ...     ).verify(metric='rmse',
+            ...     comparison='e2o', alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.07669 0.08376 0.08259 ... 0.1588 0.1838 0.2089
         """
         warn_seasonalities = ["month", "season"]
         if OPTIONS["seasonality"] not in warn_seasonalities:

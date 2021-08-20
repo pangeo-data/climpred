@@ -635,6 +635,7 @@ def xclim_sdba(
 
         if "group" not in metric_kwargs:
             metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
+
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")
         if method in ["ExtremeValues"] and "group" in metric_kwargs:

@@ -369,6 +369,7 @@ def test_remove_bias_xclim_grouper_diff(
 def test_remove_bias_dayofyear_window(hindcast_recon_1d_dm):
     hindcast_recon_1d_dm.remove_bias(
         how="DetrendedQuantileMapping",
+        alignment="same_inits",
         train_test_split="unfair",
         group="time.dayofyear",
         window=15,

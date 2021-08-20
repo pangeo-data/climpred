@@ -356,14 +356,22 @@ def test_remove_bias_xclim_grouper_diff(
         train_test_split="unfair",
     )
 
-    he_time_time = he.remove_bias(
+    he_init = he.remove_bias(
+        how=how,
+        alignment=alignment,
+        group="init",
+        train_test_split="unfair",
+    )
+
+    he_time_month = he.remove_bias(
         how=how,
         alignment=alignment,
         group="time.month",
         train_test_split="unfair",
     )
 
-    assert not he_time_time.equals(he_time)
+    assert not he_time_month.equals(he_time)
+    assert he_init.equals(he_time)
 
 
 def test_remove_bias_dayofyear_window(hindcast_recon_1d_dm):

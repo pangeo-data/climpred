@@ -6,6 +6,7 @@ import pandas as pd
 import xarray as xr
 from bias_correction import XBiasCorrection
 from xclim import sdba
+from xskillscore.core.utils import suppress_warnings
 
 from .constants import BIAS_CORRECTION_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from .metrics import Metric
@@ -634,8 +635,8 @@ def xclim_sdba(
 
         if "group" not in metric_kwargs:
             metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
-        else:
-            metric_kwargs["group"] = dim
+        if "init" in metric_kwargs["group"]:
+            metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")
         if method in ["ExtremeValues"] and "group" in metric_kwargs:
             del metric_kwargs["group"]
 

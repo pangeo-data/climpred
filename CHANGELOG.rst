@@ -2,6 +2,22 @@
 What's New
 ==========
 
+climpred v2.x.x (unreleased)
+============================
+
+New Features
+------------
+- allow more `bias reduction <bias_removal.html>`_ methods wrapped from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
+
+    * ``how="EmpiricalQuantileMapping"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping
+    * ``how="DetrendedQuantileMapping"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping
+    * ``how="PrincipalComponents"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents
+    * ``how="QuantileDeltaMapping"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping
+    * ``how="Scaling"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling
+
+  These methods do not respond to ``OPTIONS['seasonality']`` like the other methods. Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
+  (:issue:`525`, :pr:`662`) `Aaron Spring`_.
+
 climpred v2.1.5 (2021-08-12)
 ============================
 

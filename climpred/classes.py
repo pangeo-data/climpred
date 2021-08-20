@@ -1723,6 +1723,11 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'basic_quantile': `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - 'EmpiricalQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
+                - 'DetrendedQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_
+                - 'PrincipalComponents': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
+                - 'QuantileDeltaMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
+                - 'Scaling': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
 
             train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
@@ -1744,6 +1749,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.
+
+            **metric_kwargs (dict): passed to xclim.sdba / XBias_Correction
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
@@ -1786,6 +1793,20 @@ class HindcastEnsemble(PredictionEnsemble):
 
             >>> HindcastEnsemble.remove_bias(alignment='maximize',
             ...     how='additive_mean', train_test_split='fair',
+            ...     train_init=slice('1954', '1980')).verify(metric='rmse',
+            ...     comparison='e2o', alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
+
+
+
+            >>> HindcastEnsemble.remove_bias(alignment='maximize',
+            ...     how='DetrendedQuantileMapping', train_test_split='fair',
             ...     train_init=slice('1954', '1980')).verify(metric='rmse',
             ...     comparison='e2o', alignment='maximize', dim='init')
             <xarray.Dataset>

@@ -373,7 +373,7 @@ def test_remove_bias_dayofyear_window(hindcast_recon_1d_dm):
         train_test_split="unfair",
         group="time.dayofyear",
         window=15,
-        nquantile=10,
+        nquantiles=10,
     )
 
 

@@ -32,14 +32,14 @@ from .checks import (
     rename_to_climpred_dims,
 )
 from .constants import (
+    BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
     BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
     CROSS_VALIDATE_METHODS,
-    EXTERNAL_BIAS_CORRECTION_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
-    XCLIM_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
+    XCLIM_BIAS_CORRECTION_METHODS,
 )
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
@@ -1698,7 +1698,7 @@ class HindcastEnsemble(PredictionEnsemble):
     ):
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
-        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`.
+        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`. When wrapping xclim.sbda.adjustment use ``group`` instead.
 
         Args:
             alignment (str): which inits or verification times should be aligned?
@@ -1837,13 +1837,13 @@ class HindcastEnsemble(PredictionEnsemble):
             how = "additive_mean"  # backwards compatibility
         if how in ["additive_mean", "multiplicative_mean", "multiplicative_std"]:
             func = gaussian_bias_removal
-        elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
+        elif how in BIAS_CORRECTION_BIAS_CORRECTION_METHODS:
             func = bias_correction
         elif how in XCLIM_BIAS_CORRECTION_METHODS:
             func = xclim_sdba
         else:
             raise NotImplementedError(
-                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
+                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."
             )
 
         if train_test_split in ["unfair-cv"]:

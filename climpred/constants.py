@@ -49,20 +49,31 @@ VALID_LEAD_UNITS = [
 VALID_REFERENCES = ["uninitialized", "persistence", "climatology"]
 
 # https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
-EXTERNAL_BIAS_CORRECTION_METHODS = [
+BIAS_CORRECTION_BIAS_CORRECTION_METHODS = [
     "modified_quantile",
     "gamma_mapping",
     "basic_quantile",
     "normal_mapping",
 ]
-XCLIM_BIAS_CORRECTION_METHODS = ["DetrendedQuantileMapping"]
+XCLIM_BIAS_CORRECTION_METHODS = [
+    "DetrendedQuantileMapping",
+    # 'LOCI',
+    "EmpiricalQuantileMapping",
+    # 'ExtremeValues',
+    # 'NpdfTransform',
+    "PrincipalComponents",
+    "QuantileDeltaMapping",
+    "Scaling",
+]
 INTERNAL_BIAS_CORRECTION_METHODS = [
     "additive_mean",
     "multiplicative_mean",
     "multiplicative_std",
 ]
 BIAS_CORRECTION_METHODS = (
-    EXTERNAL_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS + XCLIM_BIAS_CORRECTION_METHODS
+    BIAS_CORRECTION_BIAS_CORRECTION_METHODS
+    + INTERNAL_BIAS_CORRECTION_METHODS
+    + XCLIM_BIAS_CORRECTION_METHODS
 )
 BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS = ["unfair", "unfair-cv", "fair"]
 CROSS_VALIDATE_METHODS = ["LOO", False, True]

@@ -4,10 +4,10 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
-from xclim import sdba
 from bias_correction import XBiasCorrection
+from xclim import sdba
 
-from .constants import EXTERNAL_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
+from .constants import BIAS_CORRECTION_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
 from .metrics import Metric
 from .options import OPTIONS
 from .utils import (
@@ -269,7 +269,7 @@ def gaussian_bias_removal(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc bias based on OPTIONS['seasonality'] and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
@@ -286,7 +286,7 @@ def gaussian_bias_removal(
             from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
         cv (bool or str): Defaults to True.
 
-            - True: Use properly defined mean bias removal function.
+            - True: Use cross validation in bias removal function.
                 This excludes the given initialization from the bias calculation.
             - 'LOO': see True
             - False: include the given initialization in the calculation, which
@@ -392,7 +392,7 @@ def bias_correction(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc bias based on OPTIONS['seasonality'] and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
@@ -407,7 +407,7 @@ def bias_correction(
             should be based on the same set of verification dates.
         how (str): what kind of bias removal to perform. Select
             from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
-        cv (bool): Use properly defined mean bias removal function. This
+        cv (bool): Use cross validation in bias removal function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
             but yields similar skill with a large N of initializations.
@@ -550,7 +550,7 @@ def xclim_sdba(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc based on group to be passed as metric_kwargs and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
@@ -563,9 +563,8 @@ def xclim_sdba(
             - same_verif: slice to a common/consistent verification time frame prior
             to computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        how (str): what kind of bias removal to perform. Select
-            from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
-        cv (bool): Use properly defined mean bias removal function. This
+        how (str): not used
+        cv (bool): Use cross validation in removal function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
             but yields similar skill with a large N of initializations.
@@ -584,12 +583,10 @@ def xclim_sdba(
         cv=False,
         **metric_kwargs,
     ):
-        """Wrapping https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
+        """Wrapping https://github.com/Ouranosinc/xclim/blob/master/xclim/sdba/adjustment.py.
 
         Functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include:
-        - quantile mapping: https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168)
-        - modified quantile mapping: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
-        - scaled distribution mapping (Gamma and Normal Corrections): https://www.hydrol-earth-syst-sci.net/21/2649/2017/
+        - add
         """
         corrected = []
         seasonality = OPTIONS["seasonality"]
@@ -624,44 +621,39 @@ def xclim_sdba(
             data_to_be_corrected = forecast
             reference = observations
 
-        data_to_be_corrected_ori = data_to_be_corrected.copy()
+        reference = observations
+        model = forecast
+        if train_test_split in ["unfair", "unfair-cv"]:
+            # take all
+            data_to_be_corrected = forecast
 
-        for label, group in forecast.groupby(f"{dim}.{seasonality}"):
-            reference = observations.sel({dim: group[dim]})
-            model = forecast.sel({dim: group[dim]})
-            if train_test_split in ["unfair", "unfair-cv"]:
-                # take all
-                data_to_be_corrected = forecast.sel({dim: group[dim]})
-            else:
-                group_dim_data_to_be_corrected = (
-                    getattr(data_to_be_corrected_ori[dim].dt, seasonality) == label
-                )
-                data_to_be_corrected = data_to_be_corrected_ori.sel(
-                    {dim: group_dim_data_to_be_corrected}
-                )
+        if cv == "LOO" and train_test_split == "unfair-cv":
+            reference = leave_one_out(reference, dim)
+            model = leave_one_out(model, dim)
+            data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
-            if cv == "LOO" and train_test_split == "unfair-cv":
-                reference = leave_one_out(reference, dim)
-                model = leave_one_out(model, dim)
-                data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
+        if "group" not in metric_kwargs:
+            metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
+        else:
+            metric_kwargs["group"] = dim
+        if method in ["ExtremeValues"] and "group" in metric_kwargs:
+            del metric_kwargs["group"]
 
-            dqm = sdba.adjustment.DetrendedQuantileMapping()
-            
-            def adjust(reference, model, data_to_be_corrected):
-                dqm.train(reference, model)
-                return dqm.adjust(data_to_be_corrected)
+        def adjust(reference, model, data_to_be_corrected):
+            dqm = getattr(sdba.adjustment, method).train(
+                reference, model, **metric_kwargs
+            )
+            return dqm.adjust(data_to_be_corrected)
 
-            c = xr.Dataset()
-            for v in model.data_vars:
-                c[v] = adjust(reference[v], model[v], data_to_be_corrected[v])
+        c = xr.Dataset()
+        for v in model.data_vars:
+            c[v] = adjust(reference[v], model[v], data_to_be_corrected[v])
 
-            if cv and dim in c.dims and "sample" in c.dims:
-                c = c.mean(dim)
-                c = c.rename({"sample": dim})
-            # select only where data_to_be_corrected was input
-            c = c.sel({dim: data_to_be_corrected[dim]})
-            corrected.append(c)
-        corrected = xr.concat(corrected, dim).sortby(dim)
+        if cv and dim in c.dims and "sample" in c.dims:
+            c = c.mean(dim)
+            c = c.rename({"sample": dim})
+        # select only where data_to_be_corrected was input
+        corrected = c.sel({dim: data_to_be_corrected[dim]})
         # convert back to CFTimeIndex if needed
         if isinstance(corrected[dim].to_index(), pd.DatetimeIndex):
             corrected = convert_time_index(corrected, dim, "hindcast")
@@ -696,4 +688,3 @@ def xclim_sdba(
     hindcast_bias_removed._datasets["initialized"] = bias_removed_hind
 
     return hindcast_bias_removed
-    

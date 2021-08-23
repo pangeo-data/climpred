@@ -11,7 +11,7 @@ from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
-from .bias_removal import bias_correction, gaussian_bias_removal
+from .bias_removal import bias_correction, gaussian_bias_removal, xclim_sdba
 from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
@@ -32,13 +32,14 @@ from .checks import (
     rename_to_climpred_dims,
 )
 from .constants import (
+    BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
     BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
     CLIMPRED_DIMS,
     CONCAT_KWARGS,
     CROSS_VALIDATE_METHODS,
-    EXTERNAL_BIAS_CORRECTION_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
     M2M_MEMBER_DIM,
+    XCLIM_BIAS_CORRECTION_METHODS,
 )
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
@@ -1697,7 +1698,7 @@ class HindcastEnsemble(PredictionEnsemble):
     ):
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
-        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`.
+        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`. When wrapping xclim.sbda.adjustment use ``group`` instead.
 
         Args:
             alignment (str): which inits or verification times should be aligned?
@@ -1722,6 +1723,12 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'basic_quantile': `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - 'EmpiricalQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
+                - 'DetrendedQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_
+                - 'PrincipalComponents': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
+                - 'QuantileDeltaMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
+                - 'Scaling': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
+                - 'LOCI': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
 
             train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
@@ -1743,6 +1750,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.
+
+            **metric_kwargs (dict): passed to ``xclim.sdba`` (including ``group``) or ``XBias_Correction``
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
@@ -1795,15 +1804,34 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
 
-        """
-        warn_seasonalities = ["month", "season"]
-        if OPTIONS["seasonality"] not in warn_seasonalities:
-            warnings.warn(
-                "HindcastEnsemble.remove_bias() is still experimental and is only tested "
-                f"for seasonality in {warn_seasonalities}. Please consider contributing to "
-                "https://github.com/pangeo-data/climpred/issues/605"
-            )
+            Wrapping methods ``how`` from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and providing ``group`` for ``groupby``:
 
+            >>> HindcastEnsemble.remove_bias(alignment='same_init', group='init',
+            ...     how='DetrendedQuantileMapping', train_test_split='unfair',
+            ...     ).verify(metric='rmse',
+            ...     comparison='e2o', alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.09978 0.09851 0.0839 ... 0.07654 0.08207 0.08174
+
+            Wrapping methods ``how`` from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
+
+            >>> HindcastEnsemble.remove_bias(alignment='same_init',
+            ...     how='modified_quantile', train_test_split='unfair',
+            ...     ).verify(metric='rmse',
+            ...     comparison='e2o', alignment='maximize', dim='init')
+            <xarray.Dataset>
+            Dimensions:  (lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 'initialized'
+            Data variables:
+                SST      (lead) float64 0.07669 0.08376 0.08259 ... 0.1588 0.1838 0.2089
+        """
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
                 f"train_test_split='{train_test_split}' not implemented. Please choose `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description and https://github.com/pangeo-data/climpred/issues/648 for implementation status."
@@ -1836,11 +1864,13 @@ class HindcastEnsemble(PredictionEnsemble):
             how = "additive_mean"  # backwards compatibility
         if how in ["additive_mean", "multiplicative_mean", "multiplicative_std"]:
             func = gaussian_bias_removal
-        elif how in EXTERNAL_BIAS_CORRECTION_METHODS:
+        elif how in BIAS_CORRECTION_BIAS_CORRECTION_METHODS:
             func = bias_correction
+        elif how in XCLIM_BIAS_CORRECTION_METHODS:
+            func = xclim_sdba
         else:
             raise NotImplementedError(
-                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+EXTERNAL_BIAS_CORRECTION_METHODS}."
+                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."
             )
 
         if train_test_split in ["unfair-cv"]:

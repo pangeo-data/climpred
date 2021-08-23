@@ -2,6 +2,23 @@
 What's New
 ==========
 
+climpred v2.x.x (unreleased)
+============================
+
+New Features
+------------
+- allow more `bias reduction <bias_removal.html>`_ methods wrapped from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
+
+    * ``how="EmpiricalQuantileMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
+    * ``how="DetrendedQuantileMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_
+    * ``how="PrincipalComponents"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
+    * ``how="QuantileDeltaMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
+    * ``how="Scaling"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
+    * ``how="LOCI"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
+
+  These methods do not respond to ``OPTIONS['seasonality']`` like the other methods. Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
+  (:issue:`525`, :pr:`662`) `Aaron Spring`_.
+
 climpred v2.1.5 (2021-08-12)
 ============================
 

@@ -57,7 +57,7 @@ BIAS_CORRECTION_BIAS_CORRECTION_METHODS = [
 ]
 XCLIM_BIAS_CORRECTION_METHODS = [
     "DetrendedQuantileMapping",
-    # 'LOCI',
+    "LOCI",
     "EmpiricalQuantileMapping",
     # 'ExtremeValues',
     # 'NpdfTransform',

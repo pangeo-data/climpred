@@ -9,11 +9,11 @@ New Features
 ------------
 - allow more `bias reduction <bias_removal.html>`_ methods wrapped from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
-    * ``how="EmpiricalQuantileMapping"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping
-    * ``how="DetrendedQuantileMapping"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping
-    * ``how="PrincipalComponents"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents
-    * ``how="QuantileDeltaMapping"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping
-    * ``how="Scaling"``: https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling
+    * ``how="EmpiricalQuantileMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
+    * ``how="DetrendedQuantileMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_
+    * ``how="PrincipalComponents"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
+    * ``how="QuantileDeltaMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
+    * ``how="Scaling"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
 
   These methods do not respond to ``OPTIONS['seasonality']`` like the other methods. Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
   (:issue:`525`, :pr:`662`) `Aaron Spring`_.

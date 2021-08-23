@@ -551,7 +551,9 @@ def xclim_sdba(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc based on group to be passed as metric_kwargs and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc bias based on grouper to be passed as metric_kwargs and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+
+    See climpred.constants.XCLIM_BIAS_CORRECTION_METHODS for implemented methods for ``how``.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
@@ -586,10 +588,8 @@ def xclim_sdba(
     ):
         """Wrapping https://github.com/Ouranosinc/xclim/blob/master/xclim/sdba/adjustment.py.
 
-        Functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include:
-        - add
+        Functions to perform bias correction of datasets to remove biases across datasets. See climpred.constants.XCLIM_BIAS_CORRECTION_METHODS for implemented methods.
         """
-        corrected = []
         seasonality = OPTIONS["seasonality"]
         dim = "time"
         if seasonality == "weekofyear":
@@ -616,14 +616,15 @@ def xclim_sdba(
                 train_dim[dim].to_index().intersection(forecast[dim].to_index())
             )
             forecast = forecast.sel({dim: intersection})
+            model = forecast
             reference = observations.sel({dim: intersection})
         else:
             model = forecast
             data_to_be_corrected = forecast
             reference = observations
 
-        reference = observations
-        model = forecast
+        # reference = observations
+        # model = forecast
         if train_test_split in ["unfair", "unfair-cv"]:
             # take all
             data_to_be_corrected = forecast
@@ -638,18 +639,36 @@ def xclim_sdba(
 
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")
-        if method in ["ExtremeValues"] and "group" in metric_kwargs:
-            del metric_kwargs["group"]
 
-        def adjust(reference, model, data_to_be_corrected):
+        adjust_kwargs = {}
+        for k in ["interp", "extrapolation", "detrend"]:
+            if k in metric_kwargs:
+                adjust_kwargs[k] = metric_kwargs.pop(k)
+
+        def adjustment(reference, model, data_to_be_corrected):
+            print(
+                "reference nNan",
+                reference.isnull().sum().values,
+                "of",
+                reference.size,
+                "  data_to_be_corrected nNaN",
+                data_to_be_corrected.isnull().sum().values,
+                "of",
+                data_to_be_corrected.size,
+                "   model nNan",
+                model.isnull().sum().values,
+                "of",
+                model.size,
+            )
+            print(metric_kwargs)
             dqm = getattr(sdba.adjustment, method).train(
                 reference, model, **metric_kwargs
             )
-            return dqm.adjust(data_to_be_corrected)
+            return dqm.adjust(data_to_be_corrected, **adjust_kwargs)
 
         c = xr.Dataset()
         for v in model.data_vars:
-            c[v] = adjust(reference[v], model[v], data_to_be_corrected[v])
+            c[v] = adjustment(reference[v], model[v], data_to_be_corrected[v])
 
         if cv and dim in c.dims and "sample" in c.dims:
             c = c.mean(dim)

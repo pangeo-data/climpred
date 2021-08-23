@@ -226,7 +226,6 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         )
 
         fair_skill = he_fair.verify(**verify_kwargs)
-        print(unfair_skill, fair_skill)
         assert not unfair_skill[v].isnull().all()
         assert not fair_skill[v].isnull().all()
 

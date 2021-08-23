@@ -623,8 +623,6 @@ def xclim_sdba(
             data_to_be_corrected = forecast
             reference = observations
 
-        # reference = observations
-        # model = forecast
         if train_test_split in ["unfair", "unfair-cv"]:
             # take all
             data_to_be_corrected = forecast
@@ -646,21 +644,6 @@ def xclim_sdba(
                 adjust_kwargs[k] = metric_kwargs.pop(k)
 
         def adjustment(reference, model, data_to_be_corrected):
-            print(
-                "reference nNan",
-                reference.isnull().sum().values,
-                "of",
-                reference.size,
-                "  data_to_be_corrected nNaN",
-                data_to_be_corrected.isnull().sum().values,
-                "of",
-                data_to_be_corrected.size,
-                "   model nNan",
-                model.isnull().sum().values,
-                "of",
-                model.size,
-            )
-            print(metric_kwargs)
             dqm = getattr(sdba.adjustment, method).train(
                 reference, model, **metric_kwargs
             )

@@ -14,6 +14,7 @@ New Features
     * ``how="PrincipalComponents"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
     * ``how="QuantileDeltaMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
     * ``how="Scaling"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
+    * ``how="LOCI"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
 
   These methods do not respond to ``OPTIONS['seasonality']`` like the other methods. Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
   (:issue:`525`, :pr:`662`) `Aaron Spring`_.

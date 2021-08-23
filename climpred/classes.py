@@ -1728,6 +1728,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 - 'PrincipalComponents': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
                 - 'QuantileDeltaMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
                 - 'Scaling': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
+                - 'LOCI': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
 
             train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 

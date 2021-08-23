@@ -185,6 +185,7 @@ def test_monthly_leads_remove_bias_LOO(
         )
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
 @pytest.mark.parametrize("seasonality", ["month", "season"])
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
@@ -200,7 +201,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         he = (
             hindcast_NMME_Nino34.sel(lead=[4, 5])
             .sel(model="GEM-NEMO")
-            .sel(init=slice("2000", "2008"))
+            .sel(init=slice("2000", "2009"))
         )
         v = "sst"
 
@@ -249,6 +250,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
             )
 
 
+@pytest.mark.slow
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
 @pytest.mark.parametrize("seasonality", ["month", None])
 @pytest.mark.parametrize("how", XCLIM_BIAS_CORRECTION_METHODS)
@@ -260,7 +262,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
         he = (
             hindcast_NMME_Nino34.sel(lead=[4, 5])
             .sel(model="GEM-NEMO")
-            .sel(init=slice("2000", "2008"))
+            .sel(init=slice("2000", "2009"))
         )
         v = "sst"
 
@@ -346,7 +348,7 @@ def test_remove_bias_xclim_grouper_diff(
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2009"))
+        .sel(init=slice("2000", "2004"))
     )
 
     he_time = he.remove_bias(
@@ -383,7 +385,7 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2009"))
+        .sel(init=slice("2000", "2004"))
     )
 
     he_interp_linear = he.remove_bias(
@@ -409,7 +411,7 @@ def test_remove_bias_dayofyear_window(hindcast_NMME_Nino34):
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2009"))
+        .sel(init=slice("2000", "2004"))
     )
     hind = he.remove_bias(
         how="DetrendedQuantileMapping",

@@ -20,6 +20,15 @@ BIAS_CORRECTION_METHODS.remove("gamma_mapping")
 # fails with these conftest files somehow
 
 
+def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):
+    if metric_kwargs is None:
+        metric_kwargs = {}
+    if how in ["LOCI"] and "thresh" not in metric_kwargs:
+        v = list(he.data_vars)[0]
+        metric_kwargs["thresh"] = he.get_observations().quantile(0.1)[v]
+    return metric_kwargs
+
+
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
     """Test HindcastEnsemble.remove_bias yields different results for different seasonality settings."""
@@ -191,7 +200,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         he = (
             hindcast_NMME_Nino34.sel(lead=[4, 5])
             .sel(model="GEM-NEMO")
-            .sel(init=slice("2000", "2009"))
+            .sel(init=slice("2000", "2008"))
         )
         v = "sst"
 
@@ -214,9 +223,9 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
 
         print("\n fair \n")
         kw = (
-            dict(train_time=slice("2000", "2003"))
+            dict(train_time=slice("2000", "2004"))
             if alignment == "same_verifs"
-            else dict(train_init=slice("2000", "2003"))
+            else dict(train_init=slice("2000", "2004"))
         )
         he_fair = he.remove_bias(
             how=how,
@@ -246,12 +255,12 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
 def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
     hindcast_NMME_Nino34, how, seasonality, alignment
 ):
-    """Show how method unfair better skill than fair."""
+    """Show how method unfair better skill than fair in xclim methods."""
     try:
         he = (
             hindcast_NMME_Nino34.sel(lead=[4, 5])
             .sel(model="GEM-NEMO")
-            .sel(init=slice("2000", "2009"))
+            .sel(init=slice("2000", "2008"))
         )
         v = "sst"
 
@@ -267,17 +276,16 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
         if seasonality is not None:
             group = f"{group}.{seasonality}"
 
-        rb_kwargs = {}
-        if how in ["LOsCI"]:
-            rb_kwargs["thresh"] = he.get_observations().quantile(0.1).sst
         print("\n unfair \n")
+
+        metric_kwargs = _adjust_metric_kwargs(metric_kwargs=None, how=how, he=he)
 
         he_unfair = he.remove_bias(
             how=how,
             alignment=alignment,
             group=group,
             train_test_split="unfair",
-            **rb_kwargs,
+            **metric_kwargs,
         )
 
         unfair_skill = he_unfair.verify(**verify_kwargs)
@@ -290,15 +298,15 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
                 group=group,
                 train_test_split="unfair-cv",
                 cv="LOO",
-                **rb_kwargs,
+                **metric_kwargs,
             )
             unfair_cv_skill = he_unfair_cv.verify(**verify_kwargs)
 
         print("\n fair \n")
         kw = (
-            dict(train_time=slice("2000", "2003"))
+            dict(train_time=slice("2000", "2004"))
             if alignment == "same_verifs"
-            else dict(train_init=slice("2000", "2003"))
+            else dict(train_init=slice("2000", "2004"))
         )
         he_fair = he.remove_bias(
             how=how,
@@ -306,7 +314,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
             group=group,
             train_test_split="fair",
             **kw,
-            **rb_kwargs,
+            **metric_kwargs,
         )
 
         fair_skill = he_fair.verify(**verify_kwargs)
@@ -422,7 +430,8 @@ def test_remove_bias_dayofyear_window(hindcast_NMME_Nino34):
 
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):
     """Compare Scaling and additive_mean to be similar"""
-    hind_scaling = hindcast_recon_1d_dm.remove_bias(
+    he = hindcast_recon_1d_dm.isel(lead=[0, 1]).isel(init=slice(None, 366 * 2))
+    hind_scaling = he.remove_bias(
         how="Scaling",
         kind="+",
         alignment="same_inits",
@@ -436,7 +445,7 @@ def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):
             train_test_split="unfair",
         )
     assert (
-        (hind_scaling - hind_mean).get_initialized().mean(["member", "init"]) < 0.1
+        (hind_scaling - hind_mean).get_initialized().mean(["member", "init"]) < 0.02
     ).SST.all()
 
 

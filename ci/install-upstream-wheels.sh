@@ -10,6 +10,7 @@ conda uninstall -y --force \
     xarray \
     xskillscore \
     xclim \
+    bias_correction \
     climpred
 
 
@@ -37,4 +38,5 @@ python -m pip install \
     git+https://github.com/pydata/bottleneck  \
     git+https://github.com/xarray-contrib/xskillscore \
     git+https://github.com/xgcm/xrft \
-    git+https://github.com/Ouranosinc/xclim
+    git+https://github.com/Ouranosinc/xclim \
+    git+https://github.com/pankajkarman/bias_correction

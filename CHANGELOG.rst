@@ -17,7 +17,7 @@ New Features
     * ``how="LOCI"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
 
   These methods do not respond to ``OPTIONS['seasonality']`` like the other methods. Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
-  (:issue:`525`, :pr:`662`) `Aaron Spring`_.
+  (:issue:`525`, :pr:`662`, :pr:`666`) `Aaron Spring`_.
 
 climpred v2.1.5 (2021-08-12)
 ============================

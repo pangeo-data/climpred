@@ -164,6 +164,7 @@ def perfectModelEnsemble_3v_initialized_control_1d(
 def hind_ds_initialized_1d():
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
     ds = load_dataset("CESM-DP-SST")
+    ds["SST"].attrs["units"] = "C"
     ds["init"] = ds.init.astype("int")
     return ds
 
@@ -197,8 +198,9 @@ def hind_da_initialized_1d(hind_ds_initialized_1d):
 @pytest.fixture()
 def hind_ds_initialized_3d_full():
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
-    da = load_dataset("CESM-DP-SST-3D")
-    return da - da.mean("init")
+    ds = load_dataset("CESM-DP-SST-3D")
+    ds["SST"].attrs["units"] = "C"
+    return ds - ds.mean("init")
 
 
 @pytest.fixture()
@@ -217,6 +219,7 @@ def hind_da_initialized_3d(hind_ds_initialized_3d):
 def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
     ds = load_dataset("CESM-LE")
+    ds["SST"].attrs["units"] = "C"
     # add member coordinate
     ds["member"] = range(1, 1 + ds.member.size)
     return ds - ds.mean("time")
@@ -232,8 +235,9 @@ def hist_da_uninitialized_1d(hist_ds_uninitialized_1d):
 def reconstruction_ds_1d():
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.Dataset."""
-    da = load_dataset("FOSI-SST")
-    return da - da.mean("time")
+    ds = load_dataset("FOSI-SST")
+    ds["SST"].attrs["units"] = "C"
+    return ds - ds.mean("time")
 
 
 @pytest.fixture()

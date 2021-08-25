@@ -180,8 +180,12 @@ def test_monthly_leads_remove_bias_LOO(
             .isel(model=2, drop=True)
             .sel(init=slice("2005", "2006"))
         )
-        assert not he.remove_bias(how=how, alignment=alignment, cv=False).equals(
-            he.remove_bias(how=how, alignment=alignment, cv="LOO")
+        assert not he.remove_bias(
+            how=how, alignment=alignment, cv=False, train_test_split="unfair"
+        ).equals(
+            he.remove_bias(
+                how=how, alignment=alignment, cv="LOO", train_test_split="unfair-cv"
+            )
         )
 
 

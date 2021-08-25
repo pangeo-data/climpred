@@ -515,7 +515,7 @@ def bias_correction(
                 c = c.mean(dim)
                 c = c.rename({"sample": dim})
             # select only where data_to_be_corrected was input
-            if dim2 in model.dims:
+            if dim2 in data_to_be_corrected.dims:
                 data_to_be_corrected = data_to_be_corrected.unstack(dim2)
             c = c.sel({dim: data_to_be_corrected[dim]})
             corrected.append(c)

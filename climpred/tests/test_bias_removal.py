@@ -198,7 +198,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
 ):
     """Show how method unfair better skill than fair."""
     verify_kwargs = dict(
-        metric="rmse", comparison="e2o", dim="init", alignment=alignment, skipna=False
+        metric="rmse", comparison="e2o", dim="init", alignment=alignment, skipna=True
     )
 
     with set_options(seasonality=seasonality):
@@ -240,18 +240,20 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         )
 
         fair_skill = he_fair.verify(**verify_kwargs)
+
         assert not unfair_skill[v].isnull().all()
         assert not fair_skill[v].isnull().all()
 
-        assert (fair_skill > unfair_skill)[v].all(), print(
+        # allow 1 or 20% margin (worse skill)
+        f = 1.2 if how in ["modified_quantile", "basic_quantile"] else 1.01
+        assert (fair_skill * f > unfair_skill)[v].all(), print(
             fair_skill[v], unfair_skill[v]
         )
         print("checking unfair-cv")
-        if how not in ["multiplicative_std", "modified_quantile"]:
-            assert not unfair_cv_skill[v].isnull().all()
-            assert (fair_skill > unfair_cv_skill)[v].all(), print(
-                fair_skill[v], unfair_cv_skill[v]
-            )
+        assert not unfair_cv_skill[v].isnull().all()
+        assert (fair_skill * f > unfair_cv_skill)[v].all(), print(
+            fair_skill[v], unfair_cv_skill[v]
+        )
 
 
 @pytest.mark.slow
@@ -275,7 +277,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
             comparison="e2o",
             dim="init",
             alignment=alignment,
-            skipna=False,
+            skipna=True,
         )
 
         group = "time"

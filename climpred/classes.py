@@ -1830,7 +1830,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
                 skill    <U11 'initialized'
             Data variables:
-                SST      (lead) float64 0.07669 0.08376 0.08259 ... 0.1588 0.1838 0.2089
+                SST      (lead) float64 0.07628 0.08293 0.08169 ... 0.1577 0.1821 0.2087
         """
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(

@@ -199,7 +199,6 @@ def hind_da_initialized_1d(hind_ds_initialized_1d):
 def hind_ds_initialized_3d_full():
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
     ds = load_dataset("CESM-DP-SST-3D")
-    ds["SST"].attrs["units"] = "C"
     return ds - ds.mean("init")
 
 
@@ -222,7 +221,9 @@ def hist_ds_uninitialized_1d():
     ds["SST"].attrs["units"] = "C"
     # add member coordinate
     ds["member"] = range(1, 1 + ds.member.size)
-    return ds - ds.mean("time")
+    ds = ds - ds.mean("time")
+    ds["SST"].attrs["units"] = "C"
+    return ds
 
 
 @pytest.fixture()
@@ -281,8 +282,10 @@ def reconstruction_da_3d(reconstruction_ds_3d):
 def observations_ds_1d():
     """Historical timeseries from observations matching `hind_da_initialized_1d` and
     `hind_da_uninitialized_1d` mean removed xr.Dataset."""
-    da = load_dataset("ERSST")
-    return da - da.mean("time")
+    ds = load_dataset("ERSST")
+    ds = ds - ds.mean("time")
+    ds["SST"].attrs["units"] = "C"
+    return ds
 
 
 @pytest.fixture()
@@ -323,9 +326,10 @@ def hindcast_hist_obs_1d(
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
     hindcast = hindcast.add_uninitialized(hist_ds_uninitialized_1d)
     hindcast = hindcast.add_observations(observations_ds_1d)
-    hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(
-        init=slice("1964", "2014")
-    ).mean("init")
+    with xr.set_options(keep_attrs=True):
+        hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(
+            init=slice("1964", "2014")
+        ).mean("init")
     return hindcast
 
 

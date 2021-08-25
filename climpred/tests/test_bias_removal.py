@@ -348,7 +348,7 @@ def test_remove_bias_xclim_grouper_diff(
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2004"))
+        .sel(init=slice("2000", "2001"))
     )
 
     he_time = he.remove_bias(
@@ -385,7 +385,7 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2004"))
+        .sel(init=slice("2000", "2001"))
     )
 
     he_interp_linear = he.remove_bias(
@@ -407,11 +407,12 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
     assert not he_interp_nearest.equals(he_interp_linear)
 
 
-def test_remove_bias_dayofyear_window(hindcast_NMME_Nino34):
+def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
+    """Testing kwargs are used."""
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2004"))
+        .sel(init=slice("2000", "2001"))
     )
     hind = he.remove_bias(
         how="DetrendedQuantileMapping",
@@ -428,6 +429,27 @@ def test_remove_bias_dayofyear_window(hindcast_NMME_Nino34):
         group="time.month",
     )
     assert not hind_kw.equals(hind)
+
+
+def test_remove_bias_group(hindcast_NMME_Nino34):
+    """Test group=None equals not providing group."""
+    he = (
+        hindcast_NMME_Nino34.sel(lead=[4, 5])
+        .sel(model="GEM-NEMO")
+        .sel(init=slice("2000", "2001"))
+    )
+    hind = he.remove_bias(
+        how="DetrendedQuantileMapping",
+        alignment="same_inits",
+        train_test_split="unfair",
+        group=None,
+    )
+    hind_kw = he.remove_bias(
+        how="DetrendedQuantileMapping",
+        alignment="same_inits",
+        train_test_split="unfair",
+    )
+    assert hind_kw.equals(hind)
 
 
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):

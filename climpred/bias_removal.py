@@ -488,6 +488,17 @@ def bias_correction(
                 model = leave_one_out(model, dim)
                 data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
+            dim2 = "time_member"
+            if "member" in model.dims:
+                reference = reference.broadcast_like(model)
+                data_to_be_corrected = data_to_be_corrected.broadcast_like(model)
+                model = model.stack({dim2: ["time", "member"]})
+                reference = reference.stack({dim2: ["time", "member"]})
+                data_to_be_corrected = data_to_be_corrected.stack(
+                    {dim2: ["time", "member"]}
+                )
+            dim_used = dim2 if "member" in forecast.dims else dim
+
             # using bias-correction: https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -495,14 +506,19 @@ def bias_correction(
                     reference,
                     model,
                     data_to_be_corrected,
-                    dim=dim,
+                    dim=dim_used,
                 )
                 c = bc.correct(method=method, join="outer", **metric_kwargs)
+            if dim2 in c.dims:
+                c = c.unstack(dim2)
             if cv and dim in c.dims and "sample" in c.dims:
                 c = c.mean(dim)
                 c = c.rename({"sample": dim})
             # select only where data_to_be_corrected was input
-            c = c.sel({dim: data_to_be_corrected[dim]})
+            if dim2 in model.dims:
+                c = c.sel({dim: data_to_be_corrected.unstack(dim2)[dim]})
+            else:
+                c = c.sel({dim: data_to_be_corrected[dim]})
             corrected.append(c)
         corrected = xr.concat(corrected, dim).sortby(dim)
         # convert back to CFTimeIndex if needed
@@ -633,6 +649,8 @@ def xclim_sdba(
             data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
         if "group" not in metric_kwargs:
+            metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
+        elif metric_kwargs["group"] is None:
             metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
 
         if "init" in metric_kwargs["group"]:

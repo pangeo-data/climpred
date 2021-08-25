@@ -366,6 +366,8 @@ def hindcast_NMME_Nino34():
     """NMME hindcasts with monthly leads and monthly inits and related IOv2 observations for SST of the Nino34 region."""
     init = load_dataset("NMME_hindcast_Nino34_sst")
     obs = load_dataset("NMME_OIv2_Nino34_sst")
+    init["sst"].attrs["units"] = "C"
+    obs["sst"].attrs["units"] = "C"
     return HindcastEnsemble(init).add_observations(
         obs.broadcast_like(init, exclude=("L", "S", "M"))
     )

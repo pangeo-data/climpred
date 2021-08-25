@@ -516,9 +516,8 @@ def bias_correction(
                 c = c.rename({"sample": dim})
             # select only where data_to_be_corrected was input
             if dim2 in model.dims:
-                c = c.sel({dim: data_to_be_corrected.unstack(dim2)[dim]})
-            else:
-                c = c.sel({dim: data_to_be_corrected[dim]})
+                data_to_be_corrected = data_to_be_corrected.unstack(dim2)
+            c = c.sel({dim: data_to_be_corrected[dim]})
             corrected.append(c)
         corrected = xr.concat(corrected, dim).sortby(dim)
         # convert back to CFTimeIndex if needed

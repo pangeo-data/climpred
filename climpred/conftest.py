@@ -237,8 +237,9 @@ def reconstruction_ds_1d():
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.Dataset."""
     ds = load_dataset("FOSI-SST")
+    ds = ds - ds.mean("time")
     ds["SST"].attrs["units"] = "C"
-    return ds - ds.mean("time")
+    return ds
 
 
 @pytest.fixture()
@@ -315,6 +316,8 @@ def hindcast_recon_1d_ym(hind_ds_initialized_1d, reconstruction_ds_1d):
     hindcast = hindcast - hindcast.sel(time=slice("1964", "2014")).mean("time").sel(
         init=slice("1964", "2014")
     ).mean("init")
+    hindcast._datasets["initialized"]["SST"].attrs = hind_ds_initialized_1d["SST"].attrs
+    hindcast._datasets["observations"]["SST"].attrs = reconstruction_ds_1d["SST"].attrs
     return hindcast
 
 
@@ -358,6 +361,12 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     hindcast._datasets["observations"] = (
         hindcast._datasets["observations"].resample(time="1D").interpolate("linear")
     )
+    hindcast._datasets["observations"].attrs = hindcast_recon_1d_ym._datasets[
+        "observations"
+    ]
+    assert "units" in hindcast.get_initialized()["SST"].attrs
+    assert "units" in hindcast_recon_1d_ym.get_observations()["SST"].attrs
+    assert "units" in hindcast.get_observations()["SST"].attrs
     return hindcast
 
 

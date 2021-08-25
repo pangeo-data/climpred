@@ -438,18 +438,18 @@ def test_remove_bias_group(hindcast_NMME_Nino34):
         .sel(model="GEM-NEMO")
         .sel(init=slice("2000", "2001"))
     )
-    hind = he.remove_bias(
+    hind_None = he.remove_bias(
         how="DetrendedQuantileMapping",
         alignment="same_inits",
         train_test_split="unfair",
         group=None,
     )
-    hind_kw = he.remove_bias(
+    hind_no = he.remove_bias(
         how="DetrendedQuantileMapping",
         alignment="same_inits",
         train_test_split="unfair",
     )
-    assert hind_kw.equals(hind)
+    assert hind_no.equals(hind_None)
 
 
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):

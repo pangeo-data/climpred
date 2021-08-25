@@ -289,8 +289,9 @@ class PredictionEnsemble:
         equal = True
         try:
             for ds_name in self._datasets.keys():
-                if not self._datasets[ds_name].equals(other._datasets[ds_name]):
-                    equal = False
+                if isinstance(self._datasets[ds_name], xr.Dataset):
+                    if not self._datasets[ds_name].equals(other._datasets[ds_name]):
+                        equal = False
         except Exception:
             return False
         return equal

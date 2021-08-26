@@ -331,9 +331,7 @@ def compute_hindcast(
 
     if "iteration" in forecast.dims and "iteration" not in verif.dims:
         verif = (
-            verif.expand_dims("iteration")
-            .isel(iteration=[0] * forecast.iteration.size)
-            .assign_coords(iteration=forecast.iteration)
+            verif.expand_dims(iteration=forecast.iteration)
         )
 
     log_compute_hindcast_header(metric, comparison, dim, alignment, "initialized")

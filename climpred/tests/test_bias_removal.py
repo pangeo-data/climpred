@@ -180,8 +180,12 @@ def test_monthly_leads_remove_bias_LOO(
             .isel(model=2, drop=True)
             .sel(init=slice("2005", "2006"))
         )
-        assert not he.remove_bias(how=how, alignment=alignment, cv=False).equals(
-            he.remove_bias(how=how, alignment=alignment, cv="LOO")
+        assert not he.remove_bias(
+            how=how, alignment=alignment, cv=False, train_test_split="unfair"
+        ).equals(
+            he.remove_bias(
+                how=how, alignment=alignment, cv="LOO", train_test_split="unfair-cv"
+            )
         )
 
 
@@ -194,7 +198,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
 ):
     """Show how method unfair better skill than fair."""
     verify_kwargs = dict(
-        metric="rmse", comparison="e2o", dim="init", alignment=alignment, skipna=False
+        metric="rmse", comparison="e2o", dim="init", alignment=alignment, skipna=True
     )
 
     with set_options(seasonality=seasonality):
@@ -236,18 +240,20 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         )
 
         fair_skill = he_fair.verify(**verify_kwargs)
+
         assert not unfair_skill[v].isnull().all()
         assert not fair_skill[v].isnull().all()
 
-        assert (fair_skill > unfair_skill)[v].all(), print(
+        # allow 1 or 20% margin (worse skill)
+        f = 1.2 if how in ["modified_quantile", "basic_quantile"] else 1.01
+        assert (fair_skill * f > unfair_skill)[v].all(), print(
             fair_skill[v], unfair_skill[v]
         )
         print("checking unfair-cv")
-        if how not in ["multiplicative_std", "modified_quantile"]:
-            assert not unfair_cv_skill[v].isnull().all()
-            assert (fair_skill > unfair_cv_skill)[v].all(), print(
-                fair_skill[v], unfair_cv_skill[v]
-            )
+        assert not unfair_cv_skill[v].isnull().all()
+        assert (fair_skill * f > unfair_cv_skill)[v].all(), print(
+            fair_skill[v], unfair_cv_skill[v]
+        )
 
 
 @pytest.mark.slow
@@ -271,7 +277,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
             comparison="e2o",
             dim="init",
             alignment=alignment,
-            skipna=False,
+            skipna=True,
         )
 
         group = "time"
@@ -348,7 +354,7 @@ def test_remove_bias_xclim_grouper_diff(
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2004"))
+        .sel(init=slice("2000", "2001"))
     )
 
     he_time = he.remove_bias(
@@ -385,7 +391,7 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2004"))
+        .sel(init=slice("2000", "2001"))
     )
 
     he_interp_linear = he.remove_bias(
@@ -407,11 +413,12 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
     assert not he_interp_nearest.equals(he_interp_linear)
 
 
-def test_remove_bias_dayofyear_window(hindcast_NMME_Nino34):
+def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
+    """Testing kwargs are used."""
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
-        .sel(init=slice("2000", "2004"))
+        .sel(init=slice("2000", "2001"))
     )
     hind = he.remove_bias(
         how="DetrendedQuantileMapping",
@@ -428,6 +435,27 @@ def test_remove_bias_dayofyear_window(hindcast_NMME_Nino34):
         group="time.month",
     )
     assert not hind_kw.equals(hind)
+
+
+def test_remove_bias_group(hindcast_NMME_Nino34):
+    """Test group=None equals not providing group."""
+    he = (
+        hindcast_NMME_Nino34.sel(lead=[4, 5])
+        .sel(model="GEM-NEMO")
+        .sel(init=slice("2000", "2001"))
+    )
+    hind_None = he.remove_bias(
+        how="DetrendedQuantileMapping",
+        alignment="same_inits",
+        train_test_split="unfair",
+        group=None,
+    )
+    hind_no = he.remove_bias(
+        how="DetrendedQuantileMapping",
+        alignment="same_inits",
+        train_test_split="unfair",
+    )
+    assert hind_no.equals(hind_None)
 
 
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):

@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.x.x (unreleased)
+climpred v2.1.6 (unreleased)
 ============================
 
 Bug Fixes
@@ -10,7 +10,9 @@ Bug Fixes
 - Fix ``results='p'`` in :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` when ``reference='climatology'``.
   (:issue:`668`, :pr:`669`) `Aaron Spring`_.
-
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` for ``how`` in
+  [``modified_quantile``, ``basic_quantile``, ``gamma_mapping``, ``normal_mapping``]
+  takes all ``member``s to create model distribution. (:pr:`667`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -23,8 +25,11 @@ New Features
     * ``how="Scaling"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
     * ``how="LOCI"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
 
-  These methods do not respond to ``OPTIONS['seasonality']`` like the other methods. Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
+  These methods do not respond to ``OPTIONS['seasonality']`` like the other methods.
+  Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
+  Provide ``group=None`` or skip ``group`` to use ``init.{OPTIONS['seasonality']}``.
   (:issue:`525`, :pr:`662`, :pr:`666`) `Aaron Spring`_.
+
 
 climpred v2.1.5 (2021-08-12)
 ============================

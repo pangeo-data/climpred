@@ -217,26 +217,26 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
     return ds.quantile(q=[ci_low, ci_high], dim=dim, skipna=False)
 
 
-def _pvalue_from_distributions(simple_fct, init, metric=None):
+def _pvalue_from_distributions(ref_skill, init_skill, metric=None):
     """Get probability that skill of a reference forecast (e.g., persistence or
     uninitialized skill) is larger than initialized skill.
 
     Needed for bootstrapping confidence intervals and p_values of a metric in
-    the hindcast framework. Checks whether a simple forecast like persistence
+    the hindcast framework. Checks whether a simple forecast like persistence, climatology
     or uninitialized performs better than initialized forecast. Need to keep in
     mind the orientation of metric (whether larger values are better or worse
     than smaller ones.)
 
     Args:
-        simple_fct (xarray object): persistence or uninitialized skill.
-        init (xarray object): hindcast skill.
+        ref_skill (xarray object): persistence or uninitialized skill.
+        init_skill (xarray object): initialized skill.
         metric (Metric): metric class Metric
 
     Returns:
         pv (xarray object): probability that simple forecast performs better
                             than initialized forecast.
     """
-    pv = ((simple_fct - init) > 0).mean("iteration")
+    pv = ((ref_skill - init_skill) > 0).mean("iteration")
     if not metric.positive:
         pv = 1 - pv
     return pv
@@ -896,7 +896,7 @@ def bootstrap_compute(
         )
     if "climatology" in reference:
         p_clim_over_init = _pvalue_from_distributions(  # noqa: F841
-            bootstrapped_clim_skill, bootstrapped_clim_skill, metric=metric
+            bootstrapped_clim_skill, bootstrapped_init_skill, metric=metric
         )
     if "persistence" in reference:
         p_pers_over_init = _pvalue_from_distributions(  # noqa: F841

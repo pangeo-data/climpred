@@ -411,3 +411,39 @@ def test_resample_iterations_dix_no_squeeze(PM_da_initialized_1d):
     print(da)
     actual = _resample_iterations_idx(da, iterations=ITERATIONS)
     assert "test_dim" in actual.dims
+
+
+@pytest.mark.parametrize("metric", ["acc", "mae"])
+def test_bootstrap_p_climatology(hindcast_hist_obs_1d, metric):
+    """Test that p from bootstrap is close to 0 if skillful."""
+    reference = "climatology"
+    bskill = hindcast_hist_obs_1d.bootstrap(
+        metric=metric,
+        comparison="e2o",
+        dim="init",
+        iterations=21,
+        alignment="same_inits",
+        reference=reference,
+    )
+    v = "SST"
+    lead = 1
+    # first lead skill full
+    if metric in ["acc"]:
+        assert (
+            (
+                bskill.sel(skill="initialized", results="verify skill")
+                > bskill.sel(skill=reference, results="verify skill")
+            )
+            .sel(lead=lead)[v]
+            .all()
+        )
+    else:
+        assert (
+            (
+                bskill.sel(skill="initialized", results="verify skill")
+                < bskill.sel(skill=reference, results="verify skill")
+            )
+            .sel(lead=lead)[v]
+            .all()
+        )
+    assert bskill.sel(skill=reference, results="p").sel(lead=lead)[v] < 0.1

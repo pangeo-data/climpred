@@ -872,10 +872,7 @@ def bootstrap_compute(
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
-        print("clim_skill", clim_skill)
         bootstrapped_clim_skill, _ = xr.broadcast(clim_skill, bootstrapped_init_skill)
-        print("bootstrapped_clim_skill", bootstrapped_clim_skill)
-        print("bootstrapped_init_skill", bootstrapped_init_skill, "\n")
 
     # get confidence intervals CI
     init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)

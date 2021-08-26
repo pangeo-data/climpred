@@ -9,7 +9,7 @@ Bug Fixes
 ---------
 - Fix ``results='p'`` in :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` when ``reference='climatology'``.
-  (:issue:`668`, :pr:`669`) `Aaron Spring`_.
+  (:issue:`668`, :pr:`670`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` for ``how`` in
   [``modified_quantile``, ``basic_quantile``, ``gamma_mapping``, ``normal_mapping``]
   takes all ``member``s to create model distribution. (:pr:`667`) `Aaron Spring`_.

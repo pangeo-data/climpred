@@ -5,6 +5,13 @@ What's New
 climpred v2.x.x (unreleased)
 ============================
 
+Bug Fixes
+---------
+- Fix ``results='p'`` in :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` when ``reference='climatology'``.
+  (:issue:`668`, :pr:`669`) `Aaron Spring`_.
+
+
 New Features
 ------------
 - allow more `bias reduction <bias_removal.html>`_ methods wrapped from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:

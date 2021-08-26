@@ -654,6 +654,8 @@ def xclim_sdba(
 
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")
+        if 'member' in model.dims:
+            metric_kwargs["group"] = sdba.Grouper(metric_kwargs["group"], add_dims=['member'])
 
         adjust_kwargs = {}
         for k in ["interp", "extrapolation", "detrend"]:

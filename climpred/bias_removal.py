@@ -659,7 +659,7 @@ def xclim_sdba(
                 metric_kwargs["group"], add_dims=["member"]
             )
             if "member" not in reference.dims:
-                reference = reference.expand_dims(member=[model.member[0]])
+                reference = reference.expand_dims(member=model.member)
 
         adjust_kwargs = {}
         for k in ["interp", "extrapolation", "detrend"]:

@@ -672,6 +672,7 @@ def xclim_sdba(
             )
             return dqm.adjust(data_to_be_corrected, **adjust_kwargs)
 
+        del model.coords["lead"]
         c = xr.Dataset()
         for v in model.data_vars:
             c[v] = adjustment(reference[v], model[v], data_to_be_corrected[v])

@@ -330,9 +330,7 @@ def compute_hindcast(
     )
 
     if "iteration" in forecast.dims and "iteration" not in verif.dims:
-        verif = (
-            verif.expand_dims(iteration=forecast.iteration)
-        )
+        verif = verif.expand_dims(iteration=forecast.iteration)
 
     log_compute_hindcast_header(metric, comparison, dim, alignment, "initialized")
 

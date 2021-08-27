@@ -421,8 +421,6 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
 
 def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
     """Testing kwargs are used."""
-    from xclim.sdba import Grouper
-
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")
@@ -433,7 +431,7 @@ def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
         how="DetrendedQuantileMapping",
         alignment="same_inits",
         train_test_split="unfair",
-        group=Grouper("time.month", window=3),
+        group="time.month",
         nquantiles=10,
     )
     hind = he.remove_bias(

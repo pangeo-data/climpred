@@ -19,6 +19,7 @@ BIAS_CORRECTION_METHODS.remove("normal_mapping")
 BIAS_CORRECTION_METHODS.remove("gamma_mapping")
 # fails with these conftest files somehow
 XCLIM_BIAS_CORRECTION_METHODS.remove("LOCI")
+XCLIM_BIAS_CORRECTION_METHODS.remove("PrincipalComponents")
 
 
 def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):

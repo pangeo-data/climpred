@@ -432,7 +432,7 @@ def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
         how="DetrendedQuantileMapping",
         alignment="same_inits",
         train_test_split="unfair",
-        group = Grouper("time.month", window=3)
+        group = Grouper("time.month", window=3),
         nquantiles=10,
     )
     hind = he.remove_bias(

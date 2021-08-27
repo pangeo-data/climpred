@@ -422,6 +422,7 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
 def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
     """Testing kwargs are used."""
     from xclim.sdba import Grouper
+
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])
         .sel(model="GEM-NEMO")

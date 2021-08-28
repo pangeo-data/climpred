@@ -28,7 +28,7 @@ New Features
   These methods do not respond to ``OPTIONS['seasonality']`` like the other methods.
   Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.
   Provide ``group=None`` or skip ``group`` to use ``init.{OPTIONS['seasonality']}``.
-  (:issue:`525`, :pr:`662`, :pr:`666`) `Aaron Spring`_.
+  (:issue:`525`, :pr:`662`, :pr:`666`, :pr:`671`) `Aaron Spring`_.
 
 
 climpred v2.1.5 (2021-08-12)

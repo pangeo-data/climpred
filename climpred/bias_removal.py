@@ -655,8 +655,7 @@ def xclim_sdba(
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")
         if "member" in model.dims:
-            metric_kwargs["group"] = sdba.Grouper(
-                metric_kwargs["group"], add_dims=["member"]
+            metric_kwargs["add_dims"] = "member"
             )
             if "member" not in reference.dims:
                 reference = reference.expand_dims(member=[model.member[0]])

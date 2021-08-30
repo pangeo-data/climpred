@@ -9,5 +9,4 @@ netcdf4
 nc-time-axis
 bias-correction
 cf_xarray>=0.6.0
-#xclim>=0.29
-xclim@git+https://github.com/Ouranosinc/xclim.git
+xclim>=0.29

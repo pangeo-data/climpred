@@ -654,6 +654,10 @@ def xclim_sdba(
 
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")
+        if "member" in model.dims:
+            metric_kwargs["add_dims"] = ["member"]
+            if "member" not in reference.dims:
+                reference = reference.expand_dims(member=[model.member[0]])
 
         adjust_kwargs = {}
         for k in ["interp", "extrapolation", "detrend"]:
@@ -665,6 +669,8 @@ def xclim_sdba(
                 reference, model, **metric_kwargs
             )
             return dqm.adjust(data_to_be_corrected, **adjust_kwargs)
+
+        del model.coords["lead"]
 
         c = xr.Dataset()
         for v in model.data_vars:

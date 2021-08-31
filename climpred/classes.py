@@ -1817,7 +1817,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
                 skill    <U11 'initialized'
             Data variables:
-                SST      (lead) float64 0.09978 0.09851 0.0839 ... 0.07654 0.08207 0.08174
+                SST      (lead) float64 0.09823 0.09747 0.08235 ... 0.07742 0.08115 0.08326
 
             Wrapping methods ``how`` from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
 

@@ -2,7 +2,7 @@
 What's New
 ==========
 
-climpred v2.1.6 (unreleased)
+climpred v2.1.6 (2021-08-31)
 ============================
 
 Bug Fixes

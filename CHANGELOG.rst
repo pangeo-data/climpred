@@ -5,6 +5,10 @@ What's New
 climpred v2.1.6 (2021-08-31)
 ============================
 
+Adding on to `2.1.5`, more bias reduction methods wrapped from
+`xclim <https://xclim.readthedocs.io/en/latest/sdba.html>`_
+are implemented.
+
 Bug Fixes
 ---------
 - Fix ``results='p'`` in :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
@@ -12,11 +16,14 @@ Bug Fixes
   (:issue:`668`, :pr:`670`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` for ``how`` in
   [``modified_quantile``, ``basic_quantile``, ``gamma_mapping``, ``normal_mapping``]
+  from `bias_correction <https://github.com/pankajkarman/bias_correction>`_
   takes all ``member``s to create model distribution. (:pr:`667`) `Aaron Spring`_.
 
 New Features
 ------------
-- allow more `bias reduction <bias_removal.html>`_ methods wrapped from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
+- allow more `bias reduction <bias_removal.html>`_ methods wrapped from
+  `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in
+  :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
     * ``how="EmpiricalQuantileMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
     * ``how="DetrendedQuantileMapping"``: `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_

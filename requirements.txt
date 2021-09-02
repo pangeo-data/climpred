@@ -3,10 +3,10 @@ dask!=2021.03.0
 matplotlib
 ipython
 toolz
-cftime>=1.1.2
+cftime>=1.5.0
 xskillscore>=0.0.20
 netcdf4
-nc-time-axis
-bias-correction
+nc-time-axis>=1.3.1
+bias-correction>=0.4
 cf_xarray>=0.6.0
 xclim>=0.29

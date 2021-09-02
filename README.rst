@@ -73,7 +73,7 @@ Verification of weather and climate forecasts.
 .. |conda downloads| image:: https://img.shields.io/conda/dn/conda-forge/climpred
     :alt: Conda downloads
     :target: https://anaconda.org/conda-forge/climpred
-    
+
 .. |pypi downloads| image:: https://pepy.tech/badge/climpred
     :alt: pypi downloads
     :target: https://pepy.tech/project/climpred

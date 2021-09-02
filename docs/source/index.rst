@@ -17,7 +17,7 @@ climpred: verification of weather and climate forecasts
     * - license
       - |license|
     * - community
-      - |gitter| |contributors| |downloads|
+      - |gitter| |contributors| |conda downloads| |pypi downloads|
     * - tutorials
       - |gallery| |workshop| |cloud|
 
@@ -69,9 +69,13 @@ climpred: verification of weather and climate forecasts
     :alt: GitHub contributors
     :target: https://github.com/pangeo-data/climpred/graphs/contributors
 
-.. |downloads| image:: https://img.shields.io/conda/dn/conda-forge/climpred
+.. |conda downloads| image:: https://img.shields.io/conda/dn/conda-forge/climpred
     :alt: Conda downloads
     :target: https://anaconda.org/conda-forge/climpred
+
+.. |pypi downloads| image:: https://pepy.tech/badge/climpred
+    :alt: pypi downloads
+    :target: https://pepy.tech/project/climpred
 
 .. |gallery| image:: https://img.shields.io/badge/climpred-examples-ed7b0e.svg
     :alt: climpred gallery

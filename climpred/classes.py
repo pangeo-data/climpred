@@ -1542,12 +1542,11 @@ class HindcastEnsemble(PredictionEnsemble):
                     ):
                         ref = ref.mean("member")
                         if "time" in ref.dims and "time" not in result.dims:
-                            # print('just renaming time->init')
                             ref = ref.rename({"time": "init"})
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
-            # if "time" in result.dims:
-            #    result = result.swap_dims({"time": "init"})
+            if "time" in result.dims:
+                result = result.swap_dims({"time": "init"})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=["initialized"] + reference)
             return result.squeeze()

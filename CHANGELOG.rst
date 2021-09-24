@@ -11,10 +11,14 @@ Bug Fixes
 
 New Features
 ------------
-- Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble generates new 2-dimensional coordinate ``valid_time`` for ``initialized`` from ``init`` and ``lead``, which is matched with ``time`` from ``verification`` during alignment. (:issue:`575`, :pr:`674`) `Aaron Spring`_.
+- Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble generates new
+  2-dimensional coordinate ``valid_time`` for ``initialized`` from ``init`` and
+  ``lead``, which is matched with ``time`` from ``verification`` during alignment.
+  (:issue:`575`, :pr:`675`) `Aaron Spring`_.
 
 Documentation
 -------------
+
 
 climpred v2.1.6 (2021-08-31)
 ============================

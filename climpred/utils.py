@@ -592,7 +592,7 @@ def add_time_from_init_lead(ds):
         ds.coords["valid_time"] = times
         ds.coords["valid_time"].attrs.update(
             {
-                "long_name": "time",
+                "long_name": "validity time",
                 "standard_name": "time",
                 "description": "time for which the forecast is valid",
                 "calculate": "init + lead",

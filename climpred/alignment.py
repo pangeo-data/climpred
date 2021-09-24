@@ -54,7 +54,12 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
 
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
-    init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
+
+    if "valid_time" not in forecast.coords:
+        init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
+    else:
+        init_lead_matrix = forecast["valid_time"].drop("valid_time").rename(None)
+        init_lead_matrix["lead"].attrs = {}
 
     # A union between `inits` and observations in the verification data is required
     # for persistence, since the persistence forecast is based off a common set of

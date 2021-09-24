@@ -298,7 +298,7 @@ def test_hindcastEnsemble_init_time(init, calendar):
     )
     hindcast = HindcastEnsemble(init)
     initialized = hindcast.get_initialized()
-    time_name = "time"
+    time_name = "valid_time"
     print(initialized.coords[time_name].isel(lead=2).to_index())
     assert time_name in initialized.coords
     # multi-dim coord time

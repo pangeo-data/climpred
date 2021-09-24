@@ -78,7 +78,8 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
         # init only slighty cut due to alignment
         for c in hindcast.coords:
-            if c == "init":
+            print("check coord", c)
+            if c in ["init", "valid_time"]:
                 assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
             else:
                 assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size

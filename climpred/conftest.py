@@ -375,7 +375,6 @@ def hindcast_recon_1d_mm(hindcast_recon_1d_ym, reconstruction_ds_1d_mm):
     hind["lead"].attrs["units"] = "months"
     hindcast = HindcastEnsemble(hind)
     hindcast = hindcast.add_observations(reconstruction_ds_1d_mm)
-    print("in conftest", hindcast.coords, hindcast.coords["lead"])
     return hindcast
 
 

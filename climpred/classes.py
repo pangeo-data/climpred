@@ -1935,10 +1935,11 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs,
         )
         # TODO: find better location to prevent valid_time with member dims
-        if "member" in self._datasets["initialized"].coords["valid_time"].dims:
-            self._datasets["initialized"].coords["valid_time"] = (
-                self._datasets["initialized"]
-                .coords["valid_time"]
-                .isel(member=0, drop=True)
-            )
+        if "valid_time" in self._datasets["initialized"].coords:
+            if "member" in self._datasets["initialized"].coords["valid_time"].dims:
+                self._datasets["initialized"].coords["valid_time"] = (
+                    self._datasets["initialized"]
+                    .coords["valid_time"]
+                    .isel(member=0, drop=True)
+                )
         return self

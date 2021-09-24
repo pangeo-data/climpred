@@ -624,9 +624,9 @@ class PredictionEnsemble:
             >>> HindcastEnsemble_3D.smooth({'lon':1, 'lat':1})
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
-                SST      (init, lead, lat, lon) float64 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
+                SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
             Observations:
-                SST      (time, lat, lon) float64 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
+                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
             Uninitialized:
                 None
 
@@ -1934,4 +1934,11 @@ class HindcastEnsemble(PredictionEnsemble):
             train_time=train_time,
             **metric_kwargs,
         )
+        # TODO: find better location to prevent valid_time with member dims
+        if "member" in self._datasets["initialized"].coords["valid_time"].dims:
+            self._datasets["initialized"].coords["valid_time"] = (
+                self._datasets["initialized"]
+                .coords["valid_time"]
+                .isel(member=0, drop=True)
+            )
         return self

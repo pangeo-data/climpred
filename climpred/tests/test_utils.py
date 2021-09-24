@@ -292,3 +292,11 @@ def test_find_start_dates_for_given_init(
         assert start_dates.time.size - len(
             np.unique(PM_ds_control_1d_mm_cftime.time.dt.year.values)
         ) in [0, 1]
+
+
+def test_add_time_from_init_lead(hindcast_recon_1d_mm):
+    # todo improve
+    assert (
+        str(hindcast_recon_1d_mm.coords["valid_time"].isel(lead=0).to_index()[0])
+        != "1965-01-01 00:00:00"
+    ), print(hindcast_recon_1d_mm.coords)

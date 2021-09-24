@@ -78,17 +78,26 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
         # init only slighty cut due to alignment
         for c in hindcast.coords:
-            print("check coord", c)
+            print(
+                "check coord",
+                c,
+                "hindcast_bias_removed.coords",
+                hindcast_bias_removed.coords,
+            )
             if c in ["init", "valid_time"]:
-                assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
+                assert (
+                    hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
+                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
             else:
-                assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
+                assert (
+                    hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
+                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
 
     with set_options(seasonality=seasonality):
         metric = "rmse"
         dim = "init"
         comparison = "e2o"
-        hindcast = hindcast_recon_1d_mm.isel(lead=range(3))
+        hindcast = hindcast_recon_1d_mm.isel(lead=range(2))
         hindcast._datasets["initialized"].attrs["test"] = "test"
         hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
         verify_kwargs = dict(

@@ -1,3 +1,4 @@
+import dask
 import numpy as np
 import xarray as xr
 
@@ -59,6 +60,8 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
         init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
     else:  # new
         init_lead_matrix = forecast["valid_time"].drop("valid_time").rename(None)
+    if dask.is_dask_collection(init_lead_matrix):
+        init_lead_matrix = init_lead_matrix.compute()
 
     # A union between `inits` and observations in the verification data is required
     # for persistence, since the persistence forecast is based off a common set of

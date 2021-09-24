@@ -370,11 +370,12 @@ def reconstruction_ds_1d_mm(reconstruction_ds_1d_cftime):
 def hindcast_recon_1d_mm(hindcast_recon_1d_ym, reconstruction_ds_1d_mm):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
     observational and initialized time series (no grid)."""
-    hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970")).sel(
-        init=slice("1964", "1970")
-    )
-    hindcast._datasets["initialized"].lead.attrs["units"] = "months"
-    hindcast._datasets["observations"] = reconstruction_ds_1d_mm
+    hind = hindcast_recon_1d_ym.get_initialized().sel(init=slice("1964", "1970"))
+    del hind.coords["valid_time"]
+    hind["lead"].attrs["units"] = "months"
+    hindcast = HindcastEnsemble(hind)
+    hindcast = hindcast.add_observations(reconstruction_ds_1d_mm)
+    print("in conftest", hindcast.coords, hindcast.coords["lead"])
     return hindcast
 
 

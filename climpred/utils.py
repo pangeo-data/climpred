@@ -537,7 +537,14 @@ def my_shift(init, lead, init_freq, lead_unit):
 
     if lead_unit in ["years", "seasons", "months"]:
         # use init_freq reconstructed from anchor and lead unit
-        return init.shift(lead, init_freq)
+        from xarray.coding.frequencies import month_anchor_check
+
+        anchor_check = month_anchor_check(init)  # returns None, ce or cs
+        if anchor_check is not None:
+            lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
+            anchor = anchor_check[-1].upper()  # S/E for start/end of month
+            lead_freq = f"{lead_freq_string}{anchor}"
+        return init.shift(lead, lead_freq)
     else:
         # what about pentads, weeks (W)
         if lead_unit == "weeks":
@@ -549,7 +556,7 @@ def my_shift(init, lead, init_freq, lead_unit):
 
 
 def add_time_from_init_lead(ds):
-    """time = init + lead"""
+    """valid_time = init + lead"""
     if "time" not in ds.coords and "time" not in ds.dims:
         leads = ds.lead
         lead_unit = leads.attrs["units"]
@@ -563,15 +570,14 @@ def add_time_from_init_lead(ds):
                 lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
                 anchor = anchor_check[-1].upper()  # S/E for start/end of month
                 init_freq = f"{lead_freq_string}{anchor}"
-                logging.info("Guessed init freq: {init_freq}")
+                logging.info(f"Guessed init freq: {init_freq}")
         if (
             init_freq is None
             and lead_unit in ["years", "months", "seasons"]
             and "360" not in inits.calendar
         ):
             raise ValueError("Couldnt infer freq from init", inits)
-
-        # create time = init + lead
+        # create valid_time = init + lead
         times = xr.concat(
             [
                 xr.DataArray(

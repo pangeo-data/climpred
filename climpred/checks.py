@@ -182,8 +182,8 @@ def match_initialized_dims(init, verif, uninitialized=False):
 
     If uninitialized, ignore ``member``. Otherwise, ignore ``lead`` and ``member``.
     """
-    # Since verification data won't have the ``init``` dimension, temporarily rename to
-    # time.
+    # Since verification has dimension ``time`` and initialized ``init``+``lead``,
+    # temporarily rename
     init = init.rename({"init": "time"})
     init_dims = list(init.dims)
     if "lead" in init_dims:

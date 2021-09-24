@@ -150,6 +150,9 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
         ]
         time_index = xr.CFTimeIndex(cftime_dates)
         xobj[time_string] = time_index
+        if time_string == "time":
+            xobj["time"].attrs.setdefault("long_name", "time")
+            xobj["time"].attrs.setdefault("standard_name", "time")
 
     return xobj
 
@@ -510,3 +513,89 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
                 f"excepted category edges as tuple, xr.Dataset or np.array, found {type(category_edges)}"
             )
         return metric_kwargs
+
+
+def my_shift(init, lead, init_freq, lead_unit):
+    """Shift CFTimeIndex init by amount lead in units lead_unit."""
+    init_calendar = init.calendar
+    if isinstance(lead, xr.DataArray):
+        lead = lead.values
+
+    assert int(lead) == float(lead)  # int check
+    lead = int(lead)
+
+    if "360" in init_calendar:
+        # use pd.Timedelta
+        if lead_unit == "years":
+            lead = lead * 360
+        elif lead_unit == "seasons":
+            lead = lead * 90
+            lead_unit = "D"
+        elif lead_unit == "months":
+            lead_unit = "D"
+            lead = lead * 30
+
+    if lead_unit in ["years", "seasons", "months"]:
+        # use init_freq reconstructed from anchor and lead unit
+        return init.shift(lead, init_freq)
+    else:
+        # what about pentads, weeks (W)
+        if lead_unit == "weeks":
+            lead_unit = "W"
+        elif lead_unit == "pentads":
+            lead = lead * 5
+            lead_unit = "D"
+        return init + pd.Timedelta(lead, lead_unit)
+
+
+def add_time_from_init_lead(ds):
+    """time = init + lead"""
+    if "time" not in ds.coords and "time" not in ds.dims:
+        leads = ds.lead
+        lead_unit = leads.attrs["units"]
+        inits = ds.init.to_index()
+        init_freq = xr.infer_freq(inits)
+        if init_freq is None and "360" not in inits.calendar:
+            from xarray.coding.frequencies import month_anchor_check
+
+            anchor_check = month_anchor_check(inits)  # returns None, ce or cs
+            if anchor_check is not None:
+                lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
+                anchor = anchor_check[-1].upper()  # S/E for start/end of month
+                init_freq = f"{lead_freq_string}{anchor}"
+                logging.info("Guessed init freq: {init_freq}")
+        if (
+            init_freq is None
+            and lead_unit in ["years", "months", "seasons"]
+            and "360" not in inits.calendar
+        ):
+            raise ValueError("Couldnt infer freq from init", inits)
+
+        # create time = init + lead
+        times = xr.concat(
+            [
+                xr.DataArray(
+                    my_shift(inits, lead, init_freq, lead_unit),
+                    dims="init",
+                    coords={"init": inits},
+                )
+                for lead in leads
+            ],
+            dim="lead",
+            join="inner",
+            compat="broadcast_equals",
+        )
+        times["lead"] = leads
+        ds = ds.copy()  # otherwise inplace coords setting
+        if dask.is_dask_collection(times):
+            times = times.compute()
+        ds.coords["valid_time"] = times
+        ds.coords["valid_time"].attrs.update(
+            {
+                "long_name": "time",
+                "standard_name": "time",
+                "description": "time for which the forecast is valid",
+                "calculate": "init + lead",
+            }
+        )
+    return ds

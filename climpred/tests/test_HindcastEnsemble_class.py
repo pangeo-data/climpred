@@ -4,6 +4,7 @@ import xarray as xr
 from climpred import HindcastEnsemble, set_options
 from climpred.exceptions import DimensionError
 from climpred.options import OPTIONS
+from climpred.utils import convert_time_index
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
@@ -274,3 +275,41 @@ def test_HindcastEnsemble_instantiating_standard_name(
     with pytest.warns(UserWarning, match="but renamed dimension"):
         init = HindcastEnsemble(init).get_initialized()
         assert dim in init.dims, print(init.dims, init.coords)
+
+
+@pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
+@pytest.mark.parametrize(
+    "init",
+    [
+        pytest.lazy_fixture("hind_ds_initialized_1d_cftime"),
+        pytest.lazy_fixture("hind_ds_initialized_1d_cftime_mm"),
+        pytest.lazy_fixture("hind_ds_initialized_1d_cftime_dm"),
+    ],
+    ids=["ym", "mm", "dm"],
+)
+def test_hindcastEnsemble_init_time(init, calendar):
+    """Test to see hindcast ensemble can be initialized and creates time
+    coordinate depending on init and lead for different calendars and lead units."""
+    init = convert_time_index(
+        init,
+        "init",
+        "init.init",
+        calendar=calendar,
+    )
+    hindcast = HindcastEnsemble(init)
+    initialized = hindcast.get_initialized()
+    time_name = "time"
+    print(initialized.coords[time_name].isel(lead=2).to_index())
+    assert time_name in initialized.coords
+    # multi-dim coord time
+    for d in ["init", "lead"]:
+        assert d in initialized[time_name].coords
+    # time and init have both freq
+    if (
+        initialized.lead.attrs["units"] != "days"
+    ):  # cannot find freq after days shift in ProlepticGregorian calendar
+        assert xr.infer_freq(initialized["init"]) == xr.infer_freq(
+            initialized.coords[time_name].isel(lead=0)
+        )
+    # time larger than init
+    assert initialized.init.max() < initialized.coords[time_name].isel(lead=2).max()

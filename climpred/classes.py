@@ -58,6 +58,7 @@ from .smoothing import (
     temporal_smoothing,
 )
 from .utils import (
+    add_time_from_init_lead,
     broadcast_metric_kwargs_for_rps,
     convert_time_index,
     convert_Timedelta_to_lead_units,
@@ -167,13 +168,14 @@ class PredictionEnsemble:
         # `init` dimension is a `float` or `int`.
         xobj = convert_Timedelta_to_lead_units(xobj)
         has_valid_lead_units(xobj)
+        xobj = add_time_from_init_lead(xobj)
         # add metadata
         xobj = attach_standard_names(xobj)
         xobj = attach_long_names(xobj)
         xobj = xobj.cf.add_canonical_attributes(
             verbose=False, override=True, skip="units"
         )
-        del xobj.attrs["history"]
+        del xobj.attrs["history"]  # better only delete xclim message or not?
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}
@@ -312,7 +314,7 @@ class PredictionEnsemble:
             return False
         return id
 
-    def plot(self, variable=None, ax=None, show_members=False, cmap=None):
+    def plot(self, variable=None, ax=None, show_members=False, cmap=None, x="time"):
         """Plot datasets from PredictionEnsemble.
 
         Args:
@@ -320,18 +322,38 @@ class PredictionEnsemble:
             ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
             show_members (bool): whether to display all members individually.
                 Defaults to False.
-            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `jet` for
-                `HindcastEnsemble` and `tab10` for `PerfectModelEnsemble`.
+            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `viridis`
+                for :py:class:`~climpred.classes.HindcastEnsemble`
+                and ``tab10`` for :py:class:`~climpred.classes.PerfectModelEnsemble`.
+            x (str): Name of x-axis. Use ``'time'`` to show observations and
+                hindcasts in real time. Use ``'init'`` to see hindcasts as
+                initializations. For ``x='init'`` only initialized is shown and only
+                works for :py:class:`~climpred.classes.HindcastEnsemble`.
+
+        .. note::
+            Alternatively inspect initialized datasets by
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x='time')``
+            to see ``validtime`` on x-axis or
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x='init')``
+            to see ``init`` on x-axis.
 
         Returns:
             ax: plt.axes
 
         """
+        if x == "valid_time":
+            x = "time"
+        assert x in ["time", "init"]
         if self.kind == "hindcast":
             if cmap is None:
-                cmap = "jet"
+                cmap = "viridis"
             return plot_lead_timeseries_hindcast(
-                self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
+                self,
+                variable=variable,
+                ax=ax,
+                show_members=show_members,
+                cmap=cmap,
+                x=x,
             )
         elif self.kind == "perfect":
             if cmap is None:
@@ -826,7 +848,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "time", "xobj[init]")
+        xobj = convert_time_index(xobj, "time", "xobj[time]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
         match_calendars(self._datasets["initialized"], xobj, kind2="control")
@@ -848,6 +870,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
             self._datasets["initialized"], self._datasets["control"]
         )
+        # uninit = add_time_from_init_lead(uninit)
+        uninit.coords["valid_time"] = self.get_initialized().coords["valid_time"]
+        # if "time" in uninit.coords:
+        #    if "member" in uninit.time.dims:  # time not member dependent
+        #        uninit.coords["time"] = uninit.time.isel(member=0, drop=True)
         datasets = self._datasets.copy()
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="perfect")
@@ -1303,7 +1330,7 @@ class HindcastEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "time", "xobj[init]")
+        xobj = convert_time_index(xobj, "time", "xobj[time]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
         match_calendars(self._datasets["initialized"], xobj)
@@ -1325,7 +1352,7 @@ class HindcastEnsemble(PredictionEnsemble):
         match_initialized_vars(self._datasets["initialized"], xobj)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "time", "xobj[init]")
+        xobj = convert_time_index(xobj, "time", "xobj[time]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
         match_calendars(self._datasets["initialized"], xobj, kind2="uninitialized")
@@ -1482,7 +1509,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast["lead"].data
             ]
-            result = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
+            result = xr.concat(metric_over_leads, dim="lead")  # , **CONCAT_KWARGS)
             result["lead"] = forecast["lead"]
 
             if reference is not None:
@@ -1505,7 +1532,7 @@ class HindcastEnsemble(PredictionEnsemble):
                         )
                         for lead in forecast["lead"].data
                     ]
-                    ref = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
+                    ref = xr.concat(metric_over_leads, dim="lead")  # , **CONCAT_KWARGS)
                     ref["lead"] = forecast["lead"]
                     # fix to get no member dim for uninitialized e2o skill #477
                     if (
@@ -1514,10 +1541,13 @@ class HindcastEnsemble(PredictionEnsemble):
                         and "member" in ref.dims
                     ):
                         ref = ref.mean("member")
+                        if "time" in ref.dims and "time" not in result.dims:
+                            # print('just renaming time->init')
+                            ref = ref.rename({"time": "init"})
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
-            if "time" in result.dims:
-                result = result.rename({"time": "init"})
+            # if "time" in result.dims:
+            #    result = result.swap_dims({"time": "init"})
             # Add dimension/coordinate for different references.
             result = result.assign_coords(skill=["initialized"] + reference)
             return result.squeeze()
@@ -1549,6 +1579,9 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
+        # if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
+        #    res = res.rename({"time": "init"})
+        #    res.coords["time"] = self.get_initialized().time
         return res
 
     def bootstrap(

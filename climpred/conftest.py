@@ -190,6 +190,20 @@ def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
 
 
 @pytest.fixture()
+def hind_ds_initialized_1d_cftime_mm(hind_ds_initialized_1d_cftime):
+    """CESM-DPLE initialzed hindcast timeseries with cftime initializations faked for monthly leads."""
+    hind_ds_initialized_1d_cftime.lead.attrs["units"] = "months"
+    return hind_ds_initialized_1d_cftime
+
+
+@pytest.fixture()
+def hind_ds_initialized_1d_cftime_dm(hind_ds_initialized_1d_cftime):
+    """CESM-DPLE initialzed hindcast timeseries with cftime initializations faked for daily leads."""
+    hind_ds_initialized_1d_cftime.lead.attrs["units"] = "days"
+    return hind_ds_initialized_1d_cftime
+
+
+@pytest.fixture()
 def hind_da_initialized_1d(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.DataArray."""
     return hind_ds_initialized_1d["SST"]
@@ -336,19 +350,31 @@ def hindcast_hist_obs_1d(
     return hindcast
 
 
+def hindcast_obs_1d_for_alignment(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime
+):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d_cftime)
+    hindcast = hindcast.add_observations(reconstruction_ds_1d_cftime)
+    return hindcast
+
+
 @pytest.fixture()
-def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
+def reconstruction_ds_1d_mm(reconstruction_ds_1d_cftime):
+    """CESM-FOSI historical reconstruction timeseries members mean removed
+    xr.Dataset in monthly interpolated."""
+    return reconstruction_ds_1d_cftime.resample(time="1MS").interpolate("linear")
+
+
+@pytest.fixture()
+def hindcast_recon_1d_mm(hindcast_recon_1d_ym, reconstruction_ds_1d_mm):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
     observational and initialized time series (no grid)."""
     hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970")).sel(
         init=slice("1964", "1970")
     )
-    # resample init also
-    # hindcast._datasets["initialized"]['init']=xr.cftime_range(start='1964', freq='MS', periods=hindcast.coords['init'].size) # takes too long
     hindcast._datasets["initialized"].lead.attrs["units"] = "months"
-    hindcast._datasets["observations"] = (
-        hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")
-    )
+    hindcast._datasets["observations"] = reconstruction_ds_1d_mm
     return hindcast
 
 

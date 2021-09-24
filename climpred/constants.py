@@ -23,7 +23,7 @@ PM_CALENDAR_STR = "DatetimeNoLeap"
 HINDCAST_CALENDAR_STR = "DatetimeProlepticGregorian"
 
 # default kwargs when using concat
-# data_vars='minimal' could be added but needs to check that not xr.Dataset
+# data_vars='minimal' could be added but needs to check that xr.Dataset
 CONCAT_KWARGS = {"coords": "minimal", "compat": "override"}
 
 # name for additional dimension in m2m comparison

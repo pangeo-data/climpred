@@ -521,13 +521,17 @@ def my_shift(init, lead, init_freq, lead_unit):
     if isinstance(lead, xr.DataArray):
         lead = lead.values
 
-    assert int(lead) == float(lead)  # int check
-    lead = int(lead)
+    if lead_unit in ["years", "seasons", "months"] and "360" not in init_calendar:
+        if int(lead) != float(lead):
+            raise ValueError(
+                f'Require integer leads if lead.attrs["unit"]={lead_unit} in ["years", "seasons", "months"] and calendar={init_calendar} not "360_day".'
+            )
+        lead = int(lead)
 
-    if "360" in init_calendar:
-        # use pd.Timedelta
+    if "360" in init_calendar:  # use pd.Timedelta
         if lead_unit == "years":
             lead = lead * 360
+            lead_unit = "D"
         elif lead_unit == "seasons":
             lead = lead * 90
             lead_unit = "D"
@@ -541,9 +545,24 @@ def my_shift(init, lead, init_freq, lead_unit):
 
         anchor_check = month_anchor_check(init)  # returns None, ce or cs
         if anchor_check is not None:
-            lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
+            lead_freq_string = lead_unit[0].upper()  # A for years, D for days
+            if lead_freq_string == "Y":
+                lead_freq_string = "A"
+            elif lead_freq_string == "S":
+                lead_freq_string = "Q"
             anchor = anchor_check[-1].upper()  # S/E for start/end of month
+            if anchor == "E":
+                anchor = ""
             lead_freq = f"{lead_freq_string}{anchor}"
+            if lead_freq_string in ["A", "Q"]:  # add month info again
+                init_freq = xr.infer_freq(init)
+                if init_freq:
+                    if "-" in init_freq:
+                        lead_freq = lead_freq + "-" + init_freq.split("-")[-1]
+        else:
+            raise ValueError(
+                f"could not shift init={init} in calendar={init_calendar} by lead={lead} {lead_unit}"
+            )
         return init.shift(lead, lead_freq)
     else:
         # what about pentads, weeks (W)
@@ -552,7 +571,7 @@ def my_shift(init, lead, init_freq, lead_unit):
         elif lead_unit == "pentads":
             lead = lead * 5
             lead_unit = "D"
-        return init + pd.Timedelta(lead, lead_unit)
+        return init + pd.Timedelta(float(lead), lead_unit)
 
 
 def add_time_from_init_lead(ds):
@@ -569,6 +588,8 @@ def add_time_from_init_lead(ds):
             if anchor_check is not None:
                 lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
                 anchor = anchor_check[-1].upper()  # S/E for start/end of month
+                if anchor == "E":
+                    anchor = ""
                 init_freq = f"{lead_freq_string}{anchor}"
                 logging.info(f"Guessed init freq: {init_freq}")
         if (

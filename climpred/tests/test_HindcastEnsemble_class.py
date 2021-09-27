@@ -277,39 +277,50 @@ def test_HindcastEnsemble_instantiating_standard_name(
         assert dim in init.dims, print(init.dims, init.coords)
 
 
-@pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
 @pytest.mark.parametrize(
-    "init",
+    "init_freq,lead_unit",
     [
-        pytest.lazy_fixture("hind_ds_initialized_1d_cftime"),
-        pytest.lazy_fixture("hind_ds_initialized_1d_cftime_mm"),
-        pytest.lazy_fixture("hind_ds_initialized_1d_cftime_dm"),
+        ("AS-JUL", "years"),
+        ("AS-JUL", "months"),
+        ("AS-JUL", "seasons"),
+        ("MS", "months"),
+        ("3M", "days"),
+        ("7D", "days"),
+        ("1D", "hours"),
+        ("1H", "seconds"),
     ],
-    ids=["ym", "mm", "dm"],
 )
-def test_hindcastEnsemble_init_time(init, calendar):
-    """Test to see hindcast ensemble can be initialized and creates time
+@pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
+def test_hindcastEnsemble_init_time2(init_freq, lead_unit, calendar):
+    """Test to see HindcastEnsemble can be initialized and creates time
     coordinate depending on init and lead for different calendars and lead units."""
-    init = convert_time_index(
-        init,
-        "init",
-        "init.init",
-        calendar=calendar,
+    p = 3
+    nlead = 2
+    lead = [0, 1]
+    import numpy as np
+
+    init = xr.cftime_range(start="2000", freq=init_freq, periods=p)
+    data = np.random.rand(p, nlead)
+    init = xr.DataArray(
+        data,
+        dims=["init", "lead"],
+        coords={"init": init, "lead": lead},
+        name="initialized",
     )
-    hindcast = HindcastEnsemble(init)
-    initialized = hindcast.get_initialized()
-    time_name = "valid_time"
-    print(initialized.coords[time_name].isel(lead=2).to_index())
-    assert time_name in initialized.coords
-    # multi-dim coord time
-    for d in ["init", "lead"]:
-        assert d in initialized[time_name].coords
-    # time and init have both freq
-    if (
-        initialized.lead.attrs["units"] != "days"
-    ):  # cannot find freq after days shift in ProlepticGregorian calendar
-        assert xr.infer_freq(initialized["init"]) == xr.infer_freq(
-            initialized.coords[time_name].isel(lead=0)
-        )
-    # time larger than init
-    assert initialized.init.max() < initialized.coords[time_name].isel(lead=2).max()
+    init.lead.attrs["units"] = lead_unit
+    coords = HindcastEnsemble(init).coords
+    assert "valid_time" in coords
+    assert (
+        coords["valid_time"].isel(lead=0, drop=True) == coords["init"]
+    ).all(), print(
+        coords["valid_time"].isel(lead=0, drop=True).to_index(),
+        "\n vs \n",
+        coords["init"].to_index(),
+    )
+    assert (
+        coords["valid_time"].isel(lead=1, drop=True) != coords["init"]
+    ).all(), print(
+        coords["valid_time"].isel(lead=1, drop=True).to_index(),
+        "\n vs \n",
+        coords["init"].to_index(),
+    )

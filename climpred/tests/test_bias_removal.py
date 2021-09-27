@@ -475,9 +475,9 @@ def test_remove_bias_group(hindcast_NMME_Nino34):
     assert hind_no.equals(hind_None)
 
 
-def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):
+def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
     """Compare Scaling and additive_mean to be similar"""
-    he = hindcast_recon_1d_dm.isel(lead=[0, 1]).isel(init=slice(None, 366 * 2))
+    he = hindcast_recon_1d_mm.isel(lead=[0, 1])
     hind_scaling = he.remove_bias(
         how="Scaling",
         kind="+",
@@ -486,7 +486,7 @@ def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):
         group="time.dayofyear",
     )
     with set_options(seasonality="dayofyear"):
-        hind_mean = hindcast_recon_1d_dm.remove_bias(
+        hind_mean = hindcast_recon_1d_mm.remove_bias(
             how="additive_mean",
             alignment="same_inits",
             train_test_split="unfair",

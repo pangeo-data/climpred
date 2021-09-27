@@ -403,15 +403,15 @@ def hindcast_NMME_Nino34():
 
 
 @pytest.fixture()
- def da_lead():
-     """Small xr.DataArray with coords `init` and `lead`."""
-     lead = np.arange(5)
-     init = np.arange(5)
-     return xr.DataArray(
-         np.random.rand(len(lead), len(init)),
-         dims=["init", "lead"],
-         coords=[init, lead],
-     )
+def da_lead():
+    """Small xr.DataArray with coords `init` and `lead`."""
+    lead = np.arange(5)
+    init = np.arange(5)
+    return xr.DataArray(
+        np.random.rand(len(lead), len(init)),
+        dims=["init", "lead"],
+        coords=[init, lead],
+    )
 
 
 @pytest.fixture()

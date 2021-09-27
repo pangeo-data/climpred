@@ -11,7 +11,7 @@ Bug Fixes
 
 New Features
 ------------
-- Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble generates new
+- Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble` generates new
   2-dimensional coordinate ``valid_time`` for ``initialized`` from ``init`` and
   ``lead``, which is matched with ``time`` from ``verification`` during alignment.
 

@@ -347,9 +347,7 @@ def gaussian_bias_removal(
             dim="member",
             alignment=alignment,
         )
-    bias = bias.drop("skill")  # .drop(
-    #    "valid_time"
-    # )  # .rename({"time": "init"})  # time distracts here
+    bias = bias.drop("skill")
 
     # how to remove bias
     if "mean" in how:

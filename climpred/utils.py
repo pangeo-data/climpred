@@ -516,14 +516,13 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
         return metric_kwargs
 
 
-def my_shift(init, lead, init_freq=None, lead_unit=None):
+def my_shift(init, lead):
     """Shift CFTimeIndex init by amount lead in units lead_unit."""
     if isinstance(init, xr.DataArray):
         init = init.to_index()
     init_calendar = init.calendar
     if isinstance(lead, xr.DataArray):
-        if lead_unit is None:
-            lead_unit = lead.attrs["units"]
+        lead_unit = lead.attrs["units"]
         lead = lead.values
 
     if lead_unit in ["years", "seasons", "months"] and "360" not in init_calendar:
@@ -582,42 +581,20 @@ def my_shift(init, lead, init_freq=None, lead_unit=None):
 def add_time_from_init_lead(ds):
     """Add valid_time = init + lead to ds coords."""
     if "valid_time" not in ds.coords and "time" not in ds.dims:
-        leads = ds.lead
-        lead_unit = leads.attrs["units"]
-        inits = ds.init.to_index()
-        init_freq = xr.infer_freq(inits)
-        if init_freq is None and "360" not in inits.calendar:
-            from xarray.coding.frequencies import month_anchor_check
-
-            anchor_check = month_anchor_check(inits)  # returns None, ce or cs
-            if anchor_check is not None:
-                lead_freq_string = lead_unit[0].upper()  # Y for years, D for days
-                anchor = anchor_check[-1].upper()  # S/E for start/end of month
-                if anchor == "E":
-                    anchor = ""
-                init_freq = f"{lead_freq_string}{anchor}"
-                logging.info(f"Guessed init freq: {init_freq}")
-        if (
-            init_freq is None
-            and lead_unit in ["years", "months", "seasons"]
-            and "360" not in inits.calendar
-        ):
-            raise ValueError("Couldnt infer freq from init", inits)
-        # create valid_time = init + lead
         times = xr.concat(
             [
                 xr.DataArray(
-                    my_shift(inits, lead, init_freq, lead_unit),
+                    my_shift(ds.init, lead),
                     dims="init",
-                    coords={"init": inits},
+                    coords={"init": ds.init},
                 )
-                for lead in leads
+                for lead in ds.lead
             ],
             dim="lead",
             join="inner",
             compat="broadcast_equals",
         )
-        times["lead"] = leads
+        times["lead"] = ds.lead
         ds = ds.copy()  # otherwise inplace coords setting
         if dask.is_dask_collection(times):
             times = times.compute()

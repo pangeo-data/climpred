@@ -877,11 +877,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         uninit = bootstrap_uninit_pm_ensemble_from_control_cftime(
             self._datasets["initialized"], self._datasets["control"]
         )
-        # uninit = add_time_from_init_lead(uninit)
         uninit.coords["valid_time"] = self.get_initialized().coords["valid_time"]
-        # if "time" in uninit.coords:
-        #    if "member" in uninit.time.dims:  # time not member dependent
-        #        uninit.coords["time"] = uninit.time.isel(member=0, drop=True)
         datasets = self._datasets.copy()
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="perfect")
@@ -1589,9 +1585,6 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
-        # if "time" in res.dims and "init" not in res.dims:  # maybe only required for rps
-        #    res = res.rename({"time": "init"})
-        #    res.coords["time"] = self.get_initialized().time
         return res
 
     def bootstrap(

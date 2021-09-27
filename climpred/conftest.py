@@ -190,20 +190,6 @@ def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
 
 
 @pytest.fixture()
-def hind_ds_initialized_1d_cftime_mm(hind_ds_initialized_1d_cftime):
-    """CESM-DPLE initialzed hindcast timeseries with cftime initializations faked for monthly leads."""
-    hind_ds_initialized_1d_cftime.lead.attrs["units"] = "months"
-    return hind_ds_initialized_1d_cftime
-
-
-@pytest.fixture()
-def hind_ds_initialized_1d_cftime_dm(hind_ds_initialized_1d_cftime):
-    """CESM-DPLE initialzed hindcast timeseries with cftime initializations faked for daily leads."""
-    hind_ds_initialized_1d_cftime.lead.attrs["units"] = "days"
-    return hind_ds_initialized_1d_cftime
-
-
-@pytest.fixture()
 def hind_da_initialized_1d(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.DataArray."""
     return hind_ds_initialized_1d["SST"]
@@ -446,35 +432,6 @@ def da2():
     """Small plain two-dimensional xr.DataArray with different values compared to
     da1."""
     return xr.DataArray([[0, 1], [5, 6], [6, 7]], dims=("x", "y"))
-
-
-@pytest.fixture()
-def da_lead():
-    """Small xr.DataArray with coords `init` and `lead`."""
-    lead = np.arange(5)
-    init = np.arange(5)
-    return xr.DataArray(
-        np.random.rand(len(lead), len(init)),
-        dims=["init", "lead"],
-        coords=[init, lead],
-    )
-
-
-@pytest.fixture()
-def two_dim_da():
-    """xr.DataArray with two dims."""
-    da = xr.DataArray(
-        np.vstack(
-            [
-                np.arange(0, 5, 1.0),
-                np.arange(0, 10, 2.0),
-                np.arange(0, 40, 8.0),
-                np.arange(0, 20, 4.0),
-            ]
-        ),
-        dims=["row", "col"],
-    )
-    return da
 
 
 @pytest.fixture()

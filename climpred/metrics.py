@@ -2990,31 +2990,14 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     if "lead" not in forecast.dims and "lead" in forecast.coords and "lead":
         if isinstance(category_edges, tuple):
             if "lead" in category_edges[1].dims:
+
                 forecast_edges = (
                     category_edges[1].sel(lead=forecast.lead).rename({"init": "time"})
                 )
                 # shift category_edges by lead
-                if forecast.lead.attrs["units"] in ["months", "years", "seasons"]:
-                    init_freq = xr.infer_freq(forecast_edges.time)
-                    if init_freq is None:
-                        raise ValueError(
-                            "Could not shift category_edges by lead. Please use "
-                            "`climpred.utils.broadcast_time_grouped_to_time` on both "
-                            "category_edges before passing them to verify."
-                        )
-                    lead_freq = forecast.lead.attrs["units"][0].upper()
-                    if init_freq[1] == "S":
-                        lead_freq = lead_freq + "S"
-                    forecast_edges["time"] = (
-                        forecast_edges["time"]
-                        .to_index()
-                        .shift(int(forecast.lead), lead_freq)
-                    )
-                else:  # for smaller lead units pd.Timedelta is easier
-                    shift = pd.Timedelta(
-                        f'{float(forecast.lead.values)} {forecast.lead.attrs["units"][0]}'
-                    )
-                    forecast_edges["time"] = forecast_edges["time"] + shift
+                from climpred.utils import my_shift
+
+                forecast_edges["time"] = my_shift(forecast_edges.time, forecast.lead)
                 forecast_edges = forecast_edges.sel(time=forecast.time)
                 forecast_edges = forecast_edges.assign_coords(time=forecast.time)
                 verif_edges = category_edges[0]

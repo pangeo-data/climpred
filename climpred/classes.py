@@ -717,6 +717,11 @@ class PredictionEnsemble:
         )
         if smooth_fct == smooth_goddard_2013 or smooth_fct == temporal_smoothing:
             self._temporally_smoothed = tsmooth_kws
+            # recalc valid_time
+            del self._datasets["initialized"].coords["valid_time"]
+            self._datasets["initialized"] = add_time_from_init_lead(
+                self._datasets["initialized"]
+            )
         return self
 
     def _warn_if_chunked_along_init_member_time(self):

@@ -2,7 +2,7 @@ import pytest
 import xarray as xr
 
 from climpred import HindcastEnsemble, set_options
-from climpred.exceptions import DimensionError
+from climpred.exceptions import CoordinateError, DimensionError
 from climpred.options import OPTIONS
 from climpred.utils import convert_time_index
 
@@ -291,7 +291,7 @@ def test_HindcastEnsemble_instantiating_standard_name(
     ],
 )
 @pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
-def test_hindcastEnsemble_init_time2(init_freq, lead_unit, calendar):
+def test_hindcastEnsemble_init_time(init_freq, lead_unit, calendar):
     """Test to see HindcastEnsemble can be initialized and creates time
     coordinate depending on init and lead for different calendars and lead units."""
     p = 3
@@ -310,17 +310,47 @@ def test_hindcastEnsemble_init_time2(init_freq, lead_unit, calendar):
     init.lead.attrs["units"] = lead_unit
     coords = HindcastEnsemble(init).coords
     assert "valid_time" in coords
-    assert (
-        coords["valid_time"].isel(lead=0, drop=True) == coords["init"]
-    ).all(), print(
-        coords["valid_time"].isel(lead=0, drop=True).to_index(),
-        "\n vs \n",
-        coords["init"].to_index(),
+    assert (coords["valid_time"].isel(lead=0, drop=True) == coords["init"]).all()
+    assert (coords["valid_time"].isel(lead=1, drop=True) != coords["init"]).all()
+
+
+@pytest.mark.parametrize("lead_freq", ["years", "months", "seasons"])
+def test_fractional_leads_360_day(hind_ds_initialized_1d, lead_freq):
+    """Test that lead can also contain floats when calendar='360_day'."""
+    hind_ds_initialized_1d["init"] = xr.cftime_range(
+        start=str(hind_ds_initialized_1d.init[0].values),
+        freq="YS",
+        periods=hind_ds_initialized_1d.init.size,
+        calendar="360_day",
     )
-    assert (
-        coords["valid_time"].isel(lead=1, drop=True) != coords["init"]
-    ).all(), print(
-        coords["valid_time"].isel(lead=1, drop=True).to_index(),
-        "\n vs \n",
-        coords["init"].to_index(),
+    with xr.set_options(keep_attrs=True):
+        hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
+        hind_ds_initialized_1d["lead"].attrs["units"] = lead_freq
+    assert HindcastEnsemble(hind_ds_initialized_1d)
+
+
+@pytest.mark.parametrize("lead_freq", ["weeks", "pentads", "days", "seconds"])
+@pytest.mark.parametrize(
+    "calendar", ["standard", "julian", "noleap", "proleptic_gregorian"]
+)
+def test_fractional_leads_lower_than_month_lead_units(
+    hind_ds_initialized_1d, lead_freq, calendar
+):
+    """Test that lead can also contain floats when lead units is lower or equal to weeks'."""
+    hind_ds_initialized_1d["init"] = xr.cftime_range(
+        start=str(hind_ds_initialized_1d.init[0].values),
+        freq="YS",
+        periods=hind_ds_initialized_1d.init.size,
+        calendar=calendar,
     )
+    hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
+    hind_ds_initialized_1d["lead"].attrs["units"] = lead_freq
+    assert HindcastEnsemble(hind_ds_initialized_1d)
+
+
+def test_fractional_leads_fails(hind_ds_initialized_1d):
+    """Test that fractional leads fail for normal calendars and lead units in larger than days."""
+    with xr.set_options(keep_attrs=True):
+        hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
+    with pytest.raises(CoordinateError, match="Require integer"):
+        HindcastEnsemble(hind_ds_initialized_1d)

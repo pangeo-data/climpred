@@ -13,6 +13,7 @@ from . import comparisons, metrics
 from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
+from .exceptions import CoordinateError
 from .metrics import METRIC_ALIASES
 from .options import OPTIONS
 
@@ -515,16 +516,20 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
         return metric_kwargs
 
 
-def my_shift(init, lead, init_freq, lead_unit):
+def my_shift(init, lead, init_freq=None, lead_unit=None):
     """Shift CFTimeIndex init by amount lead in units lead_unit."""
+    if isinstance(init, xr.DataArray):
+        init = init.to_index()
     init_calendar = init.calendar
     if isinstance(lead, xr.DataArray):
+        if lead_unit is None:
+            lead_unit = lead.attrs["units"]
         lead = lead.values
 
     if lead_unit in ["years", "seasons", "months"] and "360" not in init_calendar:
         if int(lead) != float(lead):
-            raise ValueError(
-                f'Require integer leads if lead.attrs["unit"]={lead_unit} in ["years", "seasons", "months"] and calendar={init_calendar} not "360_day".'
+            raise CoordinateError(
+                f'Require integer leads if lead.attrs["units"]="{lead_unit}" in ["years", "seasons", "months"] and calendar="{init_calendar}" not "360_day".'
             )
         lead = int(lead)
 
@@ -575,8 +580,8 @@ def my_shift(init, lead, init_freq, lead_unit):
 
 
 def add_time_from_init_lead(ds):
-    """valid_time = init + lead"""
-    if "time" not in ds.coords and "time" not in ds.dims:
+    """Add valid_time = init + lead to ds coords."""
+    if "valid_time" not in ds.coords and "time" not in ds.dims:
         leads = ds.lead
         lead_unit = leads.attrs["units"]
         inits = ds.init.to_index()

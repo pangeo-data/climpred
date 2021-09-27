@@ -7,7 +7,7 @@ This allows things to run more easily under-the-hood.
 
 **Prediction ensembles** are expected at the minimum to contain dimensions
 ``init`` and ``lead``. ``init`` is the initialization dimension, that relays the time
-steps at which the ensemble was initialized. ``init`` must be of type ``int``,
+steps at which the ensemble was initialized. ``init`` must be of type
 ``pd.DatetimeIndex``, or ``xr.cftimeIndex``. If ``init`` is of type ``int``, it is assumed to
 be annual data. A user warning is issues when this assumption is made.
 
@@ -35,7 +35,7 @@ Check out the demo to setup a ``climpred``-ready prediction ensemble
 **Verification products** are expected to contain the ``time`` dimension at the minimum.
 For best use of ``climpred``, their ``time`` dimension should cover the full length of
 ``init`` and be the same calendar type as the accompanying prediction ensemble, if possible. The ``time`` dimension
-must be of type ``int``, ``pd.DatetimeIndex`` or ``xr.cftimeIndex``. ``time`` dimension
+must be of type ``pd.DatetimeIndex`` or ``xr.cftimeIndex``. ``time`` dimension
 of type ``int`` is assumed to be annual data.  A user warning is issued when this assumption
 is made. These products can also include additional dimensions, such as ``lat``,
 ``lon``, ``depth``, etc.
@@ -58,7 +58,7 @@ that ``climpred`` supports for them.
      - ``forecast_period``
      - units (str) [years, seasons, months, weeks, pentads, days, hours, minutes, seconds] if not ``pd.Timedelta``
    * - ``init``
-     - ``int``, ``pd.DatetimeIndex``, ``xr.CFTimeIndex``
+     - ``pd.DatetimeIndex``, ``xr.CFTimeIndex``
      - initialization as start date of experiment
      - ``forecast_reference_time``
      - None

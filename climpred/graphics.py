@@ -205,7 +205,7 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, ax=None, show_members=False, cmap="viridis"
+    he, variable=None, ax=None, show_members=False, cmap="viridis", x="time"
 ):
     """Plot datasets from HindcastEnsemble.
 
@@ -221,21 +221,23 @@ def plot_lead_timeseries_hindcast(
         ax: plt.axes
 
     """
+    if x == "time":
+        x = "valid_time"
     _check_only_climpred_dims(he)
     if variable is None:
         variable = list(he.get_initialized().data_vars)[0]
     hind = he.get_initialized()[variable]
-    lead_freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
-    lead_freq = str(lead_freq[0]) + lead_freq[1]
     hist = he.get_uninitialized()
     if isinstance(hist, xr.Dataset):
         hist = hist[variable]
-    obs = he._datasets["observations"]
+    obs = he.get_observations()
+    if isinstance(obs, xr.Dataset):
+        obs = obs[variable]
 
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
-    if isinstance(hist, xr.DataArray):
+    if isinstance(hist, xr.DataArray) and x == "time":
         if "member" in hist.dims and not show_members:
             hist = hist.mean("member")
             member_alpha = 1
@@ -254,15 +256,15 @@ def plot_lead_timeseries_hindcast(
         )
 
     for i, lead in enumerate(hind.lead.values):
-        h = hind.sel(lead=lead).rename({"init": "time"})
+        h = hind.sel(lead=lead)
         if not show_members and "member" in h.dims:
             h = h.mean("member")
             lead_alpha = 1
         else:
             lead_alpha = 0.5
-        h["time"] = shift_cftime_index(h.time, "time", int(lead), lead_freq)
         h.plot(
             ax=ax,
+            x=x,
             hue="member",
             color=cmap(i),
             label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
@@ -270,11 +272,10 @@ def plot_lead_timeseries_hindcast(
             zorder=hind.lead.size - i,
         )
 
-    if len(obs) > 0:
-        if isinstance(obs, xr.Dataset):
-            obs = obs[variable]
+    if isinstance(obs, xr.DataArray) and x == "time":
         obs.plot(
             ax=ax,
+            x=x,
             color="k",
             lw=3,
             ls="-",
@@ -289,6 +290,7 @@ def plot_lead_timeseries_hindcast(
         by_label.values(), by_label.keys(), loc="center left", bbox_to_anchor=(1, 0.5)
     )
     ax.set_title("")
+    ax.set_xlabel(he.coords[x].attrs["long_name"])
     return ax
 
 
@@ -309,7 +311,7 @@ def plot_ensemble_perfect_model(
         ax: plt.axes
 
     """
-
+    x = "valid_time"
     _check_only_climpred_dims(pm)
     if variable is None:
         variable = list(pm.get_initialized().data_vars)[0]
@@ -323,8 +325,6 @@ def plot_ensemble_perfect_model(
     control = pm.get_control()
     if isinstance(control, xr.Dataset):
         control = control[variable]
-    calendar = infer_calendar_name(initialized.init)
-    lead_freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], 1)[1]
 
     control_color = "gray"
 
@@ -334,28 +334,9 @@ def plot_ensemble_perfect_model(
     cmap = mpl.cm.get_cmap(cmap, initialized.init.size)
 
     for ii, i in enumerate(initialized.init.values):
-        dsi = initialized.sel(init=i).rename({"lead": "time"})
+        dsi = initialized.sel(init=i)
         if uninitialized_present:
-            dsu = uninitialized.sel(init=i).rename({"lead": "time"})
-        # convert lead time into cftime
-        start_str = i.strftime()[:10]
-        if initialized.lead.min() == 0:
-            dsi["time"] = xr.cftime_range(
-                start=start_str,
-                freq=lead_freq,
-                periods=dsi.time.size,
-                calendar=calendar,
-            )
-        elif initialized.lead.min() == 1:
-            dsi["time"] = xr.cftime_range(
-                start=start_str,
-                freq=lead_freq,
-                periods=dsi.time.size,
-                calendar=calendar,
-            )
-            dsi["time"] = shift_cftime_index(dsi.time, "time", 1, lead_freq)
-        if uninitialized_present:
-            dsu["time"] = dsi["time"]
+            dsu = uninitialized.sel(init=i)
         if not show_members:
             dsi = dsi.mean("member")
             if uninitialized_present:
@@ -369,15 +350,18 @@ def plot_ensemble_perfect_model(
             labelstr = "members"
             # plot ensemble mean, first white then color to highlight ensemble mean
             if uninitialized_present:
-                dsu.mean("member").plot(ax=ax, color="white", lw=3, zorder=8, alpha=0.6)
                 dsu.mean("member").plot(
-                    ax=ax, color=control_color, lw=2, zorder=9, alpha=0.6
+                    ax=ax, x=x, color="white", lw=3, zorder=8, alpha=0.6
+                )
+                dsu.mean("member").plot(
+                    ax=ax, x=x, color=control_color, lw=2, zorder=9, alpha=0.6
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
-            dsi.mean("member").plot(ax=ax, color="white", lw=3, zorder=10)
-            dsi.mean("member").plot(ax=ax, color=cmap(ii), lw=2, zorder=11)
+            dsi.mean("member").plot(ax=ax, x=x, color="white", lw=3, zorder=10)
+            dsi.mean("member").plot(ax=ax, x=x, color=cmap(ii), lw=2, zorder=11)
         dsi.plot(
             ax=ax,
+            x=x,
             hue="member",
             color=cmap(ii),
             alpha=member_alpha,
@@ -387,6 +371,7 @@ def plot_ensemble_perfect_model(
         if uninitialized_present:
             dsu.plot(
                 ax=ax,
+                x=x,
                 hue="member",
                 color=control_color,
                 alpha=member_alpha / 2,
@@ -402,4 +387,5 @@ def plot_ensemble_perfect_model(
     by_label = OrderedDict(zip(labels, handles))
     ax.legend(by_label.values(), by_label.keys())
     ax.set_title(" ")
+    ax.set_xlabel(pm.coords[x].attrs["long_name"])
     return ax

@@ -2,6 +2,43 @@
 What's New
 ==========
 
+
+climpred unreleased (202x-xx-xx)
+================================
+
+Bug Fixes
+---------
+
+New Features
+------------
+- Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble` generates new
+  2-dimensional coordinate ``valid_time`` for ``initialized`` from ``init`` and
+  ``lead``, which is matched with ``time`` from ``verification`` during alignment.
+
+  .. code-block:: python
+
+      >>> import climpred
+      >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
+      >>> hind.lead.attrs['units'] = 'years'
+      >>> climpred.HindcastEnsemble(hind).get_initialized()
+      <xarray.Dataset>
+      Dimensions:     (lead: 10, member: 10, init: 64)
+      Coordinates:
+        * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+        * member      (member) int32 1 2 3 4 5 6 7 8 9 10
+        * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+          valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2027-01-01 00:00:00
+      Data variables:
+          SST         (init, lead, member) float64 ...
+
+  (:issue:`575`, :pr:`675`) `Aaron Spring`_.
+- Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
+  not in ["years","seasons","months"]. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
+
+Documentation
+-------------
+
+
 climpred v2.1.6 (2021-08-31)
 ============================
 

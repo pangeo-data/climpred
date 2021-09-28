@@ -13,6 +13,7 @@ from . import comparisons, metrics
 from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
+from .exceptions import CoordinateError
 from .metrics import METRIC_ALIASES
 from .options import OPTIONS
 
@@ -126,8 +127,10 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
         ):
             if OPTIONS["warn_for_init_coords_int_to_annual"]:
                 warnings.warn(
-                    "Assuming annual resolution due to numeric inits. "
-                    "Change init to a datetime if it is another resolution."
+                    "Assuming annual resolution starting Jan 1st due to numeric inits. "
+                    "Please change ``init`` to a datetime if it is another resolution."
+                    "We recommend using xr.CFTimeIndex as ``init``, see "
+                    "https://climpred.readthedocs.io/en/stable/setting-up-data.html."
                 )
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
             # hard to maintain a clear rule below seasonality
@@ -150,6 +153,9 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
         ]
         time_index = xr.CFTimeIndex(cftime_dates)
         xobj[time_string] = time_index
+        if time_string == "time":
+            xobj["time"].attrs.setdefault("long_name", "time")
+            xobj["time"].attrs.setdefault("standard_name", "time")
 
     return xobj
 
@@ -510,3 +516,97 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
                 f"excepted category edges as tuple, xr.Dataset or np.array, found {type(category_edges)}"
             )
         return metric_kwargs
+
+
+def my_shift(init, lead):
+    """Shift CFTimeIndex init by amount lead in units lead_unit."""
+    if isinstance(init, xr.DataArray):
+        init = init.to_index()
+    init_calendar = init.calendar
+    if isinstance(lead, xr.DataArray):
+        lead_unit = lead.attrs["units"]
+        lead = lead.values
+
+    if lead_unit in ["years", "seasons", "months"] and "360" not in init_calendar:
+        if int(lead) != float(lead):
+            raise CoordinateError(
+                f'Require integer leads if lead.attrs["units"]="{lead_unit}" in ["years", "seasons", "months"] and calendar="{init_calendar}" not "360_day".'
+            )
+        lead = int(lead)
+
+    if "360" in init_calendar:  # use pd.Timedelta
+        if lead_unit == "years":
+            lead = lead * 360
+            lead_unit = "D"
+        elif lead_unit == "seasons":
+            lead = lead * 90
+            lead_unit = "D"
+        elif lead_unit == "months":
+            lead_unit = "D"
+            lead = lead * 30
+
+    if lead_unit in ["years", "seasons", "months"]:
+        # use init_freq reconstructed from anchor and lead unit
+        from xarray.coding.frequencies import month_anchor_check
+
+        anchor_check = month_anchor_check(init)  # returns None, ce or cs
+        if anchor_check is not None:
+            lead_freq_string = lead_unit[0].upper()  # A for years, D for days
+            if lead_freq_string == "Y":
+                lead_freq_string = "A"
+            elif lead_freq_string == "S":
+                lead_freq_string = "Q"
+            anchor = anchor_check[-1].upper()  # S/E for start/end of month
+            if anchor == "E":
+                anchor = ""
+            lead_freq = f"{lead_freq_string}{anchor}"
+            if lead_freq_string in ["A", "Q"]:  # add month info again
+                init_freq = xr.infer_freq(init)
+                if init_freq:
+                    if "-" in init_freq:
+                        lead_freq = lead_freq + "-" + init_freq.split("-")[-1]
+        else:
+            raise ValueError(
+                f"could not shift init={init} in calendar={init_calendar} by lead={lead} {lead_unit}"
+            )
+        return init.shift(lead, lead_freq)
+    else:
+        # what about pentads, weeks (W)
+        if lead_unit == "weeks":
+            lead_unit = "W"
+        elif lead_unit == "pentads":
+            lead = lead * 5
+            lead_unit = "D"
+        return init + pd.Timedelta(float(lead), lead_unit)
+
+
+def add_time_from_init_lead(ds):
+    """Add valid_time = init + lead to ds coords."""
+    if "valid_time" not in ds.coords and "time" not in ds.dims:
+        times = xr.concat(
+            [
+                xr.DataArray(
+                    my_shift(ds.init, lead),
+                    dims="init",
+                    coords={"init": ds.init},
+                )
+                for lead in ds.lead
+            ],
+            dim="lead",
+            join="inner",
+            compat="broadcast_equals",
+        )
+        times["lead"] = ds.lead
+        ds = ds.copy()  # otherwise inplace coords setting
+        if dask.is_dask_collection(times):
+            times = times.compute()
+        ds.coords["valid_time"] = times
+        ds.coords["valid_time"].attrs.update(
+            {
+                "long_name": "validity time",
+                "standard_name": "time",
+                "description": "time for which the forecast is valid",
+                "calculate": "init + lead",
+            }
+        )
+    return ds

@@ -78,16 +78,26 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
         # init only slighty cut due to alignment
         for c in hindcast.coords:
-            if c == "init":
-                assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
+            print(
+                "check coord",
+                c,
+                "hindcast_bias_removed.coords",
+                hindcast_bias_removed.coords,
+            )
+            if c in ["init", "valid_time"]:
+                assert (
+                    hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
+                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
             else:
-                assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
+                assert (
+                    hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
+                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
 
     with set_options(seasonality=seasonality):
         metric = "rmse"
         dim = "init"
         comparison = "e2o"
-        hindcast = hindcast_recon_1d_mm.isel(lead=range(3))
+        hindcast = hindcast_recon_1d_mm.isel(lead=range(2))
         hindcast._datasets["initialized"].attrs["test"] = "test"
         hindcast._datasets["initialized"]["SST"].attrs["units"] = "test_unit"
         verify_kwargs = dict(
@@ -465,9 +475,9 @@ def test_remove_bias_group(hindcast_NMME_Nino34):
     assert hind_no.equals(hind_None)
 
 
-def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):
+def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
     """Compare Scaling and additive_mean to be similar"""
-    he = hindcast_recon_1d_dm.isel(lead=[0, 1]).isel(init=slice(None, 366 * 2))
+    he = hindcast_recon_1d_mm.isel(lead=[0, 1])
     hind_scaling = he.remove_bias(
         how="Scaling",
         kind="+",
@@ -476,7 +486,7 @@ def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_dm):
         group="time.dayofyear",
     )
     with set_options(seasonality="dayofyear"):
-        hind_mean = hindcast_recon_1d_dm.remove_bias(
+        hind_mean = hindcast_recon_1d_mm.remove_bias(
             how="additive_mean",
             alignment="same_inits",
             train_test_split="unfair",

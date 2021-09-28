@@ -87,21 +87,21 @@ def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     assert "does not allow dimensions other" in str(excinfo.value)
 
 
-@pytest.mark.parametrize("cmap", ["tab10", "jet"])
+@pytest.mark.parametrize("x", ["time", "init"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["SST", None])
-def test_HindcastEnsemble_plot(
+def test_PredictionEnsemble_plot(
     hind_ds_initialized_1d,
     hist_ds_uninitialized_1d,
     reconstruction_ds_1d,
     observations_ds_1d,
     variable,
     show_members,
-    cmap,
+    x,
 ):
     """Test PredictionEnsemble.plot()."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
-    kws = {"cmap": cmap, "show_members": show_members, "variable": variable}
+    kws = {"show_members": show_members, "variable": variable, "x": x}
     he.plot(**kws)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
     he.plot(**kws)
@@ -109,3 +109,9 @@ def test_HindcastEnsemble_plot(
     he.plot(**kws)
     he = he.add_observations(observations_ds_1d)
     he.plot(**kws)
+
+    if x == "time":
+        pm = PerfectModelEnsemble(hind_ds_initialized_1d)
+        pm.plot(**kws)
+        pm = pm.add_control(hist_ds_uninitialized_1d.isel(member=0, drop=True))
+        pm.plot(**kws)

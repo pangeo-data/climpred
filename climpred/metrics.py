@@ -2233,14 +2233,15 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
         ...     dim='member', threshold=.2, alignment='same_inits')
         <xarray.Dataset>
-        Dimensions:    (lead: 10, init: 52)
+        Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init       (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
-          * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-            threshold  float64 0.2
-            skill      <U11 'initialized'
+          * init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+            valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
+            threshold   float64 0.2
+            skill       <U11 'initialized'
         Data variables:
-            SST        (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
+            SST         (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
 
         >>> # multiple thresholds averaging over init dimension
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
@@ -2333,13 +2334,14 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='crps', comparison='m2o', dim='member',
         ...     alignment='same_inits')
         <xarray.Dataset>
-        Dimensions:  (lead: 10, init: 52)
+        Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+            valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill       <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
+            SST         (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2440,13 +2442,14 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='crpss', comparison='m2o',
         ...     alignment='same_inits', dim='member')
         <xarray.Dataset>
-        Dimensions:  (init: 52, lead: 10)
+        Dimensions:     (init: 52, lead: 10)
         Coordinates:
-          * init     (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+            valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill       <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7526 0.7702 0.5126
+            SST         (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7702 0.5126
 
         >>> import scipy
         >>> PerfectModelEnsemble..isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
@@ -2555,13 +2558,14 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         >>> HindcastEnsemble.verify(metric='crpss_es', comparison='m2o',
         ...     alignment='same_verifs', dim='member')
         <xarray.Dataset>
-        Dimensions:  (init: 52, lead: 10)
+        Dimensions:     (init: 52, lead: 10)
         Coordinates:
-          * init     (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * init        (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+            valid_time  (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill       <U11 'initialized'
         Data variables:
-            SST      (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
+            SST         (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
 
     """
     if dim is None:
@@ -2765,7 +2769,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 22.0 5.0 1.0 3.0 21.0
+            SST_samples           (lead, forecast_probability) float64 22.0 5.0 ... 13.0
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
@@ -2779,7 +2783,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 22.0 5.0 1.0 3.0 21.0
+            SST_samples           (lead, forecast_probability) float64 22.0 5.0 ... 13.0
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
@@ -2795,7 +2799,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (forecast_probability) float64 22.0 5.0 1.0 3.0 21.0
+            SST_samples           (lead, forecast_probability) float64 22.0 5.0 ... 13.0
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
@@ -2986,31 +2990,14 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
     if "lead" not in forecast.dims and "lead" in forecast.coords and "lead":
         if isinstance(category_edges, tuple):
             if "lead" in category_edges[1].dims:
+
                 forecast_edges = (
                     category_edges[1].sel(lead=forecast.lead).rename({"init": "time"})
                 )
                 # shift category_edges by lead
-                if forecast.lead.attrs["units"] in ["months", "years", "seasons"]:
-                    init_freq = xr.infer_freq(forecast_edges.time)
-                    if init_freq is None:
-                        raise ValueError(
-                            "Could not shift category_edges by lead. Please use "
-                            "`climpred.utils.broadcast_time_grouped_to_time` on both "
-                            "category_edges before passing them to verify."
-                        )
-                    lead_freq = forecast.lead.attrs["units"][0].upper()
-                    if init_freq[1] == "S":
-                        lead_freq = lead_freq + "S"
-                    forecast_edges["time"] = (
-                        forecast_edges["time"]
-                        .to_index()
-                        .shift(int(forecast.lead), lead_freq)
-                    )
-                else:  # for smaller lead units pd.Timedelta is easier
-                    shift = pd.Timedelta(
-                        f'{float(forecast.lead.values)} {forecast.lead.attrs["units"][0]}'
-                    )
-                    forecast_edges["time"] = forecast_edges["time"] + shift
+                from climpred.utils import my_shift
+
+                forecast_edges["time"] = my_shift(forecast_edges.time, forecast.lead)
                 forecast_edges = forecast_edges.sel(time=forecast.time)
                 forecast_edges = forecast_edges.assign_coords(time=forecast.time)
                 verif_edges = category_edges[0]

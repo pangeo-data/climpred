@@ -108,7 +108,7 @@ def spatial_smoothing_xesmf(
             }
         )
         regridder = xe.Regridder(da, grid_out, **kwargs)
-        return regridder(da)
+        return regridder(da, keep_attrs=True)
 
     # check if lon or/and lat missing
     if ("lon" in d_lon_lat_kws) and ("lat" in d_lon_lat_kws):

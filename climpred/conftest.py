@@ -336,19 +336,31 @@ def hindcast_hist_obs_1d(
     return hindcast
 
 
+def hindcast_obs_1d_for_alignment(
+    hind_ds_initialized_1d_cftime, reconstruction_ds_1d_cftime
+):
+    """HindcastEnsemble initialized with `initialized`, `uninitialzed` and `obs`."""
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d_cftime)
+    hindcast = hindcast.add_observations(reconstruction_ds_1d_cftime)
+    return hindcast
+
+
 @pytest.fixture()
-def hindcast_recon_1d_mm(hindcast_recon_1d_ym):
+def reconstruction_ds_1d_mm(reconstruction_ds_1d_cftime):
+    """CESM-FOSI historical reconstruction timeseries members mean removed
+    xr.Dataset in monthly interpolated."""
+    return reconstruction_ds_1d_cftime.resample(time="1MS").interpolate("linear")
+
+
+@pytest.fixture()
+def hindcast_recon_1d_mm(hindcast_recon_1d_ym, reconstruction_ds_1d_mm):
     """HindcastEnsemble with initialized and reconstruction (observations) as a monthly
     observational and initialized time series (no grid)."""
-    hindcast = hindcast_recon_1d_ym.sel(time=slice("1964", "1970")).sel(
-        init=slice("1964", "1970")
-    )
-    # resample init also
-    # hindcast._datasets["initialized"]['init']=xr.cftime_range(start='1964', freq='MS', periods=hindcast.coords['init'].size) # takes too long
-    hindcast._datasets["initialized"].lead.attrs["units"] = "months"
-    hindcast._datasets["observations"] = (
-        hindcast._datasets["observations"].resample(time="1MS").interpolate("linear")
-    )
+    hind = hindcast_recon_1d_ym.get_initialized().sel(init=slice("1964", "1970"))
+    del hind.coords["valid_time"]
+    hind["lead"].attrs["units"] = "months"
+    hindcast = HindcastEnsemble(hind)
+    hindcast = hindcast.add_observations(reconstruction_ds_1d_mm)
     return hindcast
 
 
@@ -391,6 +403,18 @@ def hindcast_NMME_Nino34():
 
 
 @pytest.fixture()
+def da_lead():
+    """Small xr.DataArray with coords `init` and `lead`."""
+    lead = np.arange(5)
+    init = np.arange(5)
+    return xr.DataArray(
+        np.random.rand(len(lead), len(init)),
+        dims=["init", "lead"],
+        coords=[init, lead],
+    )
+
+
+@pytest.fixture()
 def ds1():
     """Small plain multi-dimensional coords xr.Dataset."""
     return xr.Dataset(
@@ -420,35 +444,6 @@ def da2():
     """Small plain two-dimensional xr.DataArray with different values compared to
     da1."""
     return xr.DataArray([[0, 1], [5, 6], [6, 7]], dims=("x", "y"))
-
-
-@pytest.fixture()
-def da_lead():
-    """Small xr.DataArray with coords `init` and `lead`."""
-    lead = np.arange(5)
-    init = np.arange(5)
-    return xr.DataArray(
-        np.random.rand(len(lead), len(init)),
-        dims=["init", "lead"],
-        coords=[init, lead],
-    )
-
-
-@pytest.fixture()
-def two_dim_da():
-    """xr.DataArray with two dims."""
-    da = xr.DataArray(
-        np.vstack(
-            [
-                np.arange(0, 5, 1.0),
-                np.arange(0, 10, 2.0),
-                np.arange(0, 40, 8.0),
-                np.arange(0, 20, 4.0),
-            ]
-        ),
-        dims=["row", "col"],
-    )
-    return da
 
 
 @pytest.fixture()

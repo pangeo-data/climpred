@@ -48,7 +48,7 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
 
     # If aligning reference='uninitialized', need to account for potential differences
     # in its temporal coverage. Note that the reference='uninitialized' only aligns
-    # verification dates and doesn't care about inits.
+    # verification dates and doesn't need to care about inits.
     if hist is not None:
         all_verifs = np.sort(list(set(all_verifs.data) & set(hist["time"].data)))
         all_verifs = xr.DataArray(all_verifs, dims=["time"], coords=[all_verifs])
@@ -56,9 +56,9 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
     # Construct list of `n` offset over all leads.
     n, freq = get_multiple_lead_cftime_shift_args(units, leads)
 
-    if "valid_time" not in forecast.coords:  # old
+    if "valid_time" not in forecast.coords:  # old: create init_lead_matrix
         init_lead_matrix = _construct_init_lead_matrix(forecast, n, freq, leads)
-    else:  # new
+    else:  # new: use valid_time(init, lead)
         init_lead_matrix = forecast["valid_time"].drop("valid_time").rename(None)
     if dask.is_dask_collection(init_lead_matrix):
         init_lead_matrix = init_lead_matrix.compute()

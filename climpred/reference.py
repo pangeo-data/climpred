@@ -60,7 +60,7 @@ def climatology(verif, inits, verif_dates, lead):
 
 
 def uninitialized(hist, verif, verif_dates, lead):
-    """also called historical in some communities."""
+    """Uninitialized forecast uses a simulation without any initialization (assimilation/nudging). Also called historical in some communities."""
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
     return lforecast, lverif

@@ -354,3 +354,34 @@ def test_fractional_leads_fails(hind_ds_initialized_1d):
         hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
     with pytest.raises(CoordinateError, match="Require integer"):
         HindcastEnsemble(hind_ds_initialized_1d)
+
+
+def test_HindcastEnsemble_reference_uninitialized_sensitive_to_alignment(
+    hindcast_hist_obs_1d,
+):
+    """Test that reference='uninitialized' is sensitive to alignment."""
+    kw = dict(metric="mse", comparison="e2o", dim=[], reference="uninitialized")
+    skill_same_inits = hindcast_hist_obs_1d.verify(alignment="same_inits", **kw).sel(
+        skill="uninitialized"
+    )
+    skill_same_verif = hindcast_hist_obs_1d.verify(alignment="same_verif", **kw).sel(
+        skill="uninitialized"
+    )
+    skill_maximize = hindcast_hist_obs_1d.verify(alignment="maximize", **kw).sel(
+        skill="uninitialized"
+    )
+
+    assert not skill_same_inits.mean("init").equals(skill_same_verif.mean("init"))
+    assert not skill_maximize.mean("init").equals(skill_same_verif.mean("init"))
+    assert not skill_same_inits.mean("init").equals(skill_maximize.mean("init"))
+
+    # same_inits and same_verif have same skill init size
+    assert (
+        skill_same_inits.isel(lead=4).dropna("init").init.size
+        == skill_same_verif.isel(lead=4).dropna("init").init.size
+    )
+    # maximize has more inits
+    assert (
+        skill_same_inits.isel(lead=4).dropna("init").init.size
+        < skill_maximize.isel(lead=4).dropna("init").init.size
+    )

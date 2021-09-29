@@ -33,7 +33,7 @@ New Features
 
   (:issue:`575`, :pr:`675`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
-  not in ["years","seasons","months"]. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
+  not in ["years","seasons","months"]. (:issue:`564`, :pr:`675`, pr:`678`) `Aaron Spring`_.
 
 Documentation
 -------------

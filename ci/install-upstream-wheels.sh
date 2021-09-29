@@ -6,6 +6,7 @@ conda uninstall -y --force \
     matplotlib \
     dask \
     cftime \
+    nc-time-axis \
     bottleneck \
     xarray \
     xskillscore \
@@ -34,6 +35,7 @@ python -m pip install \
     --upgrade \
     git+https://github.com/dask/dask \
     git+https://github.com/Unidata/cftime \
+    git+https://github.com/SciTools/nc-time-axis \
     git+https://github.com/pydata/xarray  \
     git+https://github.com/pydata/bottleneck  \
     git+https://github.com/xarray-contrib/xskillscore \

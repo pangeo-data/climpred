@@ -73,6 +73,11 @@ def show_versions(as_json=False):
         ("numpy", lambda mod: mod.__version__),
         ("scipy", lambda mod: mod.__version__),
         ("cftime", lambda mod: mod.__version__),
+        ("netcdf4", lambda mod: mod.__version__),
+        ("nc_time_axis", lambda mod: mod.__version__),
+        ("matplotlib", lambda mod: mod.__version__),
+        ("cf_xarray", lambda mod: mod.__version__),
+        ("xclim", lambda mod: mod.__version__),
         ("dask", lambda mod: mod.__version__),
         ("distributed", lambda mod: mod.__version__),
         # setup/test

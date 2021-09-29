@@ -861,6 +861,7 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
+
     if "uninitialized" in reference:
         # uninit skill as mean resampled uninit skill
         unin_skill = bootstrapped_uninit_skill.mean("iteration")  # noqa: F841
@@ -872,6 +873,19 @@ def bootstrap_compute(
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
+        # get clim_skill into init,lead dimensions
+        if "time" in clim_skill.dims and "valid_time" in init_skill.coords:
+            # for idea see https://github.com/pydata/xarray/discussions/4593
+            valid_time_overlap = init_skill.coords["valid_time"].where(
+                init_skill.coords["valid_time"].isin(clim_skill.time)
+            )
+            clim_skill = clim_skill.rename({"time": "valid_time"})
+            clim_skill = clim_skill.sel(
+                valid_time=init_skill.coords["valid_time"], method="nearest"
+            )
+            # mask wrongly taken method nearest values
+            clim_skill = clim_skill.where(valid_time_overlap.notnull())
+            # print('after special sel', clim_skill.coords, clim_skill.sizes)
         bootstrapped_clim_skill, _ = xr.broadcast(clim_skill, bootstrapped_init_skill)
 
     # get confidence intervals CI

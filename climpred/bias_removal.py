@@ -666,10 +666,30 @@ def xclim_sdba(
                 adjust_kwargs[k] = metric_kwargs.pop(k)
 
         def adjustment(reference, model, data_to_be_corrected):
+            # simplify without dropping extra coords manually
+            # again after https://github.com/Ouranosinc/xclim/issues/854
+            if "valid_time" not in reference.coords:
+                reference.coords["valid_time"] = model.coords["valid_time"]
+
+            def drop_unused(reference):
+                extra_coords = {
+                    nam: crd
+                    for nam, crd in reference.coords.items()
+                    if nam not in crd.dims
+                }
+                return reference.drop(extra_coords), extra_coords
+
+            reference, _ = drop_unused(reference)
+            model, _ = drop_unused(model)
+            data_to_be_corrected, extra_coords = drop_unused(data_to_be_corrected)
+
             dqm = getattr(sdba.adjustment, method).train(
                 reference, model, **metric_kwargs
             )
-            return dqm.adjust(data_to_be_corrected, **adjust_kwargs)
+            data_to_be_corrected = dqm.adjust(data_to_be_corrected, **adjust_kwargs)
+            for k, v in extra_coords.items():
+                data_to_be_corrected.coords[k] = v
+            return data_to_be_corrected
 
         del model.coords["lead"]
 

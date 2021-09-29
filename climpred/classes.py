@@ -341,9 +341,9 @@ class PredictionEnsemble:
             ax: plt.axes
 
         """
-        if x == "valid_time":
-            x = "time"
-        assert x in ["time", "init"]
+        if x == "time":
+            x = "valid_time"
+        assert x in ["valid_time", "init"]
         if self.kind == "hindcast":
             if cmap is None:
                 cmap = "viridis"
@@ -1704,7 +1704,9 @@ class HindcastEnsemble(PredictionEnsemble):
         if "uninitialized" in reference and not isinstance(
             self.get_uninitialized(), xr.Dataset
         ):
-            raise ValueError("reference uninitialized requires uninitialized.")
+            raise ValueError(
+                "reference uninitialized requires uninitialized dataset. Use HindcastEnsemble.add_uninitialized(uninitialized_ds)."
+            )
         return bootstrap_hindcast(
             self.get_initialized(),
             self.get_uninitialized()

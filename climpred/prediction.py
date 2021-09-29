@@ -20,6 +20,7 @@ from .reference import (
     uninitialized,
 )
 from .utils import (
+    add_time_from_init_lead,
     assign_attrs,
     convert_time_index,
     get_comparison_class,
@@ -323,6 +324,8 @@ def compute_hindcast(
     forecast, verif = comparison.function(hind, verif, metric=metric)
 
     # think in real time dimension: real time = init + lag
+    forecast = add_time_from_init_lead(forecast)  # add time afterwards
+
     forecast = forecast.rename({"init": "time"})
 
     inits, verif_dates = return_inits_and_verif_dates(
@@ -353,8 +356,15 @@ def compute_hindcast(
     # rename back to 'init'
     if "time" in result.dims:
         result = result.rename({"time": "init"})
+    #    result.coords['valid_time']=forecast.coords['valid_time']
     # These computations sometimes drop coordinates along the way. This appends them
     # back onto the results of the metric.
+
+    # dirty fix:
+    if "init" in result.dims and "init" in result.coords:
+        if "valid_time" in result.coords:
+            if "lead" not in result.valid_time.dims:
+                result = add_time_from_init_lead(result.drop("valid_time"))
 
     # Attach climpred compute information to result
     if add_attrs:

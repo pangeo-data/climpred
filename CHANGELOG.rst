@@ -31,9 +31,9 @@ New Features
       Data variables:
           SST         (init, lead, member) float64 ...
 
-  (:issue:`575`, :pr:`675`) `Aaron Spring`_.
+  (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
-  not in ["years","seasons","months"]. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
+  not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
 
 Documentation
 -------------
@@ -42,7 +42,7 @@ Documentation
 climpred v2.1.6 (2021-08-31)
 ============================
 
-Adding on to `2.1.5`, more bias reduction methods wrapped from
+Adding on to ``v2.1.5``, more bias reduction methods wrapped from
 `xclim <https://xclim.readthedocs.io/en/latest/sdba.html>`_
 are implemented.
 

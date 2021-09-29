@@ -277,43 +277,6 @@ def test_HindcastEnsemble_instantiating_standard_name(
         assert dim in init.dims, print(init.dims, init.coords)
 
 
-@pytest.mark.parametrize(
-    "init_freq,lead_unit",
-    [
-        ("AS-JUL", "years"),
-        ("AS-JUL", "months"),
-        ("AS-JUL", "seasons"),
-        ("MS", "months"),
-        ("3M", "days"),
-        ("7D", "days"),
-        ("1D", "hours"),
-        ("1H", "seconds"),
-    ],
-)
-@pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
-def test_hindcastEnsemble_init_time(init_freq, lead_unit, calendar):
-    """Test to see HindcastEnsemble can be initialized and creates time
-    coordinate depending on init and lead for different calendars and lead units."""
-    p = 3
-    nlead = 2
-    lead = [0, 1]
-    import numpy as np
-
-    init = xr.cftime_range(start="2000", freq=init_freq, periods=p)
-    data = np.random.rand(p, nlead)
-    init = xr.DataArray(
-        data,
-        dims=["init", "lead"],
-        coords={"init": init, "lead": lead},
-        name="initialized",
-    )
-    init.lead.attrs["units"] = lead_unit
-    coords = HindcastEnsemble(init).coords
-    assert "valid_time" in coords
-    assert (coords["valid_time"].isel(lead=0, drop=True) == coords["init"]).all()
-    assert (coords["valid_time"].isel(lead=1, drop=True) != coords["init"]).all()
-
-
 @pytest.mark.parametrize("lead_freq", ["years", "months", "seasons"])
 def test_fractional_leads_360_day(hind_ds_initialized_1d, lead_freq):
     """Test that lead can also contain floats when calendar='360_day'."""

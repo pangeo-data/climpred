@@ -139,11 +139,6 @@ def compute_climatology(
 
     if isinstance(dim, str):
         dim = [dim]
-    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, "init", "hind[init]")
-    verif = convert_time_index(verif, "time", "verif[time]")
-    # Put this after `convert_time_index` since it assigns 'years' attribute if the
-    # `init` dimension is a `float` or `int`.
     has_valid_lead_units(hind)
 
     # get metric/comparison function name, not the alias

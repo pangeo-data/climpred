@@ -221,8 +221,8 @@ def plot_lead_timeseries_hindcast(
         ax: plt.axes
 
     """
-    if x == "valid_time":
-        x = "time"
+    if x == "time":
+        x = "valid_time"
     _check_only_climpred_dims(he)
     if variable is None:
         variable = list(he.get_initialized().data_vars)[0]
@@ -237,7 +237,7 @@ def plot_lead_timeseries_hindcast(
     cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
-    if isinstance(hist, xr.DataArray) and x == "time":
+    if isinstance(hist, xr.DataArray) and x == "valid_time":
         if "member" in hist.dims and not show_members:
             hist = hist.mean("member")
             member_alpha = 1
@@ -272,10 +272,10 @@ def plot_lead_timeseries_hindcast(
             zorder=hind.lead.size - i,
         )
 
-    if isinstance(obs, xr.DataArray) and x == "time":
+    if isinstance(obs, xr.DataArray) and x == "valid_time":
         obs.plot(
             ax=ax,
-            x=x,
+            x="time",
             color="k",
             lw=3,
             ls="-",

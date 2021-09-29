@@ -128,7 +128,7 @@ def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
             if OPTIONS["warn_for_init_coords_int_to_annual"]:
                 warnings.warn(
                     "Assuming annual resolution starting Jan 1st due to numeric inits. "
-                    "Please change ``init`` to a datetime if it is another resolution."
+                    "Please change ``init`` to a datetime if it is another resolution. "
                     "We recommend using xr.CFTimeIndex as ``init``, see "
                     "https://climpred.readthedocs.io/en/stable/setting-up-data.html."
                 )

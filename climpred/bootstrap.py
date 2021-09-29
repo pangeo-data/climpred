@@ -861,11 +861,6 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
-    if False:  # "init" in init_skill.dims:
-        assert "valid_time" in init_skill.coords, print(
-            init_skill.coords, init_skill.sizes
-        )
-        assert len(init_skill.coords["valid_time"].dims) == 2
 
     if "uninitialized" in reference:
         # uninit skill as mean resampled uninit skill
@@ -878,10 +873,9 @@ def bootstrap_compute(
         clim_skill = compute_climatology(
             hind, verif, metric=metric, dim=dim, comparison=comparison, **metric_kwargs
         )
-        # print('\n init',init_skill.dims, init_skill.coords)
-        # print('clim_skill',clim_skill.dims, clim_skill.coords)
-        # print('clim_p',p_clim_over_init.dims, p_clim_over_init.coords)
+        # get clim_skill into init,lead dimensions
         if "time" in clim_skill.dims and "valid_time" in init_skill.coords:
+            # for idea see https://github.com/pydata/xarray/discussions/4593
             valid_time_overlap = init_skill.coords["valid_time"].where(
                 init_skill.coords["valid_time"].isin(clim_skill.time)
             )

@@ -666,6 +666,8 @@ def xclim_sdba(
                 adjust_kwargs[k] = metric_kwargs.pop(k)
 
         def adjustment(reference, model, data_to_be_corrected):
+            # simplify without dropping extra coords manually
+            # again after https://github.com/Ouranosinc/xclim/issues/854
             if "valid_time" not in reference.coords:
                 reference.coords["valid_time"] = model.coords["valid_time"]
 

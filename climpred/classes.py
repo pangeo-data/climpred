@@ -1704,7 +1704,9 @@ class HindcastEnsemble(PredictionEnsemble):
         if "uninitialized" in reference and not isinstance(
             self.get_uninitialized(), xr.Dataset
         ):
-            raise ValueError("reference uninitialized requires uninitialized.")
+            raise ValueError(
+                "reference uninitialized requires uninitialized dataset. Use HindcastEnsemble.add_uninitialized(uninitialized_ds)."
+            )
         return bootstrap_hindcast(
             self.get_initialized(),
             self.get_uninitialized()

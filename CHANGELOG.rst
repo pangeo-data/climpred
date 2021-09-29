@@ -42,7 +42,7 @@ Documentation
 climpred v2.1.6 (2021-08-31)
 ============================
 
-Adding on to `2.1.5`, more bias reduction methods wrapped from
+Adding on to ``v2.1.5``, more bias reduction methods wrapped from
 `xclim <https://xclim.readthedocs.io/en/latest/sdba.html>`_
 are implemented.
 

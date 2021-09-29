@@ -861,8 +861,10 @@ def bootstrap_compute(
         dim=dim,
         **metric_kwargs,
     )
-    if "init" in init_skill.dims:
-        assert "valid_time" in init_skill.coords
+    if False:  # "init" in init_skill.dims:
+        assert "valid_time" in init_skill.coords, print(
+            init_skill.coords, init_skill.sizes
+        )
         assert len(init_skill.coords["valid_time"].dims) == 2
 
     if "uninitialized" in reference:

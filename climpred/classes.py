@@ -341,9 +341,9 @@ class PredictionEnsemble:
             ax: plt.axes
 
         """
-        if x == "valid_time":
-            x = "time"
-        assert x in ["time", "init"]
+        if x == "time":
+            x = "valid_time"
+        assert x in ["valid_time", "init"]
         if self.kind == "hindcast":
             if cmap is None:
                 cmap = "viridis"

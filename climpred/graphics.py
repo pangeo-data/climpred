@@ -221,8 +221,8 @@ def plot_lead_timeseries_hindcast(
         ax: plt.axes
 
     """
-    if x == "time":
-        x = "valid_time"
+    if x == "valid_time":
+        x = "time"
     _check_only_climpred_dims(he)
     if variable is None:
         variable = list(he.get_initialized().data_vars)[0]

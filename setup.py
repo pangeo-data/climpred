@@ -23,7 +23,7 @@ CLASSIFIERS = [
 ]
 
 setup(
-    maintainer="Riley X. Brady and Aaron Spring",
+    maintainer="Aaron Spring",
     maintainer_email="aaron.spring@mpimet.mpg.de",
     description="Verification of weather and climate forecasts." + " prediction.",
     install_requires=install_requires,

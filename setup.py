@@ -23,8 +23,8 @@ CLASSIFIERS = [
 ]
 
 setup(
-    maintainer="Riley X. Brady and Aaron Spring",
-    maintainer_email="riley.brady@colorado.edu",
+    maintainer="Aaron Spring",
+    maintainer_email="aaron.spring@mpimet.mpg.de",
     description="Verification of weather and climate forecasts." + " prediction.",
     install_requires=install_requires,
     python_requires=">=3.7",
@@ -37,10 +37,5 @@ setup(
     tests_require=test_requirements,
     url="https://github.com/pangeo-data/climpred",
     use_scm_version={"version_scheme": "post-release", "local_scheme": "dirty-tag"},
-    setup_requires=[
-        "setuptools_scm",
-        "setuptools>=30.3.0",
-        "setuptools_scm_git_archive",
-    ],
     zip_safe=False,
 )

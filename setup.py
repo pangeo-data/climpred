@@ -44,6 +44,6 @@ setup(
         "viz": ["matplotlib"],
         "io": ["netcdf4"],
         "regridding": ["xesmf"],
-        "misc": ["eofs"]
+        "relative_entropy": ["eofs"],
     },
 )

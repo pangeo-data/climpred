@@ -78,11 +78,10 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           channels: conda-forge
-          channel-priority: strict
           mamba-version: "*"
           activate-environment: climpred-minimum-tests
           auto-update-conda: false
-          python-version: "3.8"
+          python-version: 3.8
 
       - name: Install conda dependencies
         run: |

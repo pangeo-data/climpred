@@ -22,13 +22,13 @@ CLASSIFIERS = [
 ]
 
 extras_require={
-        "accel": ["numba>=0.52", "bottleneck"],
-        "bias-correction": ["xclim!=0.30.0", "bias-correction>=0.4"],
-        "viz": ["matplotlib", "nc-time-axis>=1.3.1"],
-        "io": ["netcdf4"],
-        "regridding": ["xesmf"],
-        "relative_entropy": ["eofs"],
-    }
+    "accel": ["numba>=0.52", "bottleneck"],
+    "bias-correction": ["xclim!=0.30.0", "bias-correction>=0.4"],
+    "viz": ["matplotlib", "nc-time-axis>=1.3.1"],
+    "io": ["netcdf4"],
+    "regridding": ["xesmf"],
+    "relative_entropy": ["eofs"],
+}
 extras_require["complete"] = sorted({v for req in extras_require.values() for v in req})
 # after complete is set, add in test
 extras_require["test"] = [

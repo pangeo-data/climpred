@@ -27,7 +27,7 @@ jobs:
   
   
   minimum-test:  # Runs testing suite with minimal dependencies
-    name: Test climpred, python ${{ matrix.python-version }}
+    name: Test minimum dependencies, python 3.7
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
@@ -45,7 +45,7 @@ jobs:
           channels: conda-forge
           mamba-version: '*'
           activate-environment: climpred-minimum-tests
-          python-version: 3.9
+          python-version: 3.7
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/minimum-tests.yml
@@ -65,7 +65,7 @@ jobs:
           fail_ci_if_error: false
 
   maximum-test:  # Runs testing suite with all optional dependencies
-    name: Test climpred, python ${{ matrix.python-version }}
+    name: Test optional dependencies, python ${{ matrix.python-version }}
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'

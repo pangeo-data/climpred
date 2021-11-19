@@ -1,8 +1,6 @@
 import warnings
 from collections import OrderedDict
 
-import matplotlib as mpl
-import matplotlib.pyplot as plt
 import numpy as np
 import xarray as xr
 from xarray.coding.times import infer_calendar_name
@@ -11,6 +9,12 @@ from .checks import DimensionError
 from .constants import CLIMPRED_DIMS
 from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
 from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
+
+try:
+    import matplotlib as mpl
+    import matplotlib.pyplot as plt
+except ImportError:
+    pass
 
 
 def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):

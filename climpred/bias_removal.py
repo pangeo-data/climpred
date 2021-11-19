@@ -4,7 +4,6 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
-from xclim import sdba
 from xskillscore.core.utils import suppress_warnings
 
 from .constants import BIAS_CORRECTION_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES

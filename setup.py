@@ -34,7 +34,9 @@ extras_require = {
     "vwmp": ["xrft"],
 }
 extras_require["complete"] = sorted({v for req in extras_require.values() for v in req})
-extras_require["complete"].remove("xesmf")  # circumventing esmpy/xesmf installation issues; use conda
+extras_require["complete"].remove(
+    "xesmf"
+)  # circumventing esmpy/xesmf installation issues; use conda
 # after complete is set, add in test
 extras_require["test"] = [
     "pytest",

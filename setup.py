@@ -33,7 +33,7 @@ extras_require["complete"] = sorted({v for req in extras_require.values() for v 
 # after complete is set, add in test
 extras_require["test"] = [
     "pytest",
-    "pytest-cov"
+    "pytest-cov",
     "pytest-lazyfixures",
     "pytest-xdist",
 ]
@@ -54,5 +54,5 @@ setup(
     url="https://github.com/pangeo-data/climpred",
     use_scm_version={"version_scheme": "post-release", "local_scheme": "dirty-tag"},
     zip_safe=False,
-    extras_require=extras_require
+    extras_require=extras_require,
 )

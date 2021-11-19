@@ -4,7 +4,6 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
-from bias_correction import XBiasCorrection
 from xclim import sdba
 from xskillscore.core.utils import suppress_warnings
 
@@ -17,7 +16,14 @@ from .utils import (
     get_lead_cftime_shift_args,
     shift_cftime_singular,
 )
-
+try:
+    from bias_correction import XBiasCorrection
+except ImportError:
+    pass
+try:
+    from xclim import sdba
+except ImportError:
+    pass
 
 def sub(a, b):
     return a - b

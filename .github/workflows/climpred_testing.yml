@@ -114,7 +114,6 @@ jobs:
           activate-environment: climpred-maximum-tests
           auto-update-conda: false
           python-version: 3.8
-
       - name: Install conda dependencies
         run: |
           mamba env update -f ci/requirements/maximum-tests.yml

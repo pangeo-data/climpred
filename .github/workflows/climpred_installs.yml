@@ -38,12 +38,15 @@ jobs:
     - uses: actions/checkout@v2
       with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
-    - name: Setup python
-      uses: actions/setup-python@v2
-      with:
-        python-version: 3.8
+    - uses: conda-incubator/setup-miniconda@v2
+        with:
+          channels: conda-forge
+          mamba-version: "*"
+          auto-update-conda: false
+          python-version: 3.8
     - name: Install dependencies
       run: |
+        mamba env update esmpy=*=mpi* -y
         pip install -e .[complete]
         python -c "import climpred"
 

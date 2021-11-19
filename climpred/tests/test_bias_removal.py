@@ -209,6 +209,8 @@ def test_monthly_leads_remove_bias_LOO(
         )
 
 
+@requires_xclim
+@requires_bias_correction
 @pytest.mark.slow
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
 @pytest.mark.parametrize("seasonality", ["month", "season"])

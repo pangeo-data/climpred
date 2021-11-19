@@ -1,8 +1,7 @@
 import importlib
+from distutils import version
 
 import pytest
-
-from distutils import version
 
 
 def _importorskip(modname, minversion=None):

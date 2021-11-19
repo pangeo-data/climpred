@@ -40,7 +40,7 @@ setup(
     zip_safe=False,
     extras_require={
         "accel": ["numba>=0.52", "bottleneck"],
-        "bias-correction": ["xclim", "bias-correction"],
+        "bias-correction": ["xclim!=0.30.0", "bias-correction>=0.4"],
         "viz": ["matplotlib"],
         "io": ["netcdf4"],
         "regridding": ["xesmf"],

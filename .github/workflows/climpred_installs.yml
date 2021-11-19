@@ -36,15 +36,12 @@ jobs:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
     steps:
     - uses: actions/checkout@v2
-    - uses: conda-incubator/setup-miniconda@v2
+    - name: Setup python
+      uses: actions/setup-python@v2
       with:
-        channels: conda-forge
-        mamba-version: "*"
-        auto-update-conda: false
         python-version: 3.8
     - name: Install dependencies
       run: |
-        mamba install xarray esmpy
         pip install -e .[complete]
         python -c "import climpred"
 

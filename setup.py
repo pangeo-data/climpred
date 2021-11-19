@@ -50,7 +50,7 @@ setup(
     name="climpred",
     packages=find_packages(),
     test_suite="climpred/tests",
-    tests_require=test_requirements,
+    tests_require=["pytest"],
     url="https://github.com/pangeo-data/climpred",
     use_scm_version={"version_scheme": "post-release", "local_scheme": "dirty-tag"},
     zip_safe=False,

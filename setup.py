@@ -34,7 +34,7 @@ extras_require = {
     "vwmp": ["xrft"],
 }
 extras_require["complete"] = sorted({v for req in extras_require.values() for v in req})
-del extras_require["complete"]["xesmf"]
+extras_require["complete"].remove("xesmf")
 # after complete is set, add in test
 extras_require["test"] = [
     "pytest",

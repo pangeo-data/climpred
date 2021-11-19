@@ -38,4 +38,12 @@ setup(
     url="https://github.com/pangeo-data/climpred",
     use_scm_version={"version_scheme": "post-release", "local_scheme": "dirty-tag"},
     zip_safe=False,
+    extras_require={
+        "accel": ["numba>=0.52", "bottleneck"],
+        "bias-correction": ["xclim", "bias-correction"],
+        "viz": ["matplotlib"],
+        "io": ["netcdf4"],
+        "regridding": ["xesmf"],
+        "misc": ["eofs"]
+    },
 )

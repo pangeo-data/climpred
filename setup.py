@@ -27,12 +27,14 @@ extras_require = {
     "bias-correction": ["xclim!=0.30.0", "bias-correction>=0.4"],
     "viz": ["matplotlib", "nc-time-axis>=1.3.1"],
     "io": ["netcdf4"],
-    "regridding": ["xesmf"],  # for installation see https://pangeo-xesmf.readthedocs.io/en/latest/installation.html
+    "regridding": [
+        "xesmf"
+    ],  # for installation see https://pangeo-xesmf.readthedocs.io/en/latest/installation.html
     "relative_entropy": ["eofs"],
     "vwmp": ["xrft"],
 }
 extras_require["complete"] = sorted({v for req in extras_require.values() for v in req})
-del extras_require["complete"]["regridding"]
+del extras_require["complete"]["xesmf"]
 # after complete is set, add in test
 extras_require["test"] = [
     "pytest",

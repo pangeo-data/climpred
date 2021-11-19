@@ -6,15 +6,15 @@ from climpred.relative_entropy import (
     compute_relative_entropy,
 )
 
+from . import requires_eofs
+
 try:
     from eofs.xarray import Eof
-
-    Eof_loaded = True
 except ImportError:
-    Eof_loaded = False
+    pass
 
 
-@pytest.mark.skipif(not Eof_loaded, reason="eofs not installed")
+@requires_eofs
 def test_compute_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
     """
     Checks that there are no NaNs.
@@ -27,7 +27,7 @@ def test_compute_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
         assert not actual_any_nan[var]
 
 
-@pytest.mark.skipif(not Eof_loaded, reason="eofs not installed")
+@requires_eofs
 def test_bootstrap_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
     """
     Checks that there are no NaNs.
@@ -44,7 +44,7 @@ def test_bootstrap_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
         assert not actual_any_nan[var]
 
 
-@pytest.mark.skipif(not Eof_loaded, reason="eofs not installed")
+@requires_eofs
 def test_plot_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
     res = compute_relative_entropy(
         PM_da_initialized_3d, PM_da_control_3d, nmember_control=5, neofs=2

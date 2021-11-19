@@ -22,8 +22,8 @@ def LooseVersion(vstring):
 
 
 has_matplotlib, requires_matplotlib = _importorskip("matplotlib")
-has_netCDF4, requires_netCDF4 = _importorskip("netCDF4")
-has_bottleneck, requires_bottleneck = _importorskip("bottleneck")
+# has_netCDF4, requires_netCDF4 = _importorskip("netCDF4")
+# has_bottleneck, requires_bottleneck = _importorskip("bottleneck")
 # has_nc_time_axis, requires_nc_time_axis = _importorskip("nc_time_axis")
 has_xclim, requires_xclim = _importorskip("xclim")
 has_bias_correction, requires_bias_correction = _importorskip("bias_correction", "0.4")

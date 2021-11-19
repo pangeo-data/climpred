@@ -19,6 +19,7 @@ CLASSIFIERS = [
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
 ]
 
 extras_require = {
@@ -39,6 +40,16 @@ extras_require["test"] = [
     "pytest-xdist",
     "pre-commit",
     "netcdf4",
+]
+extras_require["docs"] = extras_require["complete"] + [
+    "importlib_metadata",
+    "nbsphinx",
+    "nbstripout",
+    "pygments==2.6.1",
+    "sphinx",
+    "sphinxcontrib-napoleon",
+    "sphinx_rtd_theme",
+    "sphinx-copybutton",
 ]
 
 setup(

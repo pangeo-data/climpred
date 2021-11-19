@@ -17,6 +17,7 @@ dependencies:
   - toolz
   - xarray>=0.16.1
   - xskillscore>=0.0.18
+  - numba>=0.52
   - pip
   - pip:
     # Install latest version of climpred.

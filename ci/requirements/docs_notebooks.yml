@@ -15,6 +15,7 @@ dependencies:
   - nc-time-axis
   - netcdf4
   - numpy
+  - numba>=0.52
   - pandas
   - dask-core
   - pygments==2.6.1

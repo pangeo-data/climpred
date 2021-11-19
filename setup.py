@@ -38,6 +38,7 @@ extras_require["test"] = [
     "pytest-lazyfixures",
     "pytest-xdist",
     "pre-commit",
+    "netcdf4",
 ]
 
 setup(

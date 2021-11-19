@@ -12,7 +12,7 @@ from climpred.constants import (
 from climpred.options import OPTIONS
 from climpred.testing import assert_PredictionEnsemble
 
-from . import requires_xclim, requires_bias_correction
+from . import requires_bias_correction, requires_xclim
 
 BIAS_CORRECTION_METHODS = (
     BIAS_CORRECTION_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS

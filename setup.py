@@ -42,7 +42,7 @@ setup(
         "accel": ["numba>=0.52", "bottleneck"],
         "bias-correction": ["xclim!=0.30.0", "bias-correction>=0.4"],
         "viz": ["matplotlib"],
-        "io": ["netcdf4"],
+        "io": ["netcdf4", "nc-time-axis>=1.3.1"],
         "regridding": ["xesmf"],
         "relative_entropy": ["eofs"],
     },

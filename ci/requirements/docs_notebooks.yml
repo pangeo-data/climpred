@@ -14,7 +14,6 @@ dependencies:
   - numba>=0.52
   - pandas
   - dask-core
-  # - pygments==2.6.1
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme

@@ -9,7 +9,6 @@ dependencies:
   - nbsphinx
   - nc-time-axis
   - netcdf4
-  # - pygments==2.6.1
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme

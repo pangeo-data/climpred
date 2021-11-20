@@ -55,13 +55,7 @@ jobs:
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
-        run: pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
-      - name: Upload coverage to codecov
-        uses: codecov/codecov-action@v2
-        with:
-          token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
-          fail_ci_if_error: false
+        run: pytest -n 4 --durations=20
 
   maximum-test:  # Runs testing suite with all optional dependencies
     name: Test optional dependencies, python ${{ matrix.python-version }}
@@ -97,7 +91,13 @@ jobs:
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
-        run: pytest -n 4 --durations=20
+        run: pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
+      - name: Upload coverage to codecov
+        uses: codecov/codecov-action@v2
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          file: ./coverage.xml
+          fail_ci_if_error: false
 
   doctest:  # tests all docstrings
     name: Doctests

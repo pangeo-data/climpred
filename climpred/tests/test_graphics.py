@@ -6,12 +6,12 @@ from climpred.bootstrap import bootstrap_perfect_model
 from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
-from . import requires_maplotlib
+from . import requires_matplotlib
 
 ITERATIONS = 3
 
 
-@requires_maplotlib
+@requires_matplotlib
 def test_mpi_he_plot_bootstrapped_skill_over_leadyear_da(
     PM_da_initialized_1d, PM_da_control_1d
 ):
@@ -29,7 +29,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_da(
     assert res_ax is not None
 
 
-@requires_maplotlib
+@requires_matplotlib
 def test_mpi_he_plot_bootstrapped_skill_over_leadyear_single_uninit_lead(
     PM_da_initialized_1d, PM_da_control_1d
 ):
@@ -49,7 +49,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_single_uninit_lead(
     assert res_ax is not None
 
 
-@requires_maplotlib
+@requires_matplotlib
 def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
     PM_ds_initialized_1d, PM_ds_control_1d
 ):
@@ -68,7 +68,7 @@ def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
     assert res_ax is not None
 
 
-@requires_maplotlib
+@requires_matplotlib
 @pytest.mark.parametrize("cmap", ["tab10", "jet"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["tos", None])
@@ -85,7 +85,7 @@ def test_PerfectModelEnsemble_plot(
     pm.plot(**kws)
 
 
-@requires_maplotlib
+@requires_matplotlib
 def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     """Test PredictionEnsemble.plot()."""
     pm = PerfectModelEnsemble(PM_ds_initialized_3d)
@@ -94,7 +94,7 @@ def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     assert "does not allow dimensions other" in str(excinfo.value)
 
 
-@requires_maplotlib
+@requires_matplotlib
 @pytest.mark.parametrize("x", ["time", "init"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["SST", None])

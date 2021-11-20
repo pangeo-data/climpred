@@ -40,7 +40,7 @@ dependencies:
   # Performance
   - bottleneck
   - numba
-  - dask
+  - dask-core
   # Regridding
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - xesmf

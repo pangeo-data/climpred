@@ -38,6 +38,10 @@ New Features
 Documentation
 -------------
 
+Internals/Minor Fixes
+---------------------
+- Reduce dependencies (:pr:`686`) `Aaron Spring`_.
+
 
 climpred v2.1.6 (2021-08-31)
 ============================

@@ -9,10 +9,10 @@ from climpred.stats import decorrelation_time, dpp
 try:
     from climpred.bootstrap import varweighted_mean_period_threshold
     from climpred.stats import varweighted_mean_period
-
-    xrft_loaded = True
 except ImportError:
-    xrft_loaded = False
+    pass
+
+from . import requires_xrft
 
 ITERATIONS = 2
 
@@ -24,7 +24,7 @@ def test_dpp(PM_da_control_3d, chunk):
     assert res.mean() > 0
 
 
-@pytest.mark.skipif(not xrft_loaded, reason="xrft not installed")
+@requires_xrft
 @pytest.mark.parametrize("func", (varweighted_mean_period, decorrelation_time))
 def test_potential_predictability_likely(PM_da_control_3d, func):
     """Check for positive diagnostic potential predictability in NA SST."""
@@ -41,7 +41,7 @@ def test_bootstrap_dpp_sig50_similar_dpp(PM_da_control_3d):
     xr.testing.assert_allclose(actual, expected, atol=0.5, rtol=0.5)
 
 
-@pytest.mark.skipif(not xrft_loaded, reason="xrft not installed")
+@requires_xrft
 def test_bootstrap_vwmp_sig50_similar_vwmp(PM_da_control_3d):
     sig = 50
     actual = varweighted_mean_period_threshold(
@@ -58,7 +58,7 @@ def test_bootstrap_func_multiple_sig_levels(PM_da_control_3d):
     assert (actual.isel(quantile=0).values <= actual.isel(quantile=1)).all()
 
 
-@pytest.mark.skipif(not xrft_loaded, reason="xrft not installed")
+@requires_xrft
 @pytest.mark.parametrize("step", [1, 2, -1])
 @pytest.mark.parametrize(
     "func",

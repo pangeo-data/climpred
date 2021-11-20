@@ -1,4 +1,4 @@
-name: climpred-minimum-tests
+name: climpred-maximum-tests
 channels:
   - conda-forge
   - nodefaults
@@ -7,7 +7,11 @@ dependencies:
   - cftime>=1.1.2
   - coveralls
   - dask-core
+  - eofs
+  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - ipython
+  - matplotlib-base
+  - nc-time-axis
   - netcdf4
   - pip
   - pytest
@@ -15,7 +19,11 @@ dependencies:
   - pytest-xdist
   - scipy
   - xarray>=0.16.1
+  - xesmf
+  - xrft
   - xskillscore>=0.0.18
+  - xclim
+  - bias_correction
   - pip:
     - pytest-lazy-fixture
     - -e ../..

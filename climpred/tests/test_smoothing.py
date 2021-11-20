@@ -13,10 +13,10 @@ from climpred.testing import assert_PredictionEnsemble
 
 try:
     from climpred.smoothing import spatial_smoothing_xesmf
-
-    xesmf_loaded = True
 except ImportError:
-    xesmf_loaded = False
+    pass
+
+from . import requires_xesmf
 
 
 def test_reset_temporal_axis(PM_da_control_3d_full):
@@ -55,7 +55,7 @@ def test_temporal_smoothing_reduce_length(PM_da_control_3d_full):
     assert actual == expected
 
 
-@pytest.mark.skipif(not xesmf_loaded, reason="xesmf not installed")
+@requires_xesmf
 def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(
     PM_da_control_3d_full,
 ):
@@ -71,7 +71,7 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(
     assert actual["lat"].size == expected_lat_size
 
 
-@pytest.mark.skipif(not xesmf_loaded, reason="xesmf not installed")
+@requires_xesmf
 def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(
     reconstruction_ds_3d_full,
 ):
@@ -87,6 +87,7 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(
     assert actual["lat"].size >= da.nlat.size
 
 
+@requires_xesmf
 def test_smooth_goddard_2013(PM_da_control_3d_full):
     """Test whether Goddard 2013 recommendations are fulfilled by
     smooth_Goddard_2013."""
@@ -103,6 +104,7 @@ def test_smooth_goddard_2013(PM_da_control_3d_full):
     assert actual.lat.size < da.lat.size
 
 
+@requires_xesmf
 def test_compute_after_smooth_goddard_2013(
     PM_da_initialized_3d_full, PM_da_control_3d_full
 ):
@@ -166,6 +168,7 @@ def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth, dim):
     assert skill.lead[0] == f"1-{1+smooth-1}"
 
 
+@requires_xesmf
 @pytest.mark.parametrize("step", [1, 2])
 @pytest.mark.parametrize("dim", [["lon"], ["lat"], ["lon", "lat"]])
 def test_HindcastEnsemble_spatial_smoothing_dim_and_skill(hindcast_recon_3d, dim, step):
@@ -193,6 +196,7 @@ def test_temporal_smoothing_how(perfectModelEnsemble_initialized_control_1d_ym_c
     )
 
 
+@requires_xesmf
 def test_spatial_smoothing_xesmf(hindcast_recon_3d):
     """Test different regridding methods from xesmf.regrid kwargs yield different
     results."""
@@ -236,6 +240,7 @@ def test_HindcastEnsemble_smooth_carries_lead_attrs(hindcast_recon_1d_ym):
     )
 
 
+@requires_xesmf
 @pytest.mark.parametrize(
     "smooth", [{"lead": 4, "lon": 5, "lat": 5}, "goddard", "goddard2013"]
 )

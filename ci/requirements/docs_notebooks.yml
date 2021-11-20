@@ -4,27 +4,31 @@ channels:
   - nodefaults
 dependencies:
   - python>=3.7
-  - xesmf
-  - esmpy
-  - bottleneck
   - importlib_metadata
   - jupyterlab
   - matplotlib-base
   - nbsphinx
   - nbstripout
-  - nc-time-axis
   - netcdf4
   - numpy
+  - numba>=0.52
   - pandas
-  - pygments==2.6.1
+  - dask-core
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
   - sphinx-copybutton
   - toolz
   - xarray>=0.16.1
-  - xrft  # used for varweighted_mean_period
   - esmtools>=1.1.3
+  # optionals
+  - xclim
+  - bias_correction
+  - xesmf
+  - esmpy
+  - bottleneck
+  - nc-time-axis
+  - xrft  # used for varweighted_mean_period
   - pip
   - pip:
     # Install latest version of climpred.

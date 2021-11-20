@@ -50,7 +50,7 @@ extras_require["docs"] = extras_require["complete"] + [
     "importlib_metadata",
     "nbsphinx",
     "nbstripout",
-    "pygments==2.6.1",
+    # "pygments==2.6.1",
     "sphinx",
     "sphinxcontrib-napoleon",
     "sphinx_rtd_theme",

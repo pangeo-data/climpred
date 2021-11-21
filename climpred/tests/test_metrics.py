@@ -253,3 +253,60 @@ def test_contingency(hindcast_hist_obs_1d):
         )
         == 0.0
     ).all()
+
+
+def test_overconfident(hindcast_hist_obs_1d):
+    """Test rank_histogram and less for overconfident/underdisperive."""
+    hindcast = hindcast_hist_obs_1d.copy()
+    print(hindcast.coords)
+    from climpred.stats import rm_poly
+
+    hindcast = hindcast.map(rm_poly, dim="init", deg=2).map(rm_poly, dim="time", deg=2)
+    hindcast._datasets["initialized"] *= 0.3  # make overconfident
+    less = hindcast.verify(
+        metric="less",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    rh = hindcast.verify(
+        metric="rank_histogram",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    assert (
+        rh.isel(rank=[0, -1]) > rh.isel(rank=rh["rank"].size // 2)
+    ).all()  # outer ranks larger
+    assert (less < 0).all()  # underdisperive: neg less
+
+
+def test_underconfident(hindcast_hist_obs_1d):
+    """Test rank_histogram and less for underconfident/overdisperive."""
+    hindcast = hindcast_hist_obs_1d.copy()
+    from climpred.stats import rm_poly
+
+    hindcast = hindcast.map(rm_poly, dim="init", deg=2).map(rm_poly, dim="time", deg=2)
+    hindcast._datasets["initialized"] *= 30  # make underconfident
+    less = hindcast.verify(
+        metric="less",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    rh = hindcast.verify(
+        metric="rank_histogram",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    assert (
+        (rh.isel(rank=[0, -1]) < rh.isel(rank=rh["rank"].size // 2))
+        .isel(lead=slice(2, None))
+        .all()
+    )  # outer ranks smaller
+    assert (less > 0).all()  # overdisperive: pos less

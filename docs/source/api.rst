@@ -293,6 +293,7 @@ For a thorough look at our metrics library, please see the
     _roc
     _spread
     _mul_bias
+    _less
 
 Comparisons
 -----------

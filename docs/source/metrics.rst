@@ -463,6 +463,16 @@ Receiver Operating Characteristic
 
 .. autofunction:: _roc
 
+Logarithmic Ensemble Spread Score
+=================================
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['less']}")
+
+.. autofunction:: _less
+
 ********************
 User-defined metrics
 ********************

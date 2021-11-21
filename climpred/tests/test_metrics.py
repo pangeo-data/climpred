@@ -305,8 +305,6 @@ def test_underconfident(hindcast_hist_obs_1d):
     ).SST
 
     assert (
-        (rh.isel(rank=[0, -1]) < rh.isel(rank=rh["rank"].size // 2))
-        .isel(lead=slice(2, None))
-        .all()
-    )  # outer ranks smaller
+        rh.isel(rank=[0, -1]) < rh.isel(rank=rh["rank"].size // 2)
+    ).all()  # outer ranks smaller
     assert (less > 0).all()  # overdisperive: pos less

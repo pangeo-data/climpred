@@ -3011,7 +3011,7 @@ __rps = Metric(
     positive=False,
     probabilistic=True,
     unit_power=0,
-    long_name="rps",
+    long_name="ranked probability score",
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -3207,6 +3207,70 @@ __roc = Metric(
 )
 
 
+def _less(forecast, verif, dim=None, **metric_kwargs):
+    """
+    Logarithmic Ensemble Spread Score.
+
+    .. math:: LESS = ln(\\frac{spread}{MSE})= ln(\\frac{\\sigma^2_f}{\\sigma^2_o})
+
+    Args:
+        forecast (xr.object): Forecasts.
+        verif (xr.object): Verification.
+        dim (str, list of str): The dimension(s) over which to aggregate. Defaults to
+            None, meaning aggregation over all dims other than ``lead``.
+
+    Returns:
+        less (xr.object): reduced by dimensions ``dim``
+
+    Details for LESS:
+        +-----------------+--------------------------------+
+        | **maximum**     | ∞                              |
+        +-----------------+--------------------------------+
+        | **positive**    | overdisperive / underconfident |
+        +-----------------+--------------------------------+
+        | **perfect**     | 0                              |
+        +-----------------+--------------------------------+
+        | **negative**    | underdisperive / overconfident |
+        +-----------------+--------------------------------+
+        | **minimum**     | -∞                             |
+        +-----------------+--------------------------------+
+        | **orientation** | None                           |
+        +-----------------+--------------------------------+
+
+
+    Example
+    >>> HindcastEnsemble.verify(metric='less', comparison='m2o',
+    ...     dim=['member', 'init'], alignment='same_verifs').SST
+
+
+    References:
+        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
+          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
+          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
+          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
+          631–43. https://doi.org/10/f9jrhw.
+
+    """
+    forecast, verif = xr.broadcast(forecast, verif)
+    numerator = _spread(forecast, verif, dim=dim, **metric_kwargs) ** 2
+    denominator = _mse(forecast, verif, dim=dim, **metric_kwargs)
+    return np.log(numerator / denominator)
+
+
+__less = Metric(
+    name="less",
+    function=_less,
+    probabilistic=True,
+    positive=None,
+    unit_power=0,
+    long_name="Logarithmic Ensemble Spread Score",
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=0.0,
+    requires_member_dim=True,
+)
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -3244,6 +3308,7 @@ __ALL_METRICS__ = [
     __roc,
     __spread,
     __mul_bias,
+    __less,
 ]
 
 

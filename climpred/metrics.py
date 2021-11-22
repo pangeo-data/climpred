@@ -3239,11 +3239,14 @@ def _less(forecast, verif, dim=None, **metric_kwargs):
 
 
     Example:
-        >>> HindcastEnsemble.verify(metric='less', comparison='m2o',
-        ...     dim=['member', 'init'], alignment='same_verifs').SST
+        >>> # better detrend before
+        >>> from climpred.stats import rm_poly
+        >>> HindcastEnsemble.map(rm_poly, dim="init_or_time", deg=2).verify(
+        ...     metric='less', comparison='m2o', dim=['member', 'init'],
+        ...     alignment='same_verifs').SST
         <xarray.DataArray 'SST' (lead: 10)>
-        array([1.0892464 , 1.21007473, 1.22646712, 1.27144679, 1.11218319,
-               0.94356056, 0.81438603, 0.67884539, 0.4996293 , 0.32291546])
+        array([ 0.12633664, -0.12707636, -0.26143181, -0.25096537, -0.29267366,
+               -0.2905725 , -0.43579508, -0.33774947, -0.46008438, -0.61010386])
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'

@@ -3142,7 +3142,7 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
             parameter. ``true positive rate`` and ``false positive rate`` contain
             ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
 
-    Details for area under curve:
+    Details:
         +-----------------+-----------+
         | **minimum**     | 0.0       |
         +-----------------+-----------+
@@ -3229,7 +3229,7 @@ def _less(forecast, verif, dim=None, **metric_kwargs):
     Returns:
         less (xr.object): reduced by dimensions ``dim``
 
-    Details for LESS:
+    Details:
         +-----------------+--------------------------------+
         | **maximum**     | ∞                              |
         +-----------------+--------------------------------+

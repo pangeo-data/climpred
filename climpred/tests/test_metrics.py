@@ -8,6 +8,7 @@ from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS
 from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
 from climpred.prediction import compute_hindcast, compute_perfect_model
+from climpred.stats import rm_poly
 
 
 def my_mse_function(forecast, verif, dim=None, **metric_kwargs):
@@ -253,3 +254,53 @@ def test_contingency(hindcast_hist_obs_1d):
         )
         == 0.0
     ).all()
+
+
+def test_overconfident(hindcast_hist_obs_1d):
+    """Test rank_histogram and less for overconfident/underdisperive."""
+    hindcast = hindcast_hist_obs_1d.copy()
+    hindcast = hindcast.map(rm_poly, dim="init_or_time", deg=2)
+    hindcast._datasets["initialized"] *= 0.3  # make overconfident
+    less = hindcast.verify(
+        metric="less",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    rh = hindcast.verify(
+        metric="rank_histogram",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    assert (
+        rh.isel(rank=[0, -1]) > rh.isel(rank=rh["rank"].size // 2)
+    ).all()  # outer ranks larger
+    assert (less < 0).all()  # underdisperive: neg less
+
+
+def test_underconfident(hindcast_hist_obs_1d):
+    """Test rank_histogram and less for underconfident/overdisperive."""
+    hindcast = hindcast_hist_obs_1d.copy()
+    hindcast = hindcast.map(rm_poly, dim="init_or_time", deg=2)
+    hindcast._datasets["initialized"] *= 30  # make underconfident
+    less = hindcast.verify(
+        metric="less",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    rh = hindcast.verify(
+        metric="rank_histogram",
+        comparison="m2o",
+        dim=["member", "init"],
+        alignment="same_verifs",
+    ).SST
+
+    assert (
+        rh.isel(rank=[0, -1]) < rh.isel(rank=rh["rank"].size // 2)
+    ).all()  # outer ranks smaller
+    assert (less > 0).all()  # overdisperive: pos less

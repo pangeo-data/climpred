@@ -445,6 +445,16 @@ Rank Histogram
 
 .. autofunction:: _rank_histogram
 
+Logarithmic Ensemble Spread Score
+=================================
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"\n\nKeywords: {metric_aliases['less']}")
+
+.. autofunction:: _less
+
 *************************
 Contingency-based metrics
 *************************
@@ -462,6 +472,7 @@ Receiver Operating Characteristic
     print(f"\n\nKeywords: {metric_aliases['roc']}")
 
 .. autofunction:: _roc
+
 
 ********************
 User-defined metrics

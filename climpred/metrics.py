@@ -2835,9 +2835,16 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
             least one additional dimension.
 
     Details:
-        +-----------------+-------------------+
-        | **perfect**     | flat distribution |
-        +-----------------+-------------------+
+        +-----------------+------------------------------+
+        | **flat**        | perfect                      |
+        +-----------------+------------------------------+
+        | **slope**       | biased                       |
+        +-----------------+------------------------------+
+        | **u-shaped**    | overconfident/underdisperive |
+        +-----------------+------------------------------+
+        | **dome-shaped** | underconfident/overdisperive |
+        +-----------------+------------------------------+
+
 
     See also:
         * :py:func:`~xskillscore.rank_histogram`
@@ -3011,7 +3018,7 @@ __rps = Metric(
     positive=False,
     probabilistic=True,
     unit_power=0,
-    long_name="rps",
+    long_name="ranked probability score",
     minimum=0.0,
     maximum=1.0,
     perfect=0.0,
@@ -3135,7 +3142,7 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
             parameter. ``true positive rate`` and ``false positive rate`` contain
             ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
 
-    Details for area under curve:
+    Details:
         +-----------------+-----------+
         | **minimum**     | 0.0       |
         +-----------------+-----------+
@@ -3207,6 +3214,79 @@ __roc = Metric(
 )
 
 
+def _less(forecast, verif, dim=None, **metric_kwargs):
+    """
+    Logarithmic Ensemble Spread Score.
+
+    .. math:: LESS = ln(\\frac{variance}{MSE})= ln(\\frac{\\sigma^2_f}{\\sigma^2_o})
+
+    Args:
+        forecast (xr.object): Forecasts.
+        verif (xr.object): Verification.
+        dim (str, list of str): The dimension(s) over which to aggregate. Defaults to
+            None, meaning aggregation over all dims other than ``lead``.
+
+    Returns:
+        less (xr.object): reduced by dimensions ``dim``
+
+    Details:
+        +-----------------+--------------------------------+
+        | **maximum**     | ∞                              |
+        +-----------------+--------------------------------+
+        | **positive**    | overdisperive / underconfident |
+        +-----------------+--------------------------------+
+        | **perfect**     | 0                              |
+        +-----------------+--------------------------------+
+        | **negative**    | underdisperive / overconfident |
+        +-----------------+--------------------------------+
+        | **minimum**     | -∞                             |
+        +-----------------+--------------------------------+
+        | **orientation** | None                           |
+        +-----------------+--------------------------------+
+
+
+    Example:
+        >>> # better detrend before
+        >>> from climpred.stats import rm_poly
+        >>> HindcastEnsemble.map(rm_poly, dim="init_or_time", deg=2).verify(
+        ...     metric='less', comparison='m2o', dim=['member', 'init'],
+        ...     alignment='same_verifs').SST
+        <xarray.DataArray 'SST' (lead: 10)>
+        array([ 0.12633664, -0.12707636, -0.26143181, -0.25096537, -0.29267366,
+               -0.2905725 , -0.43579508, -0.33774947, -0.46008438, -0.61010386])
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+
+
+    References:
+        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
+          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
+          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
+          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
+          631–43. https://doi.org/10/f9jrhw.
+
+    """
+    forecast, verif = xr.broadcast(forecast, verif)
+    numerator = _spread(forecast, verif, dim=dim, **metric_kwargs) ** 2
+    denominator = _mse(forecast, verif, dim=dim, **metric_kwargs)
+    return np.log(numerator / denominator)
+
+
+__less = Metric(
+    name="less",
+    function=_less,
+    probabilistic=True,
+    positive=None,
+    unit_power=0,
+    long_name="Logarithmic Ensemble Spread Score",
+    minimum=-np.inf,
+    maximum=np.inf,
+    perfect=0.0,
+    requires_member_dim=True,
+)
+
+
 __ALL_METRICS__ = [
     __pearson_r,
     __spearman_r,
@@ -3244,6 +3324,7 @@ __ALL_METRICS__ = [
     __roc,
     __spread,
     __mul_bias,
+    __less,
 ]
 
 

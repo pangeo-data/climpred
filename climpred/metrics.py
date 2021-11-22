@@ -2835,9 +2835,16 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
             least one additional dimension.
 
     Details:
-        +-----------------+-------------------+
-        | **perfect**     | flat distribution |
-        +-----------------+-------------------+
+        +-----------------+------------------------------+
+        | **flat**        | perfect                      |
+        +-----------------+------------------------------+
+        | **slope**       | biased                       |
+        +-----------------+------------------------------+
+        | **u-shaped**    | overconfident/underdisperive |
+        +-----------------+------------------------------+
+        | **dome-shaped** | underconfident/overdisperive |
+        +-----------------+------------------------------+
+
 
     See also:
         * :py:func:`~xskillscore.rank_histogram`

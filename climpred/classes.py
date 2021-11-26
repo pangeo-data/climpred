@@ -1801,6 +1801,7 @@ class HindcastEnsemble(PredictionEnsemble):
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation
+        # https://github.com/pangeo-data/climpred/issues/375
         reference = _check_valid_reference(reference)
         if "uninitialized" in reference and not isinstance(
             self.get_uninitialized(), xr.Dataset

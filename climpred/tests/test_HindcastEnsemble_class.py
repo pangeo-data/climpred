@@ -362,4 +362,4 @@ def test_HindcastEnsemble_remove_seasonality(
     skill_seasonality = hindcast_hist_obs_1d.verify(alignment="same_inits", **kw).sel(
         skill="uninitialized"
     )
-    assert (skill_seasonality => skill_no_seasonality).to_array().all()
+    assert (skill_seasonality >= skill_no_seasonality).to_array().all()

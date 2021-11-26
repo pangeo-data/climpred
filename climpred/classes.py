@@ -1160,6 +1160,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         iterations=None,
         sig=95,
         pers_sig=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Bootstrap with replacement according to Goddard et al. 2013.
@@ -1184,6 +1185,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
                 persistence. Defaults to ``None``, or the same significance as ``sig``.
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
@@ -1247,6 +1249,30 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 p:                           probability that reference performs better t...
 
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    self.sel(init=hind_group).bootstrap(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        iterations=iterations,
+                        sig=sig,
+                        pers_sig=pers_sig,
+                        **metric_kwargs,
+                    )
+                )
+                group_label.append(group)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
+            )
+            return skill_group
+
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         reference = _check_valid_reference(reference)
@@ -1645,6 +1671,7 @@ class HindcastEnsemble(PredictionEnsemble):
         sig=95,
         resample_dim="member",
         pers_sig=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Bootstrap with replacement according to Goddard et al. 2013.
@@ -1687,6 +1714,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
@@ -1744,6 +1772,32 @@ class HindcastEnsemble(PredictionEnsemble):
                 bootstrap_iterations:        50
                 p:                           probability that reference performs better t...
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    self.sel(init=hind_group).bootstrap(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        alignment=alignment,
+                        iterations=iterations,
+                        resample_dim=resample_dim,
+                        sig=sig,
+                        pers_sig=pers_sig,
+                        **metric_kwargs,
+                    )
+                )
+                group_label.append(group)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
+            )
+            return skill_group
+
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation

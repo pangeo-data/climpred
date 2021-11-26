@@ -445,3 +445,10 @@ def testPerfectModelEnsemble_verify_groupby(
         groupby=perfectModelEnsemble_initialized_control.get_initialized().init.dt.month
     )
     assert "month" in grouped_skill.dims
+    grouped_skill = perfectModelEnsemble_initialized_control.bootstrap(
+        iterations=2,
+        groupby="month",
+        **kw,
+    )
+    assert "month" in grouped_skill.dims
+

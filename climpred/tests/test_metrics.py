@@ -285,7 +285,7 @@ def test_underconfident(hindcast_hist_obs_1d):
     """Test rank_histogram and less for underconfident/overdisperive."""
     hindcast = hindcast_hist_obs_1d.copy()
     hindcast = hindcast.map(rm_poly, dim="init_or_time", deg=2)
-    hindcast._datasets["initialized"] *= 30  # make underconfident
+    hindcast._datasets["initialized"] *= 50  # make underconfident
     less = hindcast.verify(
         metric="less",
         comparison="m2o",

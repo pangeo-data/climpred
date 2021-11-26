@@ -915,7 +915,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
                 verify. One or more of ['uninitialized', 'persistence', 'climatology'].
-            groupby (str): group ``init`` before passing ``initialized`` to ``verify``.
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
@@ -956,8 +956,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if groupby is not None:
             skill_group = []
             group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
             for group, hind_group in self.get_initialized().init.groupby(
-                f'init.{groupby}'
+                groupby_str
             ):
                 skill_group.append(
                     self.sel(init=hind_group).verify(
@@ -969,8 +970,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
                     )
                 )
                 group_label.append(group)
-            skill_group = xr.concat(skill_group, groupby).assign_coords(
-                dict(groupby=group_label)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
             )
             return skill_group
 

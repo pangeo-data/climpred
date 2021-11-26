@@ -277,7 +277,7 @@ def test_overconfident(hindcast_hist_obs_1d):
 
     assert (
         rh.isel(rank=[0, -1]) > rh.isel(rank=rh["rank"].size // 2)
-    ).all(), print(rh)  # outer ranks larger
+    ).all()  # outer ranks larger
     assert (less < 0).all()  # underdisperive: neg less
 
 
@@ -302,5 +302,5 @@ def test_underconfident(hindcast_hist_obs_1d):
 
     assert (
         rh.isel(rank=[0, -1])
-        < rh.isel(rank=rh["rank"].size // 2)).isel(lead=slice(1, None)).all(), print(rh) # outer ranks smaller
+        < rh.isel(rank=rh["rank"].size // 2)).isel(lead=slice(-3, None)).all()  # outer ranks smaller
     assert (less > 0).all()  # overdisperive: pos less

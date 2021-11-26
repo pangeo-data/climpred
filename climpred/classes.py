@@ -724,10 +724,12 @@ class PredictionEnsemble:
             )
         return self
 
-    def remove_seasonality(self, seasonality=None):
+    def remove_seasonality(self, initialized_dim="init", seasonality=None):
         """Remove seasonal cycle from all climpred datasets.
 
         Args:
+            initialized_dim (str): dimension name of initialized dataset to calculate
+                climatology over. Defaults to "init". 
             seasonality (str): Seasonality to be removed. Choose from:
                 ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
 
@@ -743,13 +745,13 @@ class PredictionEnsemble:
                 SST      (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
         """
 
-        def _remove_seasonality(ds, seasonality=None):
+        def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
             """Remove the seasonal cycle from the data"""
             if ds is {}:
                 return {}
             if seasonality is None:
                 seasonality = OPTIONS["seasonality"]
-            dim = "init" if "init" in ds.dims else "time"
+            dim = initialized_dim if initialized_dim in ds.dims else "time"
             groupby = f"{dim}.{seasonality}"
             if "member" in ds.dims:
                 clim = ds.mean("member").groupby(groupby).mean()
@@ -758,7 +760,7 @@ class PredictionEnsemble:
             anom = ds.groupby(groupby) - clim
             return anom
 
-        return self.map(_remove_seasonality, seasonality=seasonality)
+        return self.map(_remove_seasonality, initialized_dim=initialized_dim, seasonality=seasonality)
 
     def _warn_if_chunked_along_init_member_time(self):
         """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with

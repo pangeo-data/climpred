@@ -374,6 +374,45 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     )
 
 
+def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"]):
+    """
+    Generate an uninitialized ensemble by resampling from the initialized prediction ensemble.
+    Full years of the first lead present from the initialized are relabeled to a different year.
+    """
+    if (init.init.dt.year.groupby("init.year").count().diff("year") != 0).any():
+        raise ValueError(
+            f'`resample_uninitialized_from_initialized` only works if the same number of initializations is present each year, found {init.init.dt.year.groupby("init.year").count()}'
+        )
+    # init = init.isel(lead=0, drop=True)
+    if "valid_time" in init.coords:
+        init = init.drop("valid_time")
+    # resample init
+    init_notnull = init.where(init.notnull(), drop=True)
+    full_years = list(set(init_notnull.init.dt.year.values))
+
+    years_same = True
+    while years_same:
+        m = full_years.copy()
+        np.random.shuffle(m)
+        years_same = (np.array(m) - np.array(full_years) == 0).any()
+    ms = [str(i) for i in m]  # convert year ints to str
+
+    resampled_inits = xr.concat([init.sel(init=i).init for i in ms], "init")
+    resampled_uninit = init.sel(init=resampled_inits)
+    resampled_uninit["init"] = init_notnull.sel(
+        init=slice(str(full_years[0]), str(full_years[-1]))
+    ).init
+    # resample members
+    if "member" in resample_dim:
+        resampled_members = np.random.randint(0, init.member.size, init.member.size)
+        resampled_uninit = resampled_uninit.isel(member=resampled_members)
+        resampled_uninit["member"] = init.member
+    # thats the problem!
+    # need to find a way how to get continuous time in lead frequency
+    # other idea: dont do .isel(lead=0) but then uninitialized has lead dim
+    return resampled_uninit  #.rename({"init": "time"})
+
+
 def _bootstrap_by_stacking(init_pm, control):
     """Bootstrap member, lead, init from control by reshaping. Fast track of function
     `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'."""

@@ -34,7 +34,14 @@ New Features
   (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
-- Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less` (:issue:`239`, :pr:`687`) `Aaron Spring`_.
+- Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
+  (:issue:`239`, :pr:`687`) `Aaron Spring`_.
+- Add keyword ``groupby`` in :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
+  initializations seasonality. (:issue:`635`, :pr:`690`) `Aaron Spring`_.
+
 
 Documentation
 -------------

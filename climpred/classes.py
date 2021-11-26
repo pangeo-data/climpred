@@ -892,6 +892,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         comparison=None,
         dim=None,
         reference=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Verify initialized predictions against a configuration of other ensemble members.
@@ -914,6 +915,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
                 verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
@@ -951,6 +953,27 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    self.sel(init=hind_group).verify(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        **metric_kwargs,
+                    )
+                )
+                group_label.append(group)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
+            )
+            return skill_group
+
         reference = _check_valid_reference(reference)
         input_dict = {
             "ensemble": self._datasets["initialized"],
@@ -1137,6 +1160,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         iterations=None,
         sig=95,
         pers_sig=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Bootstrap with replacement according to Goddard et al. 2013.
@@ -1161,6 +1185,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
                 persistence. Defaults to ``None``, or the same significance as ``sig``.
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
@@ -1224,6 +1249,30 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 p:                           probability that reference performs better t...
 
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    self.sel(init=hind_group).bootstrap(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        iterations=iterations,
+                        sig=sig,
+                        pers_sig=pers_sig,
+                        **metric_kwargs,
+                    )
+                )
+                group_label.append(group)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
+            )
+            return skill_group
+
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         reference = _check_valid_reference(reference)
@@ -1378,6 +1427,7 @@ class HindcastEnsemble(PredictionEnsemble):
         comparison=None,
         dim=None,
         alignment=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations.
@@ -1413,6 +1463,7 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
+            groupby (str): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
@@ -1451,6 +1502,28 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    self.sel(init=hind_group).verify(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        alignment=alignment,
+                        **metric_kwargs,
+                    )
+                )
+                group_label.append(group)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
+            )
+            return skill_group
+
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
@@ -1598,6 +1671,7 @@ class HindcastEnsemble(PredictionEnsemble):
         sig=95,
         resample_dim="member",
         pers_sig=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Bootstrap with replacement according to Goddard et al. 2013.
@@ -1640,6 +1714,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
             pers_sig (int, default None):
                 If not None, the separate significance level for persistence.
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
@@ -1697,9 +1772,36 @@ class HindcastEnsemble(PredictionEnsemble):
                 bootstrap_iterations:        50
                 p:                           probability that reference performs better t...
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    self.sel(init=hind_group).bootstrap(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        alignment=alignment,
+                        iterations=iterations,
+                        resample_dim=resample_dim,
+                        sig=sig,
+                        pers_sig=pers_sig,
+                        **metric_kwargs,
+                    )
+                )
+                group_label.append(group)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
+            )
+            return skill_group
+
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         # TODO: replace with more computationally efficient classes implementation
+        # https://github.com/pangeo-data/climpred/issues/375
         reference = _check_valid_reference(reference)
         if "uninitialized" in reference and not isinstance(
             self.get_uninitialized(), xr.Dataset

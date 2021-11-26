@@ -348,3 +348,24 @@ def test_HindcastEnsemble_reference_uninitialized_sensitive_to_alignment(
         skill_same_inits.isel(lead=4).dropna("init").init.size
         < skill_maximize.isel(lead=4).dropna("init").init.size
     )
+
+
+def test_HindcastEnsemble_verify_groupby(
+    hindcast_hist_obs_1d,
+):
+    """Test groupby keyword."""
+    kw = dict(
+        metric="mse",
+        comparison="e2o",
+        dim="init",
+        reference="uninitialized",
+        alignment="same_inits",
+    )
+    grouped_skill = hindcast_hist_obs_1d.verify(**kw, groupby="month")
+    assert "month" in grouped_skill.dims
+    grouped_skill = hindcast_hist_obs_1d.verify(
+        **kw, groupby=hindcast_hist_obs_1d.get_initialized().init.dt.month
+    )
+    assert "month" in grouped_skill.dims
+    grouped_skill = hindcast_hist_obs_1d.bootstrap(iterations=2, **kw, groupby="month")
+    assert "month" in grouped_skill.dims

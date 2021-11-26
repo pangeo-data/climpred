@@ -740,7 +740,7 @@ class PredictionEnsemble:
             Observations:
                 SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
             Uninitialized:
-                SST     (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
+                SST      (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
         """
 
         def _remove_seasonality(ds, seasonality=None):

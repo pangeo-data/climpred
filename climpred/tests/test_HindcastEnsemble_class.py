@@ -355,11 +355,8 @@ def test_HindcastEnsemble_remove_seasonality(
 ):
     """Test remove_seasonality reduces distance."""
     no_seasonality = hindcast_hist_obs_1d.copy().remove_seasonality()
-    kw = dict(metric="mse", comparison="e2o", dim='init', reference="uninitialized")
-    skill_no_seasonality = no_seasonality.verify(alignment="same_inits", **kw).sel(
-        skill="uninitialized"
-    )
-    skill_seasonality = hindcast_hist_obs_1d.verify(alignment="same_inits", **kw).sel(
-        skill="uninitialized"
-    )
-    assert (skill_seasonality >= skill_no_seasonality).to_array().all()
+    kw = dict(metric="mse", comparison="e2o", dim="init", alignment="same_inits", reference="uninitialized")
+    skill_no_seasonality = no_seasonality.verify(**kw).sel(skill="uninitialized")
+    skill_seasonality = hindcast_hist_obs_1d.verify(**kw).sel(skill="uninitialized")
+    print(skill_seasonality, skill_no_seasonality, skill_seasonality >= skill_no_seasonality)
+    assert (skill_seasonality >= skill_no_seasonality).to_array().all()  # improvement

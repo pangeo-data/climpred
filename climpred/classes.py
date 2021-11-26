@@ -725,7 +725,22 @@ class PredictionEnsemble:
         return self
 
     def remove_seasonality(self, seasonality=None):
-        """Remove seasonal cycle from all climpred datasets."""
+        """Remove seasonal cycle from all climpred datasets.
+
+        Args:
+            seasonality (str): Seasonality to be removed. Choose from:
+                ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
+
+        Examples:
+            >>> HindcastEnsemble.remove_seasonality()
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
+            Observations:
+                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
+            Uninitialized:
+                None
+        """
 
         def _remove_seasonality(ds, seasonality=None):
             """Remove the seasonal cycle from the data"""

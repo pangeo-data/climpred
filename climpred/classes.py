@@ -957,9 +957,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             skill_group = []
             group_label = []
             groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-            for group, hind_group in self.get_initialized().init.groupby(
-                groupby_str
-            ):
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
                 skill_group.append(
                     self.sel(init=hind_group).verify(
                         reference=reference,
@@ -1482,9 +1480,7 @@ class HindcastEnsemble(PredictionEnsemble):
             skill_group = []
             group_label = []
             groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-            for group, hind_group in self.get_initialized().init.groupby(
-                groupby_str
-            ):
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
                 skill_group.append(
                     self.sel(init=hind_group).verify(
                         reference=reference,

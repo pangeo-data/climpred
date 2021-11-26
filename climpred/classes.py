@@ -1456,17 +1456,23 @@ class HindcastEnsemble(PredictionEnsemble):
         if groupby is not None:
             skill_group = []
             group_label = []
-            for group, hind_group in self.get_initialized().init.groupby(f'init.{groupby}'):
-                skill_group.append(self.sel(init=hind_group).verify(
-                    reference=reference,
-                    metric=metric,
-                    comparison=comparison,
-                    dim=dim,
-                    alignment=alignment,
-                    **metric_kwargs)
+            for group, hind_group in self.get_initialized().init.groupby(
+                f'init.{groupby}'
+            ):
+                skill_group.append(
+                    self.sel(init=hind_group).verify(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        alignment=alignment,
+                        **metric_kwargs
+                    )
                 )
                 group_label.append(group)
-            skill_group = xr.concat(skill_group, groupby).assign_coords(dict(groupby=group_label))
+            skill_group = xr.concat(skill_group, groupby).assign_coords(
+                dict(groupby=group_label)
+            )
             return skill_group
 
         # Have to do checks here since this doesn't call `compute_hindcast` directly.

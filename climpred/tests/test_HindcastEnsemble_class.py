@@ -363,5 +363,3 @@ def test_HindcastEnsemble_remove_seasonality(
         skill="uninitialized"
     )
     assert (skill_seasonality => skill_no_seasonality).to_array().all()
-
-

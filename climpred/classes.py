@@ -966,7 +966,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                         metric=metric,
                         comparison=comparison,
                         dim=dim,
-                        **metric_kwargs
+                        **metric_kwargs,
                     )
                 )
                 group_label.append(group)
@@ -1482,7 +1482,7 @@ class HindcastEnsemble(PredictionEnsemble):
             skill_group = []
             group_label = []
             for group, hind_group in self.get_initialized().init.groupby(
-                f'init.{groupby}'
+                f"init.{groupby}"
             ):
                 skill_group.append(
                     self.sel(init=hind_group).verify(
@@ -1491,7 +1491,7 @@ class HindcastEnsemble(PredictionEnsemble):
                         comparison=comparison,
                         dim=dim,
                         alignment=alignment,
-                        **metric_kwargs
+                        **metric_kwargs,
                     )
                 )
                 group_label.append(group)

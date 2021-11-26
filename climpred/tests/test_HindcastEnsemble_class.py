@@ -359,9 +359,11 @@ def test_HindcastEnsemble_verify_groupby(
         comparison="e2o",
         dim="init",
         reference="uninitialized",
-        alignment="same_inits"
+        alignment="same_inits",
     )
     grouped_skill = hindcast_hist_obs_1d.verify(**kw, groupby="month")
     assert "month" in grouped_skill.dims
-    grouped_skill = hindcast_hist_obs_1d.verify(**kw, groupby=hindcast_hist_obs_1d.get_initialized().init.dt.month)
+    grouped_skill = hindcast_hist_obs_1d.verify(
+        **kw, groupby=hindcast_hist_obs_1d.get_initialized().init.dt.month
+    )
     assert "month" in grouped_skill.dims

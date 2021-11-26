@@ -729,7 +729,7 @@ class PredictionEnsemble:
 
         Args:
             initialized_dim (str): dimension name of initialized dataset to calculate
-                climatology over. Defaults to "init". 
+                climatology over. Defaults to "init".
             seasonality (str): Seasonality to be removed. Choose from:
                 ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
 
@@ -760,7 +760,11 @@ class PredictionEnsemble:
             anom = ds.groupby(groupby) - clim
             return anom
 
-        return self.map(_remove_seasonality, initialized_dim=initialized_dim, seasonality=seasonality)
+        return self.map(
+            _remove_seasonality,
+            initialized_dim=initialized_dim,
+            seasonality=seasonality
+        )
 
     def _warn_if_chunked_along_init_member_time(self):
         """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with

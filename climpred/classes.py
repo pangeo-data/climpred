@@ -724,6 +724,28 @@ class PredictionEnsemble:
             )
         return self
 
+    def remove_seasonality(self, seasonality=None):
+        """Remove seasonal cycle from all climpred datasets."""
+
+        def _remove_seasonality(ds, seasonality=None):
+            """Remove the seasonal cycle from the data"""
+            from climpred.options import OPTIONS
+
+            if ds is {}:
+                return {}
+            if seasonality is None:
+                seasonality = OPTIONS["seasonality"]
+            dim = "init" if "init" in ds.dims else "time"
+            groupby = f"{dim}.{seasonality}"
+            if "member" in ds.dims:
+                clim = ds.mean("member").groupby(groupby).mean()
+            else:
+                clim = ds.groupby(groupby).mean()
+            anom = ds.groupby(groupby) - clim
+            return anom
+
+        return self.map(_remove_seasonality, seasonality=seasonality)
+
     def _warn_if_chunked_along_init_member_time(self):
         """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
         more than one chunk to show how to circumvent ``xskillscore`` chunking

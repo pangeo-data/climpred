@@ -373,7 +373,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
         metric=metric,
         dim=dim,
         reference=reference,
-        **metric_kwargs
+        **metric_kwargs,
     ).tos
     if metric in ["contingency"] or metric in pearson_r_containing_metrics:
         # less strict here with all NaNs, pearson_r yields NaNs for climatology
@@ -390,7 +390,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
         dim=dim,
         iterations=ITERATIONS,
         reference=reference,
-        **metric_kwargs
+        **metric_kwargs,
     ).tos
     if len(reference) > 0:
         actual = actual.drop_sel(results="p")
@@ -442,7 +442,7 @@ def testPerfectModelEnsemble_verify_groupby(
     assert "month" in grouped_skill.dims
     grouped_skill = perfectModelEnsemble_initialized_control.verify(
         **kw,
-        groupby=perfectModelEnsemble_initialized_control.get_initialized().init.dt.month
+        groupby=perfectModelEnsemble_initialized_control.get_initialized().init.dt.month,
     )
     assert "month" in grouped_skill.dims
     grouped_skill = perfectModelEnsemble_initialized_control.bootstrap(
@@ -451,4 +451,3 @@ def testPerfectModelEnsemble_verify_groupby(
         **kw,
     )
     assert "month" in grouped_skill.dims
-

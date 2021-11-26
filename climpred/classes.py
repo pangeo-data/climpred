@@ -892,6 +892,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         comparison=None,
         dim=None,
         reference=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Verify initialized predictions against a configuration of other ensemble members.
@@ -914,6 +915,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
                 verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+            groupby (str): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
         Returns:
@@ -951,6 +953,27 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            for group, hind_group in self.get_initialized().init.groupby(
+                f'init.{groupby}'
+            ):
+                skill_group.append(
+                    self.sel(init=hind_group).verify(
+                        reference=reference,
+                        metric=metric,
+                        comparison=comparison,
+                        dim=dim,
+                        **metric_kwargs
+                    )
+                )
+                group_label.append(group)
+            skill_group = xr.concat(skill_group, groupby).assign_coords(
+                dict(groupby=group_label)
+            )
+            return skill_group
+
         reference = _check_valid_reference(reference)
         input_dict = {
             "ensemble": self._datasets["initialized"],
@@ -1414,8 +1437,8 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
+            groupby (str): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): arguments passed to ``metric``.
-            groupby (str): add
 
         Returns:
             Dataset with dimension skill reduced by dim containing initialized and

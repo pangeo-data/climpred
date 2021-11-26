@@ -425,3 +425,16 @@ def test_pvalue_from_bootstrapping(perfectModelEnsemble_initialized_control, met
     assert actual.tos.values < 2 * (1 - sig / 100)
     # lead units keep
     assert actual.lead.attrs["units"] == "years"
+
+
+def testPerfectModelEnsemble_verify_groupby(
+    perfectModelEnsemble_initialized_control,
+):
+    """Test groupby keyword."""
+    kw = dict(
+        metric="mse",
+        comparison="m2e",
+        dim="init",
+    )
+    grouped_skill = perfectModelEnsemble_initialized_control.verify(**kw, groupby="month")
+    assert "month" in grouped_skill.dims

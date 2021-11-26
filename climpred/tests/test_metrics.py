@@ -281,11 +281,11 @@ def test_overconfident(hindcast_hist_obs_1d):
     assert (less < 0).all()  # underdisperive: neg less
 
 
-def test_underconfident(hindcast_hist_obs_1d):
+def (hindcast_hist_obs_1d):
     """Test rank_histogram and less for underconfident/overdisperive."""
     hindcast = hindcast_hist_obs_1d.copy()
     hindcast = hindcast.map(rm_poly, dim="init_or_time", deg=2)
-    hindcast._datasets["initialized"] *= 50  # make underconfident
+    hindcast._datasets["initialized"] *= 30  # make underconfident
     less = hindcast.verify(
         metric="less",
         comparison="m2o",
@@ -302,5 +302,5 @@ def test_underconfident(hindcast_hist_obs_1d):
 
     assert (
         rh.isel(rank=[0, -1]) < rh.isel(rank=rh["rank"].size // 2)
-    ).all(), print(rh)  # outer ranks smaller
+    ).isel(lead=slice(1, None)).all(), print(rh)  # outer ranks smaller
     assert (less > 0).all()  # overdisperive: pos less

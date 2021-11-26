@@ -36,7 +36,8 @@ New Features
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
   (:issue:`239`, :pr:`687`) `Aaron Spring`_.
-- :py:meth:`~climpred.classes.PredictionEnsemble.remove_seasonality` removes the seasonality
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_seasonality` and 
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.remove_seasonality` remove the seasonality
   of all ``climpred`` datasets. (:issue:`530`, :pr:`688`) `Aaron Spring`_.
 
 Documentation

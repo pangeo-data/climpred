@@ -1378,6 +1378,7 @@ class HindcastEnsemble(PredictionEnsemble):
         comparison=None,
         dim=None,
         alignment=None,
+        groupby=None,
         **metric_kwargs,
     ):
         """Verifies the initialized ensemble against observations.
@@ -1414,6 +1415,7 @@ class HindcastEnsemble(PredictionEnsemble):
                   each lead should be based on the same set of verification dates.
 
             **metric_kwargs (optional): arguments passed to ``metric``.
+            groupby (str): add
 
         Returns:
             Dataset with dimension skill reduced by dim containing initialized and
@@ -1451,6 +1453,22 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
         """
+        if groupby is not None:
+            skill_group = []
+            group_label = []
+            for group, hind_group in self.get_initialized().init.groupby(f'init.{groupby}'):
+                skill_group.append(self.sel(init=hind_group).verify(
+                    reference=None,
+                    metric=None,
+                    comparison=None,
+                    dim=None,
+                    alignment=None,
+                    **metric_kwargs)
+                )
+                group_label.append(group)
+            skill_group = xr.concat(skill_group, groupby).assign_coords(dict(groupby=group_label))
+            return skill_group
+
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:

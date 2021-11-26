@@ -1458,11 +1458,11 @@ class HindcastEnsemble(PredictionEnsemble):
             group_label = []
             for group, hind_group in self.get_initialized().init.groupby(f'init.{groupby}'):
                 skill_group.append(self.sel(init=hind_group).verify(
-                    reference=None,
-                    metric=None,
-                    comparison=None,
-                    dim=None,
-                    alignment=None,
+                    reference=reference,
+                    metric=metric,
+                    comparison=comparison,
+                    dim=dim,
+                    alignment=alignment,
                     **metric_kwargs)
                 )
                 group_label.append(group)

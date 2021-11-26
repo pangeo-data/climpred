@@ -367,3 +367,24 @@ def test_HindcastEnsemble_remove_seasonality(
     skill_no_seasonality = no_seasonality.verify(**kw)
     skill_seasonality = hindcast_offset.verify(**kw)
     assert (skill_seasonality >= skill_no_seasonality).to_array().all()
+    
+
+def test_HindcastEnsemble_verify_groupby(
+    hindcast_hist_obs_1d,
+):
+    """Test groupby keyword."""
+    kw = dict(
+        metric="mse",
+        comparison="e2o",
+        dim="init",
+        reference="uninitialized",
+        alignment="same_inits",
+    )
+    grouped_skill = hindcast_hist_obs_1d.verify(**kw, groupby="month")
+    assert "month" in grouped_skill.dims
+    grouped_skill = hindcast_hist_obs_1d.verify(
+        **kw, groupby=hindcast_hist_obs_1d.get_initialized().init.dt.month
+    )
+    assert "month" in grouped_skill.dims
+    grouped_skill = hindcast_hist_obs_1d.bootstrap(iterations=2, **kw, groupby="month")
+    assert "month" in grouped_skill.dims

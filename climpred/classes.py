@@ -732,7 +732,8 @@ class PredictionEnsemble:
                 ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
 
         Examples:
-            >>> HindcastEnsemble.remove_seasonality()
+            >>> # example already without seasonal cycle
+            >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
                 SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
@@ -744,8 +745,6 @@ class PredictionEnsemble:
 
         def _remove_seasonality(ds, seasonality=None):
             """Remove the seasonal cycle from the data"""
-            from climpred.options import OPTIONS
-
             if ds is {}:
                 return {}
             if seasonality is None:

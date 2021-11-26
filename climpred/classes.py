@@ -763,7 +763,7 @@ class PredictionEnsemble:
         return self.map(
             _remove_seasonality,
             initialized_dim=initialized_dim,
-            seasonality=seasonality
+            seasonality=seasonality,
         )
 
     def _warn_if_chunked_along_init_member_time(self):

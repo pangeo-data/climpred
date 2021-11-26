@@ -355,7 +355,7 @@ def test_HindcastEnsemble_remove_seasonality(
 ):
     """Test remove_seasonality reduces distance."""
     hindcast_offset = hindcast_hist_obs_1d.copy()
-    hindcast_offset._datasets['observations'] += 1.0
+    hindcast_offset._datasets["observations"] += 1.0
     no_seasonality = hindcast_offset.remove_seasonality()
     kw = dict(
         metric="mse",

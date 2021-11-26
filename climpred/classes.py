@@ -1481,8 +1481,9 @@ class HindcastEnsemble(PredictionEnsemble):
         if groupby is not None:
             skill_group = []
             group_label = []
+            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
             for group, hind_group in self.get_initialized().init.groupby(
-                f"init.{groupby}"
+                groupby_str
             ):
                 skill_group.append(
                     self.sel(init=hind_group).verify(
@@ -1495,8 +1496,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     )
                 )
                 group_label.append(group)
-            skill_group = xr.concat(skill_group, groupby).assign_coords(
-                dict(groupby=group_label)
+            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+                dict(new_dim_name=group_label)
             )
             return skill_group
 

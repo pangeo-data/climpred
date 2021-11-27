@@ -1,11 +1,32 @@
 import warnings
 from copy import deepcopy
+from typing import (  # TYPE_CHECKING,; Collection,; DefaultDict,; MutableMapping,
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Sequence,
+    Set,
+    Tuple,
+    Union,
+)
 
 import cf_xarray
 import numpy as np
 import xarray as xr
 from dask import is_dask_collection
 from IPython.display import display_html
+from mypy_extensions import (  # (Arg, DefaultArg, NamedArg, DefaultNamedArg,
+    KwArg,
+    VarArg,
+)
+from xarray.core.coordinates import DatasetCoordinates
+from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
@@ -65,7 +86,7 @@ from .utils import (
 )
 
 
-def _display_metadata(self):
+def _display_metadata(self) -> str:
     """
     This is called in the following case:
 
@@ -117,7 +138,7 @@ def _display_metadata(self):
     return summary
 
 
-def _display_metadata_html(self):
+def _display_metadata_html(self) -> str:
     header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets["initialized"])
@@ -155,7 +176,7 @@ class PredictionEnsemble:
     """
 
     @is_xarray(1)
-    def __init__(self, xobj):
+    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]):
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
@@ -185,7 +206,7 @@ class PredictionEnsemble:
         self._warn_if_chunked_along_init_member_time()
 
     @property
-    def coords(self):
+    def coords(self) -> DatasetCoordinates:
         """Dictionary of xarray.DataArray objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
         """
@@ -207,7 +228,7 @@ class PredictionEnsemble:
         )
 
     @property
-    def sizes(self):
+    def sizes(self) -> Mapping[Hashable, int]:
         """Mapping from dimension names to lengths for all PredictionEnsemble._datasets."""
         pe_dims = dict(self.get_initialized().dims)
         for ds in self._datasets.values():
@@ -216,12 +237,12 @@ class PredictionEnsemble:
         return pe_dims
 
     @property
-    def dims(self):
+    def dims(self) -> Mapping[Hashable, int]:
         """Mapping from dimension names to lengths all PredictionEnsemble._datasets."""
         return Frozen(self.sizes)
 
     @property
-    def chunks(self):
+    def chunks(self) -> Mapping[Hashable, Tuple[int, ...]]:
         """Mapping from chunks all PredictionEnsemble._datasets."""
         pe_chunks = dict(self.get_initialized().chunks)
         for ds in self._datasets.values():
@@ -232,7 +253,16 @@ class PredictionEnsemble:
         return Frozen(pe_chunks)
 
     @property
-    def data_vars(self):
+    def chunksizes(self) -> Mapping[Hashable, Tuple[int, ...]]:
+        """Mapping from dimension names to block lengths for this dataset's data, or None if
+        the underlying data is not a dask array.
+        Cannot be modified directly, but can be modified by calling .chunk().
+        Same as Dataset.chunks.
+        """
+        return self.chunks
+
+    @property
+    def data_vars(self) -> DataVariables:
         """Dictionary of DataArray objects corresponding to data variables available in all PredictionEnsemble._datasets."""
         varset = set(self.get_initialized().data_vars)
         for ds in self._datasets.values():
@@ -244,21 +274,21 @@ class PredictionEnsemble:
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
-    def __repr__(self):
+    def __repr__(self) -> str:
         if XR_OPTIONS["display_style"] == "html":
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of all variables in all PredictionEnsemble._datasets."""
         return len(self.data_vars)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Hashable]:
         """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
         return iter(self._datasets.values())
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Hashable) -> None:
         """Remove a variable from this PredictionEnsemble."""
         del self._datasets["initialized"][key]
         for ds in self._datasets.values():
@@ -266,7 +296,7 @@ class PredictionEnsemble:
                 if key in ds.data_vars:
                     del ds[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: Hashable) -> bool:
         """The 'in' operator will return true or false depending on whether
         'key' is an array in all PredictionEnsemble._datasets or not.
         """
@@ -277,7 +307,7 @@ class PredictionEnsemble:
                     contained = False
         return contained
 
-    def equals(self, other):
+    def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """Two PredictionEnsembles are equal if they have matching variables and
         coordinates, all of which are equal.
         PredictionEnsembles can still be equal (like pandas objects) if they have NaN
@@ -298,7 +328,7 @@ class PredictionEnsemble:
             return False
         return equal
 
-    def identical(self, other):
+    def identical(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """Like equals, but also checks all dataset attributes and the
         attributes on all variables and coordinates."""
         if not isinstance(other, PredictionEnsemble):
@@ -362,7 +392,11 @@ class PredictionEnsemble:
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
 
-    def _math(self, other, operator):
+    def _math(
+        self,
+        other,
+        operator,
+    ):
         """Helper function for __add__, __sub__, __mul__, __truediv__.
 
         Allows math operations with type:
@@ -411,7 +445,7 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets["initialized"].dims):
+            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore
                 raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
@@ -434,7 +468,7 @@ class PredictionEnsemble:
                 if isinstance(other._datasets[dataset], xr.Dataset) and isinstance(
                     self._datasets[dataset], xr.Dataset
                 ):
-                    datasets[dataset] = operator(
+                    datasets[dataset] = operator(  # type: ignore
                         datasets[dataset], other._datasets[dataset]
                     )
             return self._construct_direct(datasets, kind=self.kind)
@@ -453,7 +487,7 @@ class PredictionEnsemble:
     def __truediv__(self, other):
         return self._math(other, operator="div")
 
-    def __getitem__(self, varlist):
+    def __getitem__(self, varlist: Union[str, List[str]]) -> "PredictionEnsemble":
         """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
 
         Args:
@@ -474,7 +508,7 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(self, name):
+    def __getattr__(self, name: str) -> Callable[[VarArg(Any), KwArg(Any)], Any]:
         """Allows for xarray methods to be applied to our prediction objects.
 
         Args:
@@ -562,7 +596,9 @@ class PredictionEnsemble:
         obj._warn_if_chunked_along_init_member_time()
         return obj
 
-    def _apply_func(self, func, *args, **kwargs):
+    def _apply_func(
+        self, func: Callable[..., Any], *args: Any, **kwargs: Any
+    ) -> "PredictionEnsemble":
         """Apply a function to all datasets in a `PredictionEnsemble`."""
         # Create temporary copy to modify to avoid inplace operation.
         datasets = self._datasets.copy()
@@ -591,15 +627,20 @@ class PredictionEnsemble:
         # Instantiates new object with the modified datasets.
         return self._construct_direct(datasets, kind=self.kind)
 
-    def get_initialized(self):
+    def get_initialized(self) -> xr.Dataset:
         """Returns the xarray dataset for the initialized ensemble."""
         return self._datasets["initialized"]
 
-    def get_uninitialized(self):
+    def get_uninitialized(self) -> xr.Dataset:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets["uninitialized"]
 
-    def smooth(self, smooth_kws=None, how="mean", **xesmf_kwargs):
+    def smooth(
+        self,
+        smooth_kws=None,
+        how="mean",
+        **xesmf_kwargs,
+    ):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
@@ -724,7 +765,9 @@ class PredictionEnsemble:
             )
         return self
 
-    def remove_seasonality(self, initialized_dim="init", seasonality=None):
+    def remove_seasonality(
+        self, initialized_dim: str = "init", seasonality: Union[None, str] = None
+    ) -> "PredictionEnsemble":
         """Remove seasonal cycle from all climpred datasets.
 
         Args:
@@ -811,7 +854,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    def __init__(self, xobj):
+    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]) -> None:
         """Create a `PerfectModelEnsemble` object by inputting output from the
         control run in `xarray` format.
 
@@ -1350,7 +1393,7 @@ class HindcastEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    def __init__(self, xobj):
+    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]) -> None:
         """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
 
@@ -1411,7 +1454,9 @@ class HindcastEnsemble(PredictionEnsemble):
         return init_vars_to_drop, obs_vars_to_drop
 
     @is_xarray(1)
-    def add_observations(self, xobj):
+    def add_observations(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "HindcastEnsemble":
         """Add verification data against which to verify the initialized ensemble.
 
         Args:

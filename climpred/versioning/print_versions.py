@@ -106,10 +106,7 @@ def show_versions(as_json=False):
                 deps_blob.append((modname, "installed"))
 
     if as_json:
-        try:
-            import json
-        except Exception:
-            import simplejson as json
+        import json
 
         j = dict(system=dict(sys_info), dependencies=dict(deps_blob))
 

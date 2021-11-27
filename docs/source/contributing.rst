@@ -148,6 +148,9 @@ Preparing Pull Requests
    needed, or will generally be quite clear about what you need to do to pass the
    commit test.
 
+   ``pre-commit`` also runs `mypy <http://mypy-lang.org/>`_ for static type checking on
+   `type hints <https://docs.python.org/3/library/typing.html>`_.
+
 #. Break your edits up into reasonably sized commits::
 
     $ git commit -a -m "<commit message>"

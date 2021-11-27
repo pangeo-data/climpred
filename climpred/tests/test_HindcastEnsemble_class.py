@@ -367,7 +367,7 @@ def test_HindcastEnsemble_remove_seasonality(
     skill_no_seasonality = no_seasonality.verify(**kw)
     skill_seasonality = hindcast_offset.verify(**kw)
     assert (skill_seasonality >= skill_no_seasonality).to_array().all()
-    
+
 
 def test_HindcastEnsemble_verify_groupby(
     hindcast_hist_obs_1d,

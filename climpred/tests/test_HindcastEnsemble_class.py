@@ -350,6 +350,25 @@ def test_HindcastEnsemble_reference_uninitialized_sensitive_to_alignment(
     )
 
 
+def test_HindcastEnsemble_remove_seasonality(
+    hindcast_hist_obs_1d,
+):
+    """Test remove_seasonality reduces distance."""
+    hindcast_offset = hindcast_hist_obs_1d.copy()
+    hindcast_offset._datasets["observations"] += 1.0
+    no_seasonality = hindcast_offset.remove_seasonality()
+    kw = dict(
+        metric="mse",
+        comparison="e2o",
+        dim="init",
+        alignment="same_inits",
+        reference="uninitialized",
+    )
+    skill_no_seasonality = no_seasonality.verify(**kw)
+    skill_seasonality = hindcast_offset.verify(**kw)
+    assert (skill_seasonality >= skill_no_seasonality).to_array().all()
+
+
 def test_HindcastEnsemble_verify_groupby(
     hindcast_hist_obs_1d,
 ):

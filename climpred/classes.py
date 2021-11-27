@@ -724,6 +724,48 @@ class PredictionEnsemble:
             )
         return self
 
+    def remove_seasonality(self, initialized_dim="init", seasonality=None):
+        """Remove seasonal cycle from all climpred datasets.
+
+        Args:
+            initialized_dim (str): dimension name of initialized dataset to calculate
+                climatology over. Defaults to "init".
+            seasonality (str): Seasonality to be removed. Choose from:
+                ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
+
+        Examples:
+            >>> # example already without seasonal cycle
+            >>> HindcastEnsemble.remove_seasonality(seasonality="month")
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, member) float64 -0.2349 -0.216 ... 0.6476 0.6433
+            Observations:
+                SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
+            Uninitialized:
+                SST      (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
+        """
+
+        def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
+            """Remove the seasonal cycle from the data"""
+            if ds is {}:
+                return {}
+            if seasonality is None:
+                seasonality = OPTIONS["seasonality"]
+            dim = initialized_dim if initialized_dim in ds.dims else "time"
+            groupby = f"{dim}.{seasonality}"
+            if "member" in ds.dims:
+                clim = ds.mean("member").groupby(groupby).mean()
+            else:
+                clim = ds.groupby(groupby).mean()
+            anom = ds.groupby(groupby) - clim
+            return anom
+
+        return self.map(
+            _remove_seasonality,
+            initialized_dim=initialized_dim,
+            seasonality=seasonality,
+        )
+
     def _warn_if_chunked_along_init_member_time(self):
         """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
         more than one chunk to show how to circumvent ``xskillscore`` chunking

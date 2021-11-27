@@ -36,12 +36,14 @@ New Features
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
   (:issue:`239`, :pr:`687`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_seasonality` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.remove_seasonality` remove the seasonality
+  of all ``climpred`` datasets. (:issue:`530`, :pr:`688`) `Aaron Spring`_.
 - Add keyword ``groupby`` in :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
   :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
   initializations seasonality. (:issue:`635`, :pr:`690`) `Aaron Spring`_.
-
 
 Documentation
 -------------

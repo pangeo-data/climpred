@@ -926,7 +926,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return init_vars_to_drop, ctrl_vars_to_drop
 
     @is_xarray(1)
-    def add_control(self, xobj):
+    def add_control(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "PerfectModelEnsemble":
         """Add the control run that initialized the climate prediction
         ensemble.
 
@@ -948,7 +950,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         datasets.update({"control": xobj})
         return self._construct_direct(datasets, kind="perfect")
 
-    def generate_uninitialized(self):
+    def generate_uninitialized(self) -> "PerfectModelEnsemble":
         """Generate an uninitialized ensemble by bootstrapping the
         initialized prediction ensemble.
 
@@ -967,19 +969,29 @@ class PerfectModelEnsemble(PredictionEnsemble):
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="perfect")
 
-    def get_control(self):
+    def get_control(self) -> xr.Dataset:
         """Returns the control as an xarray dataset."""
         return self._datasets["control"]
 
+    from .comparison import Comparison
+    from .metrics import Metric
+
+    metricType = Union[str, Metric]
+    comparisonType = Union[str, Comparison]
+    dimType = Optional[Union[Hashable, Iterable[Hashable]]]
+    referenceType = Optional[Union[List[str], str]]
+    groupbyType = Optional[Union[str, xr.DataArray]]
+    metric_kwargsType = Optional[Any]
+
     def verify(
         self,
-        metric=None,
-        comparison=None,
-        dim=None,
-        reference=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verify initialized predictions against a configuration of other ensemble members.
 
         .. note::
@@ -1089,7 +1101,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
-            result = result.assign_coords(skill=["initialized"] + reference)
+            result = result.assign_coords(skill=["initialized"] + reference)  # type: ignore
         return result.squeeze()
 
     def _compute_uninitialized(

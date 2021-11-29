@@ -7,6 +7,7 @@ dependencies:
   - importlib_metadata
   - matplotlib-base
   - nbsphinx
+  - mypy_extensions
   - nc-time-axis
   - netcdf4
   - sphinx

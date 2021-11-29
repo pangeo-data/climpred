@@ -53,7 +53,7 @@ from .checks import (
     match_initialized_vars,
     rename_to_climpred_dims,
 )
-from .comparison import Comparison
+from .comparisons import Comparison
 from .constants import (
     BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
     BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,

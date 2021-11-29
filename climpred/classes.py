@@ -355,7 +355,16 @@ class PredictionEnsemble:
             return False
         return id
 
-    def plot(self, variable=None, ax=None, show_members=False, cmap=None, x="time"):
+    import matplotlib.pyplot as plt
+
+    def plot(
+        self,
+        variable: Optional[str] = None,
+        ax: Optional[plt.Axes] = None,
+        show_members: bool = False,
+        cmap: Optional[str] = None,
+        x: str = "time",
+    ) -> plt.Axes:
         """Plot datasets from PredictionEnsemble.
 
         Args:
@@ -385,7 +394,7 @@ class PredictionEnsemble:
         if x == "time":
             x = "valid_time"
         assert x in ["valid_time", "init"]
-        if self.kind == "hindcast":
+        if isinstance(self, HindcastEnsemble):
             if cmap is None:
                 cmap = "viridis"
             return plot_lead_timeseries_hindcast(
@@ -396,7 +405,7 @@ class PredictionEnsemble:
                 cmap=cmap,
                 x=x,
             )
-        elif self.kind == "perfect":
+        elif isinstance(self, PerfectModelEnsemble):
             if cmap is None:
                 cmap = "tab10"
             return plot_ensemble_perfect_model(

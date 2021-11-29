@@ -7,7 +7,7 @@ import xarray as xr
 from xarray.coding.times import infer_calendar_name
 
 from .checks import DimensionError
-from .classes import HindcastEnsemble, PerfectModelEnsemble
+# from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
 from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
 from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
@@ -211,7 +211,7 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he: HindcastEnsemble,
+    he: "HindcastEnsemble",
     variable: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
     show_members: bool = False,
@@ -306,7 +306,7 @@ def plot_lead_timeseries_hindcast(
 
 
 def plot_ensemble_perfect_model(
-    pm: PerfectModelEnsemble,
+    pm: "PerfectModelEnsemble",
     variable: Optional[str] = None,
     ax: Optional[plt.Axes] = None,
     show_members: bool = False,

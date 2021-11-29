@@ -16,6 +16,7 @@ dependencies:
   - scipy
   - xarray>=0.16.1
   - xskillscore>=0.0.18
+  - mypy_extensions
   - pip:
     - pytest-lazy-fixture
     - -e ../..

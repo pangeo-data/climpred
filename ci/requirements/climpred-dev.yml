@@ -37,6 +37,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-sugar
+  - mypy_extensions
   # Performance
   - bottleneck
   - numba

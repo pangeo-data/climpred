@@ -22,10 +22,7 @@ import numpy as np
 import xarray as xr
 from dask import is_dask_collection
 from IPython.display import display_html
-from mypy_extensions import (  # (Arg, DefaultArg, NamedArg, DefaultNamedArg,
-    KwArg,
-    VarArg,
-)
+from mypy_extensions import KwArg, VarArg
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr

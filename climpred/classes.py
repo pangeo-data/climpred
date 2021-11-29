@@ -1494,7 +1494,9 @@ class HindcastEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="hindcast")
 
     @is_xarray(1)
-    def add_uninitialized(self, xobj):
+    def add_uninitialized(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "HindcastEnsemble":
         """Add a companion uninitialized ensemble for comparison to verification data.
 
         Args:
@@ -1515,7 +1517,7 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets.update({"uninitialized": xobj})
         return self._construct_direct(datasets, kind="hindcast")
 
-    def get_observations(self):
+    def get_observations(self) -> xr.Dataset:
         """Returns xarray Datasets of the observations/verification data.
 
         Returns:
@@ -1936,14 +1938,14 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def remove_bias(
         self,
-        alignment=None,
-        how="additive_mean",
-        train_test_split="unfair",
-        train_init=None,
-        train_time=None,
-        cv=False,
-        **metric_kwargs,
-    ):
+        alignment: alignmentType = None,
+        how: str = "additive_mean",
+        train_test_split: str = "unfair",
+        train_init: Optional[Union[xr.DataArray, slice]] = None,
+        train_time: Optional[Union[xr.DataArray, slice]] = None,
+        cv: Union[bool, str] = False,
+        **metric_kwargs: metric_kwargsType,
+    ) -> "HindcastEnsemble":
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
         Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`. When wrapping xclim.sbda.adjustment use ``group`` instead.

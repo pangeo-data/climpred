@@ -3,6 +3,7 @@ from copy import deepcopy
 from typing import (  # TYPE_CHECKING,; Collection,; DefaultDict,; MutableMapping,
     Any,
     Callable,
+    Collection,
     Dict,
     Hashable,
     Iterable,
@@ -52,6 +53,7 @@ from .checks import (
     match_initialized_vars,
     rename_to_climpred_dims,
 )
+from .comparison import Comparison
 from .constants import (
     BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
     BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
@@ -65,6 +67,7 @@ from .constants import (
 from .exceptions import DimensionError, VariableError
 from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .logging import log_compute_hindcast_header
+from .metrics import Metric
 from .options import OPTIONS
 from .prediction import (
     _apply_metric_at_given_lead,
@@ -84,6 +87,14 @@ from .utils import (
     convert_time_index,
     convert_Timedelta_to_lead_units,
 )
+
+metricType = Union[str, Metric]
+comparisonType = Union[str, Comparison]
+dimType = Optional[Union[str, List[str]]]
+alignmentType = str
+referenceType = Union[List[str], str]
+groupbyType = Optional[Union[str, xr.DataArray]]
+metric_kwargsType = Optional[Any]
 
 
 def _display_metadata(self) -> str:
@@ -973,16 +984,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Returns the control as an xarray dataset."""
         return self._datasets["control"]
 
-    from .comparison import Comparison
-    from .metrics import Metric
-
-    metricType = Union[str, Metric]
-    comparisonType = Union[str, Comparison]
-    dimType = Optional[Union[Hashable, Iterable[Hashable]]]
-    referenceType = Optional[Union[List[str], str]]
-    groupbyType = Optional[Union[str, xr.DataArray]]
-    metric_kwargsType = Optional[Any]
-
     def verify(
         self,
         metric: metricType = None,
@@ -1250,16 +1251,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric=None,
-        comparison=None,
-        dim=None,
-        reference=None,
-        iterations=None,
-        sig=95,
-        pers_sig=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        iterations: Optional[int] = None,
+        sig: int = 95,
+        resample_dim: str = "member",
+        pers_sig: Optional[int] = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
@@ -1278,6 +1280,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 If None or empty, returns no p value.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
+            resample_dim (str): dimension for resampling
             sig (int, default 95): Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
@@ -1358,6 +1361,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                         comparison=comparison,
                         dim=dim,
                         iterations=iterations,
+                        resample_dim=resample_dim,
                         sig=sig,
                         pers_sig=pers_sig,
                         **metric_kwargs,
@@ -1521,14 +1525,14 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def verify(
         self,
-        reference=None,
-        metric=None,
-        comparison=None,
-        dim=None,
-        alignment=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        alignment: alignmentType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verifies the initialized ensemble against observations.
 
         .. note::
@@ -1601,6 +1605,10 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
         """
+        if isinstance(reference, str):
+            reference = [reference]
+        else:
+            pass  # reference = list(reference)
         if groupby is not None:
             skill_group = []
             group_label = []
@@ -1761,18 +1769,18 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric=None,
-        comparison=None,
-        dim=None,
-        alignment=None,
-        reference=None,
-        iterations=None,
-        sig=95,
-        resample_dim="member",
-        pers_sig=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        alignment: alignmentType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        iterations: Optional[int] = None,
+        sig: int = 95,
+        resample_dim: str = "member",
+        pers_sig: Optional[int] = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:

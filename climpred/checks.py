@@ -307,7 +307,10 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
             )
 
 
-def _check_valid_reference(reference):
+from typing import List, Optional, Union
+
+
+def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List:
     """Enforce reference as list and check for valid entries."""
     if reference is None:
         reference = []

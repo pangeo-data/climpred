@@ -163,7 +163,7 @@ def _maybe_member_mean_reduce_dim(forecast, dim):
     return forecast, dim
 
 
-def _display_metric_metadata(self):
+def _display_metric_metadata(self) -> str:
     summary = "----- Metric metadata -----\n"
     summary += f"Name: {self.name}\n"
     summary += f"Alias: {self.aliases}\n"
@@ -189,32 +189,36 @@ def _display_metric_metadata(self):
     return summary
 
 
+from typing import Callable, List, Optional
+
+
 class Metric:
     """Master class for all metrics."""
 
     def __init__(
         self,
-        name,
-        function,
-        positive,
-        probabilistic,
-        unit_power,
-        long_name=None,
-        aliases=None,
-        minimum=None,
-        maximum=None,
-        perfect=None,
-        normalize=False,
-        allows_logical=False,
-        requires_member_dim=False,
+        name: str,
+        function: Callable,
+        positive: Optional[bool],
+        probabilistic: bool,
+        unit_power: float,
+        long_name: Optional[str] = None,
+        aliases: Optional[List[str]] = None,
+        minimum: Optional[float] = None,
+        maximum: Optional[float] = None,
+        perfect: Optional[float] = None,
+        normalize: bool = False,
+        allows_logical: bool = False,
+        requires_member_dim: bool = False,
     ):
         """Metric initialization.
 
         Args:
             name (str): name of metric.
             function (function): metric function.
-            positive (bool): Is metric positively oriented? If True, higher metric
+            positive (bool or None): Is metric positively oriented? If True, higher metric
              value means better skill. If False, lower metric value means better skill.
+             None if different differentiation.
             probabilistic (bool): Is metric probabilistic? `False` means
              deterministic.
             unit_power (float, int): Power of the unit of skill based on unit

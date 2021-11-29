@@ -1,9 +1,12 @@
+from typing import Callable, List, Optional
+
 import dask
 import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
 from .constants import M2M_MEMBER_DIM
+from .metrics import Metric
 
 
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
@@ -33,16 +36,13 @@ def _display_comparison_metadata(self) -> str:
     return summary
 
 
-from typing import Callable, List, Optional
-
-
 class Comparison:
     """Master class for all comparisons."""
 
     def __init__(
         self,
         name: str,
-        function: Callable,
+        function: Callable[..., Optional[Metric]],
         hindcast: bool,
         probabilistic: bool,
         long_name: Optional[str] = None,

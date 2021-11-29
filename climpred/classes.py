@@ -412,10 +412,12 @@ class PredictionEnsemble:
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
 
+    mathType = Union[int, float, np.ndarray, xr.DataArray, xr.Dataset]
+
     def _math(
         self,
-        other,
-        operator,
+        other: mathType,
+        operator: str,
     ):
         """Helper function for __add__, __sub__, __mul__, __truediv__.
 
@@ -478,7 +480,7 @@ class PredictionEnsemble:
                     f"other.data_vars = {list(other.data_vars)}."
                 )
 
-        operator = eval(operator)
+        _operator = eval(operator)
 
         if isinstance(other, PredictionEnsemble):
             # Create temporary copy to modify to avoid inplace operation.
@@ -488,23 +490,23 @@ class PredictionEnsemble:
                 if isinstance(other._datasets[dataset], xr.Dataset) and isinstance(
                     self._datasets[dataset], xr.Dataset
                 ):
-                    datasets[dataset] = operator(  # type: ignore
+                    datasets[dataset] = _operator(
                         datasets[dataset], other._datasets[dataset]
                     )
             return self._construct_direct(datasets, kind=self.kind)
         else:
-            return self._apply_func(operator, other)
+            return self._apply_func(_operator, other)
 
-    def __add__(self, other):
+    def __add__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="add")
 
-    def __sub__(self, other):
+    def __sub__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="sub")
 
-    def __mul__(self, other):
+    def __mul__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="mul")
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="div")
 
     def __getitem__(self, varlist: Union[str, List[str]]) -> "PredictionEnsemble":

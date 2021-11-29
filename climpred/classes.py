@@ -623,6 +623,7 @@ class PredictionEnsemble:
     ) -> "PredictionEnsemble":
         """Apply a function to all datasets in a `PredictionEnsemble`."""
         # Create temporary copy to modify to avoid inplace operation.
+        # isnt that essentially the same as .map(func)?
         datasets = self._datasets.copy()
 
         # More explicit than nested dictionary comprehension.
@@ -831,7 +832,7 @@ class PredictionEnsemble:
             seasonality=seasonality,
         )
 
-    def _warn_if_chunked_along_init_member_time(self):
+    def _warn_if_chunked_along_init_member_time(self) -> None:
         """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
         more than one chunk to show how to circumvent ``xskillscore`` chunking
         ``ValueError``."""
@@ -896,7 +897,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self._datasets.update({"control": {}})
         self.kind = "perfect"
 
-    def _apply_climpred_function(self, func, input_dict=None, **kwargs):
+    def _apply_climpred_function(
+        self,
+        func: Callable[..., Any],
+        input_dict: Dict[str, Any],
+        **kwargs: Any,
+    ):
         """Helper function to loop through observations and apply an arbitrary climpred
         function.
 
@@ -916,7 +922,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             control = control.drop_vars(ctrl_vars)
         return func(ensemble, control, **kwargs)
 
-    def _vars_to_drop(self, init=True):
+    def _vars_to_drop(self, init: bool = True) -> Tuple[List[str], List[str]]:
         """Returns list of variables to drop when comparing
         initialized/uninitialized to a control.
 
@@ -1113,12 +1119,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
-            result = result.assign_coords(skill=["initialized"] + reference)  # type: ignore
+            result = result.assign_coords(skill=["initialized"] + reference)
         return result.squeeze()
 
     def _compute_uninitialized(
-        self, metric=None, comparison=None, dim=None, **metric_kwargs
-    ):
+        self,
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verify the bootstrapped uninitialized run against itself.
 
         .. note::
@@ -1169,7 +1179,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
-    def _compute_persistence(self, metric=None, dim=None, **metric_kwargs):
+    def _compute_persistence(
+        self,
+        metric: metricType = None,
+        dim: dimType = None,
+        **metric_kwargs: metric_kwargsType,
+    ):
         """Verify a simple persistence forecast of the control run against itself.
 
         Args:
@@ -1215,8 +1230,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return res
 
     def _compute_climatology(
-        self, metric=None, comparison=None, dim=None, **metric_kwargs
-    ):
+        self,
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verify a climatology forecast of the control run against itself.
 
         Args:
@@ -1438,7 +1457,9 @@ class HindcastEnsemble(PredictionEnsemble):
         self._datasets.update({"observations": {}})
         self.kind = "hindcast"
 
-    def _apply_climpred_function(self, func, init, **kwargs):
+    def _apply_climpred_function(
+        self, func: Callable[..., Any], init: bool, **kwargs: Any
+    ) -> "HindcastEnsemble":
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
 
@@ -1446,12 +1467,13 @@ class HindcastEnsemble(PredictionEnsemble):
             func (function): climpred function to apply to object.
             init (bool): Whether or not it's the initialized ensemble.
         """
+        # fixme: essentially the same as map?
         hind = self._datasets["initialized"]
         verif = self._datasets["observations"]
         drop_init, drop_obs = self._vars_to_drop(init=init)
         return func(hind.drop_vars(drop_init), verif.drop_vars(drop_obs), **kwargs)
 
-    def _vars_to_drop(self, init=True):
+    def _vars_to_drop(self, init: bool = True) -> Tuple[List[str], List[str]]:
         """Returns list of variables to drop when comparing
         initialized/uninitialized to observations.
 

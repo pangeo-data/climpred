@@ -1,4 +1,4 @@
-from typing import Callable, List, Optional
+from typing import Callable, List, Optional, Tuple
 
 import dask
 import numpy as np
@@ -42,7 +42,9 @@ class Comparison:
     def __init__(
         self,
         name: str,
-        function: Callable[..., Optional[Metric]],
+        function: Callable[
+            [xr.Dataset, Optional[Metric]], Tuple[xr.Dataset, xr.Dataset]
+        ],
         hindcast: bool,
         probabilistic: bool,
         long_name: Optional[str] = None,

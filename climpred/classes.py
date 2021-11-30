@@ -1,6 +1,6 @@
 import warnings
 from copy import deepcopy
-from typing import (  # TYPE_CHECKING,; Collection,; DefaultDict,; MutableMapping,
+from typing import (
     Any,
     Callable,
     Collection,
@@ -62,7 +62,6 @@ from .constants import (
     XCLIM_BIAS_CORRECTION_METHODS,
 )
 from .exceptions import DimensionError, VariableError
-from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .logging import log_compute_hindcast_header
 from .metrics import Metric
 from .options import OPTIONS
@@ -357,11 +356,11 @@ class PredictionEnsemble:
     def plot(
         self,
         variable: Optional[str] = None,
-        ax: Optional[plt.Axes] = None,
+        ax: Optional["plt.Axes"] = None,
         show_members: bool = False,
         cmap: Optional[str] = None,
         x: str = "time",
-    ) -> plt.Axes:
+    ) -> "plt.Axes":
         """Plot datasets from PredictionEnsemble.
 
         Args:
@@ -388,6 +387,8 @@ class PredictionEnsemble:
             ax: plt.axes
 
         """
+        from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
+
         if x == "time":
             x = "valid_time"
         assert x in ["valid_time", "init"]

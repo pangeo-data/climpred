@@ -356,11 +356,11 @@ class PredictionEnsemble:
     def plot(
         self,
         variable: Optional[str] = None,
-        ax: Optional["plt.Axes"] = None,
+        ax: Optional[Any] = None,  # actually plt.Axes but plt not in requirements
         show_members: bool = False,
         cmap: Optional[str] = None,
         x: str = "time",
-    ) -> "plt.Axes":
+    ) -> Any:
         """Plot datasets from PredictionEnsemble.
 
         Args:

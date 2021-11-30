@@ -351,8 +351,6 @@ class PredictionEnsemble:
             return False
         return id
 
-    import matplotlib.pyplot as plt
-
     def plot(
         self,
         variable: Optional[str] = None,

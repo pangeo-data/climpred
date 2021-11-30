@@ -208,7 +208,7 @@ class PredictionEnsemble:
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}
         self.kind = "prediction"
-        self._temporally_smoothed = None
+        self._temporally_smoothed: Optional[Dict[str, int]] = None
         self._is_annual_lead = None
         self._warn_if_chunked_along_init_member_time()
 
@@ -656,9 +656,9 @@ class PredictionEnsemble:
 
     def smooth(
         self,
-        smooth_kws=None,
-        how="mean",
-        **xesmf_kwargs,
+        smooth_kws: Optional[Union[str, Dict[str, int]]] = None,
+        how: str = "mean",
+        **xesmf_kwargs: Any,
     ):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
@@ -711,6 +711,8 @@ class PredictionEnsemble:
         """
         if not smooth_kws:
             return self
+        tsmooth_kws: Optional[Union[str, Dict[str, int]]] = None
+        d_lon_lat_kws: Optional[Union[str, Dict[str, int]]] = None
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if "goddard" in smooth_kws:
@@ -893,7 +895,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         func: Callable[..., Any],
         input_dict: Dict[str, Any],
         **kwargs: Any,
-    ):
+    ) -> Union["PerfectModelEnsemble", xr.Dataset]:
         """Helper function to loop through observations and apply an arbitrary climpred
         function.
 
@@ -1450,7 +1452,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def _apply_climpred_function(
         self, func: Callable[..., Any], init: bool, **kwargs: Any
-    ) -> "HindcastEnsemble":
+    ) -> Union["HindcastEnsemble", xr.Dataset]:
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
 

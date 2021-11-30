@@ -7,7 +7,7 @@ import xarray as xr
 from xarray.coding.times import infer_calendar_name
 
 from .checks import DimensionError
-# from .classes import HindcastEnsemble, PerfectModelEnsemble
+from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
 from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
 from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
@@ -82,7 +82,7 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
 
 def plot_bootstrapped_skill_over_leadyear(
     bootstrapped: xr.Dataset,
-    ax: Optional[plt.Axes] = None,
+    ax: Optional["plt.Axes"] = None,
     color_initialized: str = "indianred",
     color_uninitialized: str = "steelblue",
     color_persistence: str = "gray",
@@ -91,7 +91,7 @@ def plot_bootstrapped_skill_over_leadyear(
     fontsize: Union[int, float] = 8,
     figsize: Tuple = (10, 4),
     fmt: str = "--o",
-) -> plt.Axes:
+) -> "plt.Axes":
     """
     Plot Ensemble Prediction skill as in Li et al. 2016 Fig.3a-c.
 
@@ -99,7 +99,7 @@ def plot_bootstrapped_skill_over_leadyear(
         bootstrapped (xr.DataArray or xr.Dataset with one variable):
             from PredictionEnsembleEnsemble.bootstrap() or HindcastEnsemble.bootstrap()
 
-        ax (plt.axes): plot on ax. Defaults to None.
+        ax ("plt.Axes"): plot on ax. Defaults to None.
 
     Returns:
         ax
@@ -211,13 +211,13 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he: "HindcastEnsemble",
+    he: HindcastEnsemble,
     variable: Optional[str] = None,
-    ax: Optional[plt.Axes] = None,
+    ax: Optional["plt.Axes"] = None,
     show_members: bool = False,
     cmap: Optional[str] = "viridis",
     x: str = "time",
-) -> plt.Axes:
+) -> "plt.Axes":
     """Plot datasets from HindcastEnsemble.
 
     Args:
@@ -306,13 +306,13 @@ def plot_lead_timeseries_hindcast(
 
 
 def plot_ensemble_perfect_model(
-    pm: "PerfectModelEnsemble",
+    pm: PerfectModelEnsemble,
     variable: Optional[str] = None,
-    ax: Optional[plt.Axes] = None,
+    ax: Optional["plt.Axes"] = None,
     show_members: bool = False,
     cmap: Optional[str] = "tab10",
     x: str = "time",
-) -> plt.Axes:
+) -> "plt.Axes":
     """Plot datasets from PerfectModelEnsemble.
 
     Args:

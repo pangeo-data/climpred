@@ -91,6 +91,15 @@ referenceType = Union[List[str], str]
 groupbyType = Optional[Union[str, xr.DataArray]]
 metric_kwargsType = Optional[Any]
 
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import matplotlib.pyplot as plt
+
+    optionalaxisType = Optional[plt.Axes]
+else:
+    optionalaxisType = Optional[Any]
+
 
 def _display_metadata(self) -> str:
     """
@@ -353,11 +362,11 @@ class PredictionEnsemble:
     def plot(
         self,
         variable: Optional[str] = None,
-        ax: Optional[Any] = None,  # actually plt.Axes but plt not in requirements
+        ax: optionalaxisType = None,  # actually plt.Axes but plt not in requirements
         show_members: bool = False,
         cmap: Optional[str] = None,
         x: str = "time",
-    ) -> Any:
+    ) -> "plt.Axes":
         """Plot datasets from PredictionEnsemble.
 
         Args:

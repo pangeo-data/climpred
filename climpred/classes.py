@@ -731,11 +731,6 @@ class PredictionEnsemble:
         # could be more robust in how it finds these two spatial dimensions regardless
         # of name. Optional work in progress comment.
         elif isinstance(smooth_kws, dict):
-            non_time_dims = [
-                dim for dim in smooth_kws.keys() if dim not in ["time", "lead"]
-            ]
-            if len(non_time_dims) > 0:
-                non_time_dims = non_time_dims[0]
             # goddard when time_dim and lon/lat given
             if ("lon" in smooth_kws or "lat" in smooth_kws) and (
                 "lead" in smooth_kws or "time" in smooth_kws

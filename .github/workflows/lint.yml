@@ -13,3 +13,5 @@ jobs:
           python-version: 3.8
       - name: Lint via pre-commit checks
         uses: pre-commit/action@v2.0.3
+        with:
+           extra_args: --hook-stage manual

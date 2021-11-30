@@ -22,7 +22,6 @@ import numpy as np
 import xarray as xr
 from dask import is_dask_collection
 from IPython.display import display_html
-from mypy_extensions import KwArg, VarArg
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr
@@ -526,7 +525,7 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(self, name: str) -> Callable[[VarArg(Any), KwArg(Any)], Any]:
+    def __getattr__(self, name):
         """Allows for xarray methods to be applied to our prediction objects.
 
         Args:

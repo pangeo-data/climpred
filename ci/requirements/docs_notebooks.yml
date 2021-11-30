@@ -18,7 +18,6 @@ dependencies:
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
   - sphinx-copybutton
-  - mypy_extensions
   - toolz
   - xarray>=0.16.1
   - esmtools>=1.1.3

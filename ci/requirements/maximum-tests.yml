@@ -17,7 +17,6 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-xdist
-  - mypy_extensions
   - scipy
   - xarray>=0.16.1
   - xesmf

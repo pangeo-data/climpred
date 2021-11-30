@@ -45,12 +45,10 @@ New Features
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
   initializations seasonality. (:issue:`635`, :pr:`690`) `Aaron Spring`_.
 
-Documentation
--------------
-
 Internals/Minor Fixes
 ---------------------
 - Reduce dependencies (:pr:`686`) `Aaron Spring`_.
+- Add `typing <https://docs.python.org/3/library/typing.html>`_ (:issue:`685`, :pr:`692`) `Aaron Spring`_.
 
 
 climpred v2.1.6 (2021-08-31)

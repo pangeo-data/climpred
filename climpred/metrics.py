@@ -1,4 +1,5 @@
 import warnings
+from typing import Callable, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -187,9 +188,6 @@ def _display_metric_metadata(self) -> str:
     # doc
     summary += f"Function: {self.function.__doc__}\n"
     return summary
-
-
-from typing import Callable, List, Optional
 
 
 class Metric:

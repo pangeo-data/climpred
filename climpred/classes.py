@@ -3,16 +3,12 @@ from copy import deepcopy
 from typing import (
     Any,
     Callable,
-    Collection,
     Dict,
     Hashable,
-    Iterable,
     Iterator,
     List,
     Mapping,
     Optional,
-    Sequence,
-    Set,
     Tuple,
     Union,
 )
@@ -362,7 +358,7 @@ class PredictionEnsemble:
     def plot(
         self,
         variable: Optional[str] = None,
-        ax: optionalaxisType = None,  # actually plt.Axes but plt not in requirements
+        ax: optionalaxisType = None,
         show_members: bool = False,
         cmap: Optional[str] = None,
         x: str = "time",
@@ -534,7 +530,9 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(self, name):
+    def __getattr__(
+        self, name: str
+    ) -> Callable:  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
         """Allows for xarray methods to be applied to our prediction objects.
 
         Args:
@@ -1311,7 +1309,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 If None or empty, returns no p value.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
-            resample_dim (str): dimension for resampling
+            resample_dim (str or list): dimension to resample from. default: 'member'.
+
+                - 'member': select a different set of members from hind
+                - 'init': select a different set of initializations from hind
+
             sig (int, default 95): Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
@@ -1641,10 +1643,6 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
         """
-        if isinstance(reference, str):
-            reference = [reference]
-        else:
-            pass  # reference = list(reference)
         if groupby is not None:
             skill_group = []
             group_label = []

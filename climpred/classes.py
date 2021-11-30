@@ -1,11 +1,25 @@
 import warnings
 from copy import deepcopy
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import cf_xarray
 import numpy as np
 import xarray as xr
 from dask import is_dask_collection
 from IPython.display import display_html
+from xarray.core.coordinates import DatasetCoordinates
+from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
@@ -31,6 +45,7 @@ from .checks import (
     match_initialized_vars,
     rename_to_climpred_dims,
 )
+from .comparisons import Comparison
 from .constants import (
     BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
     BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
@@ -42,8 +57,8 @@ from .constants import (
     XCLIM_BIAS_CORRECTION_METHODS,
 )
 from .exceptions import DimensionError, VariableError
-from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 from .logging import log_compute_hindcast_header
+from .metrics import Metric
 from .options import OPTIONS
 from .prediction import (
     _apply_metric_at_given_lead,
@@ -64,8 +79,25 @@ from .utils import (
     convert_Timedelta_to_lead_units,
 )
 
+metricType = Union[str, Metric]
+comparisonType = Union[str, Comparison]
+dimType = Optional[Union[str, List[str]]]
+alignmentType = str
+referenceType = Union[List[str], str]
+groupbyType = Optional[Union[str, xr.DataArray]]
+metric_kwargsType = Optional[Any]
 
-def _display_metadata(self):
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    import matplotlib.pyplot as plt
+
+    optionalaxisType = Optional[plt.Axes]
+else:
+    optionalaxisType = Optional[Any]
+
+
+def _display_metadata(self) -> str:
     """
     This is called in the following case:
 
@@ -117,7 +149,7 @@ def _display_metadata(self):
     return summary
 
 
-def _display_metadata_html(self):
+def _display_metadata_html(self) -> str:
     header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets["initialized"])
@@ -155,7 +187,7 @@ class PredictionEnsemble:
     """
 
     @is_xarray(1)
-    def __init__(self, xobj):
+    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]):
         if isinstance(xobj, xr.DataArray):
             # makes applying prediction functions easier, etc.
             xobj = xobj.to_dataset()
@@ -180,12 +212,12 @@ class PredictionEnsemble:
         # run.
         self._datasets = {"initialized": xobj, "uninitialized": {}}
         self.kind = "prediction"
-        self._temporally_smoothed = None
+        self._temporally_smoothed: Optional[Dict[str, int]] = None
         self._is_annual_lead = None
         self._warn_if_chunked_along_init_member_time()
 
     @property
-    def coords(self):
+    def coords(self) -> DatasetCoordinates:
         """Dictionary of xarray.DataArray objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
         """
@@ -207,7 +239,7 @@ class PredictionEnsemble:
         )
 
     @property
-    def sizes(self):
+    def sizes(self) -> Mapping[Hashable, int]:
         """Mapping from dimension names to lengths for all PredictionEnsemble._datasets."""
         pe_dims = dict(self.get_initialized().dims)
         for ds in self._datasets.values():
@@ -216,12 +248,12 @@ class PredictionEnsemble:
         return pe_dims
 
     @property
-    def dims(self):
+    def dims(self) -> Mapping[Hashable, int]:
         """Mapping from dimension names to lengths all PredictionEnsemble._datasets."""
         return Frozen(self.sizes)
 
     @property
-    def chunks(self):
+    def chunks(self) -> Mapping[Hashable, Tuple[int, ...]]:
         """Mapping from chunks all PredictionEnsemble._datasets."""
         pe_chunks = dict(self.get_initialized().chunks)
         for ds in self._datasets.values():
@@ -232,7 +264,16 @@ class PredictionEnsemble:
         return Frozen(pe_chunks)
 
     @property
-    def data_vars(self):
+    def chunksizes(self) -> Mapping[Hashable, Tuple[int, ...]]:
+        """Mapping from dimension names to block lengths for this dataset's data, or None if
+        the underlying data is not a dask array.
+        Cannot be modified directly, but can be modified by calling .chunk().
+        Same as Dataset.chunks.
+        """
+        return self.chunks
+
+    @property
+    def data_vars(self) -> DataVariables:
         """Dictionary of DataArray objects corresponding to data variables available in all PredictionEnsemble._datasets."""
         varset = set(self.get_initialized().data_vars)
         for ds in self._datasets.values():
@@ -244,21 +285,21 @@ class PredictionEnsemble:
 
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
-    def __repr__(self):
+    def __repr__(self) -> str:
         if XR_OPTIONS["display_style"] == "html":
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
 
-    def __len__(self):
+    def __len__(self) -> int:
         """Number of all variables in all PredictionEnsemble._datasets."""
         return len(self.data_vars)
 
-    def __iter__(self):
+    def __iter__(self) -> Iterator[Hashable]:
         """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
         return iter(self._datasets.values())
 
-    def __delitem__(self, key):
+    def __delitem__(self, key: Hashable) -> None:
         """Remove a variable from this PredictionEnsemble."""
         del self._datasets["initialized"][key]
         for ds in self._datasets.values():
@@ -266,7 +307,7 @@ class PredictionEnsemble:
                 if key in ds.data_vars:
                     del ds[key]
 
-    def __contains__(self, key):
+    def __contains__(self, key: Hashable) -> bool:
         """The 'in' operator will return true or false depending on whether
         'key' is an array in all PredictionEnsemble._datasets or not.
         """
@@ -277,7 +318,7 @@ class PredictionEnsemble:
                     contained = False
         return contained
 
-    def equals(self, other):
+    def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """Two PredictionEnsembles are equal if they have matching variables and
         coordinates, all of which are equal.
         PredictionEnsembles can still be equal (like pandas objects) if they have NaN
@@ -298,7 +339,7 @@ class PredictionEnsemble:
             return False
         return equal
 
-    def identical(self, other):
+    def identical(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """Like equals, but also checks all dataset attributes and the
         attributes on all variables and coordinates."""
         if not isinstance(other, PredictionEnsemble):
@@ -314,7 +355,14 @@ class PredictionEnsemble:
             return False
         return id
 
-    def plot(self, variable=None, ax=None, show_members=False, cmap=None, x="time"):
+    def plot(
+        self,
+        variable: Optional[str] = None,
+        ax: optionalaxisType = None,
+        show_members: bool = False,
+        cmap: Optional[str] = None,
+        x: str = "time",
+    ) -> "plt.Axes":
         """Plot datasets from PredictionEnsemble.
 
         Args:
@@ -341,10 +389,12 @@ class PredictionEnsemble:
             ax: plt.axes
 
         """
+        from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
+
         if x == "time":
             x = "valid_time"
         assert x in ["valid_time", "init"]
-        if self.kind == "hindcast":
+        if isinstance(self, HindcastEnsemble):
             if cmap is None:
                 cmap = "viridis"
             return plot_lead_timeseries_hindcast(
@@ -355,14 +405,20 @@ class PredictionEnsemble:
                 cmap=cmap,
                 x=x,
             )
-        elif self.kind == "perfect":
+        elif isinstance(self, PerfectModelEnsemble):
             if cmap is None:
                 cmap = "tab10"
             return plot_ensemble_perfect_model(
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
 
-    def _math(self, other, operator):
+    mathType = Union[int, float, np.ndarray, xr.DataArray, xr.Dataset]
+
+    def _math(
+        self,
+        other: mathType,
+        operator: str,
+    ):
         """Helper function for __add__, __sub__, __mul__, __truediv__.
 
         Allows math operations with type:
@@ -411,7 +467,7 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets["initialized"].dims):
+            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore
                 raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
@@ -424,7 +480,7 @@ class PredictionEnsemble:
                     f"other.data_vars = {list(other.data_vars)}."
                 )
 
-        operator = eval(operator)
+        _operator = eval(operator)
 
         if isinstance(other, PredictionEnsemble):
             # Create temporary copy to modify to avoid inplace operation.
@@ -434,26 +490,26 @@ class PredictionEnsemble:
                 if isinstance(other._datasets[dataset], xr.Dataset) and isinstance(
                     self._datasets[dataset], xr.Dataset
                 ):
-                    datasets[dataset] = operator(
+                    datasets[dataset] = _operator(
                         datasets[dataset], other._datasets[dataset]
                     )
             return self._construct_direct(datasets, kind=self.kind)
         else:
-            return self._apply_func(operator, other)
+            return self._apply_func(_operator, other)
 
-    def __add__(self, other):
+    def __add__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="add")
 
-    def __sub__(self, other):
+    def __sub__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="sub")
 
-    def __mul__(self, other):
+    def __mul__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="mul")
 
-    def __truediv__(self, other):
+    def __truediv__(self, other: mathType) -> "PredictionEnsemble":
         return self._math(other, operator="div")
 
-    def __getitem__(self, varlist):
+    def __getitem__(self, varlist: Union[str, List[str]]) -> "PredictionEnsemble":
         """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
 
         Args:
@@ -474,7 +530,9 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(self, name):
+    def __getattr__(
+        self, name: str
+    ) -> Callable:  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
         """Allows for xarray methods to be applied to our prediction objects.
 
         Args:
@@ -562,9 +620,12 @@ class PredictionEnsemble:
         obj._warn_if_chunked_along_init_member_time()
         return obj
 
-    def _apply_func(self, func, *args, **kwargs):
+    def _apply_func(
+        self, func: Callable[..., Any], *args: Any, **kwargs: Any
+    ) -> "PredictionEnsemble":
         """Apply a function to all datasets in a `PredictionEnsemble`."""
         # Create temporary copy to modify to avoid inplace operation.
+        # isnt that essentially the same as .map(func)?
         datasets = self._datasets.copy()
 
         # More explicit than nested dictionary comprehension.
@@ -591,15 +652,20 @@ class PredictionEnsemble:
         # Instantiates new object with the modified datasets.
         return self._construct_direct(datasets, kind=self.kind)
 
-    def get_initialized(self):
+    def get_initialized(self) -> xr.Dataset:
         """Returns the xarray dataset for the initialized ensemble."""
         return self._datasets["initialized"]
 
-    def get_uninitialized(self):
+    def get_uninitialized(self) -> xr.Dataset:
         """Returns the xarray dataset for the uninitialized ensemble."""
         return self._datasets["uninitialized"]
 
-    def smooth(self, smooth_kws=None, how="mean", **xesmf_kwargs):
+    def smooth(
+        self,
+        smooth_kws: Optional[Union[str, Dict[str, int]]] = None,
+        how: str = "mean",
+        **xesmf_kwargs: Any,
+    ):
         """Smooth all entries of PredictionEnsemble in the same manner to be
         able to still calculate prediction skill afterwards.
 
@@ -651,6 +717,8 @@ class PredictionEnsemble:
         """
         if not smooth_kws:
             return self
+        tsmooth_kws: Optional[Union[str, Dict[str, int]]] = None
+        d_lon_lat_kws: Optional[Union[str, Dict[str, int]]] = None
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if "goddard" in smooth_kws:
@@ -671,11 +739,6 @@ class PredictionEnsemble:
         # could be more robust in how it finds these two spatial dimensions regardless
         # of name. Optional work in progress comment.
         elif isinstance(smooth_kws, dict):
-            non_time_dims = [
-                dim for dim in smooth_kws.keys() if dim not in ["time", "lead"]
-            ]
-            if len(non_time_dims) > 0:
-                non_time_dims = non_time_dims[0]
             # goddard when time_dim and lon/lat given
             if ("lon" in smooth_kws or "lat" in smooth_kws) and (
                 "lead" in smooth_kws or "time" in smooth_kws
@@ -724,7 +787,9 @@ class PredictionEnsemble:
             )
         return self
 
-    def remove_seasonality(self, initialized_dim="init", seasonality=None):
+    def remove_seasonality(
+        self, initialized_dim: str = "init", seasonality: Union[None, str] = None
+    ) -> "PredictionEnsemble":
         """Remove seasonal cycle from all climpred datasets.
 
         Args:
@@ -766,7 +831,7 @@ class PredictionEnsemble:
             seasonality=seasonality,
         )
 
-    def _warn_if_chunked_along_init_member_time(self):
+    def _warn_if_chunked_along_init_member_time(self) -> None:
         """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
         more than one chunk to show how to circumvent ``xskillscore`` chunking
         ``ValueError``."""
@@ -811,7 +876,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    def __init__(self, xobj):
+    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]) -> None:
         """Create a `PerfectModelEnsemble` object by inputting output from the
         control run in `xarray` format.
 
@@ -831,7 +896,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         self._datasets.update({"control": {}})
         self.kind = "perfect"
 
-    def _apply_climpred_function(self, func, input_dict=None, **kwargs):
+    def _apply_climpred_function(
+        self,
+        func: Callable[..., Any],
+        input_dict: Dict[str, Any],
+        **kwargs: Any,
+    ) -> Union["PerfectModelEnsemble", xr.Dataset]:
         """Helper function to loop through observations and apply an arbitrary climpred
         function.
 
@@ -851,7 +921,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             control = control.drop_vars(ctrl_vars)
         return func(ensemble, control, **kwargs)
 
-    def _vars_to_drop(self, init=True):
+    def _vars_to_drop(self, init: bool = True) -> Tuple[List[str], List[str]]:
         """Returns list of variables to drop when comparing
         initialized/uninitialized to a control.
 
@@ -883,7 +953,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return init_vars_to_drop, ctrl_vars_to_drop
 
     @is_xarray(1)
-    def add_control(self, xobj):
+    def add_control(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "PerfectModelEnsemble":
         """Add the control run that initialized the climate prediction
         ensemble.
 
@@ -905,7 +977,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         datasets.update({"control": xobj})
         return self._construct_direct(datasets, kind="perfect")
 
-    def generate_uninitialized(self):
+    def generate_uninitialized(self) -> "PerfectModelEnsemble":
         """Generate an uninitialized ensemble by bootstrapping the
         initialized prediction ensemble.
 
@@ -924,19 +996,19 @@ class PerfectModelEnsemble(PredictionEnsemble):
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="perfect")
 
-    def get_control(self):
+    def get_control(self) -> xr.Dataset:
         """Returns the control as an xarray dataset."""
         return self._datasets["control"]
 
     def verify(
         self,
-        metric=None,
-        comparison=None,
-        dim=None,
-        reference=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verify initialized predictions against a configuration of other ensemble members.
 
         .. note::
@@ -1050,8 +1122,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return result.squeeze()
 
     def _compute_uninitialized(
-        self, metric=None, comparison=None, dim=None, **metric_kwargs
-    ):
+        self,
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verify the bootstrapped uninitialized run against itself.
 
         .. note::
@@ -1102,7 +1178,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
-    def _compute_persistence(self, metric=None, dim=None, **metric_kwargs):
+    def _compute_persistence(
+        self,
+        metric: metricType = None,
+        dim: dimType = None,
+        **metric_kwargs: metric_kwargsType,
+    ):
         """Verify a simple persistence forecast of the control run against itself.
 
         Args:
@@ -1148,8 +1229,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return res
 
     def _compute_climatology(
-        self, metric=None, comparison=None, dim=None, **metric_kwargs
-    ):
+        self,
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verify a climatology forecast of the control run against itself.
 
         Args:
@@ -1195,16 +1280,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric=None,
-        comparison=None,
-        dim=None,
-        reference=None,
-        iterations=None,
-        sig=95,
-        pers_sig=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        iterations: Optional[int] = None,
+        sig: int = 95,
+        resample_dim: str = "member",
+        pers_sig: Optional[int] = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
@@ -1223,6 +1309,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 If None or empty, returns no p value.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
+            resample_dim (str or list): dimension to resample from. default: 'member'.
+
+                - 'member': select a different set of members from hind
+                - 'init': select a different set of initializations from hind
+
             sig (int, default 95): Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
@@ -1303,6 +1394,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                         comparison=comparison,
                         dim=dim,
                         iterations=iterations,
+                        resample_dim=resample_dim,
                         sig=sig,
                         pers_sig=pers_sig,
                         **metric_kwargs,
@@ -1350,7 +1442,7 @@ class HindcastEnsemble(PredictionEnsemble):
     be an `xarray` Dataset or DataArray.
     """
 
-    def __init__(self, xobj):
+    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]) -> None:
         """Create a `HindcastEnsemble` object by inputting output from a
         prediction ensemble in `xarray` format.
 
@@ -1368,7 +1460,9 @@ class HindcastEnsemble(PredictionEnsemble):
         self._datasets.update({"observations": {}})
         self.kind = "hindcast"
 
-    def _apply_climpred_function(self, func, init, **kwargs):
+    def _apply_climpred_function(
+        self, func: Callable[..., Any], init: bool, **kwargs: Any
+    ) -> Union["HindcastEnsemble", xr.Dataset]:
         """Helper function to loop through verification data and apply an arbitrary
         climpred function.
 
@@ -1376,12 +1470,13 @@ class HindcastEnsemble(PredictionEnsemble):
             func (function): climpred function to apply to object.
             init (bool): Whether or not it's the initialized ensemble.
         """
+        # fixme: essentially the same as map?
         hind = self._datasets["initialized"]
         verif = self._datasets["observations"]
         drop_init, drop_obs = self._vars_to_drop(init=init)
         return func(hind.drop_vars(drop_init), verif.drop_vars(drop_obs), **kwargs)
 
-    def _vars_to_drop(self, init=True):
+    def _vars_to_drop(self, init: bool = True) -> Tuple[List[str], List[str]]:
         """Returns list of variables to drop when comparing
         initialized/uninitialized to observations.
 
@@ -1411,7 +1506,9 @@ class HindcastEnsemble(PredictionEnsemble):
         return init_vars_to_drop, obs_vars_to_drop
 
     @is_xarray(1)
-    def add_observations(self, xobj):
+    def add_observations(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "HindcastEnsemble":
         """Add verification data against which to verify the initialized ensemble.
 
         Args:
@@ -1433,7 +1530,9 @@ class HindcastEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="hindcast")
 
     @is_xarray(1)
-    def add_uninitialized(self, xobj):
+    def add_uninitialized(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "HindcastEnsemble":
         """Add a companion uninitialized ensemble for comparison to verification data.
 
         Args:
@@ -1454,7 +1553,7 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets.update({"uninitialized": xobj})
         return self._construct_direct(datasets, kind="hindcast")
 
-    def get_observations(self):
+    def get_observations(self) -> xr.Dataset:
         """Returns xarray Datasets of the observations/verification data.
 
         Returns:
@@ -1464,14 +1563,14 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def verify(
         self,
-        reference=None,
-        metric=None,
-        comparison=None,
-        dim=None,
-        alignment=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        alignment: alignmentType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Verifies the initialized ensemble against observations.
 
         .. note::
@@ -1704,18 +1803,18 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric=None,
-        comparison=None,
-        dim=None,
-        alignment=None,
-        reference=None,
-        iterations=None,
-        sig=95,
-        resample_dim="member",
-        pers_sig=None,
-        groupby=None,
-        **metric_kwargs,
-    ):
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        alignment: alignmentType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        iterations: Optional[int] = None,
+        sig: int = 95,
+        resample_dim: str = "member",
+        pers_sig: Optional[int] = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
@@ -1871,14 +1970,14 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def remove_bias(
         self,
-        alignment=None,
-        how="additive_mean",
-        train_test_split="unfair",
-        train_init=None,
-        train_time=None,
-        cv=False,
-        **metric_kwargs,
-    ):
+        alignment: alignmentType = None,
+        how: str = "additive_mean",
+        train_test_split: str = "unfair",
+        train_init: Optional[Union[xr.DataArray, slice]] = None,
+        train_time: Optional[Union[xr.DataArray, slice]] = None,
+        cv: Union[bool, str] = False,
+        **metric_kwargs: metric_kwargsType,
+    ) -> "HindcastEnsemble":
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
         Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`. When wrapping xclim.sbda.adjustment use ``group`` instead.

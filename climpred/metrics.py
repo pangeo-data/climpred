@@ -1399,7 +1399,7 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             "Comparison needed to normalize NMAE. Not found in", metric_kwargs
         )
-    mae_skill = __mae(forecast, verif, dim=dim, **metric_kwargs)
+    mae_skill = _mae(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
     nmae_skill = mae_skill / std / fac
@@ -3318,7 +3318,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         forecast (xr.object): Forecasts.
         verif (xr.object): Verification.
         dim (list or str): Dimensions to aggregate.
-        **metric_kwargs, see xs.rps
+        **metric_kwargs, see :py:func:`~xskillscore.rps`
 
     .. note::
         If ``category_edges`` is xr.Dataset or tuple of xr.Datasets, climpred will
@@ -3374,7 +3374,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         >>> category_edges = xr.DataArray([9.5, 10., 10.5, 11.], dims='category_edge').assign_coords(category_edge=[9.5, 10., 10.5, 11.]).to_dataset(name='tos')
         >>> # category_edges = np.array([9.5, 10., 10.5, 11.]) # identical
         >>> PerfectModelEnsemble.verify(metric='rps', comparison='m2c',
-        ...     dim=['member', 'init'], category_edges=category_edges)  # doctest: +ELLIPSIS
+        ...     dim=['member', 'init'], category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:                     (lead: 20)
         Coordinates:
@@ -3405,7 +3405,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         >>> category_edges = (obs_edges, forecast_edges)
         >>> HindcastEnsemble.verify(metric='rps', comparison='m2o',
         ...     dim=['member', 'init'], alignment='same_verifs',
-        ...     category_edges=category_edges)  # doctsest: +ELLIPSIS
+        ...     category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:                     (lead: 10)
         Coordinates:

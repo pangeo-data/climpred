@@ -1050,6 +1050,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
             Data variables:
                 tos      (lead) float32 0.1028 0.1249 0.1443 0.1707 ... 0.2113 0.2452 0.2297
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  PerfectModelEnsemble.verify()
+                number_of_initializations:     12
+                number_of_members:             10
+                metric:                        rmse
+                comparison:                    m2e
+                dim:                           ['init', 'member']
+                reference:                     []
 
 
             Pearson's Anomaly Correlation ('acc') comparing every member to every
@@ -1067,6 +1076,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  PerfectModelEnsemble.verify()
+                number_of_initializations:     12
+                number_of_members:             10
+                metric:                        pearson_r
+                comparison:                    m2m
+                dim:                           ['init', 'member']
+                reference:                     ['persistence', 'climatology', 'uninitiali...
+                units:                         None
         """
         if groupby is not None:
             skill_group = []
@@ -1103,7 +1122,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
             metric=metric,
             comparison=comparison,
             dim=dim,
-            add_attrs=False,
             **metric_kwargs,
         )
         if self._temporally_smoothed:
@@ -1380,17 +1398,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
             Attributes:
-                prediction_skill:            calculated by climpred https://climpred.read...
-                number_of_initializations:   12
-                number_of_members:           10
-                alignment:                   same_verifs
-                metric:                      pearson_r
-                comparison:                  m2m
-                dim:                         ['init', 'member']
-                units:                       None
-                confidence_interval_levels:  0.975-0.025
-                bootstrap_iterations:        50
-                p:                           probability that reference performs better t...
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  PerfectModelEnsemble.bootstrap()
+                number_of_initializations:     12
+                number_of_members:             10
+                metric:                        pearson_r
+                comparison:                    m2m
+                dim:                           ['init', 'member']
+                reference:                     ['persistence', 'climatology', 'uninitiali...
+                units:                         None
+                resample_dim:                  member
+                sig:                           95
+                iterations:                    50
 
         """
         if groupby is not None:
@@ -1652,6 +1671,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 skill    <U11 'initialized'
             Data variables:
                 SST      (lead) float64 0.08516 0.09492 0.1041 ... 0.1525 0.1697 0.1785
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     64
+                number_of_members:             10
+                alignment:                     same_verifs
+                metric:                        rmse
+                comparison:                    m2o
+                dim:                           ['init', 'member']
+                reference:                     []
 
             Pearson's Anomaly Correlation ('acc') comparing the ensemble mean with the
             verification (``e2o``) over the same initializations (``same_inits``) for
@@ -1669,6 +1698,17 @@ class HindcastEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     64
+                number_of_members:             10
+                alignment:                     same_inits
+                metric:                        pearson_r
+                comparison:                    e2o
+                dim:                           init
+                reference:                     ['persistence', 'climatology', 'uninitiali...
+                units:                         None
         """
         if groupby is not None:
             skill_group = []
@@ -1939,18 +1979,20 @@ class HindcastEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
-            Attributes:
-                prediction_skill:            calculated by climpred https://climpred.read...
-                number_of_initializations:   61
-                number_of_members:           10
-                alignment:                   same_verifs
-                metric:                      pearson_r
-                comparison:                  e2o
-                dim:                         ['init']
-                units:                       None
-                confidence_interval_levels:  0.975-0.025
-                bootstrap_iterations:        50
-                p:                           probability that reference performs better t...
+            Attributes: (12/13)
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.bootstrap()
+                number_of_initializations:     64
+                number_of_members:             10
+                alignment:                     same_verifs
+                metric:                        pearson_r
+                ...                            ...
+                dim:                           init
+                reference:                     ['persistence', 'climatology', 'uninitiali...
+                units:                         None
+                resample_dim:                  member
+                sig:                           95
+                iterations:                    50
         """
         if groupby is not None:
             skill_group = []
@@ -2106,6 +2148,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 skill    <U11 'initialized'
             Data variables:
                 SST      (lead) float64 0.08359 0.08141 0.08362 ... 0.1361 0.1552 0.1664
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     64
+                number_of_members:             10
+                alignment:                     maximize
+                metric:                        rmse
+                comparison:                    e2o
+                dim:                           init
+                reference:                     []
 
             Note that this HindcastEnsemble is already bias reduced, therefore
             ``train_test_split='unfair'`` has hardly any effect. Use all
@@ -2122,6 +2174,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 skill    <U11 'initialized'
             Data variables:
                 SST      (lead) float64 0.08349 0.08039 0.07522 ... 0.07305 0.08107 0.08255
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     64
+                number_of_members:             10
+                alignment:                     maximize
+                metric:                        rmse
+                comparison:                    e2o
+                dim:                           init
+                reference:                     []
 
             Separate initializations 1954 - 1980 to calculate bias. Note that
             this HindcastEnsemble is already bias reduced, therefore
@@ -2140,6 +2202,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 skill    <U11 'initialized'
             Data variables:
                 SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     37
+                number_of_members:             10
+                alignment:                     maximize
+                metric:                        rmse
+                comparison:                    e2o
+                dim:                           init
+                reference:                     []
 
             Wrapping methods ``how`` from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and providing ``group`` for ``groupby``:
 
@@ -2154,6 +2226,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 skill    <U11 'initialized'
             Data variables:
                 SST      (lead) float64 0.09841 0.09758 0.08238 ... 0.0771 0.08119 0.08322
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     52
+                number_of_members:             10
+                alignment:                     maximize
+                metric:                        rmse
+                comparison:                    e2o
+                dim:                           init
+                reference:                     []
 
             Wrapping methods ``how`` from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
 
@@ -2168,6 +2250,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 skill    <U11 'initialized'
             Data variables:
                 SST      (lead) float64 0.07628 0.08293 0.08169 ... 0.1577 0.1821 0.2087
+            Attributes:
+                prediction_skill:              calculated by climpred https://climpred.re...
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_initializations:     52
+                number_of_members:             10
+                alignment:                     maximize
+                metric:                        rmse
+                comparison:                    e2o
+                dim:                           init
+                reference:                     []
         """
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(

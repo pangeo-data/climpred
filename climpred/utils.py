@@ -14,7 +14,7 @@ from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .exceptions import CoordinateError
-from .metrics import METRIC_ALIASES
+from .metrics import ALL_METRICS, METRIC_ALIASES
 from .options import OPTIONS
 
 
@@ -58,12 +58,14 @@ def assign_attrs(
         skill.attrs["number_of_initializations"] = ds.init.size
     if "member" in ds.coords:
         skill.attrs["number_of_members"] = ds.member.size
-
     if alignment is not None:
         skill.attrs["alignment"] = alignment
+
+    metric = METRIC_ALIASES.get(metric, metric)
+    metric = get_metric_class(metric, ALL_METRICS)
     skill.attrs["metric"] = metric.name
     if comparison is not None:
-        skill.attrs["comparison"] = comparison.name
+        skill.attrs["comparison"] = comparison
     if dim is not None:
         skill.attrs["dim"] = dim
     if reference is not None:
@@ -78,12 +80,19 @@ def assign_attrs(
         skill.attrs["units"] = f"({skill.attrs['units']})^{p}"
 
     # check for none attrs and remove
-    # del_list = []
-    # for key, value in metadata_dict.items():
-    #    if value is None and key != "units":
-    #        del_list.append(key)
-    # for entry in del_list:
-    #    del metadata_dict[entry]
+    del_list = []
+    for key, value in kwargs.items():
+        if value is None and key != "units":
+            del_list.append(key)
+    for entry in del_list:
+        del kwargs[entry]
+    # for key,value in kwargs.items():
+    #    print(key,value)
+    #    if isinstance(value, tuple):
+    #        for i,v in enumerate(value):
+    #            if isinstance(v, xr.DataArray):
+    #                #kwargs[key] = value.values
+    #                kwargs[key][i]="".join(str(v)).split("")
 
     # write optional information
     skill.attrs.update(kwargs)

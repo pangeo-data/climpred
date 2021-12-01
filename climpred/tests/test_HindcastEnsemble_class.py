@@ -42,15 +42,17 @@ def test_add_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
 
 def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitialized_1d):
     """Test to see if da uninitialized ensemble can be added to the HindcastEnsemble"""
-    hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_uninitialized(hist_da_uninitialized_1d)
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d).add_uninitialized(
+        hist_da_uninitialized_1d
+    )
     assert hindcast.get_uninitialized()
 
 
 def test_verify(hindcast_hist_obs_1d):
     """Test to see if HindcastEnsemble.verify() works."""
-    hindcast = hindcast_hist_obs_1d
-    hindcast.verify(metric="acc", comparison="e2o", dim="init", alignment="same_verif")
+    hindcast_hist_obs_1d.verify(
+        metric="acc", comparison="e2o", dim="init", alignment="same_verif"
+    )
 
 
 def test_isel_xarray_func(hindcast_hist_obs_1d):

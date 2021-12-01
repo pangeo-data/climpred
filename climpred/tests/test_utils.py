@@ -101,18 +101,13 @@ def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
     assert actual["dim"] == dim
 
 
-def test_bootstrap_pm_assign_attrs():
+def test_bootstrap_pm_assign_attrs(perfectModelEnsemble_initialized_control):
     """Test assigning attrs for bootstrap_perfect_model."""
-    v = "tos"
     metric = "pearson_r"
     comparison = "m2e"
     ITERATIONS = 3
     sig = 95
-    da = load_dataset("MPI-PM-DP-1D")[v].isel(area=1, period=-1)
-    control = load_dataset("MPI-control-1D")[v].isel(area=1, period=-1)
-    actual = bootstrap_perfect_model(
-        da,
-        control,
+    actual = perfectModelEnsemble_initialized_control.bootstrap(
         metric=metric,
         comparison=comparison,
         iterations=ITERATIONS,
@@ -126,13 +121,11 @@ def test_bootstrap_pm_assign_attrs():
         assert actual["units"] == "None"
 
 
-def test_hindcast_assign_attrs():
+def test_hindcast_assign_attrs(hindcast_hist_obs_1d):
     """Test assigning attrs for compute_hindcast."""
     metric = "pearson_r"
     comparison = "e2o"
-    da = load_dataset("CESM-DP-SST")
-    control = load_dataset("ERSST")
-    actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
+    actual = hindcast_hist_obs_1d.bootstrap(metric=metric, comparison=comparison).attrs
     assert actual["metric"] == metric
     assert actual["comparison"] == comparison
     if metric == "pearson_r":

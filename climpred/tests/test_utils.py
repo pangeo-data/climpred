@@ -105,7 +105,7 @@ def test_bootstrap_pm_assign_attrs(perfectModelEnsemble_initialized_control):
     """Test assigning attrs for bootstrap_perfect_model."""
     metric = "pearson_r"
     comparison = "m2e"
-    ITERATIONS = 3
+    ITERATIONS = 2
     sig = 95
     actual = perfectModelEnsemble_initialized_control.bootstrap(
         metric=metric,

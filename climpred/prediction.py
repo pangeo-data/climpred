@@ -253,16 +253,6 @@ def compute_perfect_model(
     skill = metric.function(forecast, verif, dim=dim, **metric_kwargs)
     if comparison.name == "m2m" and M2M_MEMBER_DIM in skill.dims:
         skill = skill.mean(M2M_MEMBER_DIM)
-    # Attach climpred compute information to skill
-    if add_attrs:
-        skill = assign_attrs(
-            skill,
-            init_pm,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            metadata_dict=metric_kwargs,
-        )
     return skill
 
 
@@ -365,16 +355,4 @@ def compute_hindcast(
         if "valid_time" in result.coords:
             if "lead" not in result.valid_time.dims:
                 result = add_time_from_init_lead(result.drop("valid_time"))
-
-    # Attach climpred compute information to result
-    if add_attrs:
-        result = assign_attrs(
-            result,
-            hind,
-            alignment=alignment,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            metadata_dict=metric_kwargs,
-        )
     return result

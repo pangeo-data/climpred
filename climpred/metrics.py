@@ -321,7 +321,6 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           ['init']
             reference:                     []
-            units:                         None
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -393,7 +392,6 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -483,7 +481,6 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -574,7 +571,6 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
 
     Reference:
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
@@ -667,7 +663,6 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -739,7 +734,6 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -838,7 +832,6 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -1287,7 +1280,6 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1391,7 +1383,6 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1502,7 +1493,6 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1616,7 +1606,6 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1695,7 +1684,6 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     return mape(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1762,7 +1750,6 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     return smape(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1857,7 +1844,6 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     messs_res = _msess(forecast, verif, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
@@ -1930,7 +1916,6 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     return forecast.std(dim=dim, **metric_kwargs) / verif.std(dim=dim, **metric_kwargs)
 
@@ -2082,7 +2067,6 @@ def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     return (forecast / verif).mean(dim=dim, **metric_kwargs)
 
@@ -2151,7 +2135,6 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     acc = _pearson_r(forecast, verif, dim=dim, **metric_kwargs)
     return acc - _std_ratio(forecast, verif, dim=dim, **metric_kwargs)
@@ -2223,7 +2206,6 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     std_ratio = _std_ratio(forecast, verif, dim=dim, **metric_kwargs)
     acc = _pearson_r(forecast, verif, dim=dim, **metric_kwargs)
@@ -2307,7 +2289,6 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     acc = _pearson_r(forecast, verif, dim=dim, **metric_kwargs)
     conditional_bias = _conditional_bias(forecast, verif, dim=dim, **metric_kwargs)
@@ -2421,8 +2402,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
-            logical:                       <function pos at 0x...>
+            logical:                       Callable
 
         Option 2. Pre-process to generate a binary multi-member forecast and
         binary verification product:
@@ -2446,7 +2426,6 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast`` anymore, use
@@ -2470,7 +2449,6 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -2564,7 +2542,6 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           member
             reference:                     []
-            units:                         None
             threshold:                     0.2
 
         >>> # multiple thresholds averaging over init dimension
@@ -2588,7 +2565,6 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
             threshold:                     [0.2, 0.3]
 
     """
@@ -2806,7 +2782,6 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           member
             reference:                     []
-            units:                         None
 
         >>> import scipy
         >>> PerfectModelEnsemble..isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
@@ -2933,7 +2908,6 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           member
             reference:                     []
-            units:                         None
 
     """
     if dim is None:
@@ -3149,8 +3123,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
-            logical:                       <function pos at 0x...>
+            logical:                       Callable
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
@@ -3175,7 +3148,6 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['init', 'member']
             reference:                     []
-            units:                         None
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
@@ -3201,7 +3173,6 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    e2o
             dim:                           init
             reference:                     []
-            units:                         None
 
     """
     if "logical" in metric_kwargs:
@@ -3269,7 +3240,6 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
 
         >>> PerfectModelEnsemble.verify(metric='rank_histogram', comparison='m2c',
         ...     dim=['member', 'init'])
@@ -3289,7 +3259,6 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2c
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -3364,7 +3333,6 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
             category_edges:                [-0.5  0.   0.5  1. ]
 
 
@@ -3392,7 +3360,6 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2c
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
             category_edges:                <xarray.Dataset>\\nDimensions:        (cate...
 
 
@@ -3425,7 +3392,6 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
             category_edges:                (<xarray.Dataset>\\nDimensions:        (mon...
     """
 
@@ -3525,6 +3491,8 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
           * observations_category         (observations_category) int64 1 2 3
           * forecasts_category            (forecasts_category) int64 1 2 3
             skill                         <U11 'initialized'
+        Attributes:
+            units:    None
 
         >>> # contingency-based dichotomous accuracy score
         >>> category_edges = np.array([9.5, 10.0, 10.5])
@@ -3547,7 +3515,6 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
             comparison:                    m2c
             dim:                           ['member', 'init']
             reference:                     []
-            units:                         None
             score:                         hit_rate
             observation_category_edges:    [ 9.5 10.  10.5]
             forecast_category_edges:       [ 9.5 10.  10.5]
@@ -3639,6 +3606,8 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
+        Attributes:
+            units:    None
 
         Get area under the curve, false positive rate and true positive rate as ``metric`` dimension by specifying ``return_results='all_as_metric_dim'``:
 
@@ -3660,6 +3629,8 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
           * lead             (lead) int32 1 2
           * metric           (metric) <U19 'false positive rate' ... 'area under curve'
             skill            <U11 'initialized'
+        Attributes:
+            units:    None
 
     """
     if "logical" in metric_kwargs:
@@ -3726,6 +3697,8 @@ def _less(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
+        Attributes:
+            units:    None
 
 
     References:

@@ -71,29 +71,25 @@ def assign_attrs(
     if reference is not None:
         skill.attrs["reference"] = reference
 
-    # change unit power
+    # change unit power in all variables
     if metric.unit_power == 0:
-        skill.attrs["units"] = "None"
-    if metric.unit_power >= 2 and "units" in skill.attrs:
-        p = metric.unit_power
-        p = int(p) if int(p) == p else p
-        skill.attrs["units"] = f"({skill.attrs['units']})^{p}"
-
+        for v in skill.data_vars:
+            skill[v].attrs["units"] = "None"
+    elif metric.unit_power >= 2:
+        for v in skill.data_vars:
+            if "units" in skill.attrs:
+                p = metric.unit_power
+                p = int(p) if int(p) == p else p
+                skill[v].attrs["units"] = f"({skill[v].attrs['units']})^{p}"
+    if "logical" in kwargs:
+        kwargs["logical"] = "Callable"
     # check for none attrs and remove
     del_list = []
     for key, value in kwargs.items():
-        if value is None and key != "units":
+        if value is None:
             del_list.append(key)
     for entry in del_list:
         del kwargs[entry]
-    # for key,value in kwargs.items():
-    #    print(key,value)
-    #    if isinstance(value, tuple):
-    #        for i,v in enumerate(value):
-    #            if isinstance(v, xr.DataArray):
-    #                #kwargs[key] = value.values
-    #                kwargs[key][i]="".join(str(v)).split("")
-
     # write optional information
     skill.attrs.update(kwargs)
 

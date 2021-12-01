@@ -22,11 +22,12 @@ def assign_attrs(
     skill,
     ds,
     function_name=None,
-    metadata_dict=None,
     alignment=None,
+    reference=None,
     metric=None,
     comparison=None,
     dim=None,
+    **kwargs,
 ):
     """Write information about prediction skill into attrs.
 
@@ -34,11 +35,12 @@ def assign_attrs(
         skill (`xarray` object): prediction skill.
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
-        metadata_dict (dict): optional attrs
         alignment (str): method used to align inits and verification data.
+        reference (str): reference forecasts
         metric (class) : metric used in comparing the forecast and verification data.
         comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
+        kwargs (dict): other information
 
     Returns:
        skill (`xarray` object): prediction skill with additional attrs.
@@ -54,7 +56,7 @@ def assign_attrs(
         skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords:
         skill.attrs["number_of_initializations"] = ds.init.size
-    if "member" in ds.coords and function_name != "compute_persistence":
+    if "member" in ds.coords:
         skill.attrs["number_of_members"] = ds.member.size
 
     if alignment is not None:
@@ -64,6 +66,8 @@ def assign_attrs(
         skill.attrs["comparison"] = comparison.name
     if dim is not None:
         skill.attrs["dim"] = dim
+    if reference is not None:
+        skill.attrs["reference"] = reference
 
     # change unit power
     if metric.unit_power == 0:
@@ -74,17 +78,15 @@ def assign_attrs(
         skill.attrs["units"] = f"({skill.attrs['units']})^{p}"
 
     # check for none attrs and remove
-    del_list = []
-    for key, value in metadata_dict.items():
-        if value is None and key != "units":
-            del_list.append(key)
-    for entry in del_list:
-        del metadata_dict[entry]
+    # del_list = []
+    # for key, value in metadata_dict.items():
+    #    if value is None and key != "units":
+    #        del_list.append(key)
+    # for entry in del_list:
+    #    del metadata_dict[entry]
 
     # write optional information
-    if metadata_dict is None:
-        metadata_dict = dict()
-    skill.attrs.update(metadata_dict)
+    skill.attrs.update(kwargs)
 
     return skill
 

@@ -449,7 +449,6 @@ def _bootstrap_hindcast_over_init_dim(
             verif,
             metric=metric,
             comparison=comparison,
-            add_attrs=False,
             dim=dim,
             **metric_kwargs,
         )
@@ -472,7 +471,6 @@ def _bootstrap_hindcast_over_init_dim(
                     metric=metric,
                     comparison=comparison,
                     dim=dim,
-                    add_attrs=False,
                     **metric_kwargs,
                 )
             )
@@ -483,7 +481,6 @@ def _bootstrap_hindcast_over_init_dim(
                     verif,
                     metric=metric,
                     dim=dim,
-                    add_attrs=False,
                     **metric_kwargs,
                 )
             )
@@ -810,7 +807,6 @@ def bootstrap_compute(
                 metric=metric,
                 comparison="m2o" if isHindcast else comparison,
                 dim=dim,
-                add_attrs=False,
                 **metric_kwargs,
             )
             # take mean if 'm2o' comparison forced before
@@ -827,7 +823,6 @@ def bootstrap_compute(
             verif,
             metric=metric,
             comparison=comparison,
-            add_attrs=False,
             dim=dim,
             **metric_kwargs,
         )

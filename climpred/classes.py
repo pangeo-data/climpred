@@ -1123,10 +1123,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
         result = assign_attrs(
             result,
             self.get_initialized(),
+            function_name="PerfectModelEnsemble.verify()",
             metric=metric,
             comparison=comparison,
             dim=dim,
-            metadata_dict=metric_kwargs,
+            reference=reference,
+            **metric_kwargs,
         )
         return result.squeeze()
 
@@ -1425,18 +1427,34 @@ class PerfectModelEnsemble(PredictionEnsemble):
             "control": self._datasets["control"],
             "init": True,
         }
-        return self._apply_climpred_function(
+        bootstrapped_skill = self._apply_climpred_function(
             bootstrap_perfect_model,
             input_dict=input_dict,
             metric=metric,
             comparison=comparison,
             dim=dim,
             reference=reference,
+            resample_dim=resample_dim,
             sig=sig,
             iterations=iterations,
             pers_sig=pers_sig,
             **metric_kwargs,
         )
+        bootstrapped_skill = assign_attrs(
+            bootstrapped_skill,
+            self.get_initialized(),
+            function_name="PerfectModelEnsemble.bootstrap()",
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            reference=reference,
+            resample_dim=resample_dim,
+            sig=sig,
+            iterations=iterations,
+            pers_sig=pers_sig,
+            **metric_kwargs,
+        )
+        return bootstrapped_skill
 
 
 class HindcastEnsemble(PredictionEnsemble):
@@ -1812,10 +1830,13 @@ class HindcastEnsemble(PredictionEnsemble):
         res = assign_attrs(
             res,
             self.get_initialized(),
+            function_name="HindcastEnsemble.verify()",
             metric=metric,
             comparison=comparison,
             dim=dim,
-            metadata_dict=metric_kwargs,
+            alignment=alignment,
+            reference=reference,
+            **metric_kwargs,
         )
         return res
 
@@ -1968,7 +1989,7 @@ class HindcastEnsemble(PredictionEnsemble):
             raise ValueError(
                 "reference uninitialized requires uninitialized dataset. Use HindcastEnsemble.add_uninitialized(uninitialized_ds)."
             )
-        return bootstrap_hindcast(
+        bootstrapped_skill = bootstrap_hindcast(
             self.get_initialized(),
             self.get_uninitialized()
             if isinstance(self.get_uninitialized(), xr.Dataset)
@@ -1985,6 +2006,22 @@ class HindcastEnsemble(PredictionEnsemble):
             pers_sig=pers_sig,
             **metric_kwargs,
         )
+        bootstrapped_skill = assign_attrs(
+            bootstrapped_skill,
+            self.get_initialized(),
+            function_name="HindcastEnsemble.bootstrap()",
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            alignment=alignment,
+            reference=reference,
+            resample_dim=resample_dim,
+            sig=sig,
+            iterations=iterations,
+            pers_sig=pers_sig,
+            **metric_kwargs,
+        )
+        return bootstrapped_skill
 
     def remove_bias(
         self,

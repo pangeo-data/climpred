@@ -74,6 +74,7 @@ from .smoothing import (
 )
 from .utils import (
     add_time_from_init_lead,
+    assign_attrs,
     broadcast_metric_kwargs_for_rps,
     convert_time_index,
     convert_Timedelta_to_lead_units,
@@ -1119,6 +1120,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             result = result.assign_coords(skill=["initialized"] + reference)
+        result = assign_attrs(
+            result,
+            self.get_initialized(),
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            metadata_dict=metric_kwargs,
+        )
         return result.squeeze()
 
     def _compute_uninitialized(
@@ -1799,6 +1808,15 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
+
+        res = assign_attrs(
+            res,
+            self.get_initialized(),
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            metadata_dict=metric_kwargs,
+        )
         return res
 
     def bootstrap(

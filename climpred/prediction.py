@@ -209,7 +209,6 @@ def compute_perfect_model(
     metric="pearson_r",
     comparison="m2e",
     dim=["member", "init"],
-    add_attrs=True,
     **metric_kwargs,
 ):
     """
@@ -227,7 +226,6 @@ def compute_perfect_model(
             :py:func:`climpred.utils.get_comparison_class` and :ref:`Comparisons`).
         dim (str or list of str): dimension to apply metric over.
             default: ['member', 'init']
-        add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric.
             (see the arguments required for a given metric in metrics.py)
 
@@ -264,7 +262,6 @@ def compute_hindcast(
     comparison="e2o",
     dim="init",
     alignment="same_verifs",
-    add_attrs=True,
     **metric_kwargs,
 ):
     """Verify hindcast predictions against verification data.
@@ -296,7 +293,6 @@ def compute_hindcast(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        add_attrs (bool): write climpred compute args to attrs. default: True
         **metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 

@@ -51,8 +51,9 @@ New Features
       >>> hind = climpred.tutorial.load_dataset("NMME_hindcast_Nino34_sst")
       >>> obs = climpred.tutorial.load_dataset("NMME_OIv2_Nino34_sst")
       >>> hindcast = climpred.HindcastEnsemble(hind).add_observations(obs)
+      >>> # skill for each init month separated
       >>> skill = hindcast.verify(metric="rmse", dim="init", comparison="e2o",
-      ...                         skipna=True,valignment="maximize", groupby="month")
+      ...                         skipna=True, alignment="maximize", groupby="month")
       >>> skill
       <xarray.Dataset>
       Dimensions:  (month: 12, lead: 12, model: 12)

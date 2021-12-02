@@ -29,7 +29,6 @@ except ImportError:
     varweighted_mean_period = None
 from .utils import (
     _transpose_and_rechunk_to,
-    assign_attrs,
     convert_time_index,
     find_start_dates_for_given_init,
     get_comparison_class,
@@ -969,15 +968,6 @@ def bootstrap_compute(
             "p"
         ] = "probability that reference performs better than initialized"
     metadata_dict.update(metric_kwargs)
-    results = assign_attrs(
-        results,
-        hind,
-        alignment=alignment,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        metadata_dict=metadata_dict,
-    )
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
     results["lead"] = hind["lead"]

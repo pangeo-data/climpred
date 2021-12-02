@@ -2,7 +2,6 @@ import numpy as np
 import pytest
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
-from climpred.bootstrap import bootstrap_perfect_model
 from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
@@ -12,58 +11,19 @@ ITERATIONS = 3
 
 
 @requires_matplotlib
-def test_mpi_he_plot_bootstrapped_skill_over_leadyear_da(
-    PM_da_initialized_1d, PM_da_control_1d
+def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
+    perfectModelEnsemble_initialized_control,
 ):
     """
-    Checks plots from bootstrap_perfect_model works for xr.DataArray.
+    Checks plots from PerfectModelEnsemble.bootstrap().
     """
-    res = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        metric="pearson_r",
-        iterations=ITERATIONS,
-        reference="uninitialized",
-    )
-    res_ax = plot_bootstrapped_skill_over_leadyear(res)
-    assert res_ax is not None
-
-
-@requires_matplotlib
-def test_mpi_he_plot_bootstrapped_skill_over_leadyear_single_uninit_lead(
-    PM_da_initialized_1d, PM_da_control_1d
-):
-    """
-    Checks plots from bootstrap_perfect_model works for xr.DataArray.
-    """
-    res = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
+    res = perfectModelEnsemble_initialized_control.bootstrap(
         metric="pearson_r",
         iterations=ITERATIONS,
         reference=["uninitialized", "persistence"],
+        comparison="m2e",
+        dim=["init", "member"],
     )
-    # set all but first uninit lead to nan
-    res[:, 2, 1:] = [np.nan] * (res.lead.size - 1)
-    res_ax = plot_bootstrapped_skill_over_leadyear(res)
-    assert res_ax is not None
-
-
-@requires_matplotlib
-def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
-    PM_ds_initialized_1d, PM_ds_control_1d
-):
-    """
-    Checks plots from bootstrap_perfect_model works for xr.Dataset with one variable.
-    """
-    res = bootstrap_perfect_model(
-        PM_ds_initialized_1d,
-        PM_ds_control_1d,
-        metric="pearson_r",
-        iterations=ITERATIONS,
-        reference="uninitialized",
-    )
-    assert list(res.coords["skill"]) == ["initialized", "uninitialized"]
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
     assert res_ax is not None
 

@@ -21,7 +21,6 @@ from .metrics import (
 )
 from .options import OPTIONS
 from .utils import (
-    assign_attrs,
     convert_time_index,
     get_comparison_class,
     get_lead_cftime_shift_args,
@@ -114,7 +113,6 @@ def compute_climatology(
     metric="pearson_r",
     comparison="m2e",
     alignment="same_inits",
-    add_attrs=True,
     dim="init",
     **metric_kwargs,
 ):
@@ -126,8 +124,6 @@ def compute_climatology(
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         dim (str or list of str): dimension to apply metric over.
-        add_attrs (bool): write climpred compute_persistence args to attrs.
-            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -277,15 +273,6 @@ def compute_persistence(
     if "time" in pers:
         pers = pers.dropna(dim="time").rename({"time": "init"})
     pers["lead"] = hind.lead.values
-    if add_attrs:
-        pers = assign_attrs(
-            pers,
-            hind,
-            function_name=inspect.stack()[0][3],
-            alignment=alignment,
-            metric=metric,
-            metadata_dict=metric_kwargs,
-        )
     return pers
 
 
@@ -298,7 +285,6 @@ def compute_uninitialized(
     comparison="e2o",
     dim="time",
     alignment="same_verifs",
-    add_attrs=True,
     **metric_kwargs,
 ):
     """Verify an uninitialized ensemble against verification data.
@@ -329,7 +315,6 @@ def compute_uninitialized(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
@@ -376,15 +361,4 @@ def compute_uninitialized(
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
     uninit_skill["lead"] = hind.lead.values
-
-    # Attach climpred compute information to skill
-    if add_attrs:
-        uninit_skill = assign_attrs(
-            uninit_skill,
-            uninit,
-            function_name=inspect.stack()[0][3],
-            metric=metric,
-            comparison=comparison,
-            metadata_dict=metric_kwargs,
-        )
     return uninit_skill

@@ -29,7 +29,6 @@ except ImportError:
     varweighted_mean_period = None
 from .utils import (
     _transpose_and_rechunk_to,
-    assign_attrs,
     convert_time_index,
     find_start_dates_for_given_init,
     get_comparison_class,
@@ -39,6 +38,14 @@ from .utils import (
     rechunk_to_single_chunk_if_more_than_one_chunk_along_dim,
     shift_cftime_singular,
 )
+
+
+def _p_ci_from_sig(sig):
+    """Convert significance level sig:float=95 to p-values:float=0.025-0.975."""
+    p = (100 - sig) / 100
+    ci_low = p / 2
+    ci_high = 1 - p / 2
+    return p, ci_low, ci_high
 
 
 def _resample(hind, resample_dim):
@@ -449,7 +456,6 @@ def _bootstrap_hindcast_over_init_dim(
             verif,
             metric=metric,
             comparison=comparison,
-            add_attrs=False,
             dim=dim,
             **metric_kwargs,
         )
@@ -472,7 +478,6 @@ def _bootstrap_hindcast_over_init_dim(
                     metric=metric,
                     comparison=comparison,
                     dim=dim,
-                    add_attrs=False,
                     **metric_kwargs,
                 )
             )
@@ -483,7 +488,6 @@ def _bootstrap_hindcast_over_init_dim(
                     verif,
                     metric=metric,
                     dim=dim,
-                    add_attrs=False,
                     **metric_kwargs,
                 )
             )
@@ -692,12 +696,8 @@ def bootstrap_compute(
     if reference is None:
         reference = []
 
-    p = (100 - sig) / 100
-    ci_low = p / 2
-    ci_high = 1 - p / 2
-    p_pers = (100 - pers_sig) / 100
-    ci_low_pers = p_pers / 2
-    ci_high_pers = 1 - p_pers / 2
+    p, ci_low, ci_high = _p_ci_from_sig(sig)
+    p_pers, ci_low_pers, ci_high_pers = _p_ci_from_sig(pers_sig)
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -810,7 +810,6 @@ def bootstrap_compute(
                 metric=metric,
                 comparison="m2o" if isHindcast else comparison,
                 dim=dim,
-                add_attrs=False,
                 **metric_kwargs,
             )
             # take mean if 'm2o' comparison forced before
@@ -827,7 +826,6 @@ def bootstrap_compute(
             verif,
             metric=metric,
             comparison=comparison,
-            add_attrs=False,
             dim=dim,
             **metric_kwargs,
         )
@@ -958,27 +956,6 @@ def bootstrap_compute(
     else:
         results = results.drop_sel(results="p")
     results = results.squeeze()
-
-    # Attach climpred compute information to skill
-    # results.results
-    metadata_dict = {
-        "confidence_interval_levels": f"{ci_high}-{ci_low}",
-        "bootstrap_iterations": iterations,
-    }
-    if reference is not None:
-        metadata_dict[
-            "p"
-        ] = "probability that reference performs better than initialized"
-    metadata_dict.update(metric_kwargs)
-    results = assign_attrs(
-        results,
-        hind,
-        alignment=alignment,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        metadata_dict=metadata_dict,
-    )
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
     results["lead"] = hind["lead"]

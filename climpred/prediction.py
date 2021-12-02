@@ -209,7 +209,6 @@ def compute_perfect_model(
     metric="pearson_r",
     comparison="m2e",
     dim=["member", "init"],
-    add_attrs=True,
     **metric_kwargs,
 ):
     """
@@ -227,7 +226,6 @@ def compute_perfect_model(
             :py:func:`climpred.utils.get_comparison_class` and :ref:`Comparisons`).
         dim (str or list of str): dimension to apply metric over.
             default: ['member', 'init']
-        add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric.
             (see the arguments required for a given metric in metrics.py)
 
@@ -253,16 +251,6 @@ def compute_perfect_model(
     skill = metric.function(forecast, verif, dim=dim, **metric_kwargs)
     if comparison.name == "m2m" and M2M_MEMBER_DIM in skill.dims:
         skill = skill.mean(M2M_MEMBER_DIM)
-    # Attach climpred compute information to skill
-    if add_attrs:
-        skill = assign_attrs(
-            skill,
-            init_pm,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            metadata_dict=metric_kwargs,
-        )
     return skill
 
 
@@ -274,7 +262,6 @@ def compute_hindcast(
     comparison="e2o",
     dim="init",
     alignment="same_verifs",
-    add_attrs=True,
     **metric_kwargs,
 ):
     """Verify hindcast predictions against verification data.
@@ -306,7 +293,6 @@ def compute_hindcast(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        add_attrs (bool): write climpred compute args to attrs. default: True
         **metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -365,16 +351,4 @@ def compute_hindcast(
         if "valid_time" in result.coords:
             if "lead" not in result.valid_time.dims:
                 result = add_time_from_init_lead(result.drop("valid_time"))
-
-    # Attach climpred compute information to result
-    if add_attrs:
-        result = assign_attrs(
-            result,
-            hind,
-            alignment=alignment,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            metadata_dict=metric_kwargs,
-        )
     return result

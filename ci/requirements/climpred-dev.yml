@@ -37,6 +37,7 @@ dependencies:
   - pytest
   - pytest-cov
   - pytest-sugar
+  - pytest-xdist
   # Performance
   - bottleneck
   - numba

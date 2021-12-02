@@ -60,83 +60,65 @@ def test_intersect():
     assert all(a == e for a, e in zip(actual, expected))
 
 
-def test_da_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
-    """Test assigning attrs for compute_perfect_model and dataarrays."""
-    metric = "pearson_r"
+@pytest.mark.parametrize("metric", ["mse", "pearson_r"])
+def test_PerfectModelEnsemble_bootstrap_attrs(
+    perfectModelEnsemble_initialized_control, metric
+):
+    """Test assigning attrs for PerfectModelEnsemble.bootstrap()."""
     comparison = "m2e"
-    actual = compute_perfect_model(
-        PM_ds_initialized_1d,
-        PM_ds_control_1d,
-        metric=metric,
-        comparison=comparison,
-    ).attrs
-    assert actual["metric"] == metric
-    assert actual["comparison"] == comparison
-    if metric == "pearson_r":
-        assert actual["units"] == "None"
-    assert (
-        actual["prediction_skill"]
-        == "calculated by climpred https://climpred.readthedocs.io/"
-    )
-
-
-def test_ds_assign_attrs(PM_ds_initialized_1d, PM_ds_control_1d):
-    """Test assigning attrs for datasets."""
-    metric = "mse"
-    comparison = "m2e"
-    dim = ["init", "member"]
-    PM_ds_initialized_1d.attrs["units"] = "C"
-    actual = compute_perfect_model(
-        PM_ds_initialized_1d,
-        PM_ds_control_1d,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-    ).attrs
-    assert actual["metric"] == metric
-    assert actual["comparison"] == comparison
-    if metric == "pearson_r":
-        assert actual["units"] == "None"
-    assert actual["units"] == "(C)^2"
-    assert actual["dim"] == dim
-
-
-def test_bootstrap_pm_assign_attrs():
-    """Test assigning attrs for bootstrap_perfect_model."""
-    v = "tos"
-    metric = "pearson_r"
-    comparison = "m2e"
-    ITERATIONS = 3
+    ITERATIONS = 2
     sig = 95
-    da = load_dataset("MPI-PM-DP-1D")[v].isel(area=1, period=-1)
-    control = load_dataset("MPI-control-1D")[v].isel(area=1, period=-1)
-    actual = bootstrap_perfect_model(
-        da,
-        control,
+    v = "tos"
+    perfectModelEnsemble_initialized_control._datasets["initialized"][v].attrs[
+        "units"
+    ] = "C"
+    actual = perfectModelEnsemble_initialized_control.bootstrap(
         metric=metric,
         comparison=comparison,
+        dim=["init"],
         iterations=ITERATIONS,
         sig=sig,
-    ).attrs
-    assert actual["metric"] == metric
-    assert actual["comparison"] == comparison
-    assert actual["bootstrap_iterations"] == ITERATIONS
-    assert str(round((1 - sig / 100) / 2, 3)) in actual["confidence_interval_levels"]
+    )
+    assert actual.attrs["metric"] == metric
+    assert actual.attrs["comparison"] == comparison
+    assert actual.attrs["iterations"] == ITERATIONS
+    assert (
+        str(round((1 - sig / 100) / 2, 3)) in actual.attrs["confidence_interval_levels"]
+    )
     if metric == "pearson_r":
-        assert actual["units"] == "None"
+        assert actual[v].attrs["units"] == "None"
+    else:
+        assert actual[v].attrs["units"] == "(C)^2"
 
 
-def test_hindcast_assign_attrs():
-    """Test assigning attrs for compute_hindcast."""
-    metric = "pearson_r"
+@pytest.mark.parametrize("metric", ["mse", "pearson_r"])
+def test_HindcastEnsemble_bootstrap_attrs(hindcast_hist_obs_1d, metric):
+    """Test assigning attrs for HindcastEnsemble.bootstrap()."""
     comparison = "e2o"
-    da = load_dataset("CESM-DP-SST")
-    control = load_dataset("ERSST")
-    actual = compute_hindcast(da, control, metric=metric, comparison=comparison).attrs
-    assert actual["metric"] == metric
-    assert actual["comparison"] == comparison
+    alignment = "same_verif"
+    v = "SST"
+    iterations = 2
+    sig = 95
+    hindcast_hist_obs_1d._datasets["initialized"][v].attrs["units"] = "C"
+    actual = hindcast_hist_obs_1d.bootstrap(
+        metric=metric,
+        comparison=comparison,
+        iterations=iterations,
+        dim="init",
+        alignment=alignment,
+        sig=sig,
+    )
+    assert actual.attrs["metric"] == metric
+    assert actual.attrs["comparison"] == comparison
+    assert actual.attrs["iterations"] == iterations
+    assert actual.attrs["alignment"] == alignment
+    assert (
+        str(round((1 - sig / 100) / 2, 3)) in actual.attrs["confidence_interval_levels"]
+    )
     if metric == "pearson_r":
-        assert actual["units"] == "None"
+        assert actual[v].attrs["units"] == "None"
+    else:
+        assert actual[v].attrs["units"] == "(C)^2"
 
 
 def test_cftime_index_unchanged():

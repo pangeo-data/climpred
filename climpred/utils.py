@@ -47,6 +47,8 @@ def assign_attrs(
     """
     # assign old attrs
     skill.attrs = ds.attrs
+    for v in skill.data_vars:
+        skill[v].attrs.update(ds[v].attrs)
 
     # climpred info
     skill.attrs[
@@ -55,7 +57,9 @@ def assign_attrs(
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords:
-        skill.attrs["number_of_initializations"] = ds.init.size
+        skill.attrs[
+            "number_of_initializations"
+        ] = ds.init.size  # TODO: take less depending on alignment
     if "member" in ds.coords:
         skill.attrs["number_of_members"] = ds.member.size
     if alignment is not None:
@@ -77,12 +81,26 @@ def assign_attrs(
             skill[v].attrs["units"] = "None"
     elif metric.unit_power >= 2:
         for v in skill.data_vars:
-            if "units" in skill.attrs:
+            if "units" in skill[v].attrs:
                 p = metric.unit_power
                 p = int(p) if int(p) == p else p
                 skill[v].attrs["units"] = f"({skill[v].attrs['units']})^{p}"
+    print("kwargs", kwargs)
     if "logical" in kwargs:
         kwargs["logical"] = "Callable"
+
+    from .bootstrap import _p_ci_from_sig
+
+    if "sig" in kwargs:
+        if kwargs["sig"] is not None:
+            _, ci_low, ci_high = _p_ci_from_sig(kwargs["sig"])
+            kwargs["confidence_interval_levels"] = f"{ci_high}-{ci_low}"
+    if "pers_sig" in kwargs:
+        if kwargs["pers_sig"] is not None:
+            _, ci_low_pers, ci_high_pers = _p_ci_from_sig(kwargs["pers_sig"])
+            kwargs[
+                "confidence_interval_levels_persistence"
+            ] = f"{ci_high_pers}-{ci_low_pers}"
     # check for none attrs and remove
     del_list = []
     for key, value in kwargs.items():

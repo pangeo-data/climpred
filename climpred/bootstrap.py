@@ -41,6 +41,14 @@ from .utils import (
 )
 
 
+def _p_ci_from_sig(sig):
+    """Convert significance level sig:float=95 to p-values:float=0.025-0.975."""
+    p = (100 - sig) / 100
+    ci_low = p / 2
+    ci_high = 1 - p / 2
+    return p, ci_low, ci_high
+
+
 def _resample(hind, resample_dim):
     """Resample with replacement in dimension ``resample_dim``.
 
@@ -689,12 +697,8 @@ def bootstrap_compute(
     if reference is None:
         reference = []
 
-    p = (100 - sig) / 100
-    ci_low = p / 2
-    ci_high = 1 - p / 2
-    p_pers = (100 - pers_sig) / 100
-    ci_low_pers = p_pers / 2
-    ci_high_pers = 1 - p_pers / 2
+    p, ci_low, ci_high = _p_ci_from_sig(sig)
+    p_pers, ci_low_pers, ci_high_pers = _p_ci_from_sig(pers_sig)
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)

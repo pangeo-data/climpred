@@ -50,8 +50,9 @@ Internals/Minor Fixes
 - Reduce dependencies (:pr:`686`) `Aaron Spring`_.
 - Add `typing <https://docs.python.org/3/library/typing.html>`_ (:issue:`685`, :pr:`692`) `Aaron Spring`_.
 - refactor ``add_attrs`` into :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
-  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`. (:issue:`475`, :pr:`694`)
-  `Aaron Spring`_.
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`. Now all keywords are
+  captured in the skill dataset attributes ``.attrs``.
+  (:issue:`475`, :pr:`694`) `Aaron Spring`_.
 
 
 climpred v2.1.6 (2021-08-31)

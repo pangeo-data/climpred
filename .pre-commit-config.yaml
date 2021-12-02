@@ -33,8 +33,6 @@ repos:
     rev: v0.910-1
     hooks:
       - id: mypy
-        #  `asv_bench` are copied from setup.cfg.
-        # `_typed_ops.py` is added since otherwise mypy will complain (but notably only in pre-commit)
         exclude: "asv_bench"
         additional_dependencies: [
             # Type stubs

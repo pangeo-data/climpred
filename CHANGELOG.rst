@@ -45,6 +45,26 @@ New Features
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
   initializations seasonality. (:issue:`635`, :pr:`690`) `Aaron Spring`_.
 
+  .. code-block:: python
+
+      >>> import climpred
+      >>> hind = climpred.tutorial.load_dataset("NMME_hindcast_Nino34_sst")
+      >>> obs = climpred.tutorial.load_dataset("NMME_OIv2_Nino34_sst")
+      >>> hindcast = climpred.HindcastEnsemble(hind).add_observations(obs)
+      >>> skill = hindcast.verify(metric="rmse", dim="init", comparison="e2o",
+      ...                         skipna=True,valignment="maximize", groupby="month")
+      >>> skill
+      <xarray.Dataset>
+      Dimensions:  (month: 12, lead: 12, model: 12)
+      Coordinates:
+        * lead     (lead) float64 0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+        * model    (model) object 'NCEP-CFSv2' 'NCEP-CFSv1' ... 'GEM-NEMO'
+          skill    <U11 'initialized'
+        * month    (month) int64 1 2 3 4 5 6 7 8 9 10 11 12
+      Data variables:
+          sst      (month, lead, model) float64 0.4127 0.3837 0.3915 ... 1.255 3.98
+      >>> skill.sst.plot(hue="model", col="month", col_wrap=3)
+
 Internals/Minor Fixes
 ---------------------
 - Reduce dependencies (:pr:`686`) `Aaron Spring`_.

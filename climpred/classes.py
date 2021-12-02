@@ -232,6 +232,11 @@ class PredictionEnsemble:
         skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
             {new_dim_name: group_label}
         )
+        skill_group[group_label] = skill_group[group_label].assign_attrs(
+            {
+                "description": "new dimension showing skill grouped by init.{groupby} created by .verify(groupby) or .bootstrap(groupby)"
+            }
+        )
         return skill_group
 
     @property

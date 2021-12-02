@@ -29,6 +29,7 @@ except ImportError:
     varweighted_mean_period = None
 from .utils import (
     _transpose_and_rechunk_to,
+    add_attrs_to_climpred_coords,
     convert_time_index,
     find_start_dates_for_given_init,
     get_comparison_class,
@@ -956,6 +957,9 @@ def bootstrap_compute(
     else:
         results = results.drop_sel(results="p")
     results = results.squeeze()
+
+    results = add_attrs_to_climpred_coords(results)
+
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
     results["lead"] = hind["lead"]

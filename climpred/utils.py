@@ -18,6 +18,32 @@ from .metrics import ALL_METRICS, METRIC_ALIASES
 from .options import OPTIONS
 
 
+def add_attrs_to_climpred_coords(results):
+    from . import __version__ as version
+
+    if "results" in results.coords:
+        results["results"] = results["results"].assign_attrs(
+            {
+                "description": "new coordinate created by .bootstrap()",
+                "verify skill": "skill from verify",
+                "p": "probability that reference performs better than initialized",
+                "low_ci": "lower confidence interval threshold based on resampling with replacement",
+                "high_ci": "higher confidence interval threshold based on resampling with replacement",
+            }
+        )
+    if "skill" in results.dims:
+        results["skill"] = results["skill"].assign_attrs(
+            {
+                "description": "new dimension prediction skill of initialized and reference forecasts created by .verify() or .bootstrap()",
+                "documentation": f"https://climpred.readthedocs.io/en/v{version}/reference_forecast.html",
+            }
+        )
+        results["skill"] = results["skill"].assign_attrs(
+            {f: f"{f} forecast skill" for f in results.skill.values}
+        )
+    return results
+
+
 def assign_attrs(
     skill,
     ds,
@@ -111,6 +137,7 @@ def assign_attrs(
     # write optional information
     skill.attrs.update(kwargs)
 
+    skill = add_attrs_to_climpred_coords(skill)
     return skill
 
 

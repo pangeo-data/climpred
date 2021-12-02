@@ -217,6 +217,23 @@ class PredictionEnsemble:
         self._is_annual_lead = None
         self._warn_if_chunked_along_init_member_time()
 
+    def _groupby(self, call: str, groupby: Union[str, xr.DataArray], **kwargs: Any):
+        """Helper for verify/bootstrap(groupby='month')"""
+        skill_group, group_label = [], []
+        groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
+        for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+            skill_group.append(
+                getattr(self.sel(init=hind_group), call)(
+                    **kwargs,
+                )
+            )
+            group_label.append(group)
+        new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+        skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
+            dict(new_dim_name=group_label)
+        )
+        return skill_group
+
     @property
     def coords(self) -> DatasetCoordinates:
         """Dictionary of xarray.DataArray objects corresponding to coordinate
@@ -1087,25 +1104,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 reference:                     ['persistence', 'climatology', 'uninitiali...
         """
         if groupby is not None:
-            skill_group = []
-            group_label = []
-            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-                skill_group.append(
-                    self.sel(init=hind_group).verify(
-                        reference=reference,
-                        metric=metric,
-                        comparison=comparison,
-                        dim=dim,
-                        **metric_kwargs,
-                    )
-                )
-                group_label.append(group)
-            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
-            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
-                dict(new_dim_name=group_label)
+            return self._groupby(
+                "verify",
+                groupby,
+                reference=reference,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
+                **metric_kwargs,
             )
-            return skill_group
 
         reference = _check_valid_reference(reference)
         input_dict = {
@@ -1412,29 +1419,19 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         """
         if groupby is not None:
-            skill_group = []
-            group_label = []
-            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-                skill_group.append(
-                    self.sel(init=hind_group).bootstrap(
-                        reference=reference,
-                        metric=metric,
-                        comparison=comparison,
-                        dim=dim,
-                        iterations=iterations,
-                        resample_dim=resample_dim,
-                        sig=sig,
-                        pers_sig=pers_sig,
-                        **metric_kwargs,
-                    )
-                )
-                group_label.append(group)
-            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
-            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
-                dict(new_dim_name=group_label)
+            return self._groupby(
+                "bootstrap",
+                groupby,
+                reference=reference,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
+                iterations=iterations,
+                resample_dim=resample_dim,
+                sig=sig,
+                pers_sig=pers_sig,
+                **metric_kwargs,
             )
-            return skill_group
 
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
@@ -1709,26 +1706,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 reference:                     ['persistence', 'climatology', 'uninitiali...
         """
         if groupby is not None:
-            skill_group = []
-            group_label = []
-            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-                skill_group.append(
-                    self.sel(init=hind_group).verify(
-                        reference=reference,
-                        metric=metric,
-                        comparison=comparison,
-                        dim=dim,
-                        alignment=alignment,
-                        **metric_kwargs,
-                    )
-                )
-                group_label.append(group)
-            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
-            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
-                dict(new_dim_name=group_label)
+            return self._groupby(
+                "verify",
+                groupby,
+                reference=reference,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
+                alignment=alignment,
+                **metric_kwargs,
             )
-            return skill_group
 
         # Have to do checks here since this doesn't call `compute_hindcast` directly.
         # Will be refactored when `climpred` migrates to inheritance-based.
@@ -1994,30 +1981,20 @@ class HindcastEnsemble(PredictionEnsemble):
 
         """
         if groupby is not None:
-            skill_group = []
-            group_label = []
-            groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-                skill_group.append(
-                    self.sel(init=hind_group).bootstrap(
-                        reference=reference,
-                        metric=metric,
-                        comparison=comparison,
-                        dim=dim,
-                        alignment=alignment,
-                        iterations=iterations,
-                        resample_dim=resample_dim,
-                        sig=sig,
-                        pers_sig=pers_sig,
-                        **metric_kwargs,
-                    )
-                )
-                group_label.append(group)
-            new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
-            skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
-                dict(new_dim_name=group_label)
+            return self._groupby(
+                "bootstrap",
+                groupby,
+                reference=reference,
+                metric=metric,
+                comparison=comparison,
+                dim=dim,
+                iterations=iterations,
+                alignment=alignment,
+                resample_dim=resample_dim,
+                sig=sig,
+                pers_sig=pers_sig,
+                **metric_kwargs,
             )
-            return skill_group
 
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")

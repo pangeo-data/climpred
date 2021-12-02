@@ -956,18 +956,6 @@ def bootstrap_compute(
     else:
         results = results.drop_sel(results="p")
     results = results.squeeze()
-
-    # Attach climpred compute information to skill
-    # results.results
-    metadata_dict = {
-        "confidence_interval_levels": f"{ci_high}-{ci_low}",
-        "bootstrap_iterations": iterations,
-    }
-    if reference is not None:
-        metadata_dict[
-            "p"
-        ] = "probability that reference performs better than initialized"
-    metadata_dict.update(metric_kwargs)
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
     results["lead"] = hind["lead"]

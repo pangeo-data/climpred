@@ -56,11 +56,11 @@ def assign_attrs(
     ] = "calculated by climpred https://climpred.readthedocs.io/"
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
-    if "init" in ds.coords:
+    if "init" in ds.coords and "init" not in skill.dims:
         skill.attrs[
             "number_of_initializations"
         ] = ds.init.size  # TODO: take less depending on alignment
-    if "member" in ds.coords:
+    if "member" in ds.coords and "member" not in skill.coords:
         skill.attrs["number_of_members"] = ds.member.size
     if alignment is not None:
         skill.attrs["alignment"] = alignment
@@ -85,7 +85,7 @@ def assign_attrs(
                 p = metric.unit_power
                 p = int(p) if int(p) == p else p
                 skill[v].attrs["units"] = f"({skill[v].attrs['units']})^{p}"
-    print("kwargs", kwargs)
+
     if "logical" in kwargs:
         kwargs["logical"] = "Callable"
 

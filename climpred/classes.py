@@ -1408,6 +1408,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 resample_dim:                  member
                 sig:                           95
                 iterations:                    50
+                confidence_interval_levels:    0.975-0.025
 
         """
         if groupby is not None:
@@ -1976,19 +1977,21 @@ class HindcastEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
-            Attributes:
+            Attributes: (12/13)
                 prediction_skill:              calculated by climpred https://climpred.re...
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()
                 number_of_initializations:     64
                 number_of_members:             10
                 alignment:                     same_verifs
                 metric:                        pearson_r
-                comparison:                    e2o
+                ...                            ...
                 dim:                           init
                 reference:                     ['persistence', 'climatology', 'uninitiali...
                 resample_dim:                  member
                 sig:                           95
                 iterations:                    50
+                confidence_interval_levels:    0.975-0.025
+
         """
         if groupby is not None:
             skill_group = []

@@ -2535,7 +2535,6 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Attributes:
             prediction_skill:              calculated by climpred https://climpred.re...
             skill_calculated_by_function:  HindcastEnsemble.verify()
-            number_of_initializations:     64
             number_of_members:             10
             alignment:                     same_inits
             metric:                        threshold_brier_score
@@ -2657,7 +2656,6 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         Attributes:
             prediction_skill:              calculated by climpred https://climpred.re...
             skill_calculated_by_function:  HindcastEnsemble.verify()
-            number_of_initializations:     64
             number_of_members:             10
             alignment:                     same_inits
             metric:                        crps
@@ -2775,7 +2773,6 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         Attributes:
             prediction_skill:              calculated by climpred https://climpred.re...
             skill_calculated_by_function:  HindcastEnsemble.verify()
-            number_of_initializations:     64
             number_of_members:             10
             alignment:                     same_inits
             metric:                        crpss
@@ -2901,7 +2898,6 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         Attributes:
             prediction_skill:              calculated by climpred https://climpred.re...
             skill_calculated_by_function:  HindcastEnsemble.verify()
-            number_of_initializations:     64
             number_of_members:             10
             alignment:                     same_verifs
             metric:                        crpss_es

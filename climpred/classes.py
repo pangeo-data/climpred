@@ -1051,7 +1051,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (lead) float32 0.1028 0.1249 0.1443 0.1707 ... 0.2113 0.2452 0.2297
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  PerfectModelEnsemble.verify()
                 number_of_initializations:     12
                 number_of_members:             10
@@ -1077,7 +1077,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  PerfectModelEnsemble.verify()
                 number_of_initializations:     12
                 number_of_members:             10
@@ -1397,7 +1397,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  PerfectModelEnsemble.bootstrap()
                 number_of_initializations:     12
                 number_of_members:             10
@@ -1671,7 +1671,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.08516 0.09492 0.1041 ... 0.1525 0.1697 0.1785
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     64
                 number_of_members:             10
@@ -1698,7 +1698,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     64
                 number_of_members:             10
@@ -1978,7 +1978,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
             Attributes: (12/13)
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()
                 number_of_initializations:     64
                 number_of_members:             10
@@ -2148,7 +2148,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.08359 0.08141 0.08362 ... 0.1361 0.1552 0.1664
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     64
                 number_of_members:             10
@@ -2174,7 +2174,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.08349 0.08039 0.07522 ... 0.07305 0.08107 0.08255
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     64
                 number_of_members:             10
@@ -2202,7 +2202,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     37
                 number_of_members:             10
@@ -2226,7 +2226,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.09841 0.09758 0.08238 ... 0.0771 0.08119 0.08322
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     52
                 number_of_members:             10
@@ -2250,7 +2250,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Data variables:
                 SST      (lead) float64 0.07628 0.08293 0.08169 ... 0.1577 0.1821 0.2087
             Attributes:
-                prediction_skill:              calculated by climpred https://climpred.re...
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     52
                 number_of_members:             10

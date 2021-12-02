@@ -52,8 +52,8 @@ def assign_attrs(
 
     # climpred info
     skill.attrs[
-        "prediction_skill"
-    ] = "calculated by climpred https://climpred.readthedocs.io/"
+        "prediction_skill_software"
+    ] = "climpred https://climpred.readthedocs.io/"
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords and "init" not in skill.dims:

@@ -312,7 +312,7 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.9272 0.9145 0.9127 0.9319 ... 0.9315 0.9185 0.9112
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -383,7 +383,7 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 5.779e-23 2.753e-21 4.477e-21 ... 8.7e-22 6.781e-21
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -472,7 +472,7 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 5.0 4.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -562,7 +562,7 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.02333 0.08552 0.2679 ... 0.2369 0.2588 0.2703
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -654,7 +654,7 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.9336 0.9311 0.9293 0.9474 ... 0.9465 0.9346 0.9328
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -725,7 +725,7 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 6.248e-24 1.515e-23 ... 4.288e-24 8.254e-24
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -823,7 +823,7 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.02034 0.0689 0.2408 ... 0.2092 0.2315 0.2347
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -911,7 +911,7 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -972,7 +972,7 @@ def _spread(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.1468 0.1738 0.1922 0.2096 ... 0.2142 0.2178 0.2098
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1038,7 +1038,7 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.07875 0.08085 0.08815 ... 0.1371 0.1555 0.1664
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1112,7 +1112,7 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.06484 0.06684 0.07407 ... 0.1193 0.1361 0.1462
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1178,7 +1178,7 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.06077 0.06556 0.06368 ... 0.1131 0.142 0.1466
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1271,7 +1271,7 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.1732 0.1825 0.217 0.2309 ... 0.5247 0.6749 0.7732
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1374,7 +1374,7 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.3426 0.3532 0.3914 0.3898 ... 0.6303 0.7194 0.7726
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1484,7 +1484,7 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.4161 0.4272 0.4658 0.4806 ... 0.7244 0.8215 0.8793
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1597,7 +1597,7 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.8268 0.8175 0.783 0.7691 ... 0.4753 0.3251 0.2268
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1675,7 +1675,7 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 1.536 1.21 1.421 1.149 ... 1.078 1.369 1.833 1.245
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1741,7 +1741,7 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.3801 0.3906 0.4044 0.3819 ... 0.4822 0.5054 0.5295
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1835,7 +1835,7 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.9093 0.9041 0.8849 0.877 ... 0.6894 0.5702 0.4763
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1907,7 +1907,7 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.7567 0.8801 0.9726 1.055 ... 1.075 1.094 1.055
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1971,7 +1971,7 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -1995,7 +1995,7 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 3.203e-18 -1.068e-18 ... 2.882e-17 -2.776e-17
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2058,7 +2058,7 @@ def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.719 0.9991 1.072 1.434 ... 1.854 2.128 2.325 2.467
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2126,7 +2126,7 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.1705 0.03435 -0.05988 ... -0.1436 -0.175 -0.1434
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2197,7 +2197,7 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.7016 0.8049 0.8877 0.9836 ... 1.002 1.004 0.961
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2280,7 +2280,7 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.8306 0.8351 0.8295 0.8532 ... 0.8471 0.813 0.8097
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2393,7 +2393,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2417,7 +2417,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2441,7 +2441,7 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             alignment:                     same_verifs
@@ -2533,7 +2533,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST         (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_members:             10
             alignment:                     same_inits
@@ -2555,7 +2555,7 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST        (lead, threshold) float64 0.08712 0.005769 ... 0.1312 0.01923
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -2654,7 +2654,7 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST         (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_members:             10
             alignment:                     same_inits
@@ -2771,7 +2771,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST         (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7702 0.5126
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_members:             10
             alignment:                     same_inits
@@ -2896,7 +2896,7 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST         (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_members:             10
             alignment:                     same_verifs
@@ -3110,7 +3110,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -3135,7 +3135,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -3161,7 +3161,7 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             alignment:                     same_verifs
@@ -3227,7 +3227,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -3247,7 +3247,7 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             tos      (lead, rank) int64 1 4 2 1 2 1 0 0 0 1 2 ... 0 2 0 1 2 1 0 3 1 2 0
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  PerfectModelEnsemble.verify()
             number_of_initializations:     12
             number_of_members:             10
@@ -3320,7 +3320,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST                         (lead) float64 0.115 0.1123 ... 0.1687 0.1875
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -3348,7 +3348,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             tos                         (lead) float64 0.08951 0.1615 ... 0.1399 0.2274
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  PerfectModelEnsemble.verify()
             number_of_initializations:     12
             number_of_members:             10
@@ -3379,7 +3379,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         Data variables:
             SST                         (lead) float64 0.1248 0.1756 ... 0.3081 0.3413
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
             number_of_members:             10
@@ -3503,7 +3503,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         Data variables:
             tos      (lead) float64 1.0 1.0 1.0 1.0 0.9091 ... 1.0 1.0 1.0 nan 1.0
         Attributes:
-            prediction_skill:              calculated by climpred https://climpred.re...
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  PerfectModelEnsemble.verify()
             number_of_initializations:     12
             number_of_members:             10

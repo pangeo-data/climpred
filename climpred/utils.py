@@ -31,13 +31,14 @@ def add_attrs_to_climpred_coords(results):
                 "high_ci": "higher confidence interval threshold based on resampling with replacement",
             }
         )
-    if "skill" in results.dims:
+    if "skill" in results.coords:
         results["skill"] = results["skill"].assign_attrs(
             {
                 "description": "new dimension prediction skill of initialized and reference forecasts created by .verify() or .bootstrap()",
                 "documentation": f"https://climpred.readthedocs.io/en/v{version}/reference_forecast.html",
             }
         )
+    if "skill" in results.dims:
         results["skill"] = results["skill"].assign_attrs(
             {f: f"{f} forecast skill" for f in results.skill.values}
         )

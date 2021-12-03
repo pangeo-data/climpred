@@ -957,7 +957,6 @@ def bootstrap_compute(
         results = results.drop_sel(results="p")
     results = results.squeeze()
 
-    results = add_attrs_to_climpred_coords(results)
 
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.

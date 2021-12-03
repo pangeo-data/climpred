@@ -29,7 +29,6 @@ except ImportError:
     varweighted_mean_period = None
 from .utils import (
     _transpose_and_rechunk_to,
-    add_attrs_to_climpred_coords,
     convert_time_index,
     find_start_dates_for_given_init,
     get_comparison_class,

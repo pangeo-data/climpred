@@ -1614,7 +1614,7 @@ class HindcastEnsemble(PredictionEnsemble):
         **plot_kwargs: Any,
     ) -> Any:
         """
-        Plot where ``initialized`` ``valid_time`` matches ``verification``/``observation`` ``time`` depending on ``alignment``
+        Plot ``initialized`` ``valid_time`` where matching ``verification``/``observation`` ``time`` depending on ``alignment``.
 
         Args:
             alignment (str): which inits or verification times should be aligned?

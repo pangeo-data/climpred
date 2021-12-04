@@ -956,6 +956,7 @@ def bootstrap_compute(
     else:
         results = results.drop_sel(results="p")
     results = results.squeeze()
+
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
     results["lead"] = hind["lead"]

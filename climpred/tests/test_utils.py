@@ -119,6 +119,8 @@ def test_HindcastEnsemble_bootstrap_attrs(hindcast_hist_obs_1d, metric):
         assert actual[v].attrs["units"] == "None"
     else:
         assert actual[v].attrs["units"] == "(C)^2"
+    assert "description" in actual.results.attrs
+    assert "description" in actual.skill.attrs
 
 
 def test_cftime_index_unchanged():

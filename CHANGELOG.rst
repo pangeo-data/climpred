@@ -8,6 +8,7 @@ climpred unreleased (202x-xx-xx)
 
 Bug Fixes
 ---------
+- Fix when creating ``valid_time`` from ``lead.attrs["units"]`` in ``["seasons", "years"]`` with multi-month stride in ``init``. (:issue:`698`, :pr:`700`) `Aaron Spring`_.
 
 New Features
 ------------

@@ -86,15 +86,21 @@ def test_bootstrap_valid_time(hindcast_hist_obs_1d, alignment, reference):
         assert set(result.dims) == set(["init", "lead", "results"])
 
 
-def test_valid_time_init_MS_annual_lead():
+@pytest.mark.parametrize(
+    "start,freq,units,expected_shift",
+    [("2000-01-01", "6MS", "years", "12MS"), ("2000-01-01", "MS", "seasons", "3MS")],
+)
+def test_valid_time_from_larger_than_monthly_init_longer_freq_lead(
+    start, freq, units, expected_shift
+):
     """Raised in https://github.com/pangeo-data/climpred/issues/698"""
-    init = xr.cftime_range(start="2000-01-01", end="2002-01-01", freq="6MS")
+    init = xr.cftime_range(start=start, end="2002-01-01", freq=freq)
     print("init", init)
 
     lead = range(0, 5)
     data = np.random.random((len(init), len(lead)))
     hind = xr.DataArray(data, coords=[init, lead], dims=["init", "lead"], name="var")
-    hind["lead"].attrs["units"] = "years"
+    hind["lead"].attrs["units"] = units
 
     # Add "valid_time" coordinate using `climpred.utils.add_time_from_init_lead()`
     from climpred.utils import add_time_from_init_lead
@@ -103,9 +109,9 @@ def test_valid_time_init_MS_annual_lead():
     for lead in [0, 1]:
         assert (
             hind.valid_time.sel(lead=lead).to_index()
-            == hind.init.to_index().shift(lead, "12MS")
+            == hind.init.to_index().shift(lead, expected_shift)
         ).all(), print(
             hind.valid_time.sel(lead=lead).to_index(),
             "\n",
-            hind.init.to_index().shift(lead, "12MS"),
+            hind.init.to_index().shift(lead, expected_shift),
         )

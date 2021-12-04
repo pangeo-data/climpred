@@ -1653,7 +1653,7 @@ class HindcastEnsemble(PredictionEnsemble):
             xarray.DataArray if return_xr else plot
 
         Example:
-            >>> HindcastEnsemble.plot_alignment()
+            >>> HindcastEnsemble.plot_alignment()  # doctest: +ELLIPSIS
 
         See also:
             https://climpred.readthedocs.io/en/stable/alignment.html.

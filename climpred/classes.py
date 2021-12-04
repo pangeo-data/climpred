@@ -1603,6 +1603,47 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         return self._datasets["observations"]
 
+    def plot_alignment(
+        self: "HindcastEnsemble",
+        alignment: alignmentType,
+        reference=referenceType,
+        date2num_units: str = "days since 1960-01-01",
+        return_xr: bool = False,
+        cmap: str = "viridis",
+        edgecolors: str = "gray",
+        **plot_kwargs: Any,
+    ):
+        """
+        Plot where ``initialized`` ``valid_time`` matches ``verification``/``observation`` ``time`` depending on ``alignment``
+
+        See https://climpred.readthedocs.io/en/stable/alignment.html.
+        """
+        from .graphics import _verif_dates_xr
+
+        if alignment is None:
+            alignment = ["same_init", "same_verif", "maximize"]
+        if isinstance(alignment, str):
+            verif_dates_xr = _verif_dates_xr(self, alignment, reference, date2num_units)
+        elif isinstance(alignment, list):
+            verif_dates_xr = xr.concat(
+                [
+                    _verif_dates_xr(self, a, reference, date2num_units)
+                    for a in alignment
+                ],
+                "alignment",
+            ).assign_coords(alignment=alignment)
+            plot_kwargs["col"] = "alignment"
+
+        if return_xr:
+            return verif_dates_xr
+        try:
+            import nc_time_axis
+
+            assert int(nc_time_axis.__version__.replace(".", "")) >= 140
+            return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
+        except ImportError:
+            raise ValueError("nc_time_axis>1.4.0 required for plotting.")
+
     def verify(
         self,
         metric: metricType = None,

@@ -7,7 +7,7 @@ dependencies:
   - importlib_metadata
   - matplotlib-base
   - nbsphinx
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx
   - sphinxcontrib-napoleon

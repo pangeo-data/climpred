@@ -5,7 +5,7 @@ from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
-from . import requires_matplotlib
+from . import requires_matplotlib, requires_nc_time_axis
 
 ITERATIONS = 3
 
@@ -83,3 +83,28 @@ def test_PredictionEnsemble_plot(
         pm.plot(**kws)
         pm = pm.add_control(hist_ds_uninitialized_1d.isel(member=0, drop=True))
         pm.plot(**kws)
+
+
+@requires_matplotlib
+@requires_nc_time_axis
+@pytest.mark.parametrize("alignment", ["same_inits", None])
+@pytest.mark.parametrize("return_xr", [False, True])
+def test_HindcastEnsemble_plot_alignment(hindcast_hist_obs_1d, alignment, return_xr):
+    """Test HindcastEnsemble.plot_alignment()"""
+    import matplotlib
+    import xarray as xr
+
+    if return_xr:
+        assert isinstance(
+            hindcast_hist_obs_1d.plot_alignment(
+                alignment=alignment, return_xr=return_xr
+            ),
+            xr.DataArray,
+        )
+    else:
+        assert isinstance(
+            hindcast_hist_obs_1d.plot_alignment(
+                alignment=alignment, return_xr=return_xr
+            ),
+            (xr.plot.facetgrid.FacetGrid, matplotlib.collections.QuadMesh),
+        )

@@ -1622,7 +1622,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Plot ``initialized`` ``valid_time`` where matching ``verification``/``observation`` ``time`` depending on ``alignment``.
 
         Args:
-            alignment (str): which inits or verification times should be aligned?
+            alignment (str or list of str): which inits or verification times should be aligned?
 
                 - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
                   ``verif`` to a common time frame at each lead.

@@ -68,7 +68,7 @@ New Features
 
   (:issue:`635`, :pr:`690`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and observations are
-  aligned based on the <``alignment`` <alignment.html>_ keyword. (:issue:`701`, :pr:`702`) `Aaron Spring`_.
+  aligned based on the `alignment <alignment.html>`_ keyword. (:issue:`701`, :pr:`702`) `Aaron Spring`_.
 - Add ``attrs`` to new ``coordinates`` created by ``climpred``. (:issue:`695`, :pr:`697`) `Aaron Spring`_.
 
 Internals/Minor Fixes

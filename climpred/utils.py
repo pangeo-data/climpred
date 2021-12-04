@@ -114,7 +114,9 @@ def assign_attrs(
     return skill
 
 
-def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
+def convert_time_index(
+    xobj, time_string, kind="object", calendar=HINDCAST_CALENDAR_STR
+):
     """Converts incoming time index to a standard xr.CFTimeIndex.
 
     Args:
@@ -587,9 +589,11 @@ def my_shift(init, lead):
             lead_freq = f"{lead_freq_string}{anchor}"
             if lead_freq_string in ["A", "Q"]:  # add month info again
                 init_freq = xr.infer_freq(init)
+                # print('init_freq',init_freq)
                 if init_freq:
                     if "-" in init_freq:
                         lead_freq = lead_freq + "-" + init_freq.split("-")[-1]
+                # print('lead_freq',lead_freq)
         else:
             raise ValueError(
                 f"could not shift init={init} in calendar={init_calendar} by lead={lead} {lead_unit}"

@@ -84,3 +84,28 @@ def test_bootstrap_valid_time(hindcast_hist_obs_1d, alignment, reference):
         assert set(result.dims) == set(["init", "lead", "results", "skill"])
     else:
         assert set(result.dims) == set(["init", "lead", "results"])
+
+
+def test_valid_time_init_MS_annual_lead():
+    """Raised in https://github.com/pangeo-data/climpred/issues/698"""
+    init = xr.cftime_range(start="2000-01-01", end="2002-01-01", freq="6MS")
+    print("init", init)
+
+    lead = range(0, 5)
+    data = np.random.random((len(init), len(lead)))
+    hind = xr.DataArray(data, coords=[init, lead], dims=["init", "lead"], name="var")
+    hind["lead"].attrs["units"] = "years"
+
+    # Add "valid_time" coordinate using `climpred.utils.add_time_from_init_lead()`
+    from climpred.utils import add_time_from_init_lead
+
+    hind = add_time_from_init_lead(hind)
+    for lead in [0, 1]:
+        assert (
+            hind.valid_time.sel(lead=lead).to_index()
+            == hind.init.to_index().shift(lead, "YS")
+        ).all(), print(
+            hind.valid_time.sel(lead=lead).to_index(),
+            "\n",
+            hind.init.to_index().shift(lead, "YS"),
+        )

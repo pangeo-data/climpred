@@ -43,7 +43,7 @@ New Features
   :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
-  initializations seasonality. (:issue:`635`, :pr:`690`) `Aaron Spring`_.
+  initializations seasonality.
 
   .. code-block:: python
 
@@ -65,6 +65,9 @@ New Features
       Data variables:
           sst      (month, lead, model) float64 0.4127 0.3837 0.3915 ... 1.255 3.98
       >>> skill.sst.plot(hue="model", col="month", col_wrap=3)
+
+  (:issue:`635`, :pr:`690`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and observations are aligned based on the ``alignment`` keyword. (:issue:`701`, :pr:`702`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------

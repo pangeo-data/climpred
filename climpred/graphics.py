@@ -410,6 +410,7 @@ def plot_ensemble_perfect_model(
 
 
 def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
+    """Create verif dates xr.DataArray with dims lead and init."""
     inits, verif_dates = return_inits_and_verif_dates(
         hindcast.get_initialized().rename({"init": "time"}),
         hindcast.get_observations(),
@@ -419,8 +420,6 @@ def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
         if isinstance(hindcast.get_uninitialized(), xr.Dataset)
         else None,
     )
-    for k, v in verif_dates.items():
-        verif_dates[k].name = None  # "init"
 
     verif_dates_xr = xr.concat(
         [

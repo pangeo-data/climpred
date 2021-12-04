@@ -72,6 +72,7 @@ Visualization
     :toctree: api/
 
     HindcastEnsemble.plot
+    HindcastEnsemble.plot_alignment
 
 
 PerfectModelEnsemble

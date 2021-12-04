@@ -1605,22 +1605,57 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def plot_alignment(
         self: "HindcastEnsemble",
-        alignment: alignmentType,
-        reference=referenceType,
+        alignment: alignmentType = None,
+        reference: Optional[referenceType] = None,
         date2num_units: str = "days since 1960-01-01",
         return_xr: bool = False,
         cmap: str = "viridis",
         edgecolors: str = "gray",
         **plot_kwargs: Any,
-    ):
+    ) -> Any:
         """
         Plot where ``initialized`` ``valid_time`` matches ``verification``/``observation`` ``time`` depending on ``alignment``
 
-        See https://climpred.readthedocs.io/en/stable/alignment.html.
+        Args:
+            alignment (str): which inits or verification times should be aligned?
+
+                - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
+                  ``verif`` to a common time frame at each lead.
+
+                - 'same_inits': slice to a common init frame prior to computing
+                  metric. This philosophy follows the thought that each lead should be
+                  based on the same set of initializations.
+
+                - 'same_verif': slice to a common/consistent verification time frame
+                  prior to computing metric. This philosophy follows the thought that
+                  each lead should be based on the same set of verification dates.
+
+                - None defaults to the three above
+            reference (str, list of str): Type of reference forecasts to also verify against the
+                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
+                Defaults to None.
+            date2num_units : str
+                passed to cftime.date2num as units
+            return_xr : bool
+                see return
+            cmap : str
+                color palette
+            edgecolors : str
+                color of the edges in the plot
+            **plot_kwargs (optional): arguments passed to ``plot``.
+
+        Return:
+            xarray.DataArray if return_xr else plot
+
+        Example:
+            >>> HindcastEnsemble.plot_alignment()
+
+        See also:
+            https://climpred.readthedocs.io/en/stable/alignment.html.
         """
         from .graphics import _verif_dates_xr
 
-        if alignment is None:
+        if alignment is None or alignment == []:
             alignment = ["same_init", "same_verif", "maximize"]
         if isinstance(alignment, str):
             verif_dates_xr = _verif_dates_xr(self, alignment, reference, date2num_units)

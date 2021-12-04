@@ -579,28 +579,27 @@ def my_shift(init, lead):
         anchor_check = month_anchor_check(init)  # returns None, ce or cs
         if anchor_check is not None:
             lead_freq_string = lead_unit[0].upper()  # A for years, D for days
+            # go down to monthly freq
             if lead_freq_string == "Y":
-                lead_freq_string = "A"
+                lead_freq_string = "12M"
             elif lead_freq_string == "S":
-                lead_freq_string = "Q"
+                lead_freq_string = "3M"
             anchor = anchor_check[-1].upper()  # S/E for start/end of month
             if anchor == "E":
                 anchor = ""
             lead_freq = f"{lead_freq_string}{anchor}"
             if lead_freq_string in ["A", "Q"]:  # add month info again
                 init_freq = xr.infer_freq(init)
-                # print('init_freq',init_freq)
                 if init_freq:
                     if "-" in init_freq:
                         lead_freq = lead_freq + "-" + init_freq.split("-")[-1]
-                # print('lead_freq',lead_freq)
         else:
             raise ValueError(
                 f"could not shift init={init} in calendar={init_calendar} by lead={lead} {lead_unit}"
             )
         return init.shift(lead, lead_freq)
-    else:
-        # what about pentads, weeks (W)
+    else:  # lower freq
+        # reducing pentads, weeks (W) to days
         if lead_unit == "weeks":
             lead_unit = "W"
         elif lead_unit == "pentads":

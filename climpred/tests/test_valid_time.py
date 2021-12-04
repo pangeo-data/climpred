@@ -103,9 +103,9 @@ def test_valid_time_init_MS_annual_lead():
     for lead in [0, 1]:
         assert (
             hind.valid_time.sel(lead=lead).to_index()
-            == hind.init.to_index().shift(lead, "YS")
+            == hind.init.to_index().shift(lead, "12MS")
         ).all(), print(
             hind.valid_time.sel(lead=lead).to_index(),
             "\n",
-            hind.init.to_index().shift(lead, "YS"),
+            hind.init.to_index().shift(lead, "12MS"),
         )

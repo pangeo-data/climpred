@@ -56,7 +56,7 @@ from .constants import (
     M2M_MEMBER_DIM,
     XCLIM_BIAS_CORRECTION_METHODS,
 )
-from .exceptions import DimensionError, VariableError
+from .exceptions import CoordinateError, DimensionError, VariableError
 from .logging import log_compute_hindcast_header
 from .metrics import Metric
 from .options import OPTIONS
@@ -1663,15 +1663,27 @@ class HindcastEnsemble(PredictionEnsemble):
         if alignment is None or alignment == []:
             alignment = ["same_init", "same_verif", "maximize"]
         if isinstance(alignment, str):
-            verif_dates_xr = _verif_dates_xr(self, alignment, reference, date2num_units)
-        elif isinstance(alignment, list):
-            verif_dates_xr = xr.concat(
-                [
+            alignment = [alignment]
+
+        alignment_dates = []
+        alignments_success = []
+        for a in alignment:
+            try:
+                alignment_dates.append(
                     _verif_dates_xr(self, a, reference, date2num_units)
-                    for a in alignment
-                ],
+                )
+                alignments_success.append(a)
+            except CoordinateError as e:
+                warnings.warn(f"alignment='{a}' failed. CoordinateError: {e}")
+        verif_dates_xr = (
+            xr.concat(
+                alignment_dates,
                 "alignment",
-            ).assign_coords(alignment=alignment)
+            )
+            .assign_coords(alignment=alignments_success)
+            .squeeze()
+        )
+        if "alignment" in verif_dates_xr.dims:
             plot_kwargs["col"] = "alignment"
 
         if return_xr:

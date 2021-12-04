@@ -1605,7 +1605,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def plot_alignment(
         self: "HindcastEnsemble",
-        alignment: alignmentType = None,
+        alignment: Optional[Union[str, List[str]]] = None,
         reference: Optional[referenceType] = None,
         date2num_units: str = "days since 1960-01-01",
         return_xr: bool = False,

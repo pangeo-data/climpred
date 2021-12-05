@@ -27,7 +27,7 @@ dependencies:
   - xesmf
   - esmpy
   - bottleneck
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - xrft  # used for varweighted_mean_period
   - pip
   - pip:

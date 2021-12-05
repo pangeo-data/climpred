@@ -56,7 +56,7 @@ from .constants import (
     M2M_MEMBER_DIM,
     XCLIM_BIAS_CORRECTION_METHODS,
 )
-from .exceptions import DimensionError, VariableError
+from .exceptions import CoordinateError, DimensionError, VariableError
 from .logging import log_compute_hindcast_header
 from .metrics import Metric
 from .options import OPTIONS
@@ -1607,6 +1607,128 @@ class HindcastEnsemble(PredictionEnsemble):
             ``xarray`` Dataset of observations.
         """
         return self._datasets["observations"]
+
+    def plot_alignment(
+        self: "HindcastEnsemble",
+        alignment: Optional[Union[str, List[str]]] = None,
+        reference: Optional[referenceType] = None,
+        date2num_units: str = "days since 1960-01-01",
+        return_xr: bool = False,
+        cmap: str = "viridis",
+        edgecolors: str = "gray",
+        **plot_kwargs: Any,
+    ) -> Any:
+        """
+        Plot ``initialized`` ``valid_time`` where matching
+        ``verification``/``observation`` ``time`` depending on ``alignment``.
+        Plots ``days since reference date`` controlled by ``date2num_units``.
+        ``NaN`` / white space shows where no verification is done.
+
+        Args:
+            alignment (str or list of str): which inits or verification times should be aligned?
+
+                - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
+                  ``verif`` to a common time frame at each lead.
+
+                - 'same_inits': slice to a common init frame prior to computing
+                  metric. This philosophy follows the thought that each lead should be
+                  based on the same set of initializations.
+
+                - 'same_verif': slice to a common/consistent verification time frame
+                  prior to computing metric. This philosophy follows the thought that
+                  each lead should be based on the same set of verification dates.
+
+                - None defaults to the three above
+            reference (str, list of str): Type of reference forecasts to also verify against the
+                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
+                Defaults to None.
+            date2num_units : str
+                passed to cftime.date2num as units
+            return_xr : bool
+                see return
+            cmap : str
+                color palette
+            edgecolors : str
+                color of the edges in the plot
+            **plot_kwargs (optional): arguments passed to ``plot``.
+
+        Return:
+            xarray.DataArray if return_xr else plot
+
+        Example:
+            >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
+            <xarray.DataArray 'days since 1960-01-01' (alignment: 3, lead: 10, init: 61)>
+            array([[[-1826., -1461., -1095., ...,    nan,    nan,    nan],
+                    [-1461., -1095.,  -730., ...,    nan,    nan,    nan],
+                    [-1095.,  -730.,  -365., ...,    nan,    nan,    nan],
+                    ...,
+                    [  731.,  1096.,  1461., ...,    nan,    nan,    nan],
+                    [ 1096.,  1461.,  1827., ...,    nan,    nan,    nan],
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]],
+            <BLANKLINE>
+                   [[   nan,    nan,    nan, ..., 19359., 19724., 20089.],
+                    [   nan,    nan,    nan, ..., 19724., 20089.,    nan],
+                    [   nan,    nan,    nan, ..., 20089.,    nan,    nan],
+                    ...,
+                    [   nan,    nan,  1461., ...,    nan,    nan,    nan],
+                    [   nan,  1461.,  1827., ...,    nan,    nan,    nan],
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]],
+            <BLANKLINE>
+                   [[-1826., -1461., -1095., ..., 19359., 19724., 20089.],
+                    [-1461., -1095.,  -730., ..., 19724., 20089.,    nan],
+                    [-1095.,  -730.,  -365., ..., 20089.,    nan,    nan],
+                    ...,
+                    [  731.,  1096.,  1461., ...,    nan,    nan,    nan],
+                    [ 1096.,  1461.,  1827., ...,    nan,    nan,    nan],
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]])
+            Coordinates:
+              * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
+              * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
+
+            >>> HindcastEnsemble.plot_alignment(alignment="same_verifs")  # doctest: +SKIP
+            <matplotlib.collections.QuadMesh object at 0x1405c1520>
+
+        See also:
+            https://climpred.readthedocs.io/en/stable/alignment.html.
+        """
+        from .graphics import _verif_dates_xr
+
+        if alignment is None or alignment == []:
+            alignment = ["same_init", "same_verif", "maximize"]
+        if isinstance(alignment, str):
+            alignment = [alignment]
+
+        alignment_dates = []
+        alignments_success = []
+        for a in alignment:
+            try:
+                alignment_dates.append(
+                    _verif_dates_xr(self, a, reference, date2num_units)
+                )
+                alignments_success.append(a)
+            except CoordinateError as e:
+                warnings.warn(f"alignment='{a}' failed. CoordinateError: {e}")
+        verif_dates_xr = (
+            xr.concat(
+                alignment_dates,
+                "alignment",
+            )
+            .assign_coords(alignment=alignments_success)
+            .squeeze()
+        )
+        if "alignment" in verif_dates_xr.dims:
+            plot_kwargs["col"] = "alignment"
+
+        if return_xr:
+            return verif_dates_xr
+        try:
+            import nc_time_axis
+
+            assert int(nc_time_axis.__version__.replace(".", "")) >= 140
+            return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
+        except ImportError:
+            raise ValueError("nc_time_axis>1.4.0 required for plotting.")
 
     def verify(
         self,

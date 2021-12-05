@@ -51,7 +51,7 @@ dependencies:
   - xskillscore>=0.0.19
   # Visualization
   - matplotlib-base
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - pip
   - pip:
       - pytest-lazy-fixture

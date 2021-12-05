@@ -11,7 +11,7 @@ dependencies:
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - ipython
   - matplotlib-base
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - netcdf4
   - pip
   - pytest

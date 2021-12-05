@@ -2,10 +2,12 @@ import warnings
 from collections import OrderedDict
 from typing import Optional, Tuple, Union
 
+import cftime
 import numpy as np
 import xarray as xr
 from xarray.coding.times import infer_calendar_name
 
+from .alignment import return_inits_and_verif_dates
 from .checks import DimensionError
 from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
@@ -405,3 +407,30 @@ def plot_ensemble_perfect_model(
     ax.set_title(" ")
     ax.set_xlabel(pm.coords[x].attrs["long_name"])
     return ax
+
+
+def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
+    """Create verif dates xr.DataArray with dims lead and init."""
+    inits, verif_dates = return_inits_and_verif_dates(
+        hindcast.get_initialized().rename({"init": "time"}),
+        hindcast.get_observations(),
+        alignment,
+        reference=reference,
+        hist=hindcast.get_uninitialized()
+        if isinstance(hindcast.get_uninitialized(), xr.Dataset)
+        else None,
+    )
+
+    verif_dates_xr = xr.concat(
+        [
+            xr.DataArray(
+                cftime.date2num(verif_dates[k], date2num_units),
+                dims="init",
+                coords={"init": v.rename({"time": "init"}).to_index()},
+                name=date2num_units,
+            )
+            for k, v in inits.items()
+        ],
+        dim="lead",
+    ).assign_coords(lead=hindcast.get_initialized().lead)
+    return verif_dates_xr

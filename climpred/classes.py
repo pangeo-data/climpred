@@ -1619,7 +1619,10 @@ class HindcastEnsemble(PredictionEnsemble):
         **plot_kwargs: Any,
     ) -> Any:
         """
-        Plot ``initialized`` ``valid_time`` where matching ``verification``/``observation`` ``time`` depending on ``alignment``.
+        Plot ``initialized`` ``valid_time`` where matching
+        ``verification``/``observation`` ``time`` depending on ``alignment``.
+        Plots ``days since reference date`` controlled by ``date2num_units``.
+        ``NaN`` / white space shows where no verification is done.
 
         Args:
             alignment (str or list of str): which inits or verification times should be aligned?
@@ -1653,7 +1656,38 @@ class HindcastEnsemble(PredictionEnsemble):
             xarray.DataArray if return_xr else plot
 
         Example:
-            >>> HindcastEnsemble.plot_alignment()  # doctest: +ELLIPSIS
+            >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
+            <xarray.DataArray 'days since 1960-01-01' (alignment: 3, lead: 10, init: 61)>
+            array([[[-1826., -1461., -1095., ...,    nan,    nan,    nan],
+                    [-1461., -1095.,  -730., ...,    nan,    nan,    nan],
+                    [-1095.,  -730.,  -365., ...,    nan,    nan,    nan],
+                    ...,
+                    [  731.,  1096.,  1461., ...,    nan,    nan,    nan],
+                    [ 1096.,  1461.,  1827., ...,    nan,    nan,    nan],
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]],
+            <BLANKLINE>
+                   [[   nan,    nan,    nan, ..., 19359., 19724., 20089.],
+                    [   nan,    nan,    nan, ..., 19724., 20089.,    nan],
+                    [   nan,    nan,    nan, ..., 20089.,    nan,    nan],
+                    ...,
+                    [   nan,    nan,  1461., ...,    nan,    nan,    nan],
+                    [   nan,  1461.,  1827., ...,    nan,    nan,    nan],
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]],
+            <BLANKLINE>
+                   [[-1826., -1461., -1095., ..., 19359., 19724., 20089.],
+                    [-1461., -1095.,  -730., ..., 19724., 20089.,    nan],
+                    [-1095.,  -730.,  -365., ..., 20089.,    nan,    nan],
+                    ...,
+                    [  731.,  1096.,  1461., ...,    nan,    nan,    nan],
+                    [ 1096.,  1461.,  1827., ...,    nan,    nan,    nan],
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]])
+            Coordinates:
+              * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
+              * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
+
+            >>> HindcastEnsemble.plot_alignment(alignment="same_verifs")  # doctest: +SKIP
+            <matplotlib.collections.QuadMesh object at 0x1405c1520>
 
         See also:
             https://climpred.readthedocs.io/en/stable/alignment.html.

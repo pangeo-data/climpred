@@ -1371,7 +1371,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ``xarray`` Dataset of observations.
         """
         return self._datasets["observations"]
-    
+
     def generate_uninitialized(self, resample_dim=["init", "member"]):
         """Generate an uninitialized ensemble by resampling from the
         initialized prediction ensemble.
@@ -1382,7 +1382,6 @@ class HindcastEnsemble(PredictionEnsemble):
         uninit = resample_uninitialized_from_initialized(
             self._datasets["initialized"], resample_dim=resample_dim
         )
-        uninit.coords["valid_time"] = self.get_initialized().coords["valid_time"]
         datasets = self._datasets.copy()
         datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="hindcast")

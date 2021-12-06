@@ -35,6 +35,8 @@ New Features
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less` (:issue:`239`, :pr:`687`) `Aaron Spring`_.
+- Implement :py:meth:`~climpred.classes.HindcastEnsemble.generate_uninitialized` resampling years without replacement from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
+
 
 Documentation
 -------------

@@ -113,7 +113,6 @@ def climatology(verif, inits, verif_dates, lead):
         )
         .drop(seasonality_str)
     )
-    climatology_forecast = _maybe_int_to_seasons(climatology_forecast)
     lforecast = climatology_forecast.where(
         climatology_forecast.time.isin(init_lead), drop=True
     )

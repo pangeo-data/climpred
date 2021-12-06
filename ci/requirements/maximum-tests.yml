@@ -11,14 +11,14 @@ dependencies:
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - ipython
   - matplotlib-base
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - netcdf4
   - pip
   - pytest
   - pytest-cov
   - pytest-xdist
   - scipy
-  - xarray>=0.16.1
+  - xarray>=0.19.0
   - xesmf
   - xrft
   - xskillscore>=0.0.18

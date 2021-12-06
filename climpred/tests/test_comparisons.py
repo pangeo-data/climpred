@@ -142,35 +142,33 @@ def test_all(PM_da_initialized_1d, comparison, metric):
             assert set(forecast.dims) - set(["member"]) == set(obs.dims)
 
 
-def my_m2me_comparison(ds, metric=None):
-    """Identical to m2e but median."""
-    reference_list = []
-    forecast_list = []
-    supervector_dim = "member"
-    for m in ds.member.values:
-        forecast = ds.drop_sel(member=m).median("member")
-        reference = ds.sel(member=m).squeeze()
-        forecast_list.append(forecast)
-        reference_list.append(reference)
-    reference = xr.concat(reference_list, supervector_dim)
-    forecast = xr.concat(forecast_list, supervector_dim)
-    forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
-    reference[supervector_dim] = np.arange(reference[supervector_dim].size)
-    return forecast, reference
-
-
-my_m2me_comparison = Comparison(
-    name="m2me",
-    function=my_m2me_comparison,
-    probabilistic=False,
-    hindcast=False,
-)
-
-
 @pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
 def test_new_comparison_passed_to_compute(
     PM_da_initialized_1d, PM_da_control_1d, metric
 ):
+    def my_m2me_comparison(ds, metric=None):
+        """Identical to m2e but median."""
+        reference_list = []
+        forecast_list = []
+        supervector_dim = "member"
+        for m in ds.member.values:
+            forecast = ds.drop_sel(member=m).median("member")
+            reference = ds.sel(member=m).squeeze()
+            forecast_list.append(forecast)
+            reference_list.append(reference)
+        reference = xr.concat(reference_list, supervector_dim)
+        forecast = xr.concat(forecast_list, supervector_dim)
+        forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
+        reference[supervector_dim] = np.arange(reference[supervector_dim].size)
+        return forecast, reference
+
+    my_m2me_comparison = Comparison(
+        name="m2me",
+        function=my_m2me_comparison,
+        probabilistic=False,
+        hindcast=False,
+    )
+
     actual = compute_perfect_model(
         PM_da_initialized_1d,
         PM_da_control_1d,

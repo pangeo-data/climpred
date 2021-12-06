@@ -1,4 +1,5 @@
 import warnings
+from typing import Callable, List, Optional
 
 import numpy as np
 import pandas as pd
@@ -163,7 +164,7 @@ def _maybe_member_mean_reduce_dim(forecast, dim):
     return forecast, dim
 
 
-def _display_metric_metadata(self):
+def _display_metric_metadata(self) -> str:
     summary = "----- Metric metadata -----\n"
     summary += f"Name: {self.name}\n"
     summary += f"Alias: {self.aliases}\n"
@@ -194,27 +195,28 @@ class Metric:
 
     def __init__(
         self,
-        name,
-        function,
-        positive,
-        probabilistic,
-        unit_power,
-        long_name=None,
-        aliases=None,
-        minimum=None,
-        maximum=None,
-        perfect=None,
-        normalize=False,
-        allows_logical=False,
-        requires_member_dim=False,
+        name: str,
+        function: Callable,
+        positive: Optional[bool],
+        probabilistic: bool,
+        unit_power: float,
+        long_name: Optional[str] = None,
+        aliases: Optional[List[str]] = None,
+        minimum: Optional[float] = None,
+        maximum: Optional[float] = None,
+        perfect: Optional[float] = None,
+        normalize: bool = False,
+        allows_logical: bool = False,
+        requires_member_dim: bool = False,
     ):
         """Metric initialization.
 
         Args:
             name (str): name of metric.
             function (function): metric function.
-            positive (bool): Is metric positively oriented? If True, higher metric
+            positive (bool or None): Is metric positively oriented? If True, higher metric
              value means better skill. If False, lower metric value means better skill.
+             None if different differentiation.
             probabilistic (bool): Is metric probabilistic? `False` means
              deterministic.
             unit_power (float, int): Power of the unit of skill based on unit
@@ -309,6 +311,16 @@ def _pearson_r(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.9272 0.9145 0.9127 0.9319 ... 0.9315 0.9185 0.9112
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        pearson_r
+            comparison:                    e2o
+            dim:                           ['init']
+            reference:                     []
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -370,6 +382,16 @@ def _pearson_r_p_value(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 5.779e-23 2.753e-21 4.477e-21 ... 8.7e-22 6.781e-21
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        pearson_r_p_value
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -449,6 +471,16 @@ def _effective_sample_size(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 5.0 4.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        effective_sample_size
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -529,6 +561,16 @@ def _pearson_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.02333 0.08552 0.2679 ... 0.2369 0.2588 0.2703
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        pearson_r_eff_p_value
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
 
     Reference:
         * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
@@ -611,6 +653,16 @@ def _spearman_r(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.9336 0.9311 0.9293 0.9474 ... 0.9465 0.9346 0.9328
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        spearman_r
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     with warnings.catch_warnings():
         warnings.simplefilter("ignore", category=RuntimeWarning)
@@ -672,6 +724,16 @@ def _spearman_r_p_value(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 6.248e-24 1.515e-23 ... 4.288e-24 8.254e-24
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        spearman_r_p_value
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -760,6 +822,16 @@ def _spearman_r_eff_p_value(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.02034 0.0689 0.2408 ... 0.2092 0.2315 0.2347
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        spearman_r_eff_p_value
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -838,6 +910,16 @@ def _mse(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        mse
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return mse(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -889,6 +971,16 @@ def _spread(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.1468 0.1738 0.1922 0.2096 ... 0.2142 0.2178 0.2098
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        spread
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
     """
     return forecast.std(dim=dim, **metric_kwargs)
 
@@ -945,6 +1037,16 @@ def _rmse(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.07875 0.08085 0.08815 ... 0.1371 0.1555 0.1664
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        rmse
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return rmse(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1009,6 +1111,16 @@ def _mae(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.06484 0.06684 0.07407 ... 0.1193 0.1361 0.1462
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        mae
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return mae(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1065,6 +1177,16 @@ def _median_absolute_error(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.06077 0.06556 0.06368 ... 0.1131 0.142 0.1466
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        median_absolute_error
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return median_absolute_error(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1148,6 +1270,16 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.1732 0.1825 0.217 0.2309 ... 0.5247 0.6749 0.7732
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        nmse
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1155,7 +1287,7 @@ def _nmse(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             "Comparison needed to normalize NMSE. Not found in", metric_kwargs
         )
-    mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
+    mse_skill = _mse(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
     fac = _get_norm_factor(comparison)
     nmse_skill = mse_skill / var / fac
@@ -1241,6 +1373,16 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.3426 0.3532 0.3914 0.3898 ... 0.6303 0.7194 0.7726
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        nmae
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1248,7 +1390,7 @@ def _nmae(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             "Comparison needed to normalize NMAE. Not found in", metric_kwargs
         )
-    mae_skill = __mae.function(forecast, verif, dim=dim, **metric_kwargs)
+    mae_skill = _mae(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
     nmae_skill = mae_skill / std / fac
@@ -1341,6 +1483,16 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.4161 0.4272 0.4658 0.4806 ... 0.7244 0.8215 0.8793
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        nrmse
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1348,7 +1500,7 @@ def _nrmse(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             "Comparison needed to normalize NRMSE. Not found in", metric_kwargs
         )
-    rmse_skill = __rmse.function(forecast, verif, dim=dim, **metric_kwargs)
+    rmse_skill = _rmse(forecast, verif, dim=dim, **metric_kwargs)
     std = verif.std(dim)
     fac = _get_norm_factor(comparison)
     nrmse_skill = rmse_skill / std / np.sqrt(fac)
@@ -1444,6 +1596,16 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.8268 0.8175 0.783 0.7691 ... 0.4753 0.3251 0.2268
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        msess
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     if "comparison" in metric_kwargs:
         comparison = metric_kwargs.pop("comparison")
@@ -1451,7 +1613,7 @@ def _msess(forecast, verif, dim=None, **metric_kwargs):
         raise ValueError(
             "Comparison needed to normalize MSSS. Not found in", metric_kwargs
         )
-    mse_skill = __mse.function(forecast, verif, dim=dim, **metric_kwargs)
+    mse_skill = _mse(forecast, verif, dim=dim, **metric_kwargs)
     var = verif.var(dim)
     fac = _get_norm_factor(comparison)
     msess_skill = 1 - mse_skill / var / fac
@@ -1512,6 +1674,16 @@ def _mape(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 1.536 1.21 1.421 1.149 ... 1.078 1.369 1.833 1.245
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        mape
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return mape(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1568,6 +1740,16 @@ def _smape(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.3801 0.3906 0.4044 0.3819 ... 0.4822 0.5054 0.5295
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        smape
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return smape(forecast, verif, dim=dim, **metric_kwargs)
 
@@ -1652,8 +1834,18 @@ def _uacc(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.9093 0.9041 0.8849 0.877 ... 0.6894 0.5702 0.4763
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        uacc
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
-    messs_res = __msess.function(forecast, verif, dim=dim, **metric_kwargs)
+    messs_res = _msess(forecast, verif, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
     uacc_res = messs_res ** 0.5
     return uacc_res
@@ -1714,6 +1906,16 @@ def _std_ratio(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.7567 0.8801 0.9726 1.055 ... 1.075 1.094 1.055
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        std_ratio
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return forecast.std(dim=dim, **metric_kwargs) / verif.std(dim=dim, **metric_kwargs)
 
@@ -1768,6 +1970,16 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        unconditional_bias
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
 
         Conditional bias is removed by
         :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
@@ -1782,6 +1994,16 @@ def _unconditional_bias(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 3.203e-18 -1.068e-18 ... 2.882e-17 -2.776e-17
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        unconditional_bias
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 
@@ -1835,6 +2057,16 @@ def _mul_bias(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.719 0.9991 1.072 1.434 ... 1.854 2.128 2.325 2.467
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        mul_bias
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     return (forecast / verif).mean(dim=dim, **metric_kwargs)
 
@@ -1893,9 +2125,19 @@ def _conditional_bias(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.1705 0.03435 -0.05988 ... -0.1436 -0.175 -0.1434
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        conditional_bias
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
-    acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
-    return acc - __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
+    acc = _pearson_r(forecast, verif, dim=dim, **metric_kwargs)
+    return acc - _std_ratio(forecast, verif, dim=dim, **metric_kwargs)
 
 
 __conditional_bias = Metric(
@@ -1954,9 +2196,19 @@ def _bias_slope(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.7016 0.8049 0.8877 0.9836 ... 1.002 1.004 0.961
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        bias_slope
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
-    std_ratio = __std_ratio.function(forecast, verif, dim=dim, **metric_kwargs)
-    acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
+    std_ratio = _std_ratio(forecast, verif, dim=dim, **metric_kwargs)
+    acc = _pearson_r(forecast, verif, dim=dim, **metric_kwargs)
     return std_ratio * acc
 
 
@@ -2019,7 +2271,7 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
     Example:
         >>> HindcastEnsemble = HindcastEnsemble.remove_bias(alignment='same_verifs')
         >>> HindcastEnsemble.verify(metric='msess_murphy', comparison='e2o',
-        ...     alignment='same_verifs', dim='init')
+        ...     dim='init', alignment='same_verifs')
         <xarray.Dataset>
         Dimensions:  (lead: 10)
         Coordinates:
@@ -2027,12 +2279,20 @@ def _msess_murphy(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.8306 0.8351 0.8295 0.8532 ... 0.8471 0.813 0.8097
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        msess_murphy
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
-    acc = __pearson_r.function(forecast, verif, dim=dim, **metric_kwargs)
-    conditional_bias = __conditional_bias.function(
-        forecast, verif, dim=dim, **metric_kwargs
-    )
-    uncond_bias = __unconditional_bias.function(
+    acc = _pearson_r(forecast, verif, dim=dim, **metric_kwargs)
+    conditional_bias = _conditional_bias(forecast, verif, dim=dim, **metric_kwargs)
+    uncond_bias = _unconditional_bias(
         forecast, verif, dim=dim, **metric_kwargs
     ) / verif.std(dim=dim, **metric_kwargs)
     return acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
@@ -2132,6 +2392,17 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        brier_score
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            logical:                       Callable
 
         Option 2. Pre-process to generate a binary multi-member forecast and
         binary verification product:
@@ -2145,6 +2416,16 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        brier_score
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast`` anymore, use
@@ -2159,6 +2440,15 @@ def _brier_score(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            alignment:                     same_verifs
+            metric:                        brier_score
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
         forecast, verif, metric_kwargs, dim
@@ -2242,6 +2532,16 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_members:             10
+            alignment:                     same_inits
+            metric:                        threshold_brier_score
+            comparison:                    m2o
+            dim:                           member
+            reference:                     []
+            threshold:                     0.2
 
         >>> # multiple thresholds averaging over init dimension
         >>> HindcastEnsemble.verify(metric='threshold_brier_score', comparison='m2o',
@@ -2254,6 +2554,17 @@ def _threshold_brier_score(forecast, verif, dim=None, **metric_kwargs):
             skill      <U11 'initialized'
         Data variables:
             SST        (lead, threshold) float64 0.08712 0.005769 ... 0.1312 0.01923
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        threshold_brier_score
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            threshold:                     [0.2, 0.3]
 
     """
     if "threshold" not in metric_kwargs:
@@ -2342,6 +2653,15 @@ def _crps(forecast, verif, dim=None, **metric_kwargs):
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_members:             10
+            alignment:                     same_inits
+            metric:                        crps
+            comparison:                    m2o
+            dim:                           member
+            reference:                     []
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2450,6 +2770,15 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7702 0.5126
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_members:             10
+            alignment:                     same_inits
+            metric:                        crpss
+            comparison:                    m2o
+            dim:                           member
+            reference:                     []
 
         >>> import scipy
         >>> PerfectModelEnsemble..isel(lead=[0, 1]).verify(metric='crpss', comparison='m2m',
@@ -2495,7 +2824,7 @@ def _crpss(forecast, verif, dim=None, **metric_kwargs):
             dim=dim_for_gaussian,
             **metric_kwargs,
         )
-    forecast_skill = __crps.function(forecast, verif, dim=dim, **metric_kwargs)
+    forecast_skill = _crps(forecast, verif, dim=dim, **metric_kwargs)
     skill_score = 1 - forecast_skill / ref_skill
     return skill_score
 
@@ -2566,6 +2895,15 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        crpss_es
+            comparison:                    m2o
+            dim:                           member
+            reference:                     []
 
     """
     if dim is None:
@@ -2580,9 +2918,7 @@ def _crpss_es(forecast, verif, dim=None, **metric_kwargs):
         warnings.warn(
             "Ensemble spread is 0. CRPSS_ES yields NaNs for persistence and climatology reference skill."
         )
-    mse_h = __mse.function(
-        forecast.mean("member"), verif, dim=dim_no_member, **metric_kwargs
-    )
+    mse_h = _mse(forecast.mean("member"), verif, dim=dim_no_member, **metric_kwargs)
     crps_h = crps_gaussian(verif, mu, mse_h, dim=dim_no_member, **metric_kwargs)
     crps_r = crps_gaussian(
         verif, mu, ensemble_spread, dim=dim_no_member, **metric_kwargs
@@ -2773,6 +3109,17 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        reliability
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            logical:                       Callable
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
@@ -2787,6 +3134,16 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        reliability
+            comparison:                    m2o
+            dim:                           ['init', 'member']
+            reference:                     []
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
@@ -2803,6 +3160,15 @@ def _reliability(forecast, verif, dim=None, **metric_kwargs):
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            alignment:                     same_verifs
+            metric:                        reliability
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
 
     """
     if "logical" in metric_kwargs:
@@ -2860,6 +3226,16 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        rank_histogram
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
 
         >>> PerfectModelEnsemble.verify(metric='rank_histogram', comparison='m2c',
         ...     dim=['member', 'init'])
@@ -2870,6 +3246,15 @@ def _rank_histogram(forecast, verif, dim=None, **metric_kwargs):
           * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0
         Data variables:
             tos      (lead, rank) int64 1 4 2 1 2 1 0 0 0 1 2 ... 0 2 0 1 2 1 0 3 1 2 0
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  PerfectModelEnsemble.verify()
+            number_of_initializations:     12
+            number_of_members:             10
+            metric:                        rank_histogram
+            comparison:                    m2c
+            dim:                           ['member', 'init']
+            reference:                     []
 
     """
     dim = _remove_member_from_dim_or_raise(dim)
@@ -2898,7 +3283,7 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
         forecast (xr.object): Forecasts.
         verif (xr.object): Verification.
         dim (list or str): Dimensions to aggregate.
-        **metric_kwargs, see xs.rps
+        **metric_kwargs, see :py:func:`~xskillscore.rps`
 
     .. note::
         If ``category_edges`` is xr.Dataset or tuple of xr.Datasets, climpred will
@@ -2922,8 +3307,9 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-.5, 0., .5, 1.])
-        >>> HindcastEnsemble.verify(metric='rps', comparison='m2o', dim=['member', 'init'],
-        ...     alignment='same_verifs', category_edges=category_edges)
+        >>> HindcastEnsemble.verify(metric='rps', comparison='m2o',
+        ...     dim=['member', 'init'], alignment='same_verifs',
+        ...     category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:                     (lead: 10)
         Coordinates:
@@ -2933,15 +3319,26 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             skill                       <U11 'initialized'
         Data variables:
             SST                         (lead) float64 0.115 0.1123 ... 0.1687 0.1875
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        rps
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            category_edges:                [-0.5  0.   0.5  1. ]
 
 
-        Provide category_edges as `xr.Dataset` for category_edges varying along
+        Provide ``category_edges`` as ``xr.Dataset`` for category edges varying along
         dimensions.
 
         >>> category_edges = xr.DataArray([9.5, 10., 10.5, 11.], dims='category_edge').assign_coords(category_edge=[9.5, 10., 10.5, 11.]).to_dataset(name='tos')
         >>> # category_edges = np.array([9.5, 10., 10.5, 11.]) # identical
         >>> PerfectModelEnsemble.verify(metric='rps', comparison='m2c',
-        ...     dim=['member','init'], category_edges=category_edges)
+        ...     dim=['member', 'init'], category_edges=category_edges)
         <xarray.Dataset>
         Dimensions:                     (lead: 20)
         Coordinates:
@@ -2950,13 +3347,23 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             forecasts_category_edge     <U71 '[-np.inf, 9.5), [9.5, 10.0), [10.0, 10....
         Data variables:
             tos                         (lead) float64 0.08951 0.1615 ... 0.1399 0.2274
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  PerfectModelEnsemble.verify()
+            number_of_initializations:     12
+            number_of_members:             10
+            metric:                        rps
+            comparison:                    m2c
+            dim:                           ['member', 'init']
+            reference:                     []
+            category_edges:                <xarray.Dataset>\\nDimensions:        (cate...
 
 
-        Provide `category_edges` as tuple for different category_edges to categorize
+        Provide ``category_edges`` as tuple for different category edges to categorize
         forecasts and observations.
 
-        >>> q = [1 / 3, 2 / 3]
-        >>> forecast_edges = HindcastEnsemble.get_initialized().groupby('init.month').quantile(q=q, dim=['init','member']).rename({'quantile':'category_edge'})
+        >>> q = [1 / 3, 2 / 3]  # terciles by month
+        >>> forecast_edges = HindcastEnsemble.get_initialized().groupby('init.month').quantile(q=q, dim=['init', 'member']).rename({'quantile':'category_edge'})
         >>> obs_edges = HindcastEnsemble.get_observations().groupby('time.month').quantile(q=q, dim='time').rename({'quantile':'category_edge'})
         >>> category_edges = (obs_edges, forecast_edges)
         >>> HindcastEnsemble.verify(metric='rps', comparison='m2o',
@@ -2971,6 +3378,17 @@ def _rps(forecast, verif, dim=None, **metric_kwargs):
             skill                       <U11 'initialized'
         Data variables:
             SST                         (lead) float64 0.1248 0.1756 ... 0.3081 0.3413
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        rps
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            category_edges:                (<xarray.Dataset>\\nDimensions:        (mon...
     """
 
     if "category_edges" in metric_kwargs:
@@ -3069,6 +3487,8 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
           * observations_category         (observations_category) int64 1 2 3
           * forecasts_category            (forecasts_category) int64 1 2 3
             skill                         <U11 'initialized'
+        Attributes:
+            units:    None
 
         >>> # contingency-based dichotomous accuracy score
         >>> category_edges = np.array([9.5, 10.0, 10.5])
@@ -3082,6 +3502,18 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
           * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
         Data variables:
             tos      (lead) float64 1.0 1.0 1.0 1.0 0.9091 ... 1.0 1.0 1.0 nan 1.0
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  PerfectModelEnsemble.verify()
+            number_of_initializations:     12
+            number_of_members:             10
+            metric:                        contingency
+            comparison:                    m2c
+            dim:                           ['member', 'init']
+            reference:                     []
+            score:                         hit_rate
+            observation_category_edges:    [ 9.5 10.  10.5]
+            forecast_category_edges:       [ 9.5 10.  10.5]
 
     """
     # contingency fails when given empty dimension, therefore add fake dimension
@@ -3170,6 +3602,8 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
+        Attributes:
+            units:    None
 
         Get area under the curve, false positive rate and true positive rate as ``metric`` dimension by specifying ``return_results='all_as_metric_dim'``:
 
@@ -3191,6 +3625,8 @@ def _roc(forecast, verif, dim=None, **metric_kwargs):
           * lead             (lead) int32 1 2
           * metric           (metric) <U19 'false positive rate' ... 'area under curve'
             skill            <U11 'initialized'
+        Attributes:
+            units:    None
 
     """
     if "logical" in metric_kwargs:
@@ -3257,6 +3693,8 @@ def _less(forecast, verif, dim=None, **metric_kwargs):
         Coordinates:
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
+        Attributes:
+            units:    None
 
 
     References:

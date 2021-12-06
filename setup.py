@@ -25,7 +25,7 @@ CLASSIFIERS = [
 extras_require = {
     "accel": ["numba>=0.52", "bottleneck"],
     "bias-correction": ["xclim!=0.30.0", "bias-correction>=0.4"],
-    "viz": ["matplotlib", "nc-time-axis>=1.3.1"],
+    "viz": ["matplotlib", "nc-time-axis>=1.4.0"],
     "io": ["netcdf4"],
     "regridding": [
         "xesmf"

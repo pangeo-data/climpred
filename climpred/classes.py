@@ -1372,12 +1372,18 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         return self._datasets["observations"]
 
-    def generate_uninitialized(self, resample_dim=["init", "member"]):
+    def generate_uninitialized(
+        self, resample_dim: List[str] = ["init", "member"]
+    ) -> "HindcastEnsemble":
         """Generate an uninitialized ensemble by resampling from the
         initialized prediction ensemble.
 
+        Args:
+            resample_dim : list of str
+                dimension to resample from. Must contain "init".
+
         Returns:
-            resampled (uninitialized) ensemble
+            resampled uninitialized ensemble added to HindcastEnsemble
         """
         uninit = resample_uninitialized_from_initialized(
             self._datasets["initialized"], resample_dim=resample_dim

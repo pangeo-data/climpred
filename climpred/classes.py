@@ -1002,11 +1002,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="perfect")
 
     def generate_uninitialized(self) -> "PerfectModelEnsemble":
-        """Generate an uninitialized ensemble by bootstrapping the
-        initialized prediction ensemble.
+        """Generate an uninitialized ensemble by resampling from the control simulation.
 
         Returns:
-            resampled (uninitialized) ensemble.
+            PerfectModelEnsemble with resampled (uninitialized) ensemble from control
         """
         has_dataset(
             self._datasets["control"], "control", "generate an uninitialized ensemble."

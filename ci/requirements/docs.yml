@@ -7,14 +7,14 @@ dependencies:
   - importlib_metadata
   - matplotlib-base
   - nbsphinx
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx
   - sphinxcontrib-napoleon
   - sphinx_rtd_theme
   - sphinx-copybutton
   - toolz
-  - xarray>=0.16.1
+  - xarray>=0.19.0
   - xskillscore>=0.0.18
   - numba>=0.52
   - xclim

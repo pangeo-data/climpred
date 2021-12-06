@@ -1,5 +1,6 @@
 import inspect
 
+import pandas as pd
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -21,13 +22,43 @@ from .metrics import (
 )
 from .options import OPTIONS
 from .utils import (
-    assign_attrs,
     convert_time_index,
     get_comparison_class,
     get_lead_cftime_shift_args,
     get_metric_class,
     shift_cftime_index,
 )
+
+
+def _maybe_seasons_to_int(ds):
+    """set season str values or coords to int"""
+    seasonal = False
+    for season in ["DJF", "MAM", "JJA", "SON"]:
+        if season in ds:
+            seasonal = True
+    if seasonal:
+        ds = (
+            ds.str.replace("DJF", "1")
+            .str.replace("MAM", "2")
+            .str.replace("JJA", "3")
+            .str.replace("SON", "4")
+            .astype("int")
+        )
+    elif "season" in ds.coords:  # set season coords to int
+        seasonal = False
+        for season in ["DJF", "MAM", "JJA", "SON"]:
+            if season in ds.coords["season"]:
+                seasonal = True
+        if seasonal:
+            ds.coords["season"] = (
+                ds.coords.get("season")
+                .str.replace("DJF", "1")
+                .str.replace("MAM", "2")
+                .str.replace("JJA", "3")
+                .str.replace("SON", "4")
+                .astype("int")
+            )
+    return ds
 
 
 def persistence(verif, inits, verif_dates, lead):
@@ -37,25 +68,43 @@ def persistence(verif, inits, verif_dates, lead):
 
 
 def climatology(verif, inits, verif_dates, lead):
+    init_lead = inits[lead].copy()
     seasonality_str = OPTIONS["seasonality"]
     if seasonality_str == "weekofyear":
-        raise NotImplementedError
+        # convert to datetime for weekofyear operations
+        from .utils import convert_cftime_to_datetime_coords
+
+        verif = convert_cftime_to_datetime_coords(verif, "time")
+        init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
+        init_lead = init_lead["time"]
     climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
     # enlarge times to get climatology_forecast times
     # this prevents errors if verification.time and hindcast.init are too much apart
     verif_hind_union = xr.DataArray(
-        verif.time.to_index().union(inits[lead].time.to_index()), dims="time"
+        verif.time.to_index().union(init_lead.time.to_index()), dims="time"
     )
 
-    climatology_forecast = climatology_day.sel(
-        {seasonality_str: getattr(verif_hind_union.time.dt, seasonality_str)},
-        method="nearest",
-    ).drop(seasonality_str)
-
+    climatology_forecast = (
+        _maybe_seasons_to_int(climatology_day)
+        .sel(
+            {
+                seasonality_str: _maybe_seasons_to_int(
+                    getattr(verif_hind_union.time.dt, seasonality_str)
+                )
+            },
+            method="nearest",  # nearest may be a bit incorrect but doesnt error
+        )
+        .drop(seasonality_str)
+    )
     lforecast = climatology_forecast.where(
-        climatology_forecast.time.isin(inits[lead]), drop=True
+        climatology_forecast.time.isin(init_lead), drop=True
     )
     lverif = verif.sel(time=verif_dates[lead])
+    # convert back to CFTimeIndex if needed
+    if isinstance(lforecast["time"].to_index(), pd.DatetimeIndex):
+        lforecast = convert_time_index(lforecast, "time")
+    if isinstance(lverif["time"].to_index(), pd.DatetimeIndex):
+        lverif = convert_time_index(lverif, "time")
     return lforecast, lverif
 
 
@@ -114,7 +163,6 @@ def compute_climatology(
     metric="pearson_r",
     comparison="m2e",
     alignment="same_inits",
-    add_attrs=True,
     dim="init",
     **metric_kwargs,
 ):
@@ -126,8 +174,6 @@ def compute_climatology(
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         dim (str or list of str): dimension to apply metric over.
-        add_attrs (bool): write climpred compute_persistence args to attrs.
-            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -277,15 +323,6 @@ def compute_persistence(
     if "time" in pers:
         pers = pers.dropna(dim="time").rename({"time": "init"})
     pers["lead"] = hind.lead.values
-    if add_attrs:
-        pers = assign_attrs(
-            pers,
-            hind,
-            function_name=inspect.stack()[0][3],
-            alignment=alignment,
-            metric=metric,
-            metadata_dict=metric_kwargs,
-        )
     return pers
 
 
@@ -298,7 +335,6 @@ def compute_uninitialized(
     comparison="e2o",
     dim="time",
     alignment="same_verifs",
-    add_attrs=True,
     **metric_kwargs,
 ):
     """Verify an uninitialized ensemble against verification data.
@@ -329,7 +365,6 @@ def compute_uninitialized(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
-        add_attrs (bool): write climpred compute args to attrs. default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
@@ -376,15 +411,4 @@ def compute_uninitialized(
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
     uninit_skill["lead"] = hind.lead.values
-
-    # Attach climpred compute information to skill
-    if add_attrs:
-        uninit_skill = assign_attrs(
-            uninit_skill,
-            uninit,
-            function_name=inspect.stack()[0][3],
-            metric=metric,
-            comparison=comparison,
-            metadata_dict=metric_kwargs,
-        )
     return uninit_skill

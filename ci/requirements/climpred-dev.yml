@@ -24,19 +24,20 @@ dependencies:
   - numpy
   - pandas
   - scipy
-  - xarray
+  - xarray>=0.19.0
   # Package Management
   - asv
   - black==19.10b0
   - coveralls
   - flake8
-  #- importlib_metadata
+  - mypy
   - isort
   - pre-commit
   - pylint
   - pytest
   - pytest-cov
   - pytest-sugar
+  - pytest-xdist
   # Performance
   - bottleneck
   - numba
@@ -50,7 +51,7 @@ dependencies:
   - xskillscore>=0.0.19
   # Visualization
   - matplotlib-base
-  - nc-time-axis
+  - nc-time-axis>=1.4.0
   - pip
   - pip:
       - pytest-lazy-fixture

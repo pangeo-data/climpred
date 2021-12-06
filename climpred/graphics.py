@@ -1,11 +1,15 @@
 import warnings
 from collections import OrderedDict
+from typing import Optional, Tuple, Union
 
+import cftime
 import numpy as np
 import xarray as xr
 from xarray.coding.times import infer_calendar_name
 
+from .alignment import return_inits_and_verif_dates
 from .checks import DimensionError
+from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
 from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
 from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
@@ -79,17 +83,17 @@ def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
 
 
 def plot_bootstrapped_skill_over_leadyear(
-    bootstrapped,
-    ax=None,
-    color_initialized="indianred",
-    color_uninitialized="steelblue",
-    color_persistence="gray",
-    color_climatology="tan",
-    capsize=4,
-    fontsize=8,
-    figsize=(10, 4),
-    fmt="--o",
-):
+    bootstrapped: xr.Dataset,
+    ax: Optional["plt.Axes"] = None,
+    color_initialized: str = "indianred",
+    color_uninitialized: str = "steelblue",
+    color_persistence: str = "gray",
+    color_climatology: str = "tan",
+    capsize: Union[int, float] = 4,
+    fontsize: Union[int, float] = 8,
+    figsize: Tuple = (10, 4),
+    fmt: str = "--o",
+) -> "plt.Axes":
     """
     Plot Ensemble Prediction skill as in Li et al. 2016 Fig.3a-c.
 
@@ -97,7 +101,7 @@ def plot_bootstrapped_skill_over_leadyear(
         bootstrapped (xr.DataArray or xr.Dataset with one variable):
             from PredictionEnsembleEnsemble.bootstrap() or HindcastEnsemble.bootstrap()
 
-        ax (plt.axes): plot on ax. Defaults to None.
+        ax ("plt.Axes"): plot on ax. Defaults to None.
 
     Returns:
         ax
@@ -209,8 +213,13 @@ def _check_only_climpred_dims(pe):
 
 
 def plot_lead_timeseries_hindcast(
-    he, variable=None, ax=None, show_members=False, cmap="viridis", x="time"
-):
+    he: HindcastEnsemble,
+    variable: Optional[str] = None,
+    ax: Optional["plt.Axes"] = None,
+    show_members: bool = False,
+    cmap: Optional[str] = "viridis",
+    x: str = "time",
+) -> "plt.Axes":
     """Plot datasets from HindcastEnsemble.
 
     Args:
@@ -238,13 +247,13 @@ def plot_lead_timeseries_hindcast(
     if isinstance(obs, xr.Dataset):
         obs = obs[variable]
 
-    cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
+    _cmap = mpl.cm.get_cmap(cmap, hind.lead.size)
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
     if isinstance(hist, xr.DataArray) and x == "valid_time":
         if "member" in hist.dims and not show_members:
             hist = hist.mean("member")
-            member_alpha = 1
+            member_alpha = 1.0
             lw = 2
         else:
             member_alpha = 0.4
@@ -263,14 +272,14 @@ def plot_lead_timeseries_hindcast(
         h = hind.sel(lead=lead)
         if not show_members and "member" in h.dims:
             h = h.mean("member")
-            lead_alpha = 1
+            lead_alpha = 1.0
         else:
             lead_alpha = 0.5
         h.plot(
             ax=ax,
             x=x,
             hue="member",
-            color=cmap(i),
+            color=_cmap(i),
             label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
@@ -299,8 +308,13 @@ def plot_lead_timeseries_hindcast(
 
 
 def plot_ensemble_perfect_model(
-    pm, variable=None, ax=None, show_members=False, cmap="tab10"
-):
+    pm: PerfectModelEnsemble,
+    variable: Optional[str] = None,
+    ax: Optional["plt.Axes"] = None,
+    show_members: bool = False,
+    cmap: Optional[str] = "tab10",
+    x: str = "time",
+) -> "plt.Axes":
     """Plot datasets from PerfectModelEnsemble.
 
     Args:
@@ -335,7 +349,7 @@ def plot_ensemble_perfect_model(
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
 
-    cmap = mpl.cm.get_cmap(cmap, initialized.init.size)
+    _cmap = mpl.cm.get_cmap(cmap, initialized.init.size)
 
     for ii, i in enumerate(initialized.init.values):
         dsi = initialized.sel(init=i)
@@ -345,7 +359,7 @@ def plot_ensemble_perfect_model(
             dsi = dsi.mean("member")
             if uninitialized_present:
                 dsu = dsu.mean("member")
-            member_alpha = 1
+            member_alpha = 1.0
             lw = 2
             labelstr = "ensemble mean"
         else:
@@ -362,12 +376,12 @@ def plot_ensemble_perfect_model(
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
             dsi.mean("member").plot(ax=ax, x=x, color="white", lw=3, zorder=10)
-            dsi.mean("member").plot(ax=ax, x=x, color=cmap(ii), lw=2, zorder=11)
+            dsi.mean("member").plot(ax=ax, x=x, color=_cmap(ii), lw=2, zorder=11)
         dsi.plot(
             ax=ax,
             x=x,
             hue="member",
-            color=cmap(ii),
+            color=_cmap(ii),
             alpha=member_alpha,
             lw=lw,
             label=labelstr,
@@ -393,3 +407,30 @@ def plot_ensemble_perfect_model(
     ax.set_title(" ")
     ax.set_xlabel(pm.coords[x].attrs["long_name"])
     return ax
+
+
+def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
+    """Create verif dates xr.DataArray with dims lead and init."""
+    inits, verif_dates = return_inits_and_verif_dates(
+        hindcast.get_initialized().rename({"init": "time"}),
+        hindcast.get_observations(),
+        alignment,
+        reference=reference,
+        hist=hindcast.get_uninitialized()
+        if isinstance(hindcast.get_uninitialized(), xr.Dataset)
+        else None,
+    )
+
+    verif_dates_xr = xr.concat(
+        [
+            xr.DataArray(
+                cftime.date2num(verif_dates[k], date2num_units),
+                dims="init",
+                coords={"init": v.rename({"time": "init"}).to_index()},
+                name=date2num_units,
+            )
+            for k, v in inits.items()
+        ],
+        dim="lead",
+    ).assign_coords(lead=hindcast.get_initialized().lead)
+    return verif_dates_xr

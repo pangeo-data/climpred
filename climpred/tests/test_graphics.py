@@ -2,68 +2,28 @@ import numpy as np
 import pytest
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
-from climpred.bootstrap import bootstrap_perfect_model
 from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
-from . import requires_matplotlib
+from . import requires_matplotlib, requires_nc_time_axis
 
 ITERATIONS = 3
 
 
 @requires_matplotlib
-def test_mpi_he_plot_bootstrapped_skill_over_leadyear_da(
-    PM_da_initialized_1d, PM_da_control_1d
+def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
+    perfectModelEnsemble_initialized_control,
 ):
     """
-    Checks plots from bootstrap_perfect_model works for xr.DataArray.
+    Checks plots from PerfectModelEnsemble.bootstrap().
     """
-    res = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
-        metric="pearson_r",
-        iterations=ITERATIONS,
-        reference="uninitialized",
-    )
-    res_ax = plot_bootstrapped_skill_over_leadyear(res)
-    assert res_ax is not None
-
-
-@requires_matplotlib
-def test_mpi_he_plot_bootstrapped_skill_over_leadyear_single_uninit_lead(
-    PM_da_initialized_1d, PM_da_control_1d
-):
-    """
-    Checks plots from bootstrap_perfect_model works for xr.DataArray.
-    """
-    res = bootstrap_perfect_model(
-        PM_da_initialized_1d,
-        PM_da_control_1d,
+    res = perfectModelEnsemble_initialized_control.bootstrap(
         metric="pearson_r",
         iterations=ITERATIONS,
         reference=["uninitialized", "persistence"],
+        comparison="m2e",
+        dim=["init", "member"],
     )
-    # set all but first uninit lead to nan
-    res[:, 2, 1:] = [np.nan] * (res.lead.size - 1)
-    res_ax = plot_bootstrapped_skill_over_leadyear(res)
-    assert res_ax is not None
-
-
-@requires_matplotlib
-def test_mpi_he_plot_bootstrapped_skill_over_leadyear_ds(
-    PM_ds_initialized_1d, PM_ds_control_1d
-):
-    """
-    Checks plots from bootstrap_perfect_model works for xr.Dataset with one variable.
-    """
-    res = bootstrap_perfect_model(
-        PM_ds_initialized_1d,
-        PM_ds_control_1d,
-        metric="pearson_r",
-        iterations=ITERATIONS,
-        reference="uninitialized",
-    )
-    assert list(res.coords["skill"]) == ["initialized", "uninitialized"]
     res_ax = plot_bootstrapped_skill_over_leadyear(res)
     assert res_ax is not None
 
@@ -123,3 +83,28 @@ def test_PredictionEnsemble_plot(
         pm.plot(**kws)
         pm = pm.add_control(hist_ds_uninitialized_1d.isel(member=0, drop=True))
         pm.plot(**kws)
+
+
+@requires_matplotlib
+@requires_nc_time_axis
+@pytest.mark.parametrize("alignment", ["same_inits", None])
+@pytest.mark.parametrize("return_xr", [False, True])
+def test_HindcastEnsemble_plot_alignment(hindcast_hist_obs_1d, alignment, return_xr):
+    """Test HindcastEnsemble.plot_alignment()"""
+    import matplotlib
+    import xarray as xr
+
+    if return_xr:
+        assert isinstance(
+            hindcast_hist_obs_1d.plot_alignment(
+                alignment=alignment, return_xr=return_xr
+            ),
+            xr.DataArray,
+        )
+    else:
+        assert isinstance(
+            hindcast_hist_obs_1d.plot_alignment(
+                alignment=alignment, return_xr=return_xr
+            ),
+            (xr.plot.facetgrid.FacetGrid, matplotlib.collections.QuadMesh),
+        )

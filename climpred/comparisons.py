@@ -1,9 +1,12 @@
+from typing import Callable, List, Optional, Tuple
+
 import dask
 import numpy as np
 import xarray as xr
 
 from .checks import has_dims, has_min_len
 from .constants import M2M_MEMBER_DIM
+from .metrics import Metric
 
 
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
@@ -19,7 +22,7 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     )
 
 
-def _display_comparison_metadata(self):
+def _display_comparison_metadata(self) -> str:
     summary = "----- Comparison metadata -----\n"
     summary += f"Name: {self.name}\n"
     # probabilistic or only deterministic
@@ -38,13 +41,15 @@ class Comparison:
 
     def __init__(
         self,
-        name,
-        function,
-        hindcast,
-        probabilistic,
-        long_name=None,
-        aliases=None,
-    ):
+        name: str,
+        function: Callable[
+            [xr.Dataset, Optional[Metric]], Tuple[xr.Dataset, xr.Dataset]
+        ],
+        hindcast: bool,
+        probabilistic: bool,
+        long_name: Optional[str] = None,
+        aliases: Optional[List[str]] = None,
+    ) -> None:
         """Comparison initialization.
 
         Args:
@@ -72,7 +77,7 @@ class Comparison:
         self.long_name = long_name
         self.aliases = aliases
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         """Show metadata of comparison class."""
         return _display_comparison_metadata(self)
 

@@ -1,10 +1,10 @@
 # YAML 1.2
 # Metadata for citation of this software according to the CFF format (https://citation-file-format.github.io/)
-cff-version: 1.0.3
+cff-version: 1.2.0
 message: If you use this software, please cite it using these metadata.
 # FIXME title as repository name might not be the best name, please make human readable
-title: 'pangeo-data/climpred: Release v2.1.4'
-doi: 10.5281/zenodo.5038065
+title: 'climpred: Verification of weather and climate forecasts'
+doi: 10.5281/zenodo.4556085
 # FIXME splitting of full names is error prone, please check if given/family name are correct
 authors:
 - given-names: Riley
@@ -23,7 +23,24 @@ authors:
 - given-names: Ray
   family-names: Bell
   affiliation: DTN
-version: 2.1.4
-date-released: 2021-06-28
-repository-code: https://github.com/pangeo-data/climpred
-license: other-open
+url: https://github.com/pangeo-data/climpred
+license: MIT
+preferred-citation:
+  type: article
+  authors:
+  - given-names: Riley
+    family-names: Brady
+    affiliation: McKinsey & Company
+    orcid: https://orcid.org/0000-0002-2309-8245
+  - given-names: Aaron
+    family-names: Spring
+    affiliation: Max-Planck-Institute for Meteorology
+    orcid: https://orcid.org/0000-0003-0216-2241
+  doi: 10.21105/joss.02781
+  journal: "Journal of Open Research Software"
+  day: 2
+  month: 3
+  year: 2021
+  title: "climpred: Verification of weather and climate forecasts"
+  volume: 6
+  issue: 59

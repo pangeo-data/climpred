@@ -62,6 +62,7 @@ Pre-Processing
 
     HindcastEnsemble.smooth
     HindcastEnsemble.remove_bias
+    HindcastEnsemble.remove_seasonality
 
 -------------
 Visualization
@@ -71,6 +72,7 @@ Visualization
     :toctree: api/
 
     HindcastEnsemble.plot
+    HindcastEnsemble.plot_alignment
 
 
 PerfectModelEnsemble
@@ -126,6 +128,7 @@ Pre-Processing
     :toctree: api/
 
     PerfectModelEnsemble.smooth
+    PerfectModelEnsemble.remove_seasonality
 
 -------------
 Visualization

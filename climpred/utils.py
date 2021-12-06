@@ -14,19 +14,47 @@ from .checks import is_in_list
 from .comparisons import COMPARISON_ALIASES
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .exceptions import CoordinateError
-from .metrics import METRIC_ALIASES
+from .metrics import ALL_METRICS, METRIC_ALIASES
 from .options import OPTIONS
+
+
+def add_attrs_to_climpred_coords(results):
+    from . import __version__ as version
+
+    if "results" in results.coords:
+        results["results"] = results["results"].assign_attrs(
+            {
+                "description": "new coordinate created by .bootstrap()",
+                "verify skill": "skill from verify",
+                "p": "probability that reference performs better than initialized",
+                "low_ci": "lower confidence interval threshold based on resampling with replacement",
+                "high_ci": "higher confidence interval threshold based on resampling with replacement",
+            }
+        )
+    if "skill" in results.coords:
+        results["skill"] = results["skill"].assign_attrs(
+            {
+                "description": "new dimension prediction skill of initialized and reference forecasts created by .verify() or .bootstrap()",
+                "documentation": f"https://climpred.readthedocs.io/en/v{version}/reference_forecast.html",
+            }
+        )
+    if "skill" in results.dims:
+        results["skill"] = results["skill"].assign_attrs(
+            {f: f"{f} forecast skill" for f in results.skill.values}
+        )
+    return results
 
 
 def assign_attrs(
     skill,
     ds,
     function_name=None,
-    metadata_dict=None,
     alignment=None,
+    reference=None,
     metric=None,
     comparison=None,
     dim=None,
+    **kwargs,
 ):
     """Write information about prediction skill into attrs.
 
@@ -34,62 +62,89 @@ def assign_attrs(
         skill (`xarray` object): prediction skill.
         ds (`xarray` object): prediction ensemble with inits.
         function_name (str): name of compute function
-        metadata_dict (dict): optional attrs
         alignment (str): method used to align inits and verification data.
+        reference (str): reference forecasts
         metric (class) : metric used in comparing the forecast and verification data.
         comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
+        kwargs (dict): other information
 
     Returns:
        skill (`xarray` object): prediction skill with additional attrs.
     """
     # assign old attrs
     skill.attrs = ds.attrs
+    for v in skill.data_vars:
+        skill[v].attrs.update(ds[v].attrs)
 
     # climpred info
     skill.attrs[
-        "prediction_skill"
-    ] = "calculated by climpred https://climpred.readthedocs.io/"
+        "prediction_skill_software"
+    ] = "climpred https://climpred.readthedocs.io/"
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
-    if "init" in ds.coords:
-        skill.attrs["number_of_initializations"] = ds.init.size
-    if "member" in ds.coords and function_name != "compute_persistence":
+    if "init" in ds.coords and "init" not in skill.dims:
+        skill.attrs[
+            "number_of_initializations"
+        ] = ds.init.size  # TODO: take less depending on alignment
+    if "member" in ds.coords and "member" not in skill.coords:
         skill.attrs["number_of_members"] = ds.member.size
-
     if alignment is not None:
         skill.attrs["alignment"] = alignment
+
+    metric = METRIC_ALIASES.get(metric, metric)
+    metric = get_metric_class(metric, ALL_METRICS)
     skill.attrs["metric"] = metric.name
     if comparison is not None:
-        skill.attrs["comparison"] = comparison.name
+        skill.attrs["comparison"] = comparison
     if dim is not None:
         skill.attrs["dim"] = dim
+    if reference is not None:
+        skill.attrs["reference"] = reference
 
-    # change unit power
+    # change unit power in all variables
     if metric.unit_power == 0:
-        skill.attrs["units"] = "None"
-    if metric.unit_power >= 2 and "units" in skill.attrs:
-        p = metric.unit_power
-        p = int(p) if int(p) == p else p
-        skill.attrs["units"] = f"({skill.attrs['units']})^{p}"
+        for v in skill.data_vars:
+            skill[v].attrs["units"] = "None"
+    elif metric.unit_power >= 2:
+        for v in skill.data_vars:
+            if "units" in skill[v].attrs:
+                p = metric.unit_power
+                p = int(p) if int(p) == p else p
+                skill[v].attrs["units"] = f"({skill[v].attrs['units']})^{p}"
 
+    if "logical" in kwargs:
+        kwargs["logical"] = "Callable"
+
+    from .bootstrap import _p_ci_from_sig
+
+    if "sig" in kwargs:
+        if kwargs["sig"] is not None:
+            _, ci_low, ci_high = _p_ci_from_sig(kwargs["sig"])
+            kwargs["confidence_interval_levels"] = f"{ci_high}-{ci_low}"
+    if "pers_sig" in kwargs:
+        if kwargs["pers_sig"] is not None:
+            _, ci_low_pers, ci_high_pers = _p_ci_from_sig(kwargs["pers_sig"])
+            kwargs[
+                "confidence_interval_levels_persistence"
+            ] = f"{ci_high_pers}-{ci_low_pers}"
     # check for none attrs and remove
     del_list = []
-    for key, value in metadata_dict.items():
-        if value is None and key != "units":
+    for key, value in kwargs.items():
+        if value is None:
             del_list.append(key)
     for entry in del_list:
-        del metadata_dict[entry]
-
+        del kwargs[entry]
     # write optional information
-    if metadata_dict is None:
-        metadata_dict = dict()
-    skill.attrs.update(metadata_dict)
+    skill.attrs.update(kwargs)
 
+    skill = add_attrs_to_climpred_coords(skill)
     return skill
 
 
-def convert_time_index(xobj, time_string, kind, calendar=HINDCAST_CALENDAR_STR):
+def convert_time_index(
+    xobj, time_string, kind="object", calendar=HINDCAST_CALENDAR_STR
+):
     """Converts incoming time index to a standard xr.CFTimeIndex.
 
     Args:
@@ -552,10 +607,11 @@ def my_shift(init, lead):
         anchor_check = month_anchor_check(init)  # returns None, ce or cs
         if anchor_check is not None:
             lead_freq_string = lead_unit[0].upper()  # A for years, D for days
+            # go down to monthly freq
             if lead_freq_string == "Y":
-                lead_freq_string = "A"
+                lead_freq_string = "12M"
             elif lead_freq_string == "S":
-                lead_freq_string = "Q"
+                lead_freq_string = "3M"
             anchor = anchor_check[-1].upper()  # S/E for start/end of month
             if anchor == "E":
                 anchor = ""
@@ -570,8 +626,8 @@ def my_shift(init, lead):
                 f"could not shift init={init} in calendar={init_calendar} by lead={lead} {lead_unit}"
             )
         return init.shift(lead, lead_freq)
-    else:
-        # what about pentads, weeks (W)
+    else:  # lower freq
+        # reducing pentads, weeks (W) to days
         if lead_unit == "weeks":
             lead_unit = "W"
         elif lead_unit == "pentads":

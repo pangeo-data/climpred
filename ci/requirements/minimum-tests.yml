@@ -14,7 +14,7 @@ dependencies:
   - pytest-cov
   - pytest-xdist
   - scipy
-  - xarray>=0.16.1
+  - xarray>=0.19.0
   - xskillscore>=0.0.18
   - pip:
     - pytest-lazy-fixture

@@ -1,5 +1,6 @@
 import inspect
 
+import pandas as pd
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
@@ -28,7 +29,8 @@ from .utils import (
     shift_cftime_index,
 )
 
-def _seasons_to_int(s):
+
+def _maybe_seasons_to_int(s):
     """set season str values or coords to int"""
     seasonal = False
     for season in ["DJF", "MAM", "JJA", "SON"]:
@@ -58,7 +60,8 @@ def _seasons_to_int(s):
             )
     return s
 
-def _int_to_seasons(s):
+
+def _maybe_int_to_seasons(s):
     """set int values back to seasons str"""
     seasonal = False
     for season in ["1", "2", "3", "4"]:
@@ -74,6 +77,7 @@ def _int_to_seasons(s):
         )
     return s
 
+
 def persistence(verif, inits, verif_dates, lead):
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])
@@ -81,27 +85,27 @@ def persistence(verif, inits, verif_dates, lead):
 
 
 def climatology(verif, inits, verif_dates, lead):
+    init_lead = inits[lead].copy()
     seasonality_str = OPTIONS["seasonality"]
     if seasonality_str == "weekofyear":
-        raise NotImplementedError
+        # convert to datetime for weekofyear operations
+        from .utils import convert_cftime_to_datetime_coords
+
+        verif = convert_cftime_to_datetime_coords(verif, "time")
+        init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
+        init_lead = init_lead["time"]
     climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
     # enlarge times to get climatology_forecast times
     # this prevents errors if verification.time and hindcast.init are too much apart
     verif_hind_union = xr.DataArray(
-        verif.time.to_index().union(inits[lead].time.to_index()), dims="time"
+        verif.time.to_index().union(init_lead.time.to_index()), dims="time"
     )
 
-    # if seasonality_str == 'season':
-    #    climatology_day = _seasons_to_int(climatology_day)
-    # print(climatology_day, seasonality_str,getattr(verif_hind_union.time.dt, seasonality_str),sep='\n')
-    # print()
-
-    # print(_seasons_to_int(climatology_day), seasonality_str,_seasons_to_int(getattr(verif_hind_union.time.dt, seasonality_str)),sep='\n')
     climatology_forecast = (
-        _seasons_to_int(climatology_day)
+        _maybe_seasons_to_int(climatology_day)
         .sel(
             {
-                seasonality_str: _seasons_to_int(
+                seasonality_str: _maybe_seasons_to_int(
                     getattr(verif_hind_union.time.dt, seasonality_str)
                 )
             },
@@ -109,12 +113,16 @@ def climatology(verif, inits, verif_dates, lead):
         )
         .drop(seasonality_str)
     )
-    climatology_forecast = _int_to_seasons(climatology_forecast)
-
+    climatology_forecast = _maybe_int_to_seasons(climatology_forecast)
     lforecast = climatology_forecast.where(
-        climatology_forecast.time.isin(inits[lead]), drop=True
+        climatology_forecast.time.isin(init_lead), drop=True
     )
     lverif = verif.sel(time=verif_dates[lead])
+    # convert back to CFTimeIndex if needed
+    if isinstance(lforecast["time"].to_index(), pd.DatetimeIndex):
+        lforecast = convert_time_index(lforecast, "time")
+    if isinstance(lverif["time"].to_index(), pd.DatetimeIndex):
+        lverif = convert_time_index(lverif, "time")
     return lforecast, lverif
 
 

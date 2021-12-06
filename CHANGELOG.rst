@@ -8,6 +8,11 @@ climpred unreleased (202x-xx-xx)
 
 Bug Fixes
 ---------
+- Fix when creating ``valid_time`` from ``lead.attrs["units"]`` in
+  ``["seasons", "years"]`` with multi-month stride in ``init``.
+  (:issue:`698`, :pr:`700`) `Aaron Spring`_.
+- Fix ``seasonality="season"`` in ``reference="climatology"``.
+  (:issue:`641`, :pr:`703`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -34,16 +39,60 @@ New Features
   (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
-- Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less` (:issue:`239`, :pr:`687`) `Aaron Spring`_.
-- Implement :py:meth:`~climpred.classes.HindcastEnsemble.generate_uninitialized` resampling years without replacement from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
+- Implement :py:meth:`~climpred.classes.HindcastEnsemble.generate_uninitialized` in
+  :py:class:`~climpred.classes.PredictionEnsemble` resampling years without replacement
+  from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
+- Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
+  (:issue:`239`, :pr:`687`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.remove_seasonality` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.remove_seasonality` remove the
+  seasonality of all ``climpred`` datasets. (:issue:`530`, :pr:`688`) `Aaron Spring`_.
+- Add keyword ``groupby`` in :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
+  initializations seasonality.
 
+  .. code-block:: python
 
-Documentation
--------------
+      >>> import climpred
+      >>> hind = climpred.tutorial.load_dataset("NMME_hindcast_Nino34_sst")
+      >>> obs = climpred.tutorial.load_dataset("NMME_OIv2_Nino34_sst")
+      >>> hindcast = climpred.HindcastEnsemble(hind).add_observations(obs)
+      >>> # skill for each init month separated
+      >>> skill = hindcast.verify(metric="rmse", dim="init", comparison="e2o",
+      ...                         skipna=True, alignment="maximize", groupby="month")
+      >>> skill
+      <xarray.Dataset>
+      Dimensions:  (month: 12, lead: 12, model: 12)
+      Coordinates:
+        * lead     (lead) float64 0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+        * model    (model) object 'NCEP-CFSv2' 'NCEP-CFSv1' ... 'GEM-NEMO'
+          skill    <U11 'initialized'
+        * month    (month) int64 1 2 3 4 5 6 7 8 9 10 11 12
+      Data variables:
+          sst      (month, lead, model) float64 0.4127 0.3837 0.3915 ... 1.255 3.98
+      >>> skill.sst.plot(hue="model", col="month", col_wrap=3)
+
+  (:issue:`635`, :pr:`690`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and
+  observations are aligned based on the `alignment <alignment.html>`_ keyword.
+  This may help understanding which dates are matched for the different ``alignment``
+  approaches. (:issue:`701`, :pr:`702`) `Aaron Spring`_.
+- Add ``attrs`` to new ``coordinates`` created by ``climpred``.
+  (:issue:`695`, :pr:`697`) `Aaron Spring`_.
+- Add ``seasonality="weekofyear"`` in ``reference="climatology"``.
+  (:pr:`703`) `Aaron Spring`_.
+
 
 Internals/Minor Fixes
 ---------------------
 - Reduce dependencies (:pr:`686`) `Aaron Spring`_.
+- Add `typing <https://docs.python.org/3/library/typing.html>`_ (:issue:`685`, :pr:`692`) `Aaron Spring`_.
+- refactor ``add_attrs`` into :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
+  :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`. Now all keywords are
+  captured in the skill dataset attributes ``.attrs``.
+  (:issue:`475`, :pr:`694`) `Aaron Spring`_.
 
 
 climpred v2.1.6 (2021-08-31)

@@ -45,66 +45,77 @@ def climatology(verif, inits, verif_dates, lead):
     verif_hind_union = xr.DataArray(
         verif.time.to_index().union(inits[lead].time.to_index()), dims="time"
     )
+
     def _seasons_to_int(s):
+        """set season str values or coords to int"""
         seasonal = False
-        for season in ['DJF','MAM','JJA','SON']:
+        for season in ["DJF", "MAM", "JJA", "SON"]:
             if season in s:
                 seasonal = True
         if seasonal:
-            s = s.str.replace("DJF", "1").str.replace("MAM", "2").str.replace("JJA", "3").str.replace(
-                        "SON", "4"
-                    ).astype("int")
-            seasonal = False
-            if 'season' in s.coords:
-                for season in ['DJF','MAM','JJA','SON']:
-                    if season in s.coords['season']:
-                        seasonal = True
-                if seasonal:
-                    s=s.assign_coords(season=_seasons_to_int(s.coords['season']))
-                    print('set coords to int')
+            s = (
+                s.str.replace("DJF", "1")
+                .str.replace("MAM", "2")
+                .str.replace("JJA", "3")
+                .str.replace("SON", "4")
+                .astype("int")
+            )
             return s
-        elif 'season' in s.coords:
-            # print('manual [1]')
-            print("s",s)
+        elif "season" in s.coords:  # set season coords to int
+            print("s", s)
             seasonal = False
-            for season in ['DJF','MAM','JJA','SON']:
-                if season in s.coords['season']:
+            for season in ["DJF", "MAM", "JJA", "SON"]:
+                if season in s.coords["season"]:
                     seasonal = True
             if seasonal:
-                s.coords['season']= s.coords.get('season').str.replace("DJF", "1").str.replace("MAM", "2").str.replace("JJA", "3").str.replace(
-                        "SON", "4"
-                    ).astype("int")
-            print("s",s,'\n')
+                s.coords["season"] = (
+                    s.coords.get("season")
+                    .str.replace("DJF", "1")
+                    .str.replace("MAM", "2")
+                    .str.replace("JJA", "3")
+                    .str.replace("SON", "4")
+                    .astype("int")
+                )
+            print("s", s, "\n")
             return s
         else:
             return s
 
     def _int_to_seasons(s):
+        """set int values back to seasons str"""
         seasonal = False
-        for season in ['1','2','3','4']:
+        for season in ["1", "2", "3", "4"]:
             if season in s:
                 seasonal = True
         if seasonal:
             return (
-        s.astype("str")
-        .str.replace("1", "DJF")
-        .str.replace("2", "MAM")
-        .str.replace("3", "JJA")
-        .str.replace("4", "SON")
-    )
+                s.astype("str")
+                .str.replace("1", "DJF")
+                .str.replace("2", "MAM")
+                .str.replace("3", "JJA")
+                .str.replace("4", "SON")
+            )
         else:
             return s
 
-    #if seasonality_str == 'season':
+    # if seasonality_str == 'season':
     #    climatology_day = _seasons_to_int(climatology_day)
-    print(climatology_day, seasonality_str,getattr(verif_hind_union.time.dt, seasonality_str),sep='\n')
-    print()
+    # print(climatology_day, seasonality_str,getattr(verif_hind_union.time.dt, seasonality_str),sep='\n')
+    # print()
 
-    print(_seasons_to_int(climatology_day), seasonality_str,_seasons_to_int(getattr(verif_hind_union.time.dt, seasonality_str)),sep='\n')
-    climatology_forecast = _seasons_to_int(climatology_day).sel(
-        {seasonality_str: _seasons_to_int(getattr(verif_hind_union.time.dt, seasonality_str))},
-        method="nearest", # nearest may be a bit incorrect but doesnt error
-    ).drop(seasonality_str)
+    # print(_seasons_to_int(climatology_day), seasonality_str,_seasons_to_int(getattr(verif_hind_union.time.dt, seasonality_str)),sep='\n')
+    climatology_forecast = (
+        _seasons_to_int(climatology_day)
+        .sel(
+            {
+                seasonality_str: _seasons_to_int(
+                    getattr(verif_hind_union.time.dt, seasonality_str)
+                )
+            },
+            method="nearest",  # nearest may be a bit incorrect but doesnt error
+        )
+        .drop(seasonality_str)
+    )
     climatology_forecast = _int_to_seasons(climatology_forecast)
 
     lforecast = climatology_forecast.where(

@@ -110,44 +110,6 @@ def test_pm_metric_skipna(PM_da_initialized_3d, PM_da_control_3d, metric):
     assert not skipping.isel(lead=2, x=5, y=5).isnull()
 
 
-@pytest.mark.skip(reason="comparisons dont work here")
-@pytest.mark.parametrize("metric", ("rmse", "mse"))
-@pytest.mark.parametrize("comparison", ["m2e", "m2m"])
-def test_pm_metric_weights_m2x(
-    PM_da_initialized_3d, PM_da_control_3d, comparison, metric
-):
-    """Test init weights in compute_perfect_model."""
-    # distribute weights on initializations
-    dim = "init"
-    base = compute_perfect_model(
-        PM_da_initialized_3d,
-        PM_da_control_3d,
-        dim=dim,
-        metric=metric,
-        comparison=comparison,
-    )
-    weights = xr.DataArray(np.arange(1, 1 + PM_da_initialized_3d[dim].size), dims=dim)
-    weights = xr.DataArray(
-        np.arange(
-            1,
-            1 + PM_da_initialized_3d[dim].size * PM_da_initialized_3d["member"].size,
-        ),
-        dims="init",
-    )
-
-    weighted = compute_perfect_model(
-        PM_da_initialized_3d,
-        PM_da_control_3d,
-        dim=dim,
-        comparison=comparison,
-        metric=metric,
-        weights=weights,
-    )
-    print((base / weighted).mean(["x", "y"]))
-    # test for difference
-    assert (xs.smape(base, weighted, ["x", "y"]) > 0.01).any()
-
-
 @pytest.mark.parametrize("metric", ("rmse", "mse"))
 def test_hindcast_metric_skipna(hind_da_initialized_3d, reconstruction_da_3d, metric):
     """Test skipna argument in hindcast_metric."""

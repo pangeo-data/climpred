@@ -61,23 +61,6 @@ def _maybe_seasons_to_int(ds):
     return ds
 
 
-def _maybe_int_to_seasons(ds):
-    """set int values back to seasons str"""
-    seasonal = False
-    for season in ["1", "2", "3", "4"]:
-        if season in ds:
-            seasonal = True
-    if seasonal:
-        ds = (
-            ds.astype("str")
-            .str.replace("1", "DJF")
-            .str.replace("2", "MAM")
-            .str.replace("3", "JJA")
-            .str.replace("4", "SON")
-        )
-    return ds
-
-
 def persistence(verif, inits, verif_dates, lead):
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])

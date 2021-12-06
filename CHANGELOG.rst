@@ -8,7 +8,11 @@ climpred unreleased (202x-xx-xx)
 
 Bug Fixes
 ---------
-- Fix when creating ``valid_time`` from ``lead.attrs["units"]`` in ``["seasons", "years"]`` with multi-month stride in ``init``. (:issue:`698`, :pr:`700`) `Aaron Spring`_.
+- Fix when creating ``valid_time`` from ``lead.attrs["units"]`` in
+  ``["seasons", "years"]`` with multi-month stride in ``init``.
+  (:issue:`698`, :pr:`700`) `Aaron Spring`_.
+- Fix ``seasonality="season"`` in ``reference="climatology"``.
+  (:issue:`641`, :pr:`703`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -38,8 +42,8 @@ New Features
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
   (:issue:`239`, :pr:`687`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_seasonality` and
-  :py:meth:`~climpred.classes.PerfectModelEnsemble.remove_seasonality` remove the seasonality
-  of all ``climpred`` datasets. (:issue:`530`, :pr:`688`) `Aaron Spring`_.
+  :py:meth:`~climpred.classes.PerfectModelEnsemble.remove_seasonality` remove the
+  seasonality of all ``climpred`` datasets. (:issue:`530`, :pr:`688`) `Aaron Spring`_.
 - Add keyword ``groupby`` in :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
   :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
@@ -72,7 +76,11 @@ New Features
   aligned based on the `alignment <alignment.html>`_ keyword. This may help
   understanding which dates are matched for the different ``alignment`` approaches.
   (:issue:`701`, :pr:`702`) `Aaron Spring`_.
-- Add ``attrs`` to new ``coordinates`` created by ``climpred``. (:issue:`695`, :pr:`697`) `Aaron Spring`_.
+- Add ``attrs`` to new ``coordinates`` created by ``climpred``.
+  (:issue:`695`, :pr:`697`) `Aaron Spring`_.
+- Add ``seasonality="weekofyear"`` in ``reference="climatology"``.
+  (:pr:`703`) `Aaron Spring`_.
+
 
 Internals/Minor Fixes
 ---------------------

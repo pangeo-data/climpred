@@ -30,52 +30,52 @@ from .utils import (
 )
 
 
-def _maybe_seasons_to_int(s):
+def _maybe_seasons_to_int(ds):
     """set season str values or coords to int"""
     seasonal = False
     for season in ["DJF", "MAM", "JJA", "SON"]:
-        if season in s:
+        if season in ds:
             seasonal = True
     if seasonal:
-        s = (
-            s.str.replace("DJF", "1")
+        ds = (
+            ds.str.replace("DJF", "1")
             .str.replace("MAM", "2")
             .str.replace("JJA", "3")
             .str.replace("SON", "4")
             .astype("int")
         )
-    elif "season" in s.coords:  # set season coords to int
+    elif "season" in ds.coords:  # set season coords to int
         seasonal = False
         for season in ["DJF", "MAM", "JJA", "SON"]:
-            if season in s.coords["season"]:
+            if season in ds.coords["season"]:
                 seasonal = True
         if seasonal:
-            s.coords["season"] = (
-                s.coords.get("season")
+            ds.coords["season"] = (
+                ds.coords.get("season")
                 .str.replace("DJF", "1")
                 .str.replace("MAM", "2")
                 .str.replace("JJA", "3")
                 .str.replace("SON", "4")
                 .astype("int")
             )
-    return s
+    return ds
 
 
-def _maybe_int_to_seasons(s):
+def _maybe_int_to_seasons(ds):
     """set int values back to seasons str"""
     seasonal = False
     for season in ["1", "2", "3", "4"]:
-        if season in s:
+        if season in ds:
             seasonal = True
     if seasonal:
-        s = (
-            s.astype("str")
+        ds = (
+            ds.astype("str")
             .str.replace("1", "DJF")
             .str.replace("2", "MAM")
             .str.replace("3", "JJA")
             .str.replace("4", "SON")
         )
-    return s
+    return ds
 
 
 def persistence(verif, inits, verif_dates, lead):

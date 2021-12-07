@@ -326,6 +326,85 @@ def compute_persistence(
     return pers
 
 
+def compute_persistence_from_first_lead(
+    initialized,
+    verif,
+    metric="pearson_r",
+    alignment="same_inits",
+    add_attrs=True,
+    dim="init",
+    comparison="m2e",
+    **metric_kwargs,
+):
+    """Computes the skill of a persistence forecast based on the first lead available in the initialized dataset. This function unlike ``compute_persistence`` is sensitive to ``comparison``. Requires climpred.set_options(perfect_model_persistence_from_initialized_lead_0=True).
+
+    Args:
+        hind (xarray object): The initialized ensemble.
+        verif (xarray object): Verification data. Not used.
+        metric (str): Metric name to apply at each lag for the persistence computation.
+            Default: 'pearson_r'
+        alignment (str): which inits or verification times should be aligned?
+            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+            ``verif`` to a common time frame at each lead.
+            - same_inits: slice to a common init frame prior to computing
+            metric. This philosophy follows the thought that each lead should be based
+            on the same set of initializations.
+            - same_verif: slice to a common/consistent verification time frame prior to
+            computing metric. This philosophy follows the thought that each lead
+            should be based on the same set of verification dates.
+        dim (str or list of str): dimension to apply metric over.
+        add_attrs (bool): write climpred compute_persistence args to attrs.
+            default: True
+        ** metric_kwargs (dict): additional keywords to be passed to metric
+            (see the arguments required for a given metric in :ref:`Metrics`).
+
+    Returns:
+        pers (xarray object): Results of persistence forecast with the input metric
+            applied.
+
+    Example:
+        >>>
+
+    Reference:
+        * Chapter 8 (Short-Term Climate Prediction) in Van den Dool, Huug.
+          Empirical methods in short-term climate prediction.
+          Oxford University Press, 2007.
+
+    """
+    print(
+        initialized.lead[0], initialized.lead[0] != 0, (initialized.lead[0] != 0).item()
+    )
+    if initialized.lead[0] != 0:
+        import warnings
+
+        warnings.warn(
+            f"Calculate persistence from lead={int(initialized.lead[0].values)} instead of lead=0 (recommended)."
+        )
+    if isinstance(dim, str):
+        dim = [dim]
+    # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
+    initialized = convert_time_index(initialized, "init", "initialized[init]")
+    has_valid_lead_units(initialized)
+
+    # get metric/comparison function name, not the alias
+    metric = METRIC_ALIASES.get(metric, metric)
+    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+
+    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
+    metric = get_metric_class(metric, ALL_METRICS)
+
+    forecast, observations = comparison.function(initialized, metric=metric)
+    forecast, dim = _adapt_member_for_reference_forecast(
+        forecast, observations, metric, comparison, dim
+    )
+    # persistence is forecast lead 0
+    persistence_skill = metric.function(
+        forecast.isel(lead=0, drop=True), observations, dim=dim, **metric_kwargs
+    )
+    persistence_skill["lead"] = persistence_skill.lead.values
+    return persistence_skill
+
+
 @is_xarray([0, 1])
 def compute_uninitialized(
     hind,

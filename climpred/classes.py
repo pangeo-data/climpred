@@ -65,7 +65,11 @@ from .prediction import (
     _get_metric_comparison_dim,
     compute_perfect_model,
 )
-from .reference import compute_climatology, compute_persistence
+from .reference import (
+    compute_climatology,
+    compute_persistence,
+    compute_persistence_from_first_lead,
+)
 from .smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
@@ -1144,7 +1148,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 dim_orig = deepcopy(dim)  # preserve dim, because
                 ref_compute_kwargs = metric_kwargs.copy()  # persistence changes dim
                 ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
-                if r != "persistence":
+                if (
+                    not OPTIONS["perfect_model_persistence_from_initialized_lead_0"]
+                    and r != "persistence"
+                ):
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
@@ -1256,7 +1263,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if dim is None:
             dim = list(self._datasets["initialized"].isel(lead=0).dims)
         res = self._apply_climpred_function(
-            compute_persistence,
+            compute_persistence_from_first_lead
+            if OPTIONS["perfect_model_persistence_from_initialized_lead_0"]
+            else compute_persistence,
             input_dict=input_dict,
             metric=metric,
             alignment="same_inits",

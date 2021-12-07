@@ -238,7 +238,6 @@ def compute_persistence(
     verif,
     metric="pearson_r",
     alignment="same_verifs",
-    add_attrs=True,
     dim="init",
     comparison="m2o",
     **metric_kwargs,
@@ -260,8 +259,6 @@ def compute_persistence(
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
         dim (str or list of str): dimension to apply metric over.
-        add_attrs (bool): write climpred compute_persistence args to attrs.
-            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
@@ -332,7 +329,6 @@ def compute_persistence_from_first_lead(
     verif,
     metric="pearson_r",
     alignment="same_inits",
-    add_attrs=True,
     dim="init",
     comparison="m2e",
     **metric_kwargs,
@@ -354,8 +350,6 @@ def compute_persistence_from_first_lead(
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
         dim (str or list of str): dimension to apply metric over.
-        add_attrs (bool): write climpred compute_persistence args to attrs.
-            default: True
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 

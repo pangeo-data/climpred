@@ -30,6 +30,7 @@ from .bootstrap import (
     bootstrap_hindcast,
     bootstrap_perfect_model,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
+    resample_uninitialized_from_initialized,
 )
 from .checks import (
     _check_valid_reference,
@@ -1001,11 +1002,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="perfect")
 
     def generate_uninitialized(self) -> "PerfectModelEnsemble":
-        """Generate an uninitialized ensemble by bootstrapping the
-        initialized prediction ensemble.
+        """Generate an uninitialized ensemble by resampling from the control simulation.
 
         Returns:
-            Bootstrapped (uninitialized) ensemble as a Dataset.
+            PerfectModelEnsemble with resampled (uninitialized) ensemble from control
         """
         has_dataset(
             self._datasets["control"], "control", "generate an uninitialized ensemble."
@@ -1607,6 +1607,45 @@ class HindcastEnsemble(PredictionEnsemble):
             ``xarray`` Dataset of observations.
         """
         return self._datasets["observations"]
+
+    def generate_uninitialized(
+        self, resample_dim: List[str] = ["init", "member"]
+    ) -> "HindcastEnsemble":
+        """Generate an uninitialized ensemble by resampling from the
+        initialized prediction ensemble.
+
+        Args:
+            resample_dim : list of str
+                dimension to resample from. Must contain "init".
+
+        Returns:
+            resampled uninitialized ensemble added to HindcastEnsemble
+
+        Example:
+            >>> HindcastEnsemble  # uninitialized from historical simulations
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+            Uninitialized:
+                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+
+            >>> HindcastEnsemble.generate_uninitialized()  # newly generated from initialized
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+            Uninitialized:
+                SST      (time, member) float64 0.04868 0.07173 0.09435 ... 0.4158 0.418
+        """
+        uninit = resample_uninitialized_from_initialized(
+            self._datasets["initialized"], resample_dim=resample_dim
+        )
+        datasets = self._datasets.copy()
+        datasets.update({"uninitialized": uninit})
+        return self._construct_direct(datasets, kind="hindcast")
 
     def plot_alignment(
         self: "HindcastEnsemble",

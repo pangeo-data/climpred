@@ -381,6 +381,62 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     )
 
 
+def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"]):
+    """
+    Generate an uninitialized ensemble by resampling without replacement from the initialized prediction ensemble.
+    Full years of the first lead present from the initialized are relabeled to a different year.
+    """
+    if (init.init.dt.year.groupby("init.year").count().diff("year") != 0).any():
+        raise ValueError(
+            f'`resample_uninitialized_from_initialized` only works if the same number of initializations is present each year, found {init.init.dt.year.groupby("init.year").count()}'
+        )
+    if "init" not in resample_dim:
+        raise ValueError(
+            f"Only resampling on `init` makes forecasts uninitialzed. Found resample_dim={resample_dim}."
+        )
+    init = init.isel(lead=0, drop=True)
+    # resample init
+    init_notnull = init.where(init.notnull(), drop=True)
+    full_years = list(set(init_notnull.init.dt.year.values))
+
+    years_same = True
+    while years_same:
+        m = full_years.copy()
+        np.random.shuffle(m)
+        years_same = (np.array(m) - np.array(full_years) == 0).any()
+
+    resampled_inits = xr.concat([init.sel(init=str(i)).init for i in m], "init")
+    resampled_uninit = init.sel(init=resampled_inits)
+    resampled_uninit["init"] = init_notnull.sel(
+        init=slice(str(full_years[0]), str(full_years[-1]))
+    ).init
+    # take time dim and overwrite with sorted
+    resampled_uninit = (
+        resampled_uninit.swap_dims({"init": "valid_time"})
+        .drop("init")
+        .rename({"valid_time": "time"})
+    )
+    resampled_uninit = resampled_uninit.assign_coords(
+        time=resampled_uninit.time.sortby("time").values
+    )
+
+    # resample members
+    if "member" in resample_dim:
+        resampled_members = np.random.randint(0, init.member.size, init.member.size)
+        resampled_uninit = resampled_uninit.isel(member=resampled_members)
+        resampled_uninit["member"] = init.member
+
+    from . import __version__ as version
+
+    resampled_uninit.attrs.update(
+        {
+            "description": "created by `HindcastEnsemble.generate_uninitialized()` resampling years without replacement from initialized",
+            "documentation": f"https://climpred.readthedocs.io/en/v{version}/api/climpred.classes.HindcastEnsemble.generate_uninitialized.html#climpred.classes.HindcastEnsemble.generate_uninitialized",
+        }
+    )
+    return resampled_uninit
+
+
 def _bootstrap_by_stacking(init_pm, control):
     """Bootstrap member, lead, init from control by reshaping. Fast track of function
     `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'."""

@@ -3,7 +3,6 @@ What's New
 ==========
 
 
-
 climpred unreleased (202x-xx-xx)
 ================================
 
@@ -40,6 +39,9 @@ New Features
   (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
+- Implement :py:meth:`~climpred.classes.HindcastEnsemble.generate_uninitialized` in
+  :py:class:`~climpred.classes.PredictionEnsemble` resampling years without replacement
+  from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
   (:issue:`239`, :pr:`687`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_seasonality` and
@@ -73,10 +75,10 @@ New Features
       >>> skill.sst.plot(hue="model", col="month", col_wrap=3)
 
   (:issue:`635`, :pr:`690`) `Aaron Spring`_.
-- :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and observations are
-  aligned based on the `alignment <alignment.html>`_ keyword. This may help
-  understanding which dates are matched for the different ``alignment`` approaches.
-  (:issue:`701`, :pr:`702`) `Aaron Spring`_.
+- :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and
+  observations are aligned based on the `alignment <alignment.html>`_ keyword.
+  This may help understanding which dates are matched for the different ``alignment``
+  approaches. (:issue:`701`, :pr:`702`) `Aaron Spring`_.
 - Add ``attrs`` to new ``coordinates`` created by ``climpred``.
   (:issue:`695`, :pr:`697`) `Aaron Spring`_.
 - Add ``seasonality="weekofyear"`` in ``reference="climatology"``.

@@ -53,6 +53,15 @@ Analysis Functions
     HindcastEnsemble.verify
     HindcastEnsemble.bootstrap
 
+-------------
+Generate Data
+-------------
+
+.. autosummary::
+    :toctree: api/
+
+    HindcastEnsemble.generate_uninitialized
+
 --------------
 Pre-Processing
 --------------

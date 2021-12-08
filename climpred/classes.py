@@ -1055,7 +1055,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
+                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
             groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
@@ -1103,14 +1104,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
             Attributes:
-                prediction_skill_software:     climpred https://climpred.readthedocs.io/
-                skill_calculated_by_function:  PerfectModelEnsemble.verify()
-                number_of_initializations:     12
-                number_of_members:             10
-                metric:                        pearson_r
-                comparison:                    m2m
-                dim:                           ['init', 'member']
-                reference:                     ['persistence', 'climatology', 'uninitiali...
+                prediction_skill_software:                         climpred https://clim...
+                skill_calculated_by_function:                      PerfectModelEnsemble....
+                number_of_initializations:                         12
+                number_of_members:                                 10
+                metric:                                            pearson_r
+                comparison:                                        m2m
+                dim:                                               ['init', 'member']
+                reference:                                         ['persistence', 'clim...
+                PerfectModel_persistence_from_initialized_lead_0:  False
         """
         if groupby is not None:
             return self._groupby(
@@ -1149,7 +1151,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ref_compute_kwargs = metric_kwargs.copy()  # persistence changes dim
                 ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
                 if (
-                    not OPTIONS["perfect_model_persistence_from_initialized_lead_0"]
+                    not OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]
                     and r != "persistence"
                 ):
                     ref_compute_kwargs["comparison"] = comparison
@@ -1234,7 +1236,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Verify a simple persistence forecast of the control run against itself.
 
         Note: uses climpred.reference.compute_persistence_from_first_lead
-        if OPTIONS["perfect_model_persistence_from_initialized_lead_0"] else climpred.reference.compute_persistence.
+        if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"] else climpred.reference.compute_persistence.
 
         Args:
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
@@ -1265,10 +1267,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
         }
         if dim is None:
             dim = list(self._datasets["initialized"].isel(lead=0).dims)
+        compute_persistence_func = compute_persistence_from_first_lead
+        if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]:
+            compute_persistence_func = compute_persistence_from_first_lead
+            if self.get_initialized().lead[0] != 0:
+                warnings.warn(
+                    f"Calculate persistence from lead={int(self.get_initialized().lead[0].values)} instead of lead=0 (recommended)."
+                )
+        else:
+            compute_persistence_func = compute_persistence
+
         res = self._apply_climpred_function(
-            compute_persistence_from_first_lead
-            if OPTIONS["perfect_model_persistence_from_initialized_lead_0"]
-            else compute_persistence,
+            compute_persistence_func,
             input_dict=input_dict,
             metric=metric,
             alignment="same_inits",
@@ -1357,8 +1367,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
                 If None or empty, returns no p value.
+                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
             resample_dim (str or list): dimension to resample from. default: 'member'.
@@ -1420,19 +1431,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
-            Attributes:
-                prediction_skill_software:     climpred https://climpred.readthedocs.io/
-                skill_calculated_by_function:  PerfectModelEnsemble.bootstrap()
-                number_of_initializations:     12
-                number_of_members:             10
-                metric:                        pearson_r
-                comparison:                    m2m
-                dim:                           ['init', 'member']
-                reference:                     ['persistence', 'climatology', 'uninitiali...
-                resample_dim:                  member
-                sig:                           95
-                iterations:                    50
-                confidence_interval_levels:    0.975-0.025
+            Attributes: (12/13)
+                prediction_skill_software:                         climpred https://clim...
+                skill_calculated_by_function:                      PerfectModelEnsemble...
+                number_of_initializations:                         12
+                number_of_members:                                 10
+                metric:                                            pearson_r
+                comparison:                                        m2m
+                ...
+                reference:                                         ['persistence', 'clim...
+                PerfectModel_persistence_from_initialized_lead_0:  False
+                resample_dim:                                      member
+                sig:                                               95
+                iterations:                                        50
+                confidence_interval_levels:                        0.975-0.025
 
         """
         if groupby is not None:

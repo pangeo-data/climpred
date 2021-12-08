@@ -23,15 +23,15 @@ def test_HindcastEnsemble_verify_reference(
 def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
     perfectModelEnsemble_initialized_control, comparison
 ):
-    """Test compute_persistence_from_first_lead started with perfect_model_persistence_from_initialized_lead_0."""
-    with set_options(perfect_model_persistence_from_initialized_lead_0=True):
+    """Test compute_persistence_from_first_lead started with PerfectModel_persistence_from_initialized_lead_0."""
+    with set_options(PerfectModel_persistence_from_initialized_lead_0=True):
         new_persistence = perfectModelEnsemble_initialized_control.verify(
             metric="mse",
             comparison=comparison,
             dim="init" if comparison == "e2c" else ["member", "init"],
             reference="persistence",
         )
-    with set_options(perfect_model_persistence_from_initialized_lead_0=False):
+    with set_options(PerfectModel_persistence_from_initialized_lead_0=False):
         old_persistence = perfectModelEnsemble_initialized_control.verify(
             metric="mse",
             comparison=comparison,
@@ -43,20 +43,21 @@ def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
     )
 
 
-def test_PerfectModelEnsemble_verify_persistence_from_first_lead_warning_lead_non_zero(
-    perfectModelEnsemble_initialized_control,
+@pytest.mark.parametrize("call", ["verify", "bootstrap"])
+def test_PerfectModelEnsemble_persistence_from_first_lead_warning_lead_non_zero(
+    perfectModelEnsemble_initialized_control, call
 ):
     """Test that compute_persistence_from_first_lead warns if first lead not zero."""
-    print(perfectModelEnsemble_initialized_control.get_initialized())
-    with set_options(perfect_model_persistence_from_initialized_lead_0=True):
+    kw = dict(
+        metric="mse", comparison="m2e", dim=["member", "init"], reference="persistence"
+    )
+    if call == "bootstrap":
+        kw["iterations"] = 2
+    with set_options(PerfectModel_persistence_from_initialized_lead_0=True):
         with pytest.warns(UserWarning, match="Calculate persistence from lead=1"):
             # perfectModelEnsemble_initialized_control starts with lead 1
-            perfectModelEnsemble_initialized_control.verify(
-                metric="mse",
-                comparison="m2e",
-                dim=["member", "init"],
-                reference="persistence",
-            )
+            print(perfectModelEnsemble_initialized_control.get_initialized())
+            getattr(perfectModelEnsemble_initialized_control, call)(**kw)
 
         with pytest.warns(None) as record:
             with xr.set_options(keep_attrs=True):
@@ -68,10 +69,5 @@ def test_PerfectModelEnsemble_verify_persistence_from_first_lead_warning_lead_no
                     ]
                     - 1
                 )
-            perfectModelEnsemble_initialized_control.verify(
-                metric="mse",
-                comparison="m2e",
-                dim=["member", "init"],
-                reference="persistence",
-            )
+            getattr(perfectModelEnsemble_initialized_control, call)(**kw)
         assert len(record) == 0

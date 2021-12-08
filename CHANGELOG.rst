@@ -81,6 +81,11 @@ New Features
   (:issue:`695`, :pr:`697`) `Aaron Spring`_.
 - Add ``seasonality="weekofyear"`` in ``reference="climatology"``.
   (:pr:`703`) `Aaron Spring`_.
+- Compute ``reference="persistence"`` in
+  :py:class:`~climpred.classes.PredictionEnsemble` from ``initialized`` first ``lead``
+  if ``set_option(PerfectModel_persistence_from_initialized_lead_0=True), which is
+  ``False`` by default.
+  (:issue:`637`, :pr:`706`) `Aaron Spring`_.
 
 
 Internals/Minor Fixes

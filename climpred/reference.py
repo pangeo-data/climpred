@@ -333,7 +333,7 @@ def compute_persistence_from_first_lead(
     comparison="m2e",
     **metric_kwargs,
 ):
-    """Computes the skill of a persistence forecast based on the first lead available in the initialized dataset. This function unlike ``compute_persistence`` is sensitive to ``comparison``. Requires climpred.set_options(perfect_model_persistence_from_initialized_lead_0=True).
+    """Computes the skill of a persistence forecast based on the first lead available in the initialized dataset. This function unlike ``compute_persistence`` is sensitive to ``comparison``. Requires climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True).
 
     Args:
         hind (xarray object): The initialized ensemble.
@@ -358,7 +358,7 @@ def compute_persistence_from_first_lead(
             applied.
 
     Example:
-        >>> with climpred.set_options(perfect_model_persistence_from_initialized_lead_0=True):
+        >>> with climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True):
         ...     PerfectModelEnsemble.verify(metric="mse", comparison="m2e",
         ...         dim=["init", "member"], reference="persistence"
         ...     ).sel(skill='persistence')
@@ -370,18 +370,18 @@ def compute_persistence_from_first_lead(
         Data variables:
             tos      (lead) float32 0.01056 0.01962 0.02925 ... 0.08033 0.08731 0.07578
         Attributes:
-            prediction_skill_software:                          climpred https://clim...
-            skill_calculated_by_function:                       PerfectModelEnsemble....
-            number_of_initializations:                          12
-            number_of_members:                                  10
-            metric:                                             mse
-            comparison:                                         m2e
-            dim:                                                ['init', 'member']
-            reference:                                          ['persistence']
-            perfect_model_persistence_from_initialized_lead_0:  True
+            prediction_skill_software:                         climpred https://clim...
+            skill_calculated_by_function:                      PerfectModelEnsemble....
+            number_of_initializations:                         12
+            number_of_members:                                 10
+            metric:                                            mse
+            comparison:                                        m2e
+            dim:                                               ['init', 'member']
+            reference:                                         ['persistence']
+            PerfectModel_persistence_from_initialized_lead_0:  True
 
 
-        >>> with climpred.set_options(perfect_model_persistence_from_initialized_lead_0=False):
+        >>> with climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=False):
         ...     PerfectModelEnsemble.verify(metric="mse", comparison="m2e",
         ...         dim=["init", "member"], reference="persistence"
         ...     ).sel(skill='persistence')
@@ -393,15 +393,15 @@ def compute_persistence_from_first_lead(
         Data variables:
             tos      (lead) float32 0.02794 0.04554 0.08024 ... 0.06327 0.09077 0.05898
         Attributes:
-            prediction_skill_software:                          climpred https://clim...
-            skill_calculated_by_function:                       PerfectModelEnsemble....
-            number_of_initializations:                          12
-            number_of_members:                                  10
-            metric:                                             mse
-            comparison:                                         m2e
-            dim:                                                ['init', 'member']
-            reference:                                          ['persistence']
-            perfect_model_persistence_from_initialized_lead_0:  False
+            prediction_skill_software:                         climpred https://clim...
+            skill_calculated_by_function:                      PerfectModelEnsemble....
+            number_of_initializations:                         12
+            number_of_members:                                 10
+            metric:                                            mse
+            comparison:                                        m2e
+            dim:                                               ['init', 'member']
+            reference:                                         ['persistence']
+            PerfectModel_persistence_from_initialized_lead_0:  False
 
     Reference:
         * Chapter 8 (Short-Term Climate Prediction) in Van den Dool, Huug.
@@ -409,10 +409,6 @@ def compute_persistence_from_first_lead(
           Oxford University Press, 2007.
 
     """
-    if initialized.lead[0] != 0:
-        warnings.warn(
-            f"Calculate persistence from lead={int(initialized.lead[0].values)} instead of lead=0 (recommended)."
-        )
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.

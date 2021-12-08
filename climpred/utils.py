@@ -102,8 +102,8 @@ def assign_attrs(
     if reference is not None:
         skill.attrs["reference"] = reference
     if "persistence" in reference and "PerfectModelEnsemble" in function_name:
-        skill.attrs["perfect_model_persistence_from_initialized_lead_0"] = OPTIONS[
-            "perfect_model_persistence_from_initialized_lead_0"
+        skill.attrs["PerfectModel_persistence_from_initialized_lead_0"] = OPTIONS[
+            "PerfectModel_persistence_from_initialized_lead_0"
         ]
 
     # change unit power in all variables

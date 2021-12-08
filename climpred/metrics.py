@@ -941,13 +941,13 @@ def _spread(forecast, verif, dim=None, **metric_kwargs):
     """Ensemble spread taking the standard deviation over the member dimension.
 
     .. math::
-        spread = \\std{f}
+        spread = std(f) = \\sigma^2{f} = \\sqrt\\frac{\\sum{(f-\\overline(f))^2}}{N}
 
     Args:
         forecast (xarray object): Forecast.
         verif (xarray object): Verification data (not used).
         dim (str): Dimension(s) to perform metric over.
-        metric_kwargs (dict): see :py:func:`~xr.std`
+        metric_kwargs (dict): see :py:func:`~xarray.std`
 
     Details:
         +-----------------+-----------+

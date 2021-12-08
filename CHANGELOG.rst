@@ -2,6 +2,16 @@
 What's New
 ==========
 
+.. ipython:: python
+    :suppress:
+
+    import climpred
+    from climpred import HindcastEnsemble
+    import matplotlib as mpl
+    mpl.rcdefaults()
+    mpl.use('Agg')
+    # cut border when saving (for maps)
+    mpl.rcParams["savefig.bbox"] = "tight"
 
 
 climpred unreleased (202x-xx-xx)
@@ -23,7 +33,6 @@ New Features
 
   .. code-block:: python
 
-      >>> import climpred
       >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
       >>> hind.lead.attrs['units'] = 'years'
       >>> climpred.HindcastEnsemble(hind).get_initialized()
@@ -77,6 +86,15 @@ New Features
   aligned based on the `alignment <alignment.html>`_ keyword. This may help
   understanding which dates are matched for the different ``alignment`` approaches.
   (:issue:`701`, :pr:`702`) `Aaron Spring`_.
+
+.. ipython:: python
+    :okwarning:
+
+    from climpred.tutorial import load_dataset
+    hindcast = climpred.HindcastEnsemble(load_dataset("CESM-DP-SST")).add_observations(load_dataset("ERSST"))
+    @savefig plotting_MEOW.png width=100%
+    hindcast.plot_alignment(edgecolor="w")
+
 - Add ``attrs`` to new ``coordinates`` created by ``climpred``.
   (:issue:`695`, :pr:`697`) `Aaron Spring`_.
 - Add ``seasonality="weekofyear"`` in ``reference="climatology"``.

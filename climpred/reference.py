@@ -170,8 +170,8 @@ def compute_climatology(
     """Computes the skill of a climatology forecast.
 
     Args:
-        hind (xarray object): The initialized ensemble.
-        verif (xarray object): control data, not needed
+        hind (xarray.Dataset): The initialized ensemble.
+        verif (xarray.Dataset): control data, not needed
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         dim (str or list of str): dimension to apply metric over.
@@ -179,7 +179,7 @@ def compute_climatology(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        clim (xarray object): Results of climatology forecast with the input metric
+        clim (xarray.Dataset): Results of climatology forecast with the input metric
             applied.
     """
     seasonality_str = OPTIONS["seasonality"]
@@ -245,8 +245,8 @@ def compute_persistence(
     """Computes the skill of a persistence forecast from a simulation.
 
     Args:
-        hind (xarray object): The initialized ensemble.
-        verif (xarray object): Verification data.
+        hind (xarray.Dataset): The initialized ensemble.
+        verif (xarray.Dataset): Verification data.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
@@ -263,7 +263,7 @@ def compute_persistence(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        pers (xarray object): Results of persistence forecast with the input metric
+        pers (xarray.Dataset): Results of persistence forecast with the input metric
             applied.
 
     Reference:
@@ -339,27 +339,27 @@ def compute_persistence_from_first_lead(
     ``climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True)``.
 
     Args:
-        hind (xarray object): The initialized ensemble.
-        verif (xarray object): Verification data. Not used.
+        hind (xarray.Dataset): The initialized ensemble.
+        verif (xarray.Dataset): Verification data. Not used.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
 
-            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
-            metric. This philosophy follows the thought that each lead should be based
-            on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior to
-            computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
+            - ``maximize``: maximize the degrees of freedom by slicing ``hind`` and
+              ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common init frame prior to computing
+              metric. This philosophy follows the thought that each lead should be based
+              on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time frame prior to
+              computing metric. This philosophy follows the thought that each lead
+              should be based on the same set of verification dates.
 
         dim (str or list of str): dimension to apply metric over.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        pers (xarray object): Results of persistence forecast with the input metric
+        pers (xarray.Dataset): Results of persistence forecast with the input metric
             applied.
 
     Example:
@@ -457,9 +457,9 @@ def compute_uninitialized(
         first lag and then projected out to any further lags being analyzed.
 
     Args:
-        hind (xarray object): Initialized ensemble.
-        uninit (xarray object): Uninitialized ensemble.
-        verif (xarray object): Verification data with some temporal overlap with the
+        hind (xarray.Dataset): Initialized ensemble.
+        uninit (xarray.Dataset): Uninitialized ensemble.
+        verif (xarray.Dataset): Verification data with some temporal overlap with the
             uninitialized ensemble.
         metric (str):
             Metric used in comparing the uninitialized ensemble with the verification
@@ -481,7 +481,7 @@ def compute_uninitialized(
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
-        u (xarray object): Results from comparison at the first lag.
+        u (xarray.Dataset): Results from comparison at the first lag.
 
     """
     if isinstance(dim, str):

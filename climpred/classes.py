@@ -1233,6 +1233,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
     ):
         """Verify a simple persistence forecast of the control run against itself.
 
+        Note: uses climpred.reference.compute_persistence_from_first_lead
+        if OPTIONS["perfect_model_persistence_from_initialized_lead_0"] else climpred.reference.compute_persistence.
+
         Args:
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
             verifying skill of the persistence forecast. See `metrics </metrics.html>`_.

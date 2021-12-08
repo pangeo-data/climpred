@@ -24,20 +24,16 @@ def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
     perfectModelEnsemble_initialized_control, comparison
 ):
     """Test compute_persistence_from_first_lead started with PerfectModel_persistence_from_initialized_lead_0."""
+    kw = dict(
+        metric="mse",
+        comparison=comparison,
+        dim="init" if comparison == "e2c" else ["member", "init"],
+        reference="persistence",
+    )
     with set_options(PerfectModel_persistence_from_initialized_lead_0=True):
-        new_persistence = perfectModelEnsemble_initialized_control.verify(
-            metric="mse",
-            comparison=comparison,
-            dim="init" if comparison == "e2c" else ["member", "init"],
-            reference="persistence",
-        )
+        new_persistence = perfectModelEnsemble_initialized_control.verify(**kw)
     with set_options(PerfectModel_persistence_from_initialized_lead_0=False):
-        old_persistence = perfectModelEnsemble_initialized_control.verify(
-            metric="mse",
-            comparison=comparison,
-            dim="init" if comparison == "e2c" else ["member", "init"],
-            reference="persistence",
-        )
+        old_persistence = perfectModelEnsemble_initialized_control.verify(**kw)
     assert not new_persistence.sel(skill="persistence").equals(
         old_persistence.sel(skill="persistence")
     )

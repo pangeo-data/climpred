@@ -159,7 +159,7 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
 
 
 def compute_climatology(
-    hind,
+    initialized,
     verif=None,
     metric="pearson_r",
     comparison="m2e",
@@ -170,7 +170,7 @@ def compute_climatology(
     """Computes the skill of a climatology forecast.
 
     Args:
-        hind (xarray.Dataset): The initialized ensemble.
+        initialized (xarray.Dataset): The initialized ensemble.
         verif (xarray.Dataset): control data, not needed
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
@@ -186,7 +186,7 @@ def compute_climatology(
 
     if isinstance(dim, str):
         dim = [dim]
-    has_valid_lead_units(hind)
+    has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -195,8 +195,8 @@ def compute_climatology(
     comparison = get_comparison_class(comparison, ALL_COMPARISONS)
     metric = get_metric_class(metric, ALL_METRICS)
 
-    if "iteration" in hind.dims:
-        hind = hind.isel(iteration=0, drop=True)
+    if "iteration" in initialized.dims:
+        initialized = initialized.isel(iteration=0, drop=True)
 
     if comparison.hindcast:
         kind = "hindcast"
@@ -204,10 +204,10 @@ def compute_climatology(
         kind = "perfect"
 
     if kind == "perfect":
-        forecast, verif = comparison.function(hind, metric=metric)
+        forecast, verif = comparison.function(initialized, metric=metric)
         climatology_day = verif.groupby(f"init.{seasonality_str}").mean()
     else:
-        forecast, verif = comparison.function(hind, verif, metric=metric)
+        forecast, verif = comparison.function(initialized, verif, metric=metric)
         climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
 
     climatology_day_forecast = climatology_day.sel(
@@ -234,7 +234,7 @@ def compute_climatology(
 
 @is_xarray([0, 1])
 def compute_persistence(
-    hind,
+    initialized,
     verif,
     metric="pearson_r",
     alignment="same_verifs",
@@ -245,12 +245,13 @@ def compute_persistence(
     """Computes the skill of a persistence forecast from a simulation.
 
     Args:
-        hind (xarray.Dataset): The initialized ensemble.
+        initialized (xarray.Dataset): The initialized ensemble.
         verif (xarray.Dataset): Verification data.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
-            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+
+            - maximize/None: maximize the degrees of freedom by slicing ``initialized`` and
             ``verif`` to a common time frame at each lead.
             - same_inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
@@ -258,6 +259,7 @@ def compute_persistence(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
+
         dim (str or list of str): dimension to apply metric over.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -277,11 +279,11 @@ def compute_persistence(
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, "init", "hind[init]")
+    initialized = convert_time_index(initialized, "init", "initialized[init]")
     verif = convert_time_index(verif, "time", "verif[time]")
     # Put this after `convert_time_index` since it assigns 'years' attribute if the
     # `init` dimension is a `float` or `int`.
-    has_valid_lead_units(hind)
+    has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -293,24 +295,26 @@ def compute_persistence(
     metric = get_metric_class(metric, ALL_METRICS)
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
-    if [0] in hind.lead.values:
-        hind = hind.copy()
+    if [0] in initialized.lead.values:
+        initialized = initialized.copy()
         with xr.set_options(keep_attrs=True):  # keeps lead.attrs['units']
-            hind["lead"] = hind["lead"] + 1
-        n, freq = get_lead_cftime_shift_args(hind.lead.attrs["units"], 1)
+            initialized["lead"] = initialized["lead"] + 1
+        n, freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], 1)
         # Shift backwards shift for lead zero.
-        hind["init"] = shift_cftime_index(hind, "init", -1 * n, freq)
+        initialized["init"] = shift_cftime_index(initialized, "init", -1 * n, freq)
     # temporarily change `init` to `time` for comparison to verification data time.
-    hind = hind.rename({"init": "time"})
+    initialized = initialized.rename({"init": "time"})
 
-    inits, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
+    inits, verif_dates = return_inits_and_verif_dates(
+        initialized, verif, alignment=alignment
+    )
 
     if metric.normalize:
         metric_kwargs["comparison"] = __e2c
-    dim = _rename_dim(dim, hind, verif)
+    dim = _rename_dim(dim, initialized, verif)
 
     plag = []
-    for i in hind.lead.values:
+    for i in initialized.lead.values:
         lforecast = verif.sel(time=inits[i])
         lverif = verif.sel(time=verif_dates[i])
         lforecast, dim = _adapt_member_for_reference_forecast(
@@ -322,7 +326,7 @@ def compute_persistence(
     pers = xr.concat(plag, "lead")
     if "time" in pers:
         pers = pers.dropna(dim="time").rename({"time": "init"})
-    pers["lead"] = hind.lead.values
+    pers["lead"] = initialized.lead.values
     return pers
 
 
@@ -341,7 +345,7 @@ def compute_persistence_from_first_lead(
     ``climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True)``.
 
     Args:
-        hind (xarray.Dataset): The initialized ensemble.
+        initialized (xarray.Dataset): The initialized ensemble.
         verif (xarray.Dataset): Verification data. Not used.
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
@@ -446,7 +450,7 @@ def compute_persistence_from_first_lead(
 
 @is_xarray([0, 1])
 def compute_uninitialized(
-    hind,
+    initialized,
     uninit,
     verif,
     metric="pearson_r",
@@ -462,7 +466,7 @@ def compute_uninitialized(
         first lag and then projected out to any further lags being analyzed.
 
     Args:
-        hind (xarray.Dataset): Initialized ensemble.
+        initialized (xarray.Dataset): Initialized ensemble.
         uninit (xarray.Dataset): Uninitialized ensemble.
         verif (xarray.Dataset): Verification data with some temporal overlap with the
             uninitialized ensemble.
@@ -475,7 +479,8 @@ def compute_uninitialized(
                 * m2o : each member to the verification data
         dim (str or list of str): dimension to apply metric over.
         alignment (str): which inits or verification times should be aligned?
-            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
+
+            - maximize/None: maximize the degrees of freedom by slicing ``initialized`` and
             ``verif`` to a common time frame at each lead.
             - same_inits: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
@@ -483,6 +488,7 @@ def compute_uninitialized(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
+
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
@@ -492,10 +498,10 @@ def compute_uninitialized(
     if isinstance(dim, str):
         dim = [dim]
     # Check that init is int, cftime, or datetime; convert ints or cftime to datetime.
-    hind = convert_time_index(hind, "init", "hind[init]")
+    initialized = convert_time_index(initialized, "init", "initialized[init]")
     uninit = convert_time_index(uninit, "time", "uninit[time]")
     verif = convert_time_index(verif, "time", "verif[time]")
-    has_valid_lead_units(hind)
+    has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
     metric = METRIC_ALIASES.get(metric, metric)
@@ -505,9 +511,11 @@ def compute_uninitialized(
     metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
 
-    hind = hind.rename({"init": "time"})
+    initialized = initialized.rename({"init": "time"})
 
-    _, verif_dates = return_inits_and_verif_dates(hind, verif, alignment=alignment)
+    _, verif_dates = return_inits_and_verif_dates(
+        initialized, verif, alignment=alignment
+    )
 
     if metric.normalize:
         metric_kwargs["comparison"] = comparison
@@ -515,7 +523,7 @@ def compute_uninitialized(
     plag = []
     # TODO: `same_verifs` does not need to go through the loop, since it's a fixed
     # skill over all leads
-    for i in hind["lead"].values:
+    for i in initialized["lead"].values:
         # Ensure that the uninitialized reference has all of the
         # dates for alignment.
         dates = list(set(forecast["time"].values) & set(verif_dates[i]))
@@ -528,5 +536,5 @@ def compute_uninitialized(
         # comparison expected for normalized metrics
         plag.append(metric.function(lforecast, lverif, dim=dim, **metric_kwargs))
     uninit_skill = xr.concat(plag, "lead")
-    uninit_skill["lead"] = hind.lead.values
+    uninit_skill["lead"] = initialized.lead.values
     return uninit_skill

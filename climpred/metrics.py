@@ -941,7 +941,7 @@ def _spread(forecast, verif, dim=None, **metric_kwargs):
     """Ensemble spread taking the standard deviation over the member dimension.
 
     .. math::
-        spread = std(f) = \\sigma^2{f} = \\sqrt\\frac{\\sum{(f-\\overline(f))^2}}{N}
+        spread = std(f) = \\sigma^2(f) = \\sqrt\\frac{\\sum{(f-\\overline{f})^2}}{N}
 
     Args:
         forecast (xarray object): Forecast.

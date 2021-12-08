@@ -1257,14 +1257,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        has_dataset(
-            self._datasets["control"], "control", "compute a persistence forecast"
-        )
-        input_dict = {
-            "ensemble": self._datasets["initialized"],
-            "control": self._datasets["control"],
-            "init": True,
-        }
         if dim is None:
             dim = list(self._datasets["initialized"].isel(lead=0).dims)
         compute_persistence_func = compute_persistence_from_first_lead
@@ -1277,6 +1269,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
                     )
         else:
             compute_persistence_func = compute_persistence
+            if self._datasets["control"] == {}:
+                warnings.warn(
+                    "You may also calculate persistence based on ``initialized.isel(lead=0)`` by changing ``OPTIONS['PerfectModel_persistence_from_initialized_lead_0']=True``."
+                )
+            has_dataset(
+                self._datasets["control"], "control", "compute a persistence forecast"
+            )
+        input_dict = {
+            "ensemble": self._datasets["initialized"],
+            "control": self._datasets["control"],
+            "init": True,
+        }
 
         res = self._apply_climpred_function(
             compute_persistence_func,

@@ -1271,9 +1271,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]:
             compute_persistence_func = compute_persistence_from_first_lead
             if self.get_initialized().lead[0] != 0:
-                warnings.warn(
-                    f"Calculate persistence from lead={int(self.get_initialized().lead[0].values)} instead of lead=0 (recommended)."
-                )
+                if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                    warnings.warn(
+                        f"Calculate persistence from lead={int(self.get_initialized().lead[0].values)} instead of lead=0 (recommended)."
+                    )
         else:
             compute_persistence_func = compute_persistence
 

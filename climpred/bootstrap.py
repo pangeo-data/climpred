@@ -707,11 +707,11 @@ def bootstrap_compute(
         and compute.__name__ == "compute_perfect_model"
     ):
         compute_persistence_func = compute_persistence_from_first_lead
-        print(hind.lead)
         if hind.lead[0] != 0:
-            warnings.warn(
-                f"Calculate persistence from lead={int(hind.lead[0].values)} instead of lead=0 (recommended)."
-            )
+            if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                warnings.warn(
+                    f"Calculate persistence from lead={int(hind.lead[0].values)} instead of lead=0 (recommended)."
+                )
     else:
         compute_persistence_func = compute_persistence
 

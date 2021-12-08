@@ -13,7 +13,6 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
-
 climpred unreleased (202x-xx-xx)
 ================================
 
@@ -49,6 +48,9 @@ New Features
   (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
+- Implement :py:meth:`~climpred.classes.HindcastEnsemble.generate_uninitialized` in
+  :py:class:`~climpred.classes.PredictionEnsemble` resampling years without replacement
+  from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
   (:issue:`239`, :pr:`687`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_seasonality` and

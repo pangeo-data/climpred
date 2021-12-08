@@ -447,3 +447,27 @@ def test_bootstrap_p_climatology(hindcast_hist_obs_1d, metric):
             .all()
         )
     assert bskill.sel(skill=reference, results="p").sel(lead=lead)[v] < 0.1
+
+
+def test_generate_uninitialized(hindcast_hist_obs_1d):
+    """Test HindcastEnsemble.generate_uninitialized()"""
+    from climpred.stats import rm_poly
+
+    hindcast_hist_obs_1d_new = hindcast_hist_obs_1d.map(
+        rm_poly, dim="init_or_time", deg=2
+    ).generate_uninitialized()
+    # new created
+    assert not hindcast_hist_obs_1d_new.get_initialized().equals(
+        hindcast_hist_obs_1d.get_initialized()
+    )
+    # skill different
+    kw = dict(
+        metric="mse",
+        comparison="e2o",
+        dim="init",
+        alignment="same_verifs",
+        reference="uninitialized",
+    )
+    assert not hindcast_hist_obs_1d_new.verify(**kw).equals(
+        hindcast_hist_obs_1d.verify(**kw)
+    )

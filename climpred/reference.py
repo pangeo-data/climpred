@@ -345,7 +345,7 @@ def compute_persistence_from_first_lead(
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
 
-            - ``maximize``: maximize the degrees of freedom by slicing ``hind`` and
+            - ``maximize``: maximize the degrees of freedom by slicing ``initialized`` and
               ``verif`` to a common time frame at each lead.
             - ``same_inits``: slice to a common init frame prior to computing
               metric. This philosophy follows the thought that each lead should be based

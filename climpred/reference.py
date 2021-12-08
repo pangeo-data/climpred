@@ -333,7 +333,10 @@ def compute_persistence_from_first_lead(
     comparison="m2e",
     **metric_kwargs,
 ):
-    """Computes the skill of a persistence forecast based on the first lead available in the initialized dataset. This function unlike ``compute_persistence`` is sensitive to ``comparison``. Requires climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True).
+    """Computes the skill of a persistence forecast based on the first lead available
+    in the initialized dataset. This function unlike ``compute_persistence`` is
+    sensitive to ``comparison``. Requires
+    ``climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True)``.
 
     Args:
         hind (xarray object): The initialized ensemble.
@@ -341,6 +344,7 @@ def compute_persistence_from_first_lead(
         metric (str): Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
+
             - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
             - same_inits: slice to a common init frame prior to computing
@@ -349,6 +353,7 @@ def compute_persistence_from_first_lead(
             - same_verif: slice to a common/consistent verification time frame prior to
             computing metric. This philosophy follows the thought that each lead
             should be based on the same set of verification dates.
+
         dim (str or list of str): dimension to apply metric over.
         ** metric_kwargs (dict): additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
@@ -361,7 +366,7 @@ def compute_persistence_from_first_lead(
         >>> with climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True):
         ...     PerfectModelEnsemble.verify(metric="mse", comparison="m2e",
         ...         dim=["init", "member"], reference="persistence"
-        ...     ).sel(skill='persistence')
+        ...     ).sel(skill='persistence')  # persistence sensitive to comparison
         <xarray.Dataset>
         Dimensions:  (lead: 20)
         Coordinates:
@@ -384,7 +389,7 @@ def compute_persistence_from_first_lead(
         >>> with climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=False):
         ...     PerfectModelEnsemble.verify(metric="mse", comparison="m2e",
         ...         dim=["init", "member"], reference="persistence"
-        ...     ).sel(skill='persistence')
+        ...     ).sel(skill='persistence')  # persistence not sensitive to comparison
         <xarray.Dataset>
         Dimensions:  (lead: 20)
         Coordinates:

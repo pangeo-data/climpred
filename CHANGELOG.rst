@@ -82,9 +82,10 @@ New Features
 - Add ``seasonality="weekofyear"`` in ``reference="climatology"``.
   (:pr:`703`) `Aaron Spring`_.
 - Compute ``reference="persistence"`` in
-  :py:class:`~climpred.classes.PredictionEnsemble` from ``initialized`` first ``lead``
-  if ``set_option(PerfectModel_persistence_from_initialized_lead_0=True), which is
-  ``False`` by default.
+  :py:class:`~climpred.classes.PerfectModelEnsemble` from ``initialized`` first ``lead``
+  if :py:class:`~climpred.options.set_options`
+  ``(PerfectModel_persistence_from_initialized_lead_0=True)`` (``False`` by default)
+  using :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
   (:issue:`637`, :pr:`706`) `Aaron Spring`_.
 
 

@@ -271,6 +271,8 @@ def compute_persistence(
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
 
+    See also:
+        * :py:func:`~climpred.reference.compute_persistence`
     """
     if isinstance(dim, str):
         dim = [dim]
@@ -412,6 +414,9 @@ def compute_persistence_from_first_lead(
         * Chapter 8 (Short-Term Climate Prediction) in Van den Dool, Huug.
           Empirical methods in short-term climate prediction.
           Oxford University Press, 2007.
+
+    See also:
+        * :py:func:`~climpred.reference.compute_persistence`
 
     """
     if isinstance(dim, str):

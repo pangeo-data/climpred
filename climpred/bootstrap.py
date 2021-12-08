@@ -19,8 +19,13 @@ from .comparisons import (
 )
 from .exceptions import KeywordError
 from .metrics import ALL_METRICS, METRIC_ALIASES
+from .options import OPTIONS
 from .prediction import compute_hindcast, compute_perfect_model
-from .reference import compute_climatology, compute_persistence
+from .reference import (
+    compute_climatology,
+    compute_persistence,
+    compute_persistence_from_first_lead,
+)
 from .stats import dpp
 
 try:
@@ -752,6 +757,20 @@ def bootstrap_compute(
     if reference is None:
         reference = []
 
+    compute_persistence_func = compute_persistence_from_first_lead
+    if (
+        OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]
+        and compute.__name__ == "compute_perfect_model"
+    ):
+        compute_persistence_func = compute_persistence_from_first_lead
+        if hind.lead[0] != 0:
+            if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                warnings.warn(
+                    f"Calculate persistence from lead={int(hind.lead[0].values)} instead of lead=0 (recommended)."
+                )
+    else:
+        compute_persistence_func = compute_persistence
+
     p, ci_low, ci_high = _p_ci_from_sig(sig)
     p_pers, ci_low_pers, ci_high_pers = _p_ci_from_sig(pers_sig)
 
@@ -886,7 +905,7 @@ def bootstrap_compute(
             **metric_kwargs,
         )
         if "persistence" in reference:
-            pers_skill = compute_persistence(
+            pers_skill = compute_persistence_func(
                 hind,
                 verif,
                 metric=metric,
@@ -895,7 +914,7 @@ def bootstrap_compute(
             )
             # bootstrap pers
             if resample_dim == "init":
-                bootstrapped_pers_skill = compute_persistence(
+                bootstrapped_pers_skill = compute_persistence_func(
                     bootstrapped_hind,
                     verif,
                     metric=metric,
@@ -920,7 +939,7 @@ def bootstrap_compute(
         # uninit skill as mean resampled uninit skill
         unin_skill = bootstrapped_uninit_skill.mean("iteration")  # noqa: F841
     if "persistence" in reference:
-        pers_skill = compute_persistence(
+        pers_skill = compute_persistence_func(
             hind, verif, metric=metric, dim=dim, **metric_kwargs_reference
         )
     if "climatology" in reference:
@@ -1191,7 +1210,9 @@ def bootstrap_perfect_model(
              to initialization and external forcing
             - `uninitialized` for the uninitialized/historical and approximates skill
              from external forcing
-            - `persistence` for the persistence forecast
+            - `persistence` for the persistence forecast computed by
+             `compute_persistence` or `compute_persistence_from_first_lead` depending
+             on set_options('PerfectModel_persistence_from_initialized_lead_0')
             - `climatology`
 
         the different results:

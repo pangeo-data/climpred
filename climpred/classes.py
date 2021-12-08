@@ -66,7 +66,11 @@ from .prediction import (
     _get_metric_comparison_dim,
     compute_perfect_model,
 )
-from .reference import compute_climatology, compute_persistence
+from .reference import (
+    compute_climatology,
+    compute_persistence,
+    compute_persistence_from_first_lead,
+)
 from .smoothing import (
     _reset_temporal_axis,
     smooth_goddard_2013,
@@ -1051,7 +1055,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
+                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
             groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
@@ -1099,14 +1104,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Data variables:
                 tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
             Attributes:
-                prediction_skill_software:     climpred https://climpred.readthedocs.io/
-                skill_calculated_by_function:  PerfectModelEnsemble.verify()
-                number_of_initializations:     12
-                number_of_members:             10
-                metric:                        pearson_r
-                comparison:                    m2m
-                dim:                           ['init', 'member']
-                reference:                     ['persistence', 'climatology', 'uninitiali...
+                prediction_skill_software:                         climpred https://clim...
+                skill_calculated_by_function:                      PerfectModelEnsemble....
+                number_of_initializations:                         12
+                number_of_members:                                 10
+                metric:                                            pearson_r
+                comparison:                                        m2m
+                dim:                                               ['init', 'member']
+                reference:                                         ['persistence', 'clim...
+                PerfectModel_persistence_from_initialized_lead_0:  False
         """
         if groupby is not None:
             return self._groupby(
@@ -1144,7 +1150,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 dim_orig = deepcopy(dim)  # preserve dim, because
                 ref_compute_kwargs = metric_kwargs.copy()  # persistence changes dim
                 ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
-                if r != "persistence":
+                if (
+                    not OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]
+                    and r != "persistence"
+                ):
                     ref_compute_kwargs["comparison"] = comparison
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
@@ -1226,6 +1235,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
     ):
         """Verify a simple persistence forecast of the control run against itself.
 
+        Note: uses climpred.reference.compute_persistence_from_first_lead
+        if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"] else climpred.reference.compute_persistence.
+
         Args:
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
             verifying skill of the persistence forecast. See `metrics </metrics.html>`_.
@@ -1245,18 +1257,33 @@ class PerfectModelEnsemble(PredictionEnsemble):
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
-        has_dataset(
-            self._datasets["control"], "control", "compute a persistence forecast"
-        )
+        if dim is None:
+            dim = list(self._datasets["initialized"].isel(lead=0).dims)
+        compute_persistence_func = compute_persistence_from_first_lead
+        if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]:
+            compute_persistence_func = compute_persistence_from_first_lead
+            if self.get_initialized().lead[0] != 0:
+                if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
+                    warnings.warn(
+                        f"Calculate persistence from lead={int(self.get_initialized().lead[0].values)} instead of lead=0 (recommended)."
+                    )
+        else:
+            compute_persistence_func = compute_persistence
+            if self._datasets["control"] == {}:
+                warnings.warn(
+                    "You may also calculate persistence based on ``initialized.isel(lead=0)`` by changing ``OPTIONS['PerfectModel_persistence_from_initialized_lead_0']=True``."
+                )
+            has_dataset(
+                self._datasets["control"], "control", "compute a persistence forecast"
+            )
         input_dict = {
             "ensemble": self._datasets["initialized"],
             "control": self._datasets["control"],
             "init": True,
         }
-        if dim is None:
-            dim = list(self._datasets["initialized"].isel(lead=0).dims)
+
         res = self._apply_climpred_function(
-            compute_persistence,
+            compute_persistence_func,
             input_dict=input_dict,
             metric=metric,
             alignment="same_inits",
@@ -1345,8 +1372,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
                 If None or empty, returns no p value.
+                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
             resample_dim (str or list): dimension to resample from. default: 'member'.
@@ -1408,19 +1436,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
-            Attributes:
-                prediction_skill_software:     climpred https://climpred.readthedocs.io/
-                skill_calculated_by_function:  PerfectModelEnsemble.bootstrap()
-                number_of_initializations:     12
-                number_of_members:             10
-                metric:                        pearson_r
-                comparison:                    m2m
-                dim:                           ['init', 'member']
-                reference:                     ['persistence', 'climatology', 'uninitiali...
-                resample_dim:                  member
-                sig:                           95
-                iterations:                    50
-                confidence_interval_levels:    0.975-0.025
+            Attributes: (12/13)
+                prediction_skill_software:                         climpred https://clim...
+                skill_calculated_by_function:                      PerfectModelEnsemble...
+                number_of_initializations:                         12
+                number_of_members:                                 10
+                metric:                                            pearson_r
+                comparison:                                        m2m
+                ...
+                reference:                                         ['persistence', 'clim...
+                PerfectModel_persistence_from_initialized_lead_0:  False
+                resample_dim:                                      member
+                sig:                                               95
+                iterations:                                        50
+                confidence_interval_levels:                        0.975-0.025
 
         """
         if groupby is not None:
@@ -1696,7 +1725,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Example:
             >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
-            <xarray.DataArray 'days since 1960-01-01' (alignment: 3, lead: 10, init: 61)>
+            <xarray.DataArray 'valid_time' (alignment: 3, lead: 10, init: 61)>
             array([[[-1826., -1461., -1095., ...,    nan,    nan,    nan],
                     [-1461., -1095.,  -730., ...,    nan,    nan,    nan],
                     [-1095.,  -730.,  -365., ...,    nan,    nan,    nan],
@@ -1724,6 +1753,8 @@ class HindcastEnsemble(PredictionEnsemble):
               * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
               * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
               * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
+            Attributes:
+                units:    days since 1960-01-01
 
             >>> HindcastEnsemble.plot_alignment(alignment="same_verifs")  # doctest: +SKIP
             <matplotlib.collections.QuadMesh object at 0x1405c1520>

@@ -459,6 +459,9 @@ Logarithmic Ensemble Spread Score
 Contingency-based metrics
 *************************
 
+Contingency
+===========
+
 A number of metrics can be derived from a `contingency table <https://www.cawcr.gov.au/projects/verification/#Contingency_table>`_. To use this in ``climpred``, run ``.verify(metric='contingency', score=...)`` where score can be chosen from `xskillscore <https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics>`_.
 
 .. autofunction:: _contingency

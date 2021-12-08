@@ -2,6 +2,7 @@ from .constants import GROUPBY_SEASONALITIES
 
 OPTIONS = {
     "seasonality": "month",
+    "PerfectModel_persistence_from_initialized_lead_0": False,
     "warn_for_failed_PredictionEnsemble_xr_call": True,
     "warn_for_rename_to_climpred_dims": True,
     "warn_for_init_coords_int_to_annual": True,
@@ -12,6 +13,8 @@ _SEASONALITY_OPTIONS = frozenset(GROUPBY_SEASONALITIES)
 
 _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,
+    "PerfectModel_persistence_from_initialized_lead_0": lambda choice: choice
+    in [True, False, "default"],
     "warn_for_PredictionEnsemble_xr_call": lambda choice: choice
     in [True, False, "default"],
     "warn_for_rename_to_climpred_dims": lambda choice: choice
@@ -34,6 +37,10 @@ class set_options:
             :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
         - Allowed: [``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``]
         - Default: ``dayofyear``.
+    - ``PerfectModel_persistence_from_initialized_lead_0``
+        - Use ``climpred.reference.compute_persistence_from_first_lead`` in PerfectModelEnsemble.verify/bootstrap(reference='persistence'). If ``False`` uses `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ and if ``True`` uses  `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_, see `example <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
+        - Allowed: [True, False]
+        - Default: False
     - ``warn_for_failed_PredictionEnsemble_xr_call``
         - Raise UserWarning when PredictionEnsemble.xr_call,
             e.g. ``.sel(lead=[1])`` fails on one of the datasets.

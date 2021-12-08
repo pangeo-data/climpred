@@ -1,4 +1,5 @@
 import pytest
+import xarray as xr
 
 from climpred import set_options
 
@@ -16,3 +17,53 @@ def test_HindcastEnsemble_verify_reference(
             alignment="same_verifs",
             reference=reference,
         )
+
+
+@pytest.mark.parametrize("comparison", ["m2m", "m2e", "m2c", "e2c"])
+def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
+    perfectModelEnsemble_initialized_control, comparison
+):
+    """Test compute_persistence_from_first_lead started with PerfectModel_persistence_from_initialized_lead_0."""
+    kw = dict(
+        metric="mse",
+        comparison=comparison,
+        dim="init" if comparison == "e2c" else ["member", "init"],
+        reference="persistence",
+    )
+    with set_options(PerfectModel_persistence_from_initialized_lead_0=True):
+        new_persistence = perfectModelEnsemble_initialized_control.verify(**kw)
+    with set_options(PerfectModel_persistence_from_initialized_lead_0=False):
+        old_persistence = perfectModelEnsemble_initialized_control.verify(**kw)
+    assert not new_persistence.sel(skill="persistence").equals(
+        old_persistence.sel(skill="persistence")
+    )
+
+
+@pytest.mark.parametrize("call", ["verify", "bootstrap"])
+def test_PerfectModelEnsemble_persistence_from_first_lead_warning_lead_non_zero(
+    perfectModelEnsemble_initialized_control, call
+):
+    """Test that compute_persistence_from_first_lead warns if first lead not zero."""
+    kw = dict(
+        metric="mse", comparison="m2e", dim=["member", "init"], reference="persistence"
+    )
+    if call == "bootstrap":
+        kw["iterations"] = 2
+    with set_options(PerfectModel_persistence_from_initialized_lead_0=True):
+        with pytest.warns(UserWarning, match="Calculate persistence from lead=1"):
+            # perfectModelEnsemble_initialized_control starts with lead 1
+            print(perfectModelEnsemble_initialized_control.get_initialized())
+            getattr(perfectModelEnsemble_initialized_control, call)(**kw)
+
+        with pytest.warns(None) as record:
+            with xr.set_options(keep_attrs=True):
+                perfectModelEnsemble_initialized_control._datasets["initialized"][
+                    "lead"
+                ] = (
+                    perfectModelEnsemble_initialized_control._datasets["initialized"][
+                        "lead"
+                    ]
+                    - 1
+                )
+            getattr(perfectModelEnsemble_initialized_control, call)(**kw)
+        assert len(record) == 0

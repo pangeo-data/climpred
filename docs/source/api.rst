@@ -195,6 +195,7 @@ Reference
     :toctree: api/
 
     compute_persistence
+    compute_persistence_from_first_lead
     compute_uninitialized
     compute_climatology
 

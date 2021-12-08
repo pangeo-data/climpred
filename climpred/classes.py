@@ -1753,6 +1753,8 @@ class HindcastEnsemble(PredictionEnsemble):
               * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
               * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
               * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
+            Attributes:
+                units:    days since 1960-01-01
 
             >>> HindcastEnsemble.plot_alignment(alignment="same_verifs")  # doctest: +SKIP
             <matplotlib.collections.QuadMesh object at 0x1405c1520>

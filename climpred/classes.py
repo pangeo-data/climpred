@@ -1725,7 +1725,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Example:
             >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
-            <xarray.DataArray 'days since 1960-01-01' (alignment: 3, lead: 10, init: 61)>
+            <xarray.DataArray 'valid_time [days since 1960-01-01]' (alignment: 3, lead: 10, init: 61)>
             array([[[-1826., -1461., -1095., ...,    nan,    nan,    nan],
                     [-1461., -1095.,  -730., ...,    nan,    nan,    nan],
                     [-1095.,  -730.,  -365., ...,    nan,    nan,    nan],

@@ -34,7 +34,7 @@ New Features
   .. code-block:: python
 
       >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
-      >>> hind.lead.attrs['units'] = 'years'
+      >>> hind.lead.attrs["units"] = "years"
       >>> climpred.HindcastEnsemble(hind).get_initialized()
       <xarray.Dataset>
       Dimensions:     (lead: 10, member: 10, init: 64)
@@ -87,13 +87,13 @@ New Features
   understanding which dates are matched for the different ``alignment`` approaches.
   (:issue:`701`, :pr:`702`) `Aaron Spring`_.
 
-.. ipython:: python
-    :okwarning:
+  .. ipython:: python
+      :okwarning:
 
-    from climpred.tutorial import load_dataset
-    hindcast = climpred.HindcastEnsemble(load_dataset("CESM-DP-SST")).add_observations(load_dataset("ERSST"))
-    @savefig plotting_MEOW.png width=100%
-    hindcast.plot_alignment(edgecolor="w")
+      from climpred.tutorial import load_dataset
+      hindcast = climpred.HindcastEnsemble(load_dataset("CESM-DP-SST")).add_observations(load_dataset("ERSST"))
+      @savefig plotting_MEOW.png width=100%
+      hindcast.plot_alignment(edgecolor="w")
 
 - Add ``attrs`` to new ``coordinates`` created by ``climpred``.
   (:issue:`695`, :pr:`697`) `Aaron Spring`_.
@@ -109,8 +109,9 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
-- Reduce dependencies (:pr:`686`) `Aaron Spring`_.
-- Add `typing <https://docs.python.org/3/library/typing.html>`_ (:issue:`685`, :pr:`692`) `Aaron Spring`_.
+- Reduce dependencies. (:pr:`686`) `Aaron Spring`_.
+- Add `typing <https://docs.python.org/3/library/typing.html>`_.
+  (:issue:`685`, :pr:`692`) `Aaron Spring`_.
 - refactor ``add_attrs`` into :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`. Now all keywords are
   captured in the skill dataset attributes ``.attrs``.

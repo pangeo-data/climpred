@@ -427,7 +427,7 @@ def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
                 cftime.date2num(verif_dates[k], date2num_units),
                 dims="init",
                 coords={"init": v.rename({"time": "init"}).to_index()},
-                name=date2num_units,
+                name=f"valid_time [{date2num_units}]",
             )
             for k, v in inits.items()
         ],

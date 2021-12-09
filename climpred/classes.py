@@ -760,7 +760,7 @@ class PredictionEnsemble:
         how: str = "mean",
         **xesmf_kwargs: str,
     ):
-        """Smooth in space/aggregate in time ``PredictionEnsemble``.
+        """Smooth in space and/or aggregate in time ``PredictionEnsemble``.
 
         Args:
             smooth_kws: Dictionary to specify the dims to
@@ -769,8 +769,8 @@ class PredictionEnsemble:
                 :py:func:`~climpred.smoothing.temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
                 'goddard2013'. Defaults to None.
-            how: how to smooth temporally. From ['mean','sum']. Defaults to
-                'mean'.
+            how: how to smooth temporally. From Choose from ``["mean", "sum"]``.
+                Defaults to ``"mean"``.
             **xesmf_kwargs: kwargs passed to
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
@@ -887,15 +887,14 @@ class PredictionEnsemble:
         return self
 
     def remove_seasonality(
-        self, initialized_dim: str = "init", seasonality: Union[None, str] = None
+        self, seasonality: Union[None, str] = None
     ) -> "PredictionEnsemble":
         """Remove seasonal cycle from all climpred datasets.
 
         Args:
-            initialized_dim: dimension name of initialized dataset to calculate
-                climatology over. Defaults to "init".
             seasonality: Seasonality to be removed. Choose from:
-                ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
+                ``["season", "month", "dayofyear"]``.
+                Defaults to ``OPTIONS["seasonality"]``.
 
         Examples:
             >>> # example already without seasonal cycle
@@ -926,7 +925,6 @@ class PredictionEnsemble:
 
         return self.map(
             _remove_seasonality,
-            initialized_dim=initialized_dim,
             seasonality=seasonality,
         )
 
@@ -1000,10 +998,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
           initialized: prediction ensemble output.
 
         Attributes:
-            control: Dictionary of control run associated with the initialized
-                     ensemble.
-            uninitialized: Dictionary of uninitialized run that is
-                           bootstrapped from the initialized run.
+            control: datasets dictionary item of control simulation associated with the
+                initialized ensemble.
+            uninitialized: datasets dictionary item of uninitialized forecast.
         """
         super().__init__(initialized)
         # Reserve sub-dictionary for the control simulation.
@@ -1176,8 +1173,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 reference:                     []
 
 
-            Pearson's Anomaly Correlation ('acc') comparing every member to every
-            other member (``m2m``) reducing dimensions ``member`` and ``init`` while
+            Pearson's Anomaly Correlation (``"acc"``) comparing every member to every
+            other member (``"m2m"``) reducing dimensions ``member`` and ``init`` while
             also calculating reference skill for the ``persistence``, ``climatology``
             and ``uninitialized`` forecast.
 
@@ -1471,7 +1468,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference: Type of reference forecasts with which to verify against.
                 One or more of ``["uninitialized", "persistence", "climatology"]``.
                 Defaults to ``None`` meaning no reference.
-                If None or empty, returns no p value.
+                If ``None`` or ``[]``, returns no p value.
                 For ``persistence``, choose between
                 ``set_options(PerfectModel_persistence_from_initialized_lead_0)=False``
                 (default) using :py:func:`~climpred.reference.compute_persistence` or
@@ -1519,11 +1516,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             https://doi.org/10/f4jjvf.
 
         Example:
-            Calculate the Pearson's Anomaly Correlation ('acc') comparing every member
-            to every other member (``m2m``) reducing dimensions ``member`` and
+            Calculate the Pearson's Anomaly Correlation (``"acc"``) comparing every
+            member to every other member (``"m2m"``) reducing dimensions ``member`` and
             ``init`` 50 times after resampling ``member`` dimension with replacement.
-            Also calculate reference skill for the ``persistence``, ``climatology``
-            and ``uninitialized`` forecast and compare whether initialized skill is
+            Also calculate reference skill for the ``"persistence"``, ``"climatology"``
+            and ``"uninitialized"`` forecast and compare whether initialized skill is
             better than reference skill: Returns verify skill, probability that
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
@@ -1632,10 +1629,9 @@ class HindcastEnsemble(PredictionEnsemble):
           initialized: initialized prediction ensemble output.
 
         Attributes:
-          observations: Dictionary of verification data to associate with the decadal
-              prediction ensemble.
-          uninitialized: Dictionary of companion (or bootstrapped)
-              uninitialized ensemble run.
+          observations: datasets dictionary item of verification data to associate with
+            the prediction ensemble.
+          uninitialized: datasets dictionary item of uninitialized forecast.
         """
         super().__init__(initialized)
         self._datasets.update({"observations": {}})
@@ -1760,7 +1756,7 @@ class HindcastEnsemble(PredictionEnsemble):
         """Generate ``uninitialized`` by resampling from ``initialized``.
 
         Args:
-            resample_dim: dimension to resample from. Must contain "init".
+            resample_dim: dimension to resample from. Must contain ``"init"``.
 
         Returns:
             resampled uninitialized ensemble added to HindcastEnsemble
@@ -1810,22 +1806,21 @@ class HindcastEnsemble(PredictionEnsemble):
         Args:
             alignment: which inits or verification times should be aligned?
 
-                - ``'maximize'``: maximize the degrees of freedom by slicing
-                    ``initialized`` and ``verif`` to a common time frame at each lead.
-                - ``"same_inits"`: slice to a common ``init`` frame prior to computing
-                    metric. This philosophy follows the thought that each lead should be
-                    based on the same set of initializations.
-
+                - ``"maximize"``: maximize the degrees of freedom by slicing
+                  ``initialized`` and ``verif`` to a common time frame at each lead.
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
+                  metric. This philosophy follows the thought that each lead should be
+                  based on the same set of initializations.
                 - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
-
                 - ``None`` defaults to the three above.
+
             reference: Type of reference forecasts with which to verify against.
                 One or more of ``["uninitialized", "persistence", "climatology"]``.
                 Defaults to ``None`` meaning no reference.
-            date2num_units: passed to cftime.date2num as units
-            return_xr:  return
+            date2num_units: passed to ``cftime.date2num`` as units
+            return_xr: if ``True`` return xarray.DataArray else plot
             cmap: color palette
             edgecolors: color of the edges in the plot
             **plot_kwargs: arguments passed to ``plot``.
@@ -1862,7 +1857,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Coordinates:
               * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
               * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
+              * alignment  (alignment) <U10 'same_init' 'same_verif' ""maximize
             Attributes:
                 units:    days since 1960-01-01
 
@@ -1939,13 +1934,11 @@ class HindcastEnsemble(PredictionEnsemble):
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
             alignment: which inits or verification times should be aligned?
 
-                - ``'maximize'``: maximize the degrees of freedom by slicing ``initialized`` and
-                  ``verif`` to a common time frame at each lead.
-
-                - ``"same_inits"`: slice to a common ``init`` frame prior to computing
+                - ``"maximize"``: maximize the degrees of freedom by slicing
+                  ``initialized`` and ``verif`` to a common time frame at each lead.
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
                 - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
@@ -1989,11 +1982,11 @@ class HindcastEnsemble(PredictionEnsemble):
                 dim:                           ['init', 'member']
                 reference:                     []
 
-            Pearson's Anomaly Correlation ('acc') comparing the ensemble mean with the
-            verification (``e2o``) over the same initializations (``same_inits``) for
-            all leads reducing dimension ``init`` while also calculating reference
-            skill for the ``persistence``, ``climatology`` and ``uninitialized``
-            forecast.
+            Pearson's Anomaly Correlation (``"acc"``) comparing the ensemble mean with
+            the verification (``"e2o"``) over the same initializations
+            (``"same_inits"``) for all leads reducing dimension ``init`` while also
+            calculating reference skill for the ``"persistence"``, ``"climatology"``
+            and ``'uninitialized'`` forecast.
 
             >>> HindcastEnsemble.verify(
             ...     metric="acc",
@@ -2208,16 +2201,14 @@ class HindcastEnsemble(PredictionEnsemble):
             reference: Type of reference forecasts with which to verify against.
                 One or more of ``["uninitialized", "persistence", "climatology"]``.
                 Defaults to ``None`` meaning no reference.
-                If None or empty, returns no p value.
+                If ``None`` or ``[]``, returns no p value.
             alignment: which inits or verification times should be aligned?
 
-                - 'maximize': maximize the degrees of freedom by slicing ``init`` and
+                - ""maximize: maximize the degrees of freedom by slicing ``init`` and
                   ``verif`` to a common time frame at each lead.
-
-                - ``"same_inits"`: slice to a common ``init`` frame prior to computing
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
                 - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
@@ -2255,12 +2246,12 @@ class HindcastEnsemble(PredictionEnsemble):
                     bootstrapping with replacement.
 
         Example:
-            Calculate the Pearson's Anomaly Correlation ('acc') comparing the ensemble
-            mean forecast to the verification (``e2o``) over the same verification
-            times (``same_verifs``) for all leads reducing dimensions ``init`` 50
-            times after resampling ``member`` dimension with replacement. Also
-            calculate reference skill for the ``persistence``, ``climatology``
-            and ``uninitialized`` forecast and compare whether initialized skill is
+            Calculate the Pearson's Anomaly Correlation (``"acc"``) comparing the
+            ensemble mean forecast to the verification (``"e2o"``) over the same
+            verification times (``"same_verifs"``) for all leads reducing dimensions
+            ``init`` 50 times after resampling ``member`` dimension with replacement.
+            Also calculate reference skill for the ``"persistence"``, ``"climatology"``
+            and ``"uninitialized"`` forecast and compare whether initialized skill is
             better than reference skill: Returns verify skill, probability that
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
@@ -2379,13 +2370,11 @@ class HindcastEnsemble(PredictionEnsemble):
         Args:
             alignment: which inits or verification times should be aligned?
 
-                - ``'maximize'``: maximize the degrees of freedom by slicing ``initialized`` and
-                  ``verif`` to a common time frame at each lead.
-
-                - ``"same_inits"`: slice to a common ``init`` frame prior to computing
+                - ``""maximize``: maximize the degrees of freedom by slicing
+                  ``initialized`` and ``verif`` to a common time frame at each lead.
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
                 - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
@@ -2394,9 +2383,10 @@ class HindcastEnsemble(PredictionEnsemble):
                 Defaults to 'additive_mean'. Select from:
 
                 - ``"additive_mean"``: correcting the mean forecast additively
-                - ``"multiplicative_mean"``: correcting the mean forecast multiplicatively
+                - ``"multiplicative_mean"``: correcting the mean forecast
+                  multiplicatively
                 - ``"multiplicative_std"``: correcting the standard deviation
-                    multiplicatively
+                  multiplicatively
                 - ``"modified_quantile"``: `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
                 - ``"basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
                 - ``"gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
@@ -2412,11 +2402,11 @@ class HindcastEnsemble(PredictionEnsemble):
                 and test period to apply bias correction to? For a detailed
                 description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:  # noqa: E501
 
-                - `fair`: no overlap between `train` and `test` (recommended).
+                - ``"fair"```: no overlap between `train` and `test` (recommended).
                     Set either `train_init` or `train_time`.
-                - `unfair`: completely overlapping `train` and `test`
+                - ``"unfair"``: completely overlapping `train` and `test`
                     (climpred default).
-                - `unfair-cv`: overlapping `train` and `test` except for current
+                - ``"unfair-cv"```: overlapping `train` and `test` except for current
                     `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
                     (set `cv='LOO'`).
 
@@ -2464,7 +2454,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 reference:                     []
 
             Note that this HindcastEnsemble is already bias reduced, therefore
-            ``train_test_split='unfair'`` has hardly any effect. Use all
+            ``train_test_split="unfair"`` has hardly any effect. Use all
             initializations to calculate bias and verify skill:
 
             >>> HindcastEnsemble.remove_bias(
@@ -2492,8 +2482,8 @@ class HindcastEnsemble(PredictionEnsemble):
 
             Separate initializations 1954 - 1980 to calculate bias. Note that
             this HindcastEnsemble is already bias reduced, therefore
-            ``train_test_split='fair'`` worsens skill here. Generally,
-            ``train_test_split='fair'`` is recommended to use for a fair
+            ``train_test_split="fair"`` worsens skill here. Generally,
+            ``train_test_split="fair"`` is recommended to use for a fair
             comparison against real-time forecasts.
 
             >>> HindcastEnsemble.remove_bias(

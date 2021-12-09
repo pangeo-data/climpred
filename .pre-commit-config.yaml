@@ -50,7 +50,7 @@ repos:
       hooks:
       -   id: pydocstyle
       args:
-      #- --ignore=W503
+      - --ignore=D301
       - --max-line-length=93
       - --convention google # https://google.github.io/styleguide/pyguide.html#Comments
 

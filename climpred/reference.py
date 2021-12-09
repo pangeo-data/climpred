@@ -290,17 +290,18 @@ def compute_persistence(
     Args:
         initialized: The initialized ensemble.
         verif: Verification data.
-        metric: Metric name to apply at each lag for the persistence computation. Default: 'pearson_r'
+        metric: Metric name to apply at each lag for the persistence computation.
+            Default: ``"pearson_r"``.
         alignment: which inits or verification times should be aligned?
 
-            - ``maximize``: maximize the degrees of freedom by slicing
-                ``initialized`` and ``verif`` to a common time frame at each lead.
-            - ``same_inits``: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
-            - ``same_verif``: slice to a common/consistent verification time frame
-                prior to computing metric. This philosophy follows the thought that
-                each lead should be based on the same set of verification dates.
+            - ``"maximize"``: maximize the degrees of freedom by slicing
+              ``initialized`` and ``verif`` to a common time frame at each lead.
+            - ``"same_inits"``: slice to a common init frame prior to computing
+              metric. This philosophy follows the thought that each lead should be
+              based on the same set of initializations.
+            - ``"same_verif"``: slice to a common/consistent verification time frame
+              prior to computing metric. This philosophy follows the thought that
+              each lead should be based on the same set of verification dates.
 
         dim: dimension to apply metric over.
         ** metric_kwargs: additional keywords to be passed to metric
@@ -396,13 +397,13 @@ def compute_persistence_from_first_lead(
         alignment: which inits or verification times should be aligned?
 
             - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
-                and ``verif`` to a common time frame at each lead.
+              and ``verif`` to a common time frame at each lead.
             - ``same_inits``: slice to a common ``init`` frame prior to computing
-                metric. This philosophy follows the thought that each lead should be
-                based on the same set of initializations.
+              metric. This philosophy follows the thought that each lead should be
+              based on the same set of initializations.
             - ``same_verif``: slice to a common/consistent verification time frame
-                prior to computing metric. This philosophy follows the thought that
-                each lead should be based on the same set of verification dates.
+              prior to computing metric. This philosophy follows the thought that
+              each lead should be based on the same set of verification dates.
 
         dim: dimension to apply metric over.
         ** metric_kwargs: additional keywords to be passed to metric
@@ -539,15 +540,14 @@ def compute_uninitialized(
         alignment: which inits or verification times should be aligned?
 
             - ``"maximize"``: maximize the degrees of freedom by slicing
-                ``initialized`` and ``verif`` to a common time frame at each
-                lead.
+              ``initialized`` and ``verif`` to a common time frame at each lead.
             - ``"same_inits"``: slice to a common init frame prior to computing
-                metric. This philosophy follows the thought that each lead
-                should be based on the same set of initializations.
+              metric. This philosophy follows the thought that each lead
+              should be based on the same set of initializations.
             - ``same_verif``: slice to a common/consistent verification time
-                frame prior to computing metric. This philosophy follows the
-                thought that each lead should be based on the same set of
-                verification dates.
+              frame prior to computing metric. This philosophy follows the
+              thought that each lead should be based on the same set of
+              verification dates.
 
         ** metric_kwargs: additional keywords to be passed to metric
 

@@ -47,7 +47,7 @@ def decorrelation_time(
     r"""Calculate the decorrelaton time of a time series.
 
     .. math::
-        \\tau_{d} = 1 + 2 * \\sum_{k=1}^{r}(\\alpha_{k})^{k}
+        \tau_{d} = 1 + 2 * \sum_{k=1}^{r}(\alpha_{k})^{k}
 
     Args:
         da: input.
@@ -59,7 +59,7 @@ def decorrelation_time(
 
     Reference:
         * Storch, H. v, and Francis W. Zwiers. Statistical Analysis in Climate
-          Research. Cambridge ; New York: Cambridge University Press, 1999.,
+          Research. Cambridge; New York: Cambridge University Press, 1999.,
           p.373
 
     """
@@ -90,8 +90,8 @@ def dpp(
 
     .. math::
 
-        DPP_{\\mathrm{unbiased}}(m) = \\frac{\\sigma^{2}_{m} -
-        \\frac{1}{m}\\cdot\\sigma^{2}}{\\sigma^{2}}
+        DPP_{\mathrm{unbiased}}(m) = \frac{\sigma^{2}_{m} -
+        \frac{1}{m}\cdot\\sigma^{2}}{\sigma^{2}}
 
     Note:
         Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP
@@ -189,7 +189,7 @@ def varweighted_mean_period(
     r"""Calculate the variance weighted mean period of time series.
 
     .. math::
-        P_{x} = \\frac{\\sum_k V(f_k,x)}{\\sum_k f_k  \\cdot V(f_k,x)}
+        P_{x} = \frac{\sum_k V(f_k,x)}{\sum_k f_k  \cdot V(f_k,x)}
 
     Args:
         da: input data including dim.

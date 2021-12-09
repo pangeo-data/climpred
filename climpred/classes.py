@@ -1,6 +1,7 @@
 import warnings
 from copy import deepcopy
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -13,7 +14,7 @@ from typing import (
     Union,
 )
 
-import cf_xarray
+import cf_xarray  # noqa
 import numpy as np
 import xarray as xr
 from dask import is_dask_collection
@@ -92,8 +93,6 @@ alignmentType = str
 referenceType = Union[List[str], str]
 groupbyType = Optional[Union[str, xr.DataArray]]
 metric_kwargsType = Optional[Any]
-
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     import matplotlib.pyplot as plt
@@ -237,9 +236,10 @@ class PredictionEnsemble:
         skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
             {new_dim_name: group_label}
         )
-        skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore
+        skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore # noqa: E501
             {
-                "description": "new dimension showing skill grouped by init.{groupby} created by .verify(groupby) or .bootstrap(groupby)"
+                "description": "new dimension showing skill grouped by init.{groupby}"
+                " created by .verify(groupby) or .bootstrap(groupby)"
             }
         )
         return skill_group
@@ -268,7 +268,8 @@ class PredictionEnsemble:
 
     @property
     def sizes(self) -> Mapping[Hashable, int]:
-        """Mapping from dimension names to lengths for all PredictionEnsemble._datasets."""
+        """Mapping from dimension names to lengths for all
+        PredictionEnsemble._datasets."""
         pe_dims = dict(self.get_initialized().dims)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -293,8 +294,8 @@ class PredictionEnsemble:
 
     @property
     def chunksizes(self) -> Mapping[Hashable, Tuple[int, ...]]:
-        """Mapping from dimension names to block lengths for this dataset's data, or None if
-        the underlying data is not a dask array.
+        """Mapping from dimension names to block lengths for this dataset's data, or
+        None if the underlying data is not a dask array.
         Cannot be modified directly, but can be modified by calling .chunk().
         Same as Dataset.chunks.
         """
@@ -302,7 +303,8 @@ class PredictionEnsemble:
 
     @property
     def data_vars(self) -> DataVariables:
-        """Dictionary of DataArray objects corresponding to data variables available in all PredictionEnsemble._datasets."""
+        """Dictionary of DataArray objects corresponding to data variables available in
+        all PredictionEnsemble._datasets."""
         varset = set(self.get_initialized().data_vars)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -324,7 +326,8 @@ class PredictionEnsemble:
         return len(self.data_vars)
 
     def __iter__(self) -> Iterator[Hashable]:
-        """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
+        """Iterate over underlying xr.Datasets for initialized, uninitialized,
+        observations or initialized, uninitialized, control."""
         return iter(self._datasets.values())
 
     def __delitem__(self, key: Hashable) -> None:
@@ -495,7 +498,7 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore
+            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore # noqa: E501
                 raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
@@ -608,7 +611,7 @@ class PredictionEnsemble:
                     error_type = type(e).__name__
                     if func_name:
                         if len(args) > 1:
-                            msg = f"{func_name}({args[1:]}, {kwargs}) failed\n{error_type}: {e}"
+                            msg = f"{func_name}({args[1:]}, {kwargs}) failed\n{error_type}: {e}"  # noqa: E501
                         else:
                             msg = f"{func_name}({kwargs}) failed\n{error_type}: {e}"
                     else:
@@ -623,7 +626,7 @@ class PredictionEnsemble:
                         if dim not in v.dims:
                             if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
                                 warnings.warn(
-                                    f"Error due to verification/control/uninitialized: {msg}"
+                                    f"Error due to verification/control/uninitialized: {msg}"  # noqa: E501
                                 )
                     else:
                         if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
@@ -658,7 +661,8 @@ class PredictionEnsemble:
 
         # More explicit than nested dictionary comprehension.
         for key, ds in datasets.items():
-            # If ds is xr.Dataset, apply the function directly to it. else, e.g. for {} ignore
+            # If ds is xr.Dataset, apply the function directly to it
+            # else, e.g. for {} ignore
             if isinstance(ds, xr.Dataset):
                 dim = kwargs.get("dim", "")
                 if "_or_" in dim:
@@ -724,7 +728,8 @@ class PredictionEnsemble:
             Uninitialized:
                 None
 
-            ``smooth`` simultaneously aggregates spatially listening to ``lon`` and ``lat`` and temporally listening to ``lead`` or ``time``.
+            ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
+            ``lat`` and temporally listening to ``lead`` or ``time``.
 
             >>> HindcastEnsemble_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
             Coordinates:
@@ -860,8 +865,8 @@ class PredictionEnsemble:
         )
 
     def _warn_if_chunked_along_init_member_time(self) -> None:
-        """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
-        more than one chunk to show how to circumvent ``xskillscore`` chunking
+        """Warn upon instantiation when ``CLIMPRED_DIMS`` except ``lead`` are chunked
+        with more than one chunk to show how to circumvent ``xskillscore`` chunking
         ``ValueError``."""
         suggest_one_chunk = []
         for d in self.chunks:
@@ -879,17 +884,32 @@ class PredictionEnsemble:
             if "time" in suggest_one_chunk_time_to_init:
                 suggest_one_chunk_time_to_init.remove("time")
                 suggest_one_chunk_time_to_init.append("init")
-            msg = f"{name} is chunked along dimensions {suggest_one_chunk} with more than one chunk. `{name}.chunks={self.chunks}`.\nYou cannot call `{name}.verify` or `{name}.bootstrap` in combination with any of {suggest_one_chunk_time_to_init} passed as `dim`. In order to do so, please rechunk {suggest_one_chunk} with `{name}.chunk({{dim:-1}}).verify(dim=dim).`\nIf you do not want to use dimensions {suggest_one_chunk_time_to_init} in `{name}.verify(dim=dim)`, you can disregard this warning."
+            msg = (
+                f"{name} is chunked along dimensions {suggest_one_chunk} with more "
+                f"than one chunk. `{name}.chunks={self.chunks}`.\nYou cannot call "
+                f"`{name}.verify` or `{name}.bootstrap` in combination with any of "
+                f" {suggest_one_chunk_time_to_init} passed as `dim`. In order to do "
+                f"so, please rechunk {suggest_one_chunk} with `{name}.chunk("
+                "{{dim:-1}}).verify(dim=dim).`\nIf you do not want to use dimensions "
+                f" {suggest_one_chunk_time_to_init} in `{name}.verify(dim=dim)`, you "
+                "can disregard this warning."
+            )
             # chunk lead:1 in HindcastEnsemble
             if self.kind == "hindcast":
-                msg += '\nIn `HindcastEnsemble`s you may also create one chunk per lead, as the `climpred` internally loops over lead, e.g. `.chunk({{"lead": 1}}).verify().`'
+                msg += '\nIn `HindcastEnsemble`s you may also create one chunk per "\
+                " lead, as the `climpred` internally loops over lead, e.g. "\
+                " `.chunk({{"lead": 1}}).verify().`'
             # chunk auto on non-climpred dims
             ndims = list(self.sizes)
             for d in CLIMPRED_DIMS:
                 if d in ndims:
                     ndims.remove(d)
             if len(ndims) > 0:
-                msg += f'\nConsider chunking embarassingly parallel dimensions such as {ndims} automatically, i.e. `{name}.chunk({ndims[0]}="auto").verify(...).'
+                msg += (
+                    f"\nConsider chunking embarassingly parallel dimensions such as "
+                    f"{ndims} automatically, i.e. "
+                    f'`{name}.chunk({ndims[0]}="auto").verify(...).'
+                )
             warnings.warn(msg)
 
 
@@ -1055,8 +1075,15 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
-                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
+                verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
+                For ``persistence``, choose between
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=False``
+                (default) using :py:func:`~climpred.reference.compute_persistence` or
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=True``
+                using
+                :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
             groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): Arguments passed to ``metric``.
 
@@ -1235,8 +1262,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
     ):
         """Verify a simple persistence forecast of the control run against itself.
 
-        Note: uses climpred.reference.compute_persistence_from_first_lead
-        if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"] else climpred.reference.compute_persistence.
+        Note: uses :py:func:`~climpred.reference.compute_persistence_from_first_lead`
+        if ``set_options("PerfectModel_persistence_from_initialized_lead_0"=True)`` else
+        :py:func:`~climpred.reference.compute_persistence`.
 
         Args:
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
@@ -1265,13 +1293,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
             if self.get_initialized().lead[0] != 0:
                 if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
                     warnings.warn(
-                        f"Calculate persistence from lead={int(self.get_initialized().lead[0].values)} instead of lead=0 (recommended)."
+                        "Calculate persistence from "
+                        f"lead={int(self.get_initialized().lead[0].values)} instead "
+                        "of lead=0 (recommended)."
                     )
         else:
             compute_persistence_func = compute_persistence
             if self._datasets["control"] == {}:
                 warnings.warn(
-                    "You may also calculate persistence based on ``initialized.isel(lead=0)`` by changing ``OPTIONS['PerfectModel_persistence_from_initialized_lead_0']=True``."
+                    "You may also calculate persistence based on "
+                    "``initialized.isel(lead=0)`` by changing "
+                    " ``set_options(PerfectModel_persistence_from_initialized_lead_0=True)``."
                 )
             has_dataset(
                 self._datasets["control"], "control", "compute a persistence forecast"
@@ -1372,12 +1404,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
+                verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
                 If None or empty, returns no p value.
-                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
+                For ``persistence``, choose between
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=False``
+                (default) using :py:func:`~climpred.reference.compute_persistence` or
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=True``
+                using
+                :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
             iterations (int): Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
-            resample_dim (str or list): dimension to resample from. default: 'member'.
+            resample_dim (str or list of str): dimension to resample from.
+                Defaults to `"member"``.
 
                 - 'member': select a different set of members from hind
                 - 'init': select a different set of initializations from hind
@@ -1386,7 +1426,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 uninitialized and persistence beat initialized skill.
             pers_sig (int): If not ``None``, the separate significance level for
                 persistence. Defaults to ``None``, or the same significance as ``sig``.
-            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
+            groupby (str, xr.DataArray): group ``init`` before passing ``initialized``
+                to ``bootstrap``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
         Returns:
@@ -1605,6 +1646,18 @@ class HindcastEnsemble(PredictionEnsemble):
         datasets.update({"observations": xobj})
         return self._construct_direct(datasets, kind="hindcast")
 
+    def add_verification(
+        self, xobj: Union[xr.DataArray, xr.Dataset]
+    ) -> "HindcastEnsemble":
+        """Add verification data against which to verify the initialized ensemble.
+        Same as add_observations()
+
+        Args:
+            xobj (xarray object): Dataset/DataArray to append to the
+                ``HindcastEnsemble`` object.
+        """
+        return self.add_observations(xobj)
+
     @is_xarray(1)
     def add_uninitialized(
         self, xobj: Union[xr.DataArray, xr.Dataset]
@@ -1707,9 +1760,10 @@ class HindcastEnsemble(PredictionEnsemble):
                   each lead should be based on the same set of verification dates.
 
                 - None defaults to the three above
-            reference (str, list of str): Type of reference forecasts to also verify against the
-                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
-                Defaults to None.
+            reference (str, list of str): Type of reference forecasts with which to
+                verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
             date2num_units : str
                 passed to cftime.date2num as units
             return_xr : bool
@@ -1793,12 +1847,14 @@ class HindcastEnsemble(PredictionEnsemble):
         if return_xr:
             return verif_dates_xr
         try:
-            import nc_time_axis
+            import nc_time_axis  # noqa:
 
             assert int(nc_time_axis.__version__.replace(".", "")) >= 140
             return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
         except ImportError:
             raise ValueError("nc_time_axis>1.4.0 required for plotting.")
+
+    from .docstrings import comparison_docstring
 
     def verify(
         self,
@@ -1817,9 +1873,6 @@ class HindcastEnsemble(PredictionEnsemble):
             between the initialized ensemble and observations/verification data.
 
         Args:
-            reference (str, list of str): Type of reference forecasts to also verify against the
-                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
-                Defaults to None.
             metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
                 verification. see `metrics </metrics.html>`_.
             comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
@@ -1843,6 +1896,10 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
+            reference (str, list of str): Type of reference forecasts with which to
+                verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
             groupby (str): group ``init`` before passing ``initialized`` to ``verify``.
             **metric_kwargs (optional): arguments passed to ``metric``.
 
@@ -2090,7 +2147,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 but should not contain ``member`` when ``comparison='e2o'``. Defaults to
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
             reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
+                verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
                 If None or empty, returns no p value.
             alignment (str): which inits or verification times should be aligned?
 
@@ -2202,7 +2261,8 @@ class HindcastEnsemble(PredictionEnsemble):
             self.get_uninitialized(), xr.Dataset
         ):
             raise ValueError(
-                "reference uninitialized requires uninitialized dataset. Use HindcastEnsemble.add_uninitialized(uninitialized_ds)."
+                "`reference='uninitialized'` requires `uninitialized` dataset."
+                "Use `HindcastEnsemble.add_uninitialized(uninitialized_ds)``."
             )
         bootstrapped_skill = bootstrap_hindcast(
             self.get_initialized(),
@@ -2250,7 +2310,9 @@ class HindcastEnsemble(PredictionEnsemble):
     ) -> "HindcastEnsemble":
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
-        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`. When wrapping xclim.sbda.adjustment use ``group`` instead.
+        Bias is grouped by ``seasonality`` set via
+        :py:class:`~climpred.options.set_options`.
+        When wrapping `xclim.sbda.adjustment` use ``group`` instead.
 
         Args:
             alignment (str): which inits or verification times should be aligned?
@@ -2266,23 +2328,27 @@ class HindcastEnsemble(PredictionEnsemble):
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            how (str): what kind of bias removal to perform. Defaults to 'additive_mean'. Select from:
+            how (str): what kind of bias removal to perform.
+                Defaults to 'additive_mean'. Select from:
 
                 - 'additive_mean': correcting the mean forecast additively
                 - 'multiplicative_mean': correcting the mean forecast multiplicatively
-                - 'multiplicative_std': correcting the standard deviation multiplicatively
+                - 'multiplicative_std': correcting the standard deviation
+                    multiplicatively
                 - 'modified_quantile': `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
                 - 'basic_quantile': `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
                 - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-                - 'EmpiricalQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
-                - 'DetrendedQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_
-                - 'PrincipalComponents': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
-                - 'QuantileDeltaMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
-                - 'Scaling': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
-                - 'LOCI': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
+                - :py:class:`~xclim.sdba.adjustment.EmpiricalQuantileMapping`
+                - :py:class:`~xclim.sdba.adjustment.DetrendedQuantileMapping`
+                - :py:class:`~xclim.sdba.adjustment.PrincipalComponents`
+                - :py:class:`~xclim.sdba.adjustment.QuantileDeltaMapping`
+                - :py:class:`~xclim.sdba.adjustment.Scaling`
+                - :py:class:`~xclim.sdba.adjustment.LOCI`
 
-            train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
+            train_test_split (str): How to separate train period to calculate the bias
+                and test period to apply bias correction to? For a detailed
+                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
                 - `fair`: no overlap between `train` and `test` (recommended).
                     Set either `train_init` or `train_time`.
@@ -2296,14 +2362,16 @@ class HindcastEnsemble(PredictionEnsemble):
                 when ``alignment='same_inits/maximize'``.
             train_time (xr.DataArray, slice): Define time for training
                 when ``alignment='same_verif'``.
-            cv (bool or str): Only relevant when `train_test_split='unfair-cv'`. Defaults to False.
+            cv (bool or str): Only relevant when `train_test_split='unfair-cv'`.
+                Defaults to False.
 
                 - True/'LOO': Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
                 - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.
 
-            **metric_kwargs (dict): passed to ``xclim.sdba`` (including ``group``) or ``XBias_Correction``
+            **metric_kwargs (dict): passed to ``xclim.sdba`` (including ``group``)
+                or ``XBias_Correction``
 
         Returns:
             HindcastEnsemble: bias removed HindcastEnsemble.
@@ -2386,7 +2454,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 dim:                           init
                 reference:                     []
 
-            Wrapping methods ``how`` from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and providing ``group`` for ``groupby``:
+            Wrapping methods ``how`` from
+            `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and
+            providing ``group`` for ``groupby``:
 
             >>> HindcastEnsemble.remove_bias(alignment='same_init', group='init',
             ...     how='DetrendedQuantileMapping', train_test_split='unfair',
@@ -2436,7 +2506,12 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
-                f"train_test_split='{train_test_split}' not implemented. Please choose `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description and https://github.com/pangeo-data/climpred/issues/648 for implementation status."
+                f"train_test_split='{train_test_split}' not implemented. Please choose "
+                f" `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, "
+                "see Risbey et al. 2021 "
+                "http://www.nature.com/articles/s41467-021-23771-z for description and "
+                "https://github.com/pangeo-data/climpred/issues/648 for implementation "
+                " status."
             )
 
         alignment = _check_valud_alignment(alignment)
@@ -2447,14 +2522,20 @@ class HindcastEnsemble(PredictionEnsemble):
                 or not isinstance(train_init, (slice, xr.DataArray))
             ) and (alignment in ["same_inits", "maximize"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide `train_init` as xr.DataArray, e.g. `hindcast.coords["init"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_init={train_init}`.'
+                    f'When alignment="{alignment}", please provide `train_init` as '
+                    f"`xr.DataArray`, e.g. "
+                    '`HindcastEnsemble.coords["init"].slice(start, end)` '
+                    "or slice, e.g. `slice(start, end)`, got `train_init={train_init}`."
                 )
             if (
                 (train_time is None)
                 or not isinstance(train_time, (slice, xr.DataArray))
             ) and (alignment in ["same_verif"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide `train_time` as xr.DataArray, e.g. `hindcast.coords["time"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_time={train_time}`'
+                    f'When alignment="{alignment}", please provide `train_time` as '
+                    "`xr.DataArray`, e.g. "
+                    '`HindcastEnsemble.coords["time"].slice(start, end)` '
+                    "or slice, e.g. `slice(start, end)`, got `train_time={train_time}`."
                 )
 
             if isinstance(train_init, slice):
@@ -2472,19 +2553,22 @@ class HindcastEnsemble(PredictionEnsemble):
             func = xclim_sdba
         else:
             raise NotImplementedError(
-                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."
+                f"bias removal '{how}' is not implemented, please choose from "
+                f" {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."
             )
 
         if train_test_split in ["unfair-cv"]:
             if cv not in [True, "LOO"]:
                 raise ValueError(
-                    f"Please provide `cv='LOO'` when train_test_split='unfair-cv', found `cv='{cv}'`"
+                    f"Please provide cross-validation keyword `cv='LOO'` when using "
+                    f"`train_test_split='unfair-cv'`, found `cv='{cv}'`."
                 )
             else:
                 cv = "LOO"  # backward compatibility
             if cv not in CROSS_VALIDATE_METHODS:
                 raise NotImplementedError(
-                    f"cross validation method {cv} not implemented. Please choose cv from {CROSS_VALIDATE_METHODS}."
+                    f"Cross validation method {cv} not implemented. "
+                    f"Please choose cv from {CROSS_VALIDATE_METHODS}."
                 )
             metric_kwargs["cv"] = cv
 

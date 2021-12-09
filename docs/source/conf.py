@@ -89,6 +89,7 @@ intersphinx_mapping = {
     "xarray": ("https://xarray.pydata.org/en/stable/", None),
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "xskillscore": ("https://xskillscore.readthedocs.io/en/stable", None),
+    "xclim": ("https://xclim.readthedocs.io/en/latest/", None),
 }
 
 # Should only be uncommented when testing page development while notebooks

@@ -50,10 +50,16 @@ repos:
       hooks:
       -   id: pydocstyle
       args:
-      - --ignore=W503
+      #- --ignore=W503
       - --max-line-length=93
+      - --convention google # https://google.github.io/styleguide/pyguide.html#Comments
 
   -   repo: https://github.com/pycqa/doc8
       rev: 0.10.1
       hooks:
       -   id: doc8
+
+  - repo: https://github.com/keewis/blackdoc
+    rev: v0.3.4
+    hooks:
+    -   id: blackdoc

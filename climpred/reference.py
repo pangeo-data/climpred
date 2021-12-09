@@ -110,7 +110,8 @@ def climatology(verif, inits, verif_dates, lead):
 
 
 def uninitialized(hist, verif, verif_dates, lead):
-    """Uninitialized forecast uses a simulation without any initialization (assimilation/nudging). Also called historical in some communities."""
+    """Uninitialized forecast uses a simulation without any initialization
+    (assimilation/nudging). Also called historical in some communities."""
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
     return lforecast, lverif
@@ -121,8 +122,10 @@ def uninitialized(hist, verif, verif_dates, lead):
 
 
 def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, dim):
-    """Maybe drop member from dim or add single-member dimension. Used in reference forecasts: climatology, uninitialized, persistence."""
-    # persistence or climatology forecasts wont have member dimension, create if required
+    """Maybe drop member from dim or add single-member dimension. Used in
+    reference forecasts: climatology, uninitialized, persistence."""
+    # persistence or climatology forecasts wont have member dimension, create if
+    # required
     # some metrics dont allow member dimension, remove and try mean
     # delete member from dim if needed
     if "member" in dim:
@@ -251,14 +254,14 @@ def compute_persistence(
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
 
-            - maximize/None: maximize the degrees of freedom by slicing ``initialized`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
-            metric. This philosophy follows the thought that each lead should be based
-            on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior to
-            computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
+            - ``maximize``: maximize the degrees of freedom by slicing
+                ``initialized`` and ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time frame
+                prior to computing metric. This philosophy follows the thought that
+                each lead should be based on the same set of verification dates.
 
         dim (str or list of str): dimension to apply metric over.
         ** metric_kwargs (dict): additional keywords to be passed to metric
@@ -351,14 +354,14 @@ def compute_persistence_from_first_lead(
             Default: 'pearson_r'
         alignment (str): which inits or verification times should be aligned?
 
-            - ``maximize``: maximize the degrees of freedom by slicing ``initialized`` and
-              ``verif`` to a common time frame at each lead.
-            - ``same_inits``: slice to a common init frame prior to computing
-              metric. This philosophy follows the thought that each lead should be based
-              on the same set of initializations.
-            - ``same_verif``: slice to a common/consistent verification time frame prior to
-              computing metric. This philosophy follows the thought that each lead
-              should be based on the same set of verification dates.
+            - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
+                and ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common ``init`` frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time frame
+                prior to computing metric. This philosophy follows the thought that
+                each lead should be based on the same set of verification dates.
 
         dim (str or list of str): dimension to apply metric over.
         ** metric_kwargs (dict): additional keywords to be passed to metric
@@ -369,10 +372,17 @@ def compute_persistence_from_first_lead(
             applied.
 
     Example:
-        >>> with climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True):
-        ...     PerfectModelEnsemble.verify(metric="mse", comparison="m2e",
-        ...         dim=["init", "member"], reference="persistence"
-        ...     ).sel(skill='persistence')  # persistence sensitive to comparison
+        >>> with climpred.set_options(
+        ...     PerfectModel_persistence_from_initialized_lead_0=True
+        ... ):
+        ...     PerfectModelEnsemble.verify(
+        ...         metric="mse",
+        ...         comparison="m2e",
+        ...         dim=["init", "member"],
+        ...         reference="persistence",
+        ...     ).sel(
+        ...         skill="persistence"
+        ...     )  # persistence sensitive to comparison
         <xarray.Dataset>
         Dimensions:  (lead: 20)
         Coordinates:
@@ -392,10 +402,17 @@ def compute_persistence_from_first_lead(
             PerfectModel_persistence_from_initialized_lead_0:  True
 
 
-        >>> with climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=False):
-        ...     PerfectModelEnsemble.verify(metric="mse", comparison="m2e",
-        ...         dim=["init", "member"], reference="persistence"
-        ...     ).sel(skill='persistence')  # persistence not sensitive to comparison
+        >>> with climpred.set_options(
+        ...     PerfectModel_persistence_from_initialized_lead_0=False
+        ... ):
+        ...     PerfectModelEnsemble.verify(
+        ...         metric="mse",
+        ...         comparison="m2e",
+        ...         dim=["init", "member"],
+        ...         reference="persistence",
+        ...     ).sel(
+        ...         skill="persistence"
+        ...     )  # persistence not sensitive to comparison
         <xarray.Dataset>
         Dimensions:  (lead: 20)
         Coordinates:
@@ -475,24 +492,24 @@ def compute_uninitialized(
             data.
         comparison (str):
             How to compare the uninitialized ensemble to the verification data:
-                * e2o : ensemble mean to verification data (Default)
-                * m2o : each member to the verification data
+                * `"e2o"` : ensemble mean to verification data (Default)
+                * `"m2o"` : each member to the verification data
         dim (str or list of str): dimension to apply metric over.
         alignment (str): which inits or verification times should be aligned?
 
-            - maximize/None: maximize the degrees of freedom by slicing ``initialized`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
+            - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
+                and ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common init frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior to
-            computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
+            - ``same_verif``: slice to a common/consistent verification time frame
+                prior to computing metric. This philosophy follows the thought that
+                each lead should be based on the same set of verification dates.
 
         ** metric_kwargs (dict): additional keywords to be passed to metric
 
     Returns:
-        u (xarray.Dataset): Results from comparison at the first lag.
+        uninit_skill (xarray.Dataset): Results from comparison at the first lag.
 
     """
     if isinstance(dim, str):

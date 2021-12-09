@@ -1,5 +1,6 @@
 import warnings
 from functools import wraps
+from typing import List, Optional, Union
 
 import dask
 import xarray as xr
@@ -193,11 +194,13 @@ def match_initialized_dims(init, verif, uninitialized=False):
     if (set(verif.dims) - set(init_dims)) != set():
         unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
-            f"Verification contains more dimensions than initialized. These dimensions do not match: {unmatch_dims}."
+            "Verification contains more dimensions than initialized. These dimensions "
+            f" do not match: {unmatch_dims}."
         )
     if (set(init_dims) - set(verif.dims)) != set():
         warnings.warn(
-            f"Initialized contains more dimensions than verification. Dimension(s) {set(init_dims) - set(verif.dims)} will be broadcasted."
+            "Initialized contains more dimensions than verification. "
+            f"Dimension(s) {set(init_dims) - set(verif.dims)} will be broadcasted."
         )
     return True
 
@@ -254,11 +257,15 @@ def rename_to_climpred_dims(xobj):
                     xobj[climpred_d].attrs["standard_name"] = cf_standard_name
                     if OPTIONS["warn_for_rename_to_climpred_dims"]:
                         warnings.warn(
-                            f'Did not find dimension "{climpred_d}", but renamed dimension {d} with CF-complying standard_name "{cf_standard_name}" to {climpred_d}.'
+                            f'Did not find dimension "{climpred_d}", but renamed '
+                            f"dimension {d} with CF-complying standard_name "
+                            f'"{cf_standard_name}" to {climpred_d}.'
                         )
     if not set(["init", "lead"]).issubset(set(xobj.dims)):
         warnings.warn(
-            f'Could not find dimensions ["init", "lead"] in initialized, found dimension {xobj.dims}. Also searched coordinates for CF-complying standard_names {CF_STANDARD_NAMES}.'
+            'Could not find dimensions ["init", "lead"] in initialized, found '
+            f"dimension {xobj.dims}. Also searched coordinates for CF-complying "
+            f"standard_names {CF_STANDARD_NAMES}."
         )
     return xobj
 
@@ -307,10 +314,7 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
             )
 
 
-from typing import List, Optional, Union
-
-
-def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List:
+def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List[str]:
     """Enforce reference as list and check for valid entries."""
     if reference is None:
         reference = []
@@ -328,7 +332,8 @@ def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List:
 def _check_valud_alignment(alignment):
     if alignment not in VALID_ALIGNMENTS:
         raise ValueError(
-            f"Please provide alignment from {VALID_ALIGNMENTS}, found alignment='{alignment}'."
+            f"Please provide alignment from {VALID_ALIGNMENTS}, "
+            f"found alignment='{alignment}'."
         )
     else:
         if alignment == "same_init":

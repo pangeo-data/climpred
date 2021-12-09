@@ -73,8 +73,8 @@ file_descriptions = [
     "observed RMM with interannual variablity included",
     "S2S ECMWF on-the-fly hindcasts from the S2S Project for Germany",
     "CPC/ERA5 observations for S2S forecasts over Germany",
-    "monthly multi-member hindcasts of sea-surface temperature averaged over the Nino3.4 region from the NMME project from IRIDL",
-    "monthly Reyn_SmithOIv2 sea-surface temperature observations averaged over the Nino3.4 region",
+    "monthly multi-member hindcasts of sea-surface temperature averaged over the Nino3.4 region from the NMME project from IRIDL",  # noqa: E501
+    "monthly Reyn_SmithOIv2 sea-surface temperature observations averaged over the Nino3.4 region",  # noqa: E501
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))
@@ -152,8 +152,8 @@ def load_dataset(
 
     Examples:
         >>> from climpred.tutorial import load_dataset
-        >>> proxy_dict = {'http': '127.0.0.1'}
-        >>> ds = load_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
+        >>> proxy_dict = {"http": "127.0.0.1"}
+        >>> ds = load_dataset("FOSI-SST", cache=False, proxy_dict=proxy_dict)
     """
     if name is None:
         return _get_datasets()

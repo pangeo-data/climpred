@@ -410,7 +410,8 @@ def plot_ensemble_perfect_model(
 
 
 def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
-    """Create valid_time xr.DataArray with dims lead and init in units passed to cftime.date2num."""
+    """Create ``valid_time`` ``xr.DataArray`` with dims lead and init in units passed to
+    cftime.date2num."""
     inits, verif_dates = return_inits_and_verif_dates(
         hindcast.get_initialized().rename({"init": "time"}),
         hindcast.get_observations(),

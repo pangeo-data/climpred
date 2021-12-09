@@ -54,15 +54,15 @@ class Comparison:
 
         Args:
             name (str): name of comparison.
-            function (function): comparison function.
-            hindcast (bool): Can comparison be used in `compute_hindcast`?
-                `False` means `compute_perfect_model`
+            function (Callable): comparison function.
+            hindcast (bool): Can comparison be used in ``HindcastEnsemble``?
+                ``False`` means ``PerfectModelEnsemble``
             probabilistic (bool): Can this comparison be used for probabilistic
                 metrics also? Probabilistic metrics require multiple forecasts.
                 `False` means that comparison is only deterministic.
                 `True` means that comparison can be used both deterministic and
                 probabilistic.
-            long_name (str, optional): longname of comparison. Defaults to None.
+            long_name (str, optional): longname of comparison. Defaults to ``None``.
             aliases (list of str, optional): Allowed aliases for this comparison.
                 Defaults to ``None``.
 
@@ -92,13 +92,13 @@ def _m2m(ds, metric=None):
     ``member``.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with ``member`` dimension.
+        ds (xr.Dataset): initialized with ``member`` dimension.
         metric (Metric):
             If deterministic, forecast and reference have ``member`` dim.
             If probabilistic, only forecast has ``member`` dim.
 
     Returns:
-        xr.object: forecast, reference.
+        (xr.Dataset, xr.Dataset): forecast, reference.
     """
     reference_list = []
     forecast_list = []
@@ -134,14 +134,13 @@ def _m2e(ds, metric=None):
      ensemble mean.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
+        ds (xr.Dataset): ``initialized`` with ``member`` dimension.
         metric (Metric): needed for probabilistic metrics.
-                      therefore useless in m2e comparison,
+                      therefore useless in ``m2e`` comparison,
                       but expected by internal API.
 
     Returns:
-        xr.object: forecast, reference.
+        (xr.Dataset, xr.Dataset): forecast, reference.
     """
     reference_list = []
     forecast_list = []
@@ -180,13 +179,12 @@ def _m2c(ds, metric=None):
     to the control simulation.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
+        ds (xr.Dataset): ``initialized`` with ``member`` dimension.
         metric (Metric): if deterministic, forecast and reference both have member dim
-                      if probabilistic, only forecast has member dim
+                      if probabilistic, only forecast has ``member`` dim
 
     Returns:
-        xr.object: forecast, reference.
+        (xr.Dataset, xr.Dataset): forecast, reference.
     """
     control_member = ds.member.values[0]
     reference = ds.sel(member=control_member, drop=True)
@@ -214,14 +212,13 @@ def _e2c(ds, metric=None):
     other member forecasts to the control simulation.
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
+        ds (xr.Dataset): ``initialized`` with ``member`` dimension.
         metric (Metric): needed for probabilistic metrics.
-                      therefore useless in e2c comparison,
+                      therefore useless in ``e2c`` comparison,
                       but expected by internal API.
 
     Returns:
-        xr.object: forecast, reference.
+        (xr.Dataset, xr.Dataset): forecast, reference.
     """
     control_member = ds.member.values[0]
     reference = ds.sel(member=control_member, drop=True)
@@ -247,8 +244,8 @@ def _e2o(hind, verif, metric=None):
     ``HindcastEnsemble`` setup.
 
     Args:
-        hind (xarray object): Hindcast with optional ``member`` dimension.
-        verif (xarray object): Verification data.
+        hind (xr.Dataset): Hindcast with optional ``member`` dimension.
+        verif (xr.Dataset): Verification data.
         metric (Metric): needed for probabilistic metrics.
                       therefore useless in ``e2o`` comparison,
                       but expected by internal API.
@@ -278,14 +275,14 @@ def _m2o(hind, verif, metric=None):
     ``HindcastEnsemble`` setup.
 
     Args:
-        hind (xarray object): Hindcast with ``member`` dimension.
-        verif (xarray object): Verification data.
+        hind (xr.Dataset): ``initialized`` with ``member`` dimension.
+        verif (xr.Dataset): Verification data.
         metric (Metric):
             If deterministic, forecast and verif both have ``member`` dim;
             If probabilistic, only forecast has ``member`` dim.
 
     Returns:
-        xr.object: forecast, verif.
+        (xr.Dataset, xr.Dataset): forecast, verif.
     """
     # check that this contains more than one member
     has_dims(hind, "member", "decadal prediction ensemble")
@@ -317,20 +314,15 @@ for c in __ALL_COMPARISONS__:
             COMPARISON_ALIASES[a] = c.name
 
 # Which comparisons work with which set of metrics.
-# ['e2o', 'm2o']
 HINDCAST_COMPARISONS = [c.name for c in __ALL_COMPARISONS__ if c.hindcast]
-# ['m2c', 'e2c', 'm2m', 'm2e']
 PM_COMPARISONS = [c.name for c in __ALL_COMPARISONS__ if not c.hindcast]
 ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
-# ['m2c', 'm2m']
 PROBABILISTIC_PM_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and c.probabilistic)
 ]
 NON_PROBABILISTIC_PM_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and not c.probabilistic)
 ]
-
-# ['m2o']
 PROBABILISTIC_HINDCAST_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (c.hindcast and c.probabilistic)
 ]

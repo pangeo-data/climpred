@@ -83,7 +83,8 @@ def _apply_metric_at_given_lead(
 
     lforecast["time"] = lverif[
         "time"
-    ]  # a bit dangerous: what if different? more clear once https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645 implemented
+    ]  # a bit dangerous: what if different? more clear once implemented
+    # https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645
     dim = _rename_dim(
         dim, hind, verif
     )  # dim should be much clearer once time in initialized.coords

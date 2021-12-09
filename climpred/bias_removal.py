@@ -37,7 +37,9 @@ def div(a, b):
 def leave_one_out(bias, dim):
     """Leave-one-out creating a new dimension 'sample' and fill with np.NaN.
 
-    See also: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html"""
+    See also:
+        * https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html # noqa: E501
+    """
     bias_nan = []
     for i in range(bias[dim].size):
         bias_nan.append(
@@ -277,27 +279,31 @@ def gaussian_bias_removal(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc bias based on OPTIONS['seasonality'] and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc bias based on ``OPTIONS['seasonality']`` and remove bias from
+    py:class:`~climpred.classes.HindcastEnsemble`.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
         alignment (str): which inits or verification times should be aligned?
-            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
-            metric. This philosophy follows the thought that each lead should be
-            based on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior
-            to computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
-        how (str): what kind of bias removal to perform. Select
-            from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
-        cv (bool or str): Defaults to True.
 
-            - True: Use cross validation in bias removal function.
+            - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
+                and ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common ``init`` frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+
+        how (str): what kind of bias removal to perform. Select
+            from ``['additive_mean', 'multiplicative_mean','multiplicative_std']``.
+            Defaults to ``'additive_mean'``.
+        cv (bool or str): Defaults to ``True``.
+
+            - ``True``: Use cross validation in bias removal function.
                 This excludes the given initialization from the bias calculation.
-            - 'LOO': see True
-            - False: include the given initialization in the calculation, which
+            - ``'LOO'``: see ``True``
+            - ``False``: include the given initialization in the calculation, which
                 is much faster and but yields similar skill with a large N of
                 initializations.
 
@@ -401,26 +407,30 @@ def bias_correction(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc bias based on OPTIONS['seasonality'] and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc bias based on OPTIONS['seasonality'] and remove bias from
+    py:class:`~climpred.classes.HindcastEnsemble`.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
         alignment (str): which inits or verification times should be aligned?
-            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
-            metric. This philosophy follows the thought that each lead should be
-            based on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior
-            to computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
+
+            - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
+                and ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common ``init`` frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+
         how (str): what kind of bias removal to perform. Select
-            from ['additive_mean', 'multiplicative_mean','multiplicative_std']. Defaults to 'additive_mean'.
+            from ``['additive_mean', 'multiplicative_mean','multiplicative_std']``.
+            Defaults to ``'additive_mean'``.
         cv (bool): Use cross validation in bias removal function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
             but yields similar skill with a large N of initializations.
-            Defaults to True.
+            Defaults to ``True``.
 
     Returns:
         HindcastEnsemble: bias removed hindcast.
@@ -435,12 +445,16 @@ def bias_correction(
         cv=False,
         **metric_kwargs,
     ):
-        """Wrapping https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
+        """Wrapping
+        https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py.
 
-        Functions to perform bias correction of datasets to remove biases across datasets. Implemented methods include:
-        - quantile mapping: https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168)
+        Functions to perform bias correction of datasets to remove biases across
+        datasets. Implemented methods include:
+        - quantile_mapping:
+            https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168)
         - modified quantile mapping: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
-        - scaled distribution mapping (Gamma and Normal Corrections): https://www.hydrol-earth-syst-sci.net/21/2649/2017/
+        - scaled distribution mapping (Gamma and Normal Corrections):
+            https://www.hydrol-earth-syst-sci.net/21/2649/2017/
         """
         corrected = []
         seasonality = OPTIONS["seasonality"]
@@ -507,7 +521,6 @@ def bias_correction(
                 )
             dim_used = dim2 if "member" in forecast.dims else dim
 
-            # using bias-correction: https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py
             with warnings.catch_warnings():
                 warnings.simplefilter("ignore", category=RuntimeWarning)
                 bc = XBiasCorrection(
@@ -574,22 +587,27 @@ def xclim_sdba(
     train_init=None,
     **metric_kwargs,
 ):
-    """Calc bias based on grouper to be passed as metric_kwargs and remove bias from py:class:`~climpred.classes.HindcastEnsemble`.
+    """Calc bias based on ``grouper`` to be passed as ``metric_kwargs`` and remove bias
+    from py:class:`~climpred.classes.HindcastEnsemble`.
 
-    See climpred.constants.XCLIM_BIAS_CORRECTION_METHODS for implemented methods for ``how``.
+    See :py:func:`~climpred.constants.XCLIM_BIAS_CORRECTION_METHODS` for implemented
+    methods for ``how``.
 
     Args:
         hindcast (HindcastEnsemble): hindcast.
         alignment (str): which inits or verification times should be aligned?
-            - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
-            metric. This philosophy follows the thought that each lead should be
-            based on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior
-            to computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
-        how (str): not used
+
+            - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
+                and ``verif`` to a common time frame at each lead.
+            - ``same_inits``: slice to a common ``init`` frame prior to computing
+                metric. This philosophy follows the thought that each lead should be
+                based on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time frame prior
+                to computing metric. This philosophy follows the thought that each lead
+                should be based on the same set of verification dates.
+
+        how (str): methods for bias reduction, see
+            :py:func:`~climpred.constants.XCLIM_BIAS_CORRECTION_METHODS`
         cv (bool): Use cross validation in removal function. This
             excludes the given initialization from the bias calculation. With False,
             include the given initialization in the calculation, which is much faster
@@ -609,9 +627,12 @@ def xclim_sdba(
         cv=False,
         **metric_kwargs,
     ):
-        """Wrapping https://github.com/Ouranosinc/xclim/blob/master/xclim/sdba/adjustment.py.
+        """Wrapping
+        https://github.com/Ouranosinc/xclim/blob/master/xclim/sdba/adjustment.py.
 
-        Functions to perform bias correction of datasets to remove biases across datasets. See climpred.constants.XCLIM_BIAS_CORRECTION_METHODS for implemented methods.
+        Functions to perform bias correction of datasets to remove biases across
+        datasets. See :py:func:`~climpred.constants.XCLIM_BIAS_CORRECTION_METHODS`
+        for implemented methods.
         """
         seasonality = OPTIONS["seasonality"]
         dim = "time"

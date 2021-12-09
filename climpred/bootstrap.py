@@ -158,7 +158,7 @@ def _resample_iterations_idx(
         init = init.copy(deep=True)
 
     def select_bootstrap_indices_ufunc(x, idx):
-        """Selects multi-level indices ``idx`` from xarray object ``x`` for all
+        """Selects multi-level indices ``idx`` from xr.Dataset ``x`` for all
         iterations."""
         # `apply_ufunc` sometimes adds a singleton dimension on the end, so we squeeze
         # it out here. This leverages multi-level indexing from numpy, so we can
@@ -210,13 +210,13 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
     Needed for bootstrapping confidence intervals and p_values of a metric.
 
     Args:
-        ds (xarray object): distribution.
+        ds (xr.Dataset): distribution.
         ci_low (float): low confidence interval.
         ci_high (float): high confidence interval.
         dim (str): dimension to apply xr.quantile to. Default: 'iteration'
 
     Returns:
-        uninit_hind (xarray object): uninitialize hindcast with hind.coords.
+        uninit_hind (xr.Dataset): uninitialize hindcast with hind.coords.
     """
     ds = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim)
     if isinstance(ds, xr.Dataset):
@@ -234,18 +234,18 @@ def _pvalue_from_distributions(ref_skill, init_skill, metric=None):
     uninitialized skill) is larger than initialized skill.
 
     Needed for bootstrapping confidence intervals and p_values of a metric in
-    the hindcast framework. Checks whether a simple forecast like persistence, climatology
-    or uninitialized performs better than initialized forecast. Need to keep in
-    mind the orientation of metric (whether larger values are better or worse
+    the hindcast framework. Checks whether a simple forecast like persistence,
+    climatology or uninitialized performs better than initialized forecast. Need to
+    keep in mind the orientation of metric (whether larger values are better or worse
     than smaller ones.)
 
     Args:
-        ref_skill (xarray object): persistence or uninitialized skill.
-        init_skill (xarray object): initialized skill.
+        ref_skill (xr.Dataset): persistence or uninitialized skill.
+        init_skill (xr.Dataset): initialized skill.
         metric (Metric): metric class Metric
 
     Returns:
-        pv (xarray object): probability that simple forecast performs better
+        pv (xr.Dataset): probability that simple forecast performs better
                             than initialized forecast.
     """
     pv = ((ref_skill - init_skill) > 0).mean("iteration")
@@ -263,11 +263,11 @@ def bootstrap_uninitialized_ensemble(hind, hist):
         same forcing and rearranges them into ensemble and member dimensions.
 
     Args:
-        hind (xarray object): hindcast.
-        hist (xarray object): historical uninitialized.
+        hind (xr.Dataset): hindcast.
+        hist (xr.Dataset): historical uninitialized.
 
     Returns:
-        uninit_hind (xarray object): uninitialize hindcast with hind.coords.
+        uninit_hind (xr.Dataset): uninitialize hindcast with hind.coords.
     """
     has_dims(hist, "member", "historical ensemble")
     has_dims(hind, "member", "initialized hindcast ensemble")
@@ -324,11 +324,11 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
         them into ensemble and member dimensions.
 
     Args:
-        init_pm (xarray object): initialized ensemble simulation.
-        control (xarray object): control simulation.
+        init_pm (xr.Dataset): initialized ensemble simulation.
+        control (xr.Dataset): control simulation.
 
     Returns:
-        uninit_pm (xarray object): uninitialized ensemble generated from control run.
+        uninit_pm (xr.Dataset): uninitialized ensemble generated from control run.
     """
     lead_units_equal_control_time_stride(init_pm, control)
     # short cut if annual leads
@@ -388,16 +388,20 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
 
 def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"]):
     """
-    Generate an uninitialized ensemble by resampling without replacement from the initialized prediction ensemble.
-    Full years of the first lead present from the initialized are relabeled to a different year.
+    Generate an uninitialized ensemble by resampling without replacement from the
+    initialized prediction ensemble. Full years of the first lead present from the
+    initialized are relabeled to a different year.
     """
     if (init.init.dt.year.groupby("init.year").count().diff("year") != 0).any():
         raise ValueError(
-            f'`resample_uninitialized_from_initialized` only works if the same number of initializations is present each year, found {init.init.dt.year.groupby("init.year").count()}'
+            "`resample_uninitialized_from_initialized` only works if the same number "
+            " of initializations is present each year, found "
+            f'{init.init.dt.year.groupby("init.year").count()}.'
         )
     if "init" not in resample_dim:
         raise ValueError(
-            f"Only resampling on `init` makes forecasts uninitialzed. Found resample_dim={resample_dim}."
+            f"Only resampling on `init` makes forecasts uninitialzed."
+            f"Found resample_dim={resample_dim}."
         )
     init = init.isel(lead=0, drop=True)
     # resample init
@@ -435,8 +439,11 @@ def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"
 
     resampled_uninit.attrs.update(
         {
-            "description": "created by `HindcastEnsemble.generate_uninitialized()` resampling years without replacement from initialized",
-            "documentation": f"https://climpred.readthedocs.io/en/v{version}/api/climpred.classes.HindcastEnsemble.generate_uninitialized.html#climpred.classes.HindcastEnsemble.generate_uninitialized",
+            "description": (
+                "created by `HindcastEnsemble.generate_uninitialized()` "
+                " resampling years without replacement from initialized"
+            ),
+            "documentation": f"https://climpred.readthedocs.io/en/v{version}/api/climpred.classes.HindcastEnsemble.generate_uninitialized.html#climpred.classes.HindcastEnsemble.generate_uninitialized",  # noqa: E501
         }
     )
     return resampled_uninit
@@ -766,7 +773,8 @@ def bootstrap_compute(
         if hind.lead[0] != 0:
             if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
                 warnings.warn(
-                    f"Calculate persistence from lead={int(hind.lead[0].values)} instead of lead=0 (recommended)."
+                    f"Calculate persistence from lead={int(hind.lead[0].values)} "
+                    "instead of lead=0 (recommended)."
                 )
     else:
         compute_persistence_func = compute_persistence

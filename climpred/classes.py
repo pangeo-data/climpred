@@ -716,10 +716,12 @@ class PredictionEnsemble:
         Examples:
             >>> PerfectModelEnsemble.get_initialized().lead.size
             20
-            >>> PerfectModelEnsemble.smooth({'lead':4}, how='sum').get_initialized().lead.size
+            >>> PerfectModelEnsemble.smooth(
+            ...     {"lead": 4}, how="sum"
+            ... ).get_initialized().lead.size
             17
 
-            >>> HindcastEnsemble_3D.smooth({'lon':1, 'lat':1})
+            >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
                 SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
@@ -731,14 +733,16 @@ class PredictionEnsemble:
             ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
             ``lat`` and temporally listening to ``lead`` or ``time``.
 
-            >>> HindcastEnsemble_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth(
+            ...     {"lead": 2, "lat": 5, "lon": 4}
+            ... ).get_initialized().coords
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7 8 9
               * lon         (lon) float64 250.8 254.8 258.8 262.8
               * lat         (lat) float64 -9.75 -4.75
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2026-01-01 00:00:00
-            >>> HindcastEnsemble_3D.smooth('goddard2013').get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7
@@ -1096,8 +1100,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ensemble mean forecast (``m2e``) for all leads reducing dimensions
             ``init`` and ``member``:
 
-            >>> PerfectModelEnsemble.verify(metric='rmse', comparison='m2e',
-            ...     dim=['init','member'])
+            >>> PerfectModelEnsemble.verify(
+            ...     metric="rmse", comparison="m2e", dim=["init", "member"]
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 20)
             Coordinates:
@@ -1120,9 +1125,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
             also calculating reference skill for the ``persistence``, ``climatology``
             and ``uninitialized`` forecast.
 
-            >>> PerfectModelEnsemble.verify(metric='acc', comparison='m2m',
-            ...     dim=['init', 'member'],
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> PerfectModelEnsemble.verify(
+            ...     metric="acc",
+            ...     comparison="m2m",
+            ...     dim=["init", "member"],
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
@@ -1466,9 +1474,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
 
-            >>> PerfectModelEnsemble.bootstrap(metric='acc', comparison='m2m',
-            ...     dim=['init', 'member'], iterations=50, resample_dim='member',
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> PerfectModelEnsemble.bootstrap(
+            ...     metric="acc",
+            ...     comparison="m2m",
+            ...     dim=["init", "member"],
+            ...     iterations=50,
+            ...     resample_dim="member",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
@@ -1810,7 +1823,9 @@ class HindcastEnsemble(PredictionEnsemble):
             Attributes:
                 units:    days since 1960-01-01
 
-            >>> HindcastEnsemble.plot_alignment(alignment="same_verifs")  # doctest: +SKIP
+            >>> HindcastEnsemble.plot_alignment(
+            ...     alignment="same_verifs"
+            ... )  # doctest: +SKIP
             <matplotlib.collections.QuadMesh object at 0x1405c1520>
 
         See also:
@@ -1912,8 +1927,12 @@ class HindcastEnsemble(PredictionEnsemble):
             verification (``m2o``) over the same verification time (``same_verifs``)
             for all leads reducing dimensions ``init`` and ``member``:
 
-            >>> HindcastEnsemble.verify(metric='rmse', comparison='m2o',
-            ...     alignment='same_verifs', dim=['init','member'])
+            >>> HindcastEnsemble.verify(
+            ...     metric="rmse",
+            ...     comparison="m2o",
+            ...     alignment="same_verifs",
+            ...     dim=["init", "member"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -1938,9 +1957,13 @@ class HindcastEnsemble(PredictionEnsemble):
             skill for the ``persistence``, ``climatology`` and ``uninitialized``
             forecast.
 
-            >>> HindcastEnsemble.verify(metric='acc', comparison='e2o',
-            ...     alignment='same_inits', dim='init',
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> HindcastEnsemble.verify(
+            ...     metric="acc",
+            ...     comparison="e2o",
+            ...     alignment="same_inits",
+            ...     dim="init",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, lead: 10)
             Coordinates:
@@ -2208,10 +2231,15 @@ class HindcastEnsemble(PredictionEnsemble):
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
 
-            >>> HindcastEnsemble.bootstrap(metric='acc', comparison='e2o',
-            ...     dim='init', iterations=50, resample_dim='member',
-            ...     alignment='same_verifs',
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> HindcastEnsemble.bootstrap(
+            ...     metric="acc",
+            ...     comparison="e2o",
+            ...     dim="init",
+            ...     iterations=50,
+            ...     resample_dim="member",
+            ...     alignment="same_verifs",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, results: 4, lead: 10)
             Coordinates:
@@ -2311,8 +2339,8 @@ class HindcastEnsemble(PredictionEnsemble):
         """Calculate and remove bias from
         :py:class:`~climpred.classes.HindcastEnsemble`.
         Bias is grouped by ``seasonality`` set via
-        :py:class:`~climpred.options.set_options`.
-        When wrapping `xclim.sbda.adjustment` use ``group`` instead.
+        :py:class:`~climpred.options.set_options`. When wrapping
+        :py:class:`~xclim.sdba.adjustment.TrainAdjust` use ``group`` instead.
 
         Args:
             alignment (str): which inits or verification times should be aligned?
@@ -2348,7 +2376,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
             train_test_split (str): How to separate train period to calculate the bias
                 and test period to apply bias correction to? For a detailed
-                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
+                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:  # noqa: E501
 
                 - `fair`: no overlap between `train` and `test` (recommended).
                     Set either `train_init` or `train_time`.
@@ -2380,8 +2408,9 @@ class HindcastEnsemble(PredictionEnsemble):
 
             Skill from raw model output without bias reduction:
 
-            >>> HindcastEnsemble.verify(metric='rmse', comparison='e2o',
-            ...     alignment='maximize', dim='init')
+            >>> HindcastEnsemble.verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2404,10 +2433,11 @@ class HindcastEnsemble(PredictionEnsemble):
             ``train_test_split='unfair'`` has hardly any effect. Use all
             initializations to calculate bias and verify skill:
 
-            >>> HindcastEnsemble.remove_bias(alignment='maximize',
-            ...     how='additive_mean', test_train_split='unfair'
-            ... ).verify(metric='rmse', comparison='e2o', alignment='maximize',
-            ... dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="maximize", how="additive_mean", test_train_split="unfair"
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2432,10 +2462,14 @@ class HindcastEnsemble(PredictionEnsemble):
             ``train_test_split='fair'`` is recommended to use for a fair
             comparison against real-time forecasts.
 
-            >>> HindcastEnsemble.remove_bias(alignment='maximize',
-            ...     how='additive_mean', train_test_split='fair',
-            ...     train_init=slice('1954', '1980')).verify(metric='rmse',
-            ...     comparison='e2o', alignment='maximize', dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="maximize",
+            ...     how="additive_mean",
+            ...     train_test_split="fair",
+            ...     train_init=slice("1954", "1980"),
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2458,10 +2492,14 @@ class HindcastEnsemble(PredictionEnsemble):
             `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and
             providing ``group`` for ``groupby``:
 
-            >>> HindcastEnsemble.remove_bias(alignment='same_init', group='init',
-            ...     how='DetrendedQuantileMapping', train_test_split='unfair',
-            ...     ).verify(metric='rmse',
-            ...     comparison='e2o', alignment='maximize', dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="same_init",
+            ...     group="init",
+            ...     how="DetrendedQuantileMapping",
+            ...     train_test_split="unfair",
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2482,10 +2520,13 @@ class HindcastEnsemble(PredictionEnsemble):
 
             Wrapping methods ``how`` from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
 
-            >>> HindcastEnsemble.remove_bias(alignment='same_init',
-            ...     how='modified_quantile', train_test_split='unfair',
-            ...     ).verify(metric='rmse',
-            ...     comparison='e2o', alignment='maximize', dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="same_init",
+            ...     how="modified_quantile",
+            ...     train_test_split="unfair",
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:

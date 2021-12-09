@@ -63,3 +63,6 @@ repos:
     rev: v0.3.4
     hooks:
     -   id: blackdoc
+    args:
+    - --include=*.py
+    - --exclude=CHANGELOG.rst

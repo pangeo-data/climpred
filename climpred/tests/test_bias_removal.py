@@ -1,3 +1,5 @@
+"""Test bias_removal.py."""
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -374,7 +376,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
 def test_remove_bias_xclim_grouper_diff(
     hindcast_NMME_Nino34,
 ):
-    """Test remove_bias(how='xclim_method') is sensitive to grouper"""
+    """Test remove_bias(how='xclim_method') is sensitive to grouper."""
     alignment = "same_init"
     how = "DetrendedQuantileMapping"
     he = (
@@ -413,7 +415,7 @@ def test_remove_bias_xclim_grouper_diff(
 def test_remove_bias_xclim_adjust_kwargs_diff(
     hindcast_NMME_Nino34,
 ):
-    """Test remove_bias(how='xclim_method') is sensitive to adjust_kwargs"""
+    """Test remove_bias(how='xclim_method') is sensitive to adjust_kwargs."""
     alignment = "same_init"
     how = "EmpiricalQuantileMapping"
     he = (
@@ -492,7 +494,7 @@ def test_remove_bias_group(hindcast_NMME_Nino34):
 
 @requires_xclim
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
-    """Compare Scaling and additive_mean to be similar"""
+    """Compare Scaling and additive_mean to be similar."""
     he = hindcast_recon_1d_mm.isel(lead=[0, 1])
     hind_scaling = he.remove_bias(
         how="Scaling",

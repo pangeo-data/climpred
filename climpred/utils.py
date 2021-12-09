@@ -14,8 +14,7 @@ from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
-from .comparison import Comparison
-from .comparisons import COMPARISON_ALIASES
+from .comparisons import COMPARISON_ALIASES, Comparison
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .exceptions import CoordinateError
 from .metrics import ALL_METRICS, METRIC_ALIASES, Metric
@@ -338,10 +337,10 @@ def get_comparison_class(comparison: Union[str, Comparison], list_: List) -> Com
         # check if comparison allowed
         is_in_list(comparison, list_, "comparison")
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
-        return getattr(comparisons, "__" + comparison)
+        return getattr(comparisons, f"__{comparison}")
     else:
         is_in_list(comparison, list_, "comparison")
-        return getattr(comparisons, "__" + comparison)
+        return getattr(comparisons, f"__{comparison}")
 
 
 def get_lead_cftime_shift_args(units, lead):

@@ -7,12 +7,12 @@ import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units
-from .comparison import Comparison
 from .comparisons import (
     ALL_COMPARISONS,
     COMPARISON_ALIASES,
     HINDCAST_COMPARISONS,
     PM_COMPARISONS,
+    Comparison,
     __e2c,
 )
 from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
@@ -332,7 +332,7 @@ def compute_persistence(
         metric = METRIC_ALIASES.get(metric, metric)
         metric = get_metric_class(metric, ALL_METRICS)
 
-    if isinstance(metric, str):
+    if isinstance(comparison, str):
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
@@ -495,7 +495,7 @@ def compute_persistence_from_first_lead(
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    forecast, observations = comparison.function(initialized, metric=metric)
+    forecast, observations = comparison.function(initialized, metric=metric)  # type: ignore
     forecast, dim = _adapt_member_for_reference_forecast(
         forecast, observations, metric, comparison, dim
     )
@@ -571,7 +571,7 @@ def compute_uninitialized(
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
 
-    forecast, verif = comparison.function(uninit, verif, metric=metric)
+    forecast, verif = comparison.function(uninit, verif)
 
     initialized = initialized.rename({"init": "time"})
 

@@ -1854,7 +1854,6 @@ class HindcastEnsemble(PredictionEnsemble):
         except ImportError:
             raise ValueError("nc_time_axis>1.4.0 required for plotting.")
 
-
     def verify(
         self,
         metric: metricType = None,

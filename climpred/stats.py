@@ -1,4 +1,7 @@
+"""Statistical functions to diagnose potential predictability due to variability."""
+
 import warnings
+from typing import Any, Dict, List, Union
 
 import numpy as np
 import xarray as xr
@@ -8,11 +11,12 @@ try:
     from xrft import power_spectrum
 except ImportError:
     power_spectrum = None
-from .checks import is_xarray
 
 
-def rm_poly(ds, dim="time", deg=2, **kwargs):
-    """Remove degree polynomial along dimension dim from ds."""
+def rm_poly(
+    ds: Union[xr.Dataset, xr.DataArray], dim: str = "time", deg: int = 2, **kwargs: Any
+) -> Union[xr.Dataset, xr.DataArray]:
+    """Remove degree polynomial of degree ``deg`` along dimension ``dim``."""
     coefficients = ds.polyfit(dim, deg=deg, **kwargs)
     coord = ds[dim]
     fits = []
@@ -30,22 +34,25 @@ def rm_poly(ds, dim="time", deg=2, **kwargs):
     return ds_rm_poly
 
 
-def rm_trend(ds, dim="time", **kwargs):
-    """Remove degree polynomial along dimension dim from ds."""
+def rm_trend(
+    ds: Union[xr.Dataset, xr.DataArray], dim: str = "time", **kwargs: Any
+) -> Union[xr.Dataset, xr.DataArray]:
+    """Remove degree polynomial along dimension ``dim``."""
     return rm_poly(ds, dim=dim, deg=1, **kwargs)
 
 
-@is_xarray(0)
-def decorrelation_time(da, iterations=20, dim="time"):
-    """Calculate the decorrelaton time of a time series.
+def decorrelation_time(
+    da: Union[xr.Dataset, xr.DataArray], iterations: int = 20, dim: str = "time"
+) -> Union[xr.Dataset, xr.DataArray]:
+    r"""Calculate the decorrelaton time of a time series.
 
     .. math::
         \\tau_{d} = 1 + 2 * \\sum_{k=1}^{r}(\\alpha_{k})^{k}
 
     Args:
-        da (xarray object): input.
-        iterations (optional int): Number of iterations to run the above formula.
-        dim (optional str): Time dimension for xarray object.
+        da: input.
+        iterations: Number of iterations to run the above formula.
+        dim: Time dimension for xarray object.
 
     Returns:
         Decorrelation time of time series.
@@ -58,7 +65,7 @@ def decorrelation_time(da, iterations=20, dim="time"):
     """
 
     def _lag_corr(x, y, dim, lead):
-        """Helper function to shift the two time series and correlate."""
+        """Help function to shift the two time series and correlate."""
         N = x[dim].size
         normal = x.isel({dim: slice(0, N - lead)})
         shifted = y.isel({dim: slice(0 + lead, N)})
@@ -73,8 +80,13 @@ def decorrelation_time(da, iterations=20, dim="time"):
     ).sum("it")
 
 
-def dpp(ds, dim="time", m=10, chunk=True):
-    """Calculates the Diagnostic Potential Predictability (dpp)
+def dpp(
+    ds: Union[xr.Dataset, xr.DataArray],
+    dim: str = "time",
+    m: int = 10,
+    chunk: bool = True,
+) -> Union[xr.Dataset, xr.DataArray]:
+    r"""Calculate the Diagnostic Potential Predictability (DPP).
 
     .. math::
 
@@ -86,15 +98,15 @@ def dpp(ds, dim="time", m=10, chunk=True):
         in a slightly different way: chunk=False.
 
     Args:
-        ds (xr.DataArray): control simulation with time dimension as years.
-        dim (str): dimension to apply DPP on. Default: time.
-        m (optional int): separation time scale in years between predictable
-                          low-freq component and high-freq noise.
-        chunk (optional boolean): Whether chunking is applied. Default: True.
-                    If False, then uses Resplandy 2015 / Seferian 2018 method.
+        ds: control simulation with time dimension as years.
+        dim: dimension to apply DPP on. Default: ``"time"``.
+        m: separation time scale in years between predictable
+            low-freq component and high-freq noise.
+        chunk: Whether chunking is applied. Default: True.
+            If False, then uses Resplandy 2015 / Seferian 2018 method.
 
     Returns:
-        dpp (xr.DataArray): ds without time dimension.
+        dpp: ds without time dimension.
 
     References:
         * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
@@ -110,7 +122,12 @@ def dpp(ds, dim="time", m=10, chunk=True):
 
     """
 
-    def _chunking(ds, dim="time", number_chunks=False, chunk_length=False):
+    def _chunking(
+        ds: Union[xr.Dataset, xr.DataArray],
+        dim: str = "time",
+        number_chunks: Union[bool, int] = False,
+        chunk_length: Union[bool, int] = False,
+    ) -> Union[xr.Dataset, xr.DataArray]:
         """
         Separate data into chunks and reshapes chunks in a c dimension.
 
@@ -118,13 +135,13 @@ def dpp(ds, dim="time", m=10, chunk=True):
         Needed for dpp.
 
         Args:
-            ds (xr.DataArray): control simulation with time dimension as years.
-            dim (str): dimension to apply chunking to. Default: time
-            chunk_length (int): see dpp(m)
-            number_chunks (int): number of chunks in the return data.
+            ds: control simulation with time dimension as years.
+            dim: dimension to apply chunking to. Default: time
+            chunk_length: see dpp(m)
+            number_chunks: number of chunks in the return data.
 
         Returns:
-            c (xr.DataArray): chunked ds, but with additional dimension c.
+            c: chunked ds, but with additional dimension c.
 
         """
         if number_chunks and not chunk_length:
@@ -164,17 +181,19 @@ def dpp(ds, dim="time", m=10, chunk=True):
     return dpp
 
 
-@is_xarray(0)
-def varweighted_mean_period(da, dim="time", **kwargs):
-    """Calculate the variance weighted mean period of time series based on
-    xrft.power_spectrum.
+def varweighted_mean_period(
+    da: Union[xr.Dataset, xr.DataArray],
+    dim: Union[str, List[str]] = "time",
+    **kwargs: Any,
+) -> Union[xr.Dataset, xr.DataArray]:
+    r"""Calculate the variance weighted mean period of time series.
 
     .. math::
         P_{x} = \\frac{\\sum_k V(f_k,x)}{\\sum_k f_k  \\cdot V(f_k,x)}
 
     Args:
-        da (xarray object): input data including dim.
-        dim (optional str): Name of time dimension.
+        da: input data including dim.
+        dim: Name of time dimension.
         for **kwargs see xrft.power_spectrum
 
     Reference:

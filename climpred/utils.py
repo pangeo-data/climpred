@@ -1,6 +1,9 @@
+"""Utility functions used by other modules."""
+
 import datetime
 import logging
 import warnings
+from typing import List, Union
 
 import cftime
 import dask
@@ -11,14 +14,16 @@ from xarray.coding.cftime_offsets import to_offset
 
 from . import comparisons, metrics
 from .checks import is_in_list
+from .comparison import Comparison
 from .comparisons import COMPARISON_ALIASES
 from .constants import FREQ_LIST_TO_INFER_STRIDE, HINDCAST_CALENDAR_STR
 from .exceptions import CoordinateError
-from .metrics import ALL_METRICS, METRIC_ALIASES
+from .metrics import ALL_METRICS, METRIC_ALIASES, Metric
 from .options import OPTIONS
 
 
 def add_attrs_to_climpred_coords(results):
+    """Write attrs for coords added by climpred."""
     from . import __version__ as version
 
     if "results" in results.coords:
@@ -149,10 +154,10 @@ def assign_attrs(
 def convert_time_index(
     xobj, time_string, kind="object", calendar=HINDCAST_CALENDAR_STR
 ):
-    """Converts incoming time index to a standard xr.CFTimeIndex.
+    """Convert incoming time index to a :py:class:`~xarray.CFTimeIndex`.
 
     Args:
-        xobj (xarray object): Dataset or DataArray with a time dimension to convert.
+        xobj (xarray.Dataset): with a time dimension to convert.
         time_string (str): Name of time dimension.
         kind (str): Kind of object for error message.
         calendar (str): calendar to set time dimension to.
@@ -227,9 +232,12 @@ def convert_cftime_to_datetime_coords(ds, dim):
 
 
 def find_start_dates_for_given_init(control, single_init):
-    """Find the same start dates for cftime single_init across different years in
-    control. Return control.time. Requires calendar=Datetime(No)Leap for consistent
-    `dayofyear`."""
+    """
+    Find same start dates for cftime single_init in different years in control.
+
+    Return control.time. Requires calendar=Datetime(No)Leap for consistent
+    `dayofyear`.
+    """
     # check that Leap or NoLeap calendar
     for dim in [single_init.init, control.time]:
         # dirty workaround .values requires a dimension but single_init is only a
@@ -251,11 +259,13 @@ def find_start_dates_for_given_init(control, single_init):
 
 
 def return_time_series_freq(ds, dim):
-    """Return the temporal frequency of the input time series. Finds the frequency
-    starting from high frequencies at which all ds.dim are not equal.
+    """Return the temporal frequency of the input time series.
+
+    Finds the frequency starting from high frequencies at which all ds.dim are
+    not equal.
 
     Args:
-        ds (xr.object): input with dimension `dim`.
+        ds (xr.Dataset): input with dimension `dim`.
         dim (str): name of dimension.
 
     Returns:
@@ -270,10 +280,9 @@ def return_time_series_freq(ds, dim):
             return freq
 
 
-def get_metric_class(metric, list_):
+def get_metric_class(metric: Union[str, Metric], list_: List) -> Metric:
     """
-    This allows the user to submit a string representing the desired metric
-    to the corresponding metric class.
+    Convert string representing the desired metric to corresponding metric class.
 
     Currently compatable with functions:
     * compute_persistence()
@@ -281,11 +290,11 @@ def get_metric_class(metric, list_):
     * compute_hindcast()
 
     Args:
-        metric (str): name of metric.
-        list_ (list): check whether metric in list
+        metric: name of metric.
+        list_: check whether metric in list
 
     Returns:
-        metric (Metric): class object of the metric.
+        class object of the metric.
     """
     if isinstance(metric, metrics.Metric):
         return metric
@@ -293,17 +302,16 @@ def get_metric_class(metric, list_):
         # check if metric allowed
         is_in_list(metric, list_, "metric")
         metric = METRIC_ALIASES.get(metric, metric)
-        return getattr(metrics, "__" + metric)
+        return getattr(metrics, f"__{metric}")
     else:
         raise ValueError(
             f"Please provide metric as str or Metric class, found {type(metric)}"
         )
 
 
-def get_comparison_class(comparison, list_):
+def get_comparison_class(comparison: Union[str, Comparison], list_: List) -> Comparison:
     """
-    Converts a string comparison entry from the user into a Comparison class
-     for the package to interpret.
+    Convert string comparison entry into a Comparison class.
 
     Perfect Model:
 
@@ -318,10 +326,10 @@ def get_comparison_class(comparison, list_):
         * m2o: Compare each ensemble member to the verification data.
 
     Args:
-        comparison (str): name of comparison.
+        comparison: name of comparison.
 
     Returns:
-        comparison (Comparison): comparison class.
+        comparison: comparison class.
 
     """
     if isinstance(comparison, comparisons.Comparison):
@@ -337,8 +345,8 @@ def get_comparison_class(comparison, list_):
 
 
 def get_lead_cftime_shift_args(units, lead):
-    """Determines the date increment to use when adding the lead time to init time based
-    on the units attribute.
+    """
+    Determine date increment when adding lead to init based on units attribute.
 
     Args:
         units (str): Units associated with the lead dimension. Must be
@@ -376,8 +384,7 @@ def get_lead_cftime_shift_args(units, lead):
 
 
 def get_multiple_lead_cftime_shift_args(units, leads):
-    """Returns ``CFTimeIndex.shift()`` offset increment for an arbitrary number of
-    leads.
+    """Return ``CFTimeIndex.shift()`` offset for arbitrary number of leads.
 
     Args:
         units (str): Units associated with the lead dimension. Must be one of
@@ -396,20 +403,18 @@ def get_multiple_lead_cftime_shift_args(units, leads):
 
 
 def intersect(lst1, lst2):
-    """
-    Custom intersection, since `set.intersection()` changes type of list.
-    """
+    """Return custom intersection as `set.intersection()` changes type."""
     lst3 = [value for value in lst1 if value in lst2]
     return np.array(lst3)
 
 
 def lead_units_equal_control_time_stride(init, verif):
-    """Check that the lead units of the initialized ensemble have the same frequency as
-    the control stride.
+    """
+    Check that lead units of initialized has same frequency as control stride.
 
     Args:
-        init (xr.object): initialized ensemble with lead units.
-        verif (xr.object): control, uninitialized historical simulation / observations.
+        init (xr.Dataset): initialized ensemble with lead units.
+        verif (xr.Dataset): control, uninitialized historical simulation / observations.
 
     Returns:
         bool: Possible to continue or raise warning.
@@ -447,8 +452,8 @@ def rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(ds, dim):
 
 
 def shift_cftime_index(xobj, time_string, n, freq):
-    """Shifts a ``CFTimeIndex`` over a specified number of time steps at a given
-    temporal frequency.
+    """
+    Shift a ``CFTimeIndex`` over n time steps at a given temporal frequency.
 
     This leverages the handy ``.shift()`` method from ``xarray.CFTimeIndex``. It's a
     simple call, but is used throughout ``climpred`` so it is documented here clearly
@@ -492,9 +497,12 @@ def shift_cftime_singular(cftime, n, freq):
 
 
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
-    """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
+    """
+    Assume same chunks and dimension order.
+
     This is needed after some operations which reduce chunks to size 1.
-    First transpose a to ds.dims then apply ds chunking to a."""
+    First transpose a to ds.dims then apply ds chunking to a.
+    """
     transpose_kwargs = (
         {"transpose_coords": False} if isinstance(new_chunk_ds, xr.DataArray) else {}
     )
@@ -504,7 +512,11 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
 
 
 def convert_Timedelta_to_lead_units(ds):
-    """Convert lead as pd.Timedelta to lead as int and corresponding lead.attrs['units'] and convert to longest integer lead unit possible."""
+    """
+    Convert lead as pd.Timedelta to int and corresponding lead.attrs['units'].
+
+    Converts to longest integer lead unit possible.
+    """
     if ds["lead"].dtype == "<m8[ns]":
         ds["lead"] = (ds.lead * 1e-9).astype(int)
         ds["lead"].attrs["units"] = "seconds"
@@ -528,8 +540,12 @@ def convert_Timedelta_to_lead_units(ds):
 
 
 def broadcast_time_grouped_to_time(forecast, category_edges, dim):
-    """Broadcast time.groupby('time.month/dayofyear/weekofyear').mean() from
-    category_edges back to dim matching forecast."""
+    """
+    Help function for rps metric.
+
+    Broadcast time.groupby('time.month/dayofyear/weekofyear').mean() from
+    category_edges back to dim matching forecast.
+    """
     category_edges_time_dim = [
         d
         for d in category_edges.dims
@@ -550,7 +566,11 @@ def broadcast_time_grouped_to_time(forecast, category_edges, dim):
 
 
 def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
-    """Apply broadcast_time_grouped_to_time to category_edges in metric_kwargs."""
+    """
+    Help function for rps metric.
+
+    Apply broadcast_time_grouped_to_time to category_edges in metric_kwargs.
+    """
     category_edges = metric_kwargs.get("category_edges", None)
     logging.debug("enter climpred.utils.broadcast_metric_kwargs_for_rps")
     if category_edges is not None:
@@ -572,7 +592,8 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
             logging.debug("category_edges is np.array")
         else:
             raise ValueError(
-                f"excepted category edges as tuple, xr.Dataset or np.array, found {type(category_edges)}"
+                "excepted category edges as tuple, xr.Dataset or np.array, "
+                f"found {type(category_edges)}"
             )
         return metric_kwargs
 

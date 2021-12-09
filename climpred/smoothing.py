@@ -5,8 +5,6 @@ from typing import Any, Dict, Optional
 import numpy as np
 import xarray as xr
 
-from .checks import is_xarray
-
 try:
     import xesmf as xe
 except ImportError:

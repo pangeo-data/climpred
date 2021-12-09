@@ -1,11 +1,13 @@
-import inspect
+"""Reference forecasts: climatology, persistence, uninitialized."""
 import warnings
+from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
-from .checks import has_valid_lead_units, is_xarray
+from .checks import has_valid_lead_units
+from .comparison import Comparison
 from .comparisons import (
     ALL_COMPARISONS,
     COMPARISON_ALIASES,
@@ -19,10 +21,12 @@ from .metrics import (
     DETERMINISTIC_HINDCAST_METRICS,
     METRIC_ALIASES,
     PM_METRICS,
+    Metric,
     _rename_dim,
 )
 from .options import OPTIONS
 from .utils import (
+    convert_cftime_to_datetime_coords,
     convert_time_index,
     get_comparison_class,
     get_lead_cftime_shift_args,
@@ -30,9 +34,17 @@ from .utils import (
     shift_cftime_index,
 )
 
+metricType = Union[str, Metric]
+comparisonType = Union[str, Comparison]
+dimType = Optional[Union[str, List[str]]]
+alignmentType = str
+metric_kwargsType = Optional[Any]
 
-def _maybe_seasons_to_int(ds):
-    """set season str values or coords to int"""
+
+def _maybe_seasons_to_int(
+    ds: Union[xr.Dataset, xr.DataArray]
+) -> Union[xr.Dataset, xr.DataArray]:
+    """Set season str values or coords to int."""
     seasonal = False
     for season in ["DJF", "MAM", "JJA", "SON"]:
         if season in ds:
@@ -62,19 +74,29 @@ def _maybe_seasons_to_int(ds):
     return ds
 
 
-def persistence(verif, inits, verif_dates, lead):
+def persistence(
+    verif: xr.Dataset,
+    inits: Dict[float, xr.DataArray],
+    verif_dates: Dict[float, xr.DataArray],
+    lead: float,
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    """Create forecast, verification tuple at lead for persistence forecast."""
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
     lverif = verif.sel(time=verif_dates[lead])
     return lforecast, lverif
 
 
-def climatology(verif, inits, verif_dates, lead):
+def climatology(
+    verif: xr.Dataset,
+    inits: Dict[float, xr.DataArray],
+    verif_dates: Dict[float, xr.DataArray],
+    lead: float,
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    """Create forecast, verification tuple at lead for climatology forecast."""
     init_lead = inits[lead].copy()
     seasonality_str = OPTIONS["seasonality"]
     if seasonality_str == "weekofyear":
         # convert to datetime for weekofyear operations
-        from .utils import convert_cftime_to_datetime_coords
-
         verif = convert_cftime_to_datetime_coords(verif, "time")
         init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
         init_lead = init_lead["time"]
@@ -90,7 +112,7 @@ def climatology(verif, inits, verif_dates, lead):
         .sel(
             {
                 seasonality_str: _maybe_seasons_to_int(
-                    getattr(verif_hind_union.time.dt, seasonality_str)
+                    getattr(verif_hind_union.time.dt, seasonality_str)  # type: ignore
                 )
             },
             method="nearest",  # nearest may be a bit incorrect but doesnt error
@@ -109,9 +131,18 @@ def climatology(verif, inits, verif_dates, lead):
     return lforecast, lverif
 
 
-def uninitialized(hist, verif, verif_dates, lead):
-    """Uninitialized forecast uses a simulation without any initialization
-    (assimilation/nudging). Also called historical in some communities."""
+def uninitialized(
+    hist: xr.Dataset,
+    verif: xr.Dataset,
+    verif_dates: Dict[float, xr.DataArray],
+    lead: float,
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    """
+    Create forecast, verification tuple at lead for uninitialized forecast.
+
+    Uninitialized forecast uses a simulation without any initialization
+    (assimilation/nudging). Also called historical in some communities.
+    """
     lforecast = hist.sel(time=verif_dates[lead])
     lverif = verif.sel(time=verif_dates[lead])
     return lforecast, lverif
@@ -122,8 +153,11 @@ def uninitialized(hist, verif, verif_dates, lead):
 
 
 def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, dim):
-    """Maybe drop member from dim or add single-member dimension. Used in
-    reference forecasts: climatology, uninitialized, persistence."""
+    """
+    Maybe drop member from dim or add single-member dimension.
+
+    Used in reference forecasts: climatology, uninitialized, persistence.
+    """
     # persistence or climatology forecasts wont have member dimension, create if
     # required
     # some metrics dont allow member dimension, remove and try mean
@@ -170,19 +204,19 @@ def compute_climatology(
     dim="init",
     **metric_kwargs,
 ):
-    """Computes the skill of a climatology forecast.
+    """Compute the skill of a climatology forecast.
 
     Args:
-        initialized (xarray.Dataset): The initialized ensemble.
-        verif (xarray.Dataset): control data, not needed
-        metric (str): Metric name to apply at each lag for the persistence computation.
+        initialized: The initialized ensemble.
+        verif: control data, not needed
+        metric: Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
-        dim (str or list of str): dimension to apply metric over.
-        ** metric_kwargs (dict): additional keywords to be passed to metric
+        dim: dimension to apply metric over.
+        ** metric_kwargs: additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        clim (xarray.Dataset): Results of climatology forecast with the input metric
+        clim: Results of climatology forecast with the input metric
             applied.
     """
     seasonality_str = OPTIONS["seasonality"]
@@ -192,11 +226,13 @@ def compute_climatology(
     has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+    if isinstance(metric, str):
+        metric = METRIC_ALIASES.get(metric, metric)
+        metric = get_metric_class(metric, ALL_METRICS)
 
-    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
-    metric = get_metric_class(metric, ALL_METRICS)
+    if isinstance(comparison, str):
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+        comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
     if "iteration" in initialized.dims:
         initialized = initialized.isel(iteration=0, drop=True)
@@ -235,24 +271,27 @@ def compute_climatology(
     return clim_skill
 
 
-@is_xarray([0, 1])
 def compute_persistence(
-    initialized,
-    verif,
-    metric="pearson_r",
-    alignment="same_verifs",
-    dim="init",
-    comparison="m2o",
-    **metric_kwargs,
-):
-    """Computes the skill of a persistence forecast from a simulation.
+    initialized: xr.Dataset,
+    verif: xr.Dataset,
+    metric: metricType = "acc",
+    comparison: comparisonType = "m2o",
+    dim: dimType = "init",
+    alignment: alignmentType = "same_verifs",
+    **metric_kwargs: Any,
+) -> xr.Dataset:
+    """Compute the skill of a persistence forecast from a simulation.
+
+    This function unlike
+    :py:func:`~climpred.reference.compute_persistence_from_first_lead` is
+    not sensitive to ``comparison``. Requires
+    ``climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=False)``.
 
     Args:
-        initialized (xarray.Dataset): The initialized ensemble.
-        verif (xarray.Dataset): Verification data.
-        metric (str): Metric name to apply at each lag for the persistence computation.
-            Default: 'pearson_r'
-        alignment (str): which inits or verification times should be aligned?
+        initialized: The initialized ensemble.
+        verif: Verification data.
+        metric: Metric name to apply at each lag for the persistence computation. Default: 'pearson_r'
+        alignment: which inits or verification times should be aligned?
 
             - ``maximize``: maximize the degrees of freedom by slicing
                 ``initialized`` and ``verif`` to a common time frame at each lead.
@@ -263,12 +302,12 @@ def compute_persistence(
                 prior to computing metric. This philosophy follows the thought that
                 each lead should be based on the same set of verification dates.
 
-        dim (str or list of str): dimension to apply metric over.
-        ** metric_kwargs (dict): additional keywords to be passed to metric
+        dim: dimension to apply metric over.
+        ** metric_kwargs: additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        pers (xarray.Dataset): Results of persistence forecast with the input metric
+        pers: Results of persistence forecast with the input metric
             applied.
 
     Reference:
@@ -277,7 +316,7 @@ def compute_persistence(
           Oxford University Press, 2007.
 
     See also:
-        * :py:func:`~climpred.reference.compute_persistence`
+        * :py:func:`~climpred.reference.compute_persistence_from_first_lead`
     """
     if isinstance(dim, str):
         dim = [dim]
@@ -289,13 +328,14 @@ def compute_persistence(
     has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+    if isinstance(metric, str):
+        metric = METRIC_ALIASES.get(metric, metric)
+        metric = get_metric_class(metric, ALL_METRICS)
 
-    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
+    if isinstance(metric, str):
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+        comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    # get class metric(Metric)
-    metric = get_metric_class(metric, ALL_METRICS)
     # If lead 0, need to make modifications to get proper persistence, since persistence
     # at lead 0 is == 1.
     if [0] in initialized.lead.values:
@@ -334,25 +374,26 @@ def compute_persistence(
 
 
 def compute_persistence_from_first_lead(
-    initialized,
-    verif,
-    metric="pearson_r",
-    alignment="same_inits",
-    dim="init",
-    comparison="m2e",
-    **metric_kwargs,
+    initialized: xr.Dataset,
+    verif: Optional[xr.Dataset] = None,
+    metric: metricType = "pearson_r",
+    alignment: alignmentType = "same_inits",
+    dim: dimType = "init",
+    comparison: comparisonType = "m2e",
+    **metric_kwargs: metric_kwargsType,
 ):
-    """Computes the skill of a persistence forecast based on the first lead available
-    in the initialized dataset. This function unlike ``compute_persistence`` is
+    """Compute persistence skill based on first ``lead`` in ``initialized``.
+
+    This function unlike :py:func:`~climpred.reference.compute_persistence` is
     sensitive to ``comparison``. Requires
     ``climpred.set_options(PerfectModel_persistence_from_initialized_lead_0=True)``.
 
     Args:
-        initialized (xarray.Dataset): The initialized ensemble.
-        verif (xarray.Dataset): Verification data. Not used.
-        metric (str): Metric name to apply at each lag for the persistence computation.
+        initialized: The initialized ensemble.
+        verif: Verification data. Not used.
+        metric: Metric name to apply at each lag for the persistence computation.
             Default: 'pearson_r'
-        alignment (str): which inits or verification times should be aligned?
+        alignment: which inits or verification times should be aligned?
 
             - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
                 and ``verif`` to a common time frame at each lead.
@@ -363,12 +404,12 @@ def compute_persistence_from_first_lead(
                 prior to computing metric. This philosophy follows the thought that
                 each lead should be based on the same set of verification dates.
 
-        dim (str or list of str): dimension to apply metric over.
-        ** metric_kwargs (dict): additional keywords to be passed to metric
+        dim: dimension to apply metric over.
+        ** metric_kwargs: additional keywords to be passed to metric
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        pers (xarray.Dataset): Results of persistence forecast with the input metric
+        pers: Results of persistence forecast with the input metric
             applied.
 
     Example:
@@ -447,11 +488,12 @@ def compute_persistence_from_first_lead(
     has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
-
-    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
-    metric = get_metric_class(metric, ALL_METRICS)
+    if isinstance(metric, str):
+        metric = METRIC_ALIASES.get(metric, metric)
+        metric = get_metric_class(metric, ALL_METRICS)
+    if isinstance(comparison, str):
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+        comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
     forecast, observations = comparison.function(initialized, metric=metric)
     forecast, dim = _adapt_member_for_reference_forecast(
@@ -465,16 +507,15 @@ def compute_persistence_from_first_lead(
     return persistence_skill
 
 
-@is_xarray([0, 1])
 def compute_uninitialized(
-    initialized,
-    uninit,
-    verif,
-    metric="pearson_r",
-    comparison="e2o",
-    dim="time",
-    alignment="same_verifs",
-    **metric_kwargs,
+    initialized: xr.Dataset,
+    uninit: xr.Dataset,
+    verif: xr.Dataset,
+    metric: metricType = "pearson_r",
+    comparison: comparisonType = "e2o",
+    dim: dimType = "time",
+    alignment: alignmentType = "same_verifs",
+    **metric_kwargs: metric_kwargsType,
 ):
     """Verify an uninitialized ensemble against verification data.
 
@@ -483,33 +524,35 @@ def compute_uninitialized(
         first lag and then projected out to any further lags being analyzed.
 
     Args:
-        initialized (xarray.Dataset): Initialized ensemble.
-        uninit (xarray.Dataset): Uninitialized ensemble.
-        verif (xarray.Dataset): Verification data with some temporal overlap with the
+        initialized: Initialized ensemble.
+        uninit: Uninitialized ensemble.
+        verif: Verification data with some temporal overlap with the
             uninitialized ensemble.
-        metric (str):
+        metric:
             Metric used in comparing the uninitialized ensemble with the verification
             data.
-        comparison (str):
+        comparison:
             How to compare the uninitialized ensemble to the verification data:
                 * `"e2o"` : ensemble mean to verification data (Default)
                 * `"m2o"` : each member to the verification data
-        dim (str or list of str): dimension to apply metric over.
-        alignment (str): which inits or verification times should be aligned?
+        dim: dimension to apply metric over.
+        alignment: which inits or verification times should be aligned?
 
-            - ``maximize``: maximize the degrees of freedom by slicing ``initialized``
-                and ``verif`` to a common time frame at each lead.
-            - ``same_inits``: slice to a common init frame prior to computing
-            metric. This philosophy follows the thought that each lead should be based
-            on the same set of initializations.
-            - ``same_verif``: slice to a common/consistent verification time frame
-                prior to computing metric. This philosophy follows the thought that
-                each lead should be based on the same set of verification dates.
+            - ``"maximize"``: maximize the degrees of freedom by slicing
+                ``initialized`` and ``verif`` to a common time frame at each
+                lead.
+            - ``"same_inits"``: slice to a common init frame prior to computing
+                metric. This philosophy follows the thought that each lead
+                should be based on the same set of initializations.
+            - ``same_verif``: slice to a common/consistent verification time
+                frame prior to computing metric. This philosophy follows the
+                thought that each lead should be based on the same set of
+                verification dates.
 
-        ** metric_kwargs (dict): additional keywords to be passed to metric
+        ** metric_kwargs: additional keywords to be passed to metric
 
     Returns:
-        uninit_skill (xarray.Dataset): Results from comparison at the first lag.
+        uninit_skill: Results from comparison at the first lag.
 
     """
     if isinstance(dim, str):
@@ -521,11 +564,13 @@ def compute_uninitialized(
     has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
+    if isinstance(metric, str):
+        metric = METRIC_ALIASES.get(metric, metric)
+        metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
+    if isinstance(comparison, str):
+        comparison = COMPARISON_ALIASES.get(comparison, comparison)
+        comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
 
-    comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
-    metric = get_metric_class(metric, DETERMINISTIC_HINDCAST_METRICS)
     forecast, verif = comparison.function(uninit, verif, metric=metric)
 
     initialized = initialized.rename({"init": "time"})

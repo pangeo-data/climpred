@@ -1351,6 +1351,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         if dim is None:
             dim = list(self._datasets["initialized"].isel(lead=0).dims)
+        compute_persistence_func: Callable[..., xr.Dataset]
         compute_persistence_func = compute_persistence_from_first_lead
         if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]:
             compute_persistence_func = compute_persistence_from_first_lead

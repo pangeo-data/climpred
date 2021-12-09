@@ -1,7 +1,9 @@
+"""Prediction module: _apply_metric_at_given_lead and compute functions."""
+
 import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
-from .checks import has_valid_lead_units, is_in_list, is_xarray
+from .checks import has_valid_lead_units, is_in_list
 from .comparisons import (
     COMPARISON_ALIASES,
     HINDCAST_COMPARISONS,
@@ -43,7 +45,7 @@ def _apply_metric_at_given_lead(
     dim=None,
     **metric_kwargs,
 ):
-    """Applies a metric between two time series at a given lead.
+    """Apply a metric between two time series at a given lead.
 
     Args:
         verif (xr object): Verification data.
@@ -101,7 +103,7 @@ def _apply_metric_at_given_lead(
 
 
 def _rename_dim(dim, forecast, verif):
-    """rename `dim` to `time` or `init` if forecast and verif dims require to do so."""
+    """Rename `dim` to `time` or `init` if forecast and verif dims requires."""
     if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
         dim.remove("init")
@@ -118,7 +120,7 @@ def _rename_dim(dim, forecast, verif):
 
 
 def _sanitize_to_list(dim):
-    """Make dim to list if string, tuple or set, pass if None else raise ValueError."""
+    """Ensure dim is List, raises ValueError if not str, set, tuple or None."""
     if isinstance(dim, str):
         dim = [dim]
     elif isinstance(dim, set):
@@ -135,7 +137,7 @@ def _sanitize_to_list(dim):
 
 
 def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
-    """Returns `metric`, `comparison` and `dim` for compute functions.
+    """Return `metric`, `comparison` and `dim` for compute functions.
 
     Args:
         initialized (xr.object): initialized dataset: init_pm or hind
@@ -203,7 +205,6 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     return metric, comparison, dim
 
 
-@is_xarray([0])
 def compute_perfect_model(
     init_pm,
     control=None,
@@ -213,8 +214,7 @@ def compute_perfect_model(
     **metric_kwargs,
 ):
     """
-    Compute a predictability skill score for a perfect-model framework
-    simulation dataset.
+    Compute a predictability skill score in a perfect-model framework.
 
     Args:
         init_pm (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
@@ -255,7 +255,6 @@ def compute_perfect_model(
     return skill
 
 
-@is_xarray([0, 1])
 def compute_hindcast(
     hind,
     verif,

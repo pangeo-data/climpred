@@ -31,7 +31,7 @@ from .stats import dpp
 try:
     from .stats import varweighted_mean_period
 except ImportError:
-    varweighted_mean_period = None
+    varweighted_mean_period = None  # type: ignore
 from .utils import (
     _transpose_and_rechunk_to,
     convert_time_index,

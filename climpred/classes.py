@@ -756,6 +756,7 @@ class PredictionEnsemble:
             return self
         tsmooth_kws: Optional[Union[str, Dict[str, int]]] = None
         d_lon_lat_kws: Optional[Union[str, Dict[str, int]]] = None
+        smooth_fct: Callable[..., xr.Dataset]
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if "goddard" in smooth_kws:
@@ -1868,8 +1869,6 @@ class HindcastEnsemble(PredictionEnsemble):
             return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
         except ImportError:
             raise ValueError("nc_time_axis>1.4.0 required for plotting.")
-
-    from .docstrings import comparison_docstring
 
     def verify(
         self,

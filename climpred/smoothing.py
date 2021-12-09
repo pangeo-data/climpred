@@ -244,7 +244,7 @@ def smooth_goddard_2013(
     how: str = "mean",
     **xesmf_kwargs: Any,
 ) -> xr.Dataset:
-    """Wrapper to smooth as suggested by Goddard et al. 2013.
+    """Wrap to smooth as suggested by Goddard et al. 2013.
 
     - 4-year composites
     - 5x5 degree regridding
@@ -258,7 +258,7 @@ def smooth_goddard_2013(
             Default: ``{'lon':5 , 'lat': 5}``.
         how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
             Default: ``'mean'``.
-        **xesmf_kwargs (kwargs): kwargs passed to `spatial_smoothing_xesmf`.
+        **xesmf_kwargs: kwargs passed to `spatial_smoothing_xesmf`.
 
     Returns:
         input with `smooth` timesteps less and labeling '1-(smooth-1)', '...' .

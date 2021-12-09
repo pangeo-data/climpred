@@ -3,7 +3,6 @@
 import hashlib
 import os as _os
 import urllib
-from os import PathLike
 from typing import Optional, Union
 from urllib.request import urlretrieve as _urlretrieve
 
@@ -123,7 +122,7 @@ def _initialize_proxy(proxy_dict):
 def load_dataset(
     name: Optional[str] = None,
     cache: bool = True,
-    cache_dir: Union[str, PathLike[str]] = _default_cache_dir,
+    cache_dir: str = _default_cache_dir,
     github_url: str = "https://github.com/pangeo-data/climpred-data",
     branch: str = "master",
     extension: Optional[str] = None,

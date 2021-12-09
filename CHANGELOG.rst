@@ -119,6 +119,13 @@ Internals/Minor Fixes
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`. Now all keywords are
   captured in the skill dataset attributes ``.attrs``.
   (:issue:`475`, :pr:`694`) `Aaron Spring`_.
+- docstrings formatting with `blackdocs <https://github.com/keewis/blackdoc>`_. (:pr:`708`) `Aaron Spring`_.
+- documentation linting with `doc8 <https://github.com/PyCQA/doc8>`_ and `pydocstyle <http://www.pydocstyle.org/en/stable/usage.html>`_. (:pr:`708`) `Aaron Spring`_.
+
+Documentation
+-------------
+- Refresh all docs. (:issue:`707`, :pr:`708`) `Aaron Spring`_.
+- (:issue:`707`, :pr:`708`) `Aaron Spring`_.
 
 
 climpred v2.1.6 (2021-08-31)

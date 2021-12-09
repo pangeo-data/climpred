@@ -2572,11 +2572,11 @@ class HindcastEnsemble(PredictionEnsemble):
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
                 f"train_test_split='{train_test_split}' not implemented. Please choose "
-                f" `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, "
+                f"`train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, "
                 "see Risbey et al. 2021 "
                 "http://www.nature.com/articles/s41467-021-23771-z for description and "
                 "https://github.com/pangeo-data/climpred/issues/648 for implementation "
-                " status."
+                "status."
             )
 
         alignment = _check_valid_alignment(alignment)

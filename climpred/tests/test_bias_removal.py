@@ -538,7 +538,9 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
             how=how, alignment="same_verif", train_test_split="fair", train_time=2000
         )
 
-    with pytest.raises(ValueError, match="Please provide `cv="):
+    with pytest.raises(
+        ValueError, match="Please provide cross-validation keyword `cv="
+    ):
         he.remove_bias(how=how, alignment="same_verif", train_test_split="unfair-cv")
 
     with pytest.raises(NotImplementedError, match="please choose from"):

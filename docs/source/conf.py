@@ -1,8 +1,9 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# u This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
+"""Configuration file for the Sphinx documentation builder.
+
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+http://www.sphinx-doc.org/en/master/config
+"""
 
 # -- Path setup --------------------------------------------------------------
 
@@ -10,7 +11,12 @@ import datetime
 import os
 import sys
 
+import xarray
+
 import climpred
+
+xarray.DataArray.__module__ = "xarray"
+
 
 sys.path.insert(0, os.path.abspath("../.."))
 

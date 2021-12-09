@@ -329,7 +329,7 @@ def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List[s
     return reference
 
 
-def _check_valud_alignment(alignment):
+def _check_valid_alignment(alignment):
     if alignment not in VALID_ALIGNMENTS:
         raise ValueError(
             f"Please provide alignment from {VALID_ALIGNMENTS}, "

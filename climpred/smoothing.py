@@ -15,13 +15,13 @@ except ImportError:
 
 def spatial_smoothing_xesmf(
     ds: xr.Dataset,
-    d_lon_lat_kws: dict = {"lon": 5, "lat": 5},
+    d_lon_lat_kws: Dict[str, float] = {"lon": 5, "lat": 5},
     method: str = "bilinear",
     periodic: bool = False,
-    filename: str = None,
+    filename: Optional[str] = None,
     reuse_weights: bool = False,
-    tsmooth_kws: Optional[dict] = None,
-    how: str = None,
+    tsmooth_kws: Optional[Dict[str, int]] = None,
+    how: Optional[str] = None,
 ) -> xr.Dataset:
     """Quick regridding function.
 
@@ -139,9 +139,9 @@ def spatial_smoothing_xesmf(
 
 def temporal_smoothing(
     ds: xr.Dataset,
-    tsmooth_kws: Optional[dict] = None,
+    tsmooth_kws: Optional[Dict[str, int]] = None,
     how: str = "mean",
-    d_lon_lat_kws: Optional[dict] = None,
+    d_lon_lat_kws: Optional[Dict[str, float]] = None,
 ) -> xr.Dataset:
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
@@ -150,7 +150,7 @@ def temporal_smoothing(
         tsmooth_kws: length of smoothing of timesteps.
             Defaults to ``{'time': 4}`` (see Goddard et al. 2013).
         how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
-            Default: 'mean'
+            Default: ``"mean"``.
         d_lon_lat_kws: leads nowhere but consistent with ``spatial_smoothing_xesmf``.
 
     Returns:
@@ -240,9 +240,9 @@ def _set_center_coord(ds: xr.Dataset, dim: str = "lead") -> xr.Dataset:
 def smooth_goddard_2013(
     ds: xr.Dataset,
     tsmooth_kws: Dict[str, int] = {"lead": 4},
-    d_lon_lat_kws: Dict[str, int] = {"lon": 5, "lat": 5},
+    d_lon_lat_kws: Dict[str, float] = {"lon": 5, "lat": 5},
     how: str = "mean",
-    **xesmf_kwargs: Any,
+    **xesmf_kwargs: str,
 ) -> xr.Dataset:
     """Wrap to smooth as suggested by Goddard et al. 2013.
 
@@ -272,6 +272,6 @@ def smooth_goddard_2013(
     # first temporal smoothing
     ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws)
     ds_smoothed_regridded = spatial_smoothing_xesmf(
-        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs
+        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs  # type: ignore
     )
     return ds_smoothed_regridded

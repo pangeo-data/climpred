@@ -111,6 +111,13 @@ def _display_metadata(self) -> str:
         >>> init = climpred.tutorial.load_dataset("CESM-DP-SST")
         >>> hindcast = climpred.HindcastEnsemble(init)
         >>> print(hindcast)
+        <climpred.HindcastEnsemble>
+        Initialized Ensemble:
+            SST      (init, lead, member) float64 -0.2404 -0.2085 ... 0.7442 0.7384
+        Observations:
+            None
+        Uninitialized:
+            None
 
     """
     SPACE = "    "
@@ -1864,7 +1871,7 @@ class HindcastEnsemble(PredictionEnsemble):
             Coordinates:
               * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
               * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * alignment  (alignment) <U10 'same_init' 'same_verif' ""maximize
+              * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
             Attributes:
                 units:    days since 1960-01-01
 

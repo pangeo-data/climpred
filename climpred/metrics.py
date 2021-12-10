@@ -3702,7 +3702,7 @@ def _rps(
             comparison:                    m2c
             dim:                           ['member', 'init']
             reference:                     []
-            category_edges:                <xarray.Dataset>\\nDimensions:        (cate...
+            category_edges:                <xarray.Dataset>\nDimensions:        (cate...
 
         Provide ``category_edges`` as tuple for different category edges to categorize
         forecasts and observations.
@@ -3747,7 +3747,7 @@ def _rps(
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            category_edges:                (<xarray.Dataset>\\nDimensions:        (mon...
+            category_edges:                (<xarray.Dataset>\nDimensions:        (mon...
     """
     if "category_edges" in metric_kwargs:
         category_edges = metric_kwargs.pop("category_edges")

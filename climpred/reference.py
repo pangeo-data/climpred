@@ -571,7 +571,7 @@ def compute_uninitialized(
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, HINDCAST_COMPARISONS)
 
-    forecast, verif = comparison.function(uninit, verif)
+    forecast, verif = comparison.function(uninit, verif, metric)
 
     initialized = initialized.rename({"init": "time"})
 

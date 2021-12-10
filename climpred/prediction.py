@@ -48,11 +48,11 @@ def _apply_metric_at_given_lead(
     """Apply a metric between two time series at a given lead.
 
     Args:
-        verif (xr object): Verification data.
+        verif (xr.Dataset): Verification data.
         verif_dates (dict): Lead-dependent verification dates for alignment.
         lead (int): Given lead to score.
-        hind (xr object): Initialized hindcast. Not required in a persistence forecast.
-        hist (xr object): Uninitialized/historical simulation. Required when
+        hind (xr.Dataset): Initialized hindcast. Not required in a persistence forecast.
+        hist (xr.Dataset): Uninitialized/historical simulation. Required when
             ``reference='uninitialized'``.
         inits (dict): Lead-dependent initialization dates for alignment.
         reference (str): If not ``None``, return score for this reference forecast.
@@ -63,7 +63,7 @@ def _apply_metric_at_given_lead(
         dim (str): Dimension to apply metric over.
 
     Returns:
-        result (xr object): Metric results for the given lead for the initialized
+        result (xr.Dataset): Metric results for the given lead for the initialized
             forecast or reference forecast.
     """
     # naming:: lforecast: forecast at lead; lverif: verification at lead
@@ -217,8 +217,8 @@ def compute_perfect_model(
     Compute a predictability skill score in a perfect-model framework.
 
     Args:
-        init_pm (xarray object): ensemble with dims ``lead``, ``init``, ``member``.
-        control (xarray object): NOTE that this is a legacy argument from a former
+        init_pm (xr.Dataset): ensemble with dims ``lead``, ``init``, ``member``.
+        control (xr.Dataset): NOTE that this is a legacy argument from a former
             release. ``control`` is not used in ``compute_perfect_model`` anymore.
         metric (str): `metric` name, see
          :py:func:`climpred.utils.get_metric_class` and (see :ref:`Metrics`).
@@ -231,7 +231,7 @@ def compute_perfect_model(
             (see the arguments required for a given metric in metrics.py)
 
     Returns:
-        skill (xarray object): skill score with dimensions as input `ds`
+        skill (xr.Dataset): skill score with dimensions as input `ds`
                                without `dim`.
 
     """
@@ -267,12 +267,12 @@ def compute_hindcast(
     """Verify hindcast predictions against verification data.
 
     Args:
-        hind (xarray object): Hindcast ensemble.
+        hind (xr.Dataset): Hindcast ensemble.
             Expected to follow package conventions:
             * ``init`` : dim of initialization dates
             * ``lead`` : dim of lead time from those initializations
             Additional dims can be member, lat, lon, depth, ...
-        verif (xarray object): Verification data with some temporal overlap with the
+        verif (xr.Dataset): Verification data with some temporal overlap with the
             hindcast.
         metric (str): Metric used in comparing the decadal prediction ensemble with the
             verification data. (see :py:func:`~climpred.utils.get_metric_class` and
@@ -287,7 +287,7 @@ def compute_hindcast(
         alignment (str): which inits or verification times should be aligned?
             - maximize/None: maximize the degrees of freedom by slicing ``hind`` and
             ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common init frame prior to computing
+            - same_inits: slice to a common ``init`` frame prior to computing
             metric. This philosophy follows the thought that each lead should be based
             on the same set of initializations.
             - same_verif: slice to a common/consistent verification time frame prior to
@@ -297,7 +297,7 @@ def compute_hindcast(
             (see the arguments required for a given metric in :ref:`Metrics`).
 
     Returns:
-        result (xarray object):
+        result (xr.Dataset):
             Verification metric over ``lead`` reduced by dimension(s) ``dim``.
     """
     metric, comparison, dim = _get_metric_comparison_dim(

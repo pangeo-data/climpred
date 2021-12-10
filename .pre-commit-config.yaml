@@ -49,15 +49,17 @@ repos:
       rev: 6.1.1
       hooks:
       -   id: pydocstyle
-      args:
-      - --ignore=D301
-      - --max-line-length=93
-      - --convention google # https://google.github.io/styleguide/pyguide.html#Comments
+          args: ['--match="(?!test_).*\.py"']
+          # , "--convention=google"] # https://google.github.io/styleguide/pyguide.html#Comments
 
   -   repo: https://github.com/pycqa/doc8
       rev: 0.10.1
       hooks:
       -   id: doc8
+  #        args: ["--ignore-path climpred/tests", "--max-line-length 93"]
+      #- --max-line-length 93
+      #- --ignore-path climpred/tests
+
 
   - repo: https://github.com/keewis/blackdoc
     rev: v0.3.4

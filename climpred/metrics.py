@@ -1,3 +1,5 @@
+"""Metrics for ``PredictionEnsemble.verify() and ``PredictionEnsemble.bootstrap()."""
+
 import warnings
 from typing import Any, Callable, List, Optional, Union
 
@@ -102,7 +104,7 @@ def _preprocess_dims(dim):
 
 
 def _rename_dim(dim, forecast, verif):
-    """rename `dim` to `time` or `init` if forecast and verif dims require."""
+    """Rename `dim` to `time` or `init` if forecast and verif dims require."""
     if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
         dim.remove("init")
@@ -420,7 +422,7 @@ def _pearson_r_p_value(
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=(RuntimeWarning, DeprecationWarning))
+        warnings.simplefilter("ignore", category=Warning)
         return pearson_r_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -620,7 +622,7 @@ def _pearson_r_eff_p_value(
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=(RuntimeWarning, DeprecationWarning))
+        warnings.simplefilter("ignore", category=Warning)
         return pearson_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -903,7 +905,7 @@ def _spearman_r_eff_p_value(
     # model grid. We can avoid this annoying output by specifically suppressing
     # warning here.
     with warnings.catch_warnings():
-        warnings.simplefilter("ignore", category=(RuntimeWarning, DeprecationWarning))
+        warnings.simplefilter("ignore", category=Warning)
         return spearman_r_eff_p_value(forecast, verif, dim=dim, **metric_kwargs)
 
 
@@ -2926,7 +2928,12 @@ __crps = Metric(
 )
 
 
-def _crps_quadrature(verification: xr.Dataset, cdf_or_dist:Callable, dim:dimType=None, **metric_kwargs:metric_kwargsType)-> xr.Dataset:
+def _crps_quadrature(
+    verification: xr.Dataset,
+    cdf_or_dist: Callable,
+    dim: dimType = None,
+    **metric_kwargs: metric_kwargsType,
+) -> xr.Dataset:
     """Compute the continuously ranked probability score (CPRS).
 
     For a given
@@ -3056,7 +3063,9 @@ def _crpss(
         * :py:func:`~xskillscore.crps_ensemble`
     """
     if dim is None:
-        dim = verif.dims
+        dim = list(verif.dims)
+    if isinstance(dim, str):
+        dim = list(dim)
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
     mu = verif.mean(rdim)

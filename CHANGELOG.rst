@@ -8,8 +8,9 @@ What's New
     import climpred
     from climpred import HindcastEnsemble
     import matplotlib as mpl
+
     mpl.rcdefaults()
-    mpl.use('Agg')
+    mpl.use("Agg")
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
@@ -31,20 +32,20 @@ New Features
   2-dimensional coordinate ``valid_time`` for ``initialized`` from ``init`` and
   ``lead``, which is matched with ``time`` from ``verification`` during alignment.
 
-  .. code-block:: python
+.. :: python
 
-      >>> hind = climpred.tutorial.load_dataset("CESM-DP-SST")
-      >>> hind.lead.attrs["units"] = "years"
-      >>> climpred.HindcastEnsemble(hind).get_initialized()
-      <xarray.Dataset>
-      Dimensions:     (lead: 10, member: 10, init: 64)
-      Coordinates:
-        * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-        * member      (member) int32 1 2 3 4 5 6 7 8 9 10
-        * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-          valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2027-01-01 00:00:00
-      Data variables:
-          SST         (init, lead, member) float64 ...
+>>> hind = climpred.tutorial.load_dataset("CESM-DP-SST")
+>>> hind.lead.attrs["units"] = "years"
+>>> climpred.HindcastEnsemble(hind).get_initialized()
+<xarray.Dataset>
+Dimensions:     (lead: 10, member: 10, init: 64)
+Coordinates:
+  * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+  * member      (member) int32 1 2 3 4 5 6 7 8 9 10
+  * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+    valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2027-01-01 00:00:00
+Data variables:
+    SST         (init, lead, member) float64 ...
 
   (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
@@ -63,26 +64,32 @@ New Features
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
   initializations seasonality.
 
-  .. code-block:: python
+.. :: python
 
-      >>> import climpred
-      >>> hind = climpred.tutorial.load_dataset("NMME_hindcast_Nino34_sst")
-      >>> obs = climpred.tutorial.load_dataset("NMME_OIv2_Nino34_sst")
-      >>> hindcast = climpred.HindcastEnsemble(hind).add_observations(obs)
-      >>> # skill for each init month separated
-      >>> skill = hindcast.verify(metric="rmse", dim="init", comparison="e2o",
-      ...                         skipna=True, alignment="maximize", groupby="month")
-      >>> skill
-      <xarray.Dataset>
-      Dimensions:  (month: 12, lead: 12, model: 12)
-      Coordinates:
-        * lead     (lead) float64 0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
-        * model    (model) object 'NCEP-CFSv2' 'NCEP-CFSv1' ... 'GEM-NEMO'
-          skill    <U11 'initialized'
-        * month    (month) int64 1 2 3 4 5 6 7 8 9 10 11 12
-      Data variables:
-          sst      (month, lead, model) float64 0.4127 0.3837 0.3915 ... 1.255 3.98
-      >>> skill.sst.plot(hue="model", col="month", col_wrap=3)
+>>> import climpred
+>>> hind = climpred.tutorial.load_dataset("NMME_hindcast_Nino34_sst")
+>>> obs = climpred.tutorial.load_dataset("NMME_OIv2_Nino34_sst")
+>>> hindcast = climpred.HindcastEnsemble(hind).add_observations(obs)
+>>> # skill for each init month separated
+>>> skill = hindcast.verify(
+...     metric="rmse",
+...     dim="init",
+...     comparison="e2o",
+...     skipna=True,
+...     alignment="maximize",
+...     groupby="month",
+... )
+>>> skill
+<xarray.Dataset>
+Dimensions:  (month: 12, lead: 12, model: 12)
+Coordinates:
+  * lead     (lead) float64 0.0 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+  * model    (model) object 'NCEP-CFSv2' 'NCEP-CFSv1' ... 'GEM-NEMO'
+    skill    <U11 'initialized'
+  * month    (month) int64 1 2 3 4 5 6 7 8 9 10 11 12
+Data variables:
+    sst      (month, lead, model) float64 0.4127 0.3837 0.3915 ... 1.255 3.98
+>>> skill.sst.plot(hue="model", col="month", col_wrap=3)
 
   (:issue:`635`, :pr:`690`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and
@@ -94,7 +101,10 @@ New Features
       :okwarning:
 
       from climpred.tutorial import load_dataset
-      hindcast = climpred.HindcastEnsemble(load_dataset("CESM-DP-SST")).add_observations(load_dataset("ERSST"))
+
+      hindcast = climpred.HindcastEnsemble(
+          load_dataset("CESM-DP-SST")
+      ).add_observations(load_dataset("ERSST"))
       @savefig plotting_MEOW.png width=100%
       hindcast.plot_alignment(edgecolor="w")
 
@@ -147,7 +157,7 @@ Bug Fixes
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` for ``how`` in
   ``["modified_quantile", "basic_quantile", "gamma_mapping", "normal_mapping"]``
   from `bias_correction <https://github.com/pankajkarman/bias_correction>`_
-  takes all ``member``s to create model distribution. (:pr:`667`) `Aaron Spring`_.
+  takes all ``member`` to create model distribution. (:pr:`667`) `Aaron Spring`_.
 
 New Features
 ------------
@@ -677,7 +687,8 @@ Internals/Minor Fixes
   :py:func:`~climpred.prediction.compute_perfect_model`. (:pr:`330`) `Aaron Spring`_.
 - Changed lead0 coordinate modifications to be compliant with ``xarray=0.15.1`` in
   :py:func:`~climpred.reference.compute_persistence`. (:pr:`348`) `Aaron Spring`_.
-- Exchanged ``my_quantile`` with ``xr.quantile(skipna=False)``. (:pr:`348`) `Aaron Spring`_.
+- Exchanged ``my_quantile`` with ``xr.quantile(skipna=False)``.
+  (:pr:`348`) `Aaron Spring`_.
 - Remove ``sig`` from
   :py:func:`~climpred.graphics.plot_bootstrapped_skill_over_leadyear`.
   (:pr:`351`) `Aaron Spring`_.
@@ -712,10 +723,10 @@ New Features
   what resolution the predictions are at. (:pr:`294`) `Kathy Pegion`_ and
   `Riley X. Brady`_.
 
-.. code-block:: python
+.. :: python
 
-        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
-        >>> hind.lead.attrs['units'] = 'years'
+    >>> hind = climpred.tutorial.load_dataset("CESM-DP-SST")
+    >>> hind.lead.attrs["units"] = "years"
 
 - ``HindcastEnsemble`` now has ``.add_observations()`` and ``.get_observations()``
   methods. These are the same as ``.add_reference()`` and ``.get_reference()``, which
@@ -866,36 +877,36 @@ New Features
   :py:class:`~climpred.classes.PerfectModelEnsemble` to retrieve ``xarray`` datasets
   from the objects. (:pr:`243`) `Riley X. Brady`_.
 
-    .. code-block:: python
+.. :: python
 
-        >>> hind = climpred.tutorial.load_dataset('CESM-DP-SST')
-        >>> ref = climpred.tutorial.load_dataset('ERSST')
-        >>> hindcast = climpred.HindcastEnsemble(hind)
-        >>> hindcast = hindcast.add_reference(ref, 'ERSST')
-        >>> print(hindcast)
-        <climpred.HindcastEnsemble>
-        Initialized Ensemble:
-            SST      (init, lead, member) float64 ...
-        ERSST:
-            SST      (time) float32 ...
-        Uninitialized:
-            None
-        >>> print(hindcast.get_initialized())
-        <xarray.Dataset>
-        Dimensions:  (init: 64, lead: 10, member: 10)
-        Coordinates:
-        * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-        * member   (member) int32 1 2 3 4 5 6 7 8 9 10
-        * init     (init) float32 1954.0 1955.0 1956.0 1957.0 ... 2015.0 2016.0 2017.0
-        Data variables:
-            SST      (init, lead, member) float64 ...
-        >>> print(hindcast.get_reference('ERSST'))
-        <xarray.Dataset>
-        Dimensions:  (time: 61)
-        Coordinates:
-        * time     (time) int64 1955 1956 1957 1958 1959 ... 2011 2012 2013 2014 2015
-        Data variables:
-            SST      (time) float32 ...
+>>> hind = climpred.tutorial.load_dataset("CESM-DP-SST")
+>>> ref = climpred.tutorial.load_dataset("ERSST")
+>>> hindcast = climpred.HindcastEnsemble(hind)
+>>> hindcast = hindcast.add_reference(ref, "ERSST")
+>>> print(hindcast)
+<climpred.HindcastEnsemble>
+Initialized Ensemble:
+    SST      (init, lead, member) float64 ...
+ERSST:
+    SST      (time) float32 ...
+Uninitialized:
+    None
+>>> print(hindcast.get_initialized())
+<xarray.Dataset>
+Dimensions:  (init: 64, lead: 10, member: 10)
+Coordinates:
+* lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+* member   (member) int32 1 2 3 4 5 6 7 8 9 10
+* init     (init) float32 1954.0 1955.0 1956.0 1957.0 ... 2015.0 2016.0 2017.0
+Data variables:
+    SST      (init, lead, member) float64 ...
+>>> print(hindcast.get_reference("ERSST"))
+<xarray.Dataset>
+Dimensions:  (time: 61)
+Coordinates:
+* time     (time) int64 1955 1956 1957 1958 1959 ... 2011 2012 2013 2014 2015
+Data variables:
+    SST      (time) float32 ...
 
 - ``metric_kwargs`` can be passed to :py:class:`~climpred.metrics.Metric`.
   (:pr:`264`) `Aaron Spring`_.

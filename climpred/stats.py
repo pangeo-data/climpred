@@ -91,7 +91,7 @@ def dpp(
     .. math::
 
         DPP_{\mathrm{unbiased}}(m) = \frac{\sigma^{2}_{m} -
-        \frac{1}{m}\cdot\\sigma^{2}}{\sigma^{2}}
+        \frac{1}{m}\cdot\sigma^{2}}{\sigma^{2}}
 
     Note:
         Resplandy et al. 2015 and Seferian et al. 2018 calculate unbiased DPP

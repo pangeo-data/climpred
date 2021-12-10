@@ -497,15 +497,12 @@ def shift_cftime_singular(cftime, n, freq):
 
 def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     """
-    Assume same chunks and dimension order.
+    Ensure same chunks and dimension order.
 
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a.
     """
-    transpose_kwargs = (
-        {"transpose_coords": False} if isinstance(new_chunk_ds, xr.DataArray) else {}
-    )
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
+    return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(
         ori_chunk_ds.chunks
     )
 

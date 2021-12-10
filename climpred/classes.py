@@ -105,7 +105,7 @@ else:
 
 def _display_metadata(self) -> str:
     """
-    Print the contents of the ``PredictionEnsemble`` as text.
+    Print the contents of the :py:class:`~climpred.classes.PredictionEnsemble` as text.
 
     Example:
         >>> init = climpred.tutorial.load_dataset("CESM-DP-SST")
@@ -157,7 +157,7 @@ def _display_metadata(self) -> str:
 
 
 def _display_metadata_html(self) -> str:
-    """Print the contents of the ``PredictionEnsemble`` as html."""
+    """Print the contents of the :py:class:`~climpred.classes.PredictionEnsemble` as html."""
     header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets["initialized"])
@@ -189,15 +189,22 @@ def _display_metadata_html(self) -> str:
 
 class PredictionEnsemble:
     """
-    The main object ``PredictionEnsemble``.
+    The main object :py:class:`~climpred.classes.PredictionEnsemble`.
 
-    This is the super of both ```PerfectModelEnsemble`` and
-    ```HindcastEnsemble``. This cannot be called directly by a user, but
-    should house functions that both ensemble types can use.
+    This is the super of both :py:class:`~climpred.classes.PerfectModelEnsemble` and
+    :py:class:`~climpred.classes.HindcastEnsemble`. This cannot be called directly by
+    a user, but should house functions that both ensemble types can use.
+
+    Associated xarray.Dataset are stored in:
+    * ``PredictionEnsemble._datasets["initialized"]``
+    * ``PredictionEnsemble._datasets["uninitialized"]``
+    * ``PredictionEnsemble._datasets["control"]`` in `:py:class:`~climpred.classes.PerfectModelEnsemble`
+    * ``PredictionEnsemble._datasets[observations"]`` in :py:class:`~climpred.classes.HindcastEnsemble`
+
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]):
-        """Create a ``PredictionEnsemble`` object."""
+        """Create a :py:class:`~climpred.classes.PredictionEnsemble` object."""
         if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
             initialized = initialized.to_dataset()
@@ -251,7 +258,7 @@ class PredictionEnsemble:
 
     @property
     def coords(self) -> DatasetCoordinates:
-        """Return coordinates of ``PredictionEnsemble``.
+        """Return coordinates of :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Dictionary of xarray.DataArray objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
@@ -283,7 +290,7 @@ class PredictionEnsemble:
     @property
     def sizes(self) -> Mapping[Hashable, int]:
         """
-        Return sizes of ``PredictionEnsemble``.
+        Return sizes of :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Mapping from dimension names to lengths for all PredictionEnsemble._datasets.
 
@@ -299,7 +306,7 @@ class PredictionEnsemble:
     @property
     def dims(self) -> Mapping[Hashable, int]:
         """
-        Return dimension of ``PredictionEnsemble``.
+        Return dimension of :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Mapping from dimension names to lengths all PredictionEnsemble._datasets.
 
@@ -311,7 +318,7 @@ class PredictionEnsemble:
     @property
     def chunks(self) -> Mapping[Hashable, Tuple[int, ...]]:
         """
-        Return chunks of ``PredictionEnsemble``.
+        Return chunks of :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Mapping from chunks all PredictionEnsemble._datasets.
 
@@ -328,7 +335,7 @@ class PredictionEnsemble:
 
     @property
     def chunksizes(self) -> Mapping[Hashable, Tuple[int, ...]]:
-        """Return chunksizes of ``PredictionEnsemble``.
+        """Return chunksizes of :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Mapping from dimension names to block lengths for this dataset's data, or
         None if the underlying data is not a dask array.
@@ -343,7 +350,7 @@ class PredictionEnsemble:
     @property
     def data_vars(self) -> DataVariables:
         """
-        Return data variables of ``PredictionEnsemble``.
+        Return data variables of :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Dictionary of DataArray objects corresponding to data variables available in
         all PredictionEnsemble._datasets.
@@ -369,7 +376,7 @@ class PredictionEnsemble:
             return _display_metadata(self)
 
     def __len__(self) -> int:
-        """Return number of all variables in ``PredictionEnsemble``."""
+        """Return number of all variables in :py:class:`~climpred.classes.PredictionEnsemble`."""
         return len(self.data_vars)
 
     def __iter__(self) -> Iterator[Hashable]:
@@ -377,7 +384,7 @@ class PredictionEnsemble:
         return iter(self._datasets.values())
 
     def __delitem__(self, key: Hashable) -> None:
-        """Remove a variable from ``PredictionEnsemble``."""
+        """Remove a variable from :py:class:`~climpred.classes.PredictionEnsemble`."""
         del self._datasets["initialized"][key]
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -385,7 +392,7 @@ class PredictionEnsemble:
                     del ds[key]
 
     def __contains__(self, key: Hashable) -> bool:
-        """Check variable in ``PredictionEnsemble``.
+        """Check variable in :py:class:`~climpred.classes.PredictionEnsemble`.
 
         The ``"in"`` operator will return true or false depending on whether
         ``"key"`` is in any PredictionEnsemble._datasets.
@@ -398,9 +405,9 @@ class PredictionEnsemble:
         return contained
 
     def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
-        """Check if ``PredictionEnsemble`` is equal to other ``PredictionEnsemble``.
+        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other :py:class:`~climpred.classes.PredictionEnsemble`.
 
-        Two ``PredictionEnsemble``s are equal if they have matching variables and
+        Two :py:class:`~climpred.classes.PredictionEnsemble`s are equal if they have matching variables and
         coordinates, all of which are equal.
         ``PredictionEnsembles`` can still be equal (like pandas objects) if they have NaN
         values in the same locations.
@@ -426,7 +433,7 @@ class PredictionEnsemble:
 
     def identical(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """
-        Check if ``PredictionEnsemble`` is identical to other ``PredictionEnsemble``.
+        Check if :py:class:`~climpred.classes.PredictionEnsemble` is identical to other :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Like ``equals``, but also checks all dataset attributes and the
         attributes on all variables and coordinates.
@@ -455,7 +462,7 @@ class PredictionEnsemble:
         cmap: Optional[str] = None,
         x: str = "time",
     ) -> "plt.Axes":
-        """Plot datasets from ``PredictionEnsemble``.
+        """Plot datasets from :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Args:
             variable: `variable` to show. Defaults to first in data_vars.
@@ -606,7 +613,7 @@ class PredictionEnsemble:
         return self._math(other, operator="div")
 
     def __getitem__(self, varlist: Union[str, List[str]]) -> "PredictionEnsemble":
-        """Allow subsetting variable(s) from ``PredictionEnsemble`` as from xr.Dataset.
+        """Allow subsetting variable(s) from :py:class:`~climpred.classes.PredictionEnsemble` as from xr.Dataset.
 
         Args:
             * varlist: list of names or name of data variable(s) to subselect
@@ -760,7 +767,7 @@ class PredictionEnsemble:
         how: str = "mean",
         **xesmf_kwargs: str,
     ):
-        """Smooth in space and/or aggregate in time ``PredictionEnsemble``.
+        """Smooth in space and/or aggregate in time :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Args:
             smooth_kws: Dictionary to specify the dims to
@@ -983,7 +990,7 @@ class PredictionEnsemble:
 class PerfectModelEnsemble(PredictionEnsemble):
     """An object for "perfect model" prediction ensembles.
 
-    ``PerfectModelEnsemble`` is a sub-class of ``PredictionEnsemble``. It tracks
+    :py:class:`~climpred.classes.PerfectModelEnsemble` is a sub-class of :py:class:`~climpred.classes.PredictionEnsemble`. It tracks
     the control run used to initialize the ensemble for easy computations,
     bootstrapping, etc.
 
@@ -992,7 +999,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
-        """Create a ``PerfectModelEnsemble`` object.
+        """Create a :py:class:`~climpred.classes.PerfectModelEnsemble` object.
 
         Args:
           initialized: prediction ensemble output.
@@ -1088,7 +1095,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Generate an uninitialized ensemble by resampling from the control simulation.
 
         Returns:
-            ``PerfectModelEnsemble`` with resampled (uninitialized) ensemble from
+            :py:class:`~climpred.classes.PerfectModelEnsemble` with resampled (uninitialized) ensemble from
             control
         """
         has_dataset(
@@ -1614,7 +1621,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 class HindcastEnsemble(PredictionEnsemble):
     """An object for initialized prediction ensembles.
 
-    ``HindcastEnsemble`` is a sub-class of ``PredictionEnsemble``. It tracks a
+    :py:class:`~climpred.classes.HindcastEnsemble` is a sub-class of :py:class:`~climpred.classes.PredictionEnsemble`. It tracks a
     verification dataset (i.e., observations) associated with the hindcast ensemble
     for easy computation across multiple variables.
 
@@ -1623,7 +1630,7 @@ class HindcastEnsemble(PredictionEnsemble):
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
-        """Create ``HindcastEnsemble`` from initialized prediction ensemble output.
+        """Create :py:class:`~climpred.classes.HindcastEnsemble` from initialized prediction ensemble output.
 
         Args:
           initialized: initialized prediction ensemble output.
@@ -1690,7 +1697,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Same as :py:meth:`~climpred.classes.HindcastEnsemble.add_verification`.
 
         Args:
-            obs: observations added to ``HindcastEnsemble``.
+            obs: observations added to :py:class:`~climpred.classes.HindcastEnsemble`.
         """
         if isinstance(obs, xr.DataArray):
             obs = obs.to_dataset()
@@ -1714,7 +1721,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Same as :py:meth:`~climpred.classes.HindcastEnsemble.add_observations`.
 
         Args:
-            verif: verification added to ``HindcastEnsemble``.
+            verif: verification added to :py:class:`~climpred.classes.HindcastEnsemble`.
         """
         return self.add_observations(verif)
 

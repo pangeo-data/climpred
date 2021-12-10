@@ -3,7 +3,7 @@
 import hashlib
 import os as _os
 import urllib
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 from urllib.request import urlretrieve as _urlretrieve
 
 import xarray as xr

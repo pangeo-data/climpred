@@ -3,7 +3,7 @@
 import hashlib
 import os as _os
 import urllib
-from typing import Optional, Union
+from typing import Optional, Union, Dict
 from urllib.request import urlretrieve as _urlretrieve
 
 import xarray as xr
@@ -126,7 +126,7 @@ def load_dataset(
     github_url: str = "https://github.com/pangeo-data/climpred-data",
     branch: str = "master",
     extension: Optional[str] = None,
-    proxy_dict: Optional[dict[str, str]] = None,
+    proxy_dict: Optional[Dict[str, str]] = None,
     **kws,
 ) -> xr.Dataset:
     """Load example data or a mask from an online repository.

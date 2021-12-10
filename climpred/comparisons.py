@@ -11,17 +11,6 @@ from .constants import M2M_MEMBER_DIM
 from .metrics import Metric
 
 
-def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
-    """
-    Chunk xr.Dataset `new_chunk_ds` as another xr.Dataset `ori_chunk_ds`.
-
-    This is needed after some operations which reduce chunks to size 1.
-    First transpose a to ds.dims then apply ds chunking to a.
-    """
-    # supposed to be in .utils but circular imports therefore here
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(ori_chunk_ds.chunks)
-
-
 class Comparison:
     """Master class for all comparisons."""
 
@@ -81,14 +70,14 @@ class Comparison:
 
 
 def _m2m(
-    ds: xr.Dataset, metric: Metric, verif: Optional[xr.Dataset] = None
+    initialized: xr.Dataset, metric: Metric, verif: Optional[xr.Dataset] = None
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare all members to all others in turn while leaving out verification member.
 
     :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Args:
-        ds: initialized with ``member`` dimension.
+        initialized: initialized with ``member`` dimension.
         metric:
             If deterministic, forecast and verif have ``member`` dim.
             If probabilistic, only forecast has ``member`` dim.
@@ -102,11 +91,11 @@ def _m2m(
 
     verif_list = []
     forecast_list = []
-    for m in ds.member.values:
-        forecast = ds.drop_sel(member=m)
+    for m in initialized.member.values:
+        forecast = initialized.drop_sel(member=m)
         # set incrementing members to avoid nans from broadcasting
         forecast["member"] = np.arange(1, 1 + forecast.member.size)
-        verif = ds.sel(member=m, drop=True)
+        verif = initialized.sel(member=m, drop=True)
         # Tiles the singular "verif" member to compare directly to all other members
         if not metric.probabilistic:
             forecast, verif = xr.broadcast(forecast, verif)
@@ -129,7 +118,9 @@ __m2m = Comparison(
 
 
 def _m2e(
-    ds: xr.Dataset, metric: Optional[Metric] = None, verif: Optional[xr.Dataset] = None
+    initialized: xr.Dataset,
+    metric: Optional[Metric] = None,
+    verif: Optional[xr.Dataset] = None,
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """
     Compare all members to ensemble mean while leaving out the verif in ensemble mean.
@@ -137,7 +128,7 @@ def _m2e(
     :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Args:
-        ds: ``initialized`` with ``member`` dimension.
+        initialized: ``initialized`` with ``member`` dimension.
         metric: needed for probabilistic metrics. Therefore useless in ``m2e``
             comparison, but expected by internal API.
         verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
@@ -150,9 +141,9 @@ def _m2e(
     verif_list = []
     forecast_list = []
     M2E_COMPARISON_DIM = "member"
-    for m in ds.member.values:
-        forecast = ds.drop_sel(member=m).mean("member")
-        verif = ds.sel(member=m, drop=True)
+    for m in initialized.member.values:
+        forecast = initialized.drop_sel(member=m).mean("member")
+        verif = initialized.sel(member=m, drop=True)
         forecast_list.append(forecast)
         verif_list.append(verif)
     verif = xr.concat(verif_list, M2E_COMPARISON_DIM)
@@ -160,8 +151,8 @@ def _m2e(
     forecast[M2E_COMPARISON_DIM] = np.arange(forecast[M2E_COMPARISON_DIM].size)
     verif[M2E_COMPARISON_DIM] = np.arange(verif[M2E_COMPARISON_DIM].size)
     if dask.is_dask_collection(forecast):
-        forecast = _transpose_and_rechunk_to(forecast, ds)
-        verif = _transpose_and_rechunk_to(verif, ds)
+        forecast = forecast.transpose(*initialized.dims).chunk(initialized.chunks)
+        verif = verif.transpose(*initialized.dims).chunk(initialized.chunks)
     return forecast, verif
 
 
@@ -176,7 +167,7 @@ __m2e = Comparison(
 
 
 def _m2c(
-    ds: xr.Dataset, metric: Metric, verif: Optional[xr.Dataset] = None
+    initialized: xr.Dataset, metric: Metric, verif: Optional[xr.Dataset] = None
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """
     Compare all other member forecasts to a single member verification.
@@ -189,7 +180,7 @@ def _m2c(
     :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Args:
-        ds: ``initialized`` with ``member`` dimension.
+        initialized: ``initialized`` with ``member`` dimension.
         metric: if deterministic, forecast and verif both have member dim
             if probabilistic, only forecast has ``member`` dim
         verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
@@ -199,10 +190,10 @@ def _m2c(
     """
     if verif is not None:
         raise ValueError("`verif` not expected.")
-    control_member = ds.member.values[0]
-    verif = ds.sel(member=control_member, drop=True)
+    control_member = initialized.member.values[0]
+    verif = initialized.sel(member=control_member, drop=True)
     # drop the member being verif
-    forecast = ds.drop_sel(member=control_member)
+    forecast = initialized.drop_sel(member=control_member)
     if not metric.probabilistic:
         forecast, verif = xr.broadcast(forecast, verif)
     return forecast, verif
@@ -218,7 +209,9 @@ __m2c = Comparison(
 
 
 def _e2c(
-    ds: xr.Dataset, metric: Optional[Metric] = None, verif: Optional[xr.Dataset] = None
+    initialized: xr.Dataset,
+    metric: Optional[Metric] = None,
+    verif: Optional[xr.Dataset] = None,
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """
     Compare ensemble mean forecast to single member verification.
@@ -230,7 +223,7 @@ def _e2c(
     :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Args:
-        ds: ``initialized`` with ``member`` dimension.
+        initialized: ``initialized`` with ``member`` dimension.
         metric: needed for probabilistic metrics. Therefore useless in ``e2c``
             comparison, but expected by internal API.
         verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
@@ -240,10 +233,10 @@ def _e2c(
     """
     if verif is not None:
         raise ValueError("`verif` not expected.")
-    control_member = ds.member.values[0]
-    verif = ds.sel(member=control_member, drop=True)
-    ds = ds.drop_sel(member=control_member)
-    forecast = ds.mean("member")
+    control_member = initialized.member.values[0]
+    verif = initialized.sel(member=control_member, drop=True)
+    initialized = initialized.drop_sel(member=control_member)
+    forecast = initialized.mean("member")
     return forecast, verif
 
 

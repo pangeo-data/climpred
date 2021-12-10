@@ -1,9 +1,10 @@
 .. currentmodule:: climpred.metrics
 
 .. ipython:: python
-   :suppress:
+    :suppress:
 
     from climpred.metrics import __ALL_METRICS__ as all_metrics
+
     metric_aliases = {}
     for m in all_metrics:
         if m.aliases is not None:
@@ -16,8 +17,10 @@
 Metrics
 #######
 
-All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` (for both ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects) have a ``metric`` argument
+All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` have a ``metric`` argument
 that has to be called to determine which metric is used in computing predictability.
 
 .. note::

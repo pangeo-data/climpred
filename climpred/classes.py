@@ -202,11 +202,12 @@ class PredictionEnsemble:
     :py:class:`~climpred.classes.HindcastEnsemble`. This cannot be called directly by
     a user, but should house functions that both ensemble types can use.
 
-    Associated xarray.Dataset are stored in:
-    * ``PredictionEnsemble._datasets["initialized"]``
-    * ``PredictionEnsemble._datasets["uninitialized"]``
-    * ``PredictionEnsemble._datasets["control"]`` in `:py:class:`~climpred.classes.PerfectModelEnsemble`
-    * ``PredictionEnsemble._datasets[observations"]`` in :py:class:`~climpred.classes.HindcastEnsemble`
+    Associated :py:class:`~xarray.Dataset` are stored in:
+
+        * ``PredictionEnsemble._datasets["initialized"]``
+        * ``PredictionEnsemble._datasets["uninitialized"]``
+        * ``PredictionEnsemble._datasets["control"]`` in :py:class:`~climpred.classes.PerfectModelEnsemble`
+        * ``PredictionEnsemble._datasets[observations"]`` in :py:class:`~climpred.classes.HindcastEnsemble`
 
     """
 
@@ -761,11 +762,11 @@ class PredictionEnsemble:
         return self._construct_direct(datasets, kind=self.kind)
 
     def get_initialized(self) -> xr.Dataset:
-        """Return the xarray.Dataset for the initialized ensemble."""
+        """Return the :py:class:`~xarray.Dataset` for the initialized ensemble."""
         return self._datasets["initialized"]
 
     def get_uninitialized(self) -> xr.Dataset:
-        """Return the xarray.Dataset for the uninitialized ensemble."""
+        """Return the :py:class:`~xarray.Dataset` for the uninitialized ensemble."""
         return self._datasets["uninitialized"]
 
     def smooth(
@@ -1002,7 +1003,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
     bootstrapping, etc.
 
     This object is built on ``xarray`` and thus requires the input object to
-    be an xarray.Dataset or xr.DataArray.
+    be an xarray.Dataset or :py:class:`~xarray.DataArray`.
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
@@ -1118,7 +1119,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="perfect")
 
     def get_control(self) -> xr.Dataset:
-        """Return the control as an xarray.Dataset."""
+        """Return the control as an :py:class:`~xarray.Dataset`."""
         return self._datasets["control"]
 
     def verify(
@@ -1633,8 +1634,8 @@ class HindcastEnsemble(PredictionEnsemble):
     verification dataset (i.e., observations) associated with the hindcast ensemble
     for easy computation across multiple variables.
 
-    This object is built on xarray.Dataset and thus requires the input object to
-    be an xarray.Dataset or xr.DataArray.
+    This object is built on :py:class:`~xarray.Dataset` and thus requires the input object to
+    be an xarray.Dataset or :py:class:`~xarray.DataArray`.
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
@@ -1758,7 +1759,7 @@ class HindcastEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="hindcast")
 
     def get_observations(self) -> xr.Dataset:
-        """Return xarray.Dataset of the observations/verification data.
+        """Return :py:class:`~xarray.Dataset` of the observations/verification data.
 
         Returns:
             observations

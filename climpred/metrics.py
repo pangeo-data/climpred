@@ -197,32 +197,6 @@ def _maybe_member_mean_reduce_dim(
     return forecast, dim
 
 
-def _display_metric_metadata(self: "Metric") -> str:
-    summary = "----- Metric metadata -----\n"
-    summary += f"Name: {self.name}\n"
-    summary += f"Alias: {self.aliases}\n"
-    # positively oriented
-    if self.positive:
-        summary += "Orientation: positive\n"
-    else:
-        summary += "Orientation: negative\n"
-    # probabilistic or deterministic
-    if self.probabilistic:
-        summary += "Kind: probabilistic\n"
-    else:
-        summary += "Kind: deterministic\n"
-    summary += f"Power to units: {self.unit_power}\n"
-    summary += f"long_name: {self.long_name}\n"
-    summary += f"Minimum skill: {self.minimum}\n"
-    summary += f"Maximum skill: {self.maximum}\n"
-    summary += f"Perfect skill: {self.perfect}\n"
-    summary += f"Normalize: {self.normalize}\n"
-    summary += f"Allows logical: {self.allows_logical}\n"
-    # doc
-    summary += f"Function: {self.function.__doc__}\n"
-    return summary
-
-
 class Metric:
     """Master class for all metrics."""
 
@@ -288,7 +262,29 @@ class Metric:
 
     def __repr__(self) -> str:
         """Show metadata of metric class."""
-        return _display_metric_metadata(self)
+        summary = "----- Metric metadata -----\n"
+        summary += f"Name: {self.name}\n"
+        summary += f"Alias: {self.aliases}\n"
+        # positively oriented
+        if self.positive:
+            summary += "Orientation: positive\n"
+        else:
+            summary += "Orientation: negative\n"
+        # probabilistic or deterministic
+        if self.probabilistic:
+            summary += "Kind: probabilistic\n"
+        else:
+            summary += "Kind: deterministic\n"
+        summary += f"Power to units: {self.unit_power}\n"
+        summary += f"long_name: {self.long_name}\n"
+        summary += f"Minimum skill: {self.minimum}\n"
+        summary += f"Maximum skill: {self.maximum}\n"
+        summary += f"Perfect skill: {self.perfect}\n"
+        summary += f"Normalize: {self.normalize}\n"
+        summary += f"Allows logical: {self.allows_logical}\n"
+        # doc
+        summary += f"Function: {self.function.__doc__}\n"
+        return summary
 
 
 #####################

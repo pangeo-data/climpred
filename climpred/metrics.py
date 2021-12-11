@@ -100,8 +100,10 @@ def _preprocess_dims(dim: dimType) -> List[str]:
     """
     if dim is None:
         dim = ["time"]
-    if isinstance(dim, str):
+    elif isinstance(dim, str):
         dim = [dim]
+    elif isinstance(dim, List):
+        pass
     else:
         raise ValueError
     return dim

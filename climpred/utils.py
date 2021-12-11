@@ -502,9 +502,7 @@ def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
     This is needed after some operations which reduce chunks to size 1.
     First transpose a to ds.dims then apply ds chunking to a.
     """
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(
-        ori_chunk_ds.chunks
-    )
+    return new_chunk_ds.transpose(*ori_chunk_ds.dims).chunk(ori_chunk_ds.chunks)
 
 
 def convert_Timedelta_to_lead_units(ds):

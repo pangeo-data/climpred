@@ -268,8 +268,6 @@ def _e2o(
     Returns:
         forecast, verification
     """
-    if verif is not None:
-        raise ValueError("`verif` not expected.")
     if "member" in hind.dims:
         forecast = hind.mean("member")
     else:

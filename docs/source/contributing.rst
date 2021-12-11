@@ -3,8 +3,8 @@ Contribution Guide
 =====================
 
 Contributions are highly welcomed and appreciated.  Every little help counts,
-so do not hesitate! You can make a high impact on ``climpred`` just by using it and
-reporting `issues <https://github.com/pangeo-data/climpred/issues>`__.
+so do not hesitate! You can make a high impact on ``climpred`` just by using
+it and reporting `issues <https://github.com/pangeo-data/climpred/issues>`__.
 
 The following sections cover some general guidelines
 regarding development in ``climpred`` for maintainers and contributors.
@@ -26,12 +26,14 @@ Feel free to suggest improvements or changes in the workflow.
 Feature requests and feedback
 -----------------------------
 
-We are eager to hear about your requests for new features and any suggestions about the
-API, infrastructure, and so on. Feel free to submit these as
-`issues <https://github.com/pangeo-data/climpred/issues/new>`__ with the label "feature request."
+We are eager to hear about your requests for new features and any suggestions
+about the API, infrastructure, and so on. Feel free to submit these as
+`issues <https://github.com/pangeo-data/climpred/issues/new>`__ with the label
+"feature request."
 
-Please make sure to explain in detail how the feature should work and keep the scope as
-narrow as possible. This will make it easier to implement in small PRs.
+Please make sure to explain in detail how the feature should work and keep the
+scope as narrow as possible. This will make it easier to implement in small
+PRs.
 
 
 .. _reportbugs:
@@ -39,27 +41,29 @@ narrow as possible. This will make it easier to implement in small PRs.
 Report bugs
 -----------
 
-Report bugs for ``climpred`` in the `issue tracker <https://github.com/pangeo-data/climpred/issues>`_
-with the label "bug".
+Report bugs for ``climpred`` in the
+`issue tracker <https://github.com/pangeo-data/climpred/issues>`_ with the
+label "bug".
 
 If you are reporting a bug, please include:
 
-* Your operating system name and version.
 * Any details about your local setup that might be helpful in troubleshooting,
-  specifically the Python interpreter version, installed libraries, and ``climpred``
-  version.
+  specifically the Python interpreter version, installed libraries, and
+  ``climpred`` version.
 * Detailed steps to reproduce the bug.
 
 If you can write a demonstration test that currently fails but should pass,
-that is a very useful commit to make as well, even if you cannot fix the bug itself.
+that is a very useful commit to make as well, even if you cannot fix the bug
+itself.
 
 
 .. _fixbugs:
 
-Fix bugs
---------
+Bug Fix
+-------
 
-Look through the `GitHub issues for bugs <https://github.com/pangeo-data/climpred/labels/bug>`_.
+Look through the
+`GitHub issues for bugs <https://github.com/pangeo-data/climpred/labels/bug>`_.
 
 Talk to developers to find out how you can fix specific bugs.
 
@@ -70,17 +74,17 @@ Write documentation
 ``climpred`` could always use more documentation.  What exactly is needed?
 
 * More complementary documentation.  Have you perhaps found something unclear?
-* Docstrings. There can never be too many of them.
-* Example notebooks with different Earth System Models, lead times, etc. -- they're all very
-  appreciated.
+* Example notebooks with different Earth System Models, lead times, etc. --
+  they're all very appreciated.
 
 You can also edit documentation files directly in the GitHub web interface,
 without using a local copy.  This can be convenient for small fixes.
 
-Our documentation is written in reStructuredText. You can follow our conventions in already written
-documents. Some helpful guides are located
-`here <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`__ and
-`here <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`__.
+Our documentation is written in reStructuredText. You can follow our
+conventions in already written documents. Some helpful guides are located
+`rst-quickref <http://docutils.sourceforge.net/docs/user/rst/quickref.html>`__
+and
+`rst-cheatsheet <https://github.com/ralsina/rst-cheatsheet/blob/master/rst-cheatsheet.rst>`__.
 
 .. note::
     Build the documentation locally with the following command:
@@ -93,8 +97,9 @@ documents. Some helpful guides are located
 
     The built documentation should be available in the ``docs/build/``.
 
-If you need to add new functions to the API, run ``sphinx-autogen -o api api.rst`` from the
-``docs/source`` directory and add the functions to ``api.rst``.
+If you need to add new functions to the API, run
+``sphinx-autogen -o api api.rst`` from the ``docs/source`` directory after
+adding functions to ``api.rst``.
 
  .. _`pull requests`:
  .. _pull-requests:
@@ -103,10 +108,11 @@ Preparing Pull Requests
 -----------------------
 
 #. Fork the `climpred GitHub repository <https://github.com/pangeo-data/climpred>`__.
-   It's fine to use ``climpred`` as your fork repository name because it will live
-   under your user.
+   It's fine to use ``climpred`` as your fork repository name because it will
+   live under your user.
 
-#. Clone your fork locally using `git <https://git-scm.com/>`_, connect your repository to the upstream (main project), and create a branch::
+#. Clone your fork locally using `git <https://git-scm.com/>`_, connect your
+   repository to the upstream (main project), and create a branch::
 
     $ git clone git@github.com:YOUR_GITHUB_USERNAME/climpred.git
     $ cd climpred
@@ -119,22 +125,25 @@ Preparing Pull Requests
    If you need some help with Git, follow this quick start
    `guide <https://git.wiki.kernel.org/index.php/QuickStart>`_.
 
-#. Install dependencies into a new `conda <https://conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_ environment::
+#. Install dependencies into a new
+   `conda <https://conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_
+   environment::
 
-    $ conda env update -f ci/requirements/climpred-dev.yml
+    $ conda env create -f ci/requirements/climpred-dev.yml
     $ conda activate climpred-dev
 
 #. Make an editable install of ``climpred`` by running::
 
     $ pip install -e .
 
-#. Install `pre-commit <https://pre-commit.com>`_ and its hook on the ``climpred`` repo::
+#. Install `pre-commit <https://pre-commit.com>`_ and its hook on the
+   ``climpred`` repo::
 
      $ pip install --user pre-commit
      $ pre-commit install
 
-   pre-commit automatically beautifies the code, makes it more maintainable and catches syntax errors.
-   Afterwards ``pre-commit`` will run whenever you commit.
+   ``pre-commit`` automatically beautifies the code, makes it more
+   maintainable and catches syntax errors. Afterwards ``pre-commit`` will run whenever you commit.
 
    https://pre-commit.com/ is a framework for managing and maintaining multi-language pre-commit
    hooks to ensure code-style and code formatting is consistent.

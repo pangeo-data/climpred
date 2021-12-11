@@ -106,7 +106,7 @@ def dpp(
             If False, then uses Resplandy 2015 / Seferian 2018 method.
 
     Returns:
-        dpp: ds without time dimension.
+        ds without time dimension.
 
     References:
         * Boer, G. J. “Long Time-Scale Potential Predictability in an Ensemble of
@@ -141,7 +141,7 @@ def dpp(
             number_chunks: number of chunks in the return data.
 
         Returns:
-            c: chunked ds, but with additional dimension c.
+            chunked ds but with additional dimension c.
 
         """
         if number_chunks and not chunk_length:

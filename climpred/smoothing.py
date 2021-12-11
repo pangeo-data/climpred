@@ -29,7 +29,7 @@ def spatial_smoothing_xesmf(
         ds: Contain input and output grid coordinates.
             Look for coordinates ``lon``, ``lat``, and optionally ``lon_b``,
             ``lat_b`` for conservative method. Also any coordinate which is C/F
-            compliant, .i.e. standard_name in ['longitude', 'latitude'] is allowed.
+            compliant, .i.e. standard_name in ["longitude", "latitude"] is allowed.
             Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
             or 2D (Ny, Nx) for general curvilinear grids.
             Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
@@ -37,11 +37,11 @@ def spatial_smoothing_xesmf(
             lon will equal 5 and lat will equal lon
         method: Regridding method. Options are:
 
-            - 'bilinear'
-            - 'conservative', **requires grid corner information**
-            - 'patch'
-            - 'nearest_s2d'
-            - 'nearest_d2s'
+            - "bilinear"
+            - "conservative", **requires grid corner information**
+            - "patch"
+            - "nearest_s2d"
+            - "nearest_d2s"
 
         periodic: Periodic in longitude? Defaults to ``False``.
             Only useful for global grids with non-conservative regridding.
@@ -146,20 +146,20 @@ def temporal_smoothing(
     Args:
         ds: input to be smoothed.
         tsmooth_kws: length of smoothing of timesteps.
-            Defaults to ``{'time': 4}`` (see Goddard et al. 2013).
+            Defaults to ``{"time": 4}`` (see Goddard et al. 2013).
         how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
             Default: ``"mean"``.
         d_lon_lat_kws: leads nowhere but consistent with ``spatial_smoothing_xesmf``.
 
     Returns:
         input with ``smooth`` timesteps less and
-        labeling ``'1-(smooth-1)', '...', ...`` .
+        labeling ``"1-(smooth-1)", "...", ...`` .
 
-    Reference:
-        Goddard, L., A. Kumar, A. Solomon et al.
-        “A Verification Framework for Interannual to Decadal Predictions Experiments.”
-        Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-        https://doi.org/10/f4jjvf.
+    References:
+        * Goddard, L., A. Kumar, A. Solomon et al.
+          “A Verification Framework for Interannual to Decadal Predictions Experiments.”
+          Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
 
     """
     # unpack dict
@@ -205,8 +205,8 @@ def _reset_temporal_axis(
     Args:
         ds_smoothed: Smoothed dataset.
         tsmooth_kws: Keywords smoothing is performed over.
-        dim: Dimension smoothing is performed over. Defaults to ``'lead'``.
-        set_center: Whether to set new coord `{dim}_center`. Defaults to `True`.
+        dim: Dimension smoothing is performed over. Defaults to ``"lead"``.
+        set_center: Whether to set new coord `{dim}_center`. Defaults to ``True``.
 
     Returns
         Smoothed Dataset with updated labels for smoothed temporal dimension.
@@ -251,21 +251,21 @@ def smooth_goddard_2013(
         ds: input to be smoothed.
         tsmooth_kws: length of smoothing of timesteps (applies to ``lead``
             in forecast and ``time`` in verification data).
-            Default: ``{'time': 4}`` (see Goddard et al. 2013).
+            Default: ``{"time": 4}`` (see Goddard et al. 2013).
         d_lon_lat_kws: target grid for regridding.
-            Default: ``{'lon':5 , 'lat': 5}``.
+            Default: ``{"lon":5 , "lat": 5}``.
         how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
-            Default: ``'mean'``.
-        **xesmf_kwargs: kwargs passed to `spatial_smoothing_xesmf`.
+            Default: ``"mean"``.
+        **xesmf_kwargs: kwargs passed to ``spatial_smoothing_xesmf``.
 
     Returns:
-        input with `smooth` timesteps less and labeling '1-(smooth-1)', '...' .
+        input with `smooth` timesteps less and labeling "1-(smooth-1)", "..." .
 
-    Reference:
-        Goddard, L., A. Kumar, A. Solomon et al.
-        “A Verification Framework for Interannual to Decadal Predictions Experiments.”
-        Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-        https://doi.org/10/f4jjvf.
+    References:
+        * Goddard, L., A. Kumar, A. Solomon et al.
+          “A Verification Framework for Interannual to Decadal Predictions Experiments.”
+          Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
     """
     # first temporal smoothing
     ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws)

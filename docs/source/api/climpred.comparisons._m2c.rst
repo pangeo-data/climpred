@@ -1,5 +1,5 @@
-climpred.comparisons.\_m2c
-==========================
+﻿climpred.comparisons.\_m2c
+===========================
 
 .. currentmodule:: climpred.comparisons
 

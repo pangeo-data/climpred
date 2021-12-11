@@ -56,7 +56,7 @@ repos:
       rev: 0.10.1
       hooks:
       -   id: doc8
-
+          #args: ["--ignore D000"]
   #        args: ["--ignore-path climpred/tests", "--max-line-length 93"]
       #- --max-line-length 93
       #- --ignore-path climpred/tests

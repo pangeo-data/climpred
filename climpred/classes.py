@@ -649,7 +649,7 @@ class PredictionEnsemble:
         """
 
         def wrapper(*args, **kwargs):
-            """Apply arbitrary function to all datasets in ``PredictionEnsemble``.
+            """Apply arbitrary function to all datasets in :py:class:`~climpred.classes.PerfectModelEnsemble`.
 
             Got this from: https://stackoverflow.com/questions/41919499/
             how-to-call-undefined-methods-sequentially-in-python-class
@@ -730,7 +730,7 @@ class PredictionEnsemble:
     def _apply_func(
         self, func: Callable[..., xr.Dataset], *args: Any, **kwargs: Any
     ) -> "PredictionEnsemble":
-        """Apply a function to all datasets in a ``PredictionEnsemble``."""
+        """Apply a function to all datasets in a :py:class:`~climpred.classes.PerfectModelEnsemble`."""
         # Create temporary copy to modify to avoid inplace operation.
         # isnt that essentially the same as .map(func)?
         datasets = self._datasets.copy()

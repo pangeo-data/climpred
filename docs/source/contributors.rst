@@ -15,7 +15,6 @@ Contributors
   `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
   tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
 
-
 Core Developers
 ===============
 * Aaron Spring (`github <https://github.com/aaronspring/>`__)

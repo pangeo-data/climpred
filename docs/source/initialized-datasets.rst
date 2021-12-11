@@ -24,32 +24,32 @@ examples:
      - decadal
      - `Decadal Climate Prediction Project (DCPP) contribution to CMIP6 <https://www.wcrp-climate.org/dcp-overview>`_
      - `ESGF <https://esgf-data.dkrz.de/search/cmip6-dkrz/>`_, `pangeo <https://pangeo-data.github.io/pangeo-cmip6-cloud/accessing_data.html#loading-an-esm-collection>`_
-     - [Boer2016]_
+     - Boer2016_
      - `with intake-esm <examples/misc/setup_your_own_data.html#intake-esm-for-cmorized-output>`_, `Anderson <https://github.com/andersy005>`_ at NOAA's 45th CDP Workshop: `slides <https://talks.andersonbanihirwe.dev/climpred-cdpw-2020.html>`_, `Notebook <https://nbviewer.jupyter.org/github/andersy005/talks/blob/gh-pages/notebooks/climpred-demo.ipynb>`_
    * - CESM-DPLE
      - decadal
      - `Decadal Prediction Large Ensemble Project <http://www.cesm.ucar.edu/projects/community-projects/DPLE/>`_
      - `Data <https://www.earthsystemgrid.org/dataset/ucar.cgd.ccsm4.CESM1-CAM5-DP.html>`_
-     - [Yeager2018]_
+     - Yeager2018_
      - many standard climpred `examples <quick-start.html>`_
    * - NMME
      - seasonal
      - `The North American Multimodel Ensemble: Phase-1 Seasonal-to-Interannual Prediction <https://www.cpc.ncep.noaa.gov/products/NMME/>`_
-     - `IRIDL <http://iridl.ldeo.columbia.edu/SOURCES/.Models/.NMME/>`_
-     - [Kirtman2014]_
+     - `IRIDL <http://iridl.ldeo.columbia.edu/SOURCES/.Models/.NMME/>`__
+     - Kirtman2014_
      - `seasonal SubX <examples.html#monthly-and-seasonal>`_
    * - SubX
      - subseasonal
      - `A Multimodel Subseasonal Prediction Experiment <http://cola.gmu.edu/subx/>`_
-     - `IRIDL SubX OpenDap <http://iridl.ldeo.columbia.edu/SOURCES/.Models/.SubX/>`_
-     - [Pegion2019]_
+     - `IRIDL <http://iridl.ldeo.columbia.edu/SOURCES/.Models/.SubX/>`__
+     - Pegion2019_
      - `subseasonal SubX <examples.html#subseasonal>`_
    * - S2S
      - subseasonal
      - `The Subseasonal to Seasonal (S2S) Prediction Project Database <http://wwww.s2sprediction.net/>`_
-     - `IRIDL S2S OpenDap <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`_, `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_
-     - [Vitart2017]_
-     - `IRIDL example <examples/subseasonal/daily-S2S-IRIDL.html>`_, `EWC Cloud/climetlab <examples/subseasonal/daily-S2S-ECMWF.html>`_
+     - `IRIDL <https://iridl.ldeo.columbia.edu/SOURCES/.ECMWF/.S2S/>`__, `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_
+     - Vitart2017_
+     - `IRIDL <examples/subseasonal/daily-S2S-IRIDL.html>`_, `EWC Cloud/climetlab <examples/subseasonal/daily-S2S-ECMWF.html>`_
    * - GEFS
      - weather
      - `Global Ensemble Forecast System (GEFS) <https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/global-ensemble-forecast-system-gefs>`_

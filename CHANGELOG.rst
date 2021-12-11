@@ -31,6 +31,7 @@ New Features
 - Upon instantiation, :py:class:`~climpred.classes.PredictionEnsemble` generates new
   2-dimensional coordinate ``valid_time`` for ``initialized`` from ``init`` and
   ``lead``, which is matched with ``time`` from ``verification`` during alignment.
+  (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 
 .. :: python
 
@@ -47,7 +48,6 @@ Coordinates:
 Data variables:
     SST         (init, lead, member) float64 ...
 
-  (:issue:`575`, :pr:`675`, :pr:`678`) `Aaron Spring`_.
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
 - Implement :py:meth:`~climpred.classes.HindcastEnsemble.generate_uninitialized` in
@@ -62,7 +62,8 @@ Data variables:
   :py:meth:`~climpred.classes.PerfectModelEnsemble.verify`,
   :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` and
   :py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` to group skill by
-  initializations seasonality.
+  initializations seasonality. (:issue:`635`, :pr:`690`) `Aaron Spring`_.
+
 
 .. :: python
 
@@ -91,7 +92,6 @@ Data variables:
     sst      (month, lead, model) float64 0.4127 0.3837 0.3915 ... 1.255 3.98
 >>> skill.sst.plot(hue="model", col="month", col_wrap=3)
 
-  (:issue:`635`, :pr:`690`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.plot_alignment` shows how forecast and
   observations are aligned based on the `alignment <alignment.html>`_ keyword.
   This may help understanding which dates are matched for the different ``alignment``
@@ -145,7 +145,7 @@ climpred v2.1.6 (2021-08-31)
 ============================
 
 Adding on to ``v2.1.5``, more bias reduction methods wrapped from
-`xclim <https://xclim.readthedocs.io/en/latest/sdba.html>`_
+`xclim <https://xclim.readthedocs.io/en/latest/sdba.html>`__
 are implemented.
 
 Bug Fixes
@@ -156,13 +156,13 @@ Bug Fixes
   (:issue:`668`, :pr:`670`) `Aaron Spring`_.
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` for ``how`` in
   ``["modified_quantile", "basic_quantile", "gamma_mapping", "normal_mapping"]``
-  from `bias_correction <https://github.com/pankajkarman/bias_correction>`_
+  from `bias_correction <https://github.com/pankajkarman/bias_correction>`__
   takes all ``member`` to create model distribution. (:pr:`667`) `Aaron Spring`_.
 
 New Features
 ------------
 - allow more `bias reduction <bias_removal.html>`_ methods wrapped from
-  `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ in
+  `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`__ in
   :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`:
 
     * ``how="EmpiricalQuantileMapping"``:
@@ -217,12 +217,11 @@ New Features
     * ``how="multiplicative_mean"``: correcting the mean forecast multiplicatively
     * ``how="multiplicative_std"``: correcting the standard deviation multiplicatively
 
-  Wrapped from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
+  Wrapped from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`__:
 
-    * ``how="modified_quantile"``: `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
-    * ``how="basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
-    * ``how="gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-    * ``how="normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+    * ``how="modified_quantile"``: `Bai et al. 2016 <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
+    * ``how="basic_quantile"``: `Themeßl et al. 2011 <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
+    * ``how="gamma_mapping"`` and ``how="normal_mapping"``: `Switanek et al. 2017 <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
 
 - :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias` now does
   `leave-one-out cross validation <https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html>`_
@@ -314,7 +313,7 @@ Documentation
   (:issue:`510`, :issue:`561`, :pr:`600`) `Aaron Spring`_.
 - Add `GEFS example <examples/NWP/NWP_GEFS_6h_forecasts.html>`_ for numerical weather
   prediction. (:issue:`602`, :pr:`603`) `Aaron Spring`_.
-- Add subseasonal `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html>`_
+- Add subseasonal `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html>`__
   using `climetlab <https://github.com/ecmwf-lab/climetlab-s2s-ai-challenge>`_ to access
   hindcasts from ECMWF cloud.  (:issue:`587`, :pr:`603`) `Aaron Spring`_.
 - Add subseasonal `daily S2S example <examples/subseasonal/daily-S2S-IRIDL.html>`_
@@ -327,7 +326,7 @@ Documentation
   <https://github.com/xarray-contrib/cupy-xarray>`_ finishes 10x faster.
   (:issue:`592`, :pr:`607`) `Aaron Spring`_.
 - How to work with biweekly aggregates in ``climpred``, see
-  `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`_.
+  `daily ECMWF example <examples/subseasonal/daily-S2S-ECMWF.html#biweekly-aggregates>`__.
   (:issue:`625`, :pr:`630`) `Aaron Spring`_.
 
 
@@ -482,11 +481,12 @@ have been implemented based on Contingency tables. We now include an early versi
 of bias removal for :py:class:`~climpred.classes.HindcastEnsemble`.
 
 - Use math operations like ``+-*/`` with :py:class:`~climpred.classes.HindcastEnsemble`
-  and :py:class:`~climpred.classes.PerfectModelEnsemble`. See a demo of this
-  `here <prediction-ensemble-object.html#Arithmetic-Operations-with-PredictionEnsemble-Objects>`__
-  (:pr:`377`) `Aaron Spring`_.
-- Subselect data variables from ``PredictionEnsemble`` as from ``xr.Dataset``:
-  ``PredictionEnsemble[['var1', 'var3']]`` (:pr:`409`) `Aaron Spring`_.
+  and :py:class:`~climpred.classes.PerfectModelEnsemble`. See
+  `demo <prediction-ensemble-object.html>`_
+  Arithmetic-Operations-with-PredictionEnsemble-Objects. (:pr:`377`) `Aaron Spring`_.
+- Subselect data variables from :py:class:`~climpred.classes.PerfectModelEnsemble` as
+  from :py:class:`~xarray.Dataset`:
+  ``PredictionEnsemble[["var1", "var3"]]`` (:pr:`409`) `Aaron Spring`_.
 - Plot all datasets in :py:class:`~climpred.classes.HindcastEnsemble` or
   :py:class:`~climpred.classes.PerfectModelEnsemble` by
   :py:meth:`~climpred.classes.PredictionEnsemble.plot` if no other spatial dimensions
@@ -501,13 +501,13 @@ of bias removal for :py:class:`~climpred.classes.HindcastEnsemble`.
   dimensions and output has NaNs (in the case of land, for instance).
   (:issue:`282`, :pr:`407`) `Aaron Spring`_.
 - Allow binary forecasts at when calling
- :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+  :py:meth:`~climpred.classes.HindcastEnsemble.verify`,
   rather than needing to supply binary results beforehand. In other words,
   ``hindcast.verify(metric='bs', comparison='m2o', dim='member', logical=logical)``
   is now the same as
   ``hindcast.map(logical).verify(metric='brier_score', comparison='m2o', dim='member'``.
   (:pr:`431`) `Aaron Spring`_.
-- Check calendar types when using
+- Check ``calendar`` types when using
   :py:meth:`~climpred.classes.HindcastEnsemble.add_observations`,
   :py:meth:`~climpred.classes.HindcastEnsemble.add_uninitialized`,
   :py:meth:`~climpred.classes.PerfectModelEnsemble.add_control` to ensure that the
@@ -676,7 +676,8 @@ Internals/Minor Fixes
 - Gather ``pytest.fixture in ``conftest.py``. (:pr:`313`) `Aaron Spring`_.
 - Move ``x_METRICS`` and ``COMPARISONS`` to ``metrics.py`` and ``comparisons.py`` in
   order to avoid circular import dependencies. (:pr:`315`) `Aaron Spring`_.
-- ``asv`` benchmarks added for ``HindcastEnsemble`` (:pr:`285`) `Aaron Spring`_.
+- ``asv`` benchmarks added for :py:class:`~climpred.classes.HindcastEnsemble`
+  (:pr:`285`) `Aaron Spring`_.
 - Ignore irrelevant warnings in ``pytest`` and mark slow tests
   (:pr:`333`) `Aaron Spring`_.
 - Default ``CONCAT_KWARGS`` now in all ``xr.concat`` to speed up bootstrapping.
@@ -706,8 +707,9 @@ Documentation
 -------------
 - Added demo to setup your own raw model output compliant to ``climpred``
   (:pr:`296`) `Aaron Spring`_. See (`here <examples/misc/setup_your_own_data.html>`__).
-- Added demo using ``intake-esm`` with ``climpred`` (:pr:`296`) `Aaron Spring`_.
-  See (`here <examples/misc/setup_your_own_data.html#intake-esm-for-cmorized-output>`__).
+- Added demo using ``intake-esm`` with ``climpred``.
+  See `demo <examples/misc/setup_your_own_data.html#intake-esm-for-cmorized-output>`__.
+  (:pr:`296`) `Aaron Spring`_.
 - Added `Verification Alignment <alignment.html>`_ page explaining how initializations
   are selected and aligned with verification data. (:pr:`328`) `Riley X. Brady`_.
   See (`here <alignment.html>`__).
@@ -728,15 +730,18 @@ New Features
     >>> hind = climpred.tutorial.load_dataset("CESM-DP-SST")
     >>> hind.lead.attrs["units"] = "years"
 
-- ``HindcastEnsemble`` now has ``.add_observations()`` and ``.get_observations()``
+- :py:class:`~climpred.classes.HindcastEnsemble` now has
+  :py:meth:`~climpred.classes.HindcastEnsemble.add_observations` and
+  :py:meth:`~climpred.classes.HindcastEnsemble.get_observations`
   methods. These are the same as ``.add_reference()`` and ``.get_reference()``, which
   will be deprecated eventually. The name change clears up confusion, since "reference"
-  is the appropriate name for a reference forecast, e.g. persistence. (:pr:`310`)
+  is the appropriate name for a reference forecast, e.g. ``"persistence"``. (:pr:`310`)
   `Riley X. Brady`_.
 
-- ``HindcastEnsemble`` now has ``.verify()`` function, which duplicates the
-  ``.compute_metric()`` function. We feel that ``.verify()`` is more clear and easy
-  to write, and follows the terminology of the field. (:pr:`310`) `Riley X. Brady`_.
+- :py:class:`~climpred.classes.HindcastEnsemble` now has ``.verify()`` function, which
+  duplicates the ``.compute_metric()`` function. We feel that ``.verify()`` is more
+  clear and easy to write, and follows the terminology of the field.
+  (:pr:`310`) `Riley X. Brady`_.
 
 - ``e2o`` and ``m2o`` are now the preferred keywords for comparing hindcast ensemble
   means and ensemble members to verification data, respectively. (:pr:`310`)
@@ -1002,23 +1007,26 @@ climpred v1.0.1 (2019-07-04)
 Bug Fixes
 ---------
 - Accomodate for lead-zero within the ``lead`` dimension (:pr:`196`) `Riley X. Brady`_.
-- Fix issue with adding uninitialized ensemble to ``HindcastEnsemble`` object
+- Fix issue with adding uninitialized ensemble to
+  :py:class:`~climpred.classes.HindcastEnsemble` object
   (:pr:`199`) `Riley X. Brady`_.
 - Allow ``max_dof`` keyword to be passed to ``compute_metric`` and
-  ``compute_persistence`` for ``HindcastEnsemble`` (:pr:`199`) `Riley X. Brady`_.
+  ``compute_persistence`` for :py:class:`~climpred.classes.HindcastEnsemble`.
+  (:pr:`199`) `Riley X. Brady`_.
 
 Internals/Minor Fixes
 ---------------------
 - Force ``xskillscore`` version 0.0.4 or higher to avoid ``ImportError``
   (:pr:`204`) `Riley X. Brady`_.
 - Change ``max_dfs`` keyword to ``max_dof`` (:pr:`199`) `Riley X. Brady`_.
-- Add testing for ``HindcastEnsemble`` and ``PerfectModelEnsemble`` (:pr:`199`)
-  `Riley X. Brady`_
+- Add tests for :py:class:`~climpred.classes.HindcastEnsemble` and
+  ``PerfectModelEnsemble``. (:pr:`199`) `Riley X. Brady`_
 
 climpred v1.0.0 (2019-07-03)
 ============================
 ``climpred`` v1.0.0 represents the first stable release of the package. It includes
-``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects to perform analysis with.
+:py:class:`~climpred.classes.HindcastEnsemble` and ``PerfectModelEnsemble`` objects to
+perform analysis with.
 It offers a suite of deterministic and probabilistic metrics that are optimized to be
 run on single time series or grids of data (e.g., lat, lon, and depth). Currently,
 ``climpred`` only supports annual forecasts.
@@ -1074,7 +1082,8 @@ Features
     -   ``member``:  ensemble member dimension.
 - Updates ``open_dataset`` to display available dataset names when no argument is
   passed. (:pr:`123`) `Riley X. Brady`_
-- Change ``ReferenceEnsemble`` to ``HindcastEnsemble``. (:pr:`124`) `Riley X. Brady`_
+- Change ``ReferenceEnsemble`` to :py:class:`~climpred.classes.HindcastEnsemble`.
+  (:pr:`124`) `Riley X. Brady`_
 - Add probabilistic metrics to ``climpred``. (:pr:`128`) `Aaron Spring`_
 - Consolidate separate perfect-model and hindcast functions into singular functions
   (:pr:`128`) `Aaron Spring`_
@@ -1125,6 +1134,8 @@ climpred v0.1 (2018-12-20)
 
 Collaboration between Riley Brady and Aaron Spring begins.
 
+.. _`Anderson Banihirwe`: https://github.com/andersy005
+.. _`Ray Bell`: https://github.com/raybellwaves
 .. _`Riley X. Brady`: https://github.com/bradyrx
 .. _`Andrew Huang`: https://github.com/ahuang11
 .. _`Kathy Pegion`: https://github.com/kpegion

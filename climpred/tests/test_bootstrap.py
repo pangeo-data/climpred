@@ -2,13 +2,15 @@ import dask
 import numpy as np
 import pytest
 import xarray as xr
+from xskillscore.core.resampling import (
+    resample_iterations as _resample_iterations,
+    resample_iterations_idx as _resample_iterations_idx,
+)
 
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
     _chunk_before_resample_iterations_idx,
     _resample,
-    _resample_iterations,
-    _resample_iterations_idx,
     bootstrap_hindcast,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )

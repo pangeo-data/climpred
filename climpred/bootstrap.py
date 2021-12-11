@@ -3,6 +3,10 @@ import warnings
 import dask
 import numpy as np
 import xarray as xr
+from xskillscore.core.resampling import (
+    resample_iterations as _resample_iterations,
+    resample_iterations_idx as _resample_iterations_idx,
+)
 
 from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS, PM_CALENDAR_STR
 
@@ -57,11 +61,11 @@ def _resample(hind, resample_dim):
     """Resample with replacement in dimension ``resample_dim``.
 
     Args:
-        hind (xr.object): input xr.object to be resampled.
+        hind (xr.Dataset): input xr.Dataset to be resampled.
         resample_dim (str): dimension to resample along.
 
     Returns:
-        xr.object: resampled along ``resample_dim``.
+        xr.Dataset: resampled along ``resample_dim``.
 
     """
     to_be_resampled = hind[resample_dim].values
@@ -71,137 +75,6 @@ def _resample(hind, resample_dim):
     if resample_dim != "init":
         smp_hind[resample_dim] = hind[resample_dim].values
     return smp_hind
-
-
-def _resample_iterations(init, iterations, dim="member", dim_max=None, replace=True):
-    """Resample over ``dim`` by index ``iterations`` times.
-
-    .. note::
-        This gives the same result as `_resample_iterations_idx`. When using dask, the
-        number of tasks in `_resample_iterations` will scale with iterations but
-        constant chunksize, whereas the tasks in `_resample_iterations_idx` will stay
-        constant with increasing chunksize.
-
-    Args:
-        init (xr.DataArray, xr.Dataset): Initialized prediction ensemble.
-        iterations (int): Number of bootstrapping iterations.
-        dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
-        dim_max (int): Number of items to select in `dim`.
-        replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
-
-    Returns:
-        xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
-
-    """
-    if dim_max is not None and dim_max <= init[dim].size:
-        # select only dim_max items
-        select_dim_items = dim_max
-        new_dim = init[dim].isel({dim: slice(None, dim_max)})
-    else:
-        select_dim_items = init[dim].size
-        new_dim = init[dim]
-
-    if replace:
-        idx = np.random.randint(0, init[dim].size, (iterations, select_dim_items))
-    elif not replace:
-        # create 2d np.arange()
-        idx = np.linspace(
-            (np.arange(select_dim_items)),
-            (np.arange(select_dim_items)),
-            iterations,
-            dtype="int",
-        )
-        # shuffle each line
-        for ndx in np.arange(iterations):
-            np.random.shuffle(idx[ndx])
-    idx_da = xr.DataArray(
-        idx,
-        dims=("iteration", dim),
-        coords=({"iteration": range(iterations), dim: new_dim}),
-    )
-    init_smp = []
-    for i in np.arange(iterations):
-        idx = idx_da.sel(iteration=i).data
-        init_smp2 = init.isel({dim: idx}).assign_coords({dim: new_dim})
-        init_smp.append(init_smp2)
-    init_smp = xr.concat(init_smp, dim="iteration", **CONCAT_KWARGS)
-    init_smp["iteration"] = np.arange(1, 1 + iterations)
-    return init_smp
-
-
-def _resample_iterations_idx(
-    init, iterations, dim="member", replace=True, chunk=True, dim_max=None
-):
-    """Resample over ``dim`` by index ``iterations`` times.
-
-    .. note::
-        This is a much faster way to bootstrap than resampling each iteration
-        individually and applying the function to it. However, this will create a
-        DataArray with dimension ``iteration`` of size ``iterations``. It is probably
-        best to do this out-of-memory with ``dask`` if you are doing a large number
-        of iterations or using spatial output (i.e., not time series data).
-
-    Args:
-        init (xr.DataArray, xr.Dataset): Initialized prediction ensemble.
-        iterations (int): Number of bootstrapping iterations.
-        dim (str): Dimension name to bootstrap over. Defaults to ``'member'``.
-        replace (bool): Bootstrapping with or without replacement. Defaults to ``True``.
-        chunk: (bool): Auto-chunk along chunking_dims to get optimal blocksize
-        dim_max (int): Number of indices from `dim` to return. Not implemented.
-
-    Returns:
-        xr.DataArray, xr.Dataset: Bootstrapped data with additional dim ```iteration```
-
-    """
-    if dask.is_dask_collection(init):
-        init = init.chunk({"lead": -1, "member": -1})
-        init = init.copy(deep=True)
-
-    def select_bootstrap_indices_ufunc(x, idx):
-        """Selects multi-level indices ``idx`` from xr.Dataset ``x`` for all
-        iterations."""
-        # `apply_ufunc` sometimes adds a singleton dimension on the end, so we squeeze
-        # it out here. This leverages multi-level indexing from numpy, so we can
-        # select a different set of, e.g., ensemble members for each iteration and
-        # construct one large DataArray with ``iterations`` as a dimension.
-        return np.moveaxis(x.squeeze()[idx.squeeze().transpose()], 0, -1)
-
-    if dask.is_dask_collection(init):
-        if chunk:
-            chunking_dims = [d for d in init.dims if d not in CLIMPRED_DIMS]
-            init = _chunk_before_resample_iterations_idx(
-                init, iterations, chunking_dims
-            )
-
-    # resample with or without replacement
-    if replace:
-        idx = np.random.randint(0, init[dim].size, (iterations, init[dim].size))
-    elif not replace:
-        # create 2d np.arange()
-        idx = np.linspace(
-            (np.arange(init[dim].size)),
-            (np.arange(init[dim].size)),
-            iterations,
-            dtype="int",
-        )
-        # shuffle each line
-        for ndx in np.arange(iterations):
-            np.random.shuffle(idx[ndx])
-    idx_da = xr.DataArray(
-        idx,
-        dims=("iteration", dim),
-        coords=({"iteration": range(iterations), dim: init[dim]}),
-    )
-    transpose_kwargs = (
-        {"transpose_coords": False} if isinstance(init, xr.DataArray) else {}
-    )
-    return xr.apply_ufunc(
-        select_bootstrap_indices_ufunc,
-        init.transpose(dim, ..., **transpose_kwargs),
-        idx_da,
-        dask="parallelized",
-        output_dtypes=[float],
-    )
 
 
 def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
@@ -601,11 +474,11 @@ def _maybe_auto_chunk(ds, dims):
     """Auto-chunk on dimension `dims`.
 
     Args:
-        ds (xr.object): input data.
+        ds (xr.Dataset): input data.
         dims (list of str or str): Dimensions to auto-chunk in.
 
     Returns:
-        xr.object: auto-chunked along `dims`
+        xr.Dataset: auto-chunked along `dims`
 
     """
     if dask.is_dask_collection(ds) and dims is not []:
@@ -631,7 +504,7 @@ def _chunk_before_resample_iterations_idx(
             Defaults to 100000000.
 
     Returns:
-        xr.object: chunked to have blocksize: optimal_blocksize/iterations.
+        xr.Dataset: chunked to have blocksize: optimal_blocksize/iterations.
 
     """
     if isinstance(chunking_dims, str):
@@ -1287,7 +1160,7 @@ def _bootstrap_func(
 
     Args:
         func (function): function to be bootstrapped.
-        ds (xr.object): first input argument of func. `chunk` ds on `dim` other
+        ds (xr.Dataset): first input argument of func. `chunk` ds on `dim` other
             than `resample_dim` for potential performance increase when multiple
             CPUs available.
         resample_dim (str): dimension to resample from.

@@ -49,7 +49,7 @@ repos:
       rev: 6.1.1
       hooks:
       -   id: pydocstyle
-          args: ['--match="(?!test_).*\.py"'] # ignoring tests
+          # args: ['--match="(?!test_).*\.py"'] # ignoring tests
 
           # , "--convention=google"] # https://google.github.io/styleguide/pyguide.html#Comments
 

@@ -1,3 +1,5 @@
+"""Bootstrap or resampling operators for functional compute_ functions."""
+
 import warnings
 
 import dask
@@ -103,8 +105,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
 
 
 def _pvalue_from_distributions(ref_skill, init_skill, metric=None):
-    """Get probability that skill of a reference forecast (e.g., persistence or
-    uninitialized skill) is larger than initialized skill.
+    """Get probability that reference forecast skill is larger than initialized skill.
 
     Needed for bootstrapping confidence intervals and p_values of a metric in
     the hindcast framework. Checks whether a simple forecast like persistence,
@@ -119,7 +120,7 @@ def _pvalue_from_distributions(ref_skill, init_skill, metric=None):
 
     Returns:
         pv (xr.Dataset): probability that simple forecast performs better
-                            than initialized forecast.
+            than initialized forecast.
     """
     pv = ((ref_skill - init_skill) > 0).mean("iteration")
     if not metric.positive:
@@ -222,8 +223,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     )
 
     def sel_time(start_year_int, suitable_start_dates):
-        """Select time segments from control from ``suitable_start_dates`` based on
-        year ``start_year_int``."""
+        """Select time of control from suitable_start_dates based on start_year_int."""
         start_time = suitable_start_dates.time.sel(time=str(start_year_int))
         end_time = shift_cftime_singular(start_time, block_length - 1, freq)
         new = control.sel(time=slice(*start_time, *end_time))
@@ -261,6 +261,8 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
 
 def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"]):
     """
+    Generate ``uninitialized`` by resamplling from ``initialized``.
+
     Generate an uninitialized ensemble by resampling without replacement from the
     initialized prediction ensemble. Full years of the first lead present from the
     initialized are relabeled to a different year.
@@ -323,8 +325,12 @@ def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"
 
 
 def _bootstrap_by_stacking(init_pm, control):
-    """Bootstrap member, lead, init from control by reshaping. Fast track of function
-    `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'."""
+    """
+    Bootstrap member, lead, init from control by reshaping.
+
+    Fast track of function
+    `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'.
+    """
     assert type(init_pm) == type(control)
     lead_unit = init_pm.lead.attrs["units"]
     if isinstance(init_pm, xr.Dataset):
@@ -451,7 +457,8 @@ def _bootstrap_hindcast_over_init_dim(
 
 
 def _get_resample_func(ds):
-    """Decide for resample function based on input `ds`.
+    """
+    Decide for resample function based on input `ds`.
 
     Returns:
       callable: `_resample_iterations`: if big and chunked `ds`
@@ -493,8 +500,7 @@ def _maybe_auto_chunk(ds, dims):
 def _chunk_before_resample_iterations_idx(
     ds, iterations, chunking_dims, optimal_blocksize=100000000
 ):
-    """Chunk ds so small that after _resample_iteration_idx chunks have optimal size
-    `optimal_blocksize`.
+    """Chunk that after _resample_iteration_idx chunks have optimal `optimal_blocksize`.
 
     Args:
         ds (xr.obejct): input data`.
@@ -936,8 +942,7 @@ def bootstrap_hindcast(
     pers_sig=None,
     **metric_kwargs,
 ):
-    """Bootstrap compute with replacement. Wrapper of
-     py:func:`bootstrap_compute` for hindcasts.
+    """Wrap py:func:`bootstrap_compute` for hindcasts.
 
     Args:
         hind (xr.Dataset): prediction ensemble.
@@ -1056,8 +1061,7 @@ def bootstrap_perfect_model(
     pers_sig=None,
     **metric_kwargs,
 ):
-    """Bootstrap compute with replacement. Wrapper of
-     py:func:`bootstrap_compute` for perfect-model framework.
+    """Wrap py:func:`bootstrap_compute` for perfect-model framework.
 
     Args:
         hind (xr.Dataset): prediction ensemble.
@@ -1150,13 +1154,13 @@ def _bootstrap_func(
     *func_args,
     **func_kwargs,
 ):
-    """Sig % threshold of function based on iterations resampling with replacement.
+    """Calc sig % threshold of function based on iterations resampling with replacement.
 
     Reference:
-    * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
-     Intervals for the Correlation Coefficient in Climatology.” Theoretical and
-      Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
-      https://doi.org/10/b6fnsv.
+        * Mason, S. J., and G. M. Mimmack. “The Use of Bootstrap Confidence
+          Intervals for the Correlation Coefficient in Climatology.” Theoretical and
+          Applied Climatology 45, no. 4 (December 1, 1992): 229–33.
+          https://doi.org/10/b6fnsv.
 
     Args:
         func (function): function to be bootstrapped.
@@ -1171,7 +1175,7 @@ def _bootstrap_func(
 
     Returns:
         sig_level: bootstrapped significance levels with
-                   dimensions of init_pm and len(sig) if sig is list
+            dimensions of init_pm and len(sig) if sig is list
     """
     if not callable(func):
         raise ValueError(f"Please provide func as a function, found {type(func)}")
@@ -1210,8 +1214,7 @@ def dpp_threshold(control, sig=95, iterations=500, dim="time", **dpp_kwargs):
 
 
 def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim="time"):
-    """Calc the variance-weighted mean period significance levels from re-sampled
-    dataset.
+    """Calc variance-weighted mean period significance levels from resampled dataset.
 
     See also:
         * climpred.bootstrap._bootstrap_func

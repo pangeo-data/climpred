@@ -415,8 +415,7 @@ class PredictionEnsemble:
         return contained
 
     def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
-        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other
-        :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other.
 
         Two :py:class:`~climpred.classes.PredictionEnsemble`s are equal if they have
         matching variables and coordinates, all of which are equal.

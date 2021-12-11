@@ -251,14 +251,14 @@ __e2c = Comparison(
 # HINDCAST COMPARISONS
 # --------------------------------------------#
 def _e2o(
-    hind: xr.Dataset, verif: xr.Dataset, metric: Metric
+    initialized: xr.Dataset, verif: xr.Dataset, metric: Optional[Metric]
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare the ensemble mean forecast to the verification data.
 
     :ref:`comparisons` for :py:class:`~climpred.classes.HindcastEnsemble`
 
     Args:
-        hind: Hindcast with optional ``member`` dimension.
+        initialized: Hindcast with optional ``member`` dimension.
         verif: Verification data.
         metric: needed for probabilistic metrics. Therefore useless in ``e2o``
             comparison, but expected by internal API.
@@ -266,10 +266,10 @@ def _e2o(
     Returns:
         forecast, verification
     """
-    if "member" in hind.dims:
-        forecast = hind.mean("member")
+    if "member" in initialized.dims:
+        forecast = initialized.mean("member")
     else:
-        forecast = hind
+        forecast = initialized
     return forecast, verif
 
 
@@ -284,14 +284,14 @@ __e2o = Comparison(
 
 
 def _m2o(
-    hind: xr.Dataset, verif: xr.Dataset, metric: Metric
+    initialized: xr.Dataset, verif: xr.Dataset, metric: Metric
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare each ensemble member individually to the verification data.
 
     :ref:`comparisons` for :py:class:`~climpred.classes.HindcastEnsemble`
 
     Args:
-        hind: ``initialized`` with ``member`` dimension.
+        initialized: ``initialized`` with ``member`` dimension.
         verif: Verification data.
         metric:
             If deterministic, forecast and verif both have ``member`` dim;
@@ -301,9 +301,9 @@ def _m2o(
         forecast, verification
     """
     # check that this contains more than one member
-    has_dims(hind, "member", "decadal prediction ensemble")
-    has_min_len(hind["member"], 1, "decadal prediction ensemble member")
-    forecast = hind
+    has_dims(initialized, "member", "decadal prediction ensemble")
+    has_min_len(initialized["member"], 1, "decadal prediction ensemble member")
+    forecast = initialized
     if not metric.probabilistic and "member" not in verif.dims:
         forecast, verif = xr.broadcast(
             forecast, verif, exclude=["time", "init", "lead"]

@@ -2094,7 +2094,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     verif,
                     verif_dates,
                     lead,
-                    hind=forecast,
+                    initialized=forecast,
                     hist=hist,
                     inits=inits,
                     # Ensure apply metric function returns skill and not reference
@@ -2119,7 +2119,7 @@ class HindcastEnsemble(PredictionEnsemble):
                             verif,
                             verif_dates,
                             lead,
-                            hind=forecast,
+                            initialized=forecast,
                             hist=hist,
                             inits=inits,
                             reference=r,

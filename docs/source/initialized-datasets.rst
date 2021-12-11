@@ -63,7 +63,8 @@ examples:
      - appreciated
      - `examples to add <https://github.com/pangeo-data/climpred/issues/602>`_
 
-If you find or use another publicly available initialized datasets, please consider adding a `Pull Request <contributing.html>`_.
+If you find or use another publicly available initialized datasets, please consider
+adding a `Pull Request <contributing.html>`_.
 
 References
 ##########

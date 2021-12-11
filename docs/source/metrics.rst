@@ -1,7 +1,7 @@
 .. currentmodule:: climpred.metrics
 
 .. ipython:: python
-    :supress:
+    :suppress:
 
     from climpred.metrics import __ALL_METRICS__ as all_metrics
 

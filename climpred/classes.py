@@ -386,11 +386,11 @@ class PredictionEnsemble:
             return _display_metadata(self)
 
     def __len__(self) -> int:
-        """Return number of all variables in :py:class:`~climpred.classes.PredictionEnsemble`."""
+        """Return number of all variables ``PredictionEnsemble``."""
         return len(self.data_vars)
 
     def __iter__(self) -> Iterator[Hashable]:
-        """Iterate over underlying xarray.Datasets."""
+        """Iterate over underlying :py:class:`~xarray.Dataset`s."""
         return iter(self._datasets.values())
 
     def __delitem__(self, key: Hashable) -> None:
@@ -415,12 +415,13 @@ class PredictionEnsemble:
         return contained
 
     def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
-        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other
+        :py:class:`~climpred.classes.PredictionEnsemble`.
 
-        Two :py:class:`~climpred.classes.PredictionEnsemble`s are equal if they have matching variables and
-        coordinates, all of which are equal.
-        ``PredictionEnsembles`` can still be equal (like pandas objects) if they have NaN
-        values in the same locations.
+        Two :py:class:`~climpred.classes.PredictionEnsemble`s are equal if they have
+        matching variables and coordinates, all of which are equal.
+        ``PredictionEnsembles`` can still be equal (like pandas objects) if they have
+        NaN values in the same locations.
         This method is necessary because `v1 == v2` for ``PredictionEnsembles``
         does element-wise comparisons (like numpy.ndarrays).
 
@@ -443,7 +444,7 @@ class PredictionEnsemble:
 
     def identical(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """
-        Check if :py:class:`~climpred.classes.PredictionEnsemble` is identical to other :py:class:`~climpred.classes.PredictionEnsemble`.
+        Check if :py:class:`~climpred.classes.PredictionEnsemble` is identical to other.
 
         Like ``equals``, but also checks all dataset attributes and the
         attributes on all variables and coordinates.

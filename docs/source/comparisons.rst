@@ -3,30 +3,39 @@ Comparisons
 ***********
 
 Forecasts have to be verified against some product to evaluate their performance.
-However, when verifying against a product, there are many different ways one can compare
-the ensemble of forecasts. Here we cover the comparison options for both hindcast and
-perfect model ensembles. See `terminology <terminology.html>`__ for clarification on
-the differences between these two experimental setups.
+However, when verifying against a product, there are many different ways one can
+compare the ensemble of forecasts. Here, we cover the comparison options for both
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble`.
+See `terminology <terminology.html>`__ for clarification on the differences between
+these two experimental setups.
 
-All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify` and :py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` (for both ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects) take a
-``comparison=''`` keyword to select the comparison style. See below for a detailed
+All high-level functions like :py:class:`~climpred.classes.HindcastEnsemble`
+:py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+:py:class:`~climpred.classes.HindcastEnsemble`
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
+:py:class:`~climpred.classes.PerfectModelEnsemble`
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+:py:class:`~climpred.classes.PerfectModelEnsemble`
+:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` take a
+``comparison`` keyword to select the comparison style. See below for a detailed
 description on the differences between these comparisons.
 
 Hindcast Ensembles
 ##################
 
-In hindcast ensembles, the ensemble mean forecast (``comparison='e2o'``) is expected to
-perform better than individual ensemble members (``comparison='m2o'``) as the chaotic
-component of forecasts is expected to be suppressed by this averaging, while the memory
-of the system sustains. [Boer2016]_
+In :py:class:`~climpred.classes.HindcastEnsemble`, the ensemble mean forecast
+(``comparison="e2o"``) is expected to perform better than individual ensemble members
+(``comparison="m2o"``) as the chaotic component of forecasts is expected to be
+suppressed by this averaging, while the memory of the system sustains. [Boer2016]_
 
 .. currentmodule:: climpred.comparisons
 
-``keyword: 'e2o', 'e2r'``
+``keyword: "e2o", "e2r"``
 
 .. autosummary:: _e2o
 
-``keyword: 'm2o', 'm2r'``
+``keyword: "m2o", "m2r"``
 
 .. autosummary:: _m2o
 
@@ -34,26 +43,26 @@ of the system sustains. [Boer2016]_
 Perfect Model Ensembles
 #######################
 
-In perfect-model frameworks, there are many more ways of verifying forecasts.
-[Seferian2018]_ uses a comparison of all ensemble members against the
-control run (``comparison='m2c'``) and all ensemble members against all other ensemble
-members (``comparison='m2m'``). Furthermore, the ensemble mean forecast can be verified
-against one control member (``comparison='e2c'``) or all members (``comparison='m2e'``)
-as done in [Griffies1997]_.
+In :py:class:`~climpred.classes.PerfectModelEnsemble`, there are many more ways of
+verifying forecasts. [Seferian2018]_ uses a comparison of all ensemble members against
+the control run (``comparison="m2c"``) and all ensemble members against all other
+ensemble members (``comparison="m2m"``). Furthermore, the ensemble mean forecast can
+be verified against one control member (``comparison="e2c"``) or all members
+(``comparison="m2e"``) as done in Griffies1997_.
 
-``keyword: 'm2e'``
+``keyword: "m2e"``
 
 .. autosummary:: _m2e
 
-``keyword: 'm2c'``
+``keyword: "m2c"``
 
 .. autosummary:: _m2c
 
-``keyword: 'm2m'``
+``keyword: "m2m"``
 
 .. autosummary:: _m2m
 
-``keyword: 'e2c'``
+``keyword: "e2c"``
 
 .. autosummary:: _e2c
 
@@ -62,49 +71,55 @@ Normalization
 #############
 
 The goal of a normalized distance metric is to get a constant or comparable value of
-typically 1 (or 0 for metrics defined as 1 - metric) when the metric saturates and the
-predictability horizon is reached (see `metrics <metrics.html>`__).
+typically ``1`` (or ``0`` for metrics defined as ``1 - metric``) when the metric
+saturates and the predictability horizon is reached (see `metrics <metrics.html>`__).
 
-A factor is added in the normalized metric formula (see [Seferian2018]_) to accomodate
-different comparison styles. For example, ``nrmse`` gets smalled in comparison ``m2e``
-than ``m2m`` by design, since the ensembe mean is always closer to individual members
+A factor is added in the normalized metric formula [Seferian2018]_ to accomodate
+different comparison styles. For example, ``metric="nrmse"`` gets smaller in
+comparison ``"m2e"``.
+than ``"m2m"`` by design, since the ensembe mean is always closer to individual members
 than the ensemble members to each other. In turn, the normalization factor is ``2`` for
-comparisons ``m2c``, ``m2m``, and ``m2o``. It is 1 for ``m2e``, ``e2c``, and ``e2o``.
+comparisons ``"m2c"``, ``"m2m"``, and ``"m2o"``. It is 1 for ``"m2e"``, ``"e2c"``, and
+``"e2o"``.
 
 Interpretation of Results
 #########################
 
-When ``HindcastEnsemble`` skill is computed over all initializations ``dim='init'`` of the
-hindcast, the resulting skill is a mean forecast skill over all initializations.
+When :py:class:`~climpred.classes.HindcastEnsemble` skill is computed over all
+initializations ``dim="init"`` of the hindcast, the resulting skill is a mean forecast
+skill over all initializations.
 
-``PerfectModelEnsemble`` skill is computed over a supervector comprised of all
+:py:class:`~climpred.classes.PerfectModelEnsemble` skill is computed over a
+supervector comprised of all
 initializations and members, which allows the computation of the ACC-based skill
 [Bushuk2018]_, but also returns a mean forecast skill over all initializations.
 
-The supervector approach shown in [Bushuk2018]_ and just calculating a distance-based
-metric like ``rmse`` over the member dimension as in [Griffies1997]_ yield very similar
+The supervector approach shown in Bushuk2018_ and just calculating a distance-based
+metric like ``rmse`` over the member dimension as in Griffies1997_ yield very similar
 results.
 
 Compute over dimension
 ######################
 
 The argument ``dim`` defines over which dimension a metric is computed. We can
-apply a metric over all dimensions from the initialized dataset expect ``lead``.
+apply a metric over all dimensions from the ``initialized`` dataset expect ``lead``.
 The resulting skill is then
-reduced by this ``dim``. Therefore, applying a metric over ``dim='member'`` creates a
-skill for all initializations individually. This can show the initial conditions
-dependence of skill. Likewise when computing skill over ``'init'``, we get skill for
-each member. This ``dim`` argument is different from the ``comparison`` argument which
+reduced by this ``dim``. Therefore, applying a metric over ``dim="member"`` or
+``dim=[]`` creates a skill for all initializations individually.
+This can show the initial conditions dependence of skill.
+Likewise when computing skill over ``"init"``, we get skill for each member.
+This ``dim`` argument is different from the ``comparison`` argument which
 just specifies how ``forecast`` and ``observations`` are defined.
 
 However, this above logic applies to deterministic metrics. Probabilistic metrics need
-to be applied to the ``member`` dimension and ``comparison`` from [``'m2c'``, ``'m2m'``]
-in ``PerfectModelEnsemble`` :py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``'m2o'`` comparison in ``HindcastEnsemble``
+to be applied to the ``member`` dimension and ``comparison`` from
+``["m2c", "m2m"]`` in :py:class:`~climpred.classes.PerfectModelEnsemble`
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``"m2o"`` comparison in
+:py:class:`~climpred.classes.HindcastEnsemble`
 :py:meth:`~climpred.classes.HindcastEnsemble.verify`.
 
-``dim`` should not contain
-``member`` when the comparison already computes ensemble means as in
-[``'e2o'``, ``'e2c'``].
+``dim`` should not contain ``member`` when the comparison already computes ensemble
+means as in ``["e2o", "e2c"]``.
 
 
 User-defined comparisons
@@ -127,9 +142,9 @@ comparison should also be used for probabilistic metrics, make sure that
       """Identical to m2e but median."""
       observations_list = []
       forecast_list = []
-      supervector_dim = 'member'
+      supervector_dim = "member"
       for m in ds.member.values:
-          forecast = _drop_members(ds, rmd_member=[m]).median('member')
+          forecast = _drop_members(ds, rmd_member=[m]).median("member")
           observations = ds.sel(member=m).squeeze()
           forecast_list.append(forecast)
           observations_list.append(observations)
@@ -143,16 +158,18 @@ Then initialize this comparison function with
 :py:class:`~climpred.comparisons.Comparison`::
 
   __my_m2median_comparison = Comparison(
-      name='m2me',
+      name="m2me",
       function=_my_m2median_comparison,
       probabilistic=False,
       hindcast=False)
 
 Finally, compute skill based on your own comparison::
 
-  skill = compute_perfect_model(ds, control,
-                                metric='rmse',
-                                comparison=__my_m2median_comparison)
+  PerfectModelEnsemble.verify(
+    metric="rmse",
+    comparison=__my_m2median_comparison,
+    dim=[],
+  )
 
 Once you come up with an useful comparison for your problem, consider contributing this
 comparison to ``climpred``, so all users can benefit from your comparison, see
@@ -162,10 +179,20 @@ comparison to ``climpred``, so all users can benefit from your comparison, see
 References
 ##########
 
-.. [Boer2016] Boer, G. J., D. M. Smith, C. Cassou, F. Doblas-Reyes, G. Danabasoglu, B. Kirtman, Y. Kushnir, et al. “The Decadal Climate Prediction Project (DCPP) Contribution to CMIP6.” Geosci. Model Dev. 9, no. 10 (October 25, 2016): 3751–77. https://doi.org/10/f89qdf.
+.. [Boer2016] Boer, G. J., D. M. Smith, C. Cassou, F. Doblas-Reyes, G. Danabasoglu,
+    B. Kirtman, Y. Kushnir, et al. “The Decadal Climate Prediction Project (DCPP)
+    Contribution to CMIP6.” Geosci. Model Dev. 9, no. 10 (October 25, 2016): 3751–77.
+    https://doi.org/10/f89qdf.
 
-.. [Bushuk2018] Mitchell Bushuk, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. Regional Arctic sea–ice prediction: potential versus operational seasonal forecast skill. Climate Dynamics, June 2018. https://doi.org/10/gd7hfq.
+.. [Bushuk2018] Mitchell Bushuk, Rym Msadek, Michael Winton, Gabriel Vecchi,
+    Xiaosong Yang, Anthony Rosati, and Rich Gudgel. Regional Arctic sea–ice
+    prediction: potential versus operational seasonal forecast skill.
+    Climate Dynamics, June 2018. https://doi.org/10/gd7hfq.
 
-.. [Griffies1997] S. M. Griffies and K. Bryan. A predictability study of simulated North Atlantic multidecadal variability. Climate Dynamics, 13(7-8):459–487, August 1997. https://doi.org/10/ch4kc4.
+.. [Griffies1997] S. M. Griffies and K. Bryan. A predictability study of simulated
+    North Atlantic multidecadal variability. Climate Dynamics, 13(7-8):459–487,
+    August 1997. https://doi.org/10/ch4kc4.
 
-.. [Seferian2018] Roland Séférian, Sarah Berthet, and Matthieu Chevallier. Assessing the Decadal Predictability of Land and Ocean Carbon Uptake. Geophysical Research Letters, March 2018. https://doi.org/10/gdb424.
+.. [Seferian2018] Roland Séférian, Sarah Berthet, and Matthieu Chevallier. Assessing
+    the Decadal Predictability of Land and Ocean Carbon Uptake.
+    Geophysical Research Letters, March 2018. https://doi.org/10/gdb424.

@@ -18,8 +18,8 @@ Contributors
 
 Core Developers
 ===============
-* Riley X. Brady (`github <https://github.com/bradyrx/>`__)
 * Aaron Spring (`github <https://github.com/aaronspring/>`__)
+* Riley X. Brady (`github <https://github.com/bradyrx/>`__)
 
 Contributors
 ============

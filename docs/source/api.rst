@@ -323,6 +323,8 @@ For a thorough look at our metrics library, please see the
     :toctree: api/
 
     Metric
+    Metric.__init__
+    Metric.__repr__
     _get_norm_factor
     _pearson_r
     _pearson_r_p_value
@@ -374,6 +376,8 @@ For a thorough look at our metrics library, please see the
     :toctree: api/
 
     Comparison
+    Comparison.__init__
+    Comparison.__repr__
     _e2o
     _m2o
     _m2m

@@ -1,6 +1,6 @@
 """Comparisons: How to compare forecast with verification."""
 
-from typing import Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple, Union
 
 import dask
 import numpy as np
@@ -17,9 +17,7 @@ class Comparison:
     def __init__(
         self,
         name: str,
-        function: Callable[
-            [xr.Dataset, xr.Dataset, Metric], Tuple[xr.Dataset, xr.Dataset]
-        ],
+        function: Callable[[Any, Any, Any], Tuple[xr.Dataset, xr.Dataset]],
         hindcast: bool,
         probabilistic: bool,
         long_name: Optional[str] = None,

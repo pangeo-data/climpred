@@ -664,9 +664,9 @@ class PredictionEnsemble:
                 dim that's being called. E.g., ``.isel(lead=0)`` should only
                 be applied to the initialized dataset.
 
-                Reference:
-                  * https://stackoverflow.com/questions/1528237/
-                    how-to-handle-exceptions-in-a-list-comprehensions
+                References:
+                    * https://stackoverflow.com/questions/1528237/
+                      how-to-handle-exceptions-in-a-list-comprehensions
                 """
                 try:
                     return getattr(v, name)(*args, **kwargs)
@@ -1102,8 +1102,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Generate an uninitialized ensemble by resampling from the control simulation.
 
         Returns:
-            :py:class:`~climpred.classes.PerfectModelEnsemble` with resampled (uninitialized) ensemble from
-            control
+            ``uninitialzed`` resampled from ``control`` added
+            to:py:class:`~climpred.classes.PerfectModelEnsemble`
         """
         has_dataset(
             self._datasets["control"], "control", "generate an uninitialized ensemble."
@@ -1159,8 +1159,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill reduced by dim containing initialized and
-            reference skill(s) if specified.
+            ``initialized`` and ``reference`` forecast skill reduced by dimensions
+            ``dim``
 
         Example:
             Root mean square error (``rmse``) comparing every member with the
@@ -1187,13 +1187,13 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 reference:                     []
 
 
-            Pearson's Anomaly Correlation (``"acc"``) comparing every member to every
+            Continuous Ranked Probability Score (``"crps"``) comparing every member to every
             other member (``"m2m"``) reducing dimensions ``member`` and ``init`` while
             also calculating reference skill for the ``persistence``, ``climatology``
             and ``uninitialized`` forecast.
 
             >>> PerfectModelEnsemble.verify(
-            ...     metric="acc",
+            ...     metric="crps",
             ...     comparison="m2m",
             ...     dim=["init", "member"],
             ...     reference=["persistence", "climatology", "uninitialized"],
@@ -1204,16 +1204,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
+                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.1188 0.09737
             Attributes:
-                prediction_skill_software:                         climpred https://clim...
-                skill_calculated_by_function:                      PerfectModelEnsemble....
+                prediction_skill_software:                         climpred https://climp...
+                skill_calculated_by_function:                      PerfectModelEnsemble.v...
                 number_of_initializations:                         12
                 number_of_members:                                 10
-                metric:                                            pearson_r
+                metric:                                            crps
                 comparison:                                        m2m
                 dim:                                               ['init', 'member']
-                reference:                                         ['persistence', 'clim...
+                reference:                                         ['persistence', 'clima...
                 PerfectModel_persistence_from_initialized_lead_0:  False
         """
         if groupby is not None:
@@ -1298,7 +1298,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill containing initialized and reference skill(s).
+            ``initialized`` and ``reference`` forecast skill reduced by dimensions
+            ``dim``
         """
         has_dataset(
             self._datasets["uninitialized"],
@@ -1353,9 +1354,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset of persistence forecast results.
+            persistence forecast skill.
 
-        Reference:
+        References:
             * Chapter 8 (Short-Term Climate Prediction) in
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
@@ -1425,9 +1426,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset of persistence forecast results.
+            climatology forecast skill
 
-        Reference:
+        References:
             * Chapter 8 (Short-Term Climate Prediction) in
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
@@ -1505,7 +1506,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            xr.Datasets: with dimensions ``results`` (holding ``verify skill``, ``p``,
+            xr.Dataset with dimensions ``results`` (holding ``verify skill``, ``p``,
             ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
                 * results='verify skill', skill='initialized':
@@ -1530,7 +1531,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             https://doi.org/10/f4jjvf.
 
         Example:
-            Calculate the Pearson's Anomaly Correlation (``"acc"``) comparing every
+            Continuous Ranked Probability Score (``"crps"``) comparing every
             member to every other member (``"m2m"``) reducing dimensions ``member`` and
             ``init`` 50 times after resampling ``member`` dimension with replacement.
             Also calculate reference skill for the ``"persistence"``, ``"climatology"``
@@ -1540,7 +1541,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             upper bound of the resample.
 
             >>> PerfectModelEnsemble.bootstrap(
-            ...     metric="acc",
+            ...     metric="crps",
             ...     comparison="m2m",
             ...     dim=["init", "member"],
             ...     iterations=50,
@@ -1554,16 +1555,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
+                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.1607 0.1439
             Attributes: (12/13)
-                prediction_skill_software:                         climpred https://clim...
-                skill_calculated_by_function:                      PerfectModelEnsemble...
+                prediction_skill_software:                         climpred https://climp...
+                skill_calculated_by_function:                      PerfectModelEnsemble.b...
                 number_of_initializations:                         12
                 number_of_members:                                 10
-                metric:                                            pearson_r
+                metric:                                            crps
                 comparison:                                        m2m
-                ...
-                reference:                                         ['persistence', 'clim...
+                ...                                                ...
+                reference:                                         ['persistence', 'clima...
                 PerfectModel_persistence_from_initialized_lead_0:  False
                 resample_dim:                                      member
                 sig:                                               95
@@ -1760,7 +1761,7 @@ class HindcastEnsemble(PredictionEnsemble):
         """Return xarray.Dataset of the observations/verification data.
 
         Returns:
-            observations.
+            observations
         """
         return self._datasets["observations"]
 
@@ -1773,7 +1774,8 @@ class HindcastEnsemble(PredictionEnsemble):
             resample_dim: dimension to resample from. Must contain ``"init"``.
 
         Returns:
-            resampled uninitialized ensemble added to HindcastEnsemble
+            resampled ``uninitialized`` ensemble added to
+            :py:class:`~climpred.classes.HindcastEnsemble`
 
         Example:
             >>> HindcastEnsemble  # uninitialized from historical simulations
@@ -1964,11 +1966,11 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill reduced by dim containing initialized and
-            reference skill(s) if specified.
+            ``initialized`` and ``reference`` forecast skill reduced by dimensions
+            ``dim``
 
         Example:
-            Root mean square error (``rmse``) comparing every member with the
+            Continuous Ranked Probability Score (``crps``) comparing every member with the
             verification (``m2o``) over the same verification time (``same_verifs``)
             for all leads reducing dimensions ``init`` and ``member``:
 
@@ -1996,14 +1998,14 @@ class HindcastEnsemble(PredictionEnsemble):
                 dim:                           ['init', 'member']
                 reference:                     []
 
-            Pearson's Anomaly Correlation (``"acc"``) comparing the ensemble mean with
+            Root mean square error (``"rmse"``) comparing the ensemble mean with
             the verification (``"e2o"``) over the same initializations
             (``"same_inits"``) for all leads reducing dimension ``init`` while also
             calculating reference skill for the ``"persistence"``, ``"climatology"``
             and ``'uninitialized'`` forecast.
 
             >>> HindcastEnsemble.verify(
-            ...     metric="acc",
+            ...     metric="rmse",
             ...     comparison="e2o",
             ...     alignment="same_inits",
             ...     dim="init",
@@ -2015,14 +2017,14 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
+                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.07377 0.07409
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     64
                 number_of_members:             10
                 alignment:                     same_inits
-                metric:                        pearson_r
+                metric:                        rmse
                 comparison:                    e2o
                 dim:                           init
                 reference:                     ['persistence', 'climatology', 'uninitiali...
@@ -2241,7 +2243,7 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            xr.Datasets: with dimensions ``results`` (holding ``skill``, ``p``,
+            xr.Dataset with dimensions ``results`` (holding ``skill``, ``p``,
             ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
                 * results='verify skill', skill='initialized':
@@ -2260,10 +2262,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     bootstrapping with replacement.
 
         Example:
-            Calculate the Pearson's Anomaly Correlation (``"acc"``) comparing the
-            ensemble mean forecast to the verification (``"e2o"``) over the same
-            verification times (``"same_verifs"``) for all leads reducing dimensions
-            ``init`` 50 times after resampling ``member`` dimension with replacement.
+            Continuous Ranked Probability Score (``"crps"``) comparing every member forecast to the verification (``"m2o"``) over the same
+            initializations (``"same_inits"``) for all leads reducing dimensions
+            ``member`` 50 times after resampling ``member`` dimension with replacement. Note that dimension ``init`` remains.
             Also calculate reference skill for the ``"persistence"``, ``"climatology"``
             and ``"uninitialized"`` forecast and compare whether initialized skill is
             better than reference skill: Returns verify skill, probability that
@@ -2271,31 +2272,32 @@ class HindcastEnsemble(PredictionEnsemble):
             upper bound of the resample.
 
             >>> HindcastEnsemble.bootstrap(
-            ...     metric="acc",
-            ...     comparison="e2o",
-            ...     dim="init",
+            ...     metric="crps",
+            ...     comparison="m2o",
+            ...     dim="member",
             ...     iterations=50,
             ...     resample_dim="member",
-            ...     alignment="same_verifs",
+            ...     alignment="same_inits",
             ...     reference=["persistence", "climatology", "uninitialized"],
             ... )
             <xarray.Dataset>
-            Dimensions:  (skill: 4, results: 4, lead: 10)
+            Dimensions:     (skill: 4, results: 4, lead: 10, init: 51)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
-              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
+              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+                valid_time  (lead, init) object 1956-01-01 00:00:00 ... 2015-01-01 00:00:00
+              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
+              * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
-            Attributes: (12/13)
+                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.1033
+            Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()
-                number_of_initializations:     64
                 number_of_members:             10
-                alignment:                     same_verifs
-                metric:                        pearson_r
-                ...                            ...
-                dim:                           init
+                alignment:                     same_inits
+                metric:                        crps
+                comparison:                    m2o
+                dim:                           member
                 reference:                     ['persistence', 'climatology', 'uninitiali...
                 resample_dim:                  member
                 sig:                           95
@@ -2440,7 +2442,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 or ``XBias_Correction``
 
         Returns:
-            HindcastEnsemble: bias removed HindcastEnsemble.
+            bias removed :py:class:`~climpred.classes.HindcastEnsemble`.
 
         Example:
 

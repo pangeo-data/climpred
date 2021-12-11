@@ -907,11 +907,11 @@ class PredictionEnsemble:
     def remove_seasonality(
         self, seasonality: Union[None, str] = None
     ) -> "PredictionEnsemble":
-        """Remove seasonal cycle from all climpred datasets.
+        """Remove seasonal cycle from :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Args:
             seasonality: Seasonality to be removed. Choose from:
-                ``["season", "month", "dayofyear"]``.
+                ``["season", "month", "weekofyear", "dayofyear"]``.
                 Defaults to ``OPTIONS["seasonality"]``.
 
         Examples:

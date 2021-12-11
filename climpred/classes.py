@@ -1763,7 +1763,7 @@ class HindcastEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="hindcast")
 
     def get_observations(self) -> xr.Dataset:
-        """Return :py:class:`~xarray.Dataset` of the observations/verification data.
+        """Return the :py:class:`~xarray.Dataset` of the observations/verification data.
 
         Returns:
             observations

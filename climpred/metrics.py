@@ -241,6 +241,7 @@ class Metric:
                 passed in metric_kwargs? Some probabilistic metrics allow this.
                 Defaults to ``False``.
             requires_member_dim: Does xskillscore.metric expect a member dimension?
+                Defaults to ``False``.
 
         """
         self.name = name
@@ -3690,8 +3691,8 @@ def _rps(
             category_edges:                [-0.5  0.   0.5  1. ]
 
 
-        Provide ``category_edges`` as ``xr.Dataset`` for category edges varying along
-        dimensions.
+        Provide ``category_edges`` as :py:class:`~xarray.Dataset` for category edges
+        varying along dimensions.
 
         >>> category_edges = (
         ...     xr.DataArray([9.5, 10.0, 10.5, 11.0], dims="category_edge")

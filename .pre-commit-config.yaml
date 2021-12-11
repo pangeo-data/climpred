@@ -57,11 +57,6 @@ repos:
       hooks:
       -   id: doc8
           #args: ["--ignore-path docs/source/api/climpred*.rst ."]
-          #args: ["--ignore D000"]
-  #        args: ["--ignore-path climpred/tests", "--max-line-length 93"]
-      #- --max-line-length 93
-      #- --ignore-path climpred/tests
-
 
   - repo: https://github.com/keewis/blackdoc
     rev: v0.3.4

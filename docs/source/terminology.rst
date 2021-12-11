@@ -9,15 +9,15 @@ how we use them in ``climpred``.
 Simulation Design
 #################
 
-*Hindcast Ensemble*: Ensemble members are initialized from a simulation
-(generally a reconstruction from reanalysis) or an analysis
-(representing the current state of the atmosphere, land, and ocean by assimilation of
-obsevations) at initialization dates and integrated for some lead years
-[Boer2016]_ (:py:class:`~climpred.classes.HindcastEnsemble`).
+*Hindcast Ensemble* (:py:class:`~climpred.classes.HindcastEnsemble`):
+Ensemble members are initialized from a simulation (generally a reconstruction from
+reanalysis) or an analysis (representing the current state of the atmosphere, land, and
+ocean by assimilation of observations) at initialization dates and integrated for some
+lead years [Boer2016]_.
 
-*Perfect Model Experiment*: Ensemble members are initialized from a control
-simulation at randomly chosen initialization dates and integrated for some
-lead years [Griffies1997]_ (:py:class:`~climpred.classes.PerfectModelEnsemble`).
+*Perfect Model Experiment* (:py:class:`~climpred.classes.PerfectModelEnsemble`):
+Ensemble members are initialized from a control simulation at randomly chosen
+initialization dates and integrated for some lead years [Griffies1997]_.
 
 *Reconstruction/Assimilation*: A "reconstruction" is a model solution that uses
 observations in some capacity to approximate historical or current conditions of the

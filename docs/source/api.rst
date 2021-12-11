@@ -74,10 +74,10 @@ Properties
 HindcastEnsemble
 ~~~~~~~~~~~~~~~~
 
-A :py:class:`~climpred.classes.HindcastEnsemble` is a prediction ensemble that is initialized off of some form of
-observations (an assimilation, renanalysis, etc.). Thus, it is anticipated that
-forecasts are verified against observation-like products. Read more about the
-terminology `here <terminology.html>`_.
+A :py:class:`~climpred.classes.HindcastEnsemble` is a prediction ensemble that is
+initialized off of some form of observations (an assimilation, reanalysis, etc.). Thus,
+it is anticipated that forecasts are verified against observation-like products. Read
+more about the terminology `here <terminology.html>`_.
 
 .. autosummary::
     :toctree: api/

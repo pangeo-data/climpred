@@ -54,7 +54,8 @@ class set_options:
     ``climpred_warnings`` : {``True``, ``False``}, default ``True``
         Overwrites all options containing ``"*warn*"``.
 
-    Examples:
+    Examples
+    --------
         You can use ``set_options`` either as a context manager:
 
         >>> kw = dict(

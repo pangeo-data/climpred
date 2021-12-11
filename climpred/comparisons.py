@@ -12,7 +12,7 @@ from .metrics import Metric
 
 
 class Comparison:
-    """Master class for all comparisons."""
+    """Master class for all comparisons. See :ref:`comparisons`."""
 
     def __init__(
         self,
@@ -23,7 +23,7 @@ class Comparison:
         long_name: Optional[str] = None,
         aliases: Optional[List[str]] = None,
     ) -> None:
-        """Comparison initialization.
+        """Comparison initialization See :ref:`comparisons`.
 
         Args:
             name: name of comparison.

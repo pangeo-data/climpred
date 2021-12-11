@@ -198,7 +198,7 @@ def _maybe_member_mean_reduce_dim(
 
 
 class Metric:
-    """Master class for all metrics."""
+    """Master class for all metrics. See :ref:`metrics`."""
 
     def __init__(
         self,
@@ -216,7 +216,7 @@ class Metric:
         allows_logical: bool = False,
         requires_member_dim: bool = False,
     ):
-        """Metric initialization.
+        """Metric initialization. See :ref:`metrics`.
 
         Args:
             name: name of metric.
@@ -241,9 +241,6 @@ class Metric:
                 passed in metric_kwargs? Some probabilistic metrics allow this.
                 Defaults to ``False``.
             requires_member_dim: Does xskillscore.metric expect a member dimension?
-
-        Returns:
-            Metric: metric class Metric.
 
         """
         self.name = name

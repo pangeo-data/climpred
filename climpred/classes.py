@@ -206,8 +206,10 @@ class PredictionEnsemble:
 
         * ``PredictionEnsemble._datasets["initialized"]``
         * ``PredictionEnsemble._datasets["uninitialized"]``
-        * ``PredictionEnsemble._datasets["control"]`` in :py:class:`~climpred.classes.PerfectModelEnsemble`
-        * ``PredictionEnsemble._datasets[observations"]`` in :py:class:`~climpred.classes.HindcastEnsemble`
+        * ``PredictionEnsemble._datasets["control"]`` in
+          :py:class:`~climpred.classes.PerfectModelEnsemble`
+        * ``PredictionEnsemble._datasets[observations"]`` in
+          :py:class:`~climpred.classes.HindcastEnsemble`
 
     """
 
@@ -268,7 +270,7 @@ class PredictionEnsemble:
     def coords(self) -> DatasetCoordinates:
         """Return coordinates of :py:class:`~climpred.classes.PredictionEnsemble`.
 
-        Dictionary of xarray.DataArray objects corresponding to coordinate
+        Dictionary of :py:class:`~xarray.DataArray` objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
 
         See also:
@@ -347,8 +349,8 @@ class PredictionEnsemble:
 
         Mapping from dimension names to block lengths for this dataset's data, or
         None if the underlying data is not a dask array.
-        Cannot be modified directly, but can be modified by calling .chunk().
-        Same as Dataset.chunks.
+        Cannot be modified directly, but can be modified by calling ``.chunk()``.
+        Same as :py:meth:`~xarray.Dataset.chunks`.
 
         See also:
             :py:meth:`~xarray.Dataset.chunksizes`
@@ -480,16 +482,16 @@ class PredictionEnsemble:
             cmap: Name of matplotlib-recognized colorbar. Defaults to `viridis`
                 for :py:class:`~climpred.classes.HindcastEnsemble`
                 and ``tab10`` for :py:class:`~climpred.classes.PerfectModelEnsemble`.
-            x: Name of x-axis. Use ``'time'`` to show observations and
-                hindcasts in real time. Use ``'init'`` to see hindcasts as
-                initializations. For ``x='init'`` only initialized is shown and only
+            x: Name of x-axis. Use ``time`` to show observations and
+                hindcasts in real time. Use ``init`` to see hindcasts as
+                initializations. For ``x=init`` only initialized is shown and only
                 works for :py:class:`~climpred.classes.HindcastEnsemble`.
 
         .. note::
             Alternatively inspect initialized datasets by
-            ``PredictionEnsemble.get_initialized()[v].plot.line(x='time')``
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x=time)``
             to see ``validtime`` on x-axis or
-            ``PredictionEnsemble.get_initialized()[v].plot.line(x='init')``
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x=init)``
             to see ``init`` on x-axis.
 
         Returns:
@@ -624,7 +626,7 @@ class PredictionEnsemble:
         """Allow subsetting variable(s) from :py:class:`~climpred.classes.PredictionEnsemble` as from xr.Dataset.
 
         Args:
-            * varlist: list of names or name of data variable(s) to subselect
+            varlist: list of names or name of data variable(s) to subselect
         """
         if isinstance(varlist, str):
             varlist = [varlist]
@@ -783,7 +785,7 @@ class PredictionEnsemble:
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf` or
                 :py:func:`~climpred.smoothing.temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
-                'goddard2013'. Defaults to None.
+                goddard2013. Defaults to ``None``.
             how: how to smooth temporally. From Choose from ``["mean", "sum"]``.
                 Defaults to ``"mean"``.
             **xesmf_kwargs: kwargs passed to
@@ -998,12 +1000,13 @@ class PredictionEnsemble:
 class PerfectModelEnsemble(PredictionEnsemble):
     """An object for "perfect model" prediction ensembles.
 
-    :py:class:`~climpred.classes.PerfectModelEnsemble` is a sub-class of :py:class:`~climpred.classes.PredictionEnsemble`. It tracks
+    :py:class:`~climpred.classes.PerfectModelEnsemble` is a sub-class of
+    :py:class:`~climpred.classes.PredictionEnsemble`. It tracks
     the control run used to initialize the ensemble for easy computations,
     bootstrapping, etc.
 
     This object is built on ``xarray`` and thus requires the input object to
-    be an xarray.Dataset or :py:class:`~xarray.DataArray`.
+    be an :py:class:`~xarray.Dataset` or :py:class:`~xarray.DataArray`.
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
@@ -1050,18 +1053,18 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Return list of variables to drop when comparing datasets.
 
         This is useful if the two products being compared do not share the same
-        variables. I.e., if the control has ['SST'] and the initialized has
-        ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
+        variables. I.e., if the control has ["SST"] and the initialized has
+        ["SST", "SALT"], this will return a list with ["SALT"] to be dropped
         from the initialized.
 
         Args:
-          init (bool, default True):
-            If `True`, check variables on the initialized.
-            If `False`, check variables on the uninitialized.
+            init:
+                If ``True``, check variables on the initialized.
+                If ``False``, check variables on the uninitialized.
 
         Returns:
-          Lists of variables to drop from the initialized/uninitialized
-          and control Datasets.
+            Lists of variables to drop from the initialized/uninitialized
+            and control Datasets.
         """
         init_str = "initialized" if init else "uninitialized"
         init_vars = list(self._datasets[init_str])
@@ -1495,31 +1498,30 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 replacement. Recommended >= 500.
             resample_dim: dimension to resample from. Defaults to `"member"``.
 
-                - 'member': select a different set of members from hind
-                - 'init': select a different set of initializations from hind
+                - "member": select a different set of members from forecast
+                - "init': select a different set of initializations from forecast
 
             sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
             pers_sig: If not ``None``, the separate significance level for
                 persistence. Defaults to ``None``, or the same significance as ``sig``.
-            groupby: group ``init`` before passing ``initialized``
-                to ``bootstrap``.
+            groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            xr.Dataset with dimensions ``results`` (holding ``verify skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
-            ``persistence`` and/or ``uninitialized``):
-                * results='verify skill', skill='initialized':
+            :py:class:`~xarray.Dataset` with dimensions ``results`` (holding
+            ``verify skill``, ``p``, ``low_ci`` and ``high_ci``) and ``skill``
+            (holding ``initialized``, ``persistence`` and/or ``uninitialized``):
+                * results="verify skill", skill="initialized":
                     mean initialized skill
-                * results='high_ci', skill='initialized':
+                * results="high_ci", skill="initialized":
                     high confidence interval boundary for initialized skill
-                * results='p', skill='uninitialized':
+                * results="p", skill="uninitialized":
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * results='p', skill='persistence':
+                * results="p", skill="persistence":
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistenceistence
                     simulations is smaller or equal to zero based on
@@ -1630,16 +1632,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
 class HindcastEnsemble(PredictionEnsemble):
     """An object for initialized prediction ensembles.
 
-    :py:class:`~climpred.classes.HindcastEnsemble` is a sub-class of :py:class:`~climpred.classes.PredictionEnsemble`. It tracks a
+    :py:class:`~climpred.classes.HindcastEnsemble` is a sub-class of
+    :py:class:`~climpred.classes.PredictionEnsemble`. It tracks a
     verification dataset (i.e., observations) associated with the hindcast ensemble
     for easy computation across multiple variables.
 
-    This object is built on :py:class:`~xarray.Dataset` and thus requires the input object to
-    be an xarray.Dataset or :py:class:`~xarray.DataArray`.
+    This object is built on :py:class:`~xarray.Dataset` and thus requires the input
+    object to be an :py:class:`~xarray.Dataset` or :py:class:`~xarray.DataArray`.
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
-        """Create :py:class:`~climpred.classes.HindcastEnsemble` from initialized prediction ensemble output.
+        """Create ``HindcastEnsemble`` from initialized prediction ensemble output.
 
         Args:
           initialized: initialized prediction ensemble output.
@@ -1674,8 +1677,8 @@ class HindcastEnsemble(PredictionEnsemble):
         When comparing initialized/uninitialized to observations.
 
         This is useful if the two products being compared do not share the same
-        variables. I.e., if the observations have ['SST'] and the initialized has
-        ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
+        variables. I.e., if the observations have ["SST"] and the initialized has
+        ["SST", "SALT"], this will return a list with ["SALT"] to be dropped
         from the initialized.
 
         Args:
@@ -1837,13 +1840,13 @@ class HindcastEnsemble(PredictionEnsemble):
                 One or more of ``["uninitialized", "persistence", "climatology"]``.
                 Defaults to ``None`` meaning no reference.
             date2num_units: passed to ``cftime.date2num`` as units
-            return_xr: if ``True`` return xarray.DataArray else plot
+            return_xr: if ``True`` return :py:class:`~xarray.DataArray` else plot
             cmap: color palette
             edgecolors: color of the edges in the plot
             **plot_kwargs: arguments passed to ``plot``.
 
-        Return:
-            xarray.DataArray if return_xr else plot
+        Returns:
+            :py:class:`~xarray.DataArray` if ``return_xr`` else plot
 
         Example:
             >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
@@ -2003,7 +2006,7 @@ class HindcastEnsemble(PredictionEnsemble):
             the verification (``"e2o"``) over the same initializations
             (``"same_inits"``) for all leads reducing dimension ``init`` while also
             calculating reference skill for the ``"persistence"``, ``"climatology"``
-            and ``'uninitialized'`` forecast.
+            and ``"uninitialized"`` forecast.
 
             >>> HindcastEnsemble.verify(
             ...     metric="rmse",
@@ -2213,7 +2216,7 @@ class HindcastEnsemble(PredictionEnsemble):
             dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
-                but should not contain ``member`` when ``comparison='e2o'``. Defaults to
+                but should not contain ``member`` when ``comparison="e2o"``. Defaults to
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
             reference: Type of reference forecasts with which to verify against.
                 One or more of ``["uninitialized", "persistence", "climatology"]``.
@@ -2234,29 +2237,29 @@ class HindcastEnsemble(PredictionEnsemble):
                 replacement. Recommended >= 500.
             sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
-            resample_dim (str or list): dimension to resample from. default: 'member'.
+            resample_dim: dimension to resample from. Default: ``"member"``.
 
-                - 'member': select a different set of members from hind
-                - 'init': select a different set of initializations from hind
+                - ``"member"``: select a different set of members from hind
+                - ``"init"``: select a different set of initializations from hind
 
-            pers_sig: If not None, the separate significance level for persistence.
+            pers_sig: If not ``None``, the separate significance level for persistence.
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            xr.Dataset with dimensions ``results`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
+            :py:class:`~xarray.Dataset` with dimensions ``results`` (holding ``skill``,
+            ``p``, ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
-                * results='verify skill', skill='initialized':
+                * results="verify skill", skill="initialized":
                     mean initialized skill
-                * results='high_ci', skill='initialized':
+                * results="high_ci", skill="initialized":
                     high confidence interval boundary for initialized skill
-                * results='p', skill='uninitialized':
+                * results="p", skill="uninitialized":
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * results='p', skill='persistence':
+                * results="p", skill="persistence":
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
@@ -2397,7 +2400,7 @@ class HindcastEnsemble(PredictionEnsemble):
                   each lead should be based on the same set of verification dates.
 
             how: what kind of bias removal to perform.
-                Defaults to 'additive_mean'. Select from:
+                Defaults to ``"additive_mean"``. Select from:
 
                 - ``"additive_mean"``: correcting the mean forecast additively
                 - ``"multiplicative_mean"``: correcting the mean forecast
@@ -2425,16 +2428,16 @@ class HindcastEnsemble(PredictionEnsemble):
                     (climpred default).
                 - ``"unfair-cv"```: overlapping `train` and `test` except for current
                     `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
-                    (set `cv='LOO'`).
+                    (set `cv="LOO"`).
 
             train_init: Define initializations for training
-                when ``alignment='same_inits/maximize'``.
+                when ``alignment="same_inits/maximize"``.
             train_time: Define time for training
-                when ``alignment='same_verif'``.
-            cv: Only relevant when `train_test_split='unfair-cv'`.
-                Defaults to False.
+                when ``alignment="same_verif"``.
+            cv: Only relevant when `train_test_split="unfair-cv"`.
+                Defaults to ``False``.
 
-                - True/'LOO': Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                - True/"LOO": Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
                 - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.

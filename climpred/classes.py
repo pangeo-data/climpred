@@ -1108,7 +1108,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         Returns:
             ``uninitialzed`` resampled from ``control`` added
-            to:py:class:`~climpred.classes.PerfectModelEnsemble`
+            to :py:class:`~climpred.classes.PerfectModelEnsemble`
         """
         has_dataset(
             self._datasets["control"], "control", "generate an uninitialized ensemble."

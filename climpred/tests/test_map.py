@@ -50,6 +50,6 @@ def test_PredictionEnsemble_map_dim_or(hindcast_hist_obs_1d):
 def test_PredictionEnsemble_map_dim_or_fails_if_both_dims_in_dataset(
     hindcast_hist_obs_1d,
 ):
-    """Tests that PredictionEnsemble with dim0_or_dim1 as kwargs fails if both dims in any dataset."""
+    """Tests PredictionEnsemble dim0_or_dim1 in kwargs fails if both in all dataset."""
     with pytest.raises(ValueError, match="cannot be both in"):
         hindcast_hist_obs_1d.map(rm_poly, dim="init_or_lead", deg=2)

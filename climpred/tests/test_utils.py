@@ -1,3 +1,5 @@
+"""Test utils.py"""
+
 import cftime
 import numpy as np
 import pandas as pd
@@ -5,11 +7,8 @@ import pytest
 import xarray as xr
 from xarray.testing import assert_allclose
 
-from climpred.bootstrap import bootstrap_perfect_model
 from climpred.comparisons import PM_COMPARISONS, __m2c
 from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
-from climpred.prediction import compute_hindcast, compute_perfect_model
-from climpred.tutorial import load_dataset
 from climpred.utils import (
     convert_time_index,
     find_start_dates_for_given_init,

@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import pytest
 import xarray as xr
 
@@ -78,9 +79,6 @@ def test_PerfectModelEnsemble_time_resolution_verify(HindcastEnsemble_time_resol
     """Test that PerfectModelEnsemble.verify() in any lead time resolution works."""
     pm = PerfectModelEnsemble(HindcastEnsemble_time_resolution.get_initialized())
     assert pm.verify(**PerfectModelEnsemble_verify_kw).notnull().any()
-
-
-import pandas as pd
 
 
 @pytest.mark.parametrize(

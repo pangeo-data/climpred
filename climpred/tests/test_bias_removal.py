@@ -12,7 +12,6 @@ from climpred.constants import (
     XCLIM_BIAS_CORRECTION_METHODS,
 )
 from climpred.options import OPTIONS
-from climpred.testing import assert_PredictionEnsemble
 
 from . import requires_bias_correction, requires_xclim
 
@@ -39,7 +38,7 @@ def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):
 @requires_bias_correction
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
-    """Test HindcastEnsemble.remove_bias yields different results for different seasonality settings."""
+    """Test HindcastEnsemble.remove_bias yields different results for seasonality."""
     verify_kwargs = dict(
         metric="rmse", dim="init", comparison="e2o", alignment="same_inits", skipna=True
     )
@@ -86,20 +85,10 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
         # init only slighty cut due to alignment
         for c in hindcast.coords:
-            print(
-                "check coord",
-                c,
-                "hindcast_bias_removed.coords",
-                hindcast_bias_removed.coords,
-            )
             if c in ["init", "valid_time"]:
-                assert (
-                    hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
-                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
+                assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
             else:
-                assert (
-                    hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
-                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
+                assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
 
     with set_options(seasonality=seasonality):
         metric = "rmse"

@@ -1,10 +1,8 @@
+"""Test compute_hindcast."""
+
 import dask
-import numpy as np
 import pytest
 
-from climpred.bootstrap import bootstrap_hindcast
-from climpred.comparisons import HINDCAST_COMPARISONS
-from climpred.constants import CLIMPRED_DIMS
 from climpred.prediction import compute_hindcast
 from climpred.reference import compute_persistence
 

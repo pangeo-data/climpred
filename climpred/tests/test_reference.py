@@ -23,7 +23,7 @@ def test_HindcastEnsemble_verify_reference(
 def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
     perfectModelEnsemble_initialized_control, comparison
 ):
-    """Test compute_persistence_from_first_lead started with PerfectModel_persistence_from_initialized_lead_0."""
+    """Test compute_persistence_from_first_lead vs compute_persistence."""
     kw = dict(
         metric="mse",
         comparison=comparison,

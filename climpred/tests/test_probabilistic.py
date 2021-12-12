@@ -1,10 +1,7 @@
 import numpy as np
 import pytest
 import xarray as xr
-from scipy.stats import norm
 
-from climpred import HindcastEnsemble
-from climpred.bootstrap import bootstrap_hindcast, bootstrap_perfect_model
 from climpred.comparisons import (
     NON_PROBABILISTIC_PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,
@@ -118,9 +115,7 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
 def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
     perfectModelEnsemble_initialized_control, metric, comparison, reference
 ):
-    """
-    Checks that PerfectModelEnsemble.verify() and PerfectModelEnsemble.bootstrap() works without breaking for all probabilistic metrics.
-    """
+    """Test PredictionEnsemble.verify/bootstrap() works for probabilistic metrics."""
     pm = perfectModelEnsemble_initialized_control.isel(lead=range(3), init=range(5))
     kwargs = {
         "comparison": comparison,

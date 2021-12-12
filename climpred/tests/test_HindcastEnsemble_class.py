@@ -1,10 +1,8 @@
 import pytest
 import xarray as xr
 
-from climpred import HindcastEnsemble, set_options
+from climpred import HindcastEnsemble
 from climpred.exceptions import CoordinateError, DimensionError
-from climpred.options import OPTIONS
-from climpred.utils import convert_time_index
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
@@ -221,7 +219,11 @@ def test_verify_reference_same_dims(hindcast_hist_obs_1d, metric):
 
 
 def test_HindcastEnsemble_multidim_initialized_lessdim_verif(hindcast_hist_obs_1d):
-    """Test to see if HindcastEnsemble allow broadcast over dimensions in initialized but not in observations, e.g. model dim which is not available in observations."""
+    """
+    Test HindcastEnsemble allow broadcast over dimensions in initialized only.
+
+    But not in observations, e.g. model dim which is not available in observations.
+    """
     initialized = hindcast_hist_obs_1d.get_initialized()
     obs = hindcast_hist_obs_1d.get_observations()
     hind = HindcastEnsemble(
@@ -234,7 +236,7 @@ def test_HindcastEnsemble_multidim_initialized_lessdim_verif(hindcast_hist_obs_1
 
 
 def test_HindcastEnsemble_multidim_verif_lessdim_initialized(hindcast_hist_obs_1d):
-    """Test if HindcastEnsemble initialization fails if observations contains more dims than initialized."""
+    """Test HindcastEnsemble.__init__ fails if obs has more dims than initialized."""
     initialized = hindcast_hist_obs_1d.get_initialized()
     obs = hindcast_hist_obs_1d.get_observations()
     with pytest.raises(
@@ -256,7 +258,7 @@ def test_HindcastEnsemble_multidim_verif_lessdim_initialized(hindcast_hist_obs_1
 def test_HindcastEnsemble_instantiating_standard_name(
     da_lead, dim, new_dim, cf_standard_name
 ):
-    """Instantiating a HindcastEnsemble without init dim only works if matching CF standard name is set."""
+    """Test PredictionEnsemble without init only works with matching standard name."""
     init = (
         da_lead.to_dataset(name="var").expand_dims("member").assign_coords(member=[1])
     )
@@ -268,7 +270,7 @@ def test_HindcastEnsemble_instantiating_standard_name(
     if dim != "member":  # member not required
         with pytest.raises(
             DimensionError,
-            match="Your PredictionEnsemble object must contain the following dimensions",
+            match="PredictionEnsemble object must contain the following dimensions",
         ):
             HindcastEnsemble(init)
 
@@ -301,7 +303,7 @@ def test_fractional_leads_360_day(hind_ds_initialized_1d, lead_freq):
 def test_fractional_leads_lower_than_month_lead_units(
     hind_ds_initialized_1d, lead_freq, calendar
 ):
-    """Test that lead can also contain floats when lead units is lower or equal to weeks'."""
+    """Test that lead can contain floats when lead units is lower or equal to weeks'."""
     hind_ds_initialized_1d["init"] = xr.cftime_range(
         start=str(hind_ds_initialized_1d.init[0].values),
         freq="YS",
@@ -314,7 +316,7 @@ def test_fractional_leads_lower_than_month_lead_units(
 
 
 def test_fractional_leads_fails(hind_ds_initialized_1d):
-    """Test that fractional leads fail for normal calendars and lead units in larger than days."""
+    """Test float leads fail for normal calendars and lead units in larger than days."""
     with xr.set_options(keep_attrs=True):
         hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
     with pytest.raises(CoordinateError, match="Require integer"):

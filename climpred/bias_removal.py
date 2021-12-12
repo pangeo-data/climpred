@@ -26,6 +26,8 @@ except ImportError:
 
 
 def sub(a, b):
+    print(a, b)
+    # print(a.coords,a.dims,b.coords,b.dims)
     return a - b
 
 
@@ -67,16 +69,17 @@ def _mean_bias_removal_func(hind, bias, dim, how):
     """Quick removal of mean bias over all initializations without cross validation.
 
     Args:
-        hind (xr.object): hindcast.
-        bias (xr.object): bias.
+        hind (xr.Dataset): hindcast.
+        bias (xr.Dataset): bias.
         dim (str): Time dimension name in bias.
 
     Returns:
-        xr.object: bias removed hind
+        xr.Dataset: bias removed hind
 
     """
     how_operator = sub if how == "additive" else div
     seasonality = OPTIONS["seasonality"]
+    print(hind.dims, bias.dims, dim, seasonality)
 
     with xr.set_options(keep_attrs=True):
         if seasonality == "weekofyear":
@@ -100,13 +103,13 @@ def _multiplicative_std_correction(hind, spread, dim, obs=None):
     """Quick removal of std bias over all initializations without cross validation.
 
     Args:
-        hind (xr.object): hindcast.
-        spread (xr.object): model spread.
+        hind (xr.Dataset): hindcast.
+        spread (xr.Dataset): model spread.
         dim (str): Time dimension name in bias.
-        obs (xr.object): observations
+        obs (xr.Dataset): observations
 
     Returns:
-        xr.object: bias removed hind
+        xr.Dataset: bias removed hind
 
     """
     seasonality = OPTIONS["seasonality"]
@@ -152,13 +155,13 @@ def _std_multiplicative_bias_removal_func_cv(hind, spread, dim, obs, cv="LOO"):
         the following one.
 
     Args:
-        hind (xr.object): hindcast.
-        bias (xr.object): bias.
+        hind (xr.Dataset): hindcast.
+        bias (xr.Dataset): bias.
         dim (str): Time dimension name in bias.
         how (str): additive or multiplicative bias.
 
     Returns:
-        xr.object: bias removed hind
+        xr.Dataset: bias removed hind
 
     Reference:
         * Jolliffe, Ian T., and David B. Stephenson. Forecast Verification: A
@@ -219,13 +222,13 @@ def _mean_bias_removal_func_cv(hind, bias, dim, how, cv="LOO"):
         the following one.
 
     Args:
-        hind (xr.object): hindcast.
-        bias (xr.object): bias.
+        hind (xr.Dataset): hindcast.
+        bias (xr.Dataset): bias.
         dim (str): Time dimension name in bias.
         how (str): additive or multiplicative bias.
 
     Returns:
-        xr.object: bias removed hind
+        xr.Dataset: bias removed hind
 
     Reference:
         * Jolliffe, Ian T., and David B. Stephenson. Forecast Verification: A

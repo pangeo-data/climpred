@@ -1,3 +1,5 @@
+"""Test bootstrap.py."""
+
 import dask
 import numpy as np
 import pytest
@@ -14,8 +16,7 @@ from climpred.bootstrap import (
     bootstrap_hindcast,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
-from climpred.comparisons import HINDCAST_COMPARISONS
-from climpred.constants import CONCAT_KWARGS, VALID_ALIGNMENTS
+from climpred.constants import CONCAT_KWARGS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
 

@@ -1,4 +1,4 @@
-import pytest
+"""Test relative_entropy.py"""
 
 from climpred.graphics import plot_relative_entropy
 from climpred.relative_entropy import (
@@ -7,11 +7,6 @@ from climpred.relative_entropy import (
 )
 
 from . import requires_eofs
-
-try:
-    from eofs.xarray import Eof
-except ImportError:
-    pass
 
 
 @requires_eofs

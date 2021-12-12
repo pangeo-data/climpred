@@ -1,7 +1,6 @@
 """Statistical functions to diagnose potential predictability due to variability."""
 
-import warnings
-from typing import Any, Dict, List, Union
+from typing import Any, List, Union
 
 import numpy as np
 import xarray as xr

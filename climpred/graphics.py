@@ -5,14 +5,13 @@ from typing import Optional, Tuple, Union
 import cftime
 import numpy as np
 import xarray as xr
-from xarray.coding.times import infer_calendar_name
 
 from .alignment import return_inits_and_verif_dates
 from .checks import DimensionError
 from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
-from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
-from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
+from .metrics import ALL_METRICS
+from .utils import get_metric_class
 
 try:
     import matplotlib as mpl

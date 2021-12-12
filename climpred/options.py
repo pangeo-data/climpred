@@ -31,11 +31,11 @@ class set_options:
 
     Parameters
     ----------
-    ``seasonality`` : {``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``}, default: ``"month"``
+    ``seasonality`` : {``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``}, default: ``"month"`` # noqa: E501
         Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
         Used in ``reference=climatology`` and
         :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-    ``PerfectModel_persistence_from_initialized_lead_0`` : {``True``, ``False``}, default ``False``
+    ``PerfectModel_persistence_from_initialized_lead_0`` : {``True``, ``False``}, default ``False`` # noqa: E501
         Which persistence function to use in
         ``PerfectModelEnsemble.verify/bootstrap(reference="persistence")``.
         If ``False`` use :py:func:`~climpred.reference.compute_persistence`.

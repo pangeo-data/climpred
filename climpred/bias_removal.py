@@ -4,9 +4,8 @@ import warnings
 import numpy as np
 import pandas as pd
 import xarray as xr
-from xskillscore.core.utils import suppress_warnings
 
-from .constants import BIAS_CORRECTION_BIAS_CORRECTION_METHODS, GROUPBY_SEASONALITIES
+from .constants import GROUPBY_SEASONALITIES
 from .metrics import Metric
 from .options import OPTIONS
 from .utils import (
@@ -50,9 +49,11 @@ def leave_one_out(bias, dim):
 
 
 def leave_one_out_drop(bias, dim):
-    """Leave-one-out creating a new dimension 'sample'.
+    """
+    Leave-one-out creating a new dimension ``sample``.
 
-    See also: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html."""
+    See also: https://scikit-learn.org/stable/modules/generated/sklearn.model_selection.LeaveOneOut.html. # noqa: E501
+    """
     bias_nan = []
     for i in range(bias[dim].size):
         bias_nan.append(bias.drop_isel({dim: i}).rename({dim: "sample"}).drop("sample"))
@@ -452,7 +453,8 @@ def bias_correction(
         datasets. Implemented methods include:
         - quantile_mapping:
             https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168)
-        - modified quantile mapping: https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub
+        - modified quantile mapping:
+            https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub # noqa: E501
         - scaled distribution mapping (Gamma and Normal Corrections):
             https://www.hydrol-earth-syst-sci.net/21/2649/2017/
         """

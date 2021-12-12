@@ -19,7 +19,6 @@ from typing import (
 import cf_xarray  # noqa
 import numpy as np
 import xarray as xr
-from dask import is_dask_collection
 from IPython.display import display_html
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
@@ -56,11 +55,9 @@ from .constants import (
     CONCAT_KWARGS,
     CROSS_VALIDATE_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
-    M2M_MEMBER_DIM,
     XCLIM_BIAS_CORRECTION_METHODS,
 )
 from .exceptions import CoordinateError, DimensionError, VariableError
-from .logging import log_compute_hindcast_header
 from .metrics import Metric
 from .options import OPTIONS
 from .prediction import (
@@ -164,7 +161,7 @@ def _display_metadata(self) -> str:
 
 
 def _display_metadata_html(self) -> str:
-    """Print the contents of the :py:class:`~climpred.classes.PredictionEnsemble` as html."""
+    """Print contents of :py:class:`~climpred.classes.PredictionEnsemble` as html."""
     header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets["initialized"])
@@ -623,7 +620,11 @@ class PredictionEnsemble:
         return self._math(other, operator="div")
 
     def __getitem__(self, varlist: Union[str, List[str]]) -> "PredictionEnsemble":
-        """Allow subsetting variable(s) from :py:class:`~climpred.classes.PredictionEnsemble` as from xr.Dataset.
+        """Allow subsetting variable(s) from
+
+        Allow subsetting variable(s) from
+        :py:class:`~climpred.classes.PredictionEnsemble` as from
+        :py:class:`~xarray.Dataset`.
 
         Args:
             varlist: list of names or name of data variable(s) to subselect
@@ -652,7 +653,7 @@ class PredictionEnsemble:
         """
 
         def wrapper(*args, **kwargs):
-            """Apply arbitrary function to all datasets in :py:class:`~climpred.classes.PerfectModelEnsemble`.
+            """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.
 
             Got this from: https://stackoverflow.com/questions/41919499/
             how-to-call-undefined-methods-sequentially-in-python-class
@@ -733,7 +734,7 @@ class PredictionEnsemble:
     def _apply_func(
         self, func: Callable[..., xr.Dataset], *args: Any, **kwargs: Any
     ) -> "PredictionEnsemble":
-        """Apply a function to all datasets in a :py:class:`~climpred.classes.PerfectModelEnsemble`."""
+        """Apply a function to all datasets in a ``PerfectModelEnsemble``."""
         # Create temporary copy to modify to avoid inplace operation.
         # isnt that essentially the same as .map(func)?
         datasets = self._datasets.copy()
@@ -777,7 +778,7 @@ class PredictionEnsemble:
         how: str = "mean",
         **xesmf_kwargs: str,
     ):
-        """Smooth in space and/or aggregate in time :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Smooth in space and/or aggregate in time in ``PredictionEnsemble``.
 
         Args:
             smooth_kws: Dictionary to specify the dims to
@@ -2266,9 +2267,11 @@ class HindcastEnsemble(PredictionEnsemble):
                     bootstrapping with replacement.
 
         Example:
-            Continuous Ranked Probability Score (``"crps"``) comparing every member forecast to the verification (``"m2o"``) over the same
-            initializations (``"same_inits"``) for all leads reducing dimensions
-            ``member`` 50 times after resampling ``member`` dimension with replacement. Note that dimension ``init`` remains.
+            Continuous Ranked Probability Score (``"crps"``) comparing every member
+            forecast to the verification (``"m2o"``) over the same initializations
+            (``"same_inits"``) for all leads reducing dimension ``member`` 50 times
+            after resampling ``member`` dimension with replacement. Note that dimension
+            ``init`` remains.
             Also calculate reference skill for the ``"persistence"``, ``"climatology"``
             and ``"uninitialized"`` forecast and compare whether initialized skill is
             better than reference skill: Returns verify skill, probability that
@@ -2639,7 +2642,7 @@ class HindcastEnsemble(PredictionEnsemble):
         else:
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from "
-                f" {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."
+                f" {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."  # noqa: E501
             )
 
         if train_test_split in ["unfair-cv"]:

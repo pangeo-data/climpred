@@ -1,6 +1,6 @@
 """Spatial/temporal smoothing implemented in PredictionEnsemble.smooth()."""
 
-from typing import Any, Dict, Optional
+from typing import Dict, Optional
 
 import numpy as np
 import xarray as xr
@@ -23,7 +23,7 @@ def spatial_smoothing_xesmf(
 ) -> xr.Dataset:
     """Quick regridding function.
 
-    Adapted from https://github.com/JiaweiZhuang/xESMF/pull/27/files#diff-b537ef68c98c2ec11e64e4803fe4a113R105.
+    Adapted from https://github.com/JiaweiZhuang/xESMF/pull/27/files#diff-b537ef68c98c2ec11e64e4803fe4a113R105.  # noqa: E501
 
     Args:
         ds: Contain input and output grid coordinates.

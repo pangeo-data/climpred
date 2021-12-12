@@ -1,7 +1,6 @@
 """Common checks for climpred operations."""
 
 import warnings
-from functools import wraps
 from typing import List, Optional, Union
 
 import dask
@@ -10,7 +9,6 @@ import xarray as xr
 from .constants import (
     CF_LONG_NAMES,
     CF_STANDARD_NAMES,
-    CLIMPRED_ENSEMBLE_DIMS,
     VALID_ALIGNMENTS,
     VALID_LEAD_UNITS,
     VALID_REFERENCES,

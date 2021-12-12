@@ -1,5 +1,5 @@
 """Reference forecasts: climatology, persistence, uninitialized."""
-import warnings
+
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -11,16 +11,14 @@ from .comparisons import (
     ALL_COMPARISONS,
     COMPARISON_ALIASES,
     HINDCAST_COMPARISONS,
-    PM_COMPARISONS,
     Comparison,
     __e2c,
 )
-from .constants import CLIMPRED_DIMS, M2M_MEMBER_DIM
+from .constants import M2M_MEMBER_DIM
 from .metrics import (
     ALL_METRICS,
     DETERMINISTIC_HINDCAST_METRICS,
     METRIC_ALIASES,
-    PM_METRICS,
     Metric,
     _rename_dim,
 )

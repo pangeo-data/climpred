@@ -1,6 +1,5 @@
 """Utility functions used by other modules."""
 
-import datetime
 import logging
 import warnings
 from typing import List, Union
@@ -31,15 +30,15 @@ def add_attrs_to_climpred_coords(results):
                 "description": "new coordinate created by .bootstrap()",
                 "verify skill": "skill from verify",
                 "p": "probability that reference performs better than initialized",
-                "low_ci": "lower confidence interval threshold based on resampling with replacement",
-                "high_ci": "higher confidence interval threshold based on resampling with replacement",
+                "low_ci": "lower confidence interval threshold based on resampling with replacement",  # noqa: E501
+                "high_ci": "higher confidence interval threshold based on resampling with replacement",  # noqa: E501
             }
         )
     if "skill" in results.coords:
         results["skill"] = results["skill"].assign_attrs(
             {
-                "description": "new dimension prediction skill of initialized and reference forecasts created by .verify() or .bootstrap()",
-                "documentation": f"https://climpred.readthedocs.io/en/v{version}/reference_forecast.html",
+                "description": "new dimension prediction skill of initialized and reference forecasts created by .verify() or .bootstrap()",  # noqa: E501
+                "documentation": f"https://climpred.readthedocs.io/en/v{version}/reference_forecast.html",  # noqa: E501
             }
         )
     if "skill" in results.dims:
@@ -604,7 +603,9 @@ def my_shift(init, lead):
     if lead_unit in ["years", "seasons", "months"] and "360" not in init_calendar:
         if int(lead) != float(lead):
             raise CoordinateError(
-                f'Require integer leads if lead.attrs["units"]="{lead_unit}" in ["years", "seasons", "months"] and calendar="{init_calendar}" not "360_day".'
+                f'Require integer leads if lead.attrs["units"]="{lead_unit}" in '
+                f'["years", "seasons", "months"] and calendar="{init_calendar}" '
+                'not "360_day".'
             )
         lead = int(lead)
 
@@ -642,7 +643,8 @@ def my_shift(init, lead):
                         lead_freq = lead_freq + "-" + init_freq.split("-")[-1]
         else:
             raise ValueError(
-                f"could not shift init={init} in calendar={init_calendar} by lead={lead} {lead_unit}"
+                f"could not shift init={init} in calendar={init_calendar} by "
+                f" lead={lead} {lead_unit}"
             )
         return init.shift(lead, lead_freq)
     else:  # lower freq

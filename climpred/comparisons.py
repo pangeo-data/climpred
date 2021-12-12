@@ -1,6 +1,6 @@
 """Comparisons: How to compare forecast with verification."""
 
-from typing import Any, Callable, List, Optional, Tuple, Union
+from typing import Any, Callable, List, Optional, Tuple
 
 import dask
 import numpy as np

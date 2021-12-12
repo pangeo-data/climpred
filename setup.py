@@ -29,7 +29,7 @@ extras_require = {
     "io": ["netcdf4"],
     "regridding": [
         "xesmf"
-    ],  # for installation see https://pangeo-xesmf.readthedocs.io/en/latest/installation.html
+    ],  # for installation see https://pangeo-xesmf.readthedocs.io/
     "relative_entropy": ["eofs"],
     "vwmp": ["xrft"],
 }

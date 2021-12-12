@@ -1,6 +1,5 @@
 """Testing checks.py."""
 
-import numpy as np
 import pytest
 
 from climpred.checks import (

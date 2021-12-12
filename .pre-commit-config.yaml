@@ -45,21 +45,6 @@ repos:
             numpy,
           ]
 
-  -   repo: https://github.com/pycqa/pydocstyle
-      rev: 6.1.1
-      hooks:
-      -   id: pydocstyle
-          # args: ['--match="(?!test_).*\.py"'] # ignoring tests
-
-          # , "--convention=google"] # https://google.github.io/styleguide/pyguide.html#Comments
-
-  -   repo: https://github.com/pycqa/doc8
-      rev: 0.10.1
-      hooks:
-      -   id: doc8
-
-          #args: ["--ignore-path docs/source/api/climpred*.rst ."]
-
   - repo: https://github.com/keewis/blackdoc
     rev: v0.3.4
     hooks:

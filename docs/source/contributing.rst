@@ -160,13 +160,10 @@ Preparing Pull Requests
    ``pre-commit`` also runs:
     * `mypy <http://mypy-lang.org/>`_ for static type checking on
       `type hints <https://docs.python.org/3/library/typing.html>`_.
-    * `doc8 <https://github.com/PyCQA/doc8>`_ for ``.rst`` files
     * `isort <https://pycqa.github.io/isort/>`_ sorting imports
     * `black <https://black.readthedocs.io/en/stable/>`_ code formatting
-    * `flake8 <https://flake8.pycqa.org/en/latest/>`
-    * `pydocstyle <https://github.com/pycqa/pydocstyle>`_ docstring style
-      checker
-    * `blackdoc <https://blackdoc.readthedocs.io/en/latest/>` docstring code
+    * `flake8 <https://flake8.pycqa.org/en/latest/>`_
+    * `blackdoc <https://blackdoc.readthedocs.io/en/latest/>`_ docstring code
       formatter
 
 

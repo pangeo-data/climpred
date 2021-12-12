@@ -2,6 +2,7 @@
 What's New
 ==========
 
+
 .. ipython:: python
     :suppress:
 
@@ -769,7 +770,8 @@ Documentation
 
 Bug Fixes
 ---------
-- Fixed `m2m` broken comparison issue and removed correction (:pr:`290`) `Aaron Spring`_.
+- Fixed `m2m` broken comparison issue and removed correction.
+  (:pr:`290`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------

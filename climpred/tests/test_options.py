@@ -3,10 +3,7 @@ import pytest
 import climpred
 
 
-@pytest.mark.parametrize(
-    "cross_validate", [False, True]
-)  # pytest.param(True, marks=pytest.mark.xfail)]
-# )
+@pytest.mark.parametrize("cross_validate", [False, True])
 def test_seasonality_remove_bias(hindcast_recon_1d_dm, cross_validate):
     """Test the climpred.set_option(seasonality) changes bias reduction."""
     hindcast = hindcast_recon_1d_dm

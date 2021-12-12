@@ -953,6 +953,9 @@ class PredictionEnsemble:
         When more than one chunk to show how to circumvent ``xskillscore`` chunking
         ``ValueError``.
         """
+        print(type(self))
+        if self is None:
+            return
         suggest_one_chunk = []
         for d in self.chunks:
             if d in ["time", "init", "member"]:

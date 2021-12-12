@@ -26,8 +26,6 @@ except ImportError:
 
 
 def sub(a, b):
-    print(a, b)
-    # print(a.coords,a.dims,b.coords,b.dims)
     return a - b
 
 
@@ -79,7 +77,6 @@ def _mean_bias_removal_func(hind, bias, dim, how):
     """
     how_operator = sub if how == "additive" else div
     seasonality = OPTIONS["seasonality"]
-    print(hind.dims, bias.dims, dim, seasonality)
 
     with xr.set_options(keep_attrs=True):
         if seasonality == "weekofyear":
@@ -385,10 +382,12 @@ def gaussian_bias_removal(
             bias_removal_func = _std_multiplicative_bias_removal_func_cv
             bias_removal_func_kwargs = dict(obs=hindcast.get_observations(), cv=cv)
 
+    hind = hindcast_test.get_initialized()
+    hind, bias = xr.align(hind, bias)
+
     bias_removed_hind = bias_removal_func(
-        hindcast_test.get_initialized(), bias, "init", **bias_removal_func_kwargs
-    )
-    bias_removed_hind = bias_removed_hind.squeeze(drop=True)
+        hind, bias, "init", **bias_removal_func_kwargs
+    ).squeeze(drop=True)
 
     # remove groupby label from coords
     for c in GROUPBY_SEASONALITIES + ["skill"]:

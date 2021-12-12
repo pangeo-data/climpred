@@ -1,11 +1,15 @@
+"""Implement climpred.tutorial.load_dataset to load analysis ready datasets."""
+
 import hashlib
 import os as _os
 import urllib
+from typing import Dict, Optional
 from urllib.request import urlretrieve as _urlretrieve
 
+import xarray as xr
 from xarray.backends.api import open_dataset as _open_dataset
 
-_default_cache_dir = _os.sep.join(("~", ".climpred_data"))
+_default_cache_dir: str = _os.sep.join(("~", ".climpred_data"))
 
 aliases = [
     "MPI-control-1D",
@@ -73,8 +77,8 @@ file_descriptions = [
     "observed RMM with interannual variablity included",
     "S2S ECMWF on-the-fly hindcasts from the S2S Project for Germany",
     "CPC/ERA5 observations for S2S forecasts over Germany",
-    "monthly multi-member hindcasts of sea-surface temperature averaged over the Nino3.4 region from the NMME project from IRIDL",
-    "monthly Reyn_SmithOIv2 sea-surface temperature observations averaged over the Nino3.4 region",
+    "monthly multi-member hindcasts of sea-surface temperature averaged over the Nino3.4 region from the NMME project from IRIDL",  # noqa: E501
+    "monthly Reyn_SmithOIv2 sea-surface temperature observations averaged over the Nino3.4 region",  # noqa: E501
 ]
 
 FILE_ALIAS_DICT = dict(zip(aliases, true_file_names))
@@ -89,8 +93,7 @@ def _file_md5_checksum(fname):
 
 
 def _get_datasets():
-    """Prints out available datasets for the user to load if no args are
-    given."""
+    """Print out available datasets for the user to load if no args are given."""
     for key in FILE_DESCRIPTIONS.keys():
         print(f"'{key}': {FILE_DESCRIPTIONS[key]}")
 
@@ -102,8 +105,7 @@ def _cache_all():
 
 
 def _initialize_proxy(proxy_dict):
-    """Opens a proxy for firewalled servers so that the downloads can go
-    through.
+    """Open a proxy for firewalled servers so that the downloads can go through.
 
     Args:
         proxy_dict (dictionary): Keys are either 'http' or 'https' and
@@ -118,42 +120,38 @@ def _initialize_proxy(proxy_dict):
 
 
 def load_dataset(
-    name=None,
-    cache=True,
-    cache_dir=_default_cache_dir,
-    github_url="https://github.com/pangeo-data/climpred-data",
-    branch="master",
-    extension=None,
-    proxy_dict=None,
+    name: Optional[str] = None,
+    cache: bool = True,
+    cache_dir: str = _default_cache_dir,
+    github_url: str = "https://github.com/pangeo-data/climpred-data",
+    branch: str = "master",
+    extension: Optional[str] = None,
+    proxy_dict: Optional[Dict[str, str]] = None,
     **kws,
-):
+) -> xr.Dataset:
     """Load example data or a mask from an online repository.
 
     Args:
-        name: (str, default None) Name of the netcdf file containing the
-              dataset, without the .nc extension. If None, this function
+        name: Name of the netcdf file containing the
+              dataset, without the ``.nc`` extension. If ``None``, this function
               prints out the available datasets to import.
-        cache_dir: (str, optional) The directory in which to search
-                   for and cache the data.
-        cache: (bool, optional) If True, cache data locally for use on later
-               calls.
-        github_url: (str, optional) Github repository where the data is stored.
-        branch: (str, optional) The git branch to download from.
-        extension: (str, optional) Subfolder within the repository where the
-                   data is stored.
-        proxy_dict: (dict, optional) Dictionary with keys as either 'http' or
-                    'https' and values as the proxy server. This is useful
-                    if you are on a work computer behind a firewall and need
-                    to use a proxy out to download data.
-        kws: (dict, optional) Keywords passed to xarray.open_dataset
+        cache: If ``True``, cache data locally for use on later calls.
+        cache_dir: The directory in which to search for and cache the data.
+        github_url: Github repository where the data is stored.
+        branch: The git branch to download from.
+        extension: Subfolder within the repository where the data is stored.
+        proxy_dict: Dictionary with keys as either "http" or "https" and values as the
+            proxy server. This is useful if you are on a work computer behind a
+            firewall and need to use a proxy out to download data.
+        kws: Keywords passed to :py:meth:`~xarray.open_dataset`.
 
     Returns:
-        The desired xarray dataset.
+        The desired :py:class:`~xarray.Dataset`
 
     Examples:
         >>> from climpred.tutorial import load_dataset
-        >>> proxy_dict = {'http': '127.0.0.1'}
-        >>> ds = load_dataset('FOSI-SST', cache=False, proxy_dict=proxy_dict)
+        >>> proxy_dict = {"http": "127.0.0.1"}
+        >>> ds = load_dataset("FOSI-SST", cache=False, proxy_dict=proxy_dict)
     """
     if name is None:
         return _get_datasets()

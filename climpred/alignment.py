@@ -1,3 +1,7 @@
+"""Align ``initialized`` ``valid_time=init+lead`` with ``observations`` ``time``."""
+
+from typing import Dict, List, Optional, Tuple, Union
+
 import dask
 import numpy as np
 import xarray as xr
@@ -7,10 +11,17 @@ from .constants import VALID_ALIGNMENTS
 from .exceptions import CoordinateError
 from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 
+returnType = Tuple[Dict[float, xr.DataArray], Dict[float, xr.CFTimeIndex]]
 
-def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, hist=None):
-    """Returns initializations and verification dates for an arbitrary number of leads
-    per a given alignment strategy.
+
+def return_inits_and_verif_dates(
+    forecast: xr.Dataset,
+    verif: xr.Dataset,
+    alignment: str,
+    reference: Optional[Union[str, List[str]]] = None,
+    hist: Optional[xr.Dataset] = None,
+) -> returnType:
+    """Return initializations and verification dates per a given alignment strategy.
 
     Args:
         forecast (``xarray`` object): Prediction ensemble with ``init`` dim renamed to
@@ -27,7 +38,7 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
                against the observations provided. This changes both the set of
                initializations and the verification window used at each lead.
 
-    Returns:
+    Return:
         inits (dict): Keys are the lead time integer, values are an ``xr.DataArray`` of
             initialization dates.
         verif_dates (dict): Keys are the lead time integer, values are an
@@ -81,11 +92,14 @@ def return_inits_and_verif_dates(forecast, verif, alignment, reference=None, his
         )
     elif alignment == "maximize":
         return _maximize_alignment(init_lead_matrix, all_verifs, leads)
+    else:
+        raise ValueError
 
 
-def _maximize_alignment(init_lead_matrix, all_verifs, leads):
-    """Returns initializations and verification dates, maximizing the degrees of freedom
-    at each lead individually.
+def _maximize_alignment(
+    init_lead_matrix: xr.DataArray, all_verifs: xr.DataArray, leads: xr.DataArray
+) -> returnType:
+    """Return inits and verif dates, maximizing the samples at each lead individually.
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
@@ -106,9 +120,15 @@ def _maximize_alignment(init_lead_matrix, all_verifs, leads):
     return inits, verif_dates
 
 
-def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):
-    """Returns initializations and verification dates, maintaining a common set of inits
-    at all leads.
+def _same_inits_alignment(
+    init_lead_matrix: xr.DataArray,
+    valid_inits: xr.DataArray,
+    all_verifs: xr.DataArray,
+    leads: xr.DataArray,
+    n: int,
+    freq: str,
+) -> returnType:
+    """Return inits and verif dates, maintaining a common set of inits at all leads.
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
@@ -117,14 +137,20 @@ def _same_inits_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, f
     inits = {lead: inits for lead in leads}
     verif_dates = {
         lead: shift_cftime_index(inits[lead], "time", n, freq)
-        for (lead, n) in zip(leads, n)
+        for (lead, n) in zip(leads, n)  # type: ignore
     }
     return inits, verif_dates
 
 
-def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, freq):
-    """Returns initializations and verification dates, maintaining a common verification
-    window at all leads.
+def _same_verifs_alignment(
+    init_lead_matrix: xr.DataArray,
+    valid_inits: xr.DataArray,
+    all_verifs: xr.DataArray,
+    leads: xr.DataArray,
+    n: int,
+    freq: str,
+) -> returnType:
+    """Return inits and verifs, maintaining a common verification window at all leads.
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
@@ -150,8 +176,10 @@ def _same_verifs_alignment(init_lead_matrix, valid_inits, all_verifs, leads, n, 
     return inits, verif_dates
 
 
-def _construct_init_lead_matrix(forecast, n, freq, leads):
-    """Returns xr.DataArray of "real time" (init + lead) over all inits and leads.
+def _construct_init_lead_matrix(
+    forecast: xr.Dataset, n: Tuple[int], freq: str, leads: xr.DataArray
+) -> xr.DataArray:
+    """Return xr.DataArray of "valid time" (init + lead) over all inits and leads.
 
     Arguments:
         forecast (``xarray object``): Prediction ensemble with ``init`` dim renamed to
@@ -162,7 +190,7 @@ def _construct_init_lead_matrix(forecast, n, freq, leads):
             ``CFTimeIndex.shift(value, str)``.
         leads (list, array, xr.DataArray of ints): Leads to return offset for.
 
-    Returns:
+    Return:
         init_lead_matrix (``xr.DataArray``): DataArray with x=inits and y=lead with
             values corresponding to "real time", or ``init + lead`` over all inits and
             leads.

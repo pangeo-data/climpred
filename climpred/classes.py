@@ -1,6 +1,9 @@
+"""Main module instantiating ``PerfectModelEnsemble`` and ``HindcastEnsemble."""
+
 import warnings
 from copy import deepcopy
 from typing import (
+    TYPE_CHECKING,
     Any,
     Callable,
     Dict,
@@ -13,10 +16,9 @@ from typing import (
     Union,
 )
 
-import cf_xarray
+import cf_xarray  # noqa
 import numpy as np
 import xarray as xr
-from dask import is_dask_collection
 from IPython.display import display_html
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
@@ -33,14 +35,13 @@ from .bootstrap import (
     resample_uninitialized_from_initialized,
 )
 from .checks import (
+    _check_valid_alignment,
     _check_valid_reference,
-    _check_valud_alignment,
     attach_long_names,
     attach_standard_names,
     has_dataset,
     has_dims,
     has_valid_lead_units,
-    is_xarray,
     match_calendars,
     match_initialized_dims,
     match_initialized_vars,
@@ -54,11 +55,9 @@ from .constants import (
     CONCAT_KWARGS,
     CROSS_VALIDATE_METHODS,
     INTERNAL_BIAS_CORRECTION_METHODS,
-    M2M_MEMBER_DIM,
     XCLIM_BIAS_CORRECTION_METHODS,
 )
 from .exceptions import CoordinateError, DimensionError, VariableError
-from .logging import log_compute_hindcast_header
 from .metrics import Metric
 from .options import OPTIONS
 from .prediction import (
@@ -93,8 +92,6 @@ referenceType = Union[List[str], str]
 groupbyType = Optional[Union[str, xr.DataArray]]
 metric_kwargsType = Optional[Any]
 
-from typing import TYPE_CHECKING
-
 if TYPE_CHECKING:
     import matplotlib.pyplot as plt
 
@@ -105,12 +102,20 @@ else:
 
 def _display_metadata(self) -> str:
     """
-    This is called in the following case:
+    Print the contents of the :py:class:`~climpred.classes.PredictionEnsemble` as text.
 
-    ```
-    dp = cp.HindcastEnsemble(dple)
-    print(dp)
-    ```
+    Example:
+        >>> init = climpred.tutorial.load_dataset("CESM-DP-SST")
+        >>> hindcast = climpred.HindcastEnsemble(init)
+        >>> print(hindcast)
+        <climpred.HindcastEnsemble>
+        Initialized Ensemble:
+            SST      (init, lead, member) float64 -0.2404 -0.2085 ... 0.7442 0.7384
+        Observations:
+            None
+        Uninitialized:
+            None
+
     """
     SPACE = "    "
     header = f"<climpred.{type(self).__name__}>"
@@ -156,6 +161,7 @@ def _display_metadata(self) -> str:
 
 
 def _display_metadata_html(self) -> str:
+    """Print contents of :py:class:`~climpred.classes.PredictionEnsemble` as html."""
     header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets["initialized"])
@@ -187,43 +193,55 @@ def _display_metadata_html(self) -> str:
 
 class PredictionEnsemble:
     """
-    The main object. This is the super of both `PerfectModelEnsemble` and
-    `HindcastEnsemble`. This cannot be called directly by a user, but
-    should house functions that both ensemble types can use.
+    The main object :py:class:`~climpred.classes.PredictionEnsemble`.
+
+    This is the super of both :py:class:`~climpred.classes.PerfectModelEnsemble` and
+    :py:class:`~climpred.classes.HindcastEnsemble`. This cannot be called directly by
+    a user, but should house functions that both ensemble types can use.
+
+    Associated :py:class:`~xarray.Dataset` are stored in:
+
+        * ``PredictionEnsemble._datasets["initialized"]``
+        * ``PredictionEnsemble._datasets["uninitialized"]``
+        * ``PredictionEnsemble._datasets["control"]`` in
+          :py:class:`~climpred.classes.PerfectModelEnsemble`
+        * ``PredictionEnsemble._datasets[observations"]`` in
+          :py:class:`~climpred.classes.HindcastEnsemble`
+
     """
 
-    @is_xarray(1)
-    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]):
-        if isinstance(xobj, xr.DataArray):
+    def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]):
+        """Create a :py:class:`~climpred.classes.PredictionEnsemble` object."""
+        if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
-            xobj = xobj.to_dataset()
-        xobj = rename_to_climpred_dims(xobj)
-        has_dims(xobj, ["init", "lead"], "PredictionEnsemble")
+            initialized = initialized.to_dataset()
+        initialized = rename_to_climpred_dims(initialized)
+        has_dims(initialized, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "init", "xobj[init]")
+        initialized = convert_time_index(initialized, "init", "initialized[init]")
         # Put this after `convert_time_index` since it assigns 'years' attribute if the
         # `init` dimension is a `float` or `int`.
-        xobj = convert_Timedelta_to_lead_units(xobj)
-        has_valid_lead_units(xobj)
-        xobj = add_time_from_init_lead(xobj)
+        initialized = convert_Timedelta_to_lead_units(initialized)
+        has_valid_lead_units(initialized)
+        initialized = add_time_from_init_lead(initialized)
         # add metadata
-        xobj = attach_standard_names(xobj)
-        xobj = attach_long_names(xobj)
-        xobj = xobj.cf.add_canonical_attributes(
+        initialized = attach_standard_names(initialized)
+        initialized = attach_long_names(initialized)
+        initialized = initialized.cf.add_canonical_attributes(
             verbose=False, override=True, skip="units"
         )
-        del xobj.attrs["history"]  # better only delete xclim message or not?
+        del initialized.attrs["history"]  # better only delete xclim message or not?
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
-        self._datasets = {"initialized": xobj, "uninitialized": {}}
+        self._datasets = {"initialized": initialized, "uninitialized": {}}
         self.kind = "prediction"
         self._temporally_smoothed: Optional[Dict[str, int]] = None
         self._is_annual_lead = None
         self._warn_if_chunked_along_init_member_time()
 
     def _groupby(self, call: str, groupby: Union[str, xr.DataArray], **kwargs: Any):
-        """Helper for verify/bootstrap(groupby='month')"""
+        """Help for verify/bootstrap(groupby="month")."""
         skill_group, group_label = [], []
         groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
         for group, hind_group in self.get_initialized().init.groupby(groupby_str):
@@ -237,17 +255,23 @@ class PredictionEnsemble:
         skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
             {new_dim_name: group_label}
         )
-        skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore
+        skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore # noqa: E501
             {
-                "description": "new dimension showing skill grouped by init.{groupby} created by .verify(groupby) or .bootstrap(groupby)"
+                "description": "new dimension showing skill grouped by init.{groupby}"
+                " created by .verify(groupby) or .bootstrap(groupby)"
             }
         )
         return skill_group
 
     @property
     def coords(self) -> DatasetCoordinates:
-        """Dictionary of xarray.DataArray objects corresponding to coordinate
+        """Return coordinates of :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        Dictionary of :py:class:`~xarray.DataArray` objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
+
+        See also:
+            :py:meth:`~xarray.Dataset.coords`
         """
         pe_coords = self.get_initialized().coords.to_dataset()
         for ds in self._datasets.values():
@@ -257,7 +281,11 @@ class PredictionEnsemble:
 
     @property
     def nbytes(self) -> int:
-        """Bytes sizes of all PredictionEnsemble._datasets."""
+        """Bytes sizes of all PredictionEnsemble._datasets.
+
+        See also:
+            :py:meth:`~xarray.Dataset.nbytes`
+        """
         return sum(
             [
                 sum(v.nbytes for v in ds.variables.values())
@@ -268,7 +296,14 @@ class PredictionEnsemble:
 
     @property
     def sizes(self) -> Mapping[Hashable, int]:
-        """Mapping from dimension names to lengths for all PredictionEnsemble._datasets."""
+        """
+        Return sizes of :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        Mapping from dimension names to lengths for all PredictionEnsemble._datasets.
+
+        See also:
+            :py:meth:`~xarray.Dataset.equals`
+        """
         pe_dims = dict(self.get_initialized().dims)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -277,12 +312,26 @@ class PredictionEnsemble:
 
     @property
     def dims(self) -> Mapping[Hashable, int]:
-        """Mapping from dimension names to lengths all PredictionEnsemble._datasets."""
+        """
+        Return dimension of :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        Mapping from dimension names to lengths all PredictionEnsemble._datasets.
+
+        See also:
+            :py:meth:`~xarray.Dataset.dims`
+        """
         return Frozen(self.sizes)
 
     @property
     def chunks(self) -> Mapping[Hashable, Tuple[int, ...]]:
-        """Mapping from chunks all PredictionEnsemble._datasets."""
+        """
+        Return chunks of :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        Mapping from chunks all PredictionEnsemble._datasets.
+
+        See also:
+            :py:meth:`~xarray.Dataset.chunks`
+        """
         pe_chunks = dict(self.get_initialized().chunks)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -293,16 +342,29 @@ class PredictionEnsemble:
 
     @property
     def chunksizes(self) -> Mapping[Hashable, Tuple[int, ...]]:
-        """Mapping from dimension names to block lengths for this dataset's data, or None if
-        the underlying data is not a dask array.
-        Cannot be modified directly, but can be modified by calling .chunk().
-        Same as Dataset.chunks.
+        """Return chunksizes of :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        Mapping from dimension names to block lengths for this dataset's data, or
+        None if the underlying data is not a dask array.
+        Cannot be modified directly, but can be modified by calling ``.chunk()``.
+        Same as :py:meth:`~xarray.Dataset.chunks`.
+
+        See also:
+            :py:meth:`~xarray.Dataset.chunksizes`
         """
         return self.chunks
 
     @property
     def data_vars(self) -> DataVariables:
-        """Dictionary of DataArray objects corresponding to data variables available in all PredictionEnsemble._datasets."""
+        """
+        Return data variables of :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        Dictionary of DataArray objects corresponding to data variables available in
+        all PredictionEnsemble._datasets.
+
+        See also:
+            :py:meth:`~xarray.Dataset.data_vars`
+        """
         varset = set(self.get_initialized().data_vars)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -314,21 +376,22 @@ class PredictionEnsemble:
     # when you just print it interactively
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self) -> str:
+        """Return for print(PredictionEnsemble)."""
         if XR_OPTIONS["display_style"] == "html":
             return _display_metadata_html(self)
         else:
             return _display_metadata(self)
 
     def __len__(self) -> int:
-        """Number of all variables in all PredictionEnsemble._datasets."""
+        """Return number of all variables ``PredictionEnsemble``."""
         return len(self.data_vars)
 
     def __iter__(self) -> Iterator[Hashable]:
-        """Iterate over underlying xr.Datasets for initialized, uninitialized, observations."""
+        """Iterate over underlying :py:class:`~xarray.Dataset`s."""
         return iter(self._datasets.values())
 
     def __delitem__(self, key: Hashable) -> None:
-        """Remove a variable from this PredictionEnsemble."""
+        """Remove a variable from :py:class:`~climpred.classes.PredictionEnsemble`."""
         del self._datasets["initialized"][key]
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -336,8 +399,10 @@ class PredictionEnsemble:
                     del ds[key]
 
     def __contains__(self, key: Hashable) -> bool:
-        """The 'in' operator will return true or false depending on whether
-        'key' is an array in all PredictionEnsemble._datasets or not.
+        """Check variable in :py:class:`~climpred.classes.PredictionEnsemble`.
+
+        The ``"in"`` operator will return true or false depending on whether
+        ``"key"`` is in any PredictionEnsemble._datasets.
         """
         contained = True
         for ds in self._datasets.values():
@@ -347,12 +412,18 @@ class PredictionEnsemble:
         return contained
 
     def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
-        """Two PredictionEnsembles are equal if they have matching variables and
-        coordinates, all of which are equal.
-        PredictionEnsembles can still be equal (like pandas objects) if they have NaN
-        values in the same locations.
+        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other.
+
+        Two :py:class:`~climpred.classes.PredictionEnsemble`s are equal if they have
+        matching variables and coordinates, all of which are equal.
+        ``PredictionEnsembles`` can still be equal (like pandas objects) if they have
+        NaN values in the same locations.
         This method is necessary because `v1 == v2` for ``PredictionEnsembles``
-        does element-wise comparisons (like numpy.ndarrays)."""
+        does element-wise comparisons (like numpy.ndarrays).
+
+        See also:
+            :py:meth:`~xarray.Dataset.equals`
+        """
         if not isinstance(other, PredictionEnsemble):
             return False
         if other.kind != self.kind:
@@ -368,8 +439,15 @@ class PredictionEnsemble:
         return equal
 
     def identical(self, other: Union["PredictionEnsemble", Any]) -> bool:
-        """Like equals, but also checks all dataset attributes and the
-        attributes on all variables and coordinates."""
+        """
+        Check if :py:class:`~climpred.classes.PredictionEnsemble` is identical to other.
+
+        Like ``equals``, but also checks all dataset attributes and the
+        attributes on all variables and coordinates.
+
+        See also:
+            :py:meth:`~xarray.Dataset.identical`
+        """
         if not isinstance(other, PredictionEnsemble):
             return False
         if other.kind != self.kind:
@@ -391,26 +469,26 @@ class PredictionEnsemble:
         cmap: Optional[str] = None,
         x: str = "time",
     ) -> "plt.Axes":
-        """Plot datasets from PredictionEnsemble.
+        """Plot datasets from :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Args:
-            variable (str or None): `variable` to show. Defaults to first in data_vars.
-            ax (plt.axes): Axis to use in plotting. By default, creates a new axis.
-            show_members (bool): whether to display all members individually.
+            variable: `variable` to show. Defaults to first in data_vars.
+            ax: Axis to use in plotting. By default, creates a new axis.
+            show_members: whether to display all members individually.
                 Defaults to False.
-            cmap (str): Name of matplotlib-recognized colorbar. Defaults to `viridis`
+            cmap: Name of matplotlib-recognized colorbar. Defaults to `viridis`
                 for :py:class:`~climpred.classes.HindcastEnsemble`
                 and ``tab10`` for :py:class:`~climpred.classes.PerfectModelEnsemble`.
-            x (str): Name of x-axis. Use ``'time'`` to show observations and
-                hindcasts in real time. Use ``'init'`` to see hindcasts as
-                initializations. For ``x='init'`` only initialized is shown and only
+            x: Name of x-axis. Use ``time`` to show observations and
+                hindcasts in real time. Use ``init`` to see hindcasts as
+                initializations. For ``x=init`` only initialized is shown and only
                 works for :py:class:`~climpred.classes.HindcastEnsemble`.
 
         .. note::
             Alternatively inspect initialized datasets by
-            ``PredictionEnsemble.get_initialized()[v].plot.line(x='time')``
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x=time)``
             to see ``validtime`` on x-axis or
-            ``PredictionEnsemble.get_initialized()[v].plot.line(x='init')``
+            ``PredictionEnsemble.get_initialized()[v].plot.line(x=init)``
             to see ``init`` on x-axis.
 
         Returns:
@@ -447,7 +525,7 @@ class PredictionEnsemble:
         other: mathType,
         operator: str,
     ):
-        """Helper function for __add__, __sub__, __mul__, __truediv__.
+        """Help function for __add__, __sub__, __mul__, __truediv__.
 
         Allows math operations with type:
             - int
@@ -495,7 +573,7 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore
+            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore # noqa: E501
                 raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
@@ -526,23 +604,30 @@ class PredictionEnsemble:
             return self._apply_func(_operator, other)
 
     def __add__(self, other: mathType) -> "PredictionEnsemble":
+        """Add."""
         return self._math(other, operator="add")
 
     def __sub__(self, other: mathType) -> "PredictionEnsemble":
+        """Sub."""
         return self._math(other, operator="sub")
 
     def __mul__(self, other: mathType) -> "PredictionEnsemble":
+        """Mul."""
         return self._math(other, operator="mul")
 
     def __truediv__(self, other: mathType) -> "PredictionEnsemble":
+        """Div."""
         return self._math(other, operator="div")
 
     def __getitem__(self, varlist: Union[str, List[str]]) -> "PredictionEnsemble":
-        """Allows subsetting data variable from PredictionEnsemble as from xr.Dataset.
+        """Allow subsetting variable(s) from
+
+        Allow subsetting variable(s) from
+        :py:class:`~climpred.classes.PredictionEnsemble` as from
+        :py:class:`~xarray.Dataset`.
 
         Args:
-            * varlist (list of str, str): list of names or name of data variable(s) to
-                subselect
+            varlist: list of names or name of data variable(s) to subselect
         """
         if isinstance(varlist, str):
             varlist = [varlist]
@@ -561,22 +646,21 @@ class PredictionEnsemble:
     def __getattr__(
         self, name: str
     ) -> Callable:  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
-        """Allows for xarray methods to be applied to our prediction objects.
+        """Allow for ``xarray`` methods to be applied to our prediction objects.
 
         Args:
-            * name: Function, e.g., .isel() or .sum().
+            * name: str of xarray function, e.g., ``.isel()`` or ``.sum()``.
         """
 
         def wrapper(*args, **kwargs):
-            """Applies arbitrary function to all datasets in the PredictionEnsemble
-            object.
+            """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.
 
             Got this from: https://stackoverflow.com/questions/41919499/
             how-to-call-undefined-methods-sequentially-in-python-class
             """
 
             def _apply_xr_func(v, name, *args, **kwargs):
-                """Handles exceptions in our dictionary comprehension.
+                """Handle exceptions in our dictionary comprehension.
 
                 In other words, this will skip applying the arbitrary function
                 to a sub-dataset if a ValueError is thrown. This specifically
@@ -584,9 +668,9 @@ class PredictionEnsemble:
                 dim that's being called. E.g., ``.isel(lead=0)`` should only
                 be applied to the initialized dataset.
 
-                Reference:
-                  * https://stackoverflow.com/questions/1528237/
-                    how-to-handle-exceptions-in-a-list-comprehensions
+                References:
+                    * https://stackoverflow.com/questions/1528237/
+                      how-to-handle-exceptions-in-a-list-comprehensions
                 """
                 try:
                     return getattr(v, name)(*args, **kwargs)
@@ -608,7 +692,7 @@ class PredictionEnsemble:
                     error_type = type(e).__name__
                     if func_name:
                         if len(args) > 1:
-                            msg = f"{func_name}({args[1:]}, {kwargs}) failed\n{error_type}: {e}"
+                            msg = f"{func_name}({args[1:]}, {kwargs}) failed\n{error_type}: {e}"  # noqa: E501
                         else:
                             msg = f"{func_name}({kwargs}) failed\n{error_type}: {e}"
                     else:
@@ -623,7 +707,7 @@ class PredictionEnsemble:
                         if dim not in v.dims:
                             if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
                                 warnings.warn(
-                                    f"Error due to verification/control/uninitialized: {msg}"
+                                    f"Error due to verification/control/uninitialized: {msg}"  # noqa: E501
                                 )
                     else:
                         if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
@@ -636,8 +720,7 @@ class PredictionEnsemble:
 
     @classmethod
     def _construct_direct(cls, datasets, kind):
-        """Shortcut around __init__ for internal use to avoid inplace
-        operations.
+        """Shortcut around __init__ for internal use to avoid inplace operations.
 
         Pulled from xarrray Dataset class.
         https://github.com/pydata/xarray/blob/master/xarray/core/dataset.py
@@ -649,16 +732,17 @@ class PredictionEnsemble:
         return obj
 
     def _apply_func(
-        self, func: Callable[..., Any], *args: Any, **kwargs: Any
+        self, func: Callable[..., xr.Dataset], *args: Any, **kwargs: Any
     ) -> "PredictionEnsemble":
-        """Apply a function to all datasets in a `PredictionEnsemble`."""
+        """Apply a function to all datasets in a ``PerfectModelEnsemble``."""
         # Create temporary copy to modify to avoid inplace operation.
         # isnt that essentially the same as .map(func)?
         datasets = self._datasets.copy()
 
         # More explicit than nested dictionary comprehension.
         for key, ds in datasets.items():
-            # If ds is xr.Dataset, apply the function directly to it. else, e.g. for {} ignore
+            # If ds is xr.Dataset, apply the function directly to it
+            # else, e.g. for {} ignore
             if isinstance(ds, xr.Dataset):
                 dim = kwargs.get("dim", "")
                 if "_or_" in dim:
@@ -681,41 +765,42 @@ class PredictionEnsemble:
         return self._construct_direct(datasets, kind=self.kind)
 
     def get_initialized(self) -> xr.Dataset:
-        """Returns the xarray dataset for the initialized ensemble."""
+        """Return the :py:class:`~xarray.Dataset` for the initialized ensemble."""
         return self._datasets["initialized"]
 
     def get_uninitialized(self) -> xr.Dataset:
-        """Returns the xarray dataset for the uninitialized ensemble."""
+        """Return the :py:class:`~xarray.Dataset` for the uninitialized ensemble."""
         return self._datasets["uninitialized"]
 
     def smooth(
         self,
         smooth_kws: Optional[Union[str, Dict[str, int]]] = None,
         how: str = "mean",
-        **xesmf_kwargs: Any,
+        **xesmf_kwargs: str,
     ):
-        """Smooth all entries of PredictionEnsemble in the same manner to be
-        able to still calculate prediction skill afterwards.
+        """Smooth in space and/or aggregate in time in ``PredictionEnsemble``.
 
         Args:
-            smooth_kws (dict or str): Dictionary to specify the dims to
+            smooth_kws: Dictionary to specify the dims to
                 smooth compatible with
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf` or
                 :py:func:`~climpred.smoothing.temporal_smoothing`.
                 Shortcut for Goddard et al. 2013 recommendations:
-                'goddard2013'. Defaults to None.
-            how (str): how to smooth temporally. From ['mean','sum']. Defaults to
-                'mean'.
-            **xesmf_kwargs (args): kwargs passed to
+                goddard2013. Defaults to ``None``.
+            how: how to smooth temporally. From Choose from ``["mean", "sum"]``.
+                Defaults to ``"mean"``.
+            **xesmf_kwargs: kwargs passed to
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
         Examples:
             >>> PerfectModelEnsemble.get_initialized().lead.size
             20
-            >>> PerfectModelEnsemble.smooth({'lead':4}, how='sum').get_initialized().lead.size
+            >>> PerfectModelEnsemble.smooth(
+            ...     {"lead": 4}, how="sum"
+            ... ).get_initialized().lead.size
             17
 
-            >>> HindcastEnsemble_3D.smooth({'lon':1, 'lat':1})
+            >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
                 SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
@@ -724,16 +809,19 @@ class PredictionEnsemble:
             Uninitialized:
                 None
 
-            ``smooth`` simultaneously aggregates spatially listening to ``lon`` and ``lat`` and temporally listening to ``lead`` or ``time``.
+            ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
+            ``lat`` and temporally listening to ``lead`` or ``time``.
 
-            >>> HindcastEnsemble_3D.smooth({'lead': 2, 'lat': 5, 'lon': 4}).get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth(
+            ...     {"lead": 2, "lat": 5, "lon": 4}
+            ... ).get_initialized().coords
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7 8 9
               * lon         (lon) float64 250.8 254.8 258.8 262.8
               * lat         (lat) float64 -9.75 -4.75
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2026-01-01 00:00:00
-            >>> HindcastEnsemble_3D.smooth('goddard2013').get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7
@@ -747,6 +835,7 @@ class PredictionEnsemble:
             return self
         tsmooth_kws: Optional[Union[str, Dict[str, int]]] = None
         d_lon_lat_kws: Optional[Union[str, Dict[str, int]]] = None
+        smooth_fct: Callable[..., xr.Dataset]
         # get proper smoothing function based on smooth args
         if isinstance(smooth_kws, str):
             if "goddard" in smooth_kws:
@@ -816,15 +905,14 @@ class PredictionEnsemble:
         return self
 
     def remove_seasonality(
-        self, initialized_dim: str = "init", seasonality: Union[None, str] = None
+        self, seasonality: Union[None, str] = None
     ) -> "PredictionEnsemble":
-        """Remove seasonal cycle from all climpred datasets.
+        """Remove seasonal cycle from :py:class:`~climpred.classes.PredictionEnsemble`.
 
         Args:
-            initialized_dim (str): dimension name of initialized dataset to calculate
-                climatology over. Defaults to "init".
-            seasonality (str): Seasonality to be removed. Choose from:
-                ["season", "month", "dayofyear"]. Defaults to OPTIONS["seasonality"].
+            seasonality: Seasonality to be removed. Choose from:
+                ``["season", "month", "weekofyear", "dayofyear"]``.
+                Defaults to ``OPTIONS["seasonality"]``.
 
         Examples:
             >>> # example already without seasonal cycle
@@ -839,7 +927,7 @@ class PredictionEnsemble:
         """
 
         def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
-            """Remove the seasonal cycle from the data"""
+            """Remove the seasonal cycle from the data."""
             if ds is {}:
                 return {}
             if seasonality is None:
@@ -855,14 +943,16 @@ class PredictionEnsemble:
 
         return self.map(
             _remove_seasonality,
-            initialized_dim=initialized_dim,
             seasonality=seasonality,
         )
 
     def _warn_if_chunked_along_init_member_time(self) -> None:
-        """Warn upon instantiation when CLIMPRED_DIMS except ``lead`` are chunked with
-        more than one chunk to show how to circumvent ``xskillscore`` chunking
-        ``ValueError``."""
+        """
+        Warn when ``CLIMPRED_DIMS`` except ``lead`` are wrongly chunked.
+
+        When more than one chunk to show how to circumvent ``xskillscore`` chunking
+        ``ValueError``.
+        """
         suggest_one_chunk = []
         for d in self.chunks:
             if d in ["time", "init", "member"]:
@@ -879,63 +969,74 @@ class PredictionEnsemble:
             if "time" in suggest_one_chunk_time_to_init:
                 suggest_one_chunk_time_to_init.remove("time")
                 suggest_one_chunk_time_to_init.append("init")
-            msg = f"{name} is chunked along dimensions {suggest_one_chunk} with more than one chunk. `{name}.chunks={self.chunks}`.\nYou cannot call `{name}.verify` or `{name}.bootstrap` in combination with any of {suggest_one_chunk_time_to_init} passed as `dim`. In order to do so, please rechunk {suggest_one_chunk} with `{name}.chunk({{dim:-1}}).verify(dim=dim).`\nIf you do not want to use dimensions {suggest_one_chunk_time_to_init} in `{name}.verify(dim=dim)`, you can disregard this warning."
+            msg = (
+                f"{name} is chunked along dimensions {suggest_one_chunk} with more "
+                f"than one chunk. `{name}.chunks={self.chunks}`.\nYou cannot call "
+                f"`{name}.verify` or `{name}.bootstrap` in combination with any of "
+                f" {suggest_one_chunk_time_to_init} passed as `dim`. In order to do "
+                f"so, please rechunk {suggest_one_chunk} with `{name}.chunk("
+                "{{dim:-1}}).verify(dim=dim).`\nIf you do not want to use dimensions "
+                f" {suggest_one_chunk_time_to_init} in `{name}.verify(dim=dim)`, you "
+                "can disregard this warning."
+            )
             # chunk lead:1 in HindcastEnsemble
             if self.kind == "hindcast":
-                msg += '\nIn `HindcastEnsemble`s you may also create one chunk per lead, as the `climpred` internally loops over lead, e.g. `.chunk({{"lead": 1}}).verify().`'
+                msg += '\nIn `HindcastEnsemble`s you may also create one chunk per "\
+                " lead, as the `climpred` internally loops over lead, e.g. "\
+                " `.chunk({{"lead": 1}}).verify().`'
             # chunk auto on non-climpred dims
             ndims = list(self.sizes)
             for d in CLIMPRED_DIMS:
                 if d in ndims:
                     ndims.remove(d)
             if len(ndims) > 0:
-                msg += f'\nConsider chunking embarassingly parallel dimensions such as {ndims} automatically, i.e. `{name}.chunk({ndims[0]}="auto").verify(...).'
+                msg += (
+                    f"\nConsider chunking embarassingly parallel dimensions such as "
+                    f"{ndims} automatically, i.e. "
+                    f'`{name}.chunk({ndims[0]}="auto").verify(...).'
+                )
             warnings.warn(msg)
 
 
 class PerfectModelEnsemble(PredictionEnsemble):
-    """An object for "perfect model" climate prediction ensembles.
+    """An object for "perfect model" prediction ensembles.
 
-    `PerfectModelEnsemble` is a sub-class of `PredictionEnsemble`. It tracks
+    :py:class:`~climpred.classes.PerfectModelEnsemble` is a sub-class of
+    :py:class:`~climpred.classes.PredictionEnsemble`. It tracks
     the control run used to initialize the ensemble for easy computations,
     bootstrapping, etc.
 
-    This object is built on `xarray` and thus requires the input object to
-    be an `xarray` Dataset or DataArray.
+    This object is built on ``xarray`` and thus requires the input object to
+    be an :py:class:`~xarray.Dataset` or :py:class:`~xarray.DataArray`.
     """
 
-    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]) -> None:
-        """Create a `PerfectModelEnsemble` object by inputting output from the
-        control run in `xarray` format.
+    def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
+        """Create a :py:class:`~climpred.classes.PerfectModelEnsemble` object.
 
         Args:
-          xobj (xarray object):
-            decadal prediction ensemble output.
+          initialized: prediction ensemble output.
 
         Attributes:
-            control: Dictionary of control run associated with the initialized
-                     ensemble.
-            uninitialized: Dictionary of uninitialized run that is
-                           bootstrapped from the initialized run.
+            control: datasets dictionary item of control simulation associated with the
+                initialized ensemble.
+            uninitialized: datasets dictionary item of uninitialized forecast.
         """
-
-        super().__init__(xobj)
+        super().__init__(initialized)
         # Reserve sub-dictionary for the control simulation.
         self._datasets.update({"control": {}})
         self.kind = "perfect"
 
     def _apply_climpred_function(
         self,
-        func: Callable[..., Any],
+        func: Callable[..., xr.Dataset],
         input_dict: Dict[str, Any],
         **kwargs: Any,
     ) -> Union["PerfectModelEnsemble", xr.Dataset]:
-        """Helper function to loop through observations and apply an arbitrary climpred
-        function.
+        """Loop through observations and apply an arbitrary climpred function.
 
         Args:
-            func (function): climpred function to apply to object.
-            input_dict (dict): dictionary with the following things:
+            func: climpred function to apply to object.
+            input_dict: dictionary with the following things:
                 * ensemble: initialized or uninitialized ensemble.
                 * control: control dictionary from HindcastEnsemble.
                 * init (bool): True if the initialized ensemble, False if uninitialized.
@@ -950,22 +1051,21 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return func(ensemble, control, **kwargs)
 
     def _vars_to_drop(self, init: bool = True) -> Tuple[List[str], List[str]]:
-        """Returns list of variables to drop when comparing
-        initialized/uninitialized to a control.
+        """Return list of variables to drop when comparing datasets.
 
         This is useful if the two products being compared do not share the same
-        variables. I.e., if the control has ['SST'] and the initialized has
-        ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
+        variables. I.e., if the control has ["SST"] and the initialized has
+        ["SST", "SALT"], this will return a list with ["SALT"] to be dropped
         from the initialized.
 
         Args:
-          init (bool, default True):
-            If `True`, check variables on the initialized.
-            If `False`, check variables on the uninitialized.
+            init:
+                If ``True``, check variables on the initialized.
+                If ``False``, check variables on the uninitialized.
 
         Returns:
-          Lists of variables to drop from the initialized/uninitialized
-          and control Datasets.
+            Lists of variables to drop from the initialized/uninitialized
+            and control Datasets.
         """
         init_str = "initialized" if init else "uninitialized"
         init_vars = list(self._datasets[init_str])
@@ -980,36 +1080,35 @@ class PerfectModelEnsemble(PredictionEnsemble):
             init_vars_to_drop, ctrl_vars_to_drop = [], []
         return init_vars_to_drop, ctrl_vars_to_drop
 
-    @is_xarray(1)
     def add_control(
-        self, xobj: Union[xr.DataArray, xr.Dataset]
+        self, control: Union[xr.DataArray, xr.Dataset]
     ) -> "PerfectModelEnsemble":
-        """Add the control run that initialized the climate prediction
-        ensemble.
+        """Add the control run that initialized the prediction ensemble.
 
         Args:
-            xobj (xarray object): Dataset/DataArray of the control run.
+            control: control run.
         """
         # NOTE: These should all be decorators.
-        if isinstance(xobj, xr.DataArray):
-            xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets["initialized"], xobj)
-        match_initialized_vars(self._datasets["initialized"], xobj)
+        if isinstance(control, xr.DataArray):
+            control = control.to_dataset()
+        match_initialized_dims(self._datasets["initialized"], control)
+        match_initialized_vars(self._datasets["initialized"], control)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "time", "xobj[time]")
+        control = convert_time_index(control, "time", "control[time]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets["initialized"], xobj, kind2="control")
+        match_calendars(self._datasets["initialized"], control, kind2="control")
         datasets = self._datasets.copy()
-        datasets.update({"control": xobj})
+        datasets.update({"control": control})
         return self._construct_direct(datasets, kind="perfect")
 
     def generate_uninitialized(self) -> "PerfectModelEnsemble":
         """Generate an uninitialized ensemble by resampling from the control simulation.
 
         Returns:
-            PerfectModelEnsemble with resampled (uninitialized) ensemble from control
+            ``uninitialzed`` resampled from ``control`` added
+            to :py:class:`~climpred.classes.PerfectModelEnsemble`
         """
         has_dataset(
             self._datasets["control"], "control", "generate an uninitialized ensemble."
@@ -1024,7 +1123,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="perfect")
 
     def get_control(self) -> xr.Dataset:
-        """Returns the control as an xarray dataset."""
+        """Return the control as an :py:class:`~xarray.Dataset`."""
         return self._datasets["control"]
 
     def verify(
@@ -1036,41 +1135,46 @@ class PerfectModelEnsemble(PredictionEnsemble):
         groupby: groupbyType = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
-        """Verify initialized predictions against a configuration of other ensemble members.
+        """Verify initialized predictions against a configuration of its members.
 
         .. note::
             The configuration of the other ensemble members is based off of the
             ``comparison`` keyword argument.
 
         Args:
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply in the
-                comparison. See `metrics </metrics.html>`_.
-            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
-                compare the initialized prediction ensemble with itself, see
-                `comparisons </comparisons.html>`_.
-            dim (str, list of str): Dimension(s) over which to apply ``metric``.
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare the initialized prediction ensemble with itself,
+                see `comparisons </comparisons.html>`_.
+            dim: Dimension(s) over which to apply ``metric``.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
                 is probabilistic but should not contain ``member`` when
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
-            reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
-                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
-            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``verify``.
-            **metric_kwargs (optional): Arguments passed to ``metric``.
+            reference: Type of reference forecasts with which to verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
+                For ``persistence``, choose between
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=False``
+                (default) using :py:func:`~climpred.reference.compute_persistence` or
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=True``
+                using
+                :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
+            groupby: group ``init`` before passing ``initialized`` to ``verify``.
+            **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill reduced by dim containing initialized and
-            reference skill(s) if specified.
+            ``initialized`` and ``reference`` forecast skill reduced by dimensions
+            ``dim``
 
         Example:
             Root mean square error (``rmse``) comparing every member with the
             ensemble mean forecast (``m2e``) for all leads reducing dimensions
             ``init`` and ``member``:
 
-            >>> PerfectModelEnsemble.verify(metric='rmse', comparison='m2e',
-            ...     dim=['init','member'])
+            >>> PerfectModelEnsemble.verify(
+            ...     metric="rmse", comparison="m2e", dim=["init", "member"]
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 20)
             Coordinates:
@@ -1088,30 +1192,33 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 reference:                     []
 
 
-            Pearson's Anomaly Correlation ('acc') comparing every member to every
-            other member (``m2m``) reducing dimensions ``member`` and ``init`` while
+            Continuous Ranked Probability Score (``"crps"``) comparing every member to every
+            other member (``"m2m"``) reducing dimensions ``member`` and ``init`` while
             also calculating reference skill for the ``persistence``, ``climatology``
             and ``uninitialized`` forecast.
 
-            >>> PerfectModelEnsemble.verify(metric='acc', comparison='m2m',
-            ...     dim=['init', 'member'],
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> PerfectModelEnsemble.verify(
+            ...     metric="crps",
+            ...     comparison="m2m",
+            ...     dim=["init", "member"],
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.7941 0.7489 0.5623 ... 0.1327 0.4547 0.3253
+                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.1188 0.09737
             Attributes:
-                prediction_skill_software:                         climpred https://clim...
-                skill_calculated_by_function:                      PerfectModelEnsemble....
+                prediction_skill_software:                         climpred https://climp...
+                skill_calculated_by_function:                      PerfectModelEnsemble.v...
                 number_of_initializations:                         12
                 number_of_members:                                 10
-                metric:                                            pearson_r
+                metric:                                            crps
                 comparison:                                        m2m
                 dim:                                               ['init', 'member']
-                reference:                                         ['persistence', 'clim...
+                reference:                                         ['persistence', 'clima...
                 PerfectModel_persistence_from_initialized_lead_0:  False
         """
         if groupby is not None:
@@ -1184,21 +1291,20 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``comparison`` keyword argument.
 
         Args:
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply in the
-                comparison. See `metrics </metrics.html>`_.
-            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
-                compare the uninitialized against itself, see
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare the uninitialized against itself, see
                 `comparisons </comparisons.html>`_.
-            dim (str, list of str): Dimension(s) over which to apply metric.
+            dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
                 is probabilistic but should not contain ``member`` when
                 ``comparison=e2c``. Defaults to ``None``, meaning that all dimensions
                 other than ``lead`` are reduced.
-            **metric_kwargs (optional): Arguments passed to ``metric``.
+            **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill containing initialized and reference skill(s).
+            ``initialized`` and ``reference`` forecast skill reduced by dimensions
+            ``dim``
         """
         has_dataset(
             self._datasets["uninitialized"],
@@ -1235,43 +1341,51 @@ class PerfectModelEnsemble(PredictionEnsemble):
     ):
         """Verify a simple persistence forecast of the control run against itself.
 
-        Note: uses climpred.reference.compute_persistence_from_first_lead
-        if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"] else climpred.reference.compute_persistence.
+        Note: uses :py:func:`~climpred.reference.compute_persistence_from_first_lead`
+        if ``set_options(PerfectModel_persistence_from_initialized_lead_0=True)`` else
+        :py:func:`~climpred.reference.compute_persistence`.
 
         Args:
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
-            verifying skill of the persistence forecast. See `metrics </metrics.html>`_.
-            dim (str, list of str): Dimension(s) over which to apply metric.
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare the persistence against itself, see
+                `comparisons </comparisons.html>`_. Only valid if
+                ``PerfectModel_persistence_from_initialized_lead_0=True``.
+            dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
                 is probabilistic but should not contain ``member`` when
                 ``comparison=e2c``. Defaults to ``None``, meaning that all dimensions
                 other than ``lead`` are reduced.
-            **metric_kwargs (optional): Arguments passed to ``metric``.
+            **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset of persistence forecast results.
+            persistence forecast skill.
 
-        Reference:
+        References:
             * Chapter 8 (Short-Term Climate Prediction) in
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
         """
         if dim is None:
             dim = list(self._datasets["initialized"].isel(lead=0).dims)
+        compute_persistence_func: Callable[..., xr.Dataset]
         compute_persistence_func = compute_persistence_from_first_lead
         if OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]:
             compute_persistence_func = compute_persistence_from_first_lead
             if self.get_initialized().lead[0] != 0:
                 if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
                     warnings.warn(
-                        f"Calculate persistence from lead={int(self.get_initialized().lead[0].values)} instead of lead=0 (recommended)."
+                        "Calculate persistence from "
+                        f"lead={int(self.get_initialized().lead[0].values)} instead "
+                        "of lead=0 (recommended)."
                     )
         else:
             compute_persistence_func = compute_persistence
             if self._datasets["control"] == {}:
                 warnings.warn(
-                    "You may also calculate persistence based on ``initialized.isel(lead=0)`` by changing ``OPTIONS['PerfectModel_persistence_from_initialized_lead_0']=True``."
+                    "You may also calculate persistence based on "
+                    "``initialized.isel(lead=0)`` by changing "
+                    " ``set_options(PerfectModel_persistence_from_initialized_lead_0=True)``."  # noqa: E501
                 )
             has_dataset(
                 self._datasets["control"], "control", "compute a persistence forecast"
@@ -1302,23 +1416,24 @@ class PerfectModelEnsemble(PredictionEnsemble):
         dim: dimType = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
-        """Verify a climatology forecast of the control run against itself.
+        """Verify a climatology forecast.
 
         Args:
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to use when
-            verifying skill of the persistence forecast. See `metrics </metrics.html>`_.
-            dim (str, list of str): Dimension(s) over which to apply metric.
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare the climatology against itself, see
+                `comparisons </comparisons.html>`_
+            dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
                 is probabilistic but should not contain ``member`` when
                 ``comparison=e2c``. Defaults to ``None``, meaning that all dimensions
                 other than ``lead`` are reduced.
-            **metric_kwargs (optional): Arguments passed to ``metric``.
+            **metric_kwargs: Arguments passed to ``metric``.
 
         Returns:
-            Dataset of persistence forecast results.
+            climatology forecast skill
 
-        Reference:
+        References:
             * Chapter 8 (Short-Term Climate Prediction) in
               Van den Dool, Huug. Empirical methods in short-term climate
               prediction. Oxford University Press, 2007.
@@ -1361,73 +1476,82 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to verify
-                bootstrapped skill, see `metrics </metrics.html>`_.
-            comparison (str, :py:class:`~climpred.comparisons.Comparison`): Comparison
-                passed to verify, see `comparisons </comparisons.html>`_.
-            dim (str, list of str): Dimension(s) over which to apply metric.
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare the forecast against itself, see
+                `comparisons </comparisons.html>`_
+            dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
                 is probabilistic but should not contain ``member`` when
                 ``comparison=e2c``. Defaults to ``None`` meaning that all dimensions
                 other than ``lead`` are reduced.
-            reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ``['uninitialized', 'persistence', 'climatology']``.
-                If None or empty, returns no p value.
-                For ``persistence``, choose between ``set_options(PerfectModel_persistence_from_initialized_lead_0)`` ``=False`` (default) using `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ or ``=True`` using `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
-            iterations (int): Number of resampling iterations for bootstrapping with
+            reference: Type of reference forecasts with which to verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
+                If ``None`` or ``[]``, returns no p value.
+                For ``persistence``, choose between
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=False``
+                (default) using :py:func:`~climpred.reference.compute_persistence` or
+                ``set_options(PerfectModel_persistence_from_initialized_lead_0)=True``
+                using
+                :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
+            iterations: Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
-            resample_dim (str or list): dimension to resample from. default: 'member'.
+            resample_dim: dimension to resample from. Defaults to `"member"``.
 
-                - 'member': select a different set of members from hind
-                - 'init': select a different set of initializations from hind
+                - "member": select a different set of members from forecast
+                - "init': select a different set of initializations from forecast
 
-            sig (int, default 95): Significance level in percent for deciding whether
+            sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
-            pers_sig (int): If not ``None``, the separate significance level for
+            pers_sig: If not ``None``, the separate significance level for
                 persistence. Defaults to ``None``, or the same significance as ``sig``.
-            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
-            **metric_kwargs (optional): arguments passed to ``metric``.
+            groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
+            **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            xr.Datasets: with dimensions ``results`` (holding ``verify skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
-            ``persistence`` and/or ``uninitialized``):
-                * results='verify skill', skill='initialized':
+            :py:class:`~xarray.Dataset` with dimensions ``results`` (holding
+            ``verify skill``, ``p``, ``low_ci`` and ``high_ci``) and ``skill``
+            (holding ``initialized``, ``persistence`` and/or ``uninitialized``):
+                * results="verify skill", skill="initialized":
                     mean initialized skill
-                * results='high_ci', skill='initialized':
+                * results="high_ci", skill="initialized":
                     high confidence interval boundary for initialized skill
-                * results='p', skill='uninitialized':
+                * results="p", skill="uninitialized":
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * results='p', skill='persistence':
+                * results="p", skill="persistence":
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistenceistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
 
         Reference:
-            * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
-              Gonzalez, V. Kharin, et al. “A Verification Framework for
-              Interannual-to-Decadal Predictions Experiments.” Climate
-              Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-              https://doi.org/10/f4jjvf.
+            Goddard, L., A. Kumar, A. Solomon et al.
+            “A Verification Framework for Interannual to Decadal Predictions Experiments.”
+            Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+            https://doi.org/10/f4jjvf.
 
         Example:
-            Calculate the Pearson's Anomaly Correlation ('acc') comparing every member
-            to every other member (``m2m``) reducing dimensions ``member`` and
+            Continuous Ranked Probability Score (``"crps"``) comparing every
+            member to every other member (``"m2m"``) reducing dimensions ``member`` and
             ``init`` 50 times after resampling ``member`` dimension with replacement.
-            Also calculate reference skill for the ``persistence``, ``climatology``
-            and ``uninitialized`` forecast and compare whether initialized skill is
+            Also calculate reference skill for the ``"persistence"``, ``"climatology"``
+            and ``"uninitialized"`` forecast and compare whether initialized skill is
             better than reference skill: Returns verify skill, probability that
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
 
-            >>> PerfectModelEnsemble.bootstrap(metric='acc', comparison='m2m',
-            ...     dim=['init', 'member'], iterations=50, resample_dim='member',
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> PerfectModelEnsemble.bootstrap(
+            ...     metric="crps",
+            ...     comparison="m2m",
+            ...     dim=["init", "member"],
+            ...     iterations=50,
+            ...     resample_dim="member",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
@@ -1435,16 +1559,16 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, results, lead) float64 0.7941 0.7489 ... 0.1494 0.1466
+                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.1607 0.1439
             Attributes: (12/13)
-                prediction_skill_software:                         climpred https://clim...
-                skill_calculated_by_function:                      PerfectModelEnsemble...
+                prediction_skill_software:                         climpred https://climp...
+                skill_calculated_by_function:                      PerfectModelEnsemble.b...
                 number_of_initializations:                         12
                 number_of_members:                                 10
-                metric:                                            pearson_r
+                metric:                                            crps
                 comparison:                                        m2m
-                ...
-                reference:                                         ['persistence', 'clim...
+                ...                                                ...
+                reference:                                         ['persistence', 'clima...
                 PerfectModel_persistence_from_initialized_lead_0:  False
                 resample_dim:                                      member
                 sig:                                               95
@@ -1507,44 +1631,40 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
 
 class HindcastEnsemble(PredictionEnsemble):
-    """An object for climate prediction ensembles initialized by a data-like
-    product.
+    """An object for initialized prediction ensembles.
 
-    `HindcastEnsemble` is a sub-class of `PredictionEnsemble`. It tracks a single
+    :py:class:`~climpred.classes.HindcastEnsemble` is a sub-class of
+    :py:class:`~climpred.classes.PredictionEnsemble`. It tracks a
     verification dataset (i.e., observations) associated with the hindcast ensemble
     for easy computation across multiple variables.
 
-    This object is built on `xarray` and thus requires the input object to
-    be an `xarray` Dataset or DataArray.
+    This object is built on :py:class:`~xarray.Dataset` and thus requires the input
+    object to be an :py:class:`~xarray.Dataset` or :py:class:`~xarray.DataArray`.
     """
 
-    def __init__(self, xobj: Union[xr.DataArray, xr.Dataset]) -> None:
-        """Create a `HindcastEnsemble` object by inputting output from a
-        prediction ensemble in `xarray` format.
+    def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
+        """Create ``HindcastEnsemble`` from initialized prediction ensemble output.
 
         Args:
-          xobj (xarray object):
-            decadal prediction ensemble output.
+          initialized: initialized prediction ensemble output.
 
         Attributes:
-          observations: Dictionary of verification data to associate with the decadal
-              prediction ensemble.
-          uninitialized: Dictionary of companion (or bootstrapped)
-              uninitialized ensemble run.
+          observations: datasets dictionary item of verification data to associate with
+            the prediction ensemble.
+          uninitialized: datasets dictionary item of uninitialized forecast.
         """
-        super().__init__(xobj)
+        super().__init__(initialized)
         self._datasets.update({"observations": {}})
         self.kind = "hindcast"
 
     def _apply_climpred_function(
-        self, func: Callable[..., Any], init: bool, **kwargs: Any
+        self, func: Callable[..., xr.Dataset], init: bool, **kwargs: Any
     ) -> Union["HindcastEnsemble", xr.Dataset]:
-        """Helper function to loop through verification data and apply an arbitrary
-        climpred function.
+        """Loop through verification data and apply an arbitrary climpred function.
 
         Args:
-            func (function): climpred function to apply to object.
-            init (bool): Whether or not it's the initialized ensemble.
+            func: climpred function to apply to object.
+            init: Whether or not it's the initialized ensemble.
         """
         # fixme: essentially the same as map?
         hind = self._datasets["initialized"]
@@ -1553,16 +1673,17 @@ class HindcastEnsemble(PredictionEnsemble):
         return func(hind.drop_vars(drop_init), verif.drop_vars(drop_obs), **kwargs)
 
     def _vars_to_drop(self, init: bool = True) -> Tuple[List[str], List[str]]:
-        """Returns list of variables to drop when comparing
-        initialized/uninitialized to observations.
+        """Return list of variables to drop.
+
+        When comparing initialized/uninitialized to observations.
 
         This is useful if the two products being compared do not share the same
-        variables. I.e., if the observations have ['SST'] and the initialized has
-        ['SST', 'SALT'], this will return a list with ['SALT'] to be dropped
+        variables. I.e., if the observations have ["SST"] and the initialized has
+        ["SST", "SALT"], this will return a list with ["SALT"] to be dropped
         from the initialized.
 
         Args:
-          init (bool, default True):
+          init:
             If ``True``, check variables on the initialized.
             If ``False``, check variables on the uninitialized.
 
@@ -1581,74 +1702,85 @@ class HindcastEnsemble(PredictionEnsemble):
         obs_vars_to_drop = list(set(obs_vars) - set(init_vars))
         return init_vars_to_drop, obs_vars_to_drop
 
-    @is_xarray(1)
     def add_observations(
-        self, xobj: Union[xr.DataArray, xr.Dataset]
+        self, obs: Union[xr.DataArray, xr.Dataset]
     ) -> "HindcastEnsemble":
         """Add verification data against which to verify the initialized ensemble.
 
+        Same as :py:meth:`~climpred.classes.HindcastEnsemble.add_verification`.
+
         Args:
-            xobj (xarray object): Dataset/DataArray to append to the
-                ``HindcastEnsemble`` object.
+            obs: observations added to :py:class:`~climpred.classes.HindcastEnsemble`.
         """
-        if isinstance(xobj, xr.DataArray):
-            xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets["initialized"], xobj)
-        match_initialized_vars(self._datasets["initialized"], xobj)
+        if isinstance(obs, xr.DataArray):
+            obs = obs.to_dataset()
+        match_initialized_dims(self._datasets["initialized"], obs)
+        match_initialized_vars(self._datasets["initialized"], obs)
         # Check that time is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "time", "xobj[time]")
+        obs = convert_time_index(obs, "time", "obs[time]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets["initialized"], xobj)
+        match_calendars(self._datasets["initialized"], obs)
         datasets = self._datasets.copy()
-        datasets.update({"observations": xobj})
+        datasets.update({"observations": obs})
         return self._construct_direct(datasets, kind="hindcast")
 
-    @is_xarray(1)
+    def add_verification(
+        self, verif: Union[xr.DataArray, xr.Dataset]
+    ) -> "HindcastEnsemble":
+        """Add verification data against which to verify the initialized ensemble.
+
+        Same as :py:meth:`~climpred.classes.HindcastEnsemble.add_observations`.
+
+        Args:
+            verif: verification added to :py:class:`~climpred.classes.HindcastEnsemble`.
+        """
+        return self.add_observations(verif)
+
     def add_uninitialized(
-        self, xobj: Union[xr.DataArray, xr.Dataset]
+        self, uninit: Union[xr.DataArray, xr.Dataset]
     ) -> "HindcastEnsemble":
         """Add a companion uninitialized ensemble for comparison to verification data.
 
         Args:
-            xobj (xarray object): Dataset/DataArray of the uninitialzed
-                                  ensemble.
+            uninit: uninitialzed ensemble.
         """
-        if isinstance(xobj, xr.DataArray):
-            xobj = xobj.to_dataset()
-        match_initialized_dims(self._datasets["initialized"], xobj, uninitialized=True)
-        match_initialized_vars(self._datasets["initialized"], xobj)
+        if isinstance(uninit, xr.DataArray):
+            uninit = uninit.to_dataset()
+        match_initialized_dims(
+            self._datasets["initialized"], uninit, uninitialized=True
+        )
+        match_initialized_vars(self._datasets["initialized"], uninit)
         # Check that init is int, cftime, or datetime; convert ints or cftime to
         # datetime.
-        xobj = convert_time_index(xobj, "time", "xobj[time]")
+        uninit = convert_time_index(uninit, "time", "uninit[time]")
         # Check that converted/original cftime calendar is the same as the
         # initialized calendar to avoid any alignment errors.
-        match_calendars(self._datasets["initialized"], xobj, kind2="uninitialized")
+        match_calendars(self._datasets["initialized"], uninit, kind2="uninitialized")
         datasets = self._datasets.copy()
-        datasets.update({"uninitialized": xobj})
+        datasets.update({"uninitialized": uninit})
         return self._construct_direct(datasets, kind="hindcast")
 
     def get_observations(self) -> xr.Dataset:
-        """Returns xarray Datasets of the observations/verification data.
+        """Return the :py:class:`~xarray.Dataset` of the observations/verification data.
 
         Returns:
-            ``xarray`` Dataset of observations.
+            observations
         """
         return self._datasets["observations"]
 
     def generate_uninitialized(
         self, resample_dim: List[str] = ["init", "member"]
     ) -> "HindcastEnsemble":
-        """Generate an uninitialized ensemble by resampling from the
-        initialized prediction ensemble.
+        """Generate ``uninitialized`` by resampling from ``initialized``.
 
         Args:
-            resample_dim : list of str
-                dimension to resample from. Must contain "init".
+            resample_dim: dimension to resample from. Must contain ``"init"``.
 
         Returns:
-            resampled uninitialized ensemble added to HindcastEnsemble
+            resampled ``uninitialized`` ensemble added to
+            :py:class:`~climpred.classes.HindcastEnsemble`
 
         Example:
             >>> HindcastEnsemble  # uninitialized from historical simulations
@@ -1687,41 +1819,35 @@ class HindcastEnsemble(PredictionEnsemble):
         **plot_kwargs: Any,
     ) -> Any:
         """
-        Plot ``initialized`` ``valid_time`` where matching
-        ``verification``/``observation`` ``time`` depending on ``alignment``.
-        Plots ``days since reference date`` controlled by ``date2num_units``.
-        ``NaN`` / white space shows where no verification is done.
+        Plot ``initialized`` ``valid_time`` where matching ``verification`` ``time``.
+
+        Depends on ``alignment``. Plots ``days since reference date`` controlled by
+        ``date2num_units``. ``NaN`` / white space shows where no verification is done.
 
         Args:
-            alignment (str or list of str): which inits or verification times should be aligned?
+            alignment: which inits or verification times should be aligned?
 
-                - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
-                  ``verif`` to a common time frame at each lead.
-
-                - 'same_inits': slice to a common init frame prior to computing
+                - ``"maximize"``: maximize the degrees of freedom by slicing
+                  ``initialized`` and ``verif`` to a common time frame at each lead.
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
-                - 'same_verif': slice to a common/consistent verification time frame
+                - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
+                - ``None`` defaults to the three above.
 
-                - None defaults to the three above
-            reference (str, list of str): Type of reference forecasts to also verify against the
-                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
-                Defaults to None.
-            date2num_units : str
-                passed to cftime.date2num as units
-            return_xr : bool
-                see return
-            cmap : str
-                color palette
-            edgecolors : str
-                color of the edges in the plot
-            **plot_kwargs (optional): arguments passed to ``plot``.
+            reference: Type of reference forecasts with which to verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
+            date2num_units: passed to ``cftime.date2num`` as units
+            return_xr: if ``True`` return :py:class:`~xarray.DataArray` else plot
+            cmap: color palette
+            edgecolors: color of the edges in the plot
+            **plot_kwargs: arguments passed to ``plot``.
 
-        Return:
-            xarray.DataArray if return_xr else plot
+        Returns:
+            :py:class:`~xarray.DataArray` if ``return_xr`` else plot
 
         Example:
             >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
@@ -1756,7 +1882,9 @@ class HindcastEnsemble(PredictionEnsemble):
             Attributes:
                 units:    days since 1960-01-01
 
-            >>> HindcastEnsemble.plot_alignment(alignment="same_verifs")  # doctest: +SKIP
+            >>> HindcastEnsemble.plot_alignment(
+            ...     alignment="same_verifs"
+            ... )  # doctest: +SKIP
             <matplotlib.collections.QuadMesh object at 0x1405c1520>
 
         See also:
@@ -1793,7 +1921,7 @@ class HindcastEnsemble(PredictionEnsemble):
         if return_xr:
             return verif_dates_xr
         try:
-            import nc_time_axis
+            import nc_time_axis  # noqa:
 
             assert int(nc_time_axis.__version__.replace(".", "")) >= 140
             return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
@@ -1810,53 +1938,53 @@ class HindcastEnsemble(PredictionEnsemble):
         groupby: groupbyType = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
-        """Verifies the initialized ensemble against observations.
+        """Verify the initialized ensemble against observations.
 
         .. note::
             This will automatically verify against all shared variables
             between the initialized ensemble and observations/verification data.
 
         Args:
-            reference (str, list of str): Type of reference forecasts to also verify against the
-                observations. Choose one or more of ['uninitialized', 'persistence', 'climatology'].
-                Defaults to None.
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
-                verification. see `metrics </metrics.html>`_.
-            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
-                compare to the observations/verification data. See
-                `comparisons </comparisons.html>`_.
-            dim (str, list of str): Dimension(s) to apply metric over. ``dim`` is passed
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare to the observations/verification data.
+                See `comparisons </comparisons.html>`_.
+            dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
                 but should not contain ``member`` when ``comparison=e2o``. Defaults to
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
-            alignment (str): which inits or verification times should be aligned?
+            alignment: which inits or verification times should be aligned?
 
-                - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
-                  ``verif`` to a common time frame at each lead.
-
-                - 'same_inits': slice to a common init frame prior to computing
+                - ``"maximize"``: maximize the degrees of freedom by slicing
+                  ``initialized`` and ``verif`` to a common time frame at each lead.
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
-                - 'same_verif': slice to a common/consistent verification time frame
+                - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            groupby (str): group ``init`` before passing ``initialized`` to ``verify``.
-            **metric_kwargs (optional): arguments passed to ``metric``.
+            reference: Type of reference forecasts with which to verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
+            groupby: group ``init`` before passing ``initialized`` to ``verify``.
+            **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            Dataset with dimension skill reduced by dim containing initialized and
-            reference skill(s) if specified.
+            ``initialized`` and ``reference`` forecast skill reduced by dimensions
+            ``dim``
 
         Example:
-            Root mean square error (``rmse``) comparing every member with the
+            Continuous Ranked Probability Score (``crps``) comparing every member with the
             verification (``m2o``) over the same verification time (``same_verifs``)
             for all leads reducing dimensions ``init`` and ``member``:
 
-            >>> HindcastEnsemble.verify(metric='rmse', comparison='m2o',
-            ...     alignment='same_verifs', dim=['init','member'])
+            >>> HindcastEnsemble.verify(
+            ...     metric="rmse",
+            ...     comparison="m2o",
+            ...     alignment="same_verifs",
+            ...     dim=["init", "member"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -1875,29 +2003,33 @@ class HindcastEnsemble(PredictionEnsemble):
                 dim:                           ['init', 'member']
                 reference:                     []
 
-            Pearson's Anomaly Correlation ('acc') comparing the ensemble mean with the
-            verification (``e2o``) over the same initializations (``same_inits``) for
-            all leads reducing dimension ``init`` while also calculating reference
-            skill for the ``persistence``, ``climatology`` and ``uninitialized``
-            forecast.
+            Root mean square error (``"rmse"``) comparing the ensemble mean with
+            the verification (``"e2o"``) over the same initializations
+            (``"same_inits"``) for all leads reducing dimension ``init`` while also
+            calculating reference skill for the ``"persistence"``, ``"climatology"``
+            and ``"uninitialized"`` forecast.
 
-            >>> HindcastEnsemble.verify(metric='acc', comparison='e2o',
-            ...     alignment='same_inits', dim='init',
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> HindcastEnsemble.verify(
+            ...     metric="rmse",
+            ...     comparison="e2o",
+            ...     alignment="same_inits",
+            ...     dim="init",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
             Dimensions:  (skill: 4, lead: 10)
             Coordinates:
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.9023 0.8807 0.8955 ... 0.9078 0.9128 0.9159
+                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.07377 0.07409
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
                 number_of_initializations:     64
                 number_of_members:             10
                 alignment:                     same_inits
-                metric:                        pearson_r
+                metric:                        rmse
                 comparison:                    e2o
                 dim:                           init
                 reference:                     ['persistence', 'climatology', 'uninitiali...
@@ -1962,7 +2094,7 @@ class HindcastEnsemble(PredictionEnsemble):
                     verif,
                     verif_dates,
                     lead,
-                    hind=forecast,
+                    initialized=forecast,
                     hist=hist,
                     inits=inits,
                     # Ensure apply metric function returns skill and not reference
@@ -1987,7 +2119,7 @@ class HindcastEnsemble(PredictionEnsemble):
                             verif,
                             verif_dates,
                             lead,
-                            hind=forecast,
+                            initialized=forecast,
                             hist=hist,
                             inits=inits,
                             reference=r,
@@ -2079,97 +2211,100 @@ class HindcastEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric (str, :py:class:`~climpred.metrics.Metric`): Metric to apply for
-                verification, see `metrics <metrics.html>`_.
-            comparison (str, :py:class:`~climpred.comparisons.Comparison`): How to
-                compare to the observations/verification data, see
-                `comparisons </comparisons.html>`_.
-            dim (str, list of str): dimension(s) to apply metric over. ``dim`` is passed
+            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            comparison: How to compare to the observations/verification data.
+                See `comparisons </comparisons.html>`_.
+            dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
-                but should not contain ``member`` when ``comparison='e2o'``. Defaults to
+                but should not contain ``member`` when ``comparison="e2o"``. Defaults to
                 ``None`` meaning that all dimensions other than ``lead`` are reduced.
-            reference (str, list of str): Type of reference forecasts with which to
-                verify. One or more of ['uninitialized', 'persistence', 'climatology'].
-                If None or empty, returns no p value.
-            alignment (str): which inits or verification times should be aligned?
+            reference: Type of reference forecasts with which to verify against.
+                One or more of ``["uninitialized", "persistence", "climatology"]``.
+                Defaults to ``None`` meaning no reference.
+                If ``None`` or ``[]``, returns no p value.
+            alignment: which inits or verification times should be aligned?
 
-                - 'maximize': maximize the degrees of freedom by slicing ``init`` and
+                - ""maximize: maximize the degrees of freedom by slicing ``init`` and
                   ``verif`` to a common time frame at each lead.
-
-                - 'same_inits': slice to a common init frame prior to computing
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
-                - 'same_verif': slice to a common/consistent verification time frame
+                - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            iterations (int): Number of resampling iterations for bootstrapping with
+            iterations: Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
-            sig (int, default 95): Significance level in percent for deciding whether
+            sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
-            resample_dim (str or list): dimension to resample from. default: 'member'.
+            resample_dim: dimension to resample from. Default: ``"member"``.
 
-                - 'member': select a different set of members from hind
-                - 'init': select a different set of initializations from hind
+                - ``"member"``: select a different set of members from hind
+                - ``"init"``: select a different set of initializations from hind
 
-            pers_sig (int, default None):
-                If not None, the separate significance level for persistence.
-            groupby (str, xr.DataArray): group ``init`` before passing ``initialized`` to ``bootstrap``.
-            **metric_kwargs (optional): arguments passed to ``metric``.
+            pers_sig: If not ``None``, the separate significance level for persistence.
+            groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
+            **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            xr.Datasets: with dimensions ``results`` (holding ``skill``, ``p``,
-            ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
+            :py:class:`~xarray.Dataset` with dimensions ``results`` (holding ``skill``,
+            ``p``, ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
-                * results='verify skill', skill='initialized':
+                * results="verify skill", skill="initialized":
                     mean initialized skill
-                * results='high_ci', skill='initialized':
+                * results="high_ci", skill="initialized":
                     high confidence interval boundary for initialized skill
-                * results='p', skill='uninitialized':
+                * results="p", skill="uninitialized":
                     p value of the hypothesis that the
                     difference of skill between the initialized and
                     uninitialized simulations is smaller or equal to zero
                     based on bootstrapping with replacement.
-                * results='p', skill='persistence':
+                * results="p", skill="persistence":
                     p value of the hypothesis that the
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
 
         Example:
-            Calculate the Pearson's Anomaly Correlation ('acc') comparing the ensemble
-            mean forecast to the verification (``e2o``) over the same verification
-            times (``same_verifs``) for all leads reducing dimensions ``init`` 50
-            times after resampling ``member`` dimension with replacement. Also
-            calculate reference skill for the ``persistence``, ``climatology``
-            and ``uninitialized`` forecast and compare whether initialized skill is
+            Continuous Ranked Probability Score (``"crps"``) comparing every member
+            forecast to the verification (``"m2o"``) over the same initializations
+            (``"same_inits"``) for all leads reducing dimension ``member`` 50 times
+            after resampling ``member`` dimension with replacement. Note that dimension
+            ``init`` remains.
+            Also calculate reference skill for the ``"persistence"``, ``"climatology"``
+            and ``"uninitialized"`` forecast and compare whether initialized skill is
             better than reference skill: Returns verify skill, probability that
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
 
-            >>> HindcastEnsemble.bootstrap(metric='acc', comparison='e2o',
-            ...     dim='init', iterations=50, resample_dim='member',
-            ...     alignment='same_verifs',
-            ...     reference=['persistence', 'climatology' ,'uninitialized'])
+            >>> HindcastEnsemble.bootstrap(
+            ...     metric="crps",
+            ...     comparison="m2o",
+            ...     dim="member",
+            ...     iterations=50,
+            ...     resample_dim="member",
+            ...     alignment="same_inits",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
             <xarray.Dataset>
-            Dimensions:  (skill: 4, results: 4, lead: 10)
+            Dimensions:     (skill: 4, results: 4, lead: 10, init: 51)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
-              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
+              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+                valid_time  (lead, init) object 1956-01-01 00:00:00 ... 2015-01-01 00:00:00
+              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
+              * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, results, lead) float64 0.9313 0.9119 ... 0.8078 0.8078
-            Attributes: (12/13)
+                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.1033
+            Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()
-                number_of_initializations:     64
                 number_of_members:             10
-                alignment:                     same_verifs
-                metric:                        pearson_r
-                ...                            ...
-                dim:                           init
+                alignment:                     same_inits
+                metric:                        crps
+                comparison:                    m2o
+                dim:                           member
                 reference:                     ['persistence', 'climatology', 'uninitiali...
                 resample_dim:                  member
                 sig:                           95
@@ -2202,7 +2337,8 @@ class HindcastEnsemble(PredictionEnsemble):
             self.get_uninitialized(), xr.Dataset
         ):
             raise ValueError(
-                "reference uninitialized requires uninitialized dataset. Use HindcastEnsemble.add_uninitialized(uninitialized_ds)."
+                "`reference='uninitialized'` requires `uninitialized` dataset."
+                "Use `HindcastEnsemble.add_uninitialized(uninitialized_ds)``."
             )
         bootstrapped_skill = bootstrap_hindcast(
             self.get_initialized(),
@@ -2248,72 +2384,80 @@ class HindcastEnsemble(PredictionEnsemble):
         cv: Union[bool, str] = False,
         **metric_kwargs: metric_kwargsType,
     ) -> "HindcastEnsemble":
-        """Calculate and remove bias from
-        :py:class:`~climpred.classes.HindcastEnsemble`.
-        Bias is grouped by ``seasonality`` set via :py:class:`~climpred.options.set_options`. When wrapping xclim.sbda.adjustment use ``group`` instead.
+        """Remove bias from :py:class:`~climpred.classes.HindcastEnsemble`.
+
+        Bias is grouped by ``seasonality`` set via
+        :py:class:`~climpred.options.set_options`. When wrapping
+        :py:class:`~xclim.sdba.adjustment.TrainAdjust` use ``group`` instead.
 
         Args:
-            alignment (str): which inits or verification times should be aligned?
+            alignment: which inits or verification times should be aligned?
 
-                - 'maximize': maximize the degrees of freedom by slicing ``hind`` and
-                  ``verif`` to a common time frame at each lead.
-
-                - 'same_inits': slice to a common init frame prior to computing
+                - ``""maximize``: maximize the degrees of freedom by slicing
+                  ``initialized`` and ``verif`` to a common time frame at each lead.
+                - ``"same_inits"``: slice to a common ``init`` frame prior to computing
                   metric. This philosophy follows the thought that each lead should be
                   based on the same set of initializations.
-
-                - 'same_verif': slice to a common/consistent verification time frame
+                - ``"same_verif"``: slice to a common/consistent verification time frame
                   prior to computing metric. This philosophy follows the thought that
                   each lead should be based on the same set of verification dates.
 
-            how (str): what kind of bias removal to perform. Defaults to 'additive_mean'. Select from:
+            how: what kind of bias removal to perform.
+                Defaults to ``"additive_mean"``. Select from:
 
-                - 'additive_mean': correcting the mean forecast additively
-                - 'multiplicative_mean': correcting the mean forecast multiplicatively
-                - 'multiplicative_std': correcting the standard deviation multiplicatively
-                - 'modified_quantile': `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
-                - 'basic_quantile': `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
-                - 'gamma_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-                - 'normal_mapping': `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-                - 'EmpiricalQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.EmpiricalQuantileMapping>`_
-                - 'DetrendedQuantileMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.DetrendedQuantileMapping>`_
-                - 'PrincipalComponents': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.PrincipalComponents>`_
-                - 'QuantileDeltaMapping': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.QuantileDeltaMapping>`_
-                - 'Scaling': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.Scaling>`_
-                - 'LOCI': `Reference <https://xclim.readthedocs.io/en/stable/sdba_api.html#xclim.sdba.adjustment.LOCI>`_
+                - ``"additive_mean"``: correcting the mean forecast additively
+                - ``"multiplicative_mean"``: correcting the mean forecast
+                  multiplicatively
+                - ``"multiplicative_std"``: correcting the standard deviation
+                  multiplicatively
+                - ``"modified_quantile"``: `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
+                - ``"basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
+                - ``"gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - ``"normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - :py:class:`~xclim.sdba.adjustment.EmpiricalQuantileMapping`
+                - :py:class:`~xclim.sdba.adjustment.DetrendedQuantileMapping`
+                - :py:class:`~xclim.sdba.adjustment.PrincipalComponents`
+                - :py:class:`~xclim.sdba.adjustment.QuantileDeltaMapping`
+                - :py:class:`~xclim.sdba.adjustment.Scaling`
+                - :py:class:`~xclim.sdba.adjustment.LOCI`
 
-            train_test_split (str): How to separate train period to calculate the bias and test period to apply bias correction to? For a detailed description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
+            train_test_split: How to separate train period to calculate the bias
+                and test period to apply bias correction to? For a detailed
+                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:  # noqa: E501
 
-                - `fair`: no overlap between `train` and `test` (recommended).
+                - ``"fair"```: no overlap between `train` and `test` (recommended).
                     Set either `train_init` or `train_time`.
-                - `unfair`: completely overlapping `train` and `test`
+                - ``"unfair"``: completely overlapping `train` and `test`
                     (climpred default).
-                - `unfair-cv`: overlapping `train` and `test` except for current
+                - ``"unfair-cv"```: overlapping `train` and `test` except for current
                     `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
-                    (set `cv='LOO'`).
+                    (set `cv="LOO"`).
 
-            train_init (xr.DataArray, slice): Define initializations for training
-                when ``alignment='same_inits/maximize'``.
-            train_time (xr.DataArray, slice): Define time for training
-                when ``alignment='same_verif'``.
-            cv (bool or str): Only relevant when `train_test_split='unfair-cv'`. Defaults to False.
+            train_init: Define initializations for training
+                when ``alignment="same_inits/maximize"``.
+            train_time: Define time for training
+                when ``alignment="same_verif"``.
+            cv: Only relevant when `train_test_split="unfair-cv"`.
+                Defaults to ``False``.
 
-                - True/'LOO': Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                - True/"LOO": Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
                 - False: include all initializations in the calculation of bias, which
                     is much faster and but yields similar skill with a large N of
                     initializations.
 
-            **metric_kwargs (dict): passed to ``xclim.sdba`` (including ``group``) or ``XBias_Correction``
+            **metric_kwargs: passed to ``xclim.sdba`` (including ``group``)
+                or ``XBias_Correction``
 
         Returns:
-            HindcastEnsemble: bias removed HindcastEnsemble.
+            bias removed :py:class:`~climpred.classes.HindcastEnsemble`.
 
         Example:
 
             Skill from raw model output without bias reduction:
 
-            >>> HindcastEnsemble.verify(metric='rmse', comparison='e2o',
-            ...     alignment='maximize', dim='init')
+            >>> HindcastEnsemble.verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2333,13 +2477,14 @@ class HindcastEnsemble(PredictionEnsemble):
                 reference:                     []
 
             Note that this HindcastEnsemble is already bias reduced, therefore
-            ``train_test_split='unfair'`` has hardly any effect. Use all
+            ``train_test_split="unfair"`` has hardly any effect. Use all
             initializations to calculate bias and verify skill:
 
-            >>> HindcastEnsemble.remove_bias(alignment='maximize',
-            ...     how='additive_mean', test_train_split='unfair'
-            ... ).verify(metric='rmse', comparison='e2o', alignment='maximize',
-            ... dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="maximize", how="additive_mean", test_train_split="unfair"
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2360,14 +2505,18 @@ class HindcastEnsemble(PredictionEnsemble):
 
             Separate initializations 1954 - 1980 to calculate bias. Note that
             this HindcastEnsemble is already bias reduced, therefore
-            ``train_test_split='fair'`` worsens skill here. Generally,
-            ``train_test_split='fair'`` is recommended to use for a fair
+            ``train_test_split="fair"`` worsens skill here. Generally,
+            ``train_test_split="fair"`` is recommended to use for a fair
             comparison against real-time forecasts.
 
-            >>> HindcastEnsemble.remove_bias(alignment='maximize',
-            ...     how='additive_mean', train_test_split='fair',
-            ...     train_init=slice('1954', '1980')).verify(metric='rmse',
-            ...     comparison='e2o', alignment='maximize', dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="maximize",
+            ...     how="additive_mean",
+            ...     train_test_split="fair",
+            ...     train_init=slice("1954", "1980"),
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2386,12 +2535,18 @@ class HindcastEnsemble(PredictionEnsemble):
                 dim:                           init
                 reference:                     []
 
-            Wrapping methods ``how`` from `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and providing ``group`` for ``groupby``:
+            Wrapping methods ``how`` from
+            `xclim <https://xclim.readthedocs.io/en/stable/sdba_api.html>`_ and
+            providing ``group`` for ``groupby``:
 
-            >>> HindcastEnsemble.remove_bias(alignment='same_init', group='init',
-            ...     how='DetrendedQuantileMapping', train_test_split='unfair',
-            ...     ).verify(metric='rmse',
-            ...     comparison='e2o', alignment='maximize', dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="same_init",
+            ...     group="init",
+            ...     how="DetrendedQuantileMapping",
+            ...     train_test_split="unfair",
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2412,10 +2567,13 @@ class HindcastEnsemble(PredictionEnsemble):
 
             Wrapping methods ``how`` from `bias_correction <https://github.com/pankajkarman/bias_correction/blob/master/bias_correction.py>`_:
 
-            >>> HindcastEnsemble.remove_bias(alignment='same_init',
-            ...     how='modified_quantile', train_test_split='unfair',
-            ...     ).verify(metric='rmse',
-            ...     comparison='e2o', alignment='maximize', dim='init')
+            >>> HindcastEnsemble.remove_bias(
+            ...     alignment="same_init",
+            ...     how="modified_quantile",
+            ...     train_test_split="unfair",
+            ... ).verify(
+            ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
+            ... )
             <xarray.Dataset>
             Dimensions:  (lead: 10)
             Coordinates:
@@ -2436,10 +2594,15 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
-                f"train_test_split='{train_test_split}' not implemented. Please choose `train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, see Risbey et al. 2021 http://www.nature.com/articles/s41467-021-23771-z for description and https://github.com/pangeo-data/climpred/issues/648 for implementation status."
+                f"train_test_split='{train_test_split}' not implemented. Please choose "
+                f"`train_test_split` from {BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS}, "
+                "see Risbey et al. 2021 "
+                "http://www.nature.com/articles/s41467-021-23771-z for description and "
+                "https://github.com/pangeo-data/climpred/issues/648 for implementation "
+                "status."
             )
 
-        alignment = _check_valud_alignment(alignment)
+        alignment = _check_valid_alignment(alignment)
 
         if train_test_split in ["fair"]:
             if (
@@ -2447,14 +2610,20 @@ class HindcastEnsemble(PredictionEnsemble):
                 or not isinstance(train_init, (slice, xr.DataArray))
             ) and (alignment in ["same_inits", "maximize"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide `train_init` as xr.DataArray, e.g. `hindcast.coords["init"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_init={train_init}`.'
+                    f'When alignment="{alignment}", please provide `train_init` as '
+                    f"`xr.DataArray`, e.g. "
+                    '`HindcastEnsemble.coords["init"].slice(start, end)` '
+                    "or slice, e.g. `slice(start, end)`, got `train_init={train_init}`."
                 )
             if (
                 (train_time is None)
                 or not isinstance(train_time, (slice, xr.DataArray))
             ) and (alignment in ["same_verif"]):
                 raise ValueError(
-                    f'When alignment="{alignment}", please provide `train_time` as xr.DataArray, e.g. `hindcast.coords["time"].slice(start, end)` or slice, e.g. `slice(start, end)`, got `train_time={train_time}`'
+                    f'When alignment="{alignment}", please provide `train_time` as '
+                    "`xr.DataArray`, e.g. "
+                    '`HindcastEnsemble.coords["time"].slice(start, end)` '
+                    "or slice, e.g. `slice(start, end)`, got `train_time={train_time}`."
                 )
 
             if isinstance(train_init, slice):
@@ -2472,19 +2641,22 @@ class HindcastEnsemble(PredictionEnsemble):
             func = xclim_sdba
         else:
             raise NotImplementedError(
-                f"bias removal '{how}' is not implemented, please choose from {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."
+                f"bias removal '{how}' is not implemented, please choose from "
+                f" {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."  # noqa: E501
             )
 
         if train_test_split in ["unfair-cv"]:
             if cv not in [True, "LOO"]:
                 raise ValueError(
-                    f"Please provide `cv='LOO'` when train_test_split='unfair-cv', found `cv='{cv}'`"
+                    f"Please provide cross-validation keyword `cv='LOO'` when using "
+                    f"`train_test_split='unfair-cv'`, found `cv='{cv}'`."
                 )
             else:
                 cv = "LOO"  # backward compatibility
             if cv not in CROSS_VALIDATE_METHODS:
                 raise NotImplementedError(
-                    f"cross validation method {cv} not implemented. Please choose cv from {CROSS_VALIDATE_METHODS}."
+                    f"Cross validation method {cv} not implemented. "
+                    f"Please choose cv from {CROSS_VALIDATE_METHODS}."
                 )
             metric_kwargs["cv"] = cv
 

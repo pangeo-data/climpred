@@ -1,6 +1,6 @@
 # for general checks of climpred-required dimensions
 CLIMPRED_ENSEMBLE_DIMS = ["init", "member", "lead"]
-# corresponding CF-complying standard_names from http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html to rename from
+# corresponding CF-complying standard_names from http://cfconventions.org/Data/cf-standard-names/current/build/cf-standard-name-table.html to rename from  # noqa: E501
 CF_STANDARD_NAMES = {
     "init": "forecast_reference_time",
     "member": "realization",

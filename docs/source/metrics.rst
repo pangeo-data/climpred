@@ -1,9 +1,10 @@
 .. currentmodule:: climpred.metrics
 
 .. ipython:: python
-   :suppress:
+    :suppress:
 
     from climpred.metrics import __ALL_METRICS__ as all_metrics
+
     metric_aliases = {}
     for m in all_metrics:
         if m.aliases is not None:
@@ -16,13 +17,19 @@
 Metrics
 #######
 
-All high-level functions like :py:meth:`~climpred.classes.HindcastEnsemble.verify` and
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap` (for both ``HindcastEnsemble`` and ``PerfectModelEnsemble`` objects) have a ``metric`` argument
+All high-level functions like :py:class:`~climpred.classes.HindcastEnsemble`
+:py:meth:`~climpred.classes.HindcastEnsemble.verify`,
+:py:class:`~climpred.classes.HindcastEnsemble`
+:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
+:py:class:`~climpred.classes.PerfectModelEnsemble`
+:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
+:py:class:`~climpred.classes.PerfectModelEnsemble`
+:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` have a ``metric`` argument
 that has to be called to determine which metric is used in computing predictability.
 
 .. note::
 
-    We use the phrase 'observations' ``o`` here to refer to the 'truth' data to which
+    We use the term 'observations' ``o`` here to refer to the 'truth' data to which
     we compare the forecast ``f``. These metrics can also be applied relative
     to a control simulation, reconstruction, observations, etc. This would just
     change the resulting score from quantifying skill to quantifying potential
@@ -65,7 +72,7 @@ Pearson Product-Moment Correlation Coefficient
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['pearson_r']}")
+    print(f"Keywords: {metric_aliases['pearson_r']}")
 
 .. autofunction:: _pearson_r
 
@@ -75,7 +82,7 @@ Pearson Correlation p value
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['pearson_r_p_value']}")
+    print(f"Keywords: {metric_aliases['pearson_r_p_value']}")
 
 .. autofunction:: _pearson_r_p_value
 
@@ -85,7 +92,7 @@ Effective Sample Size
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['effective_sample_size']}")
+    print(f"Keywords: {metric_aliases['effective_sample_size']}")
 
 .. autofunction:: _effective_sample_size
 
@@ -95,7 +102,7 @@ Pearson Correlation Effective p value
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['pearson_r_eff_p_value']}")
+    print(f"Keywords: {metric_aliases['pearson_r_eff_p_value']}")
 
 .. autofunction:: _pearson_r_eff_p_value
 
@@ -106,7 +113,7 @@ Spearman's Rank Correlation Coefficient
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['spearman_r']}")
+    print(f"Keywords: {metric_aliases['spearman_r']}")
 
 .. autofunction:: _spearman_r
 
@@ -117,7 +124,7 @@ Spearman's Rank Correlation Coefficient p value
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['spearman_r_p_value']}")
+    print(f"Keywords: {metric_aliases['spearman_r_p_value']}")
 
 .. autofunction:: _spearman_r_p_value
 
@@ -127,7 +134,7 @@ Spearman's Rank Correlation Effective p value
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['spearman_r_eff_p_value']}")
+    print(f"Keywords: {metric_aliases['spearman_r_eff_p_value']}")
 
 .. autofunction:: _spearman_r_eff_p_value
 
@@ -143,7 +150,7 @@ Mean Squared Error (MSE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['mse']}")
+    print(f"Keywords: {metric_aliases['mse']}")
 
 .. autofunction:: _mse
 
@@ -154,7 +161,7 @@ Root Mean Square Error (RMSE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['rmse']}")
+    print(f"Keywords: {metric_aliases['rmse']}")
 
 .. autofunction:: _rmse
 
@@ -165,7 +172,7 @@ Mean Absolute Error (MAE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['mae']}")
+    print(f"Keywords: {metric_aliases['mae']}")
 
 .. autofunction:: _mae
 
@@ -176,7 +183,7 @@ Median Absolute Error
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['median_absolute_error']}")
+    print(f"Keywords: {metric_aliases['median_absolute_error']}")
 
 .. autofunction:: _median_absolute_error
 
@@ -187,7 +194,7 @@ Spread
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['spread']}")
+    print(f"Keywords: {metric_aliases['spread']}")
 
 .. autofunction:: _spread
 
@@ -198,7 +205,7 @@ Multiplicative bias
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['mul_bias']}")
+    print(f"Keywords: {metric_aliases['mul_bias']}")
 
 .. autofunction:: _mul_bias
 
@@ -218,7 +225,7 @@ Normalized Mean Square Error (NMSE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['nmse']}")
+    print(f"Keywords: {metric_aliases['nmse']}")
 
 .. autofunction:: _nmse
 
@@ -229,7 +236,7 @@ Normalized Mean Absolute Error (NMAE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['nmae']}")
+    print(f"Keywords: {metric_aliases['nmae']}")
 
 .. autofunction:: _nmae
 
@@ -240,7 +247,7 @@ Normalized Root Mean Square Error (NRMSE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['nrmse']}")
+    print(f"Keywords: {metric_aliases['nrmse']}")
 
 .. autofunction:: _nrmse
 
@@ -251,7 +258,7 @@ Mean Square Error Skill Score (MSESS)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['msess']}")
+    print(f"Keywords: {metric_aliases['msess']}")
 
 .. autofunction:: _msess
 
@@ -262,7 +269,7 @@ Mean Absolute Percentage Error (MAPE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['mape']}")
+    print(f"Keywords: {metric_aliases['mape']}")
 
 .. autofunction:: _mape
 
@@ -272,7 +279,7 @@ Symmetric Mean Absolute Percentage Error (sMAPE)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['smape']}")
+    print(f"Keywords: {metric_aliases['smape']}")
 
 .. autofunction:: _smape
 
@@ -283,7 +290,7 @@ Unbiased Anomaly Correlation Coefficient (uACC)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['uacc']}")
+    print(f"Keywords: {metric_aliases['uacc']}")
 
 .. autofunction:: _uacc
 
@@ -291,7 +298,7 @@ Unbiased Anomaly Correlation Coefficient (uACC)
 Murphy Decomposition Metrics
 ============================
 
-Metrics derived in [Murphy1988]_ which decompose the ``MSESS`` into a correlation term,
+Metrics derived in Murphy1988_ which decompose the ``MSESS`` into a correlation term,
 a conditional bias term, and an unconditional bias term. See
 https://www-miklip.dkrz.de/about/murcss/ for a walk through of the decomposition.
 
@@ -301,7 +308,7 @@ Standard Ratio
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['std_ratio']}")
+    print(f"Keywords: {metric_aliases['std_ratio']}")
 
 .. autofunction:: _std_ratio
 
@@ -311,7 +318,7 @@ Conditional Bias
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['conditional_bias']}")
+    print(f"Keywords: {metric_aliases['conditional_bias']}")
 
 .. autofunction:: _conditional_bias
 
@@ -321,7 +328,7 @@ Unconditional Bias
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['unconditional_bias']}")
+    print(f"Keywords: {metric_aliases['unconditional_bias']}")
 
 Simple bias of the forecast minus the observations.
 
@@ -333,7 +340,7 @@ Bias Slope
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['bias_slope']}")
+    print(f"Keywords: {metric_aliases['bias_slope']}")
 
 .. autofunction:: _bias_slope
 
@@ -343,7 +350,7 @@ Murphy's Mean Square Error Skill Score
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['msess_murphy']}")
+    print(f"Keywords: {metric_aliases['msess_murphy']}")
 
 .. autofunction:: _msess_murphy
 
@@ -361,7 +368,7 @@ Continuous Ranked Probability Score (CRPS)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['crps']}")
+    print(f"Keywords: {metric_aliases['crps']}")
 
 .. autofunction:: _crps
 
@@ -371,7 +378,7 @@ Continuous Ranked Probability Skill Score (CRPSS)
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['crpss']}")
+    print(f"Keywords: {metric_aliases['crpss']}")
 
 .. autofunction:: _crpss
 
@@ -381,7 +388,7 @@ Continuous Ranked Probability Skill Score Ensemble Spread
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['crpss_es']}")
+    print(f"Keywords: {metric_aliases['crpss_es']}")
 
 .. autofunction:: _crpss_es
 
@@ -391,7 +398,7 @@ Brier Score
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['brier_score']}")
+    print(f"Keywords: {metric_aliases['brier_score']}")
 
 .. autofunction:: _brier_score
 
@@ -401,7 +408,7 @@ Threshold Brier Score
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['threshold_brier_score']}")
+    print(f"Keywords: {metric_aliases['threshold_brier_score']}")
 
 .. autofunction:: _threshold_brier_score
 
@@ -411,7 +418,7 @@ Ranked Probability Score
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['rps']}")
+    print(f"Keywords: {metric_aliases['rps']}")
 
 .. autofunction:: _rps
 
@@ -421,7 +428,7 @@ Reliability
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['reliability']}")
+    print(f"Keywords: {metric_aliases['reliability']}")
 
 .. autofunction:: _reliability
 
@@ -431,7 +438,7 @@ Discrimination
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['discrimination']}")
+    print(f"Keywords: {metric_aliases['discrimination']}")
 
 .. autofunction:: _discrimination
 
@@ -441,7 +448,7 @@ Rank Histogram
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['rank_histogram']}")
+    print(f"Keywords: {metric_aliases['rank_histogram']}")
 
 .. autofunction:: _rank_histogram
 
@@ -451,7 +458,7 @@ Logarithmic Ensemble Spread Score
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['less']}")
+    print(f"Keywords: {metric_aliases['less']}")
 
 .. autofunction:: _less
 
@@ -472,7 +479,7 @@ Receiver Operating Characteristic
 .. ipython:: python
 
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
-    print(f"\n\nKeywords: {metric_aliases['roc']}")
+    print(f"Keywords: {metric_aliases['roc']}")
 
 .. autofunction:: _roc
 

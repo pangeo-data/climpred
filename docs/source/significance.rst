@@ -14,9 +14,10 @@ system is skillful. Some questions that significance testing can answer are:
     - Are correlation coefficients statistically significant despite temporal and
       spatial autocorrelation?
 
-All of these questions deal with statistical significance. See below on how to use ``climpred``
-to address these questions. Please also have a look at the `significance testing
-example <examples/decadal/significance.html>`__.
+All of these questions deal with statistical significance. See below on how to use
+``climpred`` to address these questions.
+Please also have a look at the
+`significance testing example <examples/decadal/significance.html>`__.
 
 p value for temporal correlations
 #################################
@@ -26,17 +27,17 @@ For the correlation `metrics <metrics.html>`__, like
 ``climpred`` also hosts the associated p-value, like
 :py:func:`~climpred.metrics._pearson_r_p_value`,
 that this correlation is significantly different from zero.
-:py:func:`~climpred.metrics._pearson_r_eff_p_value` also incorporates the reduced degrees
-of freedom due to temporal autocorrelation. See
+:py:func:`~climpred.metrics._pearson_r_eff_p_value` also incorporates the reduced
+degrees of freedom due to temporal autocorrelation. See
 `example <examples/decadal/significance.html#p-value-for-temporal-correlations>`__.
 
 Bootstrapping with replacement
 ##############################
 
 Testing statistical significance through bootstrapping is commonly used in the field of
-climate prediction [could add some example citations here]. Bootstrapping relies on
+climate prediction. Bootstrapping relies on
 resampling the underlying data with replacement for a large number of ``iterations``, as
-proposed by the decadal prediction framework of Goddard et al. 2013 [Goddard2013]_.
+proposed by the decadal prediction framework of Goddard2013_.
 This means that the ``initialized`` ensemble is resampled with replacement along a
 dimension (``init`` or ``member``) and then that resampled ensemble is verified against
 the observations. This leads to a distribution of ``initialized`` skill. Further, a

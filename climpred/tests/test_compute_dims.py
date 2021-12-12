@@ -2,7 +2,6 @@ import pytest
 import xarray as xr
 from xarray.testing import assert_allclose
 
-from climpred.bootstrap import bootstrap_hindcast
 from climpred.comparisons import (
     PM_COMPARISONS,
     PROBABILISTIC_HINDCAST_COMPARISONS,

@@ -1,8 +1,9 @@
 API Reference
 =============
 
-This page provides an auto-generated summary of climpred's API.
-For more details and examples, refer to the relevant chapters in the main part of the documentation.
+This page provides an auto-generated summary of ``climpred``'s API.
+For more details and examples, refer to the relevant chapters in the main part of the
+documentation.
 
 High-Level Classes
 ------------------
@@ -13,21 +14,76 @@ High-Level Classes
 A primary feature of ``climpred`` is our prediction ensemble objects,
 :py:class:`~climpred.classes.HindcastEnsemble` and
 :py:class:`~climpred.classes.PerfectModelEnsemble`. Users can append their initialized
-ensemble to these classes, as well as an arbitrary number of verification products (assimilations,
-reconstructions, observations), control runs, and uninitialized ensembles.
+ensemble to these classes, as well as an arbitrary number of verification products
+(assimilations, reconstructions, observations), control runs, and uninitialized
+ensembles.
+
+PredictionEnsemble
+~~~~~~~~~~~~~~~~~~
+
+:py:class:`~climpred.classes.PredictionEnsemble` is the base class for
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble`.
+:py:class:`~climpred.classes.PredictionEnsemble` cannot be called directly, but
+:py:class:`~climpred.classes.HindcastEnsemble` and
+:py:class:`~climpred.classes.PerfectModelEnsemble` inherit the common base
+functionality.
+
+.. autosummary::
+    :toctree: api/
+
+    PredictionEnsemble
+    PredictionEnsemble.__init__
+
+-------
+Builtin
+-------
+
+.. autosummary::
+    :toctree: api/
+
+    PredictionEnsemble.__len__
+    PredictionEnsemble.__iter__
+    PredictionEnsemble.__delitem__
+    PredictionEnsemble.__contains__
+    PredictionEnsemble.__add__
+    PredictionEnsemble.__sub__
+    PredictionEnsemble.__mul__
+    PredictionEnsemble.__truediv__
+    PredictionEnsemble.__getitem__
+    PredictionEnsemble.__getattr__
+
+----------
+Properties
+----------
+
+.. autosummary::
+    :toctree: api/
+
+    PredictionEnsemble.coords
+    PredictionEnsemble.nbytes
+    PredictionEnsemble.sizes
+    PredictionEnsemble.dims
+    PredictionEnsemble.chunks
+    PredictionEnsemble.chunksizes
+    PredictionEnsemble.data_vars
+    PredictionEnsemble.equals
+    PredictionEnsemble.identical
+
 
 HindcastEnsemble
 ~~~~~~~~~~~~~~~~
 
-A ``HindcastEnsemble`` is a prediction ensemble that is initialized off of some form of
-observations (an assimilation, renanalysis, etc.). Thus, it is anticipated that forecasts are
-verified against observation-like products. Read more about the terminology
-`here <terminology.html>`_.
+A :py:class:`~climpred.classes.HindcastEnsemble` is a prediction ensemble that is
+initialized off of some form of observations (an assimilation, reanalysis, etc.). Thus,
+it is anticipated that forecasts are verified against observation-like products. Read
+more about the terminology `here <terminology.html>`_.
 
 .. autosummary::
     :toctree: api/
 
     HindcastEnsemble
+    HindcastEnsemble.__init__
 
 -------------------------
 Add and Retrieve Datasets
@@ -36,7 +92,6 @@ Add and Retrieve Datasets
 .. autosummary::
     :toctree: api/
 
-    HindcastEnsemble.__init__
     HindcastEnsemble.add_observations
     HindcastEnsemble.add_uninitialized
     HindcastEnsemble.get_initialized
@@ -87,15 +142,17 @@ Visualization
 PerfectModelEnsemble
 ~~~~~~~~~~~~~~~~~~~~
 
-A ``PerfectModelEnsemble`` is a prediction ensemble that is initialized off of a control simulation
-for a number of randomly chosen initialization dates. Thus, forecasts cannot be verified against
-real-world observations. Instead, they are `compared <comparisons.html>`_ to one another and to the
+A ``PerfectModelEnsemble`` is a prediction ensemble that is initialized off of a
+control simulation for a number of randomly chosen initialization dates. Thus,
+forecasts cannot be verified against real-world observations.
+Instead, they are `compared <comparisons.html>`_ to one another and to the
 original control run. Read more about the terminology `here <terminology.html>`_.
 
 .. autosummary::
     :toctree: api/
 
     PerfectModelEnsemble
+    PerfectModelEnsemble.__init__
 
 -------------------------
 Add and Retrieve Datasets
@@ -104,7 +161,6 @@ Add and Retrieve Datasets
 .. autosummary::
     :toctree: api/
 
-    PerfectModelEnsemble.__init__
     PerfectModelEnsemble.add_control
     PerfectModelEnsemble.get_initialized
     PerfectModelEnsemble.get_control
@@ -152,14 +208,12 @@ Visualization
 Direct Function Calls
 ---------------------
 
-A user can directly call functions in ``climpred``. This requires entering more arguments, e.g.
-the initialized ensemble
-:py:class:`~xarray.core.dataset.Dataset`/:py:class:`xarray.core.dataarray.DataArray` directly as
+While not encouraged anymore, a user can directly call functions in ``climpred``.
+This requires entering more arguments, e.g. the initialized ensemble directly as
 well as a verification product. Our object
 :py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making the
-analysis process much simpler. Once we have wrapped all of the functions in their entirety, we will
-likely deprecate the ability to call them directly.
+:py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making
+the analysis process much simpler.
 
 Bootstrap
 ~~~~~~~~~
@@ -238,6 +292,7 @@ Preprocessing
     load_hindcast
     rename_to_climpred_dims
     rename_SLM_to_climpred_dims
+    set_integer_time_axis
 
 .. currentmodule:: climpred.preprocessing.mpi
 
@@ -269,6 +324,8 @@ For a thorough look at our metrics library, please see the
     :toctree: api/
 
     Metric
+    Metric.__init__
+    Metric.__repr__
     _get_norm_factor
     _pearson_r
     _pearson_r_p_value
@@ -320,6 +377,8 @@ For a thorough look at our metrics library, please see the
     :toctree: api/
 
     Comparison
+    Comparison.__init__
+    Comparison.__repr__
     _e2o
     _m2o
     _m2m
@@ -329,7 +388,8 @@ For a thorough look at our metrics library, please see the
 
 Config
 ------
-Set options analogous to `xarray <http://xarray.pydata.org/en/stable/generated/xarray.set_options.html>`_.
+Set options analogous to
+`xarray <http://xarray.pydata.org/en/stable/generated/xarray.set_options.html>`_.
 
 .. currentmodule:: climpred.options
 

@@ -175,7 +175,7 @@ def test_hindcastEnsemble_plus_broadcast(hind_ds_initialized_3d, operator):
 def test_hindcastEnsemble_operator_different_datasets(
     hind_ds_initialized_1d, observations_ds_1d
 ):
-    """Test that HindcastEnsemble math operator (+-*/) on different datasets attached to HindcastEnsemble."""
+    """Test that HindcastEnsemble math operator (+-*/) on HindcastEnsemble."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
     he = he.add_observations(observations_ds_1d)
     he2 = HindcastEnsemble(hind_ds_initialized_1d)

@@ -1,8 +1,9 @@
-# Configuration file for the Sphinx documentation builder.
-#
-# u This file only contains a selection of the most common options. For a full
-# list see the documentation:
-# http://www.sphinx-doc.org/en/master/config
+"""Configuration file for the Sphinx documentation builder.
+
+This file only contains a selection of the most common options. For a full
+list see the documentation:
+http://www.sphinx-doc.org/en/master/config
+"""
 
 # -- Path setup --------------------------------------------------------------
 
@@ -10,7 +11,13 @@ import datetime
 import os
 import sys
 
+import xarray
+
 import climpred
+
+xarray.DataArray.__module__ = "xarray"
+xarray.Dataset.__module__ = "xarray"
+
 
 sys.path.insert(0, os.path.abspath("../.."))
 
@@ -87,8 +94,10 @@ html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcf
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "xarray": ("https://xarray.pydata.org/en/stable/", None),
+    "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "xskillscore": ("https://xskillscore.readthedocs.io/en/stable", None),
+    "xclim": ("https://xclim.readthedocs.io/en/latest/", None),
 }
 
 # Should only be uncommented when testing page development while notebooks

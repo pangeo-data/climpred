@@ -1,11 +1,9 @@
-import dask
-import numpy as np
+"""Test compute_perfect_model."""
+
+
 import pytest
 import xarray as xr
 
-from climpred.bootstrap import bootstrap_perfect_model
-from climpred.constants import CLIMPRED_DIMS
-from climpred.metrics import DETERMINISTIC_PM_METRICS
 from climpred.prediction import compute_perfect_model
 from climpred.reference import compute_persistence
 

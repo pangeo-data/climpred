@@ -1,3 +1,5 @@
+"""Test bias_removal.py."""
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -10,7 +12,6 @@ from climpred.constants import (
     XCLIM_BIAS_CORRECTION_METHODS,
 )
 from climpred.options import OPTIONS
-from climpred.testing import assert_PredictionEnsemble
 
 from . import requires_bias_correction, requires_xclim
 
@@ -37,7 +38,7 @@ def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):
 @requires_bias_correction
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
-    """Test HindcastEnsemble.remove_bias yields different results for different seasonality settings."""
+    """Test HindcastEnsemble.remove_bias yields different results for seasonality."""
     verify_kwargs = dict(
         metric="rmse", dim="init", comparison="e2o", alignment="same_inits", skipna=True
     )
@@ -84,20 +85,10 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
     def check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed):
         # init only slighty cut due to alignment
         for c in hindcast.coords:
-            print(
-                "check coord",
-                c,
-                "hindcast_bias_removed.coords",
-                hindcast_bias_removed.coords,
-            )
             if c in ["init", "valid_time"]:
-                assert (
-                    hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
-                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
+                assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
             else:
-                assert (
-                    hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
-                )  # , print(hindcast.coords[c].to_index(),'\n vs\n',hindcast_bias_removed.coords[c].to_index())
+                assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
 
     with set_options(seasonality=seasonality):
         metric = "rmse"
@@ -374,7 +365,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
 def test_remove_bias_xclim_grouper_diff(
     hindcast_NMME_Nino34,
 ):
-    """Test remove_bias(how='xclim_method') is sensitive to grouper"""
+    """Test remove_bias(how='xclim_method') is sensitive to grouper."""
     alignment = "same_init"
     how = "DetrendedQuantileMapping"
     he = (
@@ -413,7 +404,7 @@ def test_remove_bias_xclim_grouper_diff(
 def test_remove_bias_xclim_adjust_kwargs_diff(
     hindcast_NMME_Nino34,
 ):
-    """Test remove_bias(how='xclim_method') is sensitive to adjust_kwargs"""
+    """Test remove_bias(how='xclim_method') is sensitive to adjust_kwargs."""
     alignment = "same_init"
     how = "EmpiricalQuantileMapping"
     he = (
@@ -492,7 +483,7 @@ def test_remove_bias_group(hindcast_NMME_Nino34):
 
 @requires_xclim
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
-    """Compare Scaling and additive_mean to be similar"""
+    """Compare Scaling and additive_mean to be similar."""
     he = hindcast_recon_1d_mm.isel(lead=[0, 1])
     hind_scaling = he.remove_bias(
         how="Scaling",
@@ -538,7 +529,9 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
             how=how, alignment="same_verif", train_test_split="fair", train_time=2000
         )
 
-    with pytest.raises(ValueError, match="Please provide `cv="):
+    with pytest.raises(
+        ValueError, match="Please provide cross-validation keyword `cv="
+    ):
         he.remove_bias(how=how, alignment="same_verif", train_test_split="unfair-cv")
 
     with pytest.raises(NotImplementedError, match="please choose from"):

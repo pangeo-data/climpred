@@ -1,4 +1,6 @@
-from typing import Callable, List, Optional, Tuple
+"""Comparisons: How to compare forecast with verification."""
+
+from typing import Any, Callable, List, Optional, Tuple
 
 import dask
 import numpy as np
@@ -9,65 +11,33 @@ from .constants import M2M_MEMBER_DIM
 from .metrics import Metric
 
 
-def _transpose_and_rechunk_to(new_chunk_ds, ori_chunk_ds):
-    """Chunk xr.object `new_chunk_ds` as another xr.object `ori_chunk_ds`.
-    This is needed after some operations which reduce chunks to size 1.
-    First transpose a to ds.dims then apply ds chunking to a."""
-    # supposed to be in .utils but circular imports therefore here
-    transpose_kwargs = (
-        {"transpose_coords": False} if isinstance(new_chunk_ds, xr.DataArray) else {}
-    )
-    return new_chunk_ds.transpose(*ori_chunk_ds.dims, **transpose_kwargs).chunk(
-        ori_chunk_ds.chunks
-    )
-
-
-def _display_comparison_metadata(self) -> str:
-    summary = "----- Comparison metadata -----\n"
-    summary += f"Name: {self.name}\n"
-    # probabilistic or only deterministic
-    if not self.probabilistic:
-        summary += "Kind: deterministic\n"
-    else:
-        summary += "Kind: deterministic and probabilistic\n"
-    summary += f"long_name: {self.long_name}\n"
-    # doc
-    summary += f"Function: {self.function.__doc__}\n"
-    return summary
-
-
 class Comparison:
-    """Master class for all comparisons."""
+    """Master class for all comparisons. See :ref:`comparisons`."""
 
     def __init__(
         self,
         name: str,
-        function: Callable[
-            [xr.Dataset, Optional[Metric]], Tuple[xr.Dataset, xr.Dataset]
-        ],
+        function: Callable[[Any, Any, Any], Tuple[xr.Dataset, xr.Dataset]],
         hindcast: bool,
         probabilistic: bool,
         long_name: Optional[str] = None,
         aliases: Optional[List[str]] = None,
     ) -> None:
-        """Comparison initialization.
+        """Comparison initialization See :ref:`comparisons`.
 
         Args:
-            name (str): name of comparison.
-            function (function): comparison function.
-            hindcast (bool): Can comparison be used in `compute_hindcast`?
-                `False` means `compute_perfect_model`
-            probabilistic (bool): Can this comparison be used for probabilistic
+            name: name of comparison.
+            function: comparison function.
+            hindcast: Can comparison be used in
+                :py:class:`~climpred.classes.HindcastEnsemble`?
+                ``False`` means only :py:class:`~climpred.classes.PerfectModelEnsemble`
+            probabilistic: Can this comparison be used for probabilistic
                 metrics also? Probabilistic metrics require multiple forecasts.
-                `False` means that comparison is only deterministic.
-                `True` means that comparison can be used both deterministic and
+                ``False`` means that comparison is only deterministic.
+                ``True`` means that comparison can be used both deterministic and
                 probabilistic.
-            long_name (str, optional): longname of comparison. Defaults to None.
-            aliases (list of str, optional): Allowed aliases for this comparison.
-                Defaults to ``None``.
-
-        Returns:
-            comparison: comparison class Comparison.
+            long_name: longname of comparison.
+            aliases: Allowed aliases for this comparison.
 
         """
         self.name = name
@@ -79,7 +49,17 @@ class Comparison:
 
     def __repr__(self) -> str:
         """Show metadata of comparison class."""
-        return _display_comparison_metadata(self)
+        summary = "----- Comparison metadata -----\n"
+        summary += f"Name: {self.name}\n"
+        # probabilistic or only deterministic
+        if not self.probabilistic:
+            summary += "Kind: deterministic\n"
+        else:
+            summary += "Kind: deterministic and probabilistic\n"
+        summary += f"long_name: {self.long_name}\n"
+        # doc
+        summary += f"Function: {self.function.__doc__}\n"
+        return summary
 
 
 # --------------------------------------------#
@@ -87,36 +67,43 @@ class Comparison:
 # --------------------------------------------#
 
 
-def _m2m(ds, metric=None):
-    """Compare all members to all others in turn while leaving out the verification
-    ``member``.
+def _m2m(
+    initialized: xr.Dataset, metric: Metric, verif: Optional[xr.Dataset] = None
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    """Compare all members to all others in turn while leaving out verification member.
+
+    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with ``member`` dimension.
-        metric (Metric):
-            If deterministic, forecast and reference have ``member`` dim.
+        initialized: initialized with ``member`` dimension.
+        metric:
+            If deterministic, forecast and verif have ``member`` dim.
             If probabilistic, only forecast has ``member`` dim.
+        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Returns:
-        xr.object: forecast, reference.
+        forecast, verification
     """
-    reference_list = []
+    if verif is not None:
+        raise ValueError("`verif` not expected.")
+
+    verif_list = []
     forecast_list = []
-    for m in ds.member.values:
-        forecast = ds.drop_sel(member=m)
+    for m in initialized.member.values:
+        forecast = initialized.drop_sel(member=m)
         # set incrementing members to avoid nans from broadcasting
         forecast["member"] = np.arange(1, 1 + forecast.member.size)
-        reference = ds.sel(member=m, drop=True)
-        # Tiles the singular "reference" member to compare directly to all other members
+        verif = initialized.sel(member=m, drop=True)
+        # Tiles the singular "verif" member to compare directly to all other members
         if not metric.probabilistic:
-            forecast, reference = xr.broadcast(forecast, reference)
-        reference_list.append(reference)
+            forecast, verif = xr.broadcast(forecast, verif)
+        verif_list.append(verif)
         forecast_list.append(forecast)
-    reference = xr.concat(reference_list, M2M_MEMBER_DIM)
+    verif = xr.concat(verif_list, M2M_MEMBER_DIM)
     forecast = xr.concat(forecast_list, M2M_MEMBER_DIM)
-    reference[M2M_MEMBER_DIM] = np.arange(reference[M2M_MEMBER_DIM].size)
+    verif[M2M_MEMBER_DIM] = np.arange(verif[M2M_MEMBER_DIM].size)
     forecast[M2M_MEMBER_DIM] = np.arange(forecast[M2M_MEMBER_DIM].size)
-    return forecast, reference
+    return forecast, verif
 
 
 __m2m = Comparison(
@@ -128,37 +115,43 @@ __m2m = Comparison(
 )
 
 
-def _m2e(ds, metric=None):
+def _m2e(
+    initialized: xr.Dataset,
+    metric: Optional[Metric] = None,
+    verif: Optional[xr.Dataset] = None,
+) -> Tuple[xr.Dataset, xr.Dataset]:
     """
-    Compare all members to ensemble mean while leaving out the reference in
-     ensemble mean.
+    Compare all members to ensemble mean while leaving out the verif in ensemble mean.
+
+    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        metric (Metric): needed for probabilistic metrics.
-                      therefore useless in m2e comparison,
-                      but expected by internal API.
+        initialized: ``initialized`` with ``member`` dimension.
+        metric: needed for probabilistic metrics. Therefore useless in ``m2e``
+            comparison, but expected by internal API.
+        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Returns:
-        xr.object: forecast, reference.
+        forecast, verification
     """
-    reference_list = []
+    if verif is not None:
+        raise ValueError("`verif` not expected.")
+    verif_list = []
     forecast_list = []
     M2E_COMPARISON_DIM = "member"
-    for m in ds.member.values:
-        forecast = ds.drop_sel(member=m).mean("member")
-        reference = ds.sel(member=m, drop=True)
+    for m in initialized.member.values:
+        forecast = initialized.drop_sel(member=m).mean("member")
+        verif = initialized.sel(member=m, drop=True)
         forecast_list.append(forecast)
-        reference_list.append(reference)
-    reference = xr.concat(reference_list, M2E_COMPARISON_DIM)
+        verif_list.append(verif)
+    verif = xr.concat(verif_list, M2E_COMPARISON_DIM)
     forecast = xr.concat(forecast_list, M2E_COMPARISON_DIM)
     forecast[M2E_COMPARISON_DIM] = np.arange(forecast[M2E_COMPARISON_DIM].size)
-    reference[M2E_COMPARISON_DIM] = np.arange(reference[M2E_COMPARISON_DIM].size)
+    verif[M2E_COMPARISON_DIM] = np.arange(verif[M2E_COMPARISON_DIM].size)
     if dask.is_dask_collection(forecast):
-        forecast = _transpose_and_rechunk_to(forecast, ds)
-        reference = _transpose_and_rechunk_to(reference, ds)
-    return forecast, reference
+        forecast = forecast.transpose(*initialized.dims).chunk(initialized.chunks)
+        verif = verif.transpose(*initialized.dims).chunk(initialized.chunks)
+    return forecast, verif
 
 
 __m2e = Comparison(
@@ -171,30 +164,37 @@ __m2e = Comparison(
 )
 
 
-def _m2c(ds, metric=None):
+def _m2c(
+    initialized: xr.Dataset, metric: Metric, verif: Optional[xr.Dataset] = None
+) -> Tuple[xr.Dataset, xr.Dataset]:
     """
-    Compare all other member forecasts to a single member verification, which is the
-    first member.
+    Compare all other member forecasts to a single member verification.
+
+    Verification member is the first member.
     If the initialized dataset is concatinated in a way that the first member
     is taken from the control simulation, this compares all other member forecasts
     to the control simulation.
 
+    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
+
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        metric (Metric): if deterministic, forecast and reference both have member dim
-                      if probabilistic, only forecast has member dim
+        initialized: ``initialized`` with ``member`` dimension.
+        metric: if deterministic, forecast and verif both have member dim
+            if probabilistic, only forecast has ``member`` dim
+        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Returns:
-        xr.object: forecast, reference.
+        forecast, verification
     """
-    control_member = ds.member.values[0]
-    reference = ds.sel(member=control_member, drop=True)
-    # drop the member being reference
-    forecast = ds.drop_sel(member=control_member)
+    if verif is not None:
+        raise ValueError("`verif` not expected.")
+    control_member = initialized.member.values[0]
+    verif = initialized.sel(member=control_member, drop=True)
+    # drop the member being verif
+    forecast = initialized.drop_sel(member=control_member)
     if not metric.probabilistic:
-        forecast, reference = xr.broadcast(forecast, reference)
-    return forecast, reference
+        forecast, verif = xr.broadcast(forecast, verif)
+    return forecast, verif
 
 
 __m2c = Comparison(
@@ -206,28 +206,36 @@ __m2c = Comparison(
 )
 
 
-def _e2c(ds, metric=None):
+def _e2c(
+    initialized: xr.Dataset,
+    metric: Optional[Metric] = None,
+    verif: Optional[xr.Dataset] = None,
+) -> Tuple[xr.Dataset, xr.Dataset]:
     """
     Compare ensemble mean forecast to single member verification.
+
     If the initialized dataset is concatinated in a way that the first member
     is taken from the control simulation, this compares the member mean of all
     other member forecasts to the control simulation.
 
+    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
+
     Args:
-        ds (xarray object): xr.Dataset/xr.DataArray with member and ensemble
-                            dimension.
-        metric (Metric): needed for probabilistic metrics.
-                      therefore useless in e2c comparison,
-                      but expected by internal API.
+        initialized: ``initialized`` with ``member`` dimension.
+        metric: needed for probabilistic metrics. Therefore useless in ``e2c``
+            comparison, but expected by internal API.
+        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
 
     Returns:
-        xr.object: forecast, reference.
+        forecast, verification
     """
-    control_member = ds.member.values[0]
-    reference = ds.sel(member=control_member, drop=True)
-    ds = ds.drop_sel(member=control_member)
-    forecast = ds.mean("member")
-    return forecast, reference
+    if verif is not None:
+        raise ValueError("`verif` not expected.")
+    control_member = initialized.member.values[0]
+    verif = initialized.sel(member=control_member, drop=True)
+    initialized = initialized.drop_sel(member=control_member)
+    forecast = initialized.mean("member")
+    return forecast, verif
 
 
 __e2c = Comparison(
@@ -242,24 +250,26 @@ __e2c = Comparison(
 # --------------------------------------------#
 # HINDCAST COMPARISONS
 # --------------------------------------------#
-def _e2o(hind, verif, metric=None):
-    """Compare the ensemble mean forecast to the verification data for a
-    ``HindcastEnsemble`` setup.
+def _e2o(
+    initialized: xr.Dataset, verif: xr.Dataset, metric: Optional[Metric]
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    """Compare the ensemble mean forecast to the verification data.
+
+    :ref:`comparisons` for :py:class:`~climpred.classes.HindcastEnsemble`
 
     Args:
-        hind (xarray object): Hindcast with optional ``member`` dimension.
-        verif (xarray object): Verification data.
-        metric (Metric): needed for probabilistic metrics.
-                      therefore useless in ``e2o`` comparison,
-                      but expected by internal API.
+        initialized: Hindcast with optional ``member`` dimension.
+        verif: Verification data.
+        metric: needed for probabilistic metrics. Therefore useless in ``e2o``
+            comparison, but expected by internal API.
 
     Returns:
-        xr.object: forecast, verif.
+        forecast, verification
     """
-    if "member" in hind.dims:
-        forecast = hind.mean("member")
+    if "member" in initialized.dims:
+        forecast = initialized.mean("member")
     else:
-        forecast = hind
+        forecast = initialized
     return forecast, verif
 
 
@@ -273,24 +283,27 @@ __e2o = Comparison(
 )
 
 
-def _m2o(hind, verif, metric=None):
-    """Compares each ensemble member individually to the verification data for a
-    ``HindcastEnsemble`` setup.
+def _m2o(
+    initialized: xr.Dataset, verif: xr.Dataset, metric: Metric
+) -> Tuple[xr.Dataset, xr.Dataset]:
+    """Compare each ensemble member individually to the verification data.
+
+    :ref:`comparisons` for :py:class:`~climpred.classes.HindcastEnsemble`
 
     Args:
-        hind (xarray object): Hindcast with ``member`` dimension.
-        verif (xarray object): Verification data.
-        metric (Metric):
+        initialized: ``initialized`` with ``member`` dimension.
+        verif: Verification data.
+        metric:
             If deterministic, forecast and verif both have ``member`` dim;
             If probabilistic, only forecast has ``member`` dim.
 
     Returns:
-        xr.object: forecast, verif.
+        forecast, verification
     """
     # check that this contains more than one member
-    has_dims(hind, "member", "decadal prediction ensemble")
-    has_min_len(hind["member"], 1, "decadal prediction ensemble member")
-    forecast = hind
+    has_dims(initialized, "member", "decadal prediction ensemble")
+    has_min_len(initialized["member"], 1, "decadal prediction ensemble member")
+    forecast = initialized
     if not metric.probabilistic and "member" not in verif.dims:
         forecast, verif = xr.broadcast(
             forecast, verif, exclude=["time", "init", "lead"]
@@ -317,20 +330,15 @@ for c in __ALL_COMPARISONS__:
             COMPARISON_ALIASES[a] = c.name
 
 # Which comparisons work with which set of metrics.
-# ['e2o', 'm2o']
 HINDCAST_COMPARISONS = [c.name for c in __ALL_COMPARISONS__ if c.hindcast]
-# ['m2c', 'e2c', 'm2m', 'm2e']
 PM_COMPARISONS = [c.name for c in __ALL_COMPARISONS__ if not c.hindcast]
 ALL_COMPARISONS = HINDCAST_COMPARISONS + PM_COMPARISONS
-# ['m2c', 'm2m']
 PROBABILISTIC_PM_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and c.probabilistic)
 ]
 NON_PROBABILISTIC_PM_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (not c.hindcast and not c.probabilistic)
 ]
-
-# ['m2o']
 PROBABILISTIC_HINDCAST_COMPARISONS = [
     c.name for c in __ALL_COMPARISONS__ if (c.hindcast and c.probabilistic)
 ]

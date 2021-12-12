@@ -12,14 +12,18 @@ with open("requirements.txt") as f:
     install_requires = f.read().strip().split("\n")
 
 CLASSIFIERS = [
-    "Development Status :: 3 - Alpha",
+    "Development Status :: 5 - Production/Stable",
     "License :: OSI Approved :: MIT License",
     "Operating System :: OS Independent",
     "Intended Audience :: Science/Research",
+    "Intended Audience :: Education",
+    "Natural Language :: English",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
     "Programming Language :: Python :: 3.7",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 
 extras_require = {
@@ -29,7 +33,7 @@ extras_require = {
     "io": ["netcdf4"],
     "regridding": [
         "xesmf"
-    ],  # for installation see https://pangeo-xesmf.readthedocs.io/en/latest/installation.html
+    ],  # for installation see https://pangeo-xesmf.readthedocs.io/
     "relative_entropy": ["eofs"],
     "vwmp": ["xrft"],
 }

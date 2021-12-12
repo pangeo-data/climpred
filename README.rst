@@ -12,13 +12,13 @@ Verification of weather and climate forecasts.
     * - docs
       - |docs| |joss| |doi|
     * - tests
-      - |ci| |upstream| |requires| |codecov|
+      - |ci| |upstream| |codecov|
     * - package
-      - |conda| |pypi|
+      - |conda| |conda downloads| |pypi| |pypi downloads|
     * - license
       - |license|
     * - community
-      - |gitter| |contributors| |conda downloads| |pypi downloads|
+      - |gitter| |contributors|
     * - tutorials
       - |gallery| |workshop| |cloud|
 
@@ -41,10 +41,6 @@ Verification of weather and climate forecasts.
 .. |upstream| image:: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml/badge.svg
     :target: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml
     :alt: upstream
-
-.. |requires| image:: https://requires.io/github/pangeo-data/climpred/requirements.svg?branch=main
-     :target: https://requires.io/github/pangeo-data/climpred/requirements/?branch=main
-     :alt: Requirements Status
 
 .. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg
       :target: https://codecov.io/gh/pangeo-data/climpred

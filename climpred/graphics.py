@@ -5,14 +5,13 @@ from typing import Optional, Tuple, Union
 import cftime
 import numpy as np
 import xarray as xr
-from xarray.coding.times import infer_calendar_name
 
 from .alignment import return_inits_and_verif_dates
 from .checks import DimensionError
 from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
-from .metrics import ALL_METRICS, PROBABILISTIC_METRICS
-from .utils import get_lead_cftime_shift_args, get_metric_class, shift_cftime_index
+from .metrics import ALL_METRICS
+from .utils import get_metric_class
 
 try:
     import matplotlib as mpl
@@ -410,7 +409,8 @@ def plot_ensemble_perfect_model(
 
 
 def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
-    """Create valid_time xr.DataArray with dims lead and init in units passed to cftime.date2num."""
+    """Create ``valid_time`` ``xr.DataArray`` with dims lead and init in units passed to
+    cftime.date2num."""
     inits, verif_dates = return_inits_and_verif_dates(
         hindcast.get_initialized().rename({"init": "time"}),
         hindcast.get_observations(),

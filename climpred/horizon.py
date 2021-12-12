@@ -29,9 +29,9 @@ def _last_item_cond_true(cond, dim):
     # reset where always true to len(lead)
     reached = reached.where(~cond.all("lead"), other=cond[dim].size)
     # fix locations where always nan to nan
-    mask = cond.notnull().all("lead")  # ~(cond == False).all("lead")
+    mask = cond.notnull().all("lead")
     reached = reached.where(mask, other=np.nan)
-    ## shift back into coordinate space ##
+    # shift back into coordinate space
     # problem: cannot convert nan to idx in isel
     # therefore set to dim:0 and mask again afterwards
     reached_notnull = reached.notnull()  # remember where not masked
@@ -67,10 +67,13 @@ def horizon(cond):
         xr.DataArray, xr.Dataset: predictability horizon reduced by ``lead`` dimension.
 
     Example:
-        >>> skill = PerfectModelEnsemble.verify(metric='acc', comparison='m2e',
-        ...     dim=['init','member'], reference=['persistence'])
-        >>> horizon(skill.sel(skill='initialized') >
-        ...     skill.sel(skill='persistence'))
+        >>> skill = PerfectModelEnsemble.verify(
+        ...     metric="acc",
+        ...     comparison="m2e",
+        ...     dim=["init", "member"],
+        ...     reference=["persistence"],
+        ... )
+        >>> horizon(skill.sel(skill="initialized") > skill.sel(skill="persistence"))
         <xarray.Dataset>
         Dimensions:  ()
         Data variables:
@@ -82,9 +85,14 @@ def horizon(cond):
             description:    Forecast period is the time interval between the forecast...
 
 
-        >>> bskill = PerfectModelEnsemble.bootstrap(metric='acc', comparison='m2e',
-        ...     dim=['init','member'], reference='uninitialized', iterations=201)
-        >>> horizon(bskill.sel(skill='uninitialized', results='p') <= 0.05)
+        >>> bskill = PerfectModelEnsemble.bootstrap(
+        ...     metric="acc",
+        ...     comparison="m2e",
+        ...     dim=["init", "member"],
+        ...     reference="uninitialized",
+        ...     iterations=201,
+        ... )
+        >>> horizon(bskill.sel(skill="uninitialized", results="p") <= 0.05)
         <xarray.Dataset>
         Dimensions:  ()
         Coordinates:

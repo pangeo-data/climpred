@@ -26,3 +26,5 @@ domain that are not on the list.
   Analysis and prediction of nowcasts for precipitation and weather phenomena.
 * `xskillscore <https://xskillscore.readthedocs.io>`_:
   Metrics for verifying forecasts (a key dependency to ``climpred``).
+* `doppyo <https://github.com/csiro-dcfp/doppyo>`_ with many metrics transferred to
+  `xskillscore <https://xskillscore.readthedocs.io>`_:

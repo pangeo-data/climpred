@@ -26,48 +26,48 @@ _VALIDATORS = {
 
 
 class set_options:
-    """Set options for climpred in a controlled context. Analogous to
-    `xarray.set_options(**option) <http://xarray.pydata.org/en/stable/generated/xarray.set_options.html>`_.
+    """Set options for ``climpred`` in a controlled context. Analogous to
+    :py:class:`~xarray.options.set_options`.
 
-    Currently supported options:
+    Parameters
+    ----------
+    ``seasonality`` : {``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``}, default: ``"month"`` # noqa: E501
+        Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
+        Used in ``reference=climatology`` and
+        :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+    ``PerfectModel_persistence_from_initialized_lead_0`` : {``True``, ``False``}, default ``False`` # noqa: E501
+        Which persistence function to use in
+        ``PerfectModelEnsemble.verify/bootstrap(reference="persistence")``.
+        If ``False`` use :py:func:`~climpred.reference.compute_persistence`.
+        If ``True`` use
+        :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
+    ``warn_for_failed_PredictionEnsemble_xr_call`` : {``True``, ``False``}, default ``True``
+        Raise ``UserWarning`` when ``PredictionEnsemble.xr_call``, e.g.
+        ``.sel(lead=[1])`` fails on one of the datasets.
+    ``warn_for_rename_to_climpred_dims`` : {``True``, ``False``}, default ``True``
+        Raise ``UserWarning`` when dimensions are renamed to ``CLIMPRED_DIMS`` when
+        :py:class:`~climpred.classes.PredictionEnsemble` is instantiated.
+    ``warn_for_init_coords_int_to_annual`` : {``True``, ``False``}, default ``True``
+        Raise ``UserWarning`` when ``init`` coordinate is of type integer and gets
+        converted to annual cftime_range when
+        :py:class:`~climpred.classes.PredictionEnsemble` is instantiated.
+    ``climpred_warnings`` : {``True``, ``False``}, default ``True``
+        Overwrites all options containing ``"*warn*"``.
 
-    - ``seasonality``
-        - Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
-            Used in ``reference=climatology`` and
-            :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-        - Allowed: [``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``]
-        - Default: ``dayofyear``.
-    - ``PerfectModel_persistence_from_initialized_lead_0``
-        - Use ``climpred.reference.compute_persistence_from_first_lead`` in PerfectModelEnsemble.verify/bootstrap(reference='persistence'). If ``False`` uses `climpred.reference.compute_persistence <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence.html#climpred.reference.compute_persistence>`_ and if ``True`` uses  `climpred.reference.compute_persistence_from_first_lead <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_, see `example <https://climpred.readthedocs.io/en/stable/api/climpred.reference.compute_persistence_from_first_lead.html#climpred.reference.compute_persistence_from_first_lead>`_.
-        - Allowed: [True, False]
-        - Default: False
-    - ``warn_for_failed_PredictionEnsemble_xr_call``
-        - Raise UserWarning when PredictionEnsemble.xr_call,
-            e.g. ``.sel(lead=[1])`` fails on one of the datasets.
-        - Allowed: [True, False]
-        - Default: True
-    - ``warn_for_rename_to_climpred_dims``
-        - Raise UserWarning when dimensions are renamed to ``CLIMPRED_DIMS`` when
-            PredictionEnsemble is instantiated.
-        - Allowed: [True, False]
-        - Default: True
-    - ``warn_for_init_coords_int_to_annual``
-        - Raise UserWarning when ``init`` coordinate is of type integer and gets
-            converted to annual cftime_range when PredictionEnsemble is instantiated.
-        - Allowed: [True, False]
-        - Default: True
-    - ``climpred_warnings``
-        - Overwrites all options containing ``"*warn*"``.
-        - Allowed: [True, False]
-        - Default: True
-
-    Examples:
+    Examples
+    --------
         You can use ``set_options`` either as a context manager:
 
-        >>> kw = dict(metric='mse', comparison='e2o', dim='init',
-        ...           alignment='same_verifs', reference='climatology')
-        >>> with climpred.set_options(seasonality='month'):
-        ...     HindcastEnsemble.verify(**kw).SST.sel(skill='climatology')
+        >>> kw = dict(
+        ...     metric="mse",
+        ...     comparison="e2o",
+        ...     dim="init",
+        ...     alignment="same_verifs",
+        ...     reference="climatology",
+        ... )
+        >>> with climpred.set_options(seasonality="month"):
+        ...     HindcastEnsemble.verify(**kw).SST.sel(skill="climatology")
+        ...
         <xarray.DataArray 'SST' (lead: 10)>
         array([0.03712573, 0.03712573, 0.03712573, 0.03712573, 0.03712573,
                0.03712573, 0.03712573, 0.03712573, 0.03712573, 0.03712573])
@@ -79,7 +79,7 @@ class set_options:
 
         Or to set global options:
 
-        >>> climpred.set_options(seasonality='month')  # doctest: +ELLIPSIS
+        >>> climpred.set_options(seasonality="month")  # doctest: +ELLIPSIS
         <climpred.options.set_options object at 0x...>
     """
 

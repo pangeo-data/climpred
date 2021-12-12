@@ -1,7 +1,9 @@
+"""Spatial/temporal smoothing implemented in PredictionEnsemble.smooth()."""
+
+from typing import Dict, Optional
+
 import numpy as np
 import xarray as xr
-
-from .checks import is_xarray
 
 try:
     import xesmf as xe
@@ -9,55 +11,52 @@ except ImportError:
     xe = None
 
 
-@is_xarray(0)
 def spatial_smoothing_xesmf(
-    ds,
-    d_lon_lat_kws={"lon": 5, "lat": 5},
-    method="bilinear",
-    periodic=False,
-    filename=None,
-    reuse_weights=False,
-    tsmooth_kws=None,
-    how=None,
-):
-    """
-    Quick regridding function. Adapted from
-    https://github.com/JiaweiZhuang/xESMF/pull/27/files#diff-b537ef68c98c2ec11e64e4803fe4a113R105.
+    ds: xr.Dataset,
+    d_lon_lat_kws: Dict[str, float] = {"lon": 5, "lat": 5},
+    method: str = "bilinear",
+    periodic: bool = False,
+    filename: Optional[str] = None,
+    reuse_weights: bool = False,
+    tsmooth_kws: Optional[Dict[str, int]] = None,
+    how: Optional[str] = None,
+) -> xr.Dataset:
+    """Quick regridding function.
+
+    Adapted from https://github.com/JiaweiZhuang/xESMF/pull/27/files#diff-b537ef68c98c2ec11e64e4803fe4a113R105.  # noqa: E501
 
     Args:
-        ds (xarray-object): Contain input and output grid coordinates.
+        ds: Contain input and output grid coordinates.
             Look for coordinates ``lon``, ``lat``, and optionally ``lon_b``,
             ``lat_b`` for conservative method. Also any coordinate which is C/F
-            compliant, .i.e. standard_name in ['longitude', 'latitude'] is allowed.
+            compliant, .i.e. standard_name in ["longitude", "latitude"] is allowed.
             Shape can be 1D (Nlon,) and (Nlat,) for rectilinear grids,
             or 2D (Ny, Nx) for general curvilinear grids.
             Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
-        d_lon_lat_kws (dict): optional
-            Longitude/Latitude step size (grid resolution); if not provided,
+        d_lon_lat_kws: Longitude/Latitude step size (grid resolution); if not provided,
             lon will equal 5 and lat will equal lon
-            (optional)
-        method (str): Regridding method. Options are:
-            - 'bilinear'
-            - 'conservative', **need grid corner information**
-            - 'patch'
-            - 'nearest_s2d'
-            - 'nearest_d2s'
-        periodic (bool): Periodic in longitude? Default to False. optional
+        method: Regridding method. Options are:
+
+            - "bilinear"
+            - "conservative", **requires grid corner information**
+            - "patch"
+            - "nearest_s2d"
+            - "nearest_d2s"
+
+        periodic: Periodic in longitude? Defaults to ``False``.
             Only useful for global grids with non-conservative regridding.
             Will be forced to False for conservative regridding.
-        filename (str): Name for the weight file. (optional)
-            The default naming scheme is:
-                {method}_{Ny_in}x{Nx_in}_{Ny_out}x{Nx_out}.nc
-                e.g. bilinear_400x600_300x400.nc
-        reuse_weights (bool) Whether to read existing weight file to save
-            computing time. False by default. (optional)
-        tsmooth_kws (None): leads nowhere but consistent with `temporal_smoothing`.
-        how (None): leads nowhere but consistent with `temporal_smoothing`.
+        filename: Name for the weight file.
+            The default naming scheme is "{method}_{Ny_in}x{Nx_in}_{Ny_out}x{Nx_out}.nc"
+            e.g. "bilinear_400x600_300x400.nc"
+        reuse_weights: Whether to read existing weight file to save
+            computing time. Defaults to ``False``.
+        tsmooth_kws: leads nowhere but consistent with ``temporal_smoothing``.
+        how: leads nowhere but consistent with ``temporal_smoothing``.
 
-        Returns:
-            ds (xarray.object) regridded
+    Returns:
+        regridded
     """
-
     if xe is None:
         raise ImportError(
             "xesmf is not installed; see"
@@ -65,8 +64,7 @@ def spatial_smoothing_xesmf(
         )
 
     def _regrid_it(da, d_lon, d_lat, **kwargs):
-        """
-        Global 2D rectilinear grid centers and bounds
+        """Global 2D rectilinear grid centers and bounds.
 
         Args:
             da (xarray.DataArray): Contain input and output grid coords.
@@ -77,10 +75,10 @@ def spatial_smoothing_xesmf(
                 Shape of bounds should be (N+1,) or (Ny+1, Nx+1).
             d_lon (float): Longitude step size, i.e. grid resolution
             d_lat (float): Latitude step size, i.e. grid resolution
-        Returns:
-            da : xarray DataArray with coordinate values
-        """
 
+        Returns:
+            da : xarray.DataArray with coordinate values
+        """
         if "lon" in da.coords:
             lon = da.lon
         else:
@@ -88,7 +86,9 @@ def spatial_smoothing_xesmf(
                 lon = da.cf["longitude"]
             except KeyError:
                 raise KeyError(
-                    "Could not find `lon` as coordinate or any C/F compliant `latitude` coordinate, see https://pangeo-xesmf.readthedocs.io and https://cf-xarray.readthedocs.io"
+                    "Could not find `lon` as coordinate or any C/F compliant"
+                    "`latitude` coordinate, see https://pangeo-xesmf.readthedocs.io "
+                    "and https://cf-xarray.readthedocs.io"
                 )
 
         if "lat" in da.coords:
@@ -98,7 +98,8 @@ def spatial_smoothing_xesmf(
                 lat = da.cf["latitude"]
             except KeyError:
                 raise KeyError(
-                    "C/F compliant or `lat` as coordinate, see https://pangeo-xesmf.readthedocs.io"
+                    "C/F compliant or `lat` as coordinate, see "
+                    "https://pangeo-xesmf.readthedocs.io"
                 )
 
         grid_out = xr.Dataset(
@@ -134,38 +135,41 @@ def spatial_smoothing_xesmf(
     return ds
 
 
-@is_xarray(0)
-def temporal_smoothing(ds, tsmooth_kws=None, how="mean", d_lon_lat_kws=None):
+def temporal_smoothing(
+    ds: xr.Dataset,
+    tsmooth_kws: Optional[Dict[str, int]] = None,
+    how: str = "mean",
+    d_lon_lat_kws: Optional[Dict[str, float]] = None,
+) -> xr.Dataset:
     """Apply temporal smoothing by creating rolling smooth-timestep means.
 
-    Reference:
-    * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
-     Gonzalez, V. Kharin, et al. “A Verification Framework for
-     Interannual - to - Decadal Predictions Experiments.” Climate
-     Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-     https://doi.org/10/f4jjvf.
-
     Args:
-        ds(xr.object): input.
-        tsmooth_kws(dict): length of smoothing of timesteps.
-            Defaults to {'time': 4} (see Goddard et al. 2013).
-        how(str): aggregation type for smoothing. default: 'mean'
-        d_lon_lat_kws (None): leads nowhere but consistent with
-            `spatial_smoothing_xesmf`.
+        ds: input to be smoothed.
+        tsmooth_kws: length of smoothing of timesteps.
+            Defaults to ``{"time": 4}`` (see Goddard et al. 2013).
+        how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
+            Default: ``"mean"``.
+        d_lon_lat_kws: leads nowhere but consistent with ``spatial_smoothing_xesmf``.
 
     Returns:
-        ds_smoothed(xr.object): input with `smooth` timesteps less
-            and labeling '1-(smooth-1)', '...', ... .
+        input with ``smooth`` timesteps less and
+        labeling ``"1-(smooth-1)", "...", ...`` .
+
+    References:
+        * Goddard, L., A. Kumar, A. Solomon et al.
+          “A Verification Framework for Interannual to Decadal Predictions Experiments.”
+          Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
 
     """
     # unpack dict
     if not isinstance(tsmooth_kws, dict):
         raise ValueError(
-            "Please provide tsmooth_kws as dict, found ", type(tsmooth_kws)
+            "Please provide `tsmooth_kws` as dict, found ", type(tsmooth_kws)
         )
     if not ("time" in tsmooth_kws or "lead" in tsmooth_kws):
         raise ValueError(
-            'tsmooth_kws doesnt contain a time dimension \
+            '`tsmooth_kws` doesnt contain a `time` dimension \
             (either "lead" or "time").',
             tsmooth_kws,
         )
@@ -187,19 +191,24 @@ def temporal_smoothing(ds, tsmooth_kws=None, how="mean", d_lon_lat_kws=None):
     return ds_smoothed
 
 
-def _reset_temporal_axis(ds_smoothed, tsmooth_kws, dim="lead", set_lead_center=True):
-    """Reduce and reset temporal axis. See temporal_smoothing(). Should be
-    used after calculation of skill to maintain readable labels for skill
+def _reset_temporal_axis(
+    ds_smoothed: xr.Dataset,
+    tsmooth_kws: Dict[str, int],
+    dim: str = "lead",
+    set_lead_center: bool = True,
+) -> xr.Dataset:
+    """Reduce and reset temporal axis. See temporal_smoothing.
+
+    Should be used after calculation of skill to maintain readable labels for skill
     computation.
 
     Args:
-        ds_smoothed (xarray object): Smoothed dataset.
-        tsmooth_kws (dict): Keywords smoothing is performed over.
-        dim (str): Dimension smoothing is performed over. Defaults to 'lead'.
-        set_center (bool): Whether to set new coord `{dim}_center`.
-            Defaults to True.
+        ds_smoothed: Smoothed dataset.
+        tsmooth_kws: Keywords smoothing is performed over.
+        dim: Dimension smoothing is performed over. Defaults to ``"lead"``.
+        set_center: Whether to set new coord `{dim}_center`. Defaults to ``True``.
 
-    Returns:
+    Returns
         Smoothed Dataset with updated labels for smoothed temporal dimension.
     """
     # bugfix: actually tsmooth_kws should only dict
@@ -216,54 +225,51 @@ def _reset_temporal_axis(ds_smoothed, tsmooth_kws, dim="lead", set_lead_center=T
     return ds_smoothed
 
 
-def _set_center_coord(ds, dim="lead"):
+def _set_center_coord(ds: xr.Dataset, dim: str = "lead") -> xr.Dataset:
     """Set lead_center as a new coordinate."""
     new_dim = []
     old_dim = ds[dim].values
     for i in old_dim:
         new_dim.append(eval(i.replace("-", "+")) / 2)
-    new_dim = np.array(new_dim)
-    ds.coords[f"{dim}_center"] = (dim, new_dim)
+    ds.coords[f"{dim}_center"] = (dim, np.array(new_dim))
     return ds
 
 
-@is_xarray(0)
 def smooth_goddard_2013(
-    ds,
-    tsmooth_kws={"lead": 4},
-    d_lon_lat_kws={"lon": 5, "lat": 5},
-    how="mean",
-    **xesmf_kwargs,
-):
-    """Wrapper to smooth as suggested by Goddard et al. 2013:
-        - 4-year composites
-        - 5x5 degree regridding
+    ds: xr.Dataset,
+    tsmooth_kws: Dict[str, int] = {"lead": 4},
+    d_lon_lat_kws: Dict[str, float] = {"lon": 5, "lat": 5},
+    how: str = "mean",
+    **xesmf_kwargs: str,
+) -> xr.Dataset:
+    """Wrap to smooth as suggested by Goddard et al. 2013.
 
-    Reference:
-    * Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P.
-        Gonzalez, V. Kharin, et al. “A Verification Framework for
-        Interannual - to - Decadal Predictions Experiments.” Climate
-        Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-        https: // doi.org / 10 / f4jjvf.
+    - 4-year composites
+    - 5x5 degree regridding
 
     Args:
-        ds(xr.object): input.
-        tsmooth_kws(dict): length of smoothing of timesteps (applies to ``lead``
-                          in forecast and ``time`` in verification data).
-                          Default: {'time': 4} (see Goddard et al. 2013).
-        d_lon_lat_kws (dict): target grid for regridding.
-                              Default: {'lon':5 , 'lat': 5}
-        how(str): aggregation type for smoothing. default: 'mean'
-        **xesmf_kwargs (kwargs): kwargs passed to `spatial_smoothing_xesmf`.
+        ds: input to be smoothed.
+        tsmooth_kws: length of smoothing of timesteps (applies to ``lead``
+            in forecast and ``time`` in verification data).
+            Default: ``{"time": 4}`` (see Goddard et al. 2013).
+        d_lon_lat_kws: target grid for regridding.
+            Default: ``{"lon":5 , "lat": 5}``.
+        how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
+            Default: ``"mean"``.
+        **xesmf_kwargs: kwargs passed to ``spatial_smoothing_xesmf``.
 
     Returns:
-        ds_smoothed_regridded (xr.object): input with `smooth` timesteps less
-                                           and labeling '1-(smooth-1)', '...' .
+        input with `smooth` timesteps less and labeling "1-(smooth-1)", "..." .
 
+    References:
+        * Goddard, L., A. Kumar, A. Solomon et al.
+          “A Verification Framework for Interannual to Decadal Predictions Experiments.”
+          Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
+          https://doi.org/10/f4jjvf.
     """
     # first temporal smoothing
     ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws)
     ds_smoothed_regridded = spatial_smoothing_xesmf(
-        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs
+        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs  # type: ignore
     )
     return ds_smoothed_regridded

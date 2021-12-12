@@ -1,5 +1,7 @@
+"""Common checks for climpred operations."""
+
 import warnings
-from functools import wraps
+from typing import List, Optional, Union
 
 import dask
 import xarray as xr
@@ -7,7 +9,6 @@ import xarray as xr
 from .constants import (
     CF_LONG_NAMES,
     CF_STANDARD_NAMES,
-    CLIMPRED_ENSEMBLE_DIMS,
     VALID_ALIGNMENTS,
     VALID_LEAD_UNITS,
     VALID_REFERENCES,
@@ -18,19 +19,11 @@ from .options import OPTIONS
 NCPU = dask.system.CPU_COUNT
 
 
-def dec_args_kwargs(wrapper):
-    # https://stackoverflow.com/questions/10610824/
-    # python-shortcut-for-writing-decorators-which-accept-arguments
-    return lambda *dec_args, **dec_kwargs: lambda func: wrapper(
-        func, *dec_args, **dec_kwargs
-    )
-
-
 # --------------------------------------#
 # CHECKS
 # --------------------------------------#
 def has_dataset(obj, kind, what):
-    """Checks that the PredictionEnsemble has a specific dataset in it."""
+    """Check that the PredictionEnsemble has a specific dataset in it."""
     if len(obj) == 0:
         raise DatasetError(
             f"You need to add at least one {kind} dataset before "
@@ -40,9 +33,7 @@ def has_dataset(obj, kind, what):
 
 
 def has_dims(xobj, dims, kind):
-    """
-    Checks that at the minimum, the object has provided dimensions.
-    """
+    """Check that at the minimum, the object has provided dimensions."""
     if isinstance(dims, str):
         dims = [dims]
 
@@ -56,9 +47,7 @@ def has_dims(xobj, dims, kind):
 
 
 def has_min_len(arr, len_, kind):
-    """
-    Checks that the array is at least the specified length.
-    """
+    """Check that the array is at least the specified length."""
     arr_len = len(arr)
     if arr_len < len_:
         raise DimensionError(
@@ -69,9 +58,7 @@ def has_min_len(arr, len_, kind):
 
 
 def has_valid_lead_units(xobj):
-    """
-    Checks that the object has valid units for the lead dimension.
-    """
+    """Check that the object has valid units for the lead dimension."""
     LEAD_UNIT_ERROR = (
         "The lead dimension must must have a valid "
         f"units attribute. Valid options are: {VALID_LEAD_UNITS}"
@@ -105,56 +92,15 @@ def is_in_list(item, list_, kind):
     return True
 
 
-@dec_args_kwargs
-def is_xarray(func, *dec_args):
-    """
-    Decorate a function to ensure the first arg being submitted is
-    either a Dataset or DataArray.
-    """
-
-    @wraps(func)
-    def wrapper(*args, **kwargs):
-        try:
-            ds_da_locs = dec_args[0]
-            if not isinstance(ds_da_locs, list):
-                ds_da_locs = [ds_da_locs]
-
-            for loc in ds_da_locs:
-                if isinstance(loc, int):
-                    ds_da = args[loc]
-                elif isinstance(loc, str):
-                    ds_da = kwargs[loc]
-
-                is_ds_da = isinstance(ds_da, (xr.Dataset, xr.DataArray))
-                if not is_ds_da:
-                    typecheck = type(ds_da)
-                    raise IOError(
-                        f"""The input data is not an xarray DataArray or
-                        Dataset. climpred is built to wrap xarray to make
-                        use of its awesome features. Please input an xarray
-                        object and retry the function.
-
-                        Your input was of type: {typecheck}"""
-                    )
-        except IndexError:
-            pass
-        # this is outside of the try/except so that the traceback is relevant
-        # to the actual function call rather than showing a simple Exception
-        # (probably IndexError from trying to subselect an empty dec_args list)
-        return func(*args, **kwargs)
-
-    return wrapper
-
-
 def match_calendars(
     ds1, ds2, ds1_time="init", ds2_time="time", kind1="initialized", kind2="observation"
 ):
-    """Checks that calendars match between two xarray Datasets.
+    """Check that calendars match between two xarray Datasets.
 
     This assumes that the two datasets coming in have cftime time axes.
 
     Args:
-        ds1, ds2 (xarray object): Datasets/DataArrays to compare calendars on. For
+        ds1, ds2 (xarray.Dataset, xr.DataArrays): to compare calendars on. For
             classes, ds1 can be thought of Dataset already existing in the object,
             and ds2 the one being added.
         ds1_time, ds2_time (str, default 'time'): Name of time dimension to look
@@ -177,8 +123,7 @@ def match_calendars(
 
 
 def match_initialized_dims(init, verif, uninitialized=False):
-    """Checks that the verification data dimensions match appropriate initialized
-    dimensions.
+    """Check that the verification dimensions match initialized dimensions.
 
     If uninitialized, ignore ``member``. Otherwise, ignore ``lead`` and ``member``.
     """
@@ -193,18 +138,19 @@ def match_initialized_dims(init, verif, uninitialized=False):
     if (set(verif.dims) - set(init_dims)) != set():
         unmatch_dims = set(verif.dims) ^ set(init_dims)
         raise DimensionError(
-            f"Verification contains more dimensions than initialized. These dimensions do not match: {unmatch_dims}."
+            "Verification contains more dimensions than initialized. These dimensions "
+            f" do not match: {unmatch_dims}."
         )
     if (set(init_dims) - set(verif.dims)) != set():
         warnings.warn(
-            f"Initialized contains more dimensions than verification. Dimension(s) {set(init_dims) - set(verif.dims)} will be broadcasted."
+            "Initialized contains more dimensions than verification. "
+            f"Dimension(s) {set(init_dims) - set(verif.dims)} will be broadcasted."
         )
     return True
 
 
 def match_initialized_vars(init, verif):
-    """Checks that a new verification dataset has at least one variable
-    in common with the initialized dataset.
+    """Check that verification has at least one variable in common with the initialized.
 
     This ensures that they can be compared pairwise.
 
@@ -254,11 +200,15 @@ def rename_to_climpred_dims(xobj):
                     xobj[climpred_d].attrs["standard_name"] = cf_standard_name
                     if OPTIONS["warn_for_rename_to_climpred_dims"]:
                         warnings.warn(
-                            f'Did not find dimension "{climpred_d}", but renamed dimension {d} with CF-complying standard_name "{cf_standard_name}" to {climpred_d}.'
+                            f'Did not find dimension "{climpred_d}", but renamed '
+                            f"dimension {d} with CF-complying standard_name "
+                            f'"{cf_standard_name}" to {climpred_d}.'
                         )
     if not set(["init", "lead"]).issubset(set(xobj.dims)):
         warnings.warn(
-            f'Could not find dimensions ["init", "lead"] in initialized, found dimension {xobj.dims}. Also searched coordinates for CF-complying standard_names {CF_STANDARD_NAMES}.'
+            'Could not find dimensions ["init", "lead"] in initialized, found '
+            f"dimension {xobj.dims}. Also searched coordinates for CF-complying "
+            f"standard_names {CF_STANDARD_NAMES}."
         )
     return xobj
 
@@ -307,10 +257,7 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
             )
 
 
-from typing import List, Optional, Union
-
-
-def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List:
+def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List[str]:
     """Enforce reference as list and check for valid entries."""
     if reference is None:
         reference = []
@@ -325,10 +272,11 @@ def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List:
     return reference
 
 
-def _check_valud_alignment(alignment):
+def _check_valid_alignment(alignment):
     if alignment not in VALID_ALIGNMENTS:
         raise ValueError(
-            f"Please provide alignment from {VALID_ALIGNMENTS}, found alignment='{alignment}'."
+            f"Please provide alignment from {VALID_ALIGNMENTS}, "
+            f"found alignment='{alignment}'."
         )
     else:
         if alignment == "same_init":

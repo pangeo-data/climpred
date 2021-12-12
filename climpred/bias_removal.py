@@ -383,7 +383,8 @@ def gaussian_bias_removal(
             bias_removal_func_kwargs = dict(obs=hindcast.get_observations(), cv=cv)
 
     hind = hindcast_test.get_initialized()
-    hind, bias = xr.align(hind, bias)
+    if OPTIONS["seasonality"] == "weekofyear":
+        hind, bias = xr.align(hind, bias)
 
     bias_removed_hind = bias_removal_func(
         hind, bias, "init", **bias_removal_func_kwargs

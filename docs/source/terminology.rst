@@ -70,7 +70,7 @@ world [Meehl2013]_ [Pegion2019]_.
 [Murphy1988]_:
 
 .. math::
-    S = \\frac{A_{f} - A_{r}}{A_{p} - A_{r}},
+    S = \frac{A_{f} - A_{r}}{A_{p} - A_{r}},
 
 where :math:`A_{f}`, :math:`A_{p}`, and :math:`A_{r}` represent the accuracy of the
 forecast being assessed, the accuracy of a perfect forecast, and the accuracy of the
@@ -87,13 +87,13 @@ Forecasting
 integrated forward in time, also called re-forcasts.  Depending on the length of time
 of the integration, external forcings may or may not be included.  The longer the
 integration (e.g. decadal vs. daily), the more important it is to include external
-forcing.  [Boer2016]_.  Because they represent so-called forecasts over periods that
+forcing [Boer2016]_.  Because they represent so-called forecasts over periods that
 already occurred, their prediction skill can be evaluated.
 
 *Prediction*: Forecasts initialized from a reconstruction integrated into the future.
 Depending on the length of time of the integration, external forcings may or may not
 be included.  The longer the integration (e.g. decadal vs. daily), the more important
-it is to include external forcing. [Boer2016]_  Because predictions are made into the
+it is to include external forcing [Boer2016]_. Because predictions are made into the
 future, it is necessary to wait until the forecast occurs before one can quantify the
 skill of the forecast.
 

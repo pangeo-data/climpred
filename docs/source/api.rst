@@ -292,6 +292,7 @@ Preprocessing
     load_hindcast
     rename_to_climpred_dims
     rename_SLM_to_climpred_dims
+    set_integer_time_axis
 
 .. currentmodule:: climpred.preprocessing.mpi
 

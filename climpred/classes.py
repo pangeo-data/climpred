@@ -2388,7 +2388,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Bias is grouped by ``seasonality`` set via
         :py:class:`~climpred.options.set_options`. When wrapping
-        :py:class:`~xclim.sdba.adjustment.TrainAdjust` use ``group`` instead.
+        :py:class:`xclim.sdba.adjustment.TrainAdjust` use ``group`` instead.
 
         Args:
             alignment: which inits or verification times should be aligned?
@@ -2414,12 +2414,12 @@ class HindcastEnsemble(PredictionEnsemble):
                 - ``"basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
                 - ``"gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - ``"normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-                - :py:class:`~xclim.sdba.adjustment.EmpiricalQuantileMapping`
-                - :py:class:`~xclim.sdba.adjustment.DetrendedQuantileMapping`
-                - :py:class:`~xclim.sdba.adjustment.PrincipalComponents`
-                - :py:class:`~xclim.sdba.adjustment.QuantileDeltaMapping`
-                - :py:class:`~xclim.sdba.adjustment.Scaling`
-                - :py:class:`~xclim.sdba.adjustment.LOCI`
+                - :py:class:`xclim.sdba.adjustment.EmpiricalQuantileMapping`
+                - :py:class:`xclim.sdba.adjustment.DetrendedQuantileMapping`
+                - :py:class:`xclim.sdba.adjustment.PrincipalComponents`
+                - :py:class:`xclim.sdba.adjustment.QuantileDeltaMapping`
+                - :py:class:`xclim.sdba.adjustment.Scaling`
+                - :py:class:`xclim.sdba.adjustment.LOCI`
 
             train_test_split: How to separate train period to calculate the bias
                 and test period to apply bias correction to? For a detailed

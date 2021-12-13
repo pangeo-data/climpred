@@ -164,15 +164,15 @@ New Features
   :py:meth:`.HindcastEnsemble.remove_bias`:
 
     * ``how="EmpiricalQuantileMapping"``:
-      :py:class:`~xclim.sdba.adjustment.EmpiricalQuantileMapping`
+      :py:class:`xclim.sdba.adjustment.EmpiricalQuantileMapping`
     * ``how="DetrendedQuantileMapping"``:
-      :py:class:`~xclim.sdba.adjustment.DetrendedQuantileMapping`
+      :py:class:`xclim.sdba.adjustment.DetrendedQuantileMapping`
     * ``how="PrincipalComponents"``:
-      :py:class:`~xclim.sdba.adjustment.PrincipalComponents`
+      :py:class:`xclim.sdba.adjustment.PrincipalComponents`
     * ``how="QuantileDeltaMapping"``:
-      :py:class:`~xclim.sdba.adjustment.QuantileDeltaMapping`
-    * ``how="Scaling"``: :py:class:`~xclim.sdba.adjustment.Scaling`
-    * ``how="LOCI"``: :py:class:`~xclim.sdba.adjustment.LOCI`
+      :py:class:`xclim.sdba.adjustment.QuantileDeltaMapping`
+    * ``how="Scaling"``: :py:class:`xclim.sdba.adjustment.Scaling`
+    * ``how="LOCI"``: :py:class:`xclim.sdba.adjustment.LOCI`
 
   These methods do not respond to ``OPTIONS['seasonality']`` like the other methods.
   Provide ``group="init.month"`` to group by month or ``group='init'`` to skip grouping.

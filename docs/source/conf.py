@@ -52,6 +52,9 @@ extensions = [
     "IPython.sphinxext.ipython_console_highlighting",
 ]
 
+autosummary_generate = True
+autodoc_typehints = "none"
+
 # MyST config
 myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "html_image"]
 myst_url_schemes = ["http", "https", "mailto"]

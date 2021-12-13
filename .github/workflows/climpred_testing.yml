@@ -1,4 +1,4 @@
-name: climpred testing  # based on https://github.com/pydata/xarray/blob/master/.github/workflows/ci.yaml
+name: CI  # based on https://github.com/pydata/xarray/blob/master/.github/workflows/ci.yaml
 
 on:
   push:
@@ -128,7 +128,7 @@ jobs:
         run: |
           python -m pytest --doctest-modules climpred --ignore climpred/tests
 
-  docs_notebooks:  # Checks that pre-compiled notebooks in docs still work.
+  notebooks:  # Checks that pre-compiled notebooks in docs still work.
     runs-on: ubuntu-latest
     defaults:
         run:

@@ -37,7 +37,8 @@ version = climpred.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "nbsphinx",
+    # "nbsphinx",
+    "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
@@ -50,6 +51,10 @@ extensions = [
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
 ]
+
+# MyST config
+myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "html_image"]
+myst_url_schemes = ("http", "https", "mailto")
 
 # Cupybutton configuration
 # See: https://sphinx-copybutton.readthedocs.io/en/latest/
@@ -103,3 +108,5 @@ intersphinx_mapping = {
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
 # nbsphinx_allow_errors = True
+
+nbsphinx_kernel_name = "climpred-dev"

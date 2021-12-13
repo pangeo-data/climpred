@@ -143,7 +143,7 @@ intersphinx_mapping = {
 # are breaking.
 # nbsphinx_allow_errors = True
 
-nbsphinx_kernel_name = "climpred-docs-notebooks"
+# nbsphinx_kernel_name = "climpred-docs"
 
 
 # Napoleon configurations

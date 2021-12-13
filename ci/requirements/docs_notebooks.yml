@@ -4,7 +4,7 @@ channels:
   - nodefaults
 dependencies:
   - python>=3.7
-  - ipykernel
+  #- ipykernel
   - jupyterlab
   - matplotlib-base
   - myst-nb

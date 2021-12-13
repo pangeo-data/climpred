@@ -6,7 +6,7 @@ dependencies:
   - python=3.8
   - matplotlib-base
   - myst-nb
-  - ipykernel
+  #- ipykernel
   - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx

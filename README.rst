@@ -18,7 +18,7 @@ Verification of weather and climate forecasts.
     * - license
       - |license|
     * - community
-      - |gitter| |contributors|
+      - |gitter| |contributors| |forks| |stars|
     * - tutorials
       - |gallery| |workshop| |cloud|
 
@@ -85,6 +85,15 @@ Verification of weather and climate forecasts.
 .. |cloud| image:: https://img.shields.io/badge/climpred-cloud_demo-f9c99a
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
+
+.. |forks| image::https://img.shields.io/github/forks/pangeo-data/climpred
+    :alt: GitHub forks
+    :target: https://github.com/pangeo-data/climpred/network/members
+
+.. |stars| image::https://img.shields.io/github/stars/pangeo-data/climpred
+    :alt: GitHub stars
+    :target: https://github.com/pangeo-data/climpred/stargazers
+
 
 ..
 

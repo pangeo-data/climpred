@@ -143,7 +143,7 @@ intersphinx_mapping = {
 # are breaking.
 # nbsphinx_allow_errors = True
 
-# nbsphinx_kernel_name = "climpred-docs"
+# nbsphinx_kernel_name = "climpred-docs"  # doesnt work
 
 
 # Napoleon configurations
@@ -158,4 +158,5 @@ napoleon_type_aliases = {
     "PredictionEnsemble": "~climpred.PredictionEnsemble",
     "HindcastEnsemble": "~climpred.HindcastEnsemble",
     "PerfectModelEnsemble": "~climpred.PerfectModelEnsemble",
+    # add CFTimeIndex, Timedelta
 }

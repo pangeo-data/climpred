@@ -37,7 +37,6 @@ version = climpred.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    # "nbsphinx",
     "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
@@ -54,7 +53,7 @@ extensions = [
 
 # MyST config
 myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "html_image"]
-myst_url_schemes = ("http", "https", "mailto")
+myst_url_schemes = ["http", "https", "mailto"]
 
 # Cupybutton configuration
 # See: https://sphinx-copybutton.readthedocs.io/en/latest/
@@ -86,10 +85,45 @@ nbsphinx_timeout = 180  # 3 minute timeout
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = "alabaster"
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
+# html_theme = "pydata_sphinx_theme"
+# html_theme = "sphinx_rtd_theme"
 html_logo = "images/climpred-logo.png"
 html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcfc"}
+
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    "github_url": "https://github.com/pangeo-data/climpred",
+    "use_edit_page_button": True,
+    "navbar_end": "search-field.html",
+    "repository_branch": "main",
+    "path_to_docs": "doc",
+    "use_edit_page_button": True,
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "home_page_in_toc": False,
+    "extra_navbar": "",
+    "navbar_footer_text": "",
+}
+
+html_context = {
+    "github_user": "pangeo-data",
+    "github_repo": "climpred",
+    "github_version": "main",
+    "doc_path": "docs",
+}
+
+
+nbsphinx_prolog = """
+{% set docname = env.doc2path(env.docname, base=None) %}
+You can run this notebook in a `live session <https://binder.pangeo.io/v2/gh/pangeo-data/climpred/main?urlpath=lab/tree/docs/{{docname }}>`_ |Binder| or view it `on Github <https://github.com/pangeo-data/climpred/blob/main/docs/{{ docname }}>`_.  # noqa: E501
+.. |Binder| image:: https://mybinder.org/badge_logo.svg
+   :target: https://binder.pangeo.io/v2/gh/pangeo-data/main?urlpath=lab/tree/docs/{{ docname }}  # noqa: E501
+"""
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -110,3 +144,18 @@ intersphinx_mapping = {
 # nbsphinx_allow_errors = True
 
 nbsphinx_kernel_name = "climpred-dev"
+
+
+# Napoleon configurations
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_use_param = False
+napoleon_use_rtype = False
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "PredictionEnsemble": "~climpred.PredictionEnsemble",
+    "HindcastEnsemble": "~climpred.HindcastEnsemble",
+    "PerfectModelEnsemble": "~climpred.PerfectModelEnsemble",
+}

@@ -5,10 +5,9 @@ channels:
 dependencies:
   - python>=3.7
   # Documentation
-  - nbsphinx
   - myst-nb
   - nbstripout
-  - sphinx_rtd_theme
+  - sphinx_book_theme
   - sphinx
   - sphinxcontrib-napoleon
   # IDE

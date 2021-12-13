@@ -6,13 +6,12 @@ dependencies:
   - python=3.8
   - importlib_metadata
   - matplotlib-base
-  - nbsphinx
   - myst-nb
   - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx
   - sphinxcontrib-napoleon
-  - sphinx_rtd_theme
+  - sphinx_book_theme
   - sphinx-copybutton
   - toolz
   - xarray>=0.19.0

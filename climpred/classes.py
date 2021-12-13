@@ -383,11 +383,11 @@ class PredictionEnsemble:
             return _display_metadata(self)
 
     def __len__(self) -> int:
-        """Return number of all variables ``PredictionEnsemble``."""
+        """Return number of all variables :py:class:`.PredictionEnsemble`."""
         return len(self.data_vars)
 
     def __iter__(self) -> Iterator[Hashable]:
-        """Iterate over underlying :py:class:`~xarray.Dataset`s."""
+        """Iterate over underlying :py:class:`xarray.Dataset`."""
         return iter(self._datasets.values())
 
     def __delitem__(self, key: Hashable) -> None:

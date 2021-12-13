@@ -8,7 +8,7 @@ dependencies:
   - jupyterlab
   - matplotlib-base
   - nbsphinx
-  - myst_nb
+  - myst-nb
   - nbstripout
   - netcdf4
   - numpy

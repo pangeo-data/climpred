@@ -6,7 +6,7 @@ dependencies:
   - python>=3.7
   # Documentation
   - nbsphinx
-  - myst_nb
+  - myst-nb
   - nbstripout
   - sphinx_rtd_theme
   - sphinx

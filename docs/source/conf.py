@@ -8,6 +8,7 @@ http://www.sphinx-doc.org/en/master/config
 # -- Path setup --------------------------------------------------------------
 
 import datetime
+import inspect
 import os
 import sys
 
@@ -26,7 +27,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 current_year = datetime.datetime.now().year
 project = "climpred"
 copyright = f"2019-{current_year}, climpred development team"
-author = "climpred development team"
+today_fmt = "%Y-%m-%d"
 
 version = climpred.__version__
 
@@ -158,5 +159,70 @@ napoleon_type_aliases = {
     "PredictionEnsemble": "~climpred.PredictionEnsemble",
     "HindcastEnsemble": "~climpred.HindcastEnsemble",
     "PerfectModelEnsemble": "~climpred.PerfectModelEnsemble",
-    # add CFTimeIndex, Timedelta
 }
+
+# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# using the given strftime format.
+html_last_updated_fmt = today_fmt
+
+
+# based on numpy doc/source/conf.py
+def linkcode_resolve(domain, info):
+    """
+    Determine the URL corresponding to Python object
+    """
+    if domain != "py":
+        return None
+
+    modname = info["module"]
+    fullname = info["fullname"]
+
+    submod = sys.modules.get(modname)
+    if submod is None:
+        return None
+
+    obj = submod
+    for part in fullname.split("."):
+        try:
+            obj = getattr(obj, part)
+        except AttributeError:
+            return None
+
+    try:
+        fn = inspect.getsourcefile(inspect.unwrap(obj))
+    except TypeError:
+        fn = None
+    if not fn:
+        return None
+
+    try:
+        source, lineno = inspect.getsourcelines(obj)
+    except OSError:
+        lineno = None
+
+    if lineno:
+        linespec = f"#L{lineno}-L{lineno + len(source) - 1}"
+    else:
+        linespec = ""
+
+    fn = os.path.relpath(fn, start=os.path.dirname(climpred.__file__))
+
+    if "+" in xarray.__version__:
+        return (
+            f"https://github.com/pangeo-data/climpred/blob/main/climpred/{fn}{linespec}"
+        )
+    else:
+        return (
+            f"https://github.com/pangeo-data/climpred/blob/"
+            f"v{climpred.__version__}/climpred/{fn}{linespec}"
+        )
+
+
+def html_page_context(app, pagename, templatename, context, doctree):
+    # Disable edit button for docstring generated pages
+    if "generated" in pagename:
+        context["theme_use_edit_page_button"] = False
+
+
+def setup(app):
+    app.connect("html-page-context", html_page_context)

@@ -2168,7 +2168,7 @@ def _unconditional_bias(
             reference:                     []
 
         Conditional bias is removed by
-        :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+        :py:meth:`.HindcastEnsemble.remove_bias`.
 
         >>> HindcastEnsemble = HindcastEnsemble.remove_bias(alignment="same_verifs")
         >>> HindcastEnsemble.verify(
@@ -2611,7 +2611,7 @@ def _brier_score(
         ...
 
         Option 1. Pass with keyword ``logical``: (specifically designed for
-        :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
+        :py:class:`.PerfectModelEnsemble`, where binary verification
         can only be created after comparison)
 
         >>> HindcastEnsemble.verify(
@@ -3293,7 +3293,7 @@ def _discrimination(
         ...
 
         Option 1. Pass with keyword ``logical``: (especially designed for
-        :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
+        :py:class:`.PerfectModelEnsemble`, where binary verification
         can only be created after comparison)
 
         >>> HindcastEnsemble.verify(
@@ -3422,7 +3422,7 @@ def _reliability(
         ...
 
         Option 1. Pass with keyword ``logical``: (especially designed for
-        :py:class:`~climpred.classes.PerfectModelEnsemble`, where binary verification
+        :py:class:`.PerfectModelEnsemble`, where binary verification
         can only be created after comparison))
 
         >>> HindcastEnsemble.verify(
@@ -3690,7 +3690,7 @@ def _rps(
             category_edges:                [-0.5  0.   0.5  1. ]
 
 
-        Provide ``category_edges`` as :py:class:`~xarray.Dataset` for category edges
+        Provide ``category_edges`` as :py:class:`xarray.Dataset` for category edges
         varying along dimensions.
 
         >>> category_edges = (

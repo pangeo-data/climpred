@@ -108,7 +108,7 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
 
 .. code-block:: bash
 
-    pip install climpred
+    pip install climpred[complete]
 
 .. code-block:: bash
 

@@ -13,7 +13,7 @@ This allows things to run more easily under-the-hood.
 steps at which the ensemble was initialized.
 ``init`` is known as ``forecast_reference_time`` in the `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_.
 ``init`` must be of type :py:class:`~pandas.DatetimeIndex`, or
-:py:class:`~xarray.CFTimeIndex`.
+:py:class:`xarray.CFTimeIndex`.
 If ``init`` is of type ``int``, it is assumed to be annual data starting Jan 1st.
 A UserWarning is issues when this assumption is made.
 
@@ -23,20 +23,20 @@ A UserWarning is issues when this assumption is made.
 The units for the ``lead`` dimension must be specified in as an attribute.
 Valid options are ``["years", "seasons", "months"]`` and
 ["weeks", "pentads", "days", "hours", "minutes", "seconds"]``.
-If ``lead`` is provided as :py:class:`~pandas.Timedelta` up to ``"weeks"``, ``lead``
+If ``lead`` is provided as :py:class:`pandas.Timedelta` up to ``"weeks"``, ``lead``
 is converted to ``int`` and a corresponding ``lead.attrs["units"]``.
-For larger ``lead`` as :py:class:`~pandas.Timedelta` ("months", "seasons" or "years"),
-no conversion is possible.
+For larger ``lead`` as :py:class:`pandas.Timedelta`
+``["months", "seasons" or "years"]``, no conversion is possible.
 
-``valid_time=init+lead`` will be calculated in
-:py:class:`~climpred.classes.PredictionEnsemble` upon instantiation.
+``valid_time=init+lead`` will be calculated in :py:class:`.PredictionEnsemble` upon
+instantiation.
 
 Another crucial dimension is ``member``, which holds the various ensemble members,
 which is only required for probabilistic metrics. ``member`` is known as
 ``realization`` in the `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_
 
-Any additional dimensions will
-be broadcasted: these could be dimensions like ``lat``, ``lon``, ``depth``, etc.
+Any additional dimensions will be broadcasted: these could be dimensions like ``lat``,
+``lon``, ``depth``, etc.
 
 If the expected dimensions are not found, but the matching `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_
 ``standard_name`` in a coordinate attribute, the dimension is renamed to the
@@ -50,7 +50,7 @@ Check out the demo to setup a ``climpred``-ready prediction ensemble
 For best use of ``climpred``, their ``time`` dimension should cover the full length of
 ``init`` and be the same calendar type as the accompanying prediction ensemble.
 The ``time`` dimension must be :py:class:`~pandas.DatetimeIndex`, or
-:py:class:`~xarray.CFTimeIndex`.
+:py:class:`xarray.CFTimeIndex`.
 ``time`` dimension of type ``int`` is assumed to be annual data starting Jan 1st.
 A UserWarning is issued when this assumption is made.
 These products can also include additional dimensions, such as ``lat``, ``lon``,
@@ -69,12 +69,12 @@ that ``climpred`` supports for them.
      - `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_
      - Attribute(s)
    * - ``lead``
-     - ``int``, ``float`` or :py:class:`~pandas.Timedelta` up to "weeks"
+     - ``int``, ``float`` or :py:class:`pandas.Timedelta` up to ``weeks``
      - lead timestep after initialization ``init``
      - ``forecast_period``
-     - units (str) [years, seasons, months, weeks, pentads, days, hours, minutes, seconds] if not :py:class:`~pandas.Timedelta`
+     - units (str) [``years``, ``seasons``, ``months``, ``weeks``, ``pentads``, ``days``, ``hours``, ``minutes``, ``seconds``] if not :py:class:`pandas.Timedelta`
    * - ``init``
-     -  :py:class:`~pandas.DatetimeIndex` or :py:class:`~xarray.CFTimeIndex`.
+     -  :py:class:`~pandas.DatetimeIndex` or :py:class:`xarray.CFTimeIndex`.
      - initialization as start date of experiment
      - ``forecast_reference_time``
      - None

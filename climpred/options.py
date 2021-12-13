@@ -34,7 +34,7 @@ class set_options:
     ``seasonality`` : {``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``}, default: ``"month"`` # noqa: E501
         Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
         Used in ``reference=climatology`` and
-        :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
+        :py:meth:`.HindcastEnsemble.remove_bias`.
     ``PerfectModel_persistence_from_initialized_lead_0`` : {``True``, ``False``}, default ``False`` # noqa: E501
         Which persistence function to use in
         ``PerfectModelEnsemble.verify/bootstrap(reference="persistence")``.
@@ -46,11 +46,11 @@ class set_options:
         ``.sel(lead=[1])`` fails on one of the datasets.
     ``warn_for_rename_to_climpred_dims`` : {``True``, ``False``}, default ``True``
         Raise ``UserWarning`` when dimensions are renamed to ``CLIMPRED_DIMS`` when
-        :py:class:`~climpred.classes.PredictionEnsemble` is instantiated.
+        :py:class:`.PredictionEnsemble` is instantiated.
     ``warn_for_init_coords_int_to_annual`` : {``True``, ``False``}, default ``True``
         Raise ``UserWarning`` when ``init`` coordinate is of type integer and gets
         converted to annual cftime_range when
-        :py:class:`~climpred.classes.PredictionEnsemble` is instantiated.
+        :py:class:`.PredictionEnsemble` is instantiated.
     ``climpred_warnings`` : {``True``, ``False``}, default ``True``
         Overwrites all options containing ``"*warn*"``.
 

@@ -51,7 +51,7 @@ respective distributions. Confidence intervals using these distributions are als
 calculated.
 
 This behavior is incorporated by
-:py:meth:`~climpred.classes.PredictionEnsemble.bootstrap`, see
+:py:meth:`.PredictionEnsemble.bootstrap`, see
 `example <examples/decadal/significance.html#Bootstrapping-with-replacement>`__.
 
 

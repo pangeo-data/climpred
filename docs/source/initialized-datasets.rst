@@ -4,7 +4,7 @@ Initialized Datasets
 
 Probably the hardest part in working with ``climpred`` is getting the ``initialized``
 dataset complying to the expectations and data model of ``climpred``.
-For names, data types and conventions of :py:class:`~xarray.Dataset` dimensions and
+For names, data types and conventions of :py:class:`xarray.Dataset` dimensions and
 coordinates, please refer to `Setting up your Dataset <setting-up-data.html>`_.
 
 Here, we list publicly available initialized datasets and corresponding ``climpred``

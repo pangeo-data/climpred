@@ -9,13 +9,13 @@ how we use them in ``climpred``.
 Simulation Design
 #################
 
-*Hindcast Ensemble* (:py:class:`~climpred.classes.HindcastEnsemble`):
+*Hindcast Ensemble* (:py:class:`.HindcastEnsemble`):
 Ensemble members are initialized from a simulation (generally a reconstruction from
 reanalysis) or an analysis (representing the current state of the atmosphere, land, and
 ocean by assimilation of observations) at initialization dates and integrated for some
 lead years [Boer2016]_.
 
-*Perfect Model Experiment* (:py:class:`~climpred.classes.PerfectModelEnsemble`):
+*Perfect Model Experiment* (:py:class:`.PerfectModelEnsemble`):
 Ensemble members are initialized from a control simulation at randomly chosen
 initialization dates and integrated for some lead years [Griffies1997]_.
 

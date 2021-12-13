@@ -146,7 +146,7 @@ def load_dataset(
         kws: Keywords passed to :py:meth:`~xarray.open_dataset`.
 
     Returns:
-        The desired :py:class:`~xarray.Dataset`
+        The desired :py:class:`xarray.Dataset`
 
     Examples:
         >>> from climpred.tutorial import load_dataset

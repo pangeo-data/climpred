@@ -24,3 +24,4 @@ dependencies:
   - pip:
     # Install latest version of climpred.
     - -e ../..
+    - nb_black

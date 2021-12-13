@@ -100,6 +100,7 @@ Data variables:
 
   .. ipython:: python
       :okwarning:
+      :okexcept:
 
       from climpred.tutorial import load_dataset
 

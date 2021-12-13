@@ -4,9 +4,9 @@ channels:
   - nodefaults
 dependencies:
   - python=3.8
-  - importlib_metadata
   - matplotlib-base
   - myst-nb
+  - ipykernel
   - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx

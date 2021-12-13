@@ -21,6 +21,6 @@ dependencies:
   - bias_correction
   - pip
   - pip:
-    # Install latest version of climpred.
+    # Install latest version of climpred
     - -e ../..
     - nb_black

@@ -28,7 +28,7 @@ dependencies:
   - esmpy
   - bottleneck
   - nc-time-axis>=1.4.0
-  - xrft  # used for varweighted_mean_period
+  - xrft
   - pip
   - pip:
     # Install latest version of climpred.

@@ -476,7 +476,7 @@ class PredictionEnsemble:
             ax: Axis to use in plotting. By default, creates a new axis.
             show_members: whether to display all members individually.
                 Defaults to False.
-            cmap: Name of matplotlib-recognized colorbar. Defaults to `viridis`
+            cmap: Name of matplotlib-recognized colorbar. Defaults to ``viridis``
                 for :py:class:`.HindcastEnsemble`
                 and ``tab10`` for :py:class:`.PerfectModelEnsemble`.
             x: Name of x-axis. Use ``time`` to show observations and

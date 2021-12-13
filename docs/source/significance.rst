@@ -50,8 +50,8 @@ beaten by the ``uninitialized`` or resampled reference metrics calculated from t
 respective distributions. Confidence intervals using these distributions are also
 calculated.
 
-This behavior is incorporated by
-:py:meth:`.PredictionEnsemble.bootstrap`, see
+This behavior is incorporated by :py:meth:`.HindcastEnsemble.bootstrap` and
+:py:meth:`.PerfectModelEnsemble.bootstrap`, see
 `example <examples/decadal/significance.html#Bootstrapping-with-replacement>`__.
 
 
@@ -68,6 +68,7 @@ Sign test
 
 Use DelSole's sign test relying on the statistics of a random walk to decide whether
 one forecast is significantly better than another forecast [DelSole2016]_, see
+:py:func:`xskillscore.sign_test` and
 `sign test example <examples/decadal/significance.html#sign-test>`__.
 
 

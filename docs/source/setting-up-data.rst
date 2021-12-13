@@ -22,7 +22,7 @@ A UserWarning is issues when this assumption is made.
 ``lead`` must be ``int`` or ``float``.
 The units for the ``lead`` dimension must be specified in as an attribute.
 Valid options are ``["years", "seasons", "months"]`` and
-["weeks", "pentads", "days", "hours", "minutes", "seconds"]``.
+``["weeks", "pentads", "days", "hours", "minutes", "seconds"]``.
 If ``lead`` is provided as :py:class:`pandas.Timedelta` up to ``"weeks"``, ``lead``
 is converted to ``int`` and a corresponding ``lead.attrs["units"]``.
 For larger ``lead`` as :py:class:`pandas.Timedelta`

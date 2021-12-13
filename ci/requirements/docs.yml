@@ -11,7 +11,6 @@ dependencies:
   - netcdf4
   - sphinx
   - sphinxcontrib-napoleon
-  - sphinx_book_theme
   - sphinx-copybutton
   - toolz
   - xarray>=0.19.0
@@ -24,3 +23,4 @@ dependencies:
     # Install latest version of climpred
     - -e ../..
     - nb_black
+    - sphinx_book_theme

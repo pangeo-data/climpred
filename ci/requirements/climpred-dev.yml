@@ -7,7 +7,6 @@ dependencies:
   # Documentation
   - myst-nb
   - nbstripout
-  - sphinx_book_theme
   - sphinx
   - sphinxcontrib-napoleon
   # IDE
@@ -56,3 +55,4 @@ dependencies:
   - pip:
       - pytest-lazy-fixture
       - nb_black  # notebook linting
+      - sphinx_book_theme

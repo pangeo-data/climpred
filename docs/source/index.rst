@@ -17,7 +17,7 @@ climpred: verification of weather and climate forecasts
     * - license
       - |license|
     * - community
-      - |gitter| |contributors| |forks| |stars|
+      - |gitter| |contributors| |forks| |stars| |issues| |PRs|
     * - tutorials
       - |gallery| |workshop| |cloud|
 
@@ -93,6 +93,13 @@ climpred: verification of weather and climate forecasts
     :alt: GitHub stars
     :target: https://github.com/pangeo-data/climpred/stargazers
 
+.. |issues| image::https://img.shields.io/github/issues/pangeo-data/climpred
+    :alt: GitHub issues
+    :target: https://github.com/pangeo-data/climpred/issues
+
+.. |PRs| image::https://img.shields.io/github/issues/pangeo-data/climpred
+    :alt: GitHub PRs
+    :target: https://github.com/pangeo-data/climpred/pulls
 
 
 .. note::

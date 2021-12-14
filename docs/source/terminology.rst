@@ -13,11 +13,11 @@ Simulation Design
 Ensemble members are initialized from a simulation (generally a reconstruction from
 reanalysis) or an analysis (representing the current state of the atmosphere, land, and
 ocean by assimilation of observations) at initialization dates and integrated for some
-lead years [Boer2016]_.
+lead years [Boer2016_].
 
 *Perfect Model Experiment* (:py:class:`.PerfectModelEnsemble`):
 Ensemble members are initialized from a control simulation at randomly chosen
-initialization dates and integrated for some lead years [Griffies1997]_.
+initialization dates and integrated for some lead years [Griffies1997_].
 
 *Reconstruction/Assimilation*: A "reconstruction" is a model solution that uses
 observations in some capacity to approximate historical or current conditions of the
@@ -45,11 +45,11 @@ Forecast Assessment
 ###################
 
 *Accuracy*: The average degree of correspondence between individual pairs of forecasts
-and observations [Murphy1988]_; [Jolliffe2011]_. Examples include Mean Absolute Error
+and observations [Murphy1988, Jolliffe2011_]. Examples include Mean Absolute Error
 (MAE) and Mean Square Error (MSE). See `metrics <metrics.html>`_.
 
 *Association*: The overall strength of the relationship between individual pairs of
-forecasts and observations [Jolliffe2011]_. The primary measure of association is the
+forecasts and observations [Jolliffe2011_]. The primary measure of association is the
 Anomaly Correlation Coefficient (ACC), which can be measured using the Pearson
 product-moment correlation or Spearman's Rank correlation. See
 `metrics <metrics.html>`_.
@@ -59,26 +59,26 @@ rather than the current "capability to predict." One estimates this by computing
 metric (like the anomaly correlation coefficient (ACC)) between the prediction
 ensemble and a member (or collection of members) selected as the verification member(s)
 (in a perfect-model setup) or the reconstruction that initialized it
-(in a hindcast setup) [Meehl2013]_ [Pegion2019]_.
+(in a hindcast setup) [Meehl2013, Pegion2019_].
 
 *(Prediction) Skill*: This characterizes the current ability of the ensemble
 forecasting system to predict the real world. This is derived by computing a metric
 between the prediction ensemble and observations, reanalysis, or analysis of the real
-world [Meehl2013]_ [Pegion2019]_.
+world [Meehl2013, Pegion2019_].
 
 *Skill Score*: The most generic skill score can be defined as the following
-[Murphy1988]_:
+[Murphy1988_]:
 
 .. math::
     S = \frac{A_{f} - A_{r}}{A_{p} - A_{r}},
 
 where :math:`A_{f}`, :math:`A_{p}`, and :math:`A_{r}` represent the accuracy of the
 forecast being assessed, the accuracy of a perfect forecast, and the accuracy of the
-reference forecast (e.g. persistence), respectively [Murphy1985]_. Here, :math:`S`
+reference forecast (e.g. persistence), respectively [Murphy1985_]. Here, :math:`S`
 represents the improvement in accuracy of the forecasts over the reference forecasts
 relative to the total possible improvement in accuracy. They are typically designed to
 take a value of 1 for a perfect forecast and 0 for equivalent to the reference
-forecast [Jolliffe2011]_.
+forecast [Jolliffe2011_].
 
 Forecasting
 ###########
@@ -87,32 +87,34 @@ Forecasting
 integrated forward in time, also called re-forcasts.  Depending on the length of time
 of the integration, external forcings may or may not be included.  The longer the
 integration (e.g. decadal vs. daily), the more important it is to include external
-forcing [Boer2016]_.  Because they represent so-called forecasts over periods that
+forcing [Boer2016_].  Because they represent so-called forecasts over periods that
 already occurred, their prediction skill can be evaluated.
 
 *Prediction*: Forecasts initialized from a reconstruction integrated into the future.
 Depending on the length of time of the integration, external forcings may or may not
 be included.  The longer the integration (e.g. decadal vs. daily), the more important
-it is to include external forcing [Boer2016]_. Because predictions are made into the
+it is to include external forcing [Boer2016_]. Because predictions are made into the
 future, it is necessary to wait until the forecast occurs before one can quantify the
 skill of the forecast.
 
 *Projection* An estimate of the future climate that is dependent on the externally
 forced climate response, such as anthropogenic greenhouse gases, aerosols, and
-volcanic eruptions [Meehl2013]_.
+volcanic eruptions [Meehl2013_].
 
 References
 ##########
 
+.. [Murphy1985] Murphy, Allan H., and Daan, H. "Forecast evaluation. Probability,
+    Statistics, and Decision Making in the Atmospheric Sciences.",
+    A. H. Murphy and R. W. Katz, Eds., Westview Press, 379-437.
+
+.. [Murphy1988] Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
+    Their Relationships to the Correlation Coefficient.” Monthly Weather Review 116,
+    no. 12 (December 1, 1988): 2417–24. https://doi.org/10/fc7mxd.
+
 .. [Griffies1997] Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
     North Atlantic Multidecadal Variability.”
     Climate Dynamics 13, no. 7–8 (1997): 459–87. https://doi.org/10/ch4kc4
-
-.. [Boer2016] Boer, G. J., Smith, D. M., Cassou, C., Doblas-Reyes, F.,
-    Danabasoglu, G., Kirtman, B., Kushnir, Y., Kimoto, M., Meehl, G. A., Msadek, R.,
-    Mueller, W. A., Taylor, K. E., Zwiers, F., Rixen, M., Ruprich-Robert, Y., and
-    Eade, R.: The Decadal Climate Prediction Project (DCPP) contribution to CMIP6,
-    Geosci. Model Dev., 9, 3751-3777, https://doi.org/10.5194/gmd-9-3751-2016, 2016.
 
 .. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. "Forecast Verification:
     A Practitioner’s Guide in Atmospheric Science.""
@@ -125,13 +127,11 @@ References
     Bulletin of the American Meteorological Society, 95(2), 243-267.
     https://doi.org/10.1175/BAMS-D-12-00241.1.
 
-.. [Murphy1985] Murphy, Allan H., and Daan, H. "Forecast evaluation. Probability,
-    Statistics, and Decision Making in the Atmospheric Sciences.",
-    A. H. Murphy and R. W. Katz, Eds., Westview Press, 379-437.
-
-.. [Murphy1988] Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-    Their Relationships to the Correlation Coefficient.” Monthly Weather Review 116,
-    no. 12 (December 1, 1988): 2417–24. https://doi.org/10/fc7mxd.
+.. [Boer2016] Boer, G. J., Smith, D. M., Cassou, C., Doblas-Reyes, F.,
+    Danabasoglu, G., Kirtman, B., Kushnir, Y., Kimoto, M., Meehl, G. A., Msadek, R.,
+    Mueller, W. A., Taylor, K. E., Zwiers, F., Rixen, M., Ruprich-Robert, Y., and
+    Eade, R.: The Decadal Climate Prediction Project (DCPP) contribution to CMIP6,
+    Geosci. Model Dev., 9, 3751-3777, https://doi.org/10.5194/gmd-9-3751-2016, 2016.
 
 .. [Pegion2019] Pegion, K., T. Delsole, E. Becker, and T. Cicerone (2019).
     "Assessing the Fidelity of Predictability Estimates",

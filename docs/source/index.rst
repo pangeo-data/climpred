@@ -97,7 +97,7 @@ climpred: verification of weather and climate forecasts
     :alt: GitHub issues
     :target: https://github.com/pangeo-data/climpred/issues
 
-.. |PRs| image:: https://img.shields.io/github/pulls/pangeo-data/climpred
+.. |PRs| image:: https://img.shields.io/github/issues-pr/pangeo-data/climpred
     :alt: GitHub PRs
     :target: https://github.com/pangeo-data/climpred/pulls
 

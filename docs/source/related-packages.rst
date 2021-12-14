@@ -17,7 +17,8 @@ domain that are not on the list.
   on scoring from MurCSS.
 * `properscoring <https://github.com/TheClimateCorporation/properscoring>`_:
   Probabilistic forecast metrics in python.
-  (We've since wrapped these functions in ``xskillscore``)
+  (We've since wrapped these functions in
+  `xskillscore <https://xskillscore.readthedocs.io>`_.)
 * `pySTEPS <https://pysteps.github.io/>`_:
   Framework for short-term ensemble forecasting of precipitation.
 * `S2D Verification <https://cran.r-project.org/web/packages/s2dverification/s2dverification.pdf>`_:
@@ -27,4 +28,4 @@ domain that are not on the list.
 * `xskillscore <https://xskillscore.readthedocs.io>`_:
   Metrics for verifying forecasts (a key dependency to ``climpred``).
 * `doppyo <https://github.com/csiro-dcfp/doppyo>`_ with many metrics transferred to
-  `xskillscore <https://xskillscore.readthedocs.io>`_:
+  `xskillscore <https://xskillscore.readthedocs.io>`_

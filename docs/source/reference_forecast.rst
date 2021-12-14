@@ -5,23 +5,23 @@ Reference Forecasts
 To quantify the quality of an initialized forecast, it is useful to judge it against
 some simple reference forecast. ``climpred`` currently supports a several reference
 forecasts, and we are open to adding other reference forecasts. Consider opening a
-`Pull Request <contributing.html>`_.
+`Pull Request <contributing.html>`_ for additional references.
 
 **Persistence Forecast**: Whatever is observed at the time of initialization is
-forecasted to persist into the forecast period [Jolliffe2012]_.
+forecasted to persist into the forecast period [Jolliffe2012_].
 You can compute this by passing ``reference="persistence"`` into
 :py:meth:`.HindcastEnsemble.verify`, :py:meth:`.HindcastEnsemble.bootstrap`,
 :py:meth:`.PerfectModelEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.bootstrap`.
 
 **Damped Persistence Forecast**: (*Not Implemented*) The amplitudes of the anomalies
-reduce in time exponentially at a time scale of the local autocorrelation [Yuan2016]_.
+reduce in time exponentially at a time scale of the local autocorrelation [Yuan2016_].
 
 .. math::
 
     v_{dp}(t) = v(0)e^{-\alpha t}
 
 **Climatology**: The average values at the temporal forecast resolution (e.g., annual,
-monthly, daily) over some long period, which is usually 30 years [Jolliffe2012]_.
+monthly, daily) over some long period, which is usually 30 years [Jolliffe2012_].
 You can compute this by passing ``reference="climatology"`` into
 :py:meth:`.HindcastEnsemble.verify`, :py:meth:`.HindcastEnsemble.bootstrap`,
 :py:meth:`.PerfectModelEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.bootstrap`.
@@ -57,7 +57,7 @@ uninitialized forecast.
 **Random Mechanism**: (*Not Implemented*) A probability distribution is assigned to the
 possible range of the variable being forecasted, and a sequence of forecasts is
 produced by taking a sequence of independent values from that distribution
-[Jolliffe2012]_. This would be similar to computing an uninitialized forecast.
+[Jolliffe2012_]. This would be similar to computing an uninitialized forecast.
 
 References
 ##########

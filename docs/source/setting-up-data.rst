@@ -83,3 +83,10 @@ that ``climpred`` supports for them.
      - ensemble member
      - ``realization``
      - None
+
+Probably the most challenging part is concatenating
+(:py:meth:`xarray.Dataset.concatenate`) raw model output with dimension ``time`` of
+multiple simulations to a multi-dimensional :py:class:`xarray.Dataset` containing
+dimensions ``init``, (``member``) and ``lead``, where ``time`` becomes
+"valid_time=init+lead". One way of doing it is
+:py:func:`climpred.preprocessing.shared.load_hindcast`.

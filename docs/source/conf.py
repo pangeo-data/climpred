@@ -55,6 +55,7 @@ extensions = [
 # autosummary_generate = True
 # autodoc_typehints = "none"
 
+
 # MyST config
 myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "html_image"]
 myst_url_schemes = ["http", "https", "mailto"]
@@ -77,7 +78,13 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["build", "climpred_gpu.ipynb", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "build",
+    # "source/misc/climpred_gpu.ipynb",
+    "**.ipynb_checkpoints",
+    "Thumbs.db",
+    ".DS_Store",
+]
 
 pygments_style = "sphinx"
 source_suffix = ".rst"

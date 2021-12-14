@@ -8,7 +8,6 @@ http://www.sphinx-doc.org/en/master/config
 # -- Path setup --------------------------------------------------------------
 
 import datetime
-import inspect
 import os
 import sys
 
@@ -176,56 +175,16 @@ napoleon_type_aliases = {
 html_last_updated_fmt = today_fmt
 
 
-# based on numpy doc/source/conf.py
-def linkcode_resolve(domain, info):
+def rstjinja(app, docname, source):
     """
-    Determine the URL corresponding to Python object
+    Render our pages as a jinja template for fancy templating goodness.
     """
-    if domain != "py":
-        return None
-
-    modname = info["module"]
-    fullname = info["fullname"]
-
-    submod = sys.modules.get(modname)
-    if submod is None:
-        return None
-
-    obj = submod
-    for part in fullname.split("."):
-        try:
-            obj = getattr(obj, part)
-        except AttributeError:
-            return None
-
-    try:
-        fn = inspect.getsourcefile(inspect.unwrap(obj))
-    except TypeError:
-        fn = None
-    if not fn:
-        return None
-
-    try:
-        source, lineno = inspect.getsourcelines(obj)
-    except OSError:
-        lineno = None
-
-    if lineno:
-        linespec = f"#L{lineno}-L{lineno + len(source) - 1}"
-    else:
-        linespec = ""
-
-    fn = os.path.relpath(fn, start=os.path.dirname(climpred.__file__))
-
-    if "+" in xarray.__version__:
-        return (
-            f"https://github.com/pangeo-data/climpred/blob/main/climpred/{fn}{linespec}"
-        )
-    else:
-        return (
-            f"https://github.com/pangeo-data/climpred/blob/"
-            f"v{climpred.__version__}/climpred/{fn}{linespec}"
-        )
+    # Make sure we're outputting HTML
+    if app.builder.format != "html":
+        return
+    src = source[0]
+    rendered = app.builder.templates.render_string(src, app.config.html_context)
+    source[0] = rendered
 
 
 def html_page_context(app, pagename, templatename, context, doctree):
@@ -235,4 +194,5 @@ def html_page_context(app, pagename, templatename, context, doctree):
 
 
 def setup(app):
+    app.connect("source-read", rstjinja)
     app.connect("html-page-context", html_page_context)

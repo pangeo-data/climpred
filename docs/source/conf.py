@@ -37,8 +37,8 @@ version = climpred.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    # "myst_nb",
-    "nbsphinx",
+    "myst_nb",
+    # "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
@@ -80,7 +80,6 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     "build",
-    # "source/misc/climpred_gpu.ipynb",
     "**.ipynb_checkpoints",
     "Thumbs.db",
     ".DS_Store",
@@ -90,7 +89,6 @@ pygments_style = "sphinx"
 source_suffix = ".rst"
 master_doc = "index"
 
-nbsphinx_timeout = 180  # 3 minute timeout
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

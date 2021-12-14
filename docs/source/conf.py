@@ -148,7 +148,7 @@ intersphinx_mapping = {
 # nbsphinx_allow_errors = True
 
 # nbsphinx_kernel_name = "climpred-docs"  # doesnt work
-
+nbsphinx_allow_errors = True
 
 # Napoleon configurations
 napoleon_google_docstring = True

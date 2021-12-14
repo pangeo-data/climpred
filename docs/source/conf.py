@@ -106,7 +106,7 @@ html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcf
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "github_url": "https://github.com/pangeo-data/climpred",
+    "repository_url": "https://github.com/pangeo-data/climpred",
     "use_edit_page_button": True,
     # "navbar_end": "search-field.html",
     "repository_branch": "main",

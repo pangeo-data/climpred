@@ -108,7 +108,7 @@ html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcf
 html_theme_options = {
     "github_url": "https://github.com/pangeo-data/climpred",
     "use_edit_page_button": True,
-    "navbar_end": "search-field.html",
+    # "navbar_end": "search-field.html",
     "repository_branch": "main",
     "path_to_docs": "docs",
     "use_edit_page_button": True,

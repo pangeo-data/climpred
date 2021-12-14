@@ -40,7 +40,7 @@ Verification of weather and climate forecasts.
 
 .. |upstream| image:: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml/badge.svg
     :target: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml
-    :alt: upstream
+    :alt: CI upstream
 
 .. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg
       :target: https://codecov.io/gh/pangeo-data/climpred

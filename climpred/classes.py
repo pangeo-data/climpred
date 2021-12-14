@@ -2423,27 +2423,26 @@ class HindcastEnsemble(PredictionEnsemble):
 
             train_test_split: How to separate train period to calculate the bias
                 and test period to apply bias correction to? For a detailed
-                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:  # noqa: E501
+                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
-                - ``"fair"```: no overlap between `train` and `test` (recommended).
-                    Set either `train_init` or `train_time`.
-                - ``"unfair"``: completely overlapping `train` and `test`
-                    (climpred default).
-                - ``"unfair-cv"```: overlapping `train` and `test` except for current
-                    `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
-                    (set `cv="LOO"`).
+                - ``"fair"```: no overlap between ``train`` and ``test`` (recommended).
+                  Set either ``train_init`` or ``train_time``.
+                - ``"unfair"``: completely overlapping ``train`` and ``test`` (default).
+                - ``"unfair-cv"```: overlapping ``train`` and ``test`` except for
+                  current `init`, which is
+                  `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                  (set ``cv="LOO"``).
 
             train_init: Define initializations for training
-                when ``alignment="same_inits/maximize"``.
-            train_time: Define time for training
-                when ``alignment="same_verif"``.
-            cv: Only relevant when `train_test_split="unfair-cv"`.
-                Defaults to ``False``.
+              when ``alignment="same_inits/maximize"``.
+            train_time: Define time for training when ``alignment="same_verif"``.
+            cv: Only relevant when ``train_test_split="unfair-cv"``.
+              Defaults to ``False``.
 
-                - True/"LOO": Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
-                - False: include all initializations in the calculation of bias, which
-                    is much faster and but yields similar skill with a large N of
-                    initializations.
+                - ``True/"LOO"``: Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                - ``False``: include all initializations in the calculation of bias,
+                  which is much faster and but yields similar skill with a large N of
+                  initializations.
 
             **metric_kwargs: passed to ``xclim.sdba`` (including ``group``)
                 or ``XBias_Correction``
@@ -2591,7 +2590,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 comparison:                    e2o
                 dim:                           init
                 reference:                     []
-        """
+        """  # noqa: E501
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
                 f"train_test_split='{train_test_split}' not implemented. Please choose "

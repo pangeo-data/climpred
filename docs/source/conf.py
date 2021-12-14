@@ -37,7 +37,8 @@ version = climpred.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "myst_nb",
+    # "myst_nb",
+    "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
@@ -129,10 +130,10 @@ html_context = {
 
 nbsphinx_prolog = """
 {% set docname = env.doc2path(env.docname, base=None) %}
-You can run this notebook in a `live session <https://binder.pangeo.io/v2/gh/pangeo-data/climpred/main?urlpath=lab/tree/docs/{{docname }}>`_ |Binder| or view it `on Github <https://github.com/pangeo-data/climpred/blob/main/docs/{{ docname }}>`_.  # noqa: E501
+You can run this notebook in a `live session <https://binder.pangeo.io/v2/gh/pangeo-data/climpred/main?urlpath=lab/tree/docs/{{docname }}>`_ |Binder| or view it `on Github <https://github.com/pangeo-data/climpred/blob/main/docs/{{ docname }}>`_.
 .. |Binder| image:: https://mybinder.org/badge_logo.svg
-   :target: https://binder.pangeo.io/v2/gh/pangeo-data/main?urlpath=lab/tree/docs/{{ docname }}  # noqa: E501
-"""
+   :target: https://binder.pangeo.io/v2/gh/pangeo-data/main?urlpath=lab/tree/docs/{{ docname }}
+"""  # noqa: E501
 
 
 # Add any paths that contain custom static files (such as style sheets) here,

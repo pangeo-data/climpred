@@ -80,7 +80,6 @@ templates_path = ["_templates"]
 # This pattern also affects html_static_path and html_extra_path.
 exclude_patterns = [
     "build",
-    # "source/misc/climpred_gpu.ipynb",
     "**.ipynb_checkpoints",
     "Thumbs.db",
     ".DS_Store",
@@ -90,7 +89,6 @@ pygments_style = "sphinx"
 source_suffix = ".rst"
 master_doc = "index"
 
-nbsphinx_timeout = 180  # 3 minute timeout
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
@@ -157,6 +155,7 @@ intersphinx_mapping = {
 # nbsphinx_kernel_name = "climpred-docs"  # doesnt work
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600
+nbsphinx_execute = "never"
 
 # Napoleon configurations
 napoleon_google_docstring = True

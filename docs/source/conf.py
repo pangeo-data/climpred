@@ -109,7 +109,7 @@ html_theme_options = {
     "use_edit_page_button": True,
     # "navbar_end": "search-field.html",
     "repository_branch": "main",
-    "path_to_docs": "docs",
+    "path_to_docs": "docs/source",
     "use_edit_page_button": True,
     "use_repository_button": True,
     "use_issues_button": True,

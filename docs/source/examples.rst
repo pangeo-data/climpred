@@ -5,7 +5,9 @@ Examples
 
     Please use the ``climpred-dev`` environment
 
-        $ conda env create -f ci/requirements/climpred-dev.yml
+    .. :: bash
+
+      conda env create -f ci/requirements/climpred-dev.yml
 
     to ensure that all dependencies are installed to complete all example
     notebooks listed here.
@@ -53,8 +55,8 @@ Decadal
 Misc
 ====
 .. toctree::
-  :maxdepth: 1
+   :maxdepth: 1
 
-  examples/misc/efficient_dask.ipynb
-  examples/misc/climpred_gpu.ipynb
-  examples/misc/setup_your_own_data.ipynb
+   examples/misc/efficient_dask.ipynb
+   examples/misc/climpred_gpu.ipynb
+   examples/misc/setup_your_own_data.ipynb

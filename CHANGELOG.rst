@@ -51,9 +51,8 @@ Data variables:
 
 - Allow ``lead`` as ``float`` also if ``calendar="360_day"`` or ``lead.attrs["units"]``
   not in ``["years","seasons","months"]``. (:issue:`564`, :pr:`675`) `Aaron Spring`_.
-- Implement :py:meth:`.HindcastEnsemble.generate_uninitialized` in
-  :py:class:`.PredictionEnsemble` resampling years without replacement
-  from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
+- Implement :py:meth:`.HindcastEnsemble.generate_uninitialized` resampling years
+  without replacement from ``initialized``. (:issue:`589`, :pr:`591`) `Aaron Spring`_.
 - Implement Logarithmic Ensemble Skill Score :py:func:`~climpred.metrics._less`.
   (:issue:`239`, :pr:`687`) `Aaron Spring`_.
 - :py:meth:`.HindcastEnsemble.remove_seasonality` and
@@ -135,7 +134,7 @@ Internals/Minor Fixes
 
 Documentation
 -------------
-- Refresh all docs with ``sphinx_book_theme.
+- Refresh all docs with ``sphinx_book_theme``.
   (:issue:`707`, :pr:`708`, :pr:`709`) `Aaron Spring`_.
 
 

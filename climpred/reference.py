@@ -100,26 +100,26 @@ def climatology(
         init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
         init_lead = init_lead["time"]
     climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
-    # enlarge times to get climatology_forecast times
-    # this prevents errors if verification.time and hindcast.init are too much apart
-    verif_hind_union = xr.DataArray(
-        verif.time.to_index().union(init_lead.time.to_index()), dims="time"
-    )
-
-    climatology_forecast = (
-        _maybe_seasons_to_int(climatology_day)
-        .sel(
-            {
-                seasonality_str: _maybe_seasons_to_int(
-                    getattr(verif_hind_union.time.dt, seasonality_str)  # type: ignore
-                )
-            },
-            method="nearest",  # nearest may be a bit incorrect but doesnt error
-        )
-        .drop_vars(seasonality_str)
-    )
     with warnings.catch_warnings():  # ignore numpy warning https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064 # noqa: E501
         warnings.simplefilter(action="ignore", category=FutureWarning)
+        # enlarge times to get climatology_forecast times
+        # this prevents errors if verification.time and hindcast.init are too much apart
+        verif_hind_union = xr.DataArray(
+            verif.time.to_index().union(init_lead.time.to_index()), dims="time"
+        )
+
+        climatology_forecast = (
+            _maybe_seasons_to_int(climatology_day)
+            .sel(
+                {
+                    seasonality_str: _maybe_seasons_to_int(
+                        getattr(verif_hind_union.time.dt, seasonality_str)  # type: ignore
+                    )
+                },
+                method="nearest",  # nearest may be a bit incorrect but doesnt error
+            )
+            .drop_vars(seasonality_str)
+        )
         lforecast = climatology_forecast.where(
             climatology_forecast.time.isin(init_lead), drop=True
         )

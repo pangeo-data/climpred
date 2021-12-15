@@ -48,6 +48,7 @@ dependencies:
   - eofs
   - esmtools>=1.1.3
   - xskillscore>=0.0.19
+  - xrft
   # Visualization
   - matplotlib-base
   - nc-time-axis>=1.4.0

@@ -59,7 +59,7 @@ from .constants import (
 )
 from .exceptions import CoordinateError, DimensionError, VariableError
 from .metrics import Metric
-from .options import OPTIONS
+from .options import OPTIONS, set_options
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -244,13 +244,14 @@ class PredictionEnsemble:
         """Help for verify/bootstrap(groupby="month")."""
         skill_group, group_label = [], []
         groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-        for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-            skill_group.append(
-                getattr(self.sel(init=hind_group), call)(
-                    **kwargs,
+        with set_options(warn_for_failed_PredictionEnsemble_xr_call=False):
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    getattr(self.sel(init=hind_group), call)(
+                        **kwargs,
+                    )
                 )
-            )
-            group_label.append(group)
+                group_label.append(group)
         new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
         skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
             {new_dim_name: group_label}

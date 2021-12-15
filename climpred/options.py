@@ -15,7 +15,7 @@ _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,
     "PerfectModel_persistence_from_initialized_lead_0": lambda choice: choice
     in [True, False, "default"],
-    "warn_for_PredictionEnsemble_xr_call": lambda choice: choice
+    "warn_for_failed_PredictionEnsemble_xr_call": lambda choice: choice
     in [True, False, "default"],
     "warn_for_rename_to_climpred_dims": lambda choice: choice
     in [True, False, "default"],

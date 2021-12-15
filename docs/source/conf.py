@@ -145,6 +145,7 @@ intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "xskillscore": ("https://xskillscore.readthedocs.io/en/stable", None),
     "xclim": ("https://xclim.readthedocs.io/en/latest/", None),
+    "esmtools": ("https://esmtools.readthedocs.io/en/latest/", None),
 }
 
 # Should only be uncommented when testing page development while notebooks

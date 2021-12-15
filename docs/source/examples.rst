@@ -2,6 +2,7 @@ Examples
 ########
 
 .. note::
+
     Please use the ``climpred-dev`` environment
 
         $ conda env create -f ci/requirements/climpred-dev.yml
@@ -47,6 +48,7 @@ Decadal
    examples/decadal/tropical-pacific-ssts.ipynb
    examples/decadal/diagnose-potential-predictability.ipynb
    examples/decadal/Significance.ipynb
+
 
 Misc
 ====

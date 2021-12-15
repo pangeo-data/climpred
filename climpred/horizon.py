@@ -50,7 +50,7 @@ def _last_item_cond_true(cond, dim):
             drop=True
         )
         if "lead" in reached_dim_space.coords:
-            reached_dim_space = reached_dim_space.drop("lead")
+            reached_dim_space = reached_dim_space.drop_vars("lead")
     return reached_dim_space
 
 

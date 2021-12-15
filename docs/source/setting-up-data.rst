@@ -12,7 +12,7 @@ This allows things to run more easily under-the-hood.
 ``init`` is the initialization dimension, that relays the time
 steps at which the ensemble was initialized.
 ``init`` is known as ``forecast_reference_time`` in the `CF convention <http://cfconventions.org/Data/cf-standard-names/77/build/cf-standard-name-table.html>`_.
-``init`` must be of type :py:class:`~pandas.DatetimeIndex`, or
+``init`` must be of type :py:class:`pandas.DatetimeIndex`, or
 :py:class:`xarray.CFTimeIndex`.
 If ``init`` is of type ``int``, it is assumed to be annual data starting Jan 1st.
 A UserWarning is issues when this assumption is made.
@@ -49,7 +49,7 @@ Check out the demo to setup a ``climpred``-ready prediction ensemble
 **Verification products** are expected to contain the ``time`` dimension at the minimum.
 For best use of ``climpred``, their ``time`` dimension should cover the full length of
 ``init`` and be the same calendar type as the accompanying prediction ensemble.
-The ``time`` dimension must be :py:class:`~pandas.DatetimeIndex`, or
+The ``time`` dimension must be :py:class:`pandas.DatetimeIndex`, or
 :py:class:`xarray.CFTimeIndex`.
 ``time`` dimension of type ``int`` is assumed to be annual data starting Jan 1st.
 A UserWarning is issued when this assumption is made.
@@ -74,7 +74,7 @@ that ``climpred`` supports for them.
      - ``forecast_period``
      - units (str) [``years``, ``seasons``, ``months``, ``weeks``, ``pentads``, ``days``, ``hours``, ``minutes``, ``seconds``] if not :py:class:`pandas.Timedelta`
    * - ``init``
-     -  :py:class:`~pandas.DatetimeIndex` or :py:class:`xarray.CFTimeIndex`.
+     -  :py:class:`pandas.DatetimeIndex` or :py:class:`xarray.CFTimeIndex`.
      - initialization as start date of experiment
      - ``forecast_reference_time``
      - None

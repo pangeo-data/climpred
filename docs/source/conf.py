@@ -38,7 +38,6 @@ version = climpred.__version__
 # ones.
 extensions = [
     "myst_nb",
-    # "nbsphinx",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
@@ -50,7 +49,10 @@ extensions = [
     "sphinx_copybutton",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
+    "sphinxcontrib.bibtex",
 ]
+
+bibtex_bibfiles = ["refs.bib"]
 
 # autosummary_generate = True
 # autodoc_typehints = "none"

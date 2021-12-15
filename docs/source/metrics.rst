@@ -42,7 +42,7 @@ Deterministic
 Deterministic metrics assess the forecast as a definite prediction of the future, rather
 than in terms of probabilities. Another way to look at deterministic metrics is that
 they are a special case of probabilistic metrics where a value of one is assigned to
-one category and zero to all others [Jolliffe2011]_.
+one category and zero to all others [Jolliffe2011_].
 
 Correlation Metrics
 ===================
@@ -355,7 +355,7 @@ Probabilistic
 
 Probabilistic metrics include the spread of the ensemble simulations in their
 calculations and assign a probability value between 0 and 1 to their forecasts
-[Jolliffe2011]_.
+[Jolliffe2011_].
 
 Continuous Ranked Probability Score (CRPS)
 ==========================================

@@ -6,7 +6,8 @@ dependencies:
   - python=3.8
   - matplotlib-base
   - myst-nb
-  #- ipykernel
+  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
+  - xesmf
   - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx

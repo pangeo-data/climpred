@@ -2302,7 +2302,7 @@ def _conditional_bias(
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
         metric_kwargs: see :py:func:`~xskillscore.pearson_r`
-        and :py:meth:`~xarray.Datasetstd`
+        and :py:meth:`~xarray.Dataset.std`
 
     Notes:
         +-----------------+-----------+

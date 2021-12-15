@@ -218,7 +218,7 @@ def compute_relative_entropy(
             # P_b base distribution # eofs require time
             pc_b = solver.projectField(
                 anom_b.sel(init=init, lead=lead)
-                .drop("lead")
+                .drop_vars("lead")
                 .rename({"member": "time"}),
                 neofs=neofs,
                 eofscaling=0,
@@ -231,7 +231,7 @@ def compute_relative_entropy(
             # P_x init distribution
             pc_x = solver.projectField(
                 anom_x.sel(init=init, lead=lead)
-                .drop("lead")
+                .drop_vars("lead")
                 .rename({"member": "time"}),
                 neofs=neofs,
                 eofscaling=0,

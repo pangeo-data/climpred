@@ -108,10 +108,8 @@ just specifies how ``forecast`` and ``observations`` are defined.
 
 However, this above logic applies to deterministic metrics. Probabilistic metrics need
 to be applied to the ``member`` dimension and ``comparison`` from
-``["m2c", "m2m"]`` in :py:class:`.PerfectModelEnsemble`
-:py:meth:`.PerfectModelEnsemble.verify` and ``"m2o"`` comparison in
-:py:class:`.HindcastEnsemble`
-:py:meth:`.HindcastEnsemble.verify`.
+``["m2c", "m2m"]`` in :py:meth:`.PerfectModelEnsemble.verify` and ``"m2o"`` comparison
+in :py:meth:`.HindcastEnsemble.verify`.
 
 ``dim`` should not contain ``member`` when the comparison already computes ensemble
 means as in ``["e2o", "e2c"]``.
@@ -121,36 +119,36 @@ User-defined comparisons
 ########################
 
 You can also construct your own comparisons via the
-:py:class:`~climpred.comparisons.Comparison` class.
+:py:class:`climpred.comparisons.Comparison` class.
 
 .. autosummary:: Comparison
 
 First, write your own comparison function, similar to the existing ones. If a
-comparison should also be used for probabilistic metrics, make sure that
-``metric.probabilistic`` returns ``forecast`` with ``member`` dimension and
+comparison should also be used for probabilistic metrics, make sure that probabilistic
+metrics returns ``forecast`` with ``member`` dimension and
 ``observations`` without. For deterministic metrics, return ``forecast`` and
 ``observations`` with identical dimensions but without an identical comparison::
 
-  from climpred.comparisons import Comparison, _drop_members
+  from climpred.comparisons import Comparison, M2M_MEMBER_DIM
 
-  def _my_m2median_comparison(ds, metric=None):
+  def _my_m2median_comparison(initialized, metric=None):
       """Identical to m2e but median."""
       observations_list = []
       forecast_list = []
       supervector_dim = "member"
-      for m in ds.member.values:
-          forecast = _drop_members(ds, rmd_member=[m]).median("member")
-          observations = ds.sel(member=m).squeeze()
+      for m in initialized.member.values:
+          forecast = initialized.drop_sel(member=m).median("member")
+          observations = initialized.sel(member=m).squeeze()
           forecast_list.append(forecast)
           observations_list.append(observations)
-      observations = xr.concat(observations_list, supervector_dim)
-      forecast = xr.concat(forecast_list, supervector_dim)
-      forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
-      observations[supervector_dim] = np.arange(observations[supervector_dim].size)
+      observations = xr.concat(observations_list, M2M_MEMBER_DIM)
+      forecast = xr.concat(forecast_list, M2M_MEMBER_DIM)
+      forecast[M2M_MEMBER_DIM] = np.arange(forecast[M2M_MEMBER_DIM].size)
+      observations[M2M_MEMBER_DIM] = np.arange(observations[M2M_MEMBER_DIM].size)
       return forecast, observations
 
 Then initialize this comparison function with
-:py:class:`~climpred.comparisons.Comparison`::
+:py:class:`climpred.comparisons.Comparison`::
 
   __my_m2median_comparison = Comparison(
       name="m2me",

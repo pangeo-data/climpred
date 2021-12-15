@@ -49,10 +49,7 @@ extensions = [
     "sphinx_copybutton",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
-    "sphinxcontrib.bibtex",
 ]
-
-bibtex_bibfiles = ["refs.bib"]
 
 # autosummary_generate = True
 # autodoc_typehints = "none"
@@ -157,7 +154,7 @@ intersphinx_mapping = {
 # nbsphinx_kernel_name = "climpred-docs"  # doesnt work
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600
-nbsphinx_execute = "never"
+nbsphinx_execute = "auto"  # "never" "always"
 
 # Napoleon configurations
 napoleon_google_docstring = True

@@ -1,5 +1,6 @@
 """Reference forecasts: climatology, persistence, uninitialized."""
 
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -115,11 +116,13 @@ def climatology(
             },
             method="nearest",  # nearest may be a bit incorrect but doesnt error
         )
-        .drop(seasonality_str)
+        .drop_vars(seasonality_str)
     )
-    lforecast = climatology_forecast.where(
-        climatology_forecast.time.isin(init_lead), drop=True
-    )
+    with warnings.catch_warnings():  # ignore numpy warning https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064 # noqa: E501
+        warnings.simplefilter(action="ignore", category=FutureWarning)
+        lforecast = climatology_forecast.where(
+            climatology_forecast.time.isin(init_lead), drop=True
+        )
     lverif = verif.sel(time=verif_dates[lead])
     # convert back to CFTimeIndex if needed
     if isinstance(lforecast["time"].to_index(), pd.DatetimeIndex):
@@ -249,7 +252,7 @@ def compute_climatology(
 
     climatology_day_forecast = climatology_day.sel(
         {seasonality_str: getattr(forecast.init.dt, seasonality_str)}, method="nearest"
-    ).drop(seasonality_str)
+    ).drop_vars(seasonality_str)
 
     if kind == "hindcast":
         climatology_day_forecast = climatology_day_forecast.rename({"init": "time"})

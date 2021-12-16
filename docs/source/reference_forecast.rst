@@ -40,24 +40,20 @@ You can compute this by passing ``reference="uninitialized"`` into
 Some modeling centers (such as NCAR)
 provide a dynamical uninitialized ensemble (the CESM Large Ensemble) along with their
 initialized prediction system (the CESM Decadal Prediction Large Ensemble).
-Use :py:class:`.HindcastEnsemble`
-:py:meth:`.HindcastEnsemble.add_uninitialized` or
-:py:class:`.PerfectModelEnsemble`
+Use :py:meth:`.HindcastEnsemble.add_uninitialized` or
 :py:meth:`.PerfectModelEnsemble.add_uninitialized`.
-If this
-isn't available, one can approximate the uninitialized response by resampling a
-control simulation.
-This could be, for example, output from an uninitialized Large Ensemble.
-You may also run :py:meth:`.HindcastEnsemble.generate_uninitialized` or
+This could be, for example, output from an ``uninitialized`` Large Ensemble.
+If ``uninitialzed`` isn't available, one can run
+:py:meth:`.HindcastEnsemble.generate_uninitialized` or
 :py:meth:`.PerfectModelEnsemble.generate_uninitialized`, which
 resamples the ``initialized`` from :py:class:`.HindcastEnsemble` or
 ``control`` from :py:class:`.PerfectModelEnsemble` to an
-uninitialized forecast.
+``uninitialized`` forecast.
 
 **Random Mechanism**: (*Not Implemented*) A probability distribution is assigned to the
 possible range of the variable being forecasted, and a sequence of forecasts is
 produced by taking a sequence of independent values from that distribution
-[Jolliffe2012_]. This would be similar to computing an uninitialized forecast.
+[Jolliffe2012_]. This would be similar to computing an ``uninitialized`` forecast.
 
 References
 ##########

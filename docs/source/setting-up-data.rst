@@ -6,7 +6,7 @@ Setting Up Your Dataset
 `xarray <https://xarray.pydata.org/en/stable/>`_ dimensions.
 This allows things to run more easily under-the-hood.
 
-**Prediction ensembles** are expected at the minimum to contain dimensions
+:py:class:`.Prediction ensemble`s are expected at the minimum to contain dimensions
 ``init`` and ``lead``.
 
 ``init`` is the initialization dimension, that relays the time

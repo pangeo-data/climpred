@@ -36,7 +36,10 @@ def rm_poly(
 def rm_trend(
     ds: Union[xr.Dataset, xr.DataArray], dim: str = "time", **kwargs: Any
 ) -> Union[xr.Dataset, xr.DataArray]:
-    """Remove degree polynomial along dimension ``dim``."""
+    """
+    Remove degree polynomial along dimension ``dim``
+
+    Using :py:class:`~climpred.stats.rm_poly` with ``deg = 1``."""
     return rm_poly(ds, dim=dim, deg=1, **kwargs)
 
 

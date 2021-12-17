@@ -125,14 +125,6 @@ html_context = {
 }
 
 
-nbsphinx_prolog = """
-{% set docname = env.doc2path(env.docname, base=None) %}
-You can run this notebook in a `live session <https://binder.pangeo.io/v2/gh/pangeo-data/climpred/main?urlpath=lab/tree/docs/{{docname }}>`_ |Binder| or view it `on Github <https://github.com/pangeo-data/climpred/blob/main/docs/{{ docname }}>`_.
-.. |Binder| image:: https://mybinder.org/badge_logo.svg
-   :target: https://binder.pangeo.io/v2/gh/pangeo-data/main?urlpath=lab/tree/docs/{{ docname }}
-"""  # noqa: E501
-
-
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
 # so a file named "default.css" will overwrite the builtin "default.css".
@@ -155,7 +147,9 @@ intersphinx_mapping = {
 # nbsphinx_kernel_name = "climpred-docs"  # doesnt work
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600
-nbsphinx_execute = "auto"  # "never" "always"
+# nbsphinx_execute = "auto"  # "never" "always"
+jupyter_execute_notebooks = "auto"
+
 
 # Napoleon configurations
 napoleon_google_docstring = True

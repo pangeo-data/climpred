@@ -472,6 +472,9 @@ class PredictionEnsemble:
     ) -> "plt.Axes":
         """Plot datasets from :py:class:`.PredictionEnsemble`.
 
+        Wraps :py:func:`.climpred.graphics.plot_ensemble_perfect_model` or
+        :py:func:`.climpred.graphics.plot_lead_timeseries_hindcast`.
+
         Args:
             variable: `variable` to show. Defaults to first in data_vars.
             ax: Axis to use in plotting. By default, creates a new axis.

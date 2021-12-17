@@ -312,6 +312,18 @@ Smoothing
     temporal_smoothing
     spatial_smoothing_xesmf
 
+Visualization
+~~~~~~~~~~~~~
+.. currentmodule:: climpred.graphics
+
+.. autosummary::
+    :toctree: api/
+
+    plot_bootstrapped_skill_over_leadyear
+    plot_ensemble_perfect_model
+    plot_lead_timeseries_hindcast
+
+
 Metrics
 -------
 

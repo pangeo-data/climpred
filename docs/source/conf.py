@@ -147,7 +147,7 @@ intersphinx_mapping = {
 # nbsphinx_kernel_name = "climpred-docs"  # doesnt work
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600
-# nbsphinx_execute = "auto"  # "never" "always"
+nbsphinx_execute = "auto"  # "never" "always"
 jupyter_execute_notebooks = "auto"
 
 

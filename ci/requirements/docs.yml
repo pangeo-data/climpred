@@ -8,6 +8,7 @@ dependencies:
   - myst-nb
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - xesmf
+  - esmtools
   - nc-time-axis>=1.4.0
   - netcdf4
   - sphinx

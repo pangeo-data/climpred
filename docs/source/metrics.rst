@@ -17,14 +17,9 @@
 Metrics
 #######
 
-All high-level functions like :py:class:`~climpred.classes.HindcastEnsemble`
-:py:meth:`~climpred.classes.HindcastEnsemble.verify`,
-:py:class:`~climpred.classes.HindcastEnsemble`
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
-:py:class:`~climpred.classes.PerfectModelEnsemble`
-:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
-:py:class:`~climpred.classes.PerfectModelEnsemble`
-:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` have a ``metric`` argument
+All high-level functions like :py:meth:`.HindcastEnsemble.verify`,
+:py:meth:`.HindcastEnsemble.bootstrap`, :py:meth:`.PerfectModelEnsemble.verify` and
+:py:meth:`.PerfectModelEnsemble.bootstrap` have a ``metric`` argument
 that has to be called to determine which metric is used in computing predictability.
 
 .. note::
@@ -47,7 +42,7 @@ Deterministic
 Deterministic metrics assess the forecast as a definite prediction of the future, rather
 than in terms of probabilities. Another way to look at deterministic metrics is that
 they are a special case of probabilistic metrics where a value of one is assigned to
-one category and zero to all others [Jolliffe2011]_.
+one category and zero to all others [Jolliffe2011_].
 
 Correlation Metrics
 ===================
@@ -360,7 +355,7 @@ Probabilistic
 
 Probabilistic metrics include the spread of the ensemble simulations in their
 calculations and assign a probability value between 0 and 1 to their forecasts
-[Jolliffe2011]_.
+[Jolliffe2011_].
 
 Continuous Ranked Probability Score (CRPS)
 ==========================================

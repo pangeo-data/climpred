@@ -5,9 +5,8 @@ channels:
 dependencies:
   - python>=3.7
   # Documentation
-  - nbsphinx
+  - myst-nb
   - nbstripout
-  - sphinx_rtd_theme
   - sphinx
   - sphinxcontrib-napoleon
   # IDE
@@ -49,6 +48,7 @@ dependencies:
   - eofs
   - esmtools>=1.1.3
   - xskillscore>=0.0.19
+  - xrft
   # Visualization
   - matplotlib-base
   - nc-time-axis>=1.4.0
@@ -56,3 +56,4 @@ dependencies:
   - pip:
       - pytest-lazy-fixture
       - nb_black  # notebook linting
+      - sphinx_book_theme

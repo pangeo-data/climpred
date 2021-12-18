@@ -15,12 +15,6 @@ Nothing here is set in stone and can't be changed.
 Feel free to suggest improvements or changes in the workflow.
 
 
-
-.. contents:: Contribution links
-   :depth: 2
-
-
-
 .. _submitfeedback:
 
 Feature requests and feedback
@@ -157,12 +151,13 @@ Preparing Pull Requests
    needed, or will generally be quite clear about what you need to do to pass
    the commit test.
 
-   ``pre-commit`` also runs:
+   ``pre-commit`` also runs::
+
     * `mypy <http://mypy-lang.org/>`_ for static type checking on
       `type hints <https://docs.python.org/3/library/typing.html>`_.
     * `isort <https://pycqa.github.io/isort/>`_ sorting imports
     * `black <https://black.readthedocs.io/en/stable/>`_ code formatting
-    * `flake8 <https://flake8.pycqa.org/en/latest/>`_
+    * `flake8 <https://flake8.pycqa.org/en/latest/>`_ code linting
     * `blackdoc <https://blackdoc.readthedocs.io/en/latest/>`_ docstring code
       formatter
 

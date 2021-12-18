@@ -18,7 +18,7 @@ Verification of weather and climate forecasts.
     * - license
       - |license|
     * - community
-      - |gitter| |contributors|
+      - |gitter| |contributors| |forks| |stars| |issues| |PRs|
     * - tutorials
       - |gallery| |workshop| |cloud|
 
@@ -40,7 +40,7 @@ Verification of weather and climate forecasts.
 
 .. |upstream| image:: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml/badge.svg
     :target: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml
-    :alt: upstream
+    :alt: CI upstream
 
 .. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg
       :target: https://codecov.io/gh/pangeo-data/climpred
@@ -86,6 +86,22 @@ Verification of weather and climate forecasts.
     :alt: climpred cloud demo
     :target: https://github.com/aaronspring/climpred-cloud-demo
 
+.. |forks| image:: https://img.shields.io/github/forks/pangeo-data/climpred
+    :alt: GitHub forks
+    :target: https://github.com/pangeo-data/climpred/network/members
+
+.. |stars| image:: https://img.shields.io/github/stars/pangeo-data/climpred
+    :alt: GitHub stars
+    :target: https://github.com/pangeo-data/climpred/stargazers
+
+.. |issues| image:: https://img.shields.io/github/issues/pangeo-data/climpred
+    :alt: GitHub issues
+    :target: https://github.com/pangeo-data/climpred/issues
+
+.. |PRs| image:: https://img.shields.io/github/issues-pr/pangeo-data/climpred
+    :alt: GitHub PRs
+    :target: https://github.com/pangeo-data/climpred/pulls
+
 ..
 
 .. note::
@@ -117,7 +133,13 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
     conda install -c conda-forge climpred
 
 You can also install the bleeding edge (pre-release versions) by cloning this
-repository and running ``pip install . --upgrade`` in the main directory or
+repository or installing directly from GitHub:
+
+.. code-block:: bash
+
+    git clone https://github.com/pangeo-data/climpred.git
+    cd climpred
+    pip install . --upgrade
 
 .. code-block:: bash
 

@@ -56,7 +56,9 @@ def leave_one_out_drop(bias, dim):
     """
     bias_nan = []
     for i in range(bias[dim].size):
-        bias_nan.append(bias.drop_isel({dim: i}).rename({dim: "sample"}).drop("sample"))
+        bias_nan.append(
+            bias.drop_isel({dim: i}).rename({dim: "sample"}).drop_vars("sample")
+        )
     bias_nan = xr.concat(bias_nan, dim).assign_coords(
         {dim: bias[dim], "sample": np.arange(bias[dim].size - 1)}
     )
@@ -361,7 +363,7 @@ def gaussian_bias_removal(
             dim="member",
             alignment=alignment,
         )
-    bias = bias.drop("skill")
+    bias = bias.drop_vars("skill")
 
     # how to remove bias
     if "mean" in how:

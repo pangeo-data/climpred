@@ -1,5 +1,6 @@
 """Reference forecasts: climatology, persistence, uninitialized."""
 
+import warnings
 from typing import Any, Dict, List, Optional, Tuple, Union
 
 import pandas as pd
@@ -99,27 +100,29 @@ def climatology(
         init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
         init_lead = init_lead["time"]
     climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
-    # enlarge times to get climatology_forecast times
-    # this prevents errors if verification.time and hindcast.init are too much apart
-    verif_hind_union = xr.DataArray(
-        verif.time.to_index().union(init_lead.time.to_index()), dims="time"
-    )
-
-    climatology_forecast = (
-        _maybe_seasons_to_int(climatology_day)
-        .sel(
-            {
-                seasonality_str: _maybe_seasons_to_int(
-                    getattr(verif_hind_union.time.dt, seasonality_str)  # type: ignore
-                )
-            },
-            method="nearest",  # nearest may be a bit incorrect but doesnt error
+    with warnings.catch_warnings():  # ignore numpy warning https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064 # noqa: E501
+        warnings.simplefilter(action="ignore", category=FutureWarning)
+        # enlarge times to get climatology_forecast times
+        # this prevents errors if verification.time and hindcast.init are too much apart
+        verif_hind_union = xr.DataArray(
+            verif.time.to_index().union(init_lead.time.to_index()), dims="time"
         )
-        .drop(seasonality_str)
-    )
-    lforecast = climatology_forecast.where(
-        climatology_forecast.time.isin(init_lead), drop=True
-    )
+
+        climatology_forecast = (
+            _maybe_seasons_to_int(climatology_day)
+            .sel(
+                {
+                    seasonality_str: _maybe_seasons_to_int(
+                        getattr(verif_hind_union.time.dt, seasonality_str)  # type: ignore
+                    )
+                },
+                method="nearest",  # nearest may be a bit incorrect but doesnt error
+            )
+            .drop_vars(seasonality_str)
+        )
+        lforecast = climatology_forecast.where(
+            climatology_forecast.time.isin(init_lead), drop=True
+        )
     lverif = verif.sel(time=verif_dates[lead])
     # convert back to CFTimeIndex if needed
     if isinstance(lforecast["time"].to_index(), pd.DatetimeIndex):
@@ -249,7 +252,7 @@ def compute_climatology(
 
     climatology_day_forecast = climatology_day.sel(
         {seasonality_str: getattr(forecast.init.dt, seasonality_str)}, method="nearest"
-    ).drop(seasonality_str)
+    ).drop_vars(seasonality_str)
 
     if kind == "hindcast":
         climatology_day_forecast = climatology_day_forecast.rename({"init": "time"})

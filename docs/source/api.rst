@@ -12,8 +12,8 @@ High-Level Classes
 
 
 A primary feature of ``climpred`` is our prediction ensemble objects,
-:py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble`. Users can append their initialized
+:py:class:`.HindcastEnsemble` and
+:py:class:`.PerfectModelEnsemble`. Users can append their initialized
 ensemble to these classes, as well as an arbitrary number of verification products
 (assimilations, reconstructions, observations), control runs, and uninitialized
 ensembles.
@@ -21,12 +21,12 @@ ensembles.
 PredictionEnsemble
 ~~~~~~~~~~~~~~~~~~
 
-:py:class:`~climpred.classes.PredictionEnsemble` is the base class for
-:py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble`.
-:py:class:`~climpred.classes.PredictionEnsemble` cannot be called directly, but
-:py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble` inherit the common base
+:py:class:`.PredictionEnsemble` is the base class for
+:py:class:`.HindcastEnsemble` and
+:py:class:`.PerfectModelEnsemble`.
+:py:class:`.PredictionEnsemble` cannot be called directly, but
+:py:class:`.HindcastEnsemble` and
+:py:class:`.PerfectModelEnsemble` inherit the common base
 functionality.
 
 .. autosummary::
@@ -74,7 +74,7 @@ Properties
 HindcastEnsemble
 ~~~~~~~~~~~~~~~~
 
-A :py:class:`~climpred.classes.HindcastEnsemble` is a prediction ensemble that is
+A :py:class:`.HindcastEnsemble` is a prediction ensemble that is
 initialized off of some form of observations (an assimilation, reanalysis, etc.). Thus,
 it is anticipated that forecasts are verified against observation-like products. Read
 more about the terminology `here <terminology.html>`_.
@@ -211,8 +211,8 @@ Direct Function Calls
 While not encouraged anymore, a user can directly call functions in ``climpred``.
 This requires entering more arguments, e.g. the initialized ensemble directly as
 well as a verification product. Our object
-:py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble` wrap most of these functions, making
+:py:class:`.HindcastEnsemble` and
+:py:class:`.PerfectModelEnsemble` wrap most of these functions, making
 the analysis process much simpler.
 
 Bootstrap
@@ -272,6 +272,8 @@ Statistics
     decorrelation_time
     dpp
     varweighted_mean_period
+    rm_poly
+    rm_trend
 
 Tutorial
 ~~~~~~~~
@@ -311,6 +313,18 @@ Smoothing
 
     temporal_smoothing
     spatial_smoothing_xesmf
+
+Visualization
+~~~~~~~~~~~~~
+.. currentmodule:: climpred.graphics
+
+.. autosummary::
+    :toctree: api/
+
+    plot_bootstrapped_skill_over_leadyear
+    plot_ensemble_perfect_model
+    plot_lead_timeseries_hindcast
+
 
 Metrics
 -------

@@ -9,14 +9,19 @@ from climpred import set_options
 def test_HindcastEnsemble_verify_reference(
     hindcast_hist_obs_1d, seasonality, reference
 ):
-    with set_options(seasonality=seasonality):
-        hindcast_hist_obs_1d.verify(
-            metric="mse",
-            comparison="e2o",
-            dim="init",
-            alignment="same_verifs",
-            reference=reference,
-        )
+    with set_options(
+        seasonality=seasonality
+    ):  # testing against np FutureWarning https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064 # noqa: E501
+        with pytest.warns(None) as record:
+            hindcast_hist_obs_1d.verify(
+                metric="mse",
+                comparison="e2o",
+                dim="init",
+                alignment="same_verifs",
+                reference=reference,
+            )
+        if reference != "climatology" and seasonality != "weekofyear":
+            assert len(record) == 0, print([i.message.args[0] for i in record])
 
 
 @pytest.mark.parametrize("comparison", ["m2m", "m2e", "m2c", "e2c"])

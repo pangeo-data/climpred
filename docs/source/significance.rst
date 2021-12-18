@@ -37,7 +37,7 @@ Bootstrapping with replacement
 Testing statistical significance through bootstrapping is commonly used in the field of
 climate prediction. Bootstrapping relies on
 resampling the underlying data with replacement for a large number of ``iterations``, as
-proposed by the decadal prediction framework of Goddard2013_.
+proposed by the decadal prediction framework [Goddard2013_, Boer2016_].
 This means that the ``initialized`` ensemble is resampled with replacement along a
 dimension (``init`` or ``member``) and then that resampled ensemble is verified against
 the observations. This leads to a distribution of ``initialized`` skill. Further, a
@@ -50,8 +50,8 @@ beaten by the ``uninitialized`` or resampled reference metrics calculated from t
 respective distributions. Confidence intervals using these distributions are also
 calculated.
 
-This behavior is incorporated by
-:py:meth:`~climpred.classes.PredictionEnsemble.bootstrap`, see
+This behavior is incorporated by :py:meth:`.HindcastEnsemble.bootstrap` and
+:py:meth:`.PerfectModelEnsemble.bootstrap`, see
 `example <examples/decadal/significance.html#Bootstrapping-with-replacement>`__.
 
 
@@ -59,7 +59,7 @@ Field significance
 ##################
 
 Please use :py:func:`esmtools.testing.multipletests` to control the false discovery
-rate (FDR) in geospatial data from the above obtained p-values [Wilks2016]_. See the
+rate (FDR) in geospatial data from the above obtained p-values [Wilks2016_]. See the
 `FDR example <examples/decadal/significance.html#Field-significance>`__.
 
 
@@ -67,12 +67,19 @@ Sign test
 #########
 
 Use DelSole's sign test relying on the statistics of a random walk to decide whether
-one forecast is significantly better than another forecast [DelSole2016]_, see
+one forecast is significantly better than another forecast [DelSole2016_], see
+:py:func:`xskillscore.sign_test` and
 `sign test example <examples/decadal/significance.html#sign-test>`__.
 
 
 References
 ##########
+
+.. [Boer2016] Boer, G. J., Smith, D. M., Cassou, C., Doblas-Reyes, F.,
+    Danabasoglu, G., Kirtman, B., Kushnir, Y., Kimoto, M., Meehl, G. A., Msadek, R.,
+    Mueller, W. A., Taylor, K. E., Zwiers, F., Rixen, M., Ruprich-Robert, Y., and
+    Eade, R.: The Decadal Climate Prediction Project (DCPP) contribution to CMIP6,
+    Geosci. Model Dev., 9, 3751-3777, https://doi.org/10.5194/gmd-9-3751-2016, 2016.
 
 .. [Goddard2013]  Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P. Gonzalez, V.
     Kharin, et al. “A Verification Framework for Interannual-to-Decadal Predictions

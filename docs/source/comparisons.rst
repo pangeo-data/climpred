@@ -5,26 +5,21 @@ Comparisons
 Forecasts have to be verified against some product to evaluate their performance.
 However, when verifying against a product, there are many different ways one can
 compare the ensemble of forecasts. Here, we cover the comparison options for both
-:py:class:`~climpred.classes.HindcastEnsemble` and
-:py:class:`~climpred.classes.PerfectModelEnsemble`.
+:py:class:`.HindcastEnsemble` and
+:py:class:`.PerfectModelEnsemble`.
 See `terminology <terminology.html>`__ for clarification on the differences between
 these two experimental setups.
 
-All high-level functions like :py:class:`~climpred.classes.HindcastEnsemble`
-:py:meth:`~climpred.classes.HindcastEnsemble.verify`,
-:py:class:`~climpred.classes.HindcastEnsemble`
-:py:meth:`~climpred.classes.HindcastEnsemble.bootstrap`,
-:py:class:`~climpred.classes.PerfectModelEnsemble`
-:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and
-:py:class:`~climpred.classes.PerfectModelEnsemble`
-:py:meth:`~climpred.classes.PerfectModelEnsemble.bootstrap` take a
-``comparison`` keyword to select the comparison style. See below for a detailed
-description on the differences between these comparisons.
+All high-level functions like :py:meth:`.HindcastEnsemble.verify`,
+:py:meth:`.HindcastEnsemble.bootstrap`, :py:meth:`.PerfectModelEnsemble.verify` and
+:py:meth:`.PerfectModelEnsemble.bootstrap` take a ``comparison`` keyword to select the
+comparison style. See below for a detailed description on the differences between these
+comparisons.
 
 Hindcast Ensembles
 ##################
 
-In :py:class:`~climpred.classes.HindcastEnsemble`, the ensemble mean forecast
+In :py:class:`.HindcastEnsemble`, the ensemble mean forecast
 (``comparison="e2o"``) is expected to perform better than individual ensemble members
 (``comparison="m2o"``) as the chaotic component of forecasts is expected to be
 suppressed by this averaging, while the memory of the system sustains. [Boer2016]_
@@ -43,7 +38,7 @@ suppressed by this averaging, while the memory of the system sustains. [Boer2016
 Perfect Model Ensembles
 #######################
 
-In :py:class:`~climpred.classes.PerfectModelEnsemble`, there are many more ways of
+In :py:class:`.PerfectModelEnsemble`, there are many more ways of
 verifying forecasts. [Seferian2018]_ uses a comparison of all ensemble members against
 the control run (``comparison="m2c"``) and all ensemble members against all other
 ensemble members (``comparison="m2m"``). Furthermore, the ensemble mean forecast can
@@ -85,11 +80,11 @@ comparisons ``"m2c"``, ``"m2m"``, and ``"m2o"``. It is 1 for ``"m2e"``, ``"e2c"`
 Interpretation of Results
 #########################
 
-When :py:class:`~climpred.classes.HindcastEnsemble` skill is computed over all
+When :py:class:`.HindcastEnsemble` skill is computed over all
 initializations ``dim="init"`` of the hindcast, the resulting skill is a mean forecast
 skill over all initializations.
 
-:py:class:`~climpred.classes.PerfectModelEnsemble` skill is computed over a
+:py:class:`.PerfectModelEnsemble` skill is computed over a
 supervector comprised of all
 initializations and members, which allows the computation of the ACC-based skill
 [Bushuk2018]_, but also returns a mean forecast skill over all initializations.
@@ -113,10 +108,8 @@ just specifies how ``forecast`` and ``observations`` are defined.
 
 However, this above logic applies to deterministic metrics. Probabilistic metrics need
 to be applied to the ``member`` dimension and ``comparison`` from
-``["m2c", "m2m"]`` in :py:class:`~climpred.classes.PerfectModelEnsemble`
-:py:meth:`~climpred.classes.PerfectModelEnsemble.verify` and ``"m2o"`` comparison in
-:py:class:`~climpred.classes.HindcastEnsemble`
-:py:meth:`~climpred.classes.HindcastEnsemble.verify`.
+``["m2c", "m2m"]`` in :py:meth:`.PerfectModelEnsemble.verify` and ``"m2o"`` comparison
+in :py:meth:`.HindcastEnsemble.verify`.
 
 ``dim`` should not contain ``member`` when the comparison already computes ensemble
 means as in ``["e2o", "e2c"]``.
@@ -126,36 +119,36 @@ User-defined comparisons
 ########################
 
 You can also construct your own comparisons via the
-:py:class:`~climpred.comparisons.Comparison` class.
+:py:class:`climpred.comparisons.Comparison` class.
 
 .. autosummary:: Comparison
 
 First, write your own comparison function, similar to the existing ones. If a
-comparison should also be used for probabilistic metrics, make sure that
-``metric.probabilistic`` returns ``forecast`` with ``member`` dimension and
+comparison should also be used for probabilistic metrics, make sure that probabilistic
+metrics returns ``forecast`` with ``member`` dimension and
 ``observations`` without. For deterministic metrics, return ``forecast`` and
 ``observations`` with identical dimensions but without an identical comparison::
 
-  from climpred.comparisons import Comparison, _drop_members
+  from climpred.comparisons import Comparison, M2M_MEMBER_DIM
 
-  def _my_m2median_comparison(ds, metric=None):
+  def _my_m2median_comparison(initialized, metric=None):
       """Identical to m2e but median."""
       observations_list = []
       forecast_list = []
       supervector_dim = "member"
-      for m in ds.member.values:
-          forecast = _drop_members(ds, rmd_member=[m]).median("member")
-          observations = ds.sel(member=m).squeeze()
+      for m in initialized.member.values:
+          forecast = initialized.drop_sel(member=m).median("member")
+          observations = initialized.sel(member=m).squeeze()
           forecast_list.append(forecast)
           observations_list.append(observations)
-      observations = xr.concat(observations_list, supervector_dim)
-      forecast = xr.concat(forecast_list, supervector_dim)
-      forecast[supervector_dim] = np.arange(forecast[supervector_dim].size)
-      observations[supervector_dim] = np.arange(observations[supervector_dim].size)
+      observations = xr.concat(observations_list, M2M_MEMBER_DIM)
+      forecast = xr.concat(forecast_list, M2M_MEMBER_DIM)
+      forecast[M2M_MEMBER_DIM] = np.arange(forecast[M2M_MEMBER_DIM].size)
+      observations[M2M_MEMBER_DIM] = np.arange(observations[M2M_MEMBER_DIM].size)
       return forecast, observations
 
 Then initialize this comparison function with
-:py:class:`~climpred.comparisons.Comparison`::
+:py:class:`climpred.comparisons.Comparison`::
 
   __my_m2median_comparison = Comparison(
       name="m2me",

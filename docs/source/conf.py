@@ -26,7 +26,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 current_year = datetime.datetime.now().year
 project = "climpred"
 copyright = f"2019-{current_year}, climpred development team"
-author = "climpred development team"
+today_fmt = "%Y-%m-%d"
 
 version = climpred.__version__
 
@@ -37,7 +37,7 @@ version = climpred.__version__
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
 extensions = [
-    "nbsphinx",
+    "myst_nb",
     "sphinx.ext.autodoc",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
@@ -50,6 +50,14 @@ extensions = [
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
 ]
+
+# autosummary_generate = True
+# autodoc_typehints = "none"
+
+
+# MyST config
+myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "html_image"]
+myst_url_schemes = ["http", "https", "mailto"]
 
 # Cupybutton configuration
 # See: https://sphinx-copybutton.readthedocs.io/en/latest/
@@ -69,22 +77,53 @@ templates_path = ["_templates"]
 # List of patterns, relative to source directory, that match files and
 # directories to ignore when looking for source files.
 # This pattern also affects html_static_path and html_extra_path.
-exclude_patterns = ["build", "**.ipynb_checkpoints", "Thumbs.db", ".DS_Store"]
+exclude_patterns = [
+    "build",
+    "**.ipynb_checkpoints",
+    "Thumbs.db",
+    ".DS_Store",
+]
 
 pygments_style = "sphinx"
 source_suffix = ".rst"
 master_doc = "index"
 
-nbsphinx_timeout = 180  # 3 minute timeout
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-# html_theme = "alabaster"
-html_theme = "sphinx_rtd_theme"
+html_theme = "sphinx_book_theme"
+# html_theme = "pydata_sphinx_theme"
+# html_theme = "sphinx_rtd_theme"
 html_logo = "images/climpred-logo.png"
 html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcfc"}
+
+
+# Theme options are theme-specific and customize the look and feel of a theme
+# further.  For a list of options available for each theme, see the
+# documentation.
+html_theme_options = {
+    "repository_url": "https://github.com/pangeo-data/climpred",
+    "use_edit_page_button": True,
+    # "navbar_end": "search-field.html",
+    "repository_branch": "main",
+    "path_to_docs": "docs/source",
+    "use_edit_page_button": True,
+    "use_repository_button": True,
+    "use_issues_button": True,
+    "home_page_in_toc": False,
+    "extra_navbar": "",
+    "navbar_footer_text": "",
+}
+
+html_context = {
+    "github_user": "pangeo-data",
+    "github_repo": "climpred",
+    "github_version": "main",
+    "doc_path": "docs",
+}
+
 
 # Add any paths that contain custom static files (such as style sheets) here,
 # relative to this directory. They are copied after the builtin static files,
@@ -98,8 +137,57 @@ intersphinx_mapping = {
     "numpy": ("https://docs.scipy.org/doc/numpy/", None),
     "xskillscore": ("https://xskillscore.readthedocs.io/en/stable", None),
     "xclim": ("https://xclim.readthedocs.io/en/latest/", None),
+    "esmtools": ("https://esmtools.readthedocs.io/en/latest/", None),
 }
 
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
 # nbsphinx_allow_errors = True
+
+# nbsphinx_kernel_name = "climpred-docs"  # doesnt work
+nbsphinx_allow_errors = True
+nbsphinx_timeout = 600
+nbsphinx_execute = "auto"  # "never" "always"
+jupyter_execute_notebooks = "auto"
+
+
+# Napoleon configurations
+napoleon_google_docstring = True
+napoleon_numpy_docstring = False
+napoleon_use_param = False
+napoleon_use_rtype = False
+napoleon_preprocess_types = True
+napoleon_type_aliases = {
+    "DataArray": "~xarray.DataArray",
+    "Dataset": "~xarray.Dataset",
+    "PredictionEnsemble": "~climpred.PredictionEnsemble",
+    "HindcastEnsemble": "~climpred.HindcastEnsemble",
+    "PerfectModelEnsemble": "~climpred.PerfectModelEnsemble",
+}
+
+# If not '', a 'Last updated on:' timestamp is inserted at every page bottom,
+# using the given strftime format.
+html_last_updated_fmt = today_fmt
+
+
+def rstjinja(app, docname, source):
+    """
+    Render our pages as a jinja template for fancy templating goodness.
+    """
+    # Make sure we're outputting HTML
+    if app.builder.format != "html":
+        return
+    src = source[0]
+    rendered = app.builder.templates.render_string(src, app.config.html_context)
+    source[0] = rendered
+
+
+def html_page_context(app, pagename, templatename, context, doctree):
+    # Disable edit button for docstring generated pages
+    if "generated" in pagename:
+        context["theme_use_edit_page_button"] = False
+
+
+def setup(app):
+    app.connect("source-read", rstjinja)
+    app.connect("html-page-context", html_page_context)

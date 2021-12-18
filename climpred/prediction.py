@@ -352,5 +352,5 @@ def compute_hindcast(
     if "init" in result.dims and "init" in result.coords:
         if "valid_time" in result.coords:
             if "lead" not in result.valid_time.dims:
-                result = add_time_from_init_lead(result.drop("valid_time"))
+                result = add_time_from_init_lead(result.drop_vars("valid_time"))
     return result

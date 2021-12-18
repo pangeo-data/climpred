@@ -106,7 +106,7 @@ def test_compute_hindcast_CESM_3D_keep_coords(
 ):
     """Test that no coords are lost in compute_hindcast with the CESM sample data."""
     s = compute_hindcast(hind_da_initialized_3d, reconstruction_da_3d)
-    for c in hind_da_initialized_3d.drop("init").coords:
+    for c in hind_da_initialized_3d.drop_vars("init").coords:
         assert c in s.coords
 
 

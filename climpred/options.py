@@ -15,7 +15,7 @@ _VALIDATORS = {
     "seasonality": _SEASONALITY_OPTIONS.__contains__,
     "PerfectModel_persistence_from_initialized_lead_0": lambda choice: choice
     in [True, False, "default"],
-    "warn_for_PredictionEnsemble_xr_call": lambda choice: choice
+    "warn_for_failed_PredictionEnsemble_xr_call": lambda choice: choice
     in [True, False, "default"],
     "warn_for_rename_to_climpred_dims": lambda choice: choice
     in [True, False, "default"],
@@ -26,36 +26,38 @@ _VALIDATORS = {
 
 
 class set_options:
-    """Set options for ``climpred`` in a controlled context. Analogous to
+    """
+    Set options for ``climpred`` in a controlled context.
+
+    Analogous to
     :py:class:`~xarray.options.set_options`.
 
-    Parameters
-    ----------
-    ``seasonality`` : {``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``}, default: ``"month"`` # noqa: E501
-        Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
-        Used in ``reference=climatology`` and
-        :py:meth:`~climpred.classes.HindcastEnsemble.remove_bias`.
-    ``PerfectModel_persistence_from_initialized_lead_0`` : {``True``, ``False``}, default ``False`` # noqa: E501
-        Which persistence function to use in
-        ``PerfectModelEnsemble.verify/bootstrap(reference="persistence")``.
-        If ``False`` use :py:func:`~climpred.reference.compute_persistence`.
-        If ``True`` use
-        :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
-    ``warn_for_failed_PredictionEnsemble_xr_call`` : {``True``, ``False``}, default ``True``
-        Raise ``UserWarning`` when ``PredictionEnsemble.xr_call``, e.g.
-        ``.sel(lead=[1])`` fails on one of the datasets.
-    ``warn_for_rename_to_climpred_dims`` : {``True``, ``False``}, default ``True``
-        Raise ``UserWarning`` when dimensions are renamed to ``CLIMPRED_DIMS`` when
-        :py:class:`~climpred.classes.PredictionEnsemble` is instantiated.
-    ``warn_for_init_coords_int_to_annual`` : {``True``, ``False``}, default ``True``
-        Raise ``UserWarning`` when ``init`` coordinate is of type integer and gets
-        converted to annual cftime_range when
-        :py:class:`~climpred.classes.PredictionEnsemble` is instantiated.
-    ``climpred_warnings`` : {``True``, ``False``}, default ``True``
-        Overwrites all options containing ``"*warn*"``.
+    Args:
+        ``seasonality`` : {``"dayofyear"``, ``"weekofyear"``, ``"month"``, ``"season"``}, default: ``"month"`` # noqa: E501
+            Attribute to group dimension ``groupby(f"{dim}.{seasonality}"")``.
+            Used in ``reference=climatology`` and
+            :py:meth:`.HindcastEnsemble.remove_bias`.
+        ``PerfectModel_persistence_from_initialized_lead_0`` : {``True``, ``False``}, default ``False`` # noqa: E501
+            Which persistence function to use in
+            ``PerfectModelEnsemble.verify/bootstrap(reference="persistence")``.
+            If ``False`` use :py:func:`~climpred.reference.compute_persistence`.
+            If ``True`` use
+            :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
+        ``warn_for_failed_PredictionEnsemble_xr_call`` : {``True``, ``False``}, default ``True``
+            Raise ``UserWarning`` when ``PredictionEnsemble.xr_call``, e.g.
+            ``.sel(lead=[1])`` fails on one of the datasets.
+        ``warn_for_rename_to_climpred_dims`` : {``True``, ``False``}, default ``True``
+            Raise ``UserWarning`` when dimensions are renamed to ``CLIMPRED_DIMS`` when
+            :py:class:`.PredictionEnsemble` is instantiated.
+        ``warn_for_init_coords_int_to_annual`` : {``True``, ``False``}, default ``True``
+            Raise ``UserWarning`` when ``init`` coordinate is of type integer and gets
+            converted to annual cftime_range when
+            :py:class:`.PredictionEnsemble` is instantiated.
+        ``climpred_warnings`` : {``True``, ``False``}, default ``True``
+            Overwrites all options containing ``"*warn*"``.
 
-    Examples
-    --------
+    Examples:
+
         You can use ``set_options`` either as a context manager:
 
         >>> kw = dict(

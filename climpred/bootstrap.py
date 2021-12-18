@@ -297,7 +297,7 @@ def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"
     # take time dim and overwrite with sorted
     resampled_uninit = (
         resampled_uninit.swap_dims({"init": "valid_time"})
-        .drop("init")
+        .drop_vars("init")
         .rename({"valid_time": "time"})
     )
     resampled_uninit = resampled_uninit.assign_coords(

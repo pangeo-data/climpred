@@ -29,8 +29,8 @@ class Comparison:
             name: name of comparison.
             function: comparison function.
             hindcast: Can comparison be used in
-                :py:class:`~climpred.classes.HindcastEnsemble`?
-                ``False`` means only :py:class:`~climpred.classes.PerfectModelEnsemble`
+                :py:class:`.HindcastEnsemble`?
+                ``False`` means only :py:class:`.PerfectModelEnsemble`
             probabilistic: Can this comparison be used for probabilistic
                 metrics also? Probabilistic metrics require multiple forecasts.
                 ``False`` means that comparison is only deterministic.
@@ -72,14 +72,14 @@ def _m2m(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare all members to all others in turn while leaving out verification member.
 
-    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
+    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: initialized with ``member`` dimension.
         metric:
             If deterministic, forecast and verif have ``member`` dim.
             If probabilistic, only forecast has ``member`` dim.
-        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
+        verif: not used in :py:class:`.PerfectModelEnsemble`
 
     Returns:
         forecast, verification
@@ -123,13 +123,13 @@ def _m2e(
     """
     Compare all members to ensemble mean while leaving out the verif in ensemble mean.
 
-    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
+    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.
         metric: needed for probabilistic metrics. Therefore useless in ``m2e``
             comparison, but expected by internal API.
-        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
+        verif: not used in :py:class:`.PerfectModelEnsemble`
 
     Returns:
         forecast, verification
@@ -175,13 +175,13 @@ def _m2c(
     is taken from the control simulation, this compares all other member forecasts
     to the control simulation.
 
-    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
+    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.
         metric: if deterministic, forecast and verif both have member dim
             if probabilistic, only forecast has ``member`` dim
-        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
+        verif: not used in :py:class:`.PerfectModelEnsemble`
 
     Returns:
         forecast, verification
@@ -218,13 +218,13 @@ def _e2c(
     is taken from the control simulation, this compares the member mean of all
     other member forecasts to the control simulation.
 
-    :ref:`comparisons` for :py:class:`~climpred.classes.PerfectModelEnsemble`
+    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.
         metric: needed for probabilistic metrics. Therefore useless in ``e2c``
             comparison, but expected by internal API.
-        verif: not used in :py:class:`~climpred.classes.PerfectModelEnsemble`
+        verif: not used in :py:class:`.PerfectModelEnsemble`
 
     Returns:
         forecast, verification
@@ -255,7 +255,7 @@ def _e2o(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare the ensemble mean forecast to the verification data.
 
-    :ref:`comparisons` for :py:class:`~climpred.classes.HindcastEnsemble`
+    :ref:`comparisons` for :py:class:`.HindcastEnsemble`
 
     Args:
         initialized: Hindcast with optional ``member`` dimension.
@@ -288,7 +288,7 @@ def _m2o(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare each ensemble member individually to the verification data.
 
-    :ref:`comparisons` for :py:class:`~climpred.classes.HindcastEnsemble`
+    :ref:`comparisons` for :py:class:`.HindcastEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.

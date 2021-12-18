@@ -1,4 +1,4 @@
-name: climpred installs
+name: install
 
 on:
   push:

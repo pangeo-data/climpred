@@ -59,7 +59,7 @@ from .constants import (
 )
 from .exceptions import CoordinateError, DimensionError, VariableError
 from .metrics import Metric
-from .options import OPTIONS
+from .options import OPTIONS, set_options
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
@@ -102,7 +102,7 @@ else:
 
 def _display_metadata(self) -> str:
     """
-    Print the contents of the :py:class:`~climpred.classes.PredictionEnsemble` as text.
+    Print the contents of the :py:class:`.PredictionEnsemble` as text.
 
     Example:
         >>> init = climpred.tutorial.load_dataset("CESM-DP-SST")
@@ -161,7 +161,7 @@ def _display_metadata(self) -> str:
 
 
 def _display_metadata_html(self) -> str:
-    """Print contents of :py:class:`~climpred.classes.PredictionEnsemble` as html."""
+    """Print contents of :py:class:`.PredictionEnsemble` as html."""
     header = f"<h4>climpred.{type(self).__name__}</h4>"
     display_html(header, raw=True)
     init_repr_str = dataset_repr(self._datasets["initialized"])
@@ -193,25 +193,25 @@ def _display_metadata_html(self) -> str:
 
 class PredictionEnsemble:
     """
-    The main object :py:class:`~climpred.classes.PredictionEnsemble`.
+    The main object :py:class:`.PredictionEnsemble`.
 
-    This is the super of both :py:class:`~climpred.classes.PerfectModelEnsemble` and
-    :py:class:`~climpred.classes.HindcastEnsemble`. This cannot be called directly by
+    This is the super of both :py:class:`.PerfectModelEnsemble` and
+    :py:class:`.HindcastEnsemble`. This cannot be called directly by
     a user, but should house functions that both ensemble types can use.
 
-    Associated :py:class:`~xarray.Dataset` are stored in:
+    Associated :py:class:`xarray.Dataset` are stored in:
 
         * ``PredictionEnsemble._datasets["initialized"]``
         * ``PredictionEnsemble._datasets["uninitialized"]``
         * ``PredictionEnsemble._datasets["control"]`` in
-          :py:class:`~climpred.classes.PerfectModelEnsemble`
+          :py:class:`.PerfectModelEnsemble`
         * ``PredictionEnsemble._datasets[observations"]`` in
-          :py:class:`~climpred.classes.HindcastEnsemble`
+          :py:class:`.HindcastEnsemble`
 
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]):
-        """Create a :py:class:`~climpred.classes.PredictionEnsemble` object."""
+        """Create a :py:class:`.PredictionEnsemble` object."""
         if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
             initialized = initialized.to_dataset()
@@ -244,13 +244,14 @@ class PredictionEnsemble:
         """Help for verify/bootstrap(groupby="month")."""
         skill_group, group_label = [], []
         groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
-        for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-            skill_group.append(
-                getattr(self.sel(init=hind_group), call)(
-                    **kwargs,
+        with set_options(warn_for_failed_PredictionEnsemble_xr_call=False):
+            for group, hind_group in self.get_initialized().init.groupby(groupby_str):
+                skill_group.append(
+                    getattr(self.sel(init=hind_group), call)(
+                        **kwargs,
+                    )
                 )
-            )
-            group_label.append(group)
+                group_label.append(group)
         new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
         skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
             {new_dim_name: group_label}
@@ -265,9 +266,9 @@ class PredictionEnsemble:
 
     @property
     def coords(self) -> DatasetCoordinates:
-        """Return coordinates of :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Return coordinates of :py:class:`.PredictionEnsemble`.
 
-        Dictionary of :py:class:`~xarray.DataArray` objects corresponding to coordinate
+        Dictionary of :py:class:`xarray.DataArray` objects corresponding to coordinate
         variables available in all PredictionEnsemble._datasets.
 
         See also:
@@ -297,7 +298,7 @@ class PredictionEnsemble:
     @property
     def sizes(self) -> Mapping[Hashable, int]:
         """
-        Return sizes of :py:class:`~climpred.classes.PredictionEnsemble`.
+        Return sizes of :py:class:`.PredictionEnsemble`.
 
         Mapping from dimension names to lengths for all PredictionEnsemble._datasets.
 
@@ -313,7 +314,7 @@ class PredictionEnsemble:
     @property
     def dims(self) -> Mapping[Hashable, int]:
         """
-        Return dimension of :py:class:`~climpred.classes.PredictionEnsemble`.
+        Return dimension of :py:class:`.PredictionEnsemble`.
 
         Mapping from dimension names to lengths all PredictionEnsemble._datasets.
 
@@ -325,7 +326,7 @@ class PredictionEnsemble:
     @property
     def chunks(self) -> Mapping[Hashable, Tuple[int, ...]]:
         """
-        Return chunks of :py:class:`~climpred.classes.PredictionEnsemble`.
+        Return chunks of :py:class:`.PredictionEnsemble`.
 
         Mapping from chunks all PredictionEnsemble._datasets.
 
@@ -342,7 +343,7 @@ class PredictionEnsemble:
 
     @property
     def chunksizes(self) -> Mapping[Hashable, Tuple[int, ...]]:
-        """Return chunksizes of :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Return chunksizes of :py:class:`.PredictionEnsemble`.
 
         Mapping from dimension names to block lengths for this dataset's data, or
         None if the underlying data is not a dask array.
@@ -357,7 +358,7 @@ class PredictionEnsemble:
     @property
     def data_vars(self) -> DataVariables:
         """
-        Return data variables of :py:class:`~climpred.classes.PredictionEnsemble`.
+        Return data variables of :py:class:`.PredictionEnsemble`.
 
         Dictionary of DataArray objects corresponding to data variables available in
         all PredictionEnsemble._datasets.
@@ -383,15 +384,15 @@ class PredictionEnsemble:
             return _display_metadata(self)
 
     def __len__(self) -> int:
-        """Return number of all variables ``PredictionEnsemble``."""
+        """Return number of all variables :py:class:`.PredictionEnsemble`."""
         return len(self.data_vars)
 
     def __iter__(self) -> Iterator[Hashable]:
-        """Iterate over underlying :py:class:`~xarray.Dataset`s."""
+        """Iterate over underlying :py:class:`xarray.Dataset`."""
         return iter(self._datasets.values())
 
     def __delitem__(self, key: Hashable) -> None:
-        """Remove a variable from :py:class:`~climpred.classes.PredictionEnsemble`."""
+        """Remove a variable from :py:class:`.PredictionEnsemble`."""
         del self._datasets["initialized"][key]
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
@@ -399,7 +400,7 @@ class PredictionEnsemble:
                     del ds[key]
 
     def __contains__(self, key: Hashable) -> bool:
-        """Check variable in :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Check variable in :py:class:`.PredictionEnsemble`.
 
         The ``"in"`` operator will return true or false depending on whether
         ``"key"`` is in any PredictionEnsemble._datasets.
@@ -412,9 +413,9 @@ class PredictionEnsemble:
         return contained
 
     def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
-        """Check if :py:class:`~climpred.classes.PredictionEnsemble` is equal to other.
+        """Check if :py:class:`.PredictionEnsemble` is equal to other.
 
-        Two :py:class:`~climpred.classes.PredictionEnsemble`s are equal if they have
+        Two :py:class:`.PredictionEnsemble`s are equal if they have
         matching variables and coordinates, all of which are equal.
         ``PredictionEnsembles`` can still be equal (like pandas objects) if they have
         NaN values in the same locations.
@@ -440,7 +441,7 @@ class PredictionEnsemble:
 
     def identical(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """
-        Check if :py:class:`~climpred.classes.PredictionEnsemble` is identical to other.
+        Check if :py:class:`.PredictionEnsemble` is identical to other.
 
         Like ``equals``, but also checks all dataset attributes and the
         attributes on all variables and coordinates.
@@ -469,20 +470,23 @@ class PredictionEnsemble:
         cmap: Optional[str] = None,
         x: str = "time",
     ) -> "plt.Axes":
-        """Plot datasets from :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Plot datasets from :py:class:`.PredictionEnsemble`.
+
+        Wraps :py:func:`.climpred.graphics.plot_ensemble_perfect_model` or
+        :py:func:`.climpred.graphics.plot_lead_timeseries_hindcast`.
 
         Args:
             variable: `variable` to show. Defaults to first in data_vars.
             ax: Axis to use in plotting. By default, creates a new axis.
             show_members: whether to display all members individually.
                 Defaults to False.
-            cmap: Name of matplotlib-recognized colorbar. Defaults to `viridis`
-                for :py:class:`~climpred.classes.HindcastEnsemble`
-                and ``tab10`` for :py:class:`~climpred.classes.PerfectModelEnsemble`.
+            cmap: Name of matplotlib-recognized colorbar. Defaults to ``viridis``
+                for :py:class:`.HindcastEnsemble`
+                and ``tab10`` for :py:class:`.PerfectModelEnsemble`.
             x: Name of x-axis. Use ``time`` to show observations and
                 hindcasts in real time. Use ``init`` to see hindcasts as
                 initializations. For ``x=init`` only initialized is shown and only
-                works for :py:class:`~climpred.classes.HindcastEnsemble`.
+                works for :py:class:`.HindcastEnsemble`.
 
         .. note::
             Alternatively inspect initialized datasets by
@@ -623,8 +627,8 @@ class PredictionEnsemble:
         """Allow subsetting variable(s) from
 
         Allow subsetting variable(s) from
-        :py:class:`~climpred.classes.PredictionEnsemble` as from
-        :py:class:`~xarray.Dataset`.
+        :py:class:`.PredictionEnsemble` as from
+        :py:class:`xarray.Dataset`.
 
         Args:
             varlist: list of names or name of data variable(s) to subselect
@@ -765,11 +769,11 @@ class PredictionEnsemble:
         return self._construct_direct(datasets, kind=self.kind)
 
     def get_initialized(self) -> xr.Dataset:
-        """Return the :py:class:`~xarray.Dataset` for the initialized ensemble."""
+        """Return the :py:class:`xarray.Dataset` for the initialized ensemble."""
         return self._datasets["initialized"]
 
     def get_uninitialized(self) -> xr.Dataset:
-        """Return the :py:class:`~xarray.Dataset` for the uninitialized ensemble."""
+        """Return the :py:class:`xarray.Dataset` for the uninitialized ensemble."""
         return self._datasets["uninitialized"]
 
     def smooth(
@@ -907,7 +911,7 @@ class PredictionEnsemble:
     def remove_seasonality(
         self, seasonality: Union[None, str] = None
     ) -> "PredictionEnsemble":
-        """Remove seasonal cycle from :py:class:`~climpred.classes.PredictionEnsemble`.
+        """Remove seasonal cycle from :py:class:`.PredictionEnsemble`.
 
         Args:
             seasonality: Seasonality to be removed. Choose from:
@@ -915,7 +919,15 @@ class PredictionEnsemble:
                 Defaults to ``OPTIONS["seasonality"]``.
 
         Examples:
-            >>> # example already without seasonal cycle
+            >>> HindcastEnsemble
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+            Uninitialized:
+                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+            >>> # example already effectively without seasonal cycle
             >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
             Initialized Ensemble:
@@ -1001,17 +1013,17 @@ class PredictionEnsemble:
 class PerfectModelEnsemble(PredictionEnsemble):
     """An object for "perfect model" prediction ensembles.
 
-    :py:class:`~climpred.classes.PerfectModelEnsemble` is a sub-class of
-    :py:class:`~climpred.classes.PredictionEnsemble`. It tracks
+    :py:class:`.PerfectModelEnsemble` is a sub-class of
+    :py:class:`.PredictionEnsemble`. It tracks
     the control run used to initialize the ensemble for easy computations,
     bootstrapping, etc.
 
     This object is built on ``xarray`` and thus requires the input object to
-    be an :py:class:`~xarray.Dataset` or :py:class:`~xarray.DataArray`.
+    be an :py:class:`xarray.Dataset` or :py:class:`xarray.DataArray`.
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
-        """Create a :py:class:`~climpred.classes.PerfectModelEnsemble` object.
+        """Create a :py:class:`.PerfectModelEnsemble` object.
 
         Args:
           initialized: prediction ensemble output.
@@ -1108,7 +1120,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
         Returns:
             ``uninitialzed`` resampled from ``control`` added
-            to :py:class:`~climpred.classes.PerfectModelEnsemble`
+            to :py:class:`.PerfectModelEnsemble`
         """
         has_dataset(
             self._datasets["control"], "control", "generate an uninitialized ensemble."
@@ -1123,7 +1135,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="perfect")
 
     def get_control(self) -> xr.Dataset:
-        """Return the control as an :py:class:`~xarray.Dataset`."""
+        """Return the control as an :py:class:`xarray.Dataset`."""
         return self._datasets["control"]
 
     def verify(
@@ -1142,9 +1154,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``comparison`` keyword argument.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the initialized prediction ensemble with itself,
-                see `comparisons </comparisons.html>`_.
+                see `comparisons <../comparisons.html>`_.
             dim: Dimension(s) over which to apply ``metric``.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1291,9 +1303,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``comparison`` keyword argument.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the uninitialized against itself, see
-                `comparisons </comparisons.html>`_.
+                `comparisons <../comparisons.html>`_.
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1346,9 +1358,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         :py:func:`~climpred.reference.compute_persistence`.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the persistence against itself, see
-                `comparisons </comparisons.html>`_. Only valid if
+                `comparisons <../comparisons.html>`_. Only valid if
                 ``PerfectModel_persistence_from_initialized_lead_0=True``.
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
@@ -1419,9 +1431,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Verify a climatology forecast.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the climatology against itself, see
-                `comparisons </comparisons.html>`_
+                `comparisons <../comparisons.html>`_
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1476,9 +1488,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the forecast against itself, see
-                `comparisons </comparisons.html>`_
+                `comparisons <../comparisons.html>`_
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1510,7 +1522,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            :py:class:`~xarray.Dataset` with dimensions ``results`` (holding
+            :py:class:`xarray.Dataset` with dimensions ``results`` (holding
             ``verify skill``, ``p``, ``low_ci`` and ``high_ci``) and ``skill``
             (holding ``initialized``, ``persistence`` and/or ``uninitialized``):
                 * results="verify skill", skill="initialized":
@@ -1633,13 +1645,13 @@ class PerfectModelEnsemble(PredictionEnsemble):
 class HindcastEnsemble(PredictionEnsemble):
     """An object for initialized prediction ensembles.
 
-    :py:class:`~climpred.classes.HindcastEnsemble` is a sub-class of
-    :py:class:`~climpred.classes.PredictionEnsemble`. It tracks a
+    :py:class:`.HindcastEnsemble` is a sub-class of
+    :py:class:`.PredictionEnsemble`. It tracks a
     verification dataset (i.e., observations) associated with the hindcast ensemble
     for easy computation across multiple variables.
 
-    This object is built on :py:class:`~xarray.Dataset` and thus requires the input
-    object to be an :py:class:`~xarray.Dataset` or :py:class:`~xarray.DataArray`.
+    This object is built on :py:class:`xarray.Dataset` and thus requires the input
+    object to be an :py:class:`xarray.Dataset` or :py:class:`xarray.DataArray`.
     """
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]) -> None:
@@ -1707,10 +1719,10 @@ class HindcastEnsemble(PredictionEnsemble):
     ) -> "HindcastEnsemble":
         """Add verification data against which to verify the initialized ensemble.
 
-        Same as :py:meth:`~climpred.classes.HindcastEnsemble.add_verification`.
+        Same as :py:meth:`.HindcastEnsemble.add_verification`.
 
         Args:
-            obs: observations added to :py:class:`~climpred.classes.HindcastEnsemble`.
+            obs: observations added to :py:class:`.HindcastEnsemble`.
         """
         if isinstance(obs, xr.DataArray):
             obs = obs.to_dataset()
@@ -1731,10 +1743,10 @@ class HindcastEnsemble(PredictionEnsemble):
     ) -> "HindcastEnsemble":
         """Add verification data against which to verify the initialized ensemble.
 
-        Same as :py:meth:`~climpred.classes.HindcastEnsemble.add_observations`.
+        Same as :py:meth:`.HindcastEnsemble.add_observations`.
 
         Args:
-            verif: verification added to :py:class:`~climpred.classes.HindcastEnsemble`.
+            verif: verification added to :py:class:`.HindcastEnsemble`.
         """
         return self.add_observations(verif)
 
@@ -1763,7 +1775,7 @@ class HindcastEnsemble(PredictionEnsemble):
         return self._construct_direct(datasets, kind="hindcast")
 
     def get_observations(self) -> xr.Dataset:
-        """Return the :py:class:`~xarray.Dataset` of the observations/verification data.
+        """Return the :py:class:`xarray.Dataset` of the observations/verification data.
 
         Returns:
             observations
@@ -1780,7 +1792,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Returns:
             resampled ``uninitialized`` ensemble added to
-            :py:class:`~climpred.classes.HindcastEnsemble`
+            :py:class:`.HindcastEnsemble`
 
         Example:
             >>> HindcastEnsemble  # uninitialized from historical simulations
@@ -1841,13 +1853,13 @@ class HindcastEnsemble(PredictionEnsemble):
                 One or more of ``["uninitialized", "persistence", "climatology"]``.
                 Defaults to ``None`` meaning no reference.
             date2num_units: passed to ``cftime.date2num`` as units
-            return_xr: if ``True`` return :py:class:`~xarray.DataArray` else plot
+            return_xr: if ``True`` return :py:class:`xarray.DataArray` else plot
             cmap: color palette
             edgecolors: color of the edges in the plot
             **plot_kwargs: arguments passed to ``plot``.
 
         Returns:
-            :py:class:`~xarray.DataArray` if ``return_xr`` else plot
+            :py:class:`xarray.DataArray` if ``return_xr`` else plot
 
         Example:
             >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
@@ -1945,9 +1957,9 @@ class HindcastEnsemble(PredictionEnsemble):
             between the initialized ensemble and observations/verification data.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare to the observations/verification data.
-                See `comparisons </comparisons.html>`_.
+                See `comparisons <../comparisons.html>`_.
             dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -2211,9 +2223,9 @@ class HindcastEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare to the observations/verification data.
-                See `comparisons </comparisons.html>`_.
+                See `comparisons <../comparisons.html>`_.
             dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -2248,7 +2260,7 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            :py:class:`~xarray.Dataset` with dimensions ``results`` (holding ``skill``,
+            :py:class:`xarray.Dataset` with dimensions ``results`` (holding ``skill``,
             ``p``, ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
             ``persistence`` and/or ``uninitialized``):
                 * results="verify skill", skill="initialized":
@@ -2384,11 +2396,11 @@ class HindcastEnsemble(PredictionEnsemble):
         cv: Union[bool, str] = False,
         **metric_kwargs: metric_kwargsType,
     ) -> "HindcastEnsemble":
-        """Remove bias from :py:class:`~climpred.classes.HindcastEnsemble`.
+        """Remove bias from :py:class:`.HindcastEnsemble`.
 
         Bias is grouped by ``seasonality`` set via
         :py:class:`~climpred.options.set_options`. When wrapping
-        :py:class:`~xclim.sdba.adjustment.TrainAdjust` use ``group`` instead.
+        :py:class:`xclim.sdba.adjustment.TrainAdjust` use ``group`` instead.
 
         Args:
             alignment: which inits or verification times should be aligned?
@@ -2414,42 +2426,41 @@ class HindcastEnsemble(PredictionEnsemble):
                 - ``"basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
                 - ``"gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
                 - ``"normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-                - :py:class:`~xclim.sdba.adjustment.EmpiricalQuantileMapping`
-                - :py:class:`~xclim.sdba.adjustment.DetrendedQuantileMapping`
-                - :py:class:`~xclim.sdba.adjustment.PrincipalComponents`
-                - :py:class:`~xclim.sdba.adjustment.QuantileDeltaMapping`
-                - :py:class:`~xclim.sdba.adjustment.Scaling`
-                - :py:class:`~xclim.sdba.adjustment.LOCI`
+                - :py:class:`xclim.sdba.adjustment.EmpiricalQuantileMapping`
+                - :py:class:`xclim.sdba.adjustment.DetrendedQuantileMapping`
+                - :py:class:`xclim.sdba.adjustment.PrincipalComponents`
+                - :py:class:`xclim.sdba.adjustment.QuantileDeltaMapping`
+                - :py:class:`xclim.sdba.adjustment.Scaling`
+                - :py:class:`xclim.sdba.adjustment.LOCI`
 
             train_test_split: How to separate train period to calculate the bias
                 and test period to apply bias correction to? For a detailed
-                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:  # noqa: E501
+                description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
-                - ``"fair"```: no overlap between `train` and `test` (recommended).
-                    Set either `train_init` or `train_time`.
-                - ``"unfair"``: completely overlapping `train` and `test`
-                    (climpred default).
-                - ``"unfair-cv"```: overlapping `train` and `test` except for current
-                    `init`, which is `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
-                    (set `cv="LOO"`).
+                - ``"fair"```: no overlap between ``train`` and ``test`` (recommended).
+                  Set either ``train_init`` or ``train_time``.
+                - ``"unfair"``: completely overlapping ``train`` and ``test`` (default).
+                - ``"unfair-cv"```: overlapping ``train`` and ``test`` except for
+                  current `init`, which is
+                  `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                  (set ``cv="LOO"``).
 
             train_init: Define initializations for training
-                when ``alignment="same_inits/maximize"``.
-            train_time: Define time for training
-                when ``alignment="same_verif"``.
-            cv: Only relevant when `train_test_split="unfair-cv"`.
-                Defaults to ``False``.
+              when ``alignment="same_inits/maximize"``.
+            train_time: Define time for training when ``alignment="same_verif"``.
+            cv: Only relevant when ``train_test_split="unfair-cv"``.
+              Defaults to ``False``.
 
-                - True/"LOO": Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
-                - False: include all initializations in the calculation of bias, which
-                    is much faster and but yields similar skill with a large N of
-                    initializations.
+                - ``True/"LOO"``: Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+                - ``False``: include all initializations in the calculation of bias,
+                  which is much faster and but yields similar skill with a large N of
+                  initializations.
 
             **metric_kwargs: passed to ``xclim.sdba`` (including ``group``)
                 or ``XBias_Correction``
 
         Returns:
-            bias removed :py:class:`~climpred.classes.HindcastEnsemble`.
+            bias removed :py:class:`.HindcastEnsemble`.
 
         Example:
 
@@ -2591,7 +2602,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 comparison:                    e2o
                 dim:                           init
                 reference:                     []
-        """
+        """  # noqa: E501
         if train_test_split not in BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS:
             raise NotImplementedError(
                 f"train_test_split='{train_test_split}' not implemented. Please choose "

@@ -272,6 +272,8 @@ Statistics
     decorrelation_time
     dpp
     varweighted_mean_period
+    rm_poly
+    rm_trend
 
 Tutorial
 ~~~~~~~~

@@ -1154,9 +1154,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``comparison`` keyword argument.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the initialized prediction ensemble with itself,
-                see `comparisons </comparisons.html>`_.
+                see `comparisons <../comparisons.html>`_.
             dim: Dimension(s) over which to apply ``metric``.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1303,9 +1303,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ``comparison`` keyword argument.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the uninitialized against itself, see
-                `comparisons </comparisons.html>`_.
+                `comparisons <../comparisons.html>`_.
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1358,9 +1358,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         :py:func:`~climpred.reference.compute_persistence`.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the persistence against itself, see
-                `comparisons </comparisons.html>`_. Only valid if
+                `comparisons <../comparisons.html>`_. Only valid if
                 ``PerfectModel_persistence_from_initialized_lead_0=True``.
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
@@ -1431,9 +1431,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Verify a climatology forecast.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the climatology against itself, see
-                `comparisons </comparisons.html>`_
+                `comparisons <../comparisons.html>`_
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1488,9 +1488,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare the forecast against itself, see
-                `comparisons </comparisons.html>`_
+                `comparisons <../comparisons.html>`_
             dim: Dimension(s) over which to apply metric.
                 ``dim`` is passed on to xskillscore.{metric} and includes xskillscore's
                 ``member_dim``. ``dim`` should contain ``member`` when ``comparison``
@@ -1957,9 +1957,9 @@ class HindcastEnsemble(PredictionEnsemble):
             between the initialized ensemble and observations/verification data.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare to the observations/verification data.
-                See `comparisons </comparisons.html>`_.
+                See `comparisons <../comparisons.html>`_.
             dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic
@@ -2223,9 +2223,9 @@ class HindcastEnsemble(PredictionEnsemble):
         """Bootstrap with replacement according to Goddard et al. 2013.
 
         Args:
-            metric: Metric to apply for verification, see `metrics <metrics.html>`_
+            metric: Metric to apply for verification, see `metrics <../metrics.html>`_
             comparison: How to compare to the observations/verification data.
-                See `comparisons </comparisons.html>`_.
+                See `comparisons <../comparisons.html>`_.
             dim: Dimension(s) to apply metric over. ``dim`` is passed
                 on to xskillscore.{metric} and includes xskillscore's ``member_dim``.
                 ``dim`` should contain ``member`` when ``comparison`` is probabilistic

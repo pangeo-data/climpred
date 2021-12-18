@@ -15,9 +15,9 @@ control runs, reconstructions, uninitialized ensembles) along with your initiali
 prediction output.
 
 When computing lead-dependent skill scores, ``climpred`` handles all of the
-"init"-"lead"-"time"-matching for you, properly aligning the multiple time dimensions
-between the hindcast and verification datasets. We offer a suite of vectorized
-`deterministic <metrics.html#deterministic>`_
+``init+lead-valid_time``-matching for you, properly aligning the multiple
+``time`` dimensions between the hindcast and verification datasets.
+We offer a suite of vectorized `deterministic <metrics.html#deterministic>`_
 and `probabilistic <metrics.html#probabilistic>`_ metrics that can be applied to time
 series and grids. It's as easy as concatenating your initialized prediction output into
 one :py:class:`xarray.Dataset` and running the :py:meth:`.HindcastEnsemble.verify`

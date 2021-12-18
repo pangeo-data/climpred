@@ -6,7 +6,7 @@ Setting Up Your Dataset
 `xarray <https://xarray.pydata.org/en/stable/>`_ dimensions.
 This allows things to run more easily under-the-hood.
 
-:py:class:`.Prediction ensemble`s are expected at the minimum to contain dimensions
+:py:class:`.PredictionEnsemble` expects at the minimum to contain dimensions
 ``init`` and ``lead``.
 
 ``init`` is the initialization dimension, that relays the time
@@ -72,7 +72,7 @@ that ``climpred`` supports for them.
      - ``int``, ``float`` or :py:class:`pandas.Timedelta` up to ``weeks``
      - lead timestep after initialization ``init``
      - ``forecast_period``
-     - units (str) [``years``, ``seasons``, ``months``, ``weeks``, ``pentads``, ``days``, ``hours``, ``minutes``, ``seconds``] if not :py:class:`pandas.Timedelta`
+     - units (str) [``years``, ``seasons``, ``months``, ``weeks``, ``pentads``, ``days``, ``hours``, ``minutes``, ``seconds``] or :py:class:`pandas.Timedelta`
    * - ``init``
      -  :py:class:`pandas.DatetimeIndex` or :py:class:`xarray.CFTimeIndex`.
      - initialization as start date of experiment
@@ -85,8 +85,8 @@ that ``climpred`` supports for them.
      - None
 
 Probably the most challenging part is concatenating
-(:py:meth:`xarray.concat`) raw model output with dimension ``time`` of
+(:py:func:`xarray.concat`) raw model output with dimension ``time`` of
 multiple simulations to a multi-dimensional :py:class:`xarray.Dataset` containing
 dimensions ``init``, (``member``) and ``lead``, where ``time`` becomes
-"valid_time=init+lead". One way of doing it is
+``valid_time=init+lead``. One way of doing it is
 :py:func:`climpred.preprocessing.shared.load_hindcast`.

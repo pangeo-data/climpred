@@ -919,7 +919,15 @@ class PredictionEnsemble:
                 Defaults to ``OPTIONS["seasonality"]``.
 
         Examples:
-            >>> # example already without seasonal cycle
+            >>> HindcastEnsemble
+            <climpred.HindcastEnsemble>
+            Initialized Ensemble:
+                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+            Uninitialized:
+                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+            >>> # example already effectively without seasonal cycle
             >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
             Initialized Ensemble:

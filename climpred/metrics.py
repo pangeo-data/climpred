@@ -109,7 +109,7 @@ def _preprocess_dims(dim: dimType) -> List[str]:
 
 
 def _rename_dim(dim: dimType, forecast: xr.Dataset, verif: xr.Dataset) -> List[str]:
-    """Rename `dim` to `time` or `init` if forecast and verif dims require."""
+    """Rename ``dim`` to ``time`` or ``init`` if forecast and verif dims require."""
     dim = _preprocess_dims(dim)
     if "init" in dim and "time" in forecast.dims and "time" in verif.dims:
         dim = dim.copy()
@@ -2514,7 +2514,7 @@ def _brier_score(
     .. note::
         The Brier Score requires that the observation is binary, i.e., can be described
         as one (a "hit") or zero (a "miss"). So either provide a function with
-        with binary outcomes ``logical``in ``metric_kwargs``or create binary
+        with binary outcomes ``logical`` in ``metric_kwargs`` or create binary
         verifs and probability forecasts by `hindcast.map(logical).mean("member")`.
         This Brier Score is not the original formula given in :cite:t:`Brier1950`.
 

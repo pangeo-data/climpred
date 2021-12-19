@@ -55,7 +55,6 @@ extensions = [
 suppress_warnings = [
     "bibtex.duplicate_label",
     "bibtex.duplicate_citation",
-    "bibtex.duplicate_label",
 ]
 
 # bibtex options

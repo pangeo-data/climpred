@@ -134,8 +134,8 @@ Internals/Minor Fixes
 
 Documentation
 -------------
-- Refresh all docs with ``sphinx_book_theme``.
-  (:issue:`707`, :pr:`708`, :pr:`709`) `Aaron Spring`_.
+- Refresh all docs with ``sphinx_book_theme`` and ``myst_nb``.
+  (:issue:`707`, :pr:`708`, :pr:`709`, :pr:`710`) `Aaron Spring`_.
 
 
 climpred v2.1.6 (2021-08-31)

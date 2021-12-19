@@ -314,7 +314,7 @@ def _pearson_r(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.pearson_r`
+        metric_kwargs: see :py:func:`.xskillscore.pearson_r`
 
     Notes:
         +-----------------+-----------+
@@ -328,8 +328,8 @@ def _pearson_r(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.pearson_r`
-        * :py:func:`~.xskillscore.pearson_r_p_value`
+        * :py:func:`.xskillscore.pearson_r`
+        * :py:func:`.xskillscore.pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
@@ -394,7 +394,7 @@ def _pearson_r_p_value(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.pearson_r_p_value
+        metric_kwargs: see :py:func:`.xskillscore.pearson_r_p_value
 
     Notes:
         +-----------------+-----------+
@@ -408,8 +408,8 @@ def _pearson_r_p_value(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.pearson_r`
-        * :py:func:`~.xskillscore.pearson_r_p_value`
+        * :py:func:`.xskillscore.pearson_r`
+        * :py:func:`.xskillscore.pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r`
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
@@ -495,7 +495,7 @@ def _effective_sample_size(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.effective_sample_size`
+        metric_kwargs: see :py:func:`.xskillscore.effective_sample_size`
 
     Notes:
         +-----------------+-----------------+
@@ -592,7 +592,7 @@ def _pearson_r_eff_p_value(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.pearson_r_eff_p_value`
+        metric_kwargs: see :py:func:`.xskillscore.pearson_r_eff_p_value`
 
     Notes:
         +-----------------+-----------+
@@ -692,7 +692,7 @@ def _spearman_r(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.spearman_r`
+        metric_kwargs: see :py:func:`.xskillscore.spearman_r`
 
     Notes:
         +-----------------+-----------+
@@ -706,8 +706,8 @@ def _spearman_r(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.spearman_r`
-        * :py:func:`~.xskillscore.spearman_r_p_value`
+        * :py:func:`.xskillscore.spearman_r`
+        * :py:func:`.xskillscore.spearman_r_p_value`
         * :py:func:`~climpred.metrics._spearman_r_p_value`
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
@@ -772,7 +772,7 @@ def _spearman_r_p_value(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.spearman_r_p_value`
+        metric_kwargs: see :py:func:`.xskillscore.spearman_r_p_value`
 
     Notes:
         +-----------------+-----------+
@@ -786,8 +786,8 @@ def _spearman_r_p_value(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.spearman_r`
-        * :py:func:`~.xskillscore.spearman_r_p_value`
+        * :py:func:`.xskillscore.spearman_r`
+        * :py:func:`.xskillscore.spearman_r_p_value`
         * :py:func:`~climpred.metrics._spearman_r`
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
@@ -876,7 +876,7 @@ def _spearman_r_eff_p_value(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.spearman_r_eff_p_value`
+        metric_kwargs: see :py:func:`.xskillscore.spearman_r_eff_p_value`
 
     Notes:
         +-----------------+-----------+
@@ -971,7 +971,7 @@ def _mse(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.mse`
+        metric_kwargs: see :py:func:`.xskillscore.mse`
 
     Notes:
         +-----------------+-----------+
@@ -985,7 +985,7 @@ def _mse(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.mse`
+        * :py:func:`.xskillscore.mse`
 
     References:
         :cite:t:`Jolliffe2011`
@@ -1116,7 +1116,7 @@ def _rmse(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.rmse`
+        metric_kwargs: see :py:func:`.xskillscore.rmse`
 
     Notes:
         +-----------------+-----------+
@@ -1130,7 +1130,7 @@ def _rmse(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.rmse`
+        * :py:func:`.xskillscore.rmse`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1189,7 +1189,7 @@ def _mae(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.mae`
+        metric_kwargs: see :py:func:`.xskillscore.mae`
 
     Notes:
         +-----------------+-----------+
@@ -1203,7 +1203,7 @@ def _mae(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.mae`
+        * :py:func:`.xskillscore.mae`
 
     References:
         :cite:t:`Jolliffe2011`
@@ -1264,7 +1264,7 @@ def _median_absolute_error(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.median_absolute_error`
+        metric_kwargs: see :py:func:`.xskillscore.median_absolute_error`
 
     Notes:
         +-----------------+-----------+
@@ -1278,7 +1278,7 @@ def _median_absolute_error(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.median_absolute_error`
+        * :py:func:`.xskillscore.median_absolute_error`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1356,7 +1356,7 @@ def _nmse(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~.xskillscore.mse`
+        metric_kwargs: see :py:func:`.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -1459,7 +1459,7 @@ def _nmae(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~.xskillscore.mae`
+        metric_kwargs: see :py:func:`.xskillscore.mae`
 
     Notes:
         +----------------------------+-----------+
@@ -1564,7 +1564,7 @@ def _nrmse(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~.xskillscore.rmse`
+        metric_kwargs: see :py:func:`.xskillscore.rmse`
 
     Notes:
         +----------------------------+-----------+
@@ -1668,7 +1668,7 @@ def _msess(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~.xskillscore.mse`
+        metric_kwargs: see :py:func:`.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -1761,7 +1761,7 @@ def _mape(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.mape`
+        metric_kwargs: see :py:func:`.xskillscore.mape`
 
     Notes:
         +-----------------+-----------+
@@ -1775,7 +1775,7 @@ def _mape(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.mape`
+        * :py:func:`.xskillscore.mape`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1833,7 +1833,7 @@ def _smape(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.smape`
+        metric_kwargs: see :py:func:`.xskillscore.smape`
 
     Notes:
         +-----------------+-----------+
@@ -1847,7 +1847,7 @@ def _smape(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.smape`
+        * :py:func:`.xskillscore.smape`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1923,7 +1923,7 @@ def _uacc(
         comparison: Name comparison needed for normalization factor ``fac``, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~.xskillscore.mse`
+        metric_kwargs: see :py:func:`.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -2254,7 +2254,7 @@ def _conditional_bias(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.pearson_r`
+        metric_kwargs: see :py:func:`.xskillscore.pearson_r`
             and :py:meth:`~.xarray.Dataset.std`
 
     Notes:
@@ -2334,7 +2334,7 @@ def _bias_slope(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.pearson_r` and
+        metric_kwargs: see :py:func:`.xskillscore.pearson_r` and
             :py:meth:`~.xarray.Dataset.std`
 
     Notes:
@@ -2416,7 +2416,7 @@ def _msess_murphy(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~.xskillscore.pearson_r`,
+        metric_kwargs: see :py:func:`.xskillscore.pearson_r`,
             :py:meth:`~xarray.Dataset.mean` and :py:meth:`~.xarray.Dataset.std`
 
     Notes:
@@ -2532,7 +2532,7 @@ def _brier_score(
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean("member")`` to get forecasts and
                 verification data in interval [0,1].
-            see :py:func:`~.xskillscore.brier_score`
+            see :py:func:`.xskillscore.brier_score`
 
     Notes:
         +-----------------+-----------+
@@ -2551,8 +2551,8 @@ def _brier_score(
         * :cite:t:`Brier1950`
 
     See also:
-        * :py:func:`~properscoring.brier_score`
-        * :py:func:`~.xskillscore.brier_score`
+        * :py:func:`.properscoring.brier_score`
+        * :py:func:`.xskillscore.brier_score`
 
     Example:
         Define a boolean/logical: Function for binary scoring:
@@ -2691,11 +2691,11 @@ def _threshold_brier_score(
         forecast: Forecast with ``member`` dim.
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to `xskillscore` and averaged.
-        threshold (int, float, xr.object): Threshold to check exceedance, see
-            properscoring.threshold_brier_score.
+            `member`. Other dimensions are passed to ``xskillscore`` and averaged.
+        threshold (int, float, xarray.Dataset, xr.DataArray): Threshold to check
+            exceedance, see properscoring.threshold_brier_score.
         metric_kwargs: optional, see
-            :py:func:`~.xskillscore.threshold_brier_score`
+            :py:func:`.xskillscore.threshold_brier_score`
 
     Notes:
         +-----------------+-----------+
@@ -2712,8 +2712,8 @@ def _threshold_brier_score(
         * :cite:t:`Brier1950`
 
     See also:
-        * :py:func:`~properscoring.threshold_brier_score`
-        * :py:func:`~.xskillscore.threshold_brier_score`
+        * :py:func:`.properscoring.threshold_brier_score`
+        * :py:func:`.xskillscore.threshold_brier_score`
 
     Example:
 
@@ -2830,8 +2830,8 @@ def _crps(
         forecast: Forecast with `member` dim.
         verif: Verification data without `member` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs: optional, see :py:func:`~.xskillscore.crps_ensemble`
+            `member`. Other dimensions are passed to ``xskillscore`` and averaged.
+        metric_kwargs: optional, see :py:func:`.xskillscore.crps_ensemble`
 
     Notes:
         +-----------------+-----------+
@@ -2849,8 +2849,8 @@ def _crps(
         * https://www.lokad.com/continuous-ranked-probability-score
 
     See also:
-        * :py:func:`~properscoring.crps_ensemble`
-        * :py:func:`~.xskillscore.crps_ensemble`
+        * :py:func:`.properscoring.crps_ensemble`
+        * :py:func:`.xskillscore.crps_ensemble`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -2916,11 +2916,11 @@ def _crps_quadrature(
         forecast: Forecast with ``member`` dim.
         cdf_or_dist (callable or scipy.stats.distribution): Function which returns the
             cumulative density of the forecast distribution at value x.
-        metric_kwargs: see :py:func:`~.xskillscore.crps_quadrature`
+        metric_kwargs: see :py:func:`.xskillscore.crps_quadrature`
 
     See also:
-        * :py:func:`~properscoring.crps_quadrature`
-        * :py:func:`~.xskillscore.crps_quadrature`
+        * :py:func:`.properscoring.crps_quadrature`
+        * :py:func:`.xskillscore.crps_quadrature`
     """
     return crps_quadrature(verification, cdf_or_dist, dim=dim, **metric_kwargs)
 
@@ -2944,7 +2944,7 @@ def _crpss(
         When assuming a Gaussian distribution of forecasts, use default
         ``gaussian=True``. If not gaussian, you may specify the distribution type,
         ``xmin/xmax/tolerance`` for integration
-        (see :py:func:`~.xskillscore.crps_quadrature`).
+        (see :py:func:`.xskillscore.crps_quadrature`).
 
     Args:
         forecast: Forecast with ``member`` dim.
@@ -2954,9 +2954,9 @@ def _crpss(
         metric_kwargs: optional
             gaussian (bool, optional): If ``True``, assume Gaussian distribution for
                 baseline skill. Defaults to ``True``.
-            see :py:func:`~.xskillscore.crps_ensemble`,
-                :py:func:`~.xskillscore.crps_gaussian` and
-                :py:func:`~.xskillscore.crps_quadrature`
+            see :py:func:`.xskillscore.crps_ensemble`,
+                :py:func:`.xskillscore.crps_gaussian` and
+                :py:func:`.xskillscore.crps_quadrature`
 
     Notes:
         +----------------------------+-----------+
@@ -3021,8 +3021,8 @@ def _crpss(
             tos      (lead, init, member) float64 0.9931 0.9932 0.9932 ... 0.9947 0.9947
 
     See also:
-        * :py:func:`~properscoring.crps_ensemble`
-        * :py:func:`~.xskillscore.crps_ensemble`
+        * :py:func:`.properscoring.crps_ensemble`
+        * :py:func:`.xskillscore.crps_ensemble`
     """
     if dim is None:
         dim = list(verif.dims)
@@ -3091,9 +3091,9 @@ def _crpss_es(
         forecast: Forecast with ``member`` dim.
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs: see :py:func:`~.xskillscore.crps_ensemble`
-        and :py:func:`~.xskillscore.mse`
+            `member`. Other dimensions are passed to ``xskillscore`` and averaged.
+        metric_kwargs: see :py:func:`.xskillscore.crps_ensemble`
+        and :py:func:`.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -3221,7 +3221,7 @@ def _discrimination(
         +-----------------+------------------------+
 
     See also:
-        * :py:func:`~.xskillscore.discrimination`
+        * :py:func:`.xskillscore.discrimination`
 
     Example:
         Define a boolean/logical: Function for binary scoring:
@@ -3350,7 +3350,7 @@ def _reliability(
         +-----------------+-------------------+
 
     See also:
-        * :py:func:`~.xskillscore.reliability`
+        * :py:func:`.xskillscore.reliability`
 
     Example:
         Define a boolean/logical: Function for binary scoring:
@@ -3495,7 +3495,7 @@ def _rank_histogram(
 
 
     See also:
-        * :py:func:`~.xskillscore.rank_histogram`
+        * :py:func:`.xskillscore.rank_histogram`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -3575,7 +3575,7 @@ def _rps(
         forecast: Forecasts.
         verif: Verification.
         dim: Dimensions to aggregate.
-        **metric_kwargs, see :py:func:`~.xskillscore.rps`
+        **metric_kwargs, see :py:func:`.xskillscore.rps`
 
     .. note::
         If ``category_edges`` is xr.Dataset or tuple of xr.Datasets, climpred will
@@ -3595,7 +3595,7 @@ def _rps(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.rps`
+        * :py:func:`.xskillscore.rps`
 
     Example:
         >>> category_edges = np.array([-0.5, 0.0, 0.5, 1.0])
@@ -3917,7 +3917,7 @@ def _roc(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~.xskillscore.roc`
+        * :py:func:`.xskillscore.roc`
         * http://www.cawcr.gov.au/projects/verification/
         * https://xskillscore.readthedocs.io/en/stable/api.html#roc # noqa
 

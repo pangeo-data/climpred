@@ -202,6 +202,7 @@ repository or installing directly from GitHub:
 * :doc:`contributing`
 * :doc:`contributors`
 * :doc:`helpful-links`
+* :doc:`literature`
 * :doc:`publications`
 * :doc:`related-packages`
 * :doc:`release_procedure`
@@ -217,6 +218,7 @@ repository or installing directly from GitHub:
     contributing
     contributors
     helpful-links
+    literature
     publications
     related-packages
     release_procedure

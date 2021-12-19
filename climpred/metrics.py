@@ -2688,7 +2688,7 @@ def _threshold_brier_score(
         forecast: Forecast with ``member`` dim.
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to ``xskillscore`` and averaged.
+            ``member``. Other dimensions are passed to ``xskillscore`` and averaged.
         threshold (int, float, xarray.Dataset, xr.DataArray): Threshold to check
             exceedance, see :py:func:`.xskillscore.threshold_brier_score`.
         metric_kwargs: optional, see :py:func:`.xskillscore.threshold_brier_score`
@@ -2825,7 +2825,7 @@ def _crps(
         forecast: Forecast with ``member`` dim.
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to ``xskillscore`` and averaged.
+            ``member``. Other dimensions are passed to ``xskillscore`` and averaged.
         metric_kwargs: optional, see :py:func:`.xskillscore.crps_ensemble`
 
     Notes:
@@ -3082,7 +3082,7 @@ def _crpss_es(
         forecast: Forecast with ``member`` dim.
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to ``xskillscore`` and averaged.
+            ``member``. Other dimensions are passed to ``xskillscore`` and averaged.
         metric_kwargs: see :py:func:`.xskillscore.crps_ensemble`
             and :py:func:`.xskillscore.mse`
 

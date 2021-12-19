@@ -23,7 +23,7 @@ Feature requests and feedback
 We are eager to hear about your requests for new features and any suggestions
 about the API, infrastructure, and so on. Feel free to submit these as
 `issues <https://github.com/pangeo-data/climpred/issues/new>`__ with the label
-"feature request."
+``"feature request"``.
 
 Please make sure to explain in detail how the feature should work and keep the
 scope as narrow as possible. This will make it easier to implement in small

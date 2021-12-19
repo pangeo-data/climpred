@@ -515,7 +515,7 @@ Finally, compute skill based on your own metric::
 
 Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see
-:ref:`contributing`.
+`contributing <contributing.html>`_.
 
 **********
 References

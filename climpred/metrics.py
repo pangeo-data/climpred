@@ -2521,13 +2521,13 @@ def _brier_score(
 
     Args:
         forecast: Raw forecasts with ``member`` dimension if ``logical``
-            provided in `metric_kwargs`. Probability forecasts in [0,1] if ``logical``is
-            not provided.
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if ``logical``
+            is not provided.
         verif: Verification data without ``member`` dim. Raw verification if
-            ``logical``provided, else binary verification.
+            ``logical`` provided, else binary verification.
         dim: Dimensions to aggregate. Requires ``member`` if ``logical``
             provided in ``metric_kwargs``to create probability forecasts. If ``logical``
-            not provided in ``metric_kwargs``, should not include ```member``.
+            not provided in ``metric_kwargs``, should not include ``member``.
         metric_kwargs: optional
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean("member")`` to get forecasts and
@@ -3186,28 +3186,28 @@ def _discrimination(
     and has not occurred.
 
     Args:
-        forecast: Raw forecasts with ``member`` dimension if `logical`
-            provided in `metric_kwargs`. Probability forecasts in [0,1] if ``logical``is
+        forecast: Raw forecasts with ``member`` dimension if ``logical``
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if ``logical`` is
             not provided.
         verif: Verification data without ``member`` dim. Raw verification if
-            ``logical``provided, else binary verification.
-        dim: Dimensions to aggregate. Requires ``member``if `logical`
-            provided in ``metric_kwargs``to create probability forecasts. If `logical`
-            not provided in `metric_kwargs`, should not include `member`. At least one
-            dimension other than ``member``is required.
+            ``logical`` provided, else binary verification.
+        dim: Dimensions to aggregate. Requires ``member`` if `logical`
+            provided in ``metric_kwargs``to create probability forecasts. If ``logical``
+            not provided in ``metric_kwargs``, should not include ``member``.
+            At least one dimension other than ``member``is required.
         logical: Function with bool result to be applied to
             verification data and forecasts and then ``mean("member")`` to get
-            forecasts and verification data in interval [0,1]. Passed via ``metric_kwargs``.
+            forecasts and verification data in interval [0,1].
+            Passed via ``metric_kwargs``.
         probability_bin_edges (array_like, optional): Probability bin edges used to
             compute the histograms. Bins include the left most edge, but not the
-            right. Passed via ``metric_kwargs``. Defaults to 6 equally spaced edges between
-            0 and 1+1e-8.
+            right. Passed via ``metric_kwargs``.
+            Defaults to 6 equally spaced edges between 0 and 1+1e-8.
 
 
     Returns:
-        Discrimination with added dimension "event" containing the
-        histograms of forecast probabilities when the event was observed and not
-        observed
+        Discrimination with added dimension ``event`` containing the histograms of
+        forecast probabilities when the event was observed and not observed.
 
     Notes:
         +-----------------+------------------------+
@@ -3321,10 +3321,10 @@ def _reliability(
             provided in ``metric_kwargs``. Probability forecasts in [0,1] if
             ``logical`` is not provided.
         verif: Verification data without ``member`` dim. Raw verification if
-            ``logical``provided, else binary verification.
-        dim: Dimensions to aggregate. Requires ``member``if ``logical``
+            ``logical`` provided, else binary verification.
+        dim: Dimensions to aggregate. Requires ``member`` if ``logical``
             provided in ``metric_kwargs``to create probability forecasts. If ``logical``
-            not provided in `metric_kwargs`, should not include `member`.
+            not provided in ``metric_kwargs``, should not include ``member``.
         logical: Function with bool result to be applied to
             verification data and forecasts and then ``mean("member")`` to get
             forecasts and verification data in interval [0,1].
@@ -3473,7 +3473,7 @@ def _rank_histogram(
     Args:
         forecast: Raw forecasts with ``member`` dimension.
         verif: Verification data without ``member`` dim.
-        dim: Dimensions to aggregate. Requires to contain ``member``and at
+        dim: Dimensions to aggregate. Requires to contain ``member`` and at
             least one additional dimension.
 
     Notes:

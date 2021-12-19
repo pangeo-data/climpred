@@ -145,7 +145,8 @@ jobs:
           python-version: 3.8
       - name: Set up conda environment
         run: |
-          mamba env update -f ci/requirements/docs_notebooks.yml
+          mamba env update -f ci/requirements/docs.yml
+          pip install nbstripout
       - name: Conda info
         run: conda info
       - name: Conda list
@@ -153,6 +154,6 @@ jobs:
       - name: Test notebooks in docs
         run: |
           pushd docs
-          nbstripout source/*.ipynb source/examples/decadal/*.ipynb
+          nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/monseas/*.ipynb examples/subseasonal/*ly-subx-example.html
           make -j4 html
           popd

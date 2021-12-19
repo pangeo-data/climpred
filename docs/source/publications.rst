@@ -9,7 +9,7 @@ help build the community. Please cite :cite:p:`Brady2021`.
 Feel free to open a `Pull Request <contributing.html>`_ to add your publication to the
 list!
 
-:cite:empty:`Brady2020,Krumhardt2020,Spring2020,Brady2021,Spring2021b`
+:cite:empty:`Brady2020,Krumhardt2020,Spring2020,Brady2021,Spring2021a,Spring2021b`
 
 2021
 ####

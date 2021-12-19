@@ -52,7 +52,6 @@ extras_require["test"] = [
 ]
 extras_require["docs"] = extras_require["complete"] + [
     "myst_nb",
-    "nbstripout",
     "sphinx",
     "sphinxcontrib-napoleon",
     "sphinx_rtd_theme",

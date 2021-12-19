@@ -146,7 +146,6 @@ jobs:
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/docs.yml
-          pip install nbstripout
       - name: Conda info
         run: conda info
       - name: Conda list

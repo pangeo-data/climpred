@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.8
+  - python=>3.7
   - matplotlib-base
   - netcdf4
   - toolz
@@ -13,6 +13,7 @@ dependencies:
   # docs
   - jupyterlab
   - sphinx
+  - nbstripout
   - myst-nb
   - sphinxcontrib-napoleon
   - sphinx-copybutton

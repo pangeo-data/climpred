@@ -52,6 +52,12 @@ extensions = [
     "sphinxcontrib.bibtex",
 ]
 
+suppress_warnings = [
+    "bibtex.duplicate_label",
+    "bibtex.duplicate_citation",
+    "bibtex.duplicate_label",
+]
+
 # bibtex options
 bibtex_bibfiles = ["climpred.bib"]
 bibtex_reference_style = "author_year"
@@ -149,8 +155,6 @@ intersphinx_mapping = {
 
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
-# nbsphinx_allow_errors = True
-
 # nbsphinx_kernel_name = "climpred-docs"  # doesnt work
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600

@@ -141,7 +141,7 @@ jobs:
           auto-update-conda: false
           channels: conda-forge
           mamba-version: '*'
-          activate-environment: climpred-docs-notebooks
+          activate-environment: climpred-docs
           python-version: 3.8
       - name: Set up conda environment
         run: |

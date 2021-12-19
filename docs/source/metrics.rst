@@ -517,8 +517,9 @@ Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see
 :ref:`contributing`.
 
+**********
 References
-##########
+**********
 
 .. bibliography::
   :filter: docname in docnames

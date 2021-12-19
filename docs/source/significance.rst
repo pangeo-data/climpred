@@ -67,8 +67,8 @@ Sign test
 #########
 
 Use DelSole's sign test relying on the statistics of a random walk to decide whether
-one forecast is significantly better than another forecast :cite:p:`DelSole2016`,
-see :py:func:`xskillscore.sign_test` and
+one forecast is significantly better than another forecast
+:cite:p:`Benjamini1994,DelSole2016`, see :py:func:`xskillscore.sign_test` and
 `sign test example <examples/decadal/significance.html#sign-test>`__.
 
 References

@@ -1720,15 +1720,15 @@ def _msess(
       * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
         North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
         (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-        Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
+      * Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
         Their Relationships to the Correlation Coefficient.” Monthly Weather
         Review 116, no. 12 (December 1, 1988): 2417–24.
         https://doi.org/10/fc7mxd.
-        Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
+      * Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
         Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
         Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
         4463–72. https://doi.org/10/d2qf62.
-        Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
+      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
         Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
         Prediction: Potential versus Operational Seasonal Forecast Skill.
         Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
@@ -1981,12 +1981,12 @@ def _uacc(
         +----------------------------+-----------+
 
     References:
-          Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
+        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
           Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
           Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
           Forecast Skill." Climate Dynamics, June 9, 2018.
           https://doi.org/10/gd7hfq.
-          Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their
+        * Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their
           Relationships to the Correlation Coefficient. Monthly Weather Review,
           116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
 

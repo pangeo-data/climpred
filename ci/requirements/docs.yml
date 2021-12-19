@@ -27,3 +27,4 @@ dependencies:
     - -e ../..
     - nb_black
     - sphinx_book_theme
+    - sphinxcontrib-bibtex

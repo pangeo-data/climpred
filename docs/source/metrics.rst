@@ -42,7 +42,7 @@ Deterministic
 Deterministic metrics assess the forecast as a definite prediction of the future, rather
 than in terms of probabilities. Another way to look at deterministic metrics is that
 they are a special case of probabilistic metrics where a value of one is assigned to
-one category and zero to all others [Jolliffe2011_].
+one category and zero to all others :cite:p:`Jolliffe2011`.
 
 Correlation Metrics
 ===================
@@ -293,7 +293,7 @@ Unbiased Anomaly Correlation Coefficient (uACC)
 Murphy Decomposition Metrics
 ============================
 
-Metrics derived in Murphy1988_ which decompose the ``MSESS`` into a correlation term,
+Metrics derived in :cite:p:`Murphy1988`_ which decompose the ``MSESS`` into a correlation term,
 a conditional bias term, and an unconditional bias term. See
 https://www-miklip.dkrz.de/about/murcss/ for a walk through of the decomposition.
 
@@ -355,7 +355,7 @@ Probabilistic
 
 Probabilistic metrics include the spread of the ensemble simulations in their
 calculations and assign a probability value between 0 and 1 to their forecasts
-[Jolliffe2011_].
+:cite:p:`Jolliffe2011`.
 
 Continuous Ranked Probability Score (CRPS)
 ==========================================
@@ -517,10 +517,8 @@ Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see
 :ref:`contributing`.
 
-**********
 References
-**********
+##########
 
-.. [Jolliffe2011] Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd, Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3. URL: http://doi.wiley.com/10.1002/9781119960003.
-
-.. [Murphy1988] Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their Relationships to the Correlation Coefficient. Monthly Weather Review, 116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
+.. bibliography::
+  :filter: docname in docnames

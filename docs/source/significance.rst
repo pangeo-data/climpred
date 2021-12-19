@@ -37,7 +37,7 @@ Bootstrapping with replacement
 Testing statistical significance through bootstrapping is commonly used in the field of
 climate prediction. Bootstrapping relies on
 resampling the underlying data with replacement for a large number of ``iterations``, as
-proposed by the decadal prediction framework [Goddard2013_, Boer2016_].
+proposed by the decadal prediction framework :cite:p:`Goddard2013,Boer2016`.
 This means that the ``initialized`` ensemble is resampled with replacement along a
 dimension (``init`` or ``member``) and then that resampled ensemble is verified against
 the observations. This leads to a distribution of ``initialized`` skill. Further, a
@@ -59,39 +59,20 @@ Field significance
 ##################
 
 Please use :py:func:`esmtools.testing.multipletests` to control the false discovery
-rate (FDR) in geospatial data from the above obtained p-values [Wilks2016_]. See the
-`FDR example <examples/decadal/significance.html#Field-significance>`__.
+rate (FDR) in geospatial data from the above obtained p-values :cite:p:`Wilks2016`.
+See the `FDR example <examples/decadal/significance.html#Field-significance>`__.
 
 
 Sign test
 #########
 
 Use DelSole's sign test relying on the statistics of a random walk to decide whether
-one forecast is significantly better than another forecast [DelSole2016_], see
-:py:func:`xskillscore.sign_test` and
+one forecast is significantly better than another forecast :cite:p:`DelSole2016`,
+see :py:func:`xskillscore.sign_test` and
 `sign test example <examples/decadal/significance.html#sign-test>`__.
-
 
 References
 ##########
 
-.. [Boer2016] Boer, G. J., Smith, D. M., Cassou, C., Doblas-Reyes, F.,
-    Danabasoglu, G., Kirtman, B., Kushnir, Y., Kimoto, M., Meehl, G. A., Msadek, R.,
-    Mueller, W. A., Taylor, K. E., Zwiers, F., Rixen, M., Ruprich-Robert, Y., and
-    Eade, R.: The Decadal Climate Prediction Project (DCPP) contribution to CMIP6,
-    Geosci. Model Dev., 9, 3751-3777, https://doi.org/10.5194/gmd-9-3751-2016, 2016.
-
-.. [Goddard2013]  Goddard, L., A. Kumar, A. Solomon, D. Smith, G. Boer, P. Gonzalez, V.
-    Kharin, et al. “A Verification Framework for Interannual-to-Decadal Predictions
-    Experiments.” Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-    https://doi.org/10/f4jjvf.
-
-
-.. [Wilks2016]  Wilks, D. S. “‘The Stippling Shows Statistically Significant Grid
-    Points’: How Research Results Are Routinely Overstated and Overinterpreted, and
-    What to Do about It.” Bulletin of the American Meteorological Society 97, no. 12
-    (March 9, 2016): 2263–73. https://doi.org/10/f9mvth.
-
-
-.. [DelSole2016]  DelSole, T., & Tippett, M. K. (2016). Forecast Comparison Based on
-    Random Walks. Monthly Weather Review, 144(2), 615–626. https://doi.org/10/f782pf.
+.. bibliography::
+  :filter: docname in docnames

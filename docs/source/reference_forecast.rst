@@ -8,20 +8,20 @@ forecasts, and we are open to adding other reference forecasts. Consider opening
 `Pull Request <contributing.html>`_ for additional references.
 
 **Persistence Forecast**: Whatever is observed at the time of initialization is
-forecasted to persist into the forecast period [Jolliffe2012_].
+forecasted to persist into the forecast period :cite:p:`Jolliffe2011`.
 You can compute this by passing ``reference="persistence"`` into
 :py:meth:`.HindcastEnsemble.verify`, :py:meth:`.HindcastEnsemble.bootstrap`,
 :py:meth:`.PerfectModelEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.bootstrap`.
 
 **Damped Persistence Forecast**: (*Not Implemented*) The amplitudes of the anomalies
-reduce in time exponentially at a time scale of the local autocorrelation [Yuan2016_].
+reduce in time exponentially at a time scale of the local autocorrelation :cite:p:`Yuan2016`.
 
 .. math::
 
     v_{dp}(t) = v(0)e^{-\alpha t}
 
 **Climatology**: The average values at the temporal forecast resolution (e.g., annual,
-monthly, daily) over some long period, which is usually 30 years [Jolliffe2012_].
+monthly, daily) over some long period, which is usually 30 years :cite:p:`Jolliffe2011`.
 You can compute this by passing ``reference="climatology"`` into
 :py:meth:`.HindcastEnsemble.verify`, :py:meth:`.HindcastEnsemble.bootstrap`,
 :py:meth:`.PerfectModelEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.bootstrap`.
@@ -53,13 +53,11 @@ resamples the ``initialized`` from :py:class:`.HindcastEnsemble` or
 **Random Mechanism**: (*Not Implemented*) A probability distribution is assigned to the
 possible range of the variable being forecasted, and a sequence of forecasts is
 produced by taking a sequence of independent values from that distribution
-[Jolliffe2012_]. This would be similar to computing an ``uninitialized`` forecast.
+:cite:p:`Jolliffe2011`. This would be similar to computing an ``uninitialized``
+forecast.
 
 References
 ##########
 
-.. [Jolliffe2012] Jolliffe, Ian T., and David B. Stephenson, eds. Forecast verification:
-   a practitioner's guide in atmospheric science. John Wiley & Sons, 2012.
-
-.. [Yuan2016] Yuan, Xiaojun, et al. "Arctic sea ice seasonal prediction by a linear
-   Markov model." Journal of Climate 29.22 (2016): 8151-8173.
+.. bibliography::
+  :filter: docname in docnames

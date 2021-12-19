@@ -49,7 +49,14 @@ extensions = [
     "sphinx_copybutton",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
+    "sphinxcontrib.bibtex",
 ]
+
+# bibtex options
+bibtex_bibfiles = ["climpred.bib"]
+bibtex_reference_style = "author_year"
+bibtex_default_style = "plain"
+
 
 # autosummary_generate = True
 # autodoc_typehints = "none"

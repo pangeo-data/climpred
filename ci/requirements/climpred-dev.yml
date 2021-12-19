@@ -57,3 +57,4 @@ dependencies:
       - pytest-lazy-fixture
       - nb_black  # notebook linting
       - sphinx_book_theme
+      - sphinxcontrib-bibtex

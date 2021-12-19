@@ -4,7 +4,7 @@ Publications Using ``climpred``
 
 Below is a list of publications that have made use of ``climpred`` in their analysis.
 We appreciate a reference to ``climpred``, e.g., in your acknowledgements section to
-help build the community. Please also cite:
+help build the community. Please cite:
 
 * Brady, R. X., & Spring, A. (2021). "climpred: Verification of weather and climate
   forecasts". *Journal of Open Source Software*, 6(59), 2781. https://doi.org/10/gh9646

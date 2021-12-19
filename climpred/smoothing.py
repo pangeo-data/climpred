@@ -59,7 +59,7 @@ def spatial_smoothing_xesmf(
     """
     if xe is None:
         raise ImportError(
-            "xesmf is not installed; see"
+            "xesmf is not installed; see "
             "https://pangeo-xesmf.readthedocs.io/en/latest/installation.html"
         )
 

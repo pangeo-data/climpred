@@ -51,13 +51,15 @@ extras_require["test"] = [
     "netcdf4",
 ]
 extras_require["docs"] = extras_require["complete"] + [
-    "importlib_metadata",
-    "nbsphinx",
+    "myst_nb",
     "nbstripout",
     "sphinx",
     "sphinxcontrib-napoleon",
     "sphinx_rtd_theme",
     "sphinx-copybutton",
+    "sphinxcontrib-bibtex",
+    "sphinx_book_theme",
+    "nb_black",
 ]
 
 setup(

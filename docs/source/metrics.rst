@@ -293,7 +293,7 @@ Unbiased Anomaly Correlation Coefficient (uACC)
 Murphy Decomposition Metrics
 ============================
 
-Metrics derived in :cite:p:`Murphy1988`_ which decompose the ``MSESS`` into a correlation term,
+Metrics derived in :cite:p:`Murphy1988` which decompose the ``MSESS`` into a correlation term,
 a conditional bias term, and an unconditional bias term. See
 https://www-miklip.dkrz.de/about/murcss/ for a walk through of the decomposition.
 

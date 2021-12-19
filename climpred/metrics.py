@@ -75,9 +75,9 @@ def _get_norm_factor(comparison: Any) -> int:  # Comparison instead of Any
         [...
 
     References:
-        * Séférian, Roland, Sarah Berthet, and Matthieu Chevallier. “Assessing
-          the Decadal Predictability of Land and Ocean Carbon Uptake.”
-          Geophysical Research Letters, March 15, 2018. https://doi.org/10/gdb424.
+        * :cite:t:`Griffies1997`
+        * :cite:t:`Collins2002`
+        * :cite:t:`Seferian2018`
     """
     if comparison.name in ["m2e", "e2c", "e2o"]:
         fac = 1
@@ -156,7 +156,7 @@ def _extract_and_apply_logical(
         logical = metric_kwargs.pop("logical")
         if not callable(logical):
             raise ValueError(f"`logical` must be `callable`, found {type(logical)}")
-        # apply logical function to get forecast probability
+        # apply logical: Function to get forecast probability
         forecast = logical(forecast)  # mean(member) later
         forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
         verif = logical(verif).astype("int")  # binary outcome
@@ -306,14 +306,15 @@ def _pearson_r(
     of the forecast and verification data over the experimental period, respectively.
 
     .. note::
-        Use metric ``pearson_r_p_value`` or ``pearson_r_eff_p_value`` to get the
+        Use metric :py:func:`~climpred.metrics.pearson_r_p_value` or
+        :py:func:`~climpred.metrics.pearson_r_eff_p_value` to get the
         corresponding p value.
 
     Args:
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.pearson_r`
+        metric_kwargs: see :py:func:`~.xskillscore.pearson_r`
 
     Notes:
         +-----------------+-----------+
@@ -327,8 +328,8 @@ def _pearson_r(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.pearson_r`
-        * :py:func:`~xskillscore.pearson_r_p_value`
+        * :py:func:`~.xskillscore.pearson_r`
+        * :py:func:`~.xskillscore.pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
@@ -385,15 +386,15 @@ def _pearson_r_p_value(
     """Probability that forecast and verification data are linearly uncorrelated.
 
     Two-tailed p value associated with the Pearson product-moment correlation
-    coefficient (``pearson_r``), assuming that all samples are independent. Use
-    ``pearson_r_eff_p_value`` to account for autocorrelation in the forecast
-    and verification data.
+    coefficient :py:func:`~climpred.metrics._pearson_r`, assuming that all samples are
+    independent. Use :py:func:`~climpred.metrics._pearson_r_eff_p_value` to account for
+    autocorrelation in the forecast and verification data.
 
     Args:
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see xskillscore.pearson_r_p_value
+        metric_kwargs: see :py:func:`~.xskillscore.pearson_r_p_value
 
     Notes:
         +-----------------+-----------+
@@ -407,8 +408,8 @@ def _pearson_r_p_value(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.pearson_r`
-        * :py:func:`~xskillscore.pearson_r_p_value`
+        * :py:func:`~.xskillscore.pearson_r`
+        * :py:func:`~.xskillscore.pearson_r_p_value`
         * :py:func:`~climpred.metrics._pearson_r`
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
@@ -480,7 +481,8 @@ def _effective_sample_size(
     size which raises the correlation coefficient for a given p value.
 
     The effective sample size is used in computing the effective p value. See
-    ``pearson_r_eff_p_value`` and ``spearman_r_eff_p_value``.
+    :py:func:`~climpred.metrics._pearson_r_eff_p_value` and
+    :py:func:`~climpred.metrics._spearman_r_eff_p_value`.
 
     .. math::
         N_{eff} = N\left( \frac{1 -
@@ -493,7 +495,7 @@ def _effective_sample_size(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.effective_sample_size`
+        metric_kwargs: see :py:func:`~.xskillscore.effective_sample_size`
 
     Notes:
         +-----------------+-----------------+
@@ -507,8 +509,7 @@ def _effective_sample_size(
         +-----------------+-----------------+
 
     References:
-        * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
-          freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
+        :cite:t:`Bretherton1999`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -591,7 +592,7 @@ def _pearson_r_eff_p_value(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.pearson_r_eff_p_value`
+        metric_kwargs: see :py:func:`~.xskillscore.pearson_r_eff_p_value`
 
     Notes:
         +-----------------+-----------+
@@ -634,8 +635,7 @@ def _pearson_r_eff_p_value(
             reference:                     []
 
     References:
-        * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
-          freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
+        :cite:t:`Bretherton1999`
     """
     # p value returns a runtime error when working with NaNs, such as on a climate
     # model grid. We can avoid this annoying output by specifically suppressing
@@ -676,21 +676,23 @@ def _spearman_r(
     This correlation coefficient is nonparametric and assesses how well the relationship
     between the forecast and verification data can be described using a monotonic
     function. It is computed by first ranking the forecasts and verification data, and
-    then correlating those ranks using the ``pearson_r`` correlation.
+    then correlating those ranks using the :py:func:`~climpred.metrics._pearson_r`
+    correlation.
 
     This is also known as the anomaly correlation coefficient (ACC) when comparing
     anomalies, although the Pearson product-moment correlation coefficient
-    (``pearson_r``) is typically used when computing the ACC.
+    :py:func:`~climpred.metrics._pearson_r` is typically used when computing the ACC.
 
     .. note::
-        Use metric ``spearman_r_p_value`` or ``spearman_r_eff_p_value`` to get the
+        Use metric :py:func:`~climpred.metrics.spearman_r_p_value` or
+        :py:func:`~climpred.metrics.spearman_r_eff_p_value`` to get the
         corresponding p value.
 
     Args:
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.spearman_r`
+        metric_kwargs: see :py:func:`~.xskillscore.spearman_r`
 
     Notes:
         +-----------------+-----------+
@@ -704,8 +706,8 @@ def _spearman_r(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.spearman_r`
-        * :py:func:`~xskillscore.spearman_r_p_value`
+        * :py:func:`~.xskillscore.spearman_r`
+        * :py:func:`~.xskillscore.spearman_r_p_value`
         * :py:func:`~climpred.metrics._spearman_r_p_value`
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
@@ -762,15 +764,15 @@ def _spearman_r_p_value(
     r"""Probability that forecast and verification data are monotonically uncorrelated.
 
     Two-tailed p value associated with the Spearman's rank correlation
-    coefficient (``spearman_r``), assuming that all samples are independent. Use
-    ``spearman_r_eff_p_value`` to account for autocorrelation in the forecast
-    and verification data.
+    coefficient :py:func:`~climpred.metrics._spearman_r`, assuming that all samples are
+    independent. Use :py:func:`~climpred.metrics._spearman_r_eff_p_value` to account
+    for autocorrelation in the forecast and verification data.
 
     Args:
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.spearman_r_p_value`
+        metric_kwargs: see :py:func:`~.xskillscore.spearman_r_p_value`
 
     Notes:
         +-----------------+-----------+
@@ -784,8 +786,8 @@ def _spearman_r_p_value(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.spearman_r`
-        * :py:func:`~xskillscore.spearman_r_p_value`
+        * :py:func:`~.xskillscore.spearman_r`
+        * :py:func:`~.xskillscore.spearman_r_p_value`
         * :py:func:`~climpred.metrics._spearman_r`
         * :py:func:`~climpred.metrics._spearman_r_eff_p_value`
 
@@ -874,7 +876,7 @@ def _spearman_r_eff_p_value(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.spearman_r_eff_p_value`
+        metric_kwargs: see :py:func:`~.xskillscore.spearman_r_eff_p_value`
 
     Notes:
         +-----------------+-----------+
@@ -892,8 +894,7 @@ def _spearman_r_eff_p_value(
         * :py:func:`~climpred.metrics._pearson_r_eff_p_value`
 
     References:
-        * Bretherton, Christopher S., et al. "The effective number of spatial degrees of
-          freedom of a time-varying field." Journal of climate 12.7 (1999): 1990-2009.
+        :cite:t:`Bretherton1999`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -970,7 +971,7 @@ def _mse(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.mse`
+        metric_kwargs: see :py:func:`~.xskillscore.mse`
 
     Notes:
         +-----------------+-----------+
@@ -984,13 +985,10 @@ def _mse(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.mse`
+        * :py:func:`~.xskillscore.mse`
 
     References:
-        Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A
-        Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd,
-        Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
-        http://doi.wiley.com/10.1002/9781119960003.
+        :cite:t:`Jolliffe2011`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1118,7 +1116,7 @@ def _rmse(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.rmse`
+        metric_kwargs: see :py:func:`~.xskillscore.rmse`
 
     Notes:
         +-----------------+-----------+
@@ -1132,7 +1130,7 @@ def _rmse(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.rmse`
+        * :py:func:`~.xskillscore.rmse`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1191,7 +1189,7 @@ def _mae(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.mae`
+        metric_kwargs: see :py:func:`~.xskillscore.mae`
 
     Notes:
         +-----------------+-----------+
@@ -1205,14 +1203,10 @@ def _mae(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.mae`
+        * :py:func:`~.xskillscore.mae`
 
     References:
-        Ian T. Jolliffe and David B. Stephenson. Forecast Verification: A
-        Practitioner’s Guide in Atmospheric Science. John Wiley & Sons, Ltd,
-        Chichester, UK, December 2011. ISBN 978-1-119-96000-3 978-0-470-66071-3.
-        http://doi.wiley.com/10.1002/9781119960003.
-
+        :cite:t:`Jolliffe2011`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1270,7 +1264,7 @@ def _median_absolute_error(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.median_absolute_error`
+        metric_kwargs: see :py:func:`~.xskillscore.median_absolute_error`
 
     Notes:
         +-----------------+-----------+
@@ -1284,7 +1278,7 @@ def _median_absolute_error(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.median_absolute_error`
+        * :py:func:`~.xskillscore.median_absolute_error`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1351,7 +1345,7 @@ def _nmse(
 
     .. note::
         ``climpred`` uses a single-valued internal reference forecast for the
-        NMSE, in the terminology of Murphy 1988. I.e., we use a single
+        NMSE, in the terminology of :cite:t:`Murphy1988`. I.e., we use a single
         climatological variance of the verification data *within* the experimental
         window for normalizing MSE.
 
@@ -1362,7 +1356,7 @@ def _nmse(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~xskillscore.mse`
+        metric_kwargs: see :py:func:`~.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -1380,12 +1374,7 @@ def _nmse(
         +----------------------------+-----------+
 
     References:
-        Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13,
-        no. 7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-        Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-        Their Relationships to the Correlation Coefficient.” Monthly Weather
-        Review 116, no. 12 (December 1, 1988): 2417–24. https://doi.org/10/fc7mxd.
+        :cite:t:`Griffies1997`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1459,7 +1448,7 @@ def _nmae(
 
     .. note::
         ``climpred`` uses a single-valued internal reference forecast for the
-        NMAE, in the terminology of Murphy 1988. I.e., we use a single
+        NMAE, in the terminology of :cite:t:`Murphy1988`. I.e., we use a single
         climatological standard deviation of the verification data *within* the
         experimental window for normalizing MAE.
 
@@ -1470,7 +1459,7 @@ def _nmae(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~xskillscore.mae`
+        metric_kwargs: see :py:func:`~.xskillscore.mae`
 
     Notes:
         +----------------------------+-----------+
@@ -1488,14 +1477,8 @@ def _nmae(
         +----------------------------+-----------+
 
     References:
-        Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no.
-        7–8 (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-
-        Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-        Their Relationships to the Correlation Coefficient.” Monthly Weather
-        Review 116, no. 12 (December 1, 1988): 2417–24.
-        https://doi.org/10/fc7mxd.
+        * :cite:t:`Murphy1988`
+        * :cite:t:`Griffies1997`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1570,7 +1553,7 @@ def _nrmse(
 
     .. note::
         ``climpred`` uses a single-valued internal reference forecast for the
-        NRMSE, in the terminology of Murphy 1988. I.e., we use a single
+        NRMSE, in the terminology of :cite:t:`Murphy1988`. I.e., we use a single
         climatological variance of the verification data *within* the experimental
         window for normalizing RMSE.
 
@@ -1581,7 +1564,7 @@ def _nrmse(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~xskillscore.rmse`
+        metric_kwargs: see :py:func:`~.xskillscore.rmse`
 
     Notes:
         +----------------------------+-----------+
@@ -1599,21 +1582,9 @@ def _nrmse(
         +----------------------------+-----------+
 
     References:
-        Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-        Prediction: Potential versus Operational Seasonal Forecast Skill.”
-        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
-        Hawkins, Ed, Steffen Tietsche, Jonathan J. Day, Nathanael Melia, Keith
-        Haines, and Sarah Keeley. “Aspects of Designing and Evaluating
-        Seasonal-to-Interannual Arctic Sea-Ice Prediction Systems.” Quarterly
-        Journal of the Royal Meteorological Society 142, no. 695
-        (January 1, 2016): 672–83. https://doi.org/10/gfb3pn.
-
-        Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-        Their Relationships to the Correlation Coefficient.” Monthly Weather
-        Review 116, no. 12 (December 1, 1988): 2417–24.
-        https://doi.org/10/fc7mxd.
+        * :cite:t:`Murphy1988`
+        * :cite:t:`Hawkins2014`
+        * :cite:t:`Bushuk2018`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1686,7 +1657,7 @@ def _msess(
 
     .. note::
         ``climpred`` uses a single-valued internal reference forecast for the
-        MSSS, in the terminology of Murphy 1988. I.e., we use a single
+        MSSS, in the terminology of :cite:t:`Murphy1988`. I.e., we use a single
         climatological variance of the verification data *within* the experimental
         window for normalizing MSE.
 
@@ -1697,7 +1668,7 @@ def _msess(
         comparison: Name comparison needed for normalization factor `fac`, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~xskillscore.mse`
+        metric_kwargs: see :py:func:`~.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -1717,22 +1688,10 @@ def _msess(
         +----------------------------+-----------+
 
     References:
-      * Griffies, S. M., and K. Bryan. “A Predictability Study of Simulated
-        North Atlantic Multidecadal Variability.” Climate Dynamics 13, no. 7–8
-        (August 1, 1997): 459–87. https://doi.org/10/ch4kc4.
-      * Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-        Their Relationships to the Correlation Coefficient.” Monthly Weather
-        Review 116, no. 12 (December 1, 1988): 2417–24.
-        https://doi.org/10/fc7mxd.
-      * Pohlmann, Holger, Michael Botzet, Mojib Latif, Andreas Roesch, Martin
-        Wild, and Peter Tschuck. “Estimating the Decadal Predictability of a
-        Coupled AOGCM.” Journal of Climate 17, no. 22 (November 1, 2004):
-        4463–72. https://doi.org/10/d2qf62.
-      * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel Vecchi, Xiaosong
-        Yang, Anthony Rosati, and Rich Gudgel. “Regional Arctic Sea–Ice
-        Prediction: Potential versus Operational Seasonal Forecast Skill.
-        Climate Dynamics, June 9, 2018. https://doi.org/10/gd7hfq.
-
+      * :cite:t:`Griffies1997`
+      * :cite:t:`Murphy1988`
+      * :cite:t:`Pohlmann2004`
+      * :cite:t:`Bushuk2018`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1802,7 +1761,7 @@ def _mape(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.mape`
+        metric_kwargs: see :py:func:`~.xskillscore.mape`
 
     Notes:
         +-----------------+-----------+
@@ -1816,7 +1775,7 @@ def _mape(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.mape`
+        * :py:func:`~.xskillscore.mape`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1874,7 +1833,7 @@ def _smape(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.smape`
+        metric_kwargs: see :py:func:`~.xskillscore.smape`
 
     Notes:
         +-----------------+-----------+
@@ -1888,7 +1847,7 @@ def _smape(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.smape`
+        * :py:func:`~.xskillscore.smape`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -1938,10 +1897,11 @@ def _uacc(
 
     This is typically used in perfect model studies. Because the perfect model Anomaly
     Correlation Coefficient (ACC) is strongly state dependent, a standard ACC (e.g. one
-    computed using ``pearson_r``) will be highly sensitive to the set of start dates
-    chosen for the perfect model study. The Mean Square Skill Score (``MESSS``) can be
-    related directly to the ACC as ``MESSS = ACC^(2)`` (see Murphy 1988 and
-    Bushuk et al. 2019), so the unbiased ACC can be derived as ``uACC = sqrt(MESSS)``.
+    computed using :py:func:`~climpred.metrics._pearson_r`) will be highly sensitive to
+    the set of start dates chosen for the perfect model study.
+    The Mean Square Skill Score (``MESSS``) can be
+    related directly to the ACC as ``MESSS = ACC^(2)`` (see :cite:t:`Murphy1988` and
+    :cite:t:`Bushuk2018`), so the unbiased ACC can be derived as ``uACC = sqrt(MESSS)``.
 
     .. math::
         uACC = \sqrt{MSESS}
@@ -1963,7 +1923,7 @@ def _uacc(
         comparison: Name comparison needed for normalization factor ``fac``, see
             :py:func:`~climpred.metrics._get_norm_factor`
             (Handled internally by the compute functions)
-        metric_kwargs: see :py:func:`~xskillscore.mse`
+        metric_kwargs: see :py:func:`~.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -1981,14 +1941,8 @@ def _uacc(
         +----------------------------+-----------+
 
     References:
-        * Bushuk, Mitchell, Rym Msadek, Michael Winton, Gabriel
-          Vecchi, Xiaosong Yang, Anthony Rosati, and Rich Gudgel. “Regional
-          Arctic Sea–Ice Prediction: Potential versus Operational Seasonal
-          Forecast Skill." Climate Dynamics, June 9, 2018.
-          https://doi.org/10/gd7hfq.
-        * Allan H. Murphy. Skill Scores Based on the Mean Square Error and Their
-          Relationships to the Correlation Coefficient. Monthly Weather Review,
-          116(12):2417–2424, December 1988. https://doi.org/10/fc7mxd.
+        * :cite:t:`Murphy1988`
+        * :cite:t:`Bushuk2018`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -2138,9 +2092,8 @@ def _unconditional_bias(
         +-----------------+-----------+
 
     References:
-        https://www.cawcr.gov.au/projects/verification/
-
-        https://www-miklip.dkrz.de/about/murcss/
+        * https://www.cawcr.gov.au/projects/verification/
+        * https://www-miklip.dkrz.de/about/murcss/
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -2301,8 +2254,8 @@ def _conditional_bias(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.pearson_r`
-        and :py:meth:`~xarray.Dataset.std`
+        metric_kwargs: see :py:func:`~.xskillscore.pearson_r`
+            and :py:meth:`~.xarray.Dataset.std`
 
     Notes:
         +-----------------+-----------+
@@ -2381,8 +2334,8 @@ def _bias_slope(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.pearson_r` and
-        :py:meth:`~xarray.Dataset.std`
+        metric_kwargs: see :py:func:`~.xskillscore.pearson_r` and
+            :py:meth:`~.xarray.Dataset.std`
 
     Notes:
         +-----------------+-----------+
@@ -2463,8 +2416,8 @@ def _msess_murphy(
         forecast: Forecast.
         verif: Verification data.
         dim: Dimension(s) to perform metric over.
-        metric_kwargs: see :py:func:`~xskillscore.pearson_r`,
-            :py:meth:`~xarray.Dataset.mean` and :py:meth:`~xarray.Dataset.std`
+        metric_kwargs: see :py:func:`~.xskillscore.pearson_r`,
+            :py:meth:`~xarray.Dataset.mean` and :py:meth:`~.xarray.Dataset.std`
 
     Notes:
         +-----------------+-----------+
@@ -2484,9 +2437,7 @@ def _msess_murphy(
 
     References:
         * https://www-miklip.dkrz.de/about/murcss/
-        * Murphy, Allan H. “Skill Scores Based on the Mean Square Error and
-          Their Relationships to the Correlation Coefficient.” Monthly Weather
-          Review 116, no. 12 (December 1, 1988): 2417–24. https://doi.org/10/fc7mxd.
+        * :cite:t:`Murphy1988`
 
     Example:
         >>> HindcastEnsemble = HindcastEnsemble.remove_bias(alignment="same_verifs")
@@ -2565,8 +2516,8 @@ def _brier_score(
         as one (a "hit") or zero (a "miss"). So either provide a function with
         with binary outcomes `logical` in `metric_kwargs` or create binary
         verifs and probability forecasts by
-        `hindcast.map(logical).mean('member')`.
-        This Brier Score is not the original formula given in Brier's 1950 paper.
+        `hindcast.map(logical).mean("member")`.
+        This Brier Score is not the original formula given in :cite:t:`Brier1950`.
 
     Args:
         forecast: Raw forecasts with ``member`` dimension if `logical`
@@ -2579,9 +2530,9 @@ def _brier_score(
             not provided in `metric_kwargs`, should not include `member`.
         metric_kwargs: optional
             logical (callable): Function with bool result to be applied to verification
-                data and forecasts and then ``mean('member')`` to get forecasts and
+                data and forecasts and then ``mean("member")`` to get forecasts and
                 verification data in interval [0,1].
-            see :py:func:`~xskillscore.brier_score`
+            see :py:func:`~.xskillscore.brier_score`
 
     Notes:
         +-----------------+-----------+
@@ -2595,16 +2546,16 @@ def _brier_score(
         +-----------------+-----------+
 
     References:
-        * https://www.nws.noaa.gov/oh/rfcdev/docs/
-          Glossary_Forecast_Verification_Metrics.pdf
+        * https://www.nws.noaa.gov/oh/rfcdev/docs/Glossary_Forecast_Verification_Metrics.pdf
         * https://en.wikipedia.org/wiki/Brier_score
+        * :cite:t:`Brier1950`
 
     See also:
         * :py:func:`~properscoring.brier_score`
-        * :py:func:`~xskillscore.brier_score`
+        * :py:func:`~.xskillscore.brier_score`
 
     Example:
-        Define a boolean/logical function for binary scoring:
+        Define a boolean/logical: Function for binary scoring:
 
         >>> def pos(x):
         ...     return x > 0  # checking binary outcomes
@@ -2744,7 +2695,7 @@ def _threshold_brier_score(
         threshold (int, float, xr.object): Threshold to check exceedance, see
             properscoring.threshold_brier_score.
         metric_kwargs: optional, see
-            :py:func:`~xskillscore.threshold_brier_score`
+            :py:func:`~.xskillscore.threshold_brier_score`
 
     Notes:
         +-----------------+-----------+
@@ -2758,13 +2709,11 @@ def _threshold_brier_score(
         +-----------------+-----------+
 
     References:
-        * Brier, Glenn W. Verification of forecasts expressed in terms of
-          probability.” Monthly Weather Review 78, no. 1 (1950).
-          https://doi.org/10.1175/1520-0493(1950)078<0001:VOFEIT>2.0.CO;2.
+        * :cite:t:`Brier1950`
 
     See also:
         * :py:func:`~properscoring.threshold_brier_score`
-        * :py:func:`~xskillscore.threshold_brier_score`
+        * :py:func:`~.xskillscore.threshold_brier_score`
 
     Example:
 
@@ -2882,7 +2831,7 @@ def _crps(
         verif: Verification data without `member` dim.
         dim: Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs: optional, see :py:func:`~xskillscore.crps_ensemble`
+        metric_kwargs: optional, see :py:func:`~.xskillscore.crps_ensemble`
 
     Notes:
         +-----------------+-----------+
@@ -2896,14 +2845,12 @@ def _crps(
         +-----------------+-----------+
 
     References:
-        * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
-          Continuous Probability Distributions.” Management Science 22, no. 10
-          (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
+        * :cite:t:`Matheson1976`
         * https://www.lokad.com/continuous-ranked-probability-score
 
     See also:
         * :py:func:`~properscoring.crps_ensemble`
-        * :py:func:`~xskillscore.crps_ensemble`
+        * :py:func:`~.xskillscore.crps_ensemble`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -2969,11 +2916,11 @@ def _crps_quadrature(
         forecast: Forecast with ``member`` dim.
         cdf_or_dist (callable or scipy.stats.distribution): Function which returns the
             cumulative density of the forecast distribution at value x.
-        metric_kwargs: see :py:func:`~xskillscore.crps_quadrature`
+        metric_kwargs: see :py:func:`~.xskillscore.crps_quadrature`
 
     See also:
         * :py:func:`~properscoring.crps_quadrature`
-        * :py:func:`~xskillscore.crps_quadrature`
+        * :py:func:`~.xskillscore.crps_quadrature`
     """
     return crps_quadrature(verification, cdf_or_dist, dim=dim, **metric_kwargs)
 
@@ -2996,20 +2943,20 @@ def _crpss(
     .. note::
         When assuming a Gaussian distribution of forecasts, use default
         ``gaussian=True``. If not gaussian, you may specify the distribution type,
-        xmin/xmax/tolerance for integration
-        (see :py:func:`~xskillscore.crps_quadrature`).
+        ``xmin/xmax/tolerance`` for integration
+        (see :py:func:`~.xskillscore.crps_quadrature`).
 
     Args:
         forecast: Forecast with ``member`` dim.
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
-            `member`. Other dimensions are passed to `xskillscore` and averaged.
+            ``member``. Other dimensions are passed to ``xskillscore`` and averaged.
         metric_kwargs: optional
             gaussian (bool, optional): If ``True``, assume Gaussian distribution for
                 baseline skill. Defaults to ``True``.
-            see :py:func:`~xskillscore.crps_ensemble`,
-            :py:func:`~xskillscore.crps_gaussian` and
-            :py:func:`~xskillscore.crps_quadrature`
+            see :py:func:`~.xskillscore.crps_ensemble`,
+                :py:func:`~.xskillscore.crps_gaussian` and
+                :py:func:`~.xskillscore.crps_quadrature`
 
     Notes:
         +----------------------------+-----------+
@@ -3027,13 +2974,8 @@ def _crpss(
         +----------------------------+-----------+
 
     References:
-        * Matheson, James E., and Robert L. Winkler. “Scoring Rules for
-          Continuous Probability Distributions.” Management Science 22, no. 10
-          (June 1, 1976): 1087–96. https://doi.org/10/cwwt4g.
-        * Gneiting, Tilmann, and Adrian E Raftery. “Strictly Proper Scoring
-          Rules, Prediction, and Estimation.” Journal of the American
-          Statistical Association 102, no. 477 (March 1, 2007): 359–78.
-          https://doi.org/10/c6758w.
+        * :cite:t:`Matheson1976`
+        * :cite:t:`Gneiting2007`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -3080,7 +3022,7 @@ def _crpss(
 
     See also:
         * :py:func:`~properscoring.crps_ensemble`
-        * :py:func:`~xskillscore.crps_ensemble`
+        * :py:func:`~.xskillscore.crps_ensemble`
     """
     if dim is None:
         dim = list(verif.dims)
@@ -3150,8 +3092,8 @@ def _crpss_es(
         verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to `xskillscore` and averaged.
-        metric_kwargs: see :py:func:`~xskillscore.crps_ensemble`
-        and :py:func:`~xskillscore.mse`
+        metric_kwargs: see :py:func:`~.xskillscore.crps_ensemble`
+        and :py:func:`~.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -3169,11 +3111,7 @@ def _crpss_es(
         +----------------------------+-----------+
 
     References:
-        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
-          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
-          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
-          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
-          631–43. https://doi.org/10/f9jrhw.
+        * :cite:t:`Kadow2016`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -3263,12 +3201,12 @@ def _discrimination(
             provided in `metric_kwargs` to create probability forecasts. If `logical`
             not provided in `metric_kwargs`, should not include `member`. At least one
             dimension other than `member` is required.
-        logical (callable, optional): Function with bool result to be applied to
-            verification data and forecasts and then ``mean('member')`` to get
-            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        logical: Function with bool result to be applied to
+            verification data and forecasts and then ``mean("member")`` to get
+            forecasts and verification data in interval [0,1]. Passed via ``metric_kwargs``.
         probability_bin_edges (array_like, optional): Probability bin edges used to
             compute the histograms. Bins include the left most edge, but not the
-            right. Passed via metric_kwargs. Defaults to 6 equally spaced edges between
+            right. Passed via ``metric_kwargs``. Defaults to 6 equally spaced edges between
             0 and 1+1e-8.
 
 
@@ -3283,10 +3221,10 @@ def _discrimination(
         +-----------------+------------------------+
 
     See also:
-        * :py:func:`~xskillscore.discrimination`
+        * :py:func:`~.xskillscore.discrimination`
 
     Example:
-        Define a boolean/logical function for binary scoring:
+        Define a boolean/logical: Function for binary scoring:
 
         >>> def pos(x):
         ...     return x > 0  # checking binary outcomes
@@ -3333,7 +3271,7 @@ def _discrimination(
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
-        ``comparison='e2o'`` and ``dim='init'``:
+        ``comparison="e2o"`` and ``dim="init"``:
 
         >>> HindcastEnsemble.map(pos).mean("member").verify(
         ...     metric="discrimination",
@@ -3393,12 +3331,12 @@ def _reliability(
         dim: Dimensions to aggregate. Requires `member` if `logical`
             provided in `metric_kwargs` to create probability forecasts. If `logical`
             not provided in `metric_kwargs`, should not include `member`.
-        logical (callable, optional): Function with bool result to be applied to
-            verification data and forecasts and then ``mean('member')`` to get
-            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        logical: Function with bool result to be applied to
+            verification data and forecasts and then ``mean("member")`` to get
+            forecasts and verification data in interval [0,1]. Passed via ``metric_kwargs``.
         probability_bin_edges (array_like, optional): Probability bin edges used to
             compute the reliability. Bins include the left most edge, but not the
-            right. Passed via metric_kwargs. Defaults to 6 equally spaced edges between
+            right. Passed via ``metric_kwargs``. Defaults to 6 equally spaced edges between
             0 and 1+1e-8.
 
     Returns:
@@ -3412,10 +3350,10 @@ def _reliability(
         +-----------------+-------------------+
 
     See also:
-        * :py:func:`~xskillscore.reliability`
+        * :py:func:`~.xskillscore.reliability`
 
     Example:
-        Define a boolean/logical function for binary scoring:
+        Define a boolean/logical: Function for binary scoring:
 
         >>> def pos(x):
         ...     return x > 0  # checking binary outcomes
@@ -3483,7 +3421,7 @@ def _reliability(
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
-        ``comparison='e2o'`` and ``dim='init'``:
+        ``comparison="e2o"`` and ``dim="init"``:
 
         >>> HindcastEnsemble.map(pos).mean("member").verify(
         ...     metric="reliability",
@@ -3557,7 +3495,7 @@ def _rank_histogram(
 
 
     See also:
-        * :py:func:`~xskillscore.rank_histogram`
+        * :py:func:`~.xskillscore.rank_histogram`
 
     Example:
         >>> HindcastEnsemble.verify(
@@ -3637,7 +3575,7 @@ def _rps(
         forecast: Forecasts.
         verif: Verification.
         dim: Dimensions to aggregate.
-        **metric_kwargs, see :py:func:`~xskillscore.rps`
+        **metric_kwargs, see :py:func:`~.xskillscore.rps`
 
     .. note::
         If ``category_edges`` is xr.Dataset or tuple of xr.Datasets, climpred will
@@ -3657,7 +3595,7 @@ def _rps(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.rps`
+        * :py:func:`~.xskillscore.rps`
 
     Example:
         >>> category_edges = np.array([-0.5, 0.0, 0.5, 1.0])
@@ -3834,7 +3772,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
             or any other contingency score, e.g. ``score=hit_rate``.
         observation_category_edges (array_like): Category bin edges used to compute
             the observations CDFs. Bins include the left most edge, but not the right.
-            Passed via metric_kwargs.
+            Passed via ``metric_kwargs``.
         forecast_category_edges  (array_like): Category bin edges used to compute
             the forecast CDFs. Bins include the left most edge, but not the right.
             Passed via metric_kwargs
@@ -3932,39 +3870,40 @@ def _roc(
     """Receiver Operating Characteristic.
 
     Args:
-        observations (xarray.object): Labeled array(s) over which to apply the function.
-            If ``bin_edges=='continuous'``, observations are binary.
-        forecasts (xarray.object): Labeled array(s) over which to apply the function.
-            If ``bin_edges=='continuous'``, forecasts are probabilities.
+        observations: Labeled array(s) over which to apply the function.
+            If ``bin_edges=="continuous"``, observations are binary.
+        forecasts: Labeled array(s) over which to apply the function.
+            If ``bin_edges=="continuous"``, forecasts are probabilities.
         dim: The dimension(s) over which to aggregate. Defaults to
             None, meaning aggregation over all dims other than ``lead``.
-        logical (callable, optional): Function with bool result to be applied to
-            verification data and forecasts and then ``mean('member')`` to get
-            forecasts and verification data in interval [0,1]. Passed via metric_kwargs.
+        logical: Function with bool result to be applied to
+            verification data and forecasts and then ``mean("member")`` to get
+            forecasts and verification data in interval [0,1]. Passed via ``metric_kwargs``.
         bin_edges (array_like, str): Bin edges for categorising observations and
             forecasts. Similar to np.histogram, all but the last (righthand-most) bin
             include the left edge and exclude the right edge. The last bin includes
             both edges. ``bin_edges`` will be sorted in ascending order. If
-            ``bin_edges=='continuous'``, calculate ``bin_edges`` from forecasts, equal
+            ``bin_edges=="continuous"``, calculate ``bin_edges`` from forecasts, equal
             to ``sklearn.metrics.roc_curve(f_boolean, o_prob)``. Passed via
-            metric_kwargs. Defaults to 'continuous'.
+            ``metric_kwargs``. Defaults to "continuous".
         drop_intermediate (bool): Whether to drop some suboptimal thresholds which would
             not appear on a plotted ROC curve. This is useful in order to create lighter
-            ROC curves. Defaults to False. Defaults to ``True`` in
-            ``sklearn.metrics.roc_curve``. Passed via metric_kwargs.
-        return_results (str): Passed via metric_kwargs. Defaults to 'area'.
+            ROC curves. Defaults to ``False``. Defaults to ``True`` in
+            ``sklearn.metrics.roc_curve``. Passed via ``metric_kwargs``.
+        return_results (str): Passed via ``metric_kwargs``. Defaults to "area".
             Specify how return is structed:
-                - 'area': return only the ``area under curve`` of ROC
-                - 'all_as_tuple': return ``true positive rate`` and ``false positive rate``
+
+                - "area": return only the ``area under curve`` of ROC
+                - "all_as_tuple": return ``true positive rate`` and ``false positive rate``
                   at each bin and area under the curve of ROC as tuple
-                - 'all_as_metric_dim': return ``true positive rate`` and
+                - "all_as_metric_dim": return ``true positive rate`` and
                   ``false positive rate`` at each bin and ``area under curve`` of ROC
                   concatinated into new ``metric`` dimension
 
     Returns:
-        roc: reduced by dimensions ``dim``, see ``return_results``
-            parameter. ``true positive rate`` and ``false positive rate`` contain
-            ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
+        reduced by dimensions ``dim``, see ``return_results``
+        parameter. ``true positive rate`` and ``false positive rate`` contain
+        ``probability_bin`` dimension with ascending ``bin_edges`` as coordinates.
 
     Notes:
         +-----------------+-----------+
@@ -3978,7 +3917,7 @@ def _roc(
         +-----------------+-----------+
 
     See also:
-        * :py:func:`~xskillscore.roc`
+        * :py:func:`~.xskillscore.roc`
         * http://www.cawcr.gov.au/projects/verification/
         * https://xskillscore.readthedocs.io/en/stable/api.html#roc # noqa
 
@@ -4000,7 +3939,7 @@ def _roc(
         Attributes:
             units:    None
 
-        Get area under the curve, false positive rate and true positive rate as ``metric`` dimension by specifying ``return_results='all_as_metric_dim'``:
+        Get area under the curve, false positive rate and true positive rate as ``metric`` dimension by specifying ``return_results="all_as_metric_dim"``:
 
         >>> def f(ds):
         ...     return ds > 0
@@ -4108,12 +4047,7 @@ def _less(
 
 
     References:
-        * Kadow, Christopher, Sebastian Illing, Oliver Kunst, Henning W. Rust,
-          Holger Pohlmann, Wolfgang A. Müller, and Ulrich Cubasch. “Evaluation
-          of Forecasts by Accuracy and Spread in the MiKlip Decadal Climate
-          Prediction System.” Meteorologische Zeitschrift, December 21, 2016,
-          631–43. https://doi.org/10/f9jrhw.
-
+        :cite:t:`Kadow2016`
     """
     forecast, verif = xr.broadcast(forecast, verif)
     numerator = _spread(forecast, verif, dim=dim, **metric_kwargs) ** 2

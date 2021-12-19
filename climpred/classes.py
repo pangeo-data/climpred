@@ -415,7 +415,7 @@ class PredictionEnsemble:
     def equals(self, other: Union["PredictionEnsemble", Any]) -> bool:
         """Check if :py:class:`.PredictionEnsemble` is equal to other.
 
-        Two :py:class:`.PredictionEnsemble`s are equal if they have
+        Two :py:class:`.PredictionEnsemble` are equal if they have
         matching variables and coordinates, all of which are equal.
         ``PredictionEnsembles`` can still be equal (like pandas objects) if they have
         NaN values in the same locations.
@@ -789,8 +789,8 @@ class PredictionEnsemble:
                 smooth compatible with
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf` or
                 :py:func:`~climpred.smoothing.temporal_smoothing`.
-                Shortcut for Goddard et al. 2013 recommendations:
-                goddard2013. Defaults to ``None``.
+                Shortcut for :cite:t:`Goddard2013` ``goddard2013``.
+                Defaults to ``None``.
             how: how to smooth temporally. From Choose from ``["mean", "sum"]``.
                 Defaults to ``"mean"``.
             **xesmf_kwargs: kwargs passed to
@@ -993,7 +993,7 @@ class PredictionEnsemble:
             )
             # chunk lead:1 in HindcastEnsemble
             if self.kind == "hindcast":
-                msg += '\nIn `HindcastEnsemble`s you may also create one chunk per "\
+                msg += '\nIn `HindcastEnsemble` you may also create one chunk per "\
                 " lead, as the `climpred` internally loops over lead, e.g. "\
                 " `.chunk({{"lead": 1}}).verify().`'
             # chunk auto on non-climpred dims
@@ -1485,7 +1485,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         pers_sig: Optional[int] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
-        """Bootstrap with replacement according to Goddard et al. 2013.
+        """Bootstrap with replacement according to :cite:t:`Goddard2013`.
 
         Args:
             metric: Metric to apply for verification, see `metrics <../metrics.html>`_
@@ -1541,10 +1541,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                     bootstrapping with replacement.
 
         Reference:
-            Goddard, L., A. Kumar, A. Solomon et al.
-            “A Verification Framework for Interannual to Decadal Predictions Experiments.”
-            Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-            https://doi.org/10/f4jjvf.
+            :cite:t:`Goddard2013`
 
         Example:
             Continuous Ranked Probability Score (``"crps"``) comparing every
@@ -2220,7 +2217,7 @@ class HindcastEnsemble(PredictionEnsemble):
         pers_sig: Optional[int] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
-        """Bootstrap with replacement according to Goddard et al. 2013.
+        """Bootstrap with replacement according to :cite:t:`Goddard2013`.
 
         Args:
             metric: Metric to apply for verification, see `metrics <../metrics.html>`_
@@ -2277,6 +2274,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     difference of skill between the initialized and persistence
                     simulations is smaller or equal to zero based on
                     bootstrapping with replacement.
+
+        References:
+            :cite:t:`Goddard2013`
 
         Example:
             Continuous Ranked Probability Score (``"crps"``) comparing every member

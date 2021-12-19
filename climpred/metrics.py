@@ -2514,20 +2514,20 @@ def _brier_score(
     .. note::
         The Brier Score requires that the observation is binary, i.e., can be described
         as one (a "hit") or zero (a "miss"). So either provide a function with
-        with binary outcomes `logical` in `metric_kwargs` or create binary
+        with binary outcomes ``logical``in ``metric_kwargs``or create binary
         verifs and probability forecasts by
         `hindcast.map(logical).mean("member")`.
         This Brier Score is not the original formula given in :cite:t:`Brier1950`.
 
     Args:
-        forecast: Raw forecasts with ``member`` dimension if `logical`
-            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
+        forecast: Raw forecasts with ``member`` dimension if ``logical``
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if ``logical``is
             not provided.
         verif: Verification data without ``member`` dim. Raw verification if
-            `logical` provided, else binary verification.
-        dim: Dimensions to aggregate. Requires `member` if `logical`
-            provided in `metric_kwargs` to create probability forecasts. If `logical`
-            not provided in `metric_kwargs`, should not include `member`.
+            ``logical``provided, else binary verification.
+        dim: Dimensions to aggregate. Requires ``member`` if ``logical``
+            provided in ``metric_kwargs``to create probability forecasts. If ``logical``
+            not provided in ``metric_kwargs``, should not include ```member``.
         metric_kwargs: optional
             logical (callable): Function with bool result to be applied to verification
                 data and forecasts and then ``mean("member")`` to get forecasts and
@@ -2551,7 +2551,6 @@ def _brier_score(
         * :cite:t:`Brier1950`
 
     See also:
-        * :py:func:`.properscoring.brier_score`
         * :py:func:`.xskillscore.brier_score`
 
     Example:
@@ -2681,11 +2680,11 @@ def _threshold_brier_score(
     .. math::
         CRPS = \int_f BS(F(f), H(f - o)) df
 
-    where :math:`F(o) = \\int_{f \\leq o} p(f) df` is the cumulative distribution
+    where :math:`F(o) = \int_{f \leq o} p(f) df` is the cumulative distribution
     function (CDF) of the forecast distribution :math:`F`, :math:`o` is a point estimate
     of the true observation (observational error is neglected), :math:`BS` denotes the
     Brier score and :math:`H(x)` denotes the Heaviside step function, which we define
-    here as equal to 1 for :math:`x \\geq 0` and 0 otherwise.
+    here as equal to 1 for :math:`x \geq 0` and 0 otherwise.
 
     Args:
         forecast: Forecast with ``member`` dim.
@@ -2693,9 +2692,8 @@ def _threshold_brier_score(
         dim: Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to ``xskillscore`` and averaged.
         threshold (int, float, xarray.Dataset, xr.DataArray): Threshold to check
-            exceedance, see properscoring.threshold_brier_score.
-        metric_kwargs: optional, see
-            :py:func:`.xskillscore.threshold_brier_score`
+            exceedance, see :py:func:`.xskillscore.threshold_brier_score`.
+        metric_kwargs: optional, see :py:func:`.xskillscore.threshold_brier_score`
 
     Notes:
         +-----------------+-----------+
@@ -2712,7 +2710,6 @@ def _threshold_brier_score(
         * :cite:t:`Brier1950`
 
     See also:
-        * :py:func:`.properscoring.threshold_brier_score`
         * :py:func:`.xskillscore.threshold_brier_score`
 
     Example:
@@ -2827,8 +2824,8 @@ def _crps(
         determinstic.
 
     Args:
-        forecast: Forecast with `member` dim.
-        verif: Verification data without `member` dim.
+        forecast: Forecast with ``member`` dim.
+        verif: Verification data without ``member`` dim.
         dim: Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to ``xskillscore`` and averaged.
         metric_kwargs: optional, see :py:func:`.xskillscore.crps_ensemble`
@@ -2849,7 +2846,6 @@ def _crps(
         * https://www.lokad.com/continuous-ranked-probability-score
 
     See also:
-        * :py:func:`.properscoring.crps_ensemble`
         * :py:func:`.xskillscore.crps_ensemble`
 
     Example:
@@ -2914,12 +2910,11 @@ def _crps_quadrature(
 
     Args:
         forecast: Forecast with ``member`` dim.
-        cdf_or_dist (callable or scipy.stats.distribution): Function which returns the
-            cumulative density of the forecast distribution at value x.
+        cdf_or_dist (callable or :py:func:`.scipy.stats.distribution`): Function which
+            returns the cumulative density of the forecast distribution at value x.
         metric_kwargs: see :py:func:`.xskillscore.crps_quadrature`
 
     See also:
-        * :py:func:`.properscoring.crps_quadrature`
         * :py:func:`.xskillscore.crps_quadrature`
     """
     return crps_quadrature(verification, cdf_or_dist, dim=dim, **metric_kwargs)
@@ -3021,7 +3016,6 @@ def _crpss(
             tos      (lead, init, member) float64 0.9931 0.9932 0.9932 ... 0.9947 0.9947
 
     See also:
-        * :py:func:`.properscoring.crps_ensemble`
         * :py:func:`.xskillscore.crps_ensemble`
     """
     if dim is None:
@@ -3093,7 +3087,7 @@ def _crpss_es(
         dim: Dimension to apply metric over. Expects at least
             `member`. Other dimensions are passed to ``xskillscore`` and averaged.
         metric_kwargs: see :py:func:`.xskillscore.crps_ensemble`
-        and :py:func:`.xskillscore.mse`
+            and :py:func:`.xskillscore.mse`
 
     Notes:
         +----------------------------+-----------+
@@ -3193,14 +3187,14 @@ def _discrimination(
 
     Args:
         forecast: Raw forecasts with ``member`` dimension if `logical`
-            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
+            provided in `metric_kwargs`. Probability forecasts in [0,1] if ``logical``is
             not provided.
         verif: Verification data without ``member`` dim. Raw verification if
-            `logical` provided, else binary verification.
-        dim: Dimensions to aggregate. Requires `member` if `logical`
-            provided in `metric_kwargs` to create probability forecasts. If `logical`
+            ``logical``provided, else binary verification.
+        dim: Dimensions to aggregate. Requires ``member``if `logical`
+            provided in ``metric_kwargs``to create probability forecasts. If `logical`
             not provided in `metric_kwargs`, should not include `member`. At least one
-            dimension other than `member` is required.
+            dimension other than ``member``is required.
         logical: Function with bool result to be applied to
             verification data and forecasts and then ``mean("member")`` to get
             forecasts and verification data in interval [0,1]. Passed via ``metric_kwargs``.
@@ -3323,25 +3317,25 @@ def _reliability(
     probability bins.
 
     Args:
-        forecast: Raw forecasts with ``member`` dimension if `logical`
-            provided in `metric_kwargs`. Probability forecasts in [0,1] if `logical` is
-            not provided.
+        forecast: Raw forecasts with ``member`` dimension if ``logical``
+            provided in ``metric_kwargs``. Probability forecasts in [0,1] if
+            ``logical`` is not provided.
         verif: Verification data without ``member`` dim. Raw verification if
-            `logical` provided, else binary verification.
-        dim: Dimensions to aggregate. Requires `member` if `logical`
-            provided in `metric_kwargs` to create probability forecasts. If `logical`
+            ``logical``provided, else binary verification.
+        dim: Dimensions to aggregate. Requires ``member``if ``logical``
+            provided in ``metric_kwargs``to create probability forecasts. If ``logical``
             not provided in `metric_kwargs`, should not include `member`.
         logical: Function with bool result to be applied to
             verification data and forecasts and then ``mean("member")`` to get
-            forecasts and verification data in interval [0,1]. Passed via ``metric_kwargs``.
+            forecasts and verification data in interval [0,1].
+            Passed via ``metric_kwargs``.
         probability_bin_edges (array_like, optional): Probability bin edges used to
             compute the reliability. Bins include the left most edge, but not the
-            right. Passed via ``metric_kwargs``. Defaults to 6 equally spaced edges between
-            0 and 1+1e-8.
+            right. Passed via ``metric_kwargs``. Defaults to 6 equally spaced edges
+            between 0 and 1+1e-8.
 
     Returns:
-        reliability: The relative frequency of occurrence for each
-            probability bin
+        reliability: The relative frequency of occurrence for each probability bin
 
 
     Notes:
@@ -3479,7 +3473,7 @@ def _rank_histogram(
     Args:
         forecast: Raw forecasts with ``member`` dimension.
         verif: Verification data without ``member`` dim.
-        dim: Dimensions to aggregate. Requires to contain `member` and at
+        dim: Dimensions to aggregate. Requires to contain ``member``and at
             least one additional dimension.
 
     Notes:

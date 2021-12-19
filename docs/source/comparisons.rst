@@ -39,7 +39,7 @@ Perfect Model Ensembles
 #######################
 
 In :py:class:`.PerfectModelEnsemble`, there are many more ways of
-verifying forecasts. :cite:p:`Seferian2018` uses a comparison of all ensemble members against
+verifying forecasts. :cite:t:`Seferian2018` uses a comparison of all ensemble members against
 the control run (``comparison="m2c"``) and all ensemble members against all other
 ensemble members (``comparison="m2m"``). Furthermore, the ensemble mean forecast can
 be verified against one control member (``comparison="e2c"``) or all members

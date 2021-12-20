@@ -16,8 +16,8 @@ What's New
     mpl.rcParams["savefig.bbox"] = "tight"
 
 
-climpred unreleased (202x-xx-xx)
-================================
+climpred v2.2.0 (2021-12-20)
+============================
 
 Bug Fixes
 ---------

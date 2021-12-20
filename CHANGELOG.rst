@@ -2,7 +2,6 @@
 What's New
 ==========
 
-
 .. ipython:: python
     :suppress:
 

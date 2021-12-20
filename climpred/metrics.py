@@ -306,8 +306,8 @@ def _pearson_r(
     of the forecast and verification data over the experimental period, respectively.
 
     .. note::
-        Use metric :py:func:`~climpred.metrics.pearson_r_p_value` or
-        :py:func:`~climpred.metrics.pearson_r_eff_p_value` to get the
+        Use metric :py:func:`~climpred.metrics._pearson_r_p_value` or
+        :py:func:`~climpred.metrics._pearson_r_eff_p_value` to get the
         corresponding p value.
 
     Args:
@@ -684,8 +684,8 @@ def _spearman_r(
     :py:func:`~climpred.metrics._pearson_r` is typically used when computing the ACC.
 
     .. note::
-        Use metric :py:func:`~climpred.metrics.spearman_r_p_value` or
-        :py:func:`~climpred.metrics.spearman_r_eff_p_value`` to get the
+        Use metric :py:func:`~climpred.metrics._spearman_r_p_value` or
+        :py:func:`~climpred.metrics._spearman_r_eff_p_value`` to get the
         corresponding p value.
 
     Args:

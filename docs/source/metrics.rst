@@ -56,10 +56,13 @@ However, ``climpred`` also offers the
 `Spearman's Rank Correlation <#spearman-s-rank-correlation-coefficient>`_.
 
 Note that the p value associated with these correlations is computed via a separate
-metric. Use ``pearson_r_p_value`` or ``spearman_r_p_value`` to compute p values assuming
+metric. Use :py:func:`~climpred.metrics._pearson_r_p_value` or
+:py:func:`~climpred.metrics._spearman_r_p_value` to compute p values assuming
 that all samples in the correlated time series are independent. Use
-``pearson_r_eff_p_value`` or ``spearman_r_eff_p_value`` to account for autocorrelation
-in the time series by calculating the ``effective_sample_size``.
+:py:func:`~climpred.metrics._pearson_r_eff_p_value` or
+:py:func:`~climpred.metrics._spearman_r_eff_p_value` to account for autocorrelation
+in the time series by calculating the
+:py:func:`~climpred.metrics._effective_sample_size`.
 
 Pearson Product-Moment Correlation Coefficient
 ----------------------------------------------

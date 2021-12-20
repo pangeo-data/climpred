@@ -9,6 +9,7 @@ dependencies:
   - nbstripout
   - sphinx
   - sphinxcontrib-napoleon
+  - sphinx-copybutton
   # IDE
   - ipywidgets
   - jupyterlab
@@ -16,9 +17,7 @@ dependencies:
   # Input/Output
   - netcdf4
   # Miscellaneous
-  - lxml
-  - tqdm
-  - cftime>=1.1.2 # Optimization changes to make cftime fast
+  - cftime>=1.5.0
   # Numerics
   - numpy
   - pandas
@@ -47,14 +46,16 @@ dependencies:
   # Statistics
   - eofs
   - esmtools>=1.1.3
-  - xskillscore>=0.0.19
+  - xskillscore>=0.0.20
   - xrft
+  - xclim>=0.30.0
+  - bias_correction
   # Visualization
   - matplotlib-base
   - nc-time-axis>=1.4.0
   - pip
   - pip:
       - pytest-lazy-fixture
-      - nb_black  # notebook linting
+      - nb_black
       - sphinx_book_theme
       - sphinxcontrib-bibtex

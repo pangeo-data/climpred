@@ -3,14 +3,14 @@ import os as _os
 
 
 def get_path(
-    dir_base_experiment="/work/bm1124/m300086/CMIP6/experiments",
-    member=1,
-    init=1960,
-    model="hamocc",
-    output_stream="monitoring_ym",
-    timestr="*1231",
-    ending="nc",
-):  # “pragma: no cover”
+    dir_base_experiment: str = "/work/bm1124/m300086/CMIP6/experiments",
+    member: int = 1,
+    init: int = 1960,
+    model: str = "hamocc",
+    output_stream: str = "monitoring_ym",
+    timestr: str = "*1231",
+    ending: str = "nc",
+) -> str:
     """Get the path of a file for MPI-ESM standard output file names and directory.
 
     Args:
@@ -36,7 +36,7 @@ def get_path(
         x for x in dirs if (f"{init}" in x and "r" + str(member) + "i" in x)
     ]
     assert len(experiment_id) == 1
-    experiment_id = experiment_id[0]
+    experiment_id = experiment_id[0]  # type: ignore
     dir_outdata = f"{dir_base_experiment}/{experiment_id}/outdata/{model}"
     path = f"{dir_outdata}/{experiment_id}_{model}_{output_stream}_{timestr}.{ending}"
     if _os.path.exists(_glob.glob(path)[0]):

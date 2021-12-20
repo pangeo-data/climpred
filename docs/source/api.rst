@@ -12,22 +12,18 @@ High-Level Classes
 
 
 A primary feature of ``climpred`` is our prediction ensemble objects,
-:py:class:`.HindcastEnsemble` and
-:py:class:`.PerfectModelEnsemble`. Users can append their initialized
-ensemble to these classes, as well as an arbitrary number of verification products
-(assimilations, reconstructions, observations), control runs, and uninitialized
+:py:class:`.HindcastEnsemble` and :py:class:`.PerfectModelEnsemble`.
+Users can add their initialized ensemble to these classes, as well as verification
+products (assimilations, reconstructions, observations), control runs, and uninitialized
 ensembles.
 
 PredictionEnsemble
 ~~~~~~~~~~~~~~~~~~
 
-:py:class:`.PredictionEnsemble` is the base class for
-:py:class:`.HindcastEnsemble` and
-:py:class:`.PerfectModelEnsemble`.
-:py:class:`.PredictionEnsemble` cannot be called directly, but
-:py:class:`.HindcastEnsemble` and
-:py:class:`.PerfectModelEnsemble` inherit the common base
-functionality.
+:py:class:`.PredictionEnsemble` is the base class for :py:class:`.HindcastEnsemble` and
+:py:class:`.PerfectModelEnsemble`. :py:class:`.PredictionEnsemble` cannot be called
+directly, but :py:class:`.HindcastEnsemble` and :py:class:`.PerfectModelEnsemble`
+inherit the common base functionality.
 
 .. autosummary::
     :toctree: api/

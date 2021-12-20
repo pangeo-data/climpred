@@ -22,7 +22,7 @@ Hindcast Ensembles
 In :py:class:`.HindcastEnsemble`, the ensemble mean forecast
 (``comparison="e2o"``) is expected to perform better than individual ensemble members
 (``comparison="m2o"``) as the chaotic component of forecasts is expected to be
-suppressed by this averaging, while the memory of the system sustains. [Boer2016]_
+suppressed by this averaging, while the memory of the system sustains. :cite:p:`Boer2016`
 
 .. currentmodule:: climpred.comparisons
 
@@ -39,11 +39,11 @@ Perfect Model Ensembles
 #######################
 
 In :py:class:`.PerfectModelEnsemble`, there are many more ways of
-verifying forecasts. [Seferian2018]_ uses a comparison of all ensemble members against
+verifying forecasts. :cite:t:`Seferian2018` uses a comparison of all ensemble members against
 the control run (``comparison="m2c"``) and all ensemble members against all other
 ensemble members (``comparison="m2m"``). Furthermore, the ensemble mean forecast can
 be verified against one control member (``comparison="e2c"``) or all members
-(``comparison="m2e"``) as done in Griffies1997_.
+(``comparison="m2e"``) as done in :cite:t:`Griffies1997`.
 
 ``keyword: "m2e"``
 
@@ -69,7 +69,7 @@ The goal of a normalized distance metric is to get a constant or comparable valu
 typically ``1`` (or ``0`` for metrics defined as ``1 - metric``) when the metric
 saturates and the predictability horizon is reached (see `metrics <metrics.html>`__).
 
-A factor is added in the normalized metric formula [Seferian2018]_ to accomodate
+A factor is added in the normalized metric formula :cite:p:`Seferian2018` to accomodate
 different comparison styles. For example, ``metric="nrmse"`` gets smaller in
 comparison ``"m2e"``.
 than ``"m2m"`` by design, since the ensembe mean is always closer to individual members
@@ -87,10 +87,10 @@ skill over all initializations.
 :py:class:`.PerfectModelEnsemble` skill is computed over a
 supervector comprised of all
 initializations and members, which allows the computation of the ACC-based skill
-[Bushuk2018]_, but also returns a mean forecast skill over all initializations.
+:cite:p:`Bushuk2018`, but also returns a mean forecast skill over all initializations.
 
-The supervector approach shown in Bushuk2018_ and just calculating a distance-based
-metric like ``rmse`` over the member dimension as in Griffies1997_ yield very similar
+The supervector approach shown in :cite:t:`Bushuk2018` and just calculating a distance-based
+metric like ``rmse`` over the member dimension as in :cite:t:`Griffies1997` yield very similar
 results.
 
 Compute over dimension
@@ -172,20 +172,5 @@ comparison to ``climpred``, so all users can benefit from your comparison, see
 References
 ##########
 
-.. [Boer2016] Boer, G. J., D. M. Smith, C. Cassou, F. Doblas-Reyes, G. Danabasoglu,
-    B. Kirtman, Y. Kushnir, et al. “The Decadal Climate Prediction Project (DCPP)
-    Contribution to CMIP6.” Geosci. Model Dev. 9, no. 10 (October 25, 2016): 3751–77.
-    https://doi.org/10/f89qdf.
-
-.. [Bushuk2018] Mitchell Bushuk, Rym Msadek, Michael Winton, Gabriel Vecchi,
-    Xiaosong Yang, Anthony Rosati, and Rich Gudgel. Regional Arctic sea–ice
-    prediction: potential versus operational seasonal forecast skill.
-    Climate Dynamics, June 2018. https://doi.org/10/gd7hfq.
-
-.. [Griffies1997] S. M. Griffies and K. Bryan. A predictability study of simulated
-    North Atlantic multidecadal variability. Climate Dynamics, 13(7-8):459–487,
-    August 1997. https://doi.org/10/ch4kc4.
-
-.. [Seferian2018] Roland Séférian, Sarah Berthet, and Matthieu Chevallier. Assessing
-    the Decadal Predictability of Land and Ocean Carbon Uptake.
-    Geophysical Research Letters, March 2018. https://doi.org/10/gdb424.
+.. bibliography::
+  :filter: docname in docnames

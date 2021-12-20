@@ -59,7 +59,7 @@ def spatial_smoothing_xesmf(
     """
     if xe is None:
         raise ImportError(
-            "xesmf is not installed; see"
+            "xesmf is not installed; see "
             "https://pangeo-xesmf.readthedocs.io/en/latest/installation.html"
         )
 
@@ -146,7 +146,7 @@ def temporal_smoothing(
     Args:
         ds: input to be smoothed.
         tsmooth_kws: length of smoothing of timesteps.
-            Defaults to ``{"time": 4}`` (see Goddard et al. 2013).
+            Defaults to ``{"time": 4}`` (see :cite:t:`Goddard2013`).
         how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
             Default: ``"mean"``.
         d_lon_lat_kws: leads nowhere but consistent with ``spatial_smoothing_xesmf``.
@@ -156,10 +156,7 @@ def temporal_smoothing(
         labeling ``"1-(smooth-1)", "...", ...`` .
 
     References:
-        * Goddard, L., A. Kumar, A. Solomon et al.
-          “A Verification Framework for Interannual to Decadal Predictions Experiments.”
-          Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-          https://doi.org/10/f4jjvf.
+        :cite:t:`Goddard2013`
 
     """
     # unpack dict
@@ -242,7 +239,7 @@ def smooth_goddard_2013(
     how: str = "mean",
     **xesmf_kwargs: str,
 ) -> xr.Dataset:
-    """Wrap to smooth as suggested by Goddard et al. 2013.
+    """Wrap to smooth as suggested by :cite:t:`Goddard2013`.
 
     - 4-year composites
     - 5x5 degree regridding
@@ -251,7 +248,7 @@ def smooth_goddard_2013(
         ds: input to be smoothed.
         tsmooth_kws: length of smoothing of timesteps (applies to ``lead``
             in forecast and ``time`` in verification data).
-            Default: ``{"time": 4}`` (see Goddard et al. 2013).
+            Default: ``{"time": 4}`` (see :cite:t:`Goddard2013`).
         d_lon_lat_kws: target grid for regridding.
             Default: ``{"lon":5 , "lat": 5}``.
         how: aggregation type for smoothing. Allowed: ``["mean", "sum"]``.
@@ -259,13 +256,10 @@ def smooth_goddard_2013(
         **xesmf_kwargs: kwargs passed to ``spatial_smoothing_xesmf``.
 
     Returns:
-        input with `smooth` timesteps less and labeling "1-(smooth-1)", "..." .
+        input with ``smooth`` timesteps less and labeling "1-(smooth-1)", "..." .
 
     References:
-        * Goddard, L., A. Kumar, A. Solomon et al.
-          “A Verification Framework for Interannual to Decadal Predictions Experiments.”
-          Climate Dynamics 40, no. 1–2 (January 1, 2013): 245–72.
-          https://doi.org/10/f4jjvf.
+        :cite:t:`Goddard2013`
     """
     # first temporal smoothing
     ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws)

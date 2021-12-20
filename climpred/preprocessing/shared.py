@@ -1,3 +1,5 @@
+from typing import Any, Callable, Union
+
 import numpy as np
 import xarray as xr
 
@@ -6,38 +8,36 @@ from .mpi import get_path as get_path_mpi
 
 
 def load_hindcast(
-    inits=range(1961, 1965),
-    members=range(1, 3),
-    preprocess=None,
-    lead_offset=1,
-    parallel=True,
-    engine=None,
-    get_path=get_path_mpi,
-    **get_path_kwargs,
-):  # “pragma: no cover”
-    """Load multi-member, multi-initialization hindcast experiment into one
-    `xr.Dataset` compatible with `climpred`.
+    inits=range(1961, 1965, 1),
+    members=range(1, 3, 1),
+    preprocess: Callable = None,
+    lead_offset: int = 1,
+    parallel: bool = True,
+    engine: str = None,
+    get_path: Callable = get_path_mpi,
+    **get_path_kwargs: Any,
+) -> Union[xr.DataArray, xr.Dataset]:
+    """
+    Concat multi-member, multi-initialization hindcast experiment.
+
+    Into one :py:class:`xarray.Dataset` compatible with `climpred`.
 
     Args:
         inits (list, array): List of initializations to be loaded.
-            Defaults to range(1961, 1965).
+            Defaults to ``range(1961, 1965)``.
         members (list, array): List of initializations to be loaded.
-            Defaults to range(1, 3).
-        preprocess (function): `preprocess` function accepting and returning
-            `xr.Dataset` only. To be passed to :py:func:`xarray.open_dataset`.
-            Defaults to None.
-        parallel (bool): passed to `xr.open_mfdataset`. Defaults to True.
-        engine (str): passed to `xr.open_mfdataset`. Defaults to None.
-
-        .. note::
-            To load MPI-ESM grb files, pass `engine='pynio'`.
-
-        get_path (callable): `get_path` function specific to modelling center output
+            Defaults to ``range(1, 3)``.
+        preprocess (Callable): ``preprocess`` function accepting and returning
+            :py:class:`xarray.Dataset` only. To be passed to
+            :py:func:`xarray.open_dataset`. Defaults to None.
+        parallel (bool): passed to `xr.open_mfdataset`. Defaults to ``True``.
+        engine (str): passed to `xr.open_mfdataset`. Defaults to ``None``.
+        get_path (callable): ``get_path`` function specific to modelling center output
             format. Defaults to :py:func:`~climpred.preprocessing.mpi.get_path`.
-        **get_path_kwargs (dict): parameters passed to `**get_path`.
+        **get_path_kwargs (dict): parameters passed to ``**get_path``.
 
     Returns:
-        xr.Dataset: `climpred` compatible dataset with dims: `member`, `init`, `lead`.
+        ``climpred`` compatible dataset with dims: ``member``, ``init``, ``lead``.
 
     """
     init_list = []
@@ -70,17 +70,20 @@ def load_hindcast(
     return ds
 
 
-def rename_SLM_to_climpred_dims(xro):
-    """Rename ensemble dimensions common to SubX or CESM output:
+def rename_SLM_to_climpred_dims(
+    xro: Union[xr.DataArray, xr.Dataset]
+) -> Union[xr.DataArray, xr.Dataset]:
+    """
+    Rename ensemble dimensions common to SubX or CESM output.
 
         * ``S`` : Refers to start date and is changed to ``init``
         * ``L`` : Refers to lead time and is changed to ``lead``
         * ``M``: Refers to ensemble member and is changed to ``member``
 
     Args:
-        xro (xr.object): input from CESM/SubX containing dimensions: `S`, `L`, `M`.
+        xro (xr.Dataset): input from CESM/SubX containing dimensions: `S`, `L`, `M`.
     Returns:
-        xr.object: `climpred` compatible with dimensions: `member`, `init`, `lead`.
+        ``climpred`` compatible with dimensions: ``member``, ``init``, ``lead``.
     """
     dim_dict = {"S": "init", "L": "lead", "M": "member"}
     for dim in dim_dict.keys():
@@ -89,17 +92,21 @@ def rename_SLM_to_climpred_dims(xro):
     return xro
 
 
-def rename_to_climpred_dims(xro):
-    """Rename existing dimension in xr.object `xro` to `CLIMPRED_ENSEMBLE_DIMS` from
-    existing dimension names. This function attempts to autocorrect dimension names to
+def rename_to_climpred_dims(
+    xro: Union[xr.DataArray, xr.Dataset]
+) -> Union[xr.DataArray, xr.Dataset]:
+    """
+    Rename existing dimension to `CLIMPRED_ENSEMBLE_DIMS`.
+
+    This function attempts to autocorrect dimension names to
     climpred standards. e.g., `ensemble_member` becomes `member` and `lead_time`
     becomes `lead`, and `time` gets renamed to `lead`.
 
     Args:
-        xro (xr.object): input from DCPP via `intake-esm <intake-esm.readthedocs.io/>`_
+        xro (xr.Dataset): input from DCPP via `intake-esm <intake-esm.readthedocs.io/>`_
         containing dimension names like `dcpp_init_year`, `time`, `member_id`.
     Returns:
-        xr.object: `climpred` compatible with dimensions: `member`, `init`, `lead`.
+        ``climpred`` compatible with dimensions: ``member``, ``init``, ``lead``.
     """
     for cdim in CLIMPRED_ENSEMBLE_DIMS:
         renamed = False  # set renamed flag to false initiallly
@@ -121,8 +128,13 @@ def rename_to_climpred_dims(xro):
     return xro
 
 
-def set_integer_time_axis(xro, offset=1, time_dim="time"):
-    """Set time axis to integers starting from `offset`. Used in hindcast preprocessing
-    before the concatination of `intake-esm` happens."""
+def set_integer_time_axis(
+    xro: Union[xr.DataArray, xr.Dataset], offset: int = 1, time_dim: str = "time"
+) -> Union[xr.DataArray, xr.Dataset]:
+    """
+    Set time axis to integers starting from `offset`.
+
+    Used in hindcast preprocessing before the concatination of `intake-esm` happens.
+    """
     xro[time_dim] = np.arange(offset, offset + xro[time_dim].size)
     return xro

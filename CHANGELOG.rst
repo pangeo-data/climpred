@@ -16,8 +16,8 @@ What's New
     mpl.rcParams["savefig.bbox"] = "tight"
 
 
-climpred unreleased (202x-xx-xx)
-================================
+climpred v2.2.0 (2021-12-20)
+============================
 
 Bug Fixes
 ---------
@@ -105,7 +105,7 @@ Data variables:
       hindcast = climpred.HindcastEnsemble(
           load_dataset("CESM-DP-SST")
       ).add_observations(load_dataset("ERSST"))
-      @savefig plotting_MEOW.png width=100%
+      @savefig plot_alignment_example.png width=100%
       hindcast.plot_alignment(edgecolor="w")
 
 - Add ``attrs`` to new ``coordinates`` created by ``climpred``.
@@ -134,8 +134,8 @@ Internals/Minor Fixes
 
 Documentation
 -------------
-- Refresh all docs with ``sphinx_book_theme``.
-  (:issue:`707`, :pr:`708`, :pr:`709`) `Aaron Spring`_.
+- Refresh all docs with ``sphinx_book_theme`` and ``myst_nb``.
+  (:issue:`707`, :pr:`708`, :pr:`709`, :pr:`710`) `Aaron Spring`_.
 
 
 climpred v2.1.6 (2021-08-31)

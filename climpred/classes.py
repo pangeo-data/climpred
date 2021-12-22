@@ -215,7 +215,9 @@ class PredictionEnsemble:
         if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
             initialized = initialized.to_dataset()
-        assert isinstance(initialized, xr.Dataset), "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
+        assert isinstance(
+            initialized, xr.Dataset
+        ), "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
         initialized = rename_to_climpred_dims(initialized)
         has_dims(initialized, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to

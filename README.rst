@@ -108,6 +108,7 @@ Verification of weather and climate forecasts.
 
 ..
 
+
 .. note::
 
     We are actively looking for new contributors for climpred! Riley moved to McKinsey's

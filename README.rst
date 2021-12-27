@@ -45,7 +45,7 @@ Verification of weather and climate forecasts.
 .. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg
       :target: https://codecov.io/gh/pangeo-data/climpred
       :alt: coverage
- 
+
 .. |precommit| image:: https://results.pre-commit.ci/badge/github/pangeo-data/climpred/main.svg
    :target: https://results.pre-commit.ci/latest/github/pangeo-data/climpred/main
    :alt: pre-commit.ci status

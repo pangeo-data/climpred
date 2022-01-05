@@ -66,7 +66,6 @@ class Compute:
     @parameterized(["metric"], (METRICS))
     def time_bootstrap(self, metric):
         """Take time for `PredictionEnsemble.bootstrap`."""
-        _skip_slow()
         ensure_loaded(
             self.PredictionEnsemble.bootstrap(
                 **self.get_kwargs(metric=metric, bootstrap=True)
@@ -76,7 +75,6 @@ class Compute:
     @parameterized(["metric"], (METRICS))
     def peakmem_bootstrap(self, metric):
         """Take memory peak for `PredictionEnsemble.bootstrap`."""
-        _skip_slow()
         ensure_loaded(
             self.PredictionEnsemble.bootstrap(
                 **self.get_kwargs(metric=metric, bootstrap=True)

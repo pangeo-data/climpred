@@ -2,7 +2,7 @@ import numpy as np
 import xarray as xr
 from dask.distributed import Client
 
-from climpred import HindcastEnsemble, PerfectModelEnsemble
+from climpred import HindcastEnsemble, PerfectModelEnsemble, set_options
 from climpred.metrics import PROBABILISTIC_METRICS
 from climpred.tutorial import load_dataset
 
@@ -12,6 +12,8 @@ from . import _skip_slow, ensure_loaded, parameterized, randn, requires_dask
 METRICS = ["rmse", "crps"]
 REFERENCES = ["uninitialized", "climatology", "persistence"]
 ITERATIONS = 16
+
+set_options(climpred_warnings=False)
 
 
 class Compute:
@@ -275,7 +277,7 @@ class NMME(Compute):
     """Tutorial data from NMME project."""
 
     def get_data(self):
-        init = load_dataset("NMME_hindcast_Nino34_sst")
+        init = load_dataset("NMME_hindcast_Nino34_sst").isel(model=0)
         obs = load_dataset("NMME_OIv2_Nino34_sst")
         self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
 

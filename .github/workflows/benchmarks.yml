@@ -64,6 +64,7 @@ jobs:
       - name: Add instructions to artifact
         if: always()
         run: |
+          cat benchmarks.log
           cp benchmarks.log .asv/results/
         working-directory: ${{ env.ASV_DIR }}
 

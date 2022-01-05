@@ -54,17 +54,17 @@ class Compute:
         return metric_kwargs
 
     @parameterized(["metric"], (METRICS))
-    def time_PredictionEnsemble_verify(self, metric):
+    def time_verify(self, metric):
         """Take time for `PredictionEnsemble.verify`."""
         ensure_loaded(self.PredictionEnsemble.verify(**self.get_kwargs(metric=metric)))
 
     @parameterized(["metric"], (METRICS))
-    def peakmem_PredictionEnsemble_verify(self, metric):
+    def peakmem_verify(self, metric):
         """Take memory peak for `PredictionEnsemble.verify`."""
         ensure_loaded(self.PredictionEnsemble.verify(**self.get_kwargs(metric=metric)))
 
     @parameterized(["metric"], (METRICS))
-    def time_PredictionEnsemble_bootstrap(self, metric):
+    def time_bootstrap(self, metric):
         """Take time for `PredictionEnsemble.bootstrap`."""
         _skip_slow()
         ensure_loaded(
@@ -74,7 +74,7 @@ class Compute:
         )
 
     @parameterized(["metric"], (METRICS))
-    def peakmem_PredictionEnsemble_bootstrap(self, metric):
+    def peakmem_bootstrap(self, metric):
         """Take memory peak for `PredictionEnsemble.bootstrap`."""
         _skip_slow()
         ensure_loaded(
@@ -186,7 +186,7 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
         self.reference = None
 
 
-class GenerateSmallHindcastEnsemble(GenerateHindcastEnsemble):
+class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
     """Generate single grid point `HindcastEnsemble`."""
 
     def setup(self, *args, **kwargs):
@@ -200,7 +200,7 @@ class GenerateSmallHindcastEnsemble(GenerateHindcastEnsemble):
         self.reference = None
 
 
-class GenerateSmallReferencesHindcastEnsemble(GenerateSmallHindcastEnsemble):
+class GenerateHindcastEnsembleSmallReferences(GenerateHindcastEnsembleSmall):
     """Generate single grid point `HindcastEnsemble` with all references."""
 
     def setup(self, *args, **kwargs):
@@ -209,7 +209,7 @@ class GenerateSmallReferencesHindcastEnsemble(GenerateSmallHindcastEnsemble):
         self.reference = REFERENCES
 
 
-class GenerateSmallPerfectModelEnsemble(GeneratePerfectModelEnsemble):
+class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
     """Generate single grid point `PerfectModelEnsemble`."""
 
     def setup(self, *args, **kwargs):
@@ -222,7 +222,7 @@ class GenerateSmallPerfectModelEnsemble(GeneratePerfectModelEnsemble):
         self.reference = None
 
 
-class GenerateSmallReferencesPerfectModelEnsemble(GenerateSmallPerfectModelEnsemble):
+class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):
     """Generate single grid point `PerfectModelEnsemble`."""
 
     def setup(self, *args, **kwargs):
@@ -255,25 +255,18 @@ class GenerateHindcastEnsembleDaskDistributed(GenerateHindcastEnsembleDask):
         self.client.shutdown()
 
 
-class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
-    def setup(self, *args, **kwargs):
-        """The same tests but on 1D data."""
-        requires_dask()
-        super().setup(**kwargs)
-        self.PredictionEnsemble = self.PredictionEnsemble.isel(lon=0, lat=0)
-        self.iterations = 500
-
-
 class S2S(Compute):
     """Tutorial data from S2S project."""
 
+    number = 3
+
     def get_data(self):
+        _skip_slow()
         init = load_dataset("ECMWF_S2S_Germany").t2m
         obs = load_dataset("Observations_Germany").t2m
         self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
         self.get_data()
         self.alignment = "same_inits"
         self.reference = None  # ['uninitialized','climatology','persistence']
@@ -289,7 +282,6 @@ class NMME(Compute):
         self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
         self.get_data()
         self.alignment = "same_inits"
         self.reference = None  # ['uninitialized','climatology','persistence']

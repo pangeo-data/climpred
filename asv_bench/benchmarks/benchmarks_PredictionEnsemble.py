@@ -24,15 +24,18 @@ class Compute:
     timeout = 300.0
     repeat = 1
     number = 5
-    # repeat = (2, 5, 10)
 
     def setup(self, *args, **kwargs):
-        # self.get_data()
+        raise NotImplementedError()
         self.alignment = None
         self.reference = None  # ['uninitialized','climatology','persistence']
 
     def get_kwargs(self, metric=None, bootstrap=False):
         """Adjust kwargs for verify/bootstrap matching with metric."""
+        if not isinstance(
+            self.PredictionEnsemble, (PerfectModelEnsemble, HindcastEnsemble)
+        ):
+            raise NotImplementedError()
         dim = "member" if metric in PROBABILISTIC_METRICS else "init"
         if self.PredictionEnsemble.kind == "hindcast":
             comparison = "m2o" if metric in PROBABILISTIC_METRICS else "e2o"

@@ -20,8 +20,11 @@ class Compute:
     `PredictionEnsemble.bootstrap`.
     """
 
-    timeout = 600
-    repeat = (2, 5, 10)  # https://asv.readthedocs.io/en/stable/benchmarks.html
+    # https://asv.readthedocs.io/en/stable/benchmarks.html
+    timeout = 300.0
+    repeat = 1
+    number = 5
+    # repeat = (2, 5, 10)
 
     def setup(self, *args, **kwargs):
         # self.get_data()
@@ -83,16 +86,15 @@ class GenerateHindcastEnsemble(Compute):
     Generate random input data.
     """
 
-    def get_data(self):
+    def get_data(self, spatial_res=2):
         """Generates initialized hindcast, uninitialized historical and observational
         data, mimicking a hindcast experiment."""
         self.initialized = xr.Dataset()
         self.observations = xr.Dataset()
         self.uninitialized = xr.Dataset()
 
-        spatial_res = 2  # degrees
         self.nmember = 10
-        self.nlead = 10
+        self.nlead = 5
         self.nx = 360 // spatial_res
         self.ny = 360 // spatial_res
         self.iterations = ITERATIONS
@@ -185,8 +187,14 @@ class GenerateSmallHindcastEnsemble(GenerateHindcastEnsemble):
     """Generate single grid point `HindcastEnsemble`."""
 
     def setup(self, *args, **kwargs):
-        super().setup(**kwargs)
-        self.PredictionEnsemble = self.PredictionEnsemble.isel(lon=0, lat=0)
+        self.get_data(spatial_res=360)
+        self.PredictionEnsemble = (
+            HindcastEnsemble(self.initialized)
+            .add_uninitialized(self.uninitialized)
+            .add_observations(self.observations)
+        )
+        self.alignment = "same_verif"
+        self.reference = None
 
 
 class GenerateSmallReferencesHindcastEnsemble(GenerateSmallHindcastEnsemble):
@@ -202,9 +210,13 @@ class GenerateSmallPerfectModelEnsemble(GeneratePerfectModelEnsemble):
     """Generate single grid point `PerfectModelEnsemble`."""
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
-        super().setup(**kwargs)
-        self.PredictionEnsemble = self.PredictionEnsemble.isel(lon=0, lat=0)
+        self.get_data(spatial_res=360)
+        self.PredictionEnsemble = PerfectModelEnsemble(self.initialized).add_control(
+            self.observations
+        )
+        self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
+        self.alignment = None
+        self.reference = None
 
 
 class GenerateSmallReferencesPerfectModelEnsemble(GenerateSmallPerfectModelEnsemble):

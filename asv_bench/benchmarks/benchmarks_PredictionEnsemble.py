@@ -162,6 +162,7 @@ class GenerateHindcastEnsemble(Compute):
 
     def setup(self, *args, **kwargs):
         self.get_data()
+        _skip_slow()
         self.alignment = "same_verif"
         self.reference = None
 
@@ -191,6 +192,7 @@ class GenerateSmallReferencesHindcastEnsemble(GenerateSmallHindcastEnsemble):
     """Generate single grid point `HindcastEnsemble` with all references."""
 
     def setup(self, *args, **kwargs):
+        _skip_slow()
         super().setup(**kwargs)
         self.reference = REFERENCES
 
@@ -199,6 +201,7 @@ class GenerateSmallPerfectModelEnsemble(GeneratePerfectModelEnsemble):
     """Generate single grid point `PerfectModelEnsemble`."""
 
     def setup(self, *args, **kwargs):
+        _skip_slow()
         super().setup(**kwargs)
         self.PredictionEnsemble = self.PredictionEnsemble.isel(lon=0, lat=0)
 
@@ -207,6 +210,7 @@ class GenerateSmallReferencesPerfectModelEnsemble(GenerateSmallPerfectModelEnsem
     """Generate single grid point `PerfectModelEnsemble`."""
 
     def setup(self, *args, **kwargs):
+        _skip_slow()
         super().setup(**kwargs)
         self.reference = REFERENCES
 

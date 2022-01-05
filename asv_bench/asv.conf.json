@@ -13,25 +13,9 @@
     // project being benchmarked
     "repo": "..",
 
-    // The Python project's subdirectory in your repo.  If missing or
-    // the empty string, the project is assumed to be located at the root
-    // of the repository.
-    // "repo_subdir": "",
-
-    // Customizable commands for building, installing, and
-    // uninstalling the project. See asv.conf.json documentation.
-    //
-    // "install_command": ["in-dir={env_dir} python -mpip install {wheel_file}"],
-    // "uninstall_command": ["return-code=any python -mpip uninstall -y {project}"],
-    // "build_command": [
-    //     "python setup.py build",
-    //     "PIP_NO_BUILD_ISOLATION=false python -mpip wheel --no-deps --no-index -w {build_cache_dir} {build_dir}"
-    // ],
-
-    // List of branches to benchmark. If not provided, defaults to "master"
+    // List of branches to benchmark. If not provided, defaults to "main"
     // (for git) or "default" (for mercurial).
-    // "branches": ["master"], // for git
-    // "branches": ["default"],    // for mercurial
+    "branches": ["main"], // for git
 
     // The DVCS being used.  If not set, it will be automatically
     // determined from "repo" by looking at the protocol in the URL
@@ -55,7 +39,7 @@
 
     // The Pythons you'd like to test against.  If not provided, defaults
     // to the current version of Python used to run `asv`.
-    // "pythons": ["3.6"],
+    // "pythons": ["3.8"],
 
     // The list of conda channel names to be searched for benchmark
     // dependency packages in the specified order
@@ -77,8 +61,8 @@
     //     "pip+emcee": [""],   // emcee is only available for install with pip.
     // },
     "matrix": {
-      "numpy": [""],
       "xarray": [""],
+      "xskillscore": [""],
       "dask": [""],
       "cftime": [""],
     },

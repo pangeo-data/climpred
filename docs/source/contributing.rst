@@ -216,19 +216,19 @@ Preparing Pull Requests
    cause unexpected performance regressions.  You can run specific benchmarks
    using the ``-b`` flag, which takes a regular expression.  For example, this
    will only run tests from a
-   ``asv_bench/benchmarks/benchmarks_perfect_model.py`` file::
+   ``asv_bench/benchmarks/benchmarks_HindcastEnsemble.py`` file::
 
-      $ asv continuous -f 1.1 upstream/main HEAD -b ^benchmarks_perfect_model
+      $ asv continuous -f 1.1 upstream/main HEAD -b ^benchmarks_HindcastEnsemble
 
    If you want to only run a specific group of tests from a file, you can do it
    using ``.`` as a separator. For example::
 
-      $ asv continuous -f 1.1 upstream/main HEAD -b benchmarks_perfect_model.Compute.time_bootstrap_perfect_model
+      $ asv continuous -f 1.1 upstream/main HEAD -b benchmarks_HindcastEnsemble.Compute.time_PredictionEnsemble_bootstrap
 
-   will only run the ``time_bootstrap_perfect_model`` benchmark of class
-   ``Compute`` defined in ``benchmarks_perfect_model.py``.
+   will only run the ``time_PredictionEnsemble_bootstrap`` benchmark of class
+   ``Compute`` defined in ``benchmarks_HindcastEnsemble.py``.
 
-#. Create a new changelog entry in ``CHANGELOG.rst``:
+#. Create a new changelog entry in `CHANGELOG.rst <CHANGELOG.html>`_:
 
    The entry should be entered as:
 
@@ -238,7 +238,7 @@ Preparing Pull Requests
    and ``<pull request number>`` is the pull request number and
    ``<author's names>`` are your first and last names.
 
-   Add yourself to list of authors at the end of ``CHANGELOG.rst`` file if
+   Add yourself to list of authors at the end of `CHANGELOG.rst <CHANGELOG.html>`_ file if
    not there yet, in alphabetical order.
 
 #. Add yourself to the `contributors <https://climpred.readthedocs.io/en/latest/contributors.html>`_ list via ``docs/source/contributors.rst``.

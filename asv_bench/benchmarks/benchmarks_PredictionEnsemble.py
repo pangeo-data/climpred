@@ -166,7 +166,6 @@ class GenerateHindcastEnsemble(Compute):
         )
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
         self.get_data()
         self.alignment = "same_verif"
         self.reference = None
@@ -176,7 +175,6 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
     """Generate `PerfectModelEnsemble` out of `HindcastEnsemble`."""
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
         self.get_data()
         self.PredictionEnsemble = PerfectModelEnsemble(self.initialized).add_control(
             self.observations

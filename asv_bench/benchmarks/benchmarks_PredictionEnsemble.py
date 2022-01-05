@@ -24,7 +24,7 @@ class Compute:
     repeat = (2, 5, 10)  # https://asv.readthedocs.io/en/stable/benchmarks.html
 
     def setup(self, *args, **kwargs):
-        self.get_data()
+        # self.get_data()
         self.alignment = None
         self.reference = None  # ['uninitialized','climatology','persistence']
 
@@ -161,8 +161,8 @@ class GenerateHindcastEnsemble(Compute):
         )
 
     def setup(self, *args, **kwargs):
-        self.get_data()
         _skip_slow()
+        self.get_data()
         self.alignment = "same_verif"
         self.reference = None
 
@@ -171,6 +171,7 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
     """Generate `PerfectModelEnsemble` out of `HindcastEnsemble`."""
 
     def setup(self, *args, **kwargs):
+        _skip_slow()
         self.get_data()
         self.PredictionEnsemble = PerfectModelEnsemble(self.initialized).add_control(
             self.observations

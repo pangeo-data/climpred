@@ -1,5 +1,6 @@
 # https://github.com/pydata/xarray/blob/master/asv_bench/benchmarks/__init__.py
 import itertools
+import os
 
 import dask
 import numpy as np
@@ -55,3 +56,19 @@ def ensure_loaded(res):
     if dask.is_dask_collection(res):
         res = res.compute()
     return res
+
+
+def _skip_slow():
+    """
+    Use this function to skip slow or highly demanding tests.
+    Use it as a `Class.setup` method or a `function.setup` attribute.
+    Examples
+    --------
+    >>> from . import _skip_slow
+    >>> def time_something_slow():
+    ...     pass
+    ...
+    >>> time_something.setup = _skip_slow
+    """
+    if os.environ.get("ASV_SKIP_SLOW", "0") == "1":
+        raise NotImplementedError("Skipping this test...")

@@ -221,7 +221,7 @@ class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
 
 
 class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):
-    """Generate single grid point `PerfectModelEnsemble`."""
+    """Generate single grid point `PerfectModelEnsemble` with all references."""
 
     def setup(self, *args, **kwargs):
         _skip_slow()

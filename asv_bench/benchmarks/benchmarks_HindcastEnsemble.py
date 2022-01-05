@@ -30,7 +30,7 @@ class Generate:
         self.observations = xr.Dataset()
         self.uninitialized = xr.Dataset()
 
-        spatial_res = 10  # degrees
+        spatial_res = 2  # degrees
         self.nmember = 10
         self.nlead = 10
         self.nx = 360 // spatial_res
@@ -93,8 +93,6 @@ class Generate:
 
         self.initialized.attrs = {"history": "created for xarray benchmarking"}
         self.initialized.lead.attrs["units"] = "years"
-        self.uninitialized.time.attrs["units"] = "years"
-        self.observations.time.attrs["units"] = "years"
 
         self.PredictionEnsemble = (
             HindcastEnsemble(self.initialized)

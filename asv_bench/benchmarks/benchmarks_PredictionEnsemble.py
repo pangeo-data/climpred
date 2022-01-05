@@ -137,14 +137,14 @@ class GenerateHindcastEnsemble(Compute):
             dims=("member", "init", "lead", "lon", "lat"),
             name="var",
             attrs={"units": "var units", "description": "a description"},
-        )
+        ).squeeze()
         self.observations["var"] = xr.DataArray(
             randn((self.ninit, self.nx, self.ny), frac_nan=FRAC_NAN),
             coords={"lon": lons, "lat": lats, "time": inits},
             dims=("time", "lon", "lat"),
             name="var",
             attrs={"units": "var units", "description": "a description"},
-        )
+        ).squeeze()
 
         self.uninitialized["var"] = xr.DataArray(
             randn((self.ninit, self.nx, self.ny, self.nmember), frac_nan=FRAC_NAN),
@@ -152,7 +152,7 @@ class GenerateHindcastEnsemble(Compute):
             dims=("time", "lon", "lat", "member"),
             name="var",
             attrs={"units": "var units", "description": "a description"},
-        )
+        ).squeeze()
 
         self.initialized.attrs = {"history": "created for xarray benchmarking"}
         self.initialized.lead.attrs["units"] = "years"

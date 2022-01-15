@@ -1,6 +1,6 @@
 import pytest
 import xarray as xr
-from IPython.display import display
+from IPython.display import display_html
 
 from climpred.classes import HindcastEnsemble, PerfectModelEnsemble
 
@@ -8,6 +8,7 @@ from climpred.classes import HindcastEnsemble, PerfectModelEnsemble
 @pytest.mark.parametrize("display_style", ("html", "text"))
 def test_repr_PM(PM_da_initialized_1d, PM_da_control_1d, display_style):
     """Test html and text repr."""
+    display = print if display_style == "text" else display_html
     with xr.set_options(display_style=display_style):
         pm = PerfectModelEnsemble(PM_da_initialized_1d)
         display(pm)
@@ -25,6 +26,7 @@ def test_repr_HC(
     display_style,
 ):
     """Test html repr."""
+    display = print if display_style == "text" else display_html
     with xr.set_options(display_style=display_style):
         he = HindcastEnsemble(hind_ds_initialized_1d)
         display(he)

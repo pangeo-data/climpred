@@ -7,7 +7,6 @@ dependencies:
   - cftime>=1.1.2
   - coveralls
   - dask-core
-  - ipython
   - netcdf4
   - pip
   - pytest

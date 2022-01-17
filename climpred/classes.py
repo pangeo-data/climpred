@@ -19,7 +19,6 @@ from typing import (
 import cf_xarray  # noqa
 import numpy as np
 import xarray as xr
-from IPython.display import display_html
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr
@@ -162,33 +161,27 @@ def _display_metadata(self) -> str:
 
 def _display_metadata_html(self) -> str:
     """Print contents of :py:class:`.PredictionEnsemble` as html."""
-    header = f"<h4>climpred.{type(self).__name__}</h4>"
-    display_html(header, raw=True)
+    html_str = f"<h4>climpred.{type(self).__name__}</h4>"
     init_repr_str = dataset_repr(self._datasets["initialized"])
-    init_repr_str = init_repr_str.replace("xarray.Dataset", "Initialized Ensemble")
-    display_html(init_repr_str, raw=True)
+    html_str += init_repr_str.replace("xarray.Dataset", "Initialized Ensemble")
 
     if isinstance(self, HindcastEnsemble):
         if any(self._datasets["observations"]):
-            obs_repr_str = dataset_repr(self._datasets["observations"])
-            obs_repr_str = obs_repr_str.replace("xarray.Dataset", "Observations")
-            display_html(obs_repr_str, raw=True)
+            html_str += dataset_repr(self._datasets["observations"]).replace(
+                "xarray.Dataset", "Observations"
+            )
     elif isinstance(self, PerfectModelEnsemble):
         if any(self._datasets["control"]):
-            control_repr_str = dataset_repr(self._datasets["control"])
-            control_repr_str = control_repr_str.replace(
-                "xarray.Dataset", "Control Simulation"
+            html_str += dataset_repr(self._datasets["control"]).replace(
+                "xarray.Dataset", "Control"
             )
-            display_html(control_repr_str, raw=True)
 
     if any(self._datasets["uninitialized"]):
-        uninit_repr_str = dataset_repr(self._datasets["uninitialized"])
-        uninit_repr_str = uninit_repr_str.replace("xarray.Dataset", "Uninitialized")
-        display_html(uninit_repr_str, raw=True)
-    # better would be to aggregate repr_strs and then all return but this fails
-    # TypeError: __repr__ returned non-string (type NoneType)
-    # workaround return empty string
-    return ""
+        html_str += dataset_repr(self._datasets["uninitialized"]).replace(
+            "xarray.Dataset", "Uninitialized"
+        )
+
+    return html_str
 
 
 class PredictionEnsemble:
@@ -381,6 +374,10 @@ class PredictionEnsemble:
     # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self) -> str:
         """Return for print(PredictionEnsemble)."""
+        return _display_metadata(self)
+
+    def _repr_html(self) -> str:
+        """Return for PredictionEnsemble in html."""
         if XR_OPTIONS["display_style"] == "html":
             return _display_metadata_html(self)
         else:

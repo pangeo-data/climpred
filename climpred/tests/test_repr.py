@@ -1,40 +1,51 @@
 import pytest
 import xarray as xr
-from IPython.display import display_html
 
 from climpred.classes import HindcastEnsemble, PerfectModelEnsemble
 
 
+def assert_repr(pe, display_style):
+    if display_style == "text":
+        repr_str = pe.__repr__()
+    elif display_style == "html":
+        repr_str = pe._repr_html_()
+    assert "Ensemble" in repr_str
+    if display_style == "text":
+        assert "</pre>" not in repr_str
+    elif display_style == "html":
+        assert "icon" in repr_str
+
+
 @pytest.mark.parametrize("display_style", ("html", "text"))
-def test_repr_PM(PM_da_initialized_1d, PM_da_control_1d, display_style):
+def test_repr_PerfectModelEnsemble(
+    PM_da_initialized_1d, PM_da_control_1d, display_style
+):
     """Test html and text repr."""
-    display = print if display_style == "text" else display_html
     with xr.set_options(display_style=display_style):
         pm = PerfectModelEnsemble(PM_da_initialized_1d)
-        display(pm)
+        assert_repr(pm, display_style)
         pm = pm.add_control(PM_da_control_1d)
-        display(pm)
+        assert_repr(pm, display_style)
         pm = pm.generate_uninitialized()
-        display(pm)
+        assert_repr(pm, display_style)
 
 
 @pytest.mark.parametrize("display_style", ("html", "text"))
-def test_repr_HC(
+def test_repr_HindcastEnsemble(
     hind_ds_initialized_1d,
     hist_ds_uninitialized_1d,
     observations_ds_1d,
     display_style,
 ):
     """Test html repr."""
-    display = print if display_style == "text" else display_html
     with xr.set_options(display_style=display_style):
         he = HindcastEnsemble(hind_ds_initialized_1d)
-        display(he)
+        assert_repr(he, display_style)
         he = he.add_uninitialized(hist_ds_uninitialized_1d)
-        display(he)
+        assert_repr(he, display_style)
         he = he.add_observations(observations_ds_1d)
-        display(he)
+        assert_repr(he, display_style)
         # no uninit
         he = HindcastEnsemble(hind_ds_initialized_1d)
         he = he.add_observations(observations_ds_1d)
-        display(he)
+        assert_repr(he, display_style)

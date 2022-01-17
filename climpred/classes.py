@@ -21,6 +21,7 @@ import numpy as np
 import xarray as xr
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
+from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
@@ -117,7 +118,7 @@ def _display_metadata(self) -> str:
     """
     SPACE = "    "
     header = f"<climpred.{type(self).__name__}>"
-    summary = header + "\nInitialized Ensemble:\n"
+    summary = header + "\nInitialized:\n"
     summary += SPACE + str(self._datasets["initialized"].data_vars)[18:].strip() + "\n"
     if isinstance(self, HindcastEnsemble):
         # Prints out observations and associated variables if they exist.
@@ -159,27 +160,13 @@ def _display_metadata(self) -> str:
 
 
 def _display_metadata_html(self):
-    """Print contents of :py:class:`.PredictionEnsemble` as html."""
-    from xarray.core.formatting_html import dataset_repr
-
-    # html_str = f"<h4>climpred.{type(self).__name__}</h4>"
-    html_str = dataset_repr(self._datasets["initialized"]).replace(
-        "xarray.Dataset", "Initialized Ensemble"
-    )
-    if isinstance(self, HindcastEnsemble):
-        if any(self._datasets["observations"]):
-            html_str += dataset_repr(self._datasets["observations"]).replace(
-                "xarray.Dataset", "Observations"
+    """Show contents of :py:class:`.PredictionEnsemble` as html."""
+    html_str = f"<h4>climpred.{type(self).__name__}</h4>"
+    for k in self._datasets.keys():
+        if self._datasets[k]:
+            html_str += dataset_repr(self._datasets[k]).replace(
+                "xarray.Dataset", k.capitalize()
             )
-    elif isinstance(self, PerfectModelEnsemble):
-        if any(self._datasets["control"]):
-            html_str += dataset_repr(self._datasets["control"]).replace(
-                "xarray.Dataset", "Control"
-            )
-    if any(self._datasets["uninitialized"]):
-        html_str += dataset_repr(self._datasets["uninitialized"]).replace(
-            "xarray.Dataset", "Uninitialized"
-        )
     return html_str
 
 
@@ -369,15 +356,17 @@ class PredictionEnsemble(object):
         varlist = list(varset)
         return self.get_initialized()[varlist].data_vars
 
+    def _repr_html_(self):
+        """Return for :py:class:`.PredictionEnsemble` in html."""
+        from html import escape
+
+        if XR_OPTIONS["display_style"] == "text":
+            return f"<pre>{escape(repr(self))}</pre>"
+        return _display_metadata_html(self)
+
     def __repr__(self) -> str:
         """Return for print(:py:class:`.PredictionEnsemble`)."""
         return _display_metadata(self)
-
-    def _repr_html_(self):
-        """Return for :py:class:`.PredictionEnsemble` in html."""
-        if XR_OPTIONS["display_style"] == "text":
-            return _display_metadata(self)
-        return _display_metadata_html(self)
 
     def __len__(self) -> int:
         """Return number of all variables :py:class:`.PredictionEnsemble`."""
@@ -649,8 +638,8 @@ class PredictionEnsemble(object):
         Args:
             * name: str of xarray function, e.g., ``.isel()`` or ``.sum()``.
         """
-        if not hasattr(xr.Dataset, name):
-            return self
+        if name.startswith("_") or not hasattr(xr.Dataset, name):
+            raise AttributeError(name)
 
         def wrapper(*args, **kwargs):
             """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.

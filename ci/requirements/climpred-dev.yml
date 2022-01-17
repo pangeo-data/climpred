@@ -11,7 +11,6 @@ dependencies:
   - sphinxcontrib-napoleon
   - sphinx-copybutton
   # IDE
-  - ipywidgets
   - jupyterlab
   - nb_conda_kernels # switch conda envs in jupyter
   # Input/Output

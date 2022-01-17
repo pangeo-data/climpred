@@ -22,6 +22,7 @@ Internals/Minor Fixes
 ---------------------
 - Refactor ``asv`` benchmarking. Add ``run-benchmarks`` label to ``PR`` to run ``asv``
   via Github Actions. (:issue:`664`, :pr:`718`) `Aaron Spring`_.
+- Remove ``ipython`` from ``requirements.txt``. (:pr:`720`) `Aaron Spring`_.
 
 
 climpred v2.2.0 (2021-12-20)

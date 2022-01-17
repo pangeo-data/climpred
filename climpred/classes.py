@@ -19,7 +19,6 @@ from typing import (
 import cf_xarray  # noqa
 import numpy as np
 import xarray as xr
-from IPython.display import display_html
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr
@@ -109,86 +108,39 @@ def _display_metadata(self) -> str:
         >>> hindcast = climpred.HindcastEnsemble(init)
         >>> print(hindcast)
         <climpred.HindcastEnsemble>
-        Initialized Ensemble:
+        Initialized:
             SST      (init, lead, member) float64 -0.2404 -0.2085 ... 0.7442 0.7384
-        Observations:
-            None
         Uninitialized:
+            None
+        Observations:
             None
 
     """
     SPACE = "    "
-    header = f"<climpred.{type(self).__name__}>"
-    summary = header + "\nInitialized Ensemble:\n"
-    summary += SPACE + str(self._datasets["initialized"].data_vars)[18:].strip() + "\n"
-    if isinstance(self, HindcastEnsemble):
-        # Prints out observations and associated variables if they exist.
-        # If not, just write "None".
-        summary += "Observations:\n"
-        if any(self._datasets["observations"]):
-            num_obs = len(self._datasets["observations"].data_vars)
-            for i in range(1, num_obs + 1):
-                summary += (
-                    SPACE
-                    + str(self._datasets["observations"].data_vars)
-                    .split("\n")[i]
-                    .strip()
-                    + "\n"
+    summary = f"<climpred.{type(self).__name__}>\n"
+
+    for k in self._datasets.keys():
+        if self._datasets[k]:
+            summary += (
+                str(self._datasets[k].data_vars).replace(
+                    "Data variables", k.capitalize()
                 )
-        else:
-            summary += SPACE + "None\n"
-    elif isinstance(self, PerfectModelEnsemble):
-        summary += "Control:\n"
-        # Prints out control variables if a control is appended. If not,
-        # just write "None".
-        if any(self._datasets["control"]):
-            num_ctrl = len(self._datasets["control"].data_vars)
-            for i in range(1, num_ctrl + 1):
-                summary += (
-                    SPACE
-                    + str(self._datasets["control"].data_vars).split("\n")[i].strip()
-                    + "\n"
-                )
-        else:
-            summary += SPACE + "None\n"
-    if any(self._datasets["uninitialized"]):
-        summary += "Uninitialized:\n"
-        summary += SPACE + str(self._datasets["uninitialized"].data_vars)[18:].strip()
-    else:
-        summary += "Uninitialized:\n"
-        summary += SPACE + "None"
-    return summary
-
-
-def _display_metadata_html(self) -> str:
-    """Print contents of :py:class:`.PredictionEnsemble` as html."""
-    header = f"<h4>climpred.{type(self).__name__}</h4>"
-    display_html(header, raw=True)
-    init_repr_str = dataset_repr(self._datasets["initialized"])
-    init_repr_str = init_repr_str.replace("xarray.Dataset", "Initialized Ensemble")
-    display_html(init_repr_str, raw=True)
-
-    if isinstance(self, HindcastEnsemble):
-        if any(self._datasets["observations"]):
-            obs_repr_str = dataset_repr(self._datasets["observations"])
-            obs_repr_str = obs_repr_str.replace("xarray.Dataset", "Observations")
-            display_html(obs_repr_str, raw=True)
-    elif isinstance(self, PerfectModelEnsemble):
-        if any(self._datasets["control"]):
-            control_repr_str = dataset_repr(self._datasets["control"])
-            control_repr_str = control_repr_str.replace(
-                "xarray.Dataset", "Control Simulation"
+                + "\n"
             )
-            display_html(control_repr_str, raw=True)
+        else:
+            summary += f"{k.capitalize()}:\n{SPACE}None\n"
+    return summary.strip("\n")
 
-    if any(self._datasets["uninitialized"]):
-        uninit_repr_str = dataset_repr(self._datasets["uninitialized"])
-        uninit_repr_str = uninit_repr_str.replace("xarray.Dataset", "Uninitialized")
-        display_html(uninit_repr_str, raw=True)
-    # better would be to aggregate repr_strs and then all return but this fails
-    # TypeError: __repr__ returned non-string (type NoneType)
-    # workaround return empty string
-    return ""
+
+def _display_metadata_html(self):
+    """Show contents of :py:class:`.PredictionEnsemble` as html."""
+    html_str = f"<h4>climpred.{type(self).__name__}</h4>"
+    for k in self._datasets.keys():
+        if self._datasets[k]:
+            html_str += dataset_repr(self._datasets[k]).replace(
+                "xarray.Dataset", k.capitalize()
+            )
+    return html_str
 
 
 class PredictionEnsemble:
@@ -377,14 +329,17 @@ class PredictionEnsemble:
         varlist = list(varset)
         return self.get_initialized()[varlist].data_vars
 
-    # when you just print it interactively
-    # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
+    def _repr_html_(self):
+        """Return for :py:class:`.PredictionEnsemble` in html."""
+        from html import escape
+
+        if XR_OPTIONS["display_style"] == "text":
+            return f"<pre>{escape(repr(self))}</pre>"
+        return _display_metadata_html(self)
+
     def __repr__(self) -> str:
-        """Return for print(PredictionEnsemble)."""
-        if XR_OPTIONS["display_style"] == "html":
-            return _display_metadata_html(self)
-        else:
-            return _display_metadata(self)
+        """Return for print(:py:class:`.PredictionEnsemble`)."""
+        return _display_metadata(self)
 
     def __len__(self) -> int:
         """Return number of all variables :py:class:`.PredictionEnsemble`."""
@@ -658,6 +613,8 @@ class PredictionEnsemble:
         Args:
             * name: str of xarray function, e.g., ``.isel()`` or ``.sum()``.
         """
+        if name == "_ipython_canary_method_should_not_exist_":
+            raise AttributeError(name)
 
         def wrapper(*args, **kwargs):
             """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.
@@ -809,12 +766,12 @@ class PredictionEnsemble:
 
             >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
-            Observations:
-                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
             Uninitialized:
                 None
+            Observations:
+                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
 
             ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
             ``lat`` and temporally listening to ``lead`` or ``time``.
@@ -924,21 +881,21 @@ class PredictionEnsemble:
         Examples:
             >>> HindcastEnsemble
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
-            Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             Uninitialized:
                 SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             >>> # example already effectively without seasonal cycle
             >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2349 -0.216 ... 0.6476 0.6433
-            Observations:
-                SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
             Uninitialized:
                 SST      (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
+            Observations:
+                SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
         """
 
         def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
@@ -1797,21 +1754,21 @@ class HindcastEnsemble(PredictionEnsemble):
         Example:
             >>> HindcastEnsemble  # uninitialized from historical simulations
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
-            Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             Uninitialized:
                 SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
 
             >>> HindcastEnsemble.generate_uninitialized()  # newly generated from initialized
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
-            Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             Uninitialized:
                 SST      (time, member) float64 0.04868 0.07173 0.09435 ... 0.4158 0.418
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
         """
         uninit = resample_uninitialized_from_initialized(
             self._datasets["initialized"], resample_dim=resample_dim

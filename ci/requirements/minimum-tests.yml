@@ -4,7 +4,7 @@ channels:
   - nodefaults
 dependencies:
   - python>=3.7
-  - cftime>=1.1.2
+  - cftime>=1.5.0
   - coveralls
   - dask-core
   - netcdf4

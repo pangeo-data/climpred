@@ -49,7 +49,6 @@ extras_require["test"] = [
     "pytest-xdist",
     "pre-commit",
     "netcdf4",
-    "ipython<8.0.0",
 ]
 extras_require["docs"] = extras_require["complete"] + [
     "myst_nb",

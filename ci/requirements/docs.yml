@@ -9,7 +9,7 @@ dependencies:
   - toolz
   - xarray>=0.19.0
   - xskillscore>=0.0.18
-  - cftime
+  - cftime>=0.1.5
   # docs
   - jupyterlab
   - sphinx

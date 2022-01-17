@@ -117,45 +117,18 @@ def _display_metadata(self) -> str:
 
     """
     SPACE = "    "
-    header = f"<climpred.{type(self).__name__}>"
-    summary = header + "\nInitialized:\n"
-    summary += SPACE + str(self._datasets["initialized"].data_vars)[18:].strip() + "\n"
-    if isinstance(self, HindcastEnsemble):
-        # Prints out observations and associated variables if they exist.
-        # If not, just write "None".
-        summary += "Observations:\n"
-        if any(self._datasets["observations"]):
-            num_obs = len(self._datasets["observations"].data_vars)
-            for i in range(1, num_obs + 1):
-                summary += (
-                    SPACE
-                    + str(self._datasets["observations"].data_vars)
-                    .split("\n")[i]
-                    .strip()
-                    + "\n"
+    summary = f"<climpred.{type(self).__name__}>\n"
+
+    for k in self._datasets.keys():
+        if self._datasets[k]:
+            summary += (
+                str(self._datasets[k].data_vars).replace(
+                    "Data variables", k.capitalize()
                 )
+                + "\n"
+            )
         else:
-            summary += SPACE + "None\n"
-    elif isinstance(self, PerfectModelEnsemble):
-        summary += "Control:\n"
-        # Prints out control variables if a control is appended. If not,
-        # just write "None".
-        if any(self._datasets["control"]):
-            num_ctrl = len(self._datasets["control"].data_vars)
-            for i in range(1, num_ctrl + 1):
-                summary += (
-                    SPACE
-                    + str(self._datasets["control"].data_vars).split("\n")[i].strip()
-                    + "\n"
-                )
-        else:
-            summary += SPACE + "None\n"
-    if any(self._datasets["uninitialized"]):
-        summary += "Uninitialized:\n"
-        summary += SPACE + str(self._datasets["uninitialized"].data_vars)[18:].strip()
-    else:
-        summary += "Uninitialized:\n"
-        summary += SPACE + "None"
+            summary += f"{k.capitalize()}:\n{SPACE}None\n"
     return summary
 
 

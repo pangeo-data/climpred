@@ -108,11 +108,11 @@ def _display_metadata(self) -> str:
         >>> hindcast = climpred.HindcastEnsemble(init)
         >>> print(hindcast)
         <climpred.HindcastEnsemble>
-        Initialized Ensemble:
+        Initialized:
             SST      (init, lead, member) float64 -0.2404 -0.2085 ... 0.7442 0.7384
-        Observations:
-            None
         Uninitialized:
+            None
+        Observations:
             None
 
     """
@@ -129,7 +129,7 @@ def _display_metadata(self) -> str:
             )
         else:
             summary += f"{k.capitalize()}:\n{SPACE}None\n"
-    return summary
+    return summary.strip("\n")
 
 
 def _display_metadata_html(self):
@@ -143,7 +143,7 @@ def _display_metadata_html(self):
     return html_str
 
 
-class PredictionEnsemble(object):
+class PredictionEnsemble:
     """
     The main object :py:class:`.PredictionEnsemble`.
 
@@ -611,7 +611,7 @@ class PredictionEnsemble(object):
         Args:
             * name: str of xarray function, e.g., ``.isel()`` or ``.sum()``.
         """
-        if name.startswith("_") or not hasattr(xr.Dataset, name):
+        if name == "_ipython_canary_method_should_not_exist_":
             raise AttributeError(name)
 
         def wrapper(*args, **kwargs):
@@ -764,12 +764,12 @@ class PredictionEnsemble(object):
 
             >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
-            Observations:
-                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
             Uninitialized:
                 None
+            Observations:
+                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
 
             ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
             ``lat`` and temporally listening to ``lead`` or ``time``.
@@ -879,21 +879,21 @@ class PredictionEnsemble(object):
         Examples:
             >>> HindcastEnsemble
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
-            Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             Uninitialized:
                 SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             >>> # example already effectively without seasonal cycle
             >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2349 -0.216 ... 0.6476 0.6433
-            Observations:
-                SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
             Uninitialized:
                 SST      (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
+            Observations:
+                SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
         """
 
         def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
@@ -1752,21 +1752,21 @@ class HindcastEnsemble(PredictionEnsemble):
         Example:
             >>> HindcastEnsemble  # uninitialized from historical simulations
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
-            Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             Uninitialized:
                 SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
 
             >>> HindcastEnsemble.generate_uninitialized()  # newly generated from initialized
             <climpred.HindcastEnsemble>
-            Initialized Ensemble:
+            Initialized:
                 SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
-            Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             Uninitialized:
                 SST      (time, member) float64 0.04868 0.07173 0.09435 ... 0.4158 0.418
+            Observations:
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
         """
         uninit = resample_uninitialized_from_initialized(
             self._datasets["initialized"], resample_dim=resample_dim

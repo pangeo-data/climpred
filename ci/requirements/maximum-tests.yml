@@ -9,7 +9,6 @@ dependencies:
   - dask-core
   - eofs
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
-  - ipython
   - matplotlib-base
   - nc-time-axis>=1.4.0
   - netcdf4

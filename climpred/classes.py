@@ -21,7 +21,6 @@ import numpy as np
 import xarray as xr
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
-from xarray.core.formatting_html import dataset_repr
 from xarray.core.options import OPTIONS as XR_OPTIONS
 from xarray.core.utils import Frozen
 
@@ -159,12 +158,14 @@ def _display_metadata(self) -> str:
     return summary
 
 
-def _display_metadata_html(self) -> str:
+def _display_metadata_html(self):
     """Print contents of :py:class:`.PredictionEnsemble` as html."""
-    html_str = f"<h4>climpred.{type(self).__name__}</h4>"
-    init_repr_str = dataset_repr(self._datasets["initialized"])
-    html_str += init_repr_str.replace("xarray.Dataset", "Initialized Ensemble")
+    from xarray.core.formatting_html import dataset_repr
 
+    # html_str = f"<h4>climpred.{type(self).__name__}</h4>"
+    html_str = dataset_repr(self._datasets["initialized"]).replace(
+        "xarray.Dataset", "Initialized Ensemble"
+    )
     if isinstance(self, HindcastEnsemble):
         if any(self._datasets["observations"]):
             html_str += dataset_repr(self._datasets["observations"]).replace(
@@ -175,16 +176,14 @@ def _display_metadata_html(self) -> str:
             html_str += dataset_repr(self._datasets["control"]).replace(
                 "xarray.Dataset", "Control"
             )
-
     if any(self._datasets["uninitialized"]):
         html_str += dataset_repr(self._datasets["uninitialized"]).replace(
             "xarray.Dataset", "Uninitialized"
         )
-
     return html_str
 
 
-class PredictionEnsemble:
+class PredictionEnsemble(object):
     """
     The main object :py:class:`.PredictionEnsemble`.
 
@@ -370,18 +369,15 @@ class PredictionEnsemble:
         varlist = list(varset)
         return self.get_initialized()[varlist].data_vars
 
-    # when you just print it interactively
-    # https://stackoverflow.com/questions/1535327/how-to-print-objects-of-class-using-print
     def __repr__(self) -> str:
-        """Return for print(PredictionEnsemble)."""
+        """Return for print(:py:class:`.PredictionEnsemble`)."""
         return _display_metadata(self)
 
-    def _repr_html(self) -> str:
-        """Return for PredictionEnsemble in html."""
-        if XR_OPTIONS["display_style"] == "html":
-            return _display_metadata_html(self)
-        else:
+    def _repr_html_(self):
+        """Return for :py:class:`.PredictionEnsemble` in html."""
+        if XR_OPTIONS["display_style"] == "text":
             return _display_metadata(self)
+        return _display_metadata_html(self)
 
     def __len__(self) -> int:
         """Return number of all variables :py:class:`.PredictionEnsemble`."""
@@ -647,14 +643,14 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(
-        self, name: str
-    ) -> Callable:  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
+    def __getattr__(self, name: str):  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
         """Allow for ``xarray`` methods to be applied to our prediction objects.
 
         Args:
             * name: str of xarray function, e.g., ``.isel()`` or ``.sum()``.
         """
+        if not hasattr(xr.Dataset, name):
+            return self
 
         def wrapper(*args, **kwargs):
             """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.

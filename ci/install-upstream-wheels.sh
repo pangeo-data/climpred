@@ -7,7 +7,7 @@ conda uninstall -y --force \
     dask \
     cftime \
     nc-time-axis \
-    bottleneck \
+    # bottleneck \
     xarray \
     xskillscore \
     xclim \

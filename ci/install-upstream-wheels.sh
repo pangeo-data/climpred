@@ -7,7 +7,7 @@ conda uninstall -y --force \
     dask \
     cftime \
     nc-time-axis \
-    bottleneck \
+    # bottleneck \
     xarray \
     xskillscore \
     xclim \
@@ -37,7 +37,7 @@ python -m pip install \
     git+https://github.com/Unidata/cftime \
     git+https://github.com/SciTools/nc-time-axis \
     git+https://github.com/pydata/xarray  \
-    git+https://github.com/pydata/bottleneck  \
+    # git+https://github.com/pydata/bottleneck  \
     git+https://github.com/xarray-contrib/xskillscore \
     git+https://github.com/xgcm/xrft \
     git+https://github.com/pankajkarman/bias_correction

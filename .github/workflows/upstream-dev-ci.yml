@@ -1,14 +1,14 @@
 name: CI Upstream
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
   schedule:
     - cron: "0 0 * * 4" # Thursdays “At 00:00” UTC
   workflow_dispatch: # allows you to trigger the workflow run manually
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   detect-ci-trigger:
@@ -43,7 +43,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8"]
+        python-version: ["3.10"]
     outputs:
       artifacts_availability: ${{ steps.status.outputs.ARTIFACTS_AVAILABLE }}
     steps:

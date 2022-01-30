@@ -1,4 +1,5 @@
 """Test relative_entropy.py"""
+import pytest
 
 from climpred.graphics import plot_relative_entropy
 from climpred.relative_entropy import (
@@ -40,6 +41,7 @@ def test_bootstrap_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
 
 
 @requires_eofs
+@pytest.mark.skip
 def test_plot_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
     res = compute_relative_entropy(
         PM_da_initialized_3d, PM_da_control_3d, nmember_control=5, neofs=2

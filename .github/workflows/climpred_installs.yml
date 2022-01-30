@@ -13,9 +13,6 @@ jobs:
   detect-ci-trigger:
     name: detect ci trigger
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.head_ref || github.run_id }}
-      cancel-in-progress: true
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}

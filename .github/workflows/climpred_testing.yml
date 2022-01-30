@@ -16,9 +16,6 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
-    concurrency:
-      group: ${{ github.head_ref || github.run_id }}
-      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v2
         with:

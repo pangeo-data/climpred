@@ -21,7 +21,7 @@ jobs:
           keyword: "[skip-ci]"
 
   minimum-test:  # Runs testing suite with minimal dependencies
-    name: Test minimum dependencies, python 3.8
+    name: Test minimum dependencies, python 3.x
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'

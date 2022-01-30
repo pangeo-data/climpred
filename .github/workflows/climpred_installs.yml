@@ -1,12 +1,7 @@
 name: install
 
 on:
-  push:
-    branches:
-      - "*"
   pull_request:
-    branches:
-      - "*"
   workflow_dispatch: # allows you to trigger manually
 
 jobs:

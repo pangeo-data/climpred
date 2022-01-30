@@ -1,4 +1,5 @@
 """Test relative_entropy.py"""
+import pytest
 
 from climpred.graphics import plot_relative_entropy
 from climpred.relative_entropy import (

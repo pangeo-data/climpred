@@ -40,6 +40,7 @@ def test_bootstrap_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
 
 
 @requires_eofs
+@pytest.skip
 def test_plot_relative_entropy(PM_da_initialized_3d, PM_da_control_3d):
     res = compute_relative_entropy(
         PM_da_initialized_3d, PM_da_control_3d, nmember_control=5, neofs=2

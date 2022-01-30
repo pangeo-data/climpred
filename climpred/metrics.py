@@ -3783,9 +3783,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         ...     alignment="same_verifs",
         ...     observation_category_edges=category_edges,
         ...     forecast_category_edges=category_edges,
-        ... ).isel(
-        ...     lead=[0, 1]
-        ... ).SST
+        ... ).isel(lead=[0, 1]).SST
         <xarray.DataArray 'SST' (lead: 2, observations_category: 3, forecasts_category: 3)>
         array([[[221,  29,   0],
                 [ 53, 217,   0],

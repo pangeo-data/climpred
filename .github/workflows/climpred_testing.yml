@@ -1,12 +1,7 @@
 name: CI  # based on https://github.com/pydata/xarray/blob/master/.github/workflows/ci.yaml
 
 on:
-  push:
-    branches:
-      - "*"
   pull_request:
-    branches:
-      - "*"
   workflow_dispatch: # allows you to trigger manually
 
 jobs:

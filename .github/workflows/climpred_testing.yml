@@ -16,6 +16,9 @@ jobs:
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
+    concurrency: 
+      group: ${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
     steps:
       - uses: actions/checkout@v2
         with:
@@ -26,10 +29,13 @@ jobs:
           keyword: "[skip-ci]"
 
   minimum-test:  # Runs testing suite with minimal dependencies
-    name: Test minimum dependencies, python 3.7
+    name: Test minimum dependencies, python 3.8
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
+    concurrency: 
+      group: ${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
     defaults:
         run:
           shell: bash -l {0}
@@ -102,6 +108,9 @@ jobs:
   doctest:  # tests all docstrings
     name: Doctests
     runs-on: "ubuntu-latest"
+    concurrency: 
+      group: ${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
     defaults:
       run:
         shell: bash -l {0}
@@ -130,6 +139,9 @@ jobs:
 
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
     runs-on: ubuntu-latest
+    concurrency: 
+      group: ${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
     defaults:
         run:
           shell: bash -l {0}

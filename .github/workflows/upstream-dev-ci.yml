@@ -1,14 +1,14 @@
 name: CI Upstream
 on:
   push:
-    branches:
-      - main
   pull_request:
-    branches:
-      - main
   schedule:
     - cron: "0 0 * * 4" # Thursdays “At 00:00” UTC
   workflow_dispatch: # allows you to trigger the workflow run manually
+
+concurrency:
+  group: ${{ github.ref }}
+  cancel-in-progress: true
 
 jobs:
   detect-ci-trigger:
@@ -29,9 +29,6 @@ jobs:
   upstream-dev:
     name: upstream-dev
     runs-on: ubuntu-latest
-    concurrency:
-      group: ${{ github.head_ref || github.run_id }}
-      cancel-in-progress: true
     needs: detect-ci-trigger
     if: |
       always()

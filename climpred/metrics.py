@@ -3775,7 +3775,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
 
     Example:
         >>> category_edges = np.array([-0.5, 0.0, 0.5, 1.0])
-        >>> HindcastEnsemble.verify(  # doctest: +ELLIPSIS
+        >>> HindcastEnsemble.verify( # doctest: +ELLIPSIS
         ...     metric="contingency",
         ...     score="table",
         ...     comparison="m2o",

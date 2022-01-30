@@ -22,12 +22,12 @@ jobs:
 
   install-climpred-complete:  # Installs climpred on various OS.
     name: Install climpred[complete], ${{ matrix.os }}
-    concurrency:
-      group: ${{ github.head_ref || github.run_id }}
-      cancel-in-progress: true
     runs-on: ${{ matrix.os }}
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
+    concurrency:
+      group: ${{ github.head_ref || github.run_id }}
+      cancel-in-progress: true
     strategy:
       fail-fast: false
       matrix:
@@ -46,11 +46,11 @@ jobs:
   install-climpred:  # Installs climpred on various OS.
     name: Install climpred, ${{ matrix.os }}
     runs-on: ${{ matrix.os }}
+    needs: detect-ci-trigger
+    if: needs.detect-ci-trigger.outputs.triggered == 'false'
     concurrency:
       group: ${{ github.head_ref || github.run_id }}
       cancel-in-progress: true
-    needs: detect-ci-trigger
-    if: needs.detect-ci-trigger.outputs.triggered == 'false'
     strategy:
       fail-fast: false
       matrix:

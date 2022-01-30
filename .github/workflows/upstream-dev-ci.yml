@@ -7,7 +7,7 @@ on:
   workflow_dispatch: # allows you to trigger the workflow run manually
 
 concurrency:
-  group: ${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:

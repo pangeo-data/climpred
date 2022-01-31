@@ -223,7 +223,7 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
     - there should be several CPU available for the computation, like on a
      cluster or multi-core computer
     """
-    nbytes_in_MB = ds.nbytes / (1024 ** 2)
+    nbytes_in_MB = ds.nbytes / (1024**2)
     if not dask.is_dask_collection(ds):
         if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
             warnings.warn(

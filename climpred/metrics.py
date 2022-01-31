@@ -1968,7 +1968,7 @@ def _uacc(
     """
     messs_res = _msess(forecast, verif, dim=dim, **metric_kwargs)
     # Negative values are automatically turned into nans from xarray.
-    uacc_res = messs_res ** 0.5
+    uacc_res = messs_res**0.5
     return uacc_res
 
 
@@ -2470,7 +2470,7 @@ def _msess_murphy(
     uncond_bias = _unconditional_bias(
         forecast, verif, dim=dim, **metric_kwargs
     ) / verif.std(dim=dim, **metric_kwargs)
-    return acc ** 2 - conditional_bias ** 2 - uncond_bias ** 2
+    return acc**2 - conditional_bias**2 - uncond_bias**2
 
 
 __msess_murphy = Metric(

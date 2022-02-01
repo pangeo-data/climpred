@@ -47,6 +47,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
+    "sphinx-opengraph",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxcontrib.bibtex",

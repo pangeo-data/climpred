@@ -180,7 +180,7 @@ def test_convert_time_index_does_not_overwrite():
     inits = np.arange(1990, 2000)
     da = xr.DataArray(np.random.rand(len(inits)), dims="init", coords=[inits])
     new_inits = convert_time_index(da, "init", "")
-    assert isinstance(da.init.to_index(), pd.Int64Index)
+    assert isinstance(da.init.to_index(), pd.Index)
     assert isinstance(new_inits.init.to_index(), xr.CFTimeIndex)
 
 

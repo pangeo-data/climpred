@@ -183,10 +183,8 @@ def convert_time_index(
                 d.split("-") for d in time_index.strftime("%Y-%m-%d-%H-%M-%S")
             ]
 
-        # If Float64Index or Int64Index, assume annual and convert accordingly.
-        elif isinstance(time_index, pd.Float64Index) | isinstance(
-            time_index, pd.Int64Index
-        ):
+        # If pd.Index, assume annual and convert accordingly.
+        elif isinstance(time_index, pd.Index):
             if OPTIONS["warn_for_init_coords_int_to_annual"]:
                 warnings.warn(
                     "Assuming annual resolution starting Jan 1st due to numeric inits. "

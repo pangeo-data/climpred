@@ -4,6 +4,7 @@ import numpy as np
 import pytest
 import xskillscore as xs
 
+from climpred.alignment import _isin
 from climpred.exceptions import CoordinateError
 from climpred.prediction import compute_hindcast
 
@@ -176,3 +177,18 @@ def test_maximize_alignment_verifs(
                 assert (
                     f"verifs: {1955+i}-01-01 00:00:00-2017-01-01 00:00:00" in record[2]
                 )
+
+
+def test_my_isin(hindcast_recon_1d_ym):
+    """Test _isin function calc on asi8 instead of xr.CFTimeIndex is equvi to isin."""
+    he = hindcast_recon_1d_ym
+    all_verifs = he.get_observations()["time"]
+    init_lead_matrix = (
+        he.coords["valid_time"]
+        .drop_vars("valid_time")
+        .rename(None)
+        .rename({"init": "time"})
+    )
+    previous = init_lead_matrix.isin(all_verifs)
+    faster = _isin(init_lead_matrix, all_verifs)
+    assert previous.equals(faster)

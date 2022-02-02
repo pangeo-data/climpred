@@ -186,7 +186,7 @@ ogp_image = "https://climpred.readthedocs.io/en/stable/_static/climpred-logo.png
 ogp_custom_meta_tags = [
     '<meta name="twitter:card" content="summary_large_image" />',
     '<meta property="twitter:site" content="@realaaronspring" />',
-    '<meta name="image" property="og:image" content="https://climpred.readthedocs.io/en/stable/_static/climpred-logo.png" />',
+    '<meta name="image" property="og:image" content="https://climpred.readthedocs.io/en/stable/_static/climpred-logo.png" />',  # noqa
 ]
 
 

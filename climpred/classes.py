@@ -624,7 +624,7 @@ class PredictionEnsemble:
             "_repr_mimebundle_",
             "_repr_javascript_",
         ]:
-            return  # typing: ignore
+            return None  # typing: ignore
 
         def wrapper(*args, **kwargs):
             """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.

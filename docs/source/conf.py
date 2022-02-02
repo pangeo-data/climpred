@@ -189,7 +189,6 @@ ogp_custom_meta_tags = [
     '<meta name="image" property="og:image" content="https://climpred.readthedocs.io/en/stable/_static/climpred-logo.png" />',  # noqa
 ]
 
-
 def rstjinja(app, docname, source):
     """
     Render our pages as a jinja template for fancy templating goodness.

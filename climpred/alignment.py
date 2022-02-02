@@ -14,7 +14,14 @@ from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 returnType = Tuple[Dict[float, xr.DataArray], Dict[float, xr.CFTimeIndex]]
 
 
-def _isin(init_lead_matrix: xr.DataArray, all_verifs: xr.DataArray) -> xr.DataArray:
+def _isin(
+    init_lead_matrix: Union[xr.CFTimeIndex, xr.DataArray],
+    all_verifs: Union[xr.CFTimeIndex, xr.DataArray],
+) -> xr.DataArray:
+    """Speeding up np.isin by changing input types."""
+    if isinstance(init_lead_matrix, xr.DataArray):
+        if init_lead_matrix.time.size < 100:  # previous behavior for few inits
+            return init_lead_matrix.isin(all_verifs)
     if not isinstance(all_verifs, xr.CFTimeIndex):
         all_verifs = all_verifs.to_index()
     if len(init_lead_matrix.dims) == 2:
@@ -103,7 +110,7 @@ def return_inits_and_verif_dates(
     # for persistence, since the persistence forecast is based off a common set of
     # initializations.
     if "persistence" in reference:
-        union_with_verifs = all_inits.isin(all_verifs)
+        union_with_verifs = _isin(all_inits, all_verifs)
         init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
     valid_inits = init_lead_matrix["time"]
 

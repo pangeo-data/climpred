@@ -625,9 +625,8 @@ class PredictionEnsemble:
             "_repr_json_",
             "_repr_mimebundle_",
             "_repr_javascript_",
-            "_ipython_display_",
         ]:
-            raise AttributeError(name)
+            return
 
         def wrapper(*args, **kwargs):
             """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.

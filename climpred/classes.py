@@ -605,9 +605,7 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(
-        self, name: str
-    ) -> Optional[Callable]:  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
+    def __getattr__(self, name: str):  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
         """Allow for ``xarray`` methods to be applied to our prediction objects.
 
         Args:

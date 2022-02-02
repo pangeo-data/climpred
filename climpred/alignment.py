@@ -14,6 +14,38 @@ from .utils import get_multiple_lead_cftime_shift_args, shift_cftime_index
 returnType = Tuple[Dict[float, xr.DataArray], Dict[float, xr.CFTimeIndex]]
 
 
+def _isin(
+    init_lead_matrix: Union[xr.CFTimeIndex, xr.DataArray],
+    all_verifs: Union[xr.CFTimeIndex, xr.DataArray],
+) -> xr.DataArray:
+    """Speeding up np.isin by changing input types."""
+    if isinstance(init_lead_matrix, xr.DataArray):
+        if init_lead_matrix.time.size < 100:  # previous behavior for few inits
+            return init_lead_matrix.isin(all_verifs)
+    if not isinstance(all_verifs, xr.CFTimeIndex):
+        all_verifs = all_verifs.to_index()
+    if len(init_lead_matrix.dims) == 2:
+        init_lead_asi8 = np.vstack(
+            [
+                init_lead_matrix.sel(lead=i).to_index().asi8
+                for i in init_lead_matrix.lead
+            ]
+        )
+        isin = np.isin(init_lead_asi8, all_verifs.asi8)
+    elif len(init_lead_matrix.dims) == 1:
+        if not isinstance(init_lead_matrix, xr.CFTimeIndex):
+            init_lead_matrix2 = init_lead_matrix.to_index()
+        else:
+            init_lead_matrix2 = init_lead_matrix
+        isin = np.isin(init_lead_matrix2.asi8, all_verifs.asi8)
+    return xr.DataArray(
+        data=isin,
+        dims=init_lead_matrix.dims,
+        coords=init_lead_matrix.coords,
+        attrs=init_lead_matrix.attrs,
+    )
+
+
 def return_inits_and_verif_dates(
     forecast: xr.Dataset,
     verif: xr.Dataset,
@@ -78,7 +110,7 @@ def return_inits_and_verif_dates(
     # for persistence, since the persistence forecast is based off a common set of
     # initializations.
     if "persistence" in reference:
-        union_with_verifs = all_inits.isin(all_verifs)
+        union_with_verifs = _isin(all_inits, all_verifs)
         init_lead_matrix = init_lead_matrix.where(union_with_verifs, drop=True)
     valid_inits = init_lead_matrix["time"]
 
@@ -105,7 +137,7 @@ def _maximize_alignment(
     """
     # Move row-wise and find all forecasted times that align with verification dates at
     # the given lead.
-    verify_with_observations = init_lead_matrix.isin(all_verifs)
+    verify_with_observations = _isin(init_lead_matrix, all_verifs)
     lead_dependent_verif_dates = init_lead_matrix.where(verify_with_observations)
     # Probably a way to do this more efficiently since we're doing essentially
     # the same thing at each step.
@@ -132,7 +164,7 @@ def _same_inits_alignment(
 
     See ``return_inits_and_verif_dates`` for descriptions of expected variables.
     """
-    verifies_at_all_leads = init_lead_matrix.isin(all_verifs).all("lead")
+    verifies_at_all_leads = _isin(init_lead_matrix, all_verifs).all("lead")
     inits = valid_inits.where(verifies_at_all_leads, drop=True)
     inits = {lead: inits for lead in leads}
     verif_dates = {
@@ -165,7 +197,7 @@ def _same_verifs_alignment(
         )
     # Force to CFTimeIndex for consistency with `same_inits`
     verif_dates = xr.concat(common_set_of_verifs, "time").to_index()
-    inits_that_verify_with_verif_dates = init_lead_matrix.isin(verif_dates)
+    inits_that_verify_with_verif_dates = _isin(init_lead_matrix, verif_dates)
     inits = {
         lead: valid_inits.where(
             inits_that_verify_with_verif_dates.sel(lead=lead), drop=True

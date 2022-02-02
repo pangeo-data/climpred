@@ -229,6 +229,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
             alignment=alignment,
             train_test_split="unfair",
         )
+
         unfair_skill = he_unfair.verify(**verify_kwargs)
 
         print("\n unfair-cv \n")

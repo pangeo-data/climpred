@@ -2648,4 +2648,11 @@ class HindcastEnsemble(PredictionEnsemble):
                     .coords["valid_time"]
                     .isel(member=0, drop=True)
                 )
+        # to avoid ValueError: conflicting sizes for dimension 'time': length 1 on the
+        # data but length n on coordinate 'time'
+        if "valid_time" in self.get_initialized().coords:
+            if self.get_initialized().coords["valid_time"].isnull().any():
+                self._datasets["initialized"] = self._datasets["initialized"].dropna(
+                    "init"
+                )
         return self

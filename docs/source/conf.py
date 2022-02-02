@@ -47,7 +47,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
-    "sphinx-opengraph",
+    "sphinxext.opengraph",
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxcontrib.bibtex",
@@ -180,6 +180,14 @@ napoleon_type_aliases = {
 # using the given strftime format.
 html_last_updated_fmt = today_fmt
 
+# configuration for sphinxext.opengraph
+ogp_site_url = "https://climpred.readthedocs.io/en/latest/"
+ogp_image = "https://climpred.readthedocs.io/en/stable/_static/climpred-logo.png"
+ogp_custom_meta_tags = [
+    '<meta name="twitter:card" content="summary_large_image" />',
+    '<meta property="twitter:site" content="@realaaronspring" />',
+    '<meta name="image" property="og:image" content="https://climpred.readthedocs.io/en/stable/_static/climpred-logo.png" />',
+]
 
 def rstjinja(app, docname, source):
     """

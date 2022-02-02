@@ -605,16 +605,26 @@ class PredictionEnsemble:
 
         return self._apply_func(sel_vars, varlist)
 
-    def __getattr__(
-        self, name: str
-    ) -> Callable:  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
+    def __getattr__(self, name):  # -> Callable[[VarArg(Any), KwArg(Any)], Any]
         """Allow for ``xarray`` methods to be applied to our prediction objects.
 
         Args:
             * name: str of xarray function, e.g., ``.isel()`` or ``.sum()``.
         """
-        if name == "_ipython_canary_method_should_not_exist_":
-            raise AttributeError(name)
+        if name in [
+            "_ipython_canary_method_should_not_exist_",
+            "_ipython_display_",
+            "_repr_markdown_",
+            "_repr_svg_",
+            "_repr_png_",
+            "_repr_pdf_",
+            "_repr_jpeg_",
+            "_repr_latex_",
+            "_repr_json_",
+            "_repr_mimebundle_",
+            "_repr_javascript_",
+        ]:
+            return None  # typing: ignore
 
         def wrapper(*args, **kwargs):
             """Apply arbitrary function to all datasets in ``PerfectModelEnsemble``.

@@ -1,0 +1,20 @@
+---
+name: binder PR link
+
+on:
+  pull_request:
+    types: [opened]
+
+
+jobs:
+  comment_PR_link_binder:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Comment PR
+        uses: thollander/actions-comment-pull-request@main
+        with:
+          message: >-
+            Checkout your PR on
+            [![Binder](https://mybinder.org/v2/gh/pangeo-data/climpred/${{github.head_ref}}?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb).
+            Open the console and `pip install -e .` before using the notebooks to use `climpred` from this PR.
+          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}

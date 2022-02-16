@@ -76,6 +76,12 @@ def _apply_metric_at_given_lead(
         lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
+        # print('lforecast',lforecast.time.size,'vs',lverif.time.size,'lverif')
+        # print('verif',verif,'inits',inits, 'verif_dates',verif_dates)
+        # from IPython.core.debugger import Pdb;
+        # Pdb().set_trace()
+        # assert False
+        # return lforecast, lverif, verif, inits, verif_dates, lead
     elif reference == "uninitialized":
         lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
@@ -349,8 +355,8 @@ def compute_hindcast(
     # back onto the results of the metric.
 
     # dirty fix:
-    if "init" in result.dims and "init" in result.coords:
-        if "valid_time" in result.coords:
-            if "lead" not in result.valid_time.dims:
-                result = add_time_from_init_lead(result.drop_vars("valid_time"))
+    # if "init" in result.dims and "init" in result.coords:
+    #    if "valid_time" in result.coords:
+    #        if "lead" not in result.valid_time.dims:
+    #            result = add_time_from_init_lead(result.drop_vars("valid_time"))
     return result

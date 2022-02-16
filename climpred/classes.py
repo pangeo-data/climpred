@@ -979,6 +979,129 @@ class PredictionEnsemble:
                 )
             warnings.warn(msg)
 
+    def bootstrap(
+        self,
+        metric=None,
+        comparison=None,
+        dim=None,
+        alignment=None,
+        resample_dim="init",
+        iterations=None,
+        reference=None,
+        sig=95,
+        **metric_kwargs,
+    ):
+        """docstring, add typing"""
+        import xskillscore as xs
+
+        from climpred.bootstrap import (  # _resample,
+            _distribution_to_ci,
+            _p_ci_from_sig,
+            _pvalue_from_distributions,
+        )
+
+        metric, comparison, _ = _get_metric_comparison_dim(
+            self.get_initialized(),
+            metric,
+            comparison,
+            dim,
+            kind="hindcast" if type(self) == HindcastEnsemble else "PM",
+        )
+        # sanitize
+        if reference is None:
+            reference = []
+        if isinstance(reference, str):
+            reference = [reference]
+        if dim is None:
+            dim = ...
+        if isinstance(dim, str):
+            dim = [dim]
+
+        verify_kwargs_no_dim = dict(
+            metric=metric, comparison=comparison, reference=reference, **metric_kwargs
+        )
+        if "Hindcast" in str(type(self)):
+            verify_kwargs_no_dim["alignment"] = alignment
+
+        resample_func = xs.resample_iterations_idx
+        if resample_dim == "init":
+            verify_skill = self.verify(dim=[], **verify_kwargs_no_dim)
+            resampled_skills = xr.concat(
+                [
+                    verify_skill.mean(dim).assign_coords(iteration="no_change"),
+                    resample_func(verify_skill, iterations, dim="init").mean(dim),
+                ],
+                "iteration",
+            )
+            resampled_skills.lead.attrs = self.get_initialized().lead.attrs
+        elif resample_dim == "member":
+            # todo: add nice chunking
+            self._datasets["initialized"] = xr.concat(
+                [
+                    self.get_initialized().assign_coords(iteration="no_change"),
+                    resample_func(self.get_initialized(), iterations - 1, resample_dim),
+                ],
+                "iteration",
+            )
+            self._datasets["uninitialized"] = xr.concat(
+                [self.get_uninitialized() for i in range(iterations)], "iteration"
+            )
+            resampled_skills = self.verify(dim=dim, **verify_kwargs_no_dim)
+        else:
+            raise ValueError(
+                f'Please specify `resample_dim` as "init" or "member", found {resample_dim}.'
+            )
+
+        skill = resampled_skills.isel(iteration=0, drop=True)
+        rskill = resampled_skills.isel(iteration=slice(1, None))
+        p, ci_low, ci_high = _p_ci_from_sig(sig)
+
+        ci = _distribution_to_ci(rskill, ci_low, ci_high)
+
+        results = [
+            skill,
+            ci.isel(quantile=0, drop=True),
+            ci.isel(quantile=1, drop=True),
+        ]
+        if reference != []:
+            pvalue = _pvalue_from_distributions(
+                rskill.sel(skill="initialized"),
+                skill.drop_sel(skill="initialized"),
+                metric=metric,
+            )
+            pvalue = xr.concat(
+                [
+                    pvalue.isel(skill=0, drop=True)
+                    .assign_coords(skill="initialized")
+                    .where(1 == 2),
+                    pvalue,
+                ],
+                "skill",
+            )
+            results.insert(1, pvalue)
+
+        results = (
+            xr.concat(results, dim="results", coords="minimal")
+            .assign_coords(
+                skill=["initialized"] + reference,
+                results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
+            )
+            .squeeze()
+        )
+        from climpred.utils import assign_attrs
+
+        results = assign_attrs(
+            results,
+            self.get_initialized(),
+            function_name=f"{type(self)}.bootstrap()",
+            dim=dim,
+            sig=sig,
+            iterations=iterations,
+            **verify_kwargs_no_dim,
+            **metric_kwargs,
+        )
+        return results
+
 
 class PerfectModelEnsemble(PredictionEnsemble):
     """An object for "perfect model" prediction ensembles.
@@ -1442,7 +1565,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
-    def bootstrap(
+    def _bootstrap(
         self,
         metric: metricType = None,
         comparison: comparisonType = None,
@@ -1573,7 +1696,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
         reference = _check_valid_reference(reference)
-        has_dataset(self._datasets["control"], "control", "iteration")
+        # has_dataset(self._datasets["control"], "control", "iteration")
         input_dict = {
             "ensemble": self._datasets["initialized"],
             "control": self._datasets["control"],
@@ -2173,7 +2296,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
         return res
 
-    def bootstrap(
+    def _bootstrap(
         self,
         metric: metricType = None,
         comparison: comparisonType = None,

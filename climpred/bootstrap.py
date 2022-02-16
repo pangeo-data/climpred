@@ -928,7 +928,7 @@ def bootstrap_compute(
 
     # Ensure that the lead units get carried along for the calculation. The attribute
     # tends to get dropped along the way due to ``xarray`` functionality.
-    results["lead"] = initialized["lead"]
+    # results["lead"] = initialized["lead"]
     if "units" in initialized["lead"].attrs and "units" not in results["lead"].attrs:
         results["lead"].attrs["units"] = initialized["lead"].attrs["units"]
     return results
@@ -1003,7 +1003,7 @@ def bootstrap_hindcast(
     """
     # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
     initialized = convert_time_index(initialized, "init", "initialized[init]")
-    if isinstance(hist, xr.Dataset):
+    if isinstance(hist, xr.Dataset) and "uninitialized" in reference:
         hist = convert_time_index(hist, "time", "uninitialized[time]")
     else:
         hist = False
@@ -1031,8 +1031,9 @@ def bootstrap_hindcast(
     else:
         times = np.sort(list(set(initialized.init.data) & set(verif.time.data)))
     initialized = initialized.sel(init=times)
-    if isinstance(hist, xr.Dataset):
-        hist = hist.sel(time=times)
+    # if isinstance(hist, xr.Dataset) and "uninitialized" in reference:
+    # print(times, hist.time)
+    # hist = hist.sel(time=times)
     verif = verif.sel(time=times)
 
     return bootstrap_compute(

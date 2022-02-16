@@ -81,7 +81,8 @@ def persistence(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Create forecast, verification tuple at lead for persistence forecast."""
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
-    lverif = verif.sel(time=verif_dates[lead])
+    # lverif = verif.sel(time=verif_dates[lead])
+    lverif = verif.where(verif.time.isin(verif_dates[lead]), drop=True)
     return lforecast, lverif
 
 

@@ -22,7 +22,10 @@ from .options import OPTIONS
 
 def add_attrs_to_climpred_coords(results):
     """Write attrs for coords added by climpred."""
-    from . import __version__ as version
+    try:
+        from . import __version__ as version
+    except ImportError:
+        version = "version"
 
     if "results" in results.coords:
         results["results"] = results["results"].assign_attrs(

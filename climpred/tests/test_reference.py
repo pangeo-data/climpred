@@ -28,7 +28,7 @@ def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
         metric="mse",
         comparison=comparison,
         dim="init" if comparison == "e2c" else ["member", "init"],
-        reference="persistence",
+        reference=["persistence", "climatology"],
     )
     with set_options(PerfectModel_persistence_from_initialized_lead_0=True):
         new_persistence = perfectModelEnsemble_initialized_control.verify(**kw)

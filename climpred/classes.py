@@ -1237,13 +1237,13 @@ class PerfectModelEnsemble(PredictionEnsemble):
         if reference:
             for r in reference:
                 dim_orig = deepcopy(dim)  # preserve dim, because
-                ref_compute_kwargs = metric_kwargs.copy()  # persistence changes dim
-                ref_compute_kwargs.update({"dim": dim_orig, "metric": metric})
-                if (
-                    not OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]
-                    and r != "persistence"
-                ):
-                    ref_compute_kwargs["comparison"] = comparison
+                ref_compute_kwargs = deepcopy(metric_kwargs)  # persistence changes dim
+                ref_compute_kwargs.update(
+                    {"dim": dim_orig, "metric": metric, "comparison": comparison}
+                )
+                if r == "persistence":
+                    if not OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]:
+                        del ref_compute_kwargs["comparison"]
                 ref = getattr(self, f"_compute_{r}")(**ref_compute_kwargs)
                 result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             result = result.assign_coords(skill=["initialized"] + reference)

@@ -27,6 +27,11 @@ Internals/Minor Fixes
   :py:meth:`.HindcastEnsemble.verify` and :py:meth:`.HindcastEnsemble.bootstrap` with
   large number of inits. (:issue:`414`, :pr:`724`) `Aaron Spring`_.
 
+Bug Fixes
+---------
+- Fix ``PerfectModel_persistence_from_initialized_lead_0=True`` with multiple
+  references. (:issue:`732`, :pr:`733`) `Aaron Spring`_.
+
 
 climpred v2.2.0 (2021-12-20)
 ============================

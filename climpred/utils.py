@@ -24,8 +24,9 @@ def add_attrs_to_climpred_coords(results):
     """Write attrs for coords added by climpred."""
     try:
         from . import __version__ as version
+        version = f"v{version}"
     except ImportError:
-        version = "version"
+        version = "stable"
 
     if "results" in results.coords:
         results["results"] = results["results"].assign_attrs(
@@ -41,7 +42,7 @@ def add_attrs_to_climpred_coords(results):
         results["skill"] = results["skill"].assign_attrs(
             {
                 "description": "new dimension prediction skill of initialized and reference forecasts created by .verify() or .bootstrap()",  # noqa: E501
-                "documentation": f"https://climpred.readthedocs.io/en/v{version}/reference_forecast.html",  # noqa: E501
+                "documentation": f"https://climpred.readthedocs.io/en/{version}/reference_forecast.html",  # noqa: E501
             }
         )
     if "skill" in results.dims:

@@ -50,7 +50,7 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
     Checks that HindcastEnsemble.verify() and HindcastEnsemble.bootstrap() works
     without breaking for all probabilistic metrics.
     """
-    he = hindcast_hist_obs_1d.isel(lead=[0, 1], init=range(10))
+    he = hindcast_hist_obs_1d  # .isel(lead=[0, 1], init=range(10))
 
     category_edges = np.array([-0.5, 0, 0.5])
     if metric in probabilistic_metrics_requiring_logical:

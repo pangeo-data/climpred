@@ -90,7 +90,9 @@ def _apply_metric_at_given_lead(
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
-
+    assert lforecast.time.size == lverif.time.size, print(
+        lforecast.time.to_index(), lverif.time.to_index(), reference
+    )
     lforecast["time"] = lverif[
         "time"
     ]  # a bit dangerous: what if different? more clear once implemented

@@ -1158,9 +1158,11 @@ class PredictionEnsemble:
 
         results = [
             skill,
-            ci.isel(quantile=0, drop=True),
-            ci.isel(quantile=1, drop=True),
+            ci.sel(quantile=ci_low, drop=True),
+            ci.sel(quantile=ci_high, drop=True),
         ]
+        results_labels = ["verify skill", "low_ci", "high_ci"]
+
         if reference != []:
             pvalue = _pvalue_from_distributions(
                 resampled_skills.drop_sel(skill="initialized"),
@@ -1177,18 +1179,27 @@ class PredictionEnsemble:
                 "skill",
             )
             results.insert(1, pvalue)
-
+            results_labels.insert(1, "p")
+        # print(results)
+        results_dims = (
+            ["skill", "results", "lead"]
+            if "skill" in list(results[0].dims)
+            else ["results", "lead"]
+        )
+        results = [i.transpose("lead", ...) for i in results]
+        # print(results)
         results = (
             xr.concat(
-                results, dim="results", coords="minimal", compat="no_conflicts"
+                results, dim="results", coords="minimal"  # , compat="no_conflicts"
             )  # todo: check compat no_conflicts, override or default
             .assign_coords(
                 skill=["initialized"] + reference,
-                results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
+                results=("results", results_labels),
             )
             .squeeze()
         )
-        results = results.transpose("skill", "results", "lead", ...)
+
+        results = results.transpose(*results_dims, ...)
         from climpred.utils import assign_attrs
 
         results = assign_attrs(

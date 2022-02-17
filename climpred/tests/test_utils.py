@@ -94,7 +94,7 @@ def test_PerfectModelEnsemble_bootstrap_attrs(
 def test_HindcastEnsemble_bootstrap_attrs(hindcast_hist_obs_1d, metric):
     """Test assigning attrs for HindcastEnsemble.bootstrap()."""
     comparison = "e2o"
-    alignment = "same_verif"
+    alignment = "same_inits"
     v = "SST"
     iterations = 2
     sig = 95

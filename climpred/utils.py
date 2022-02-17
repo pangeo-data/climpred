@@ -101,6 +101,9 @@ def assign_attrs(
     if comparison is not None:
         skill.attrs["comparison"] = comparison
     if dim is not None:
+        if isinstance(dim, list):
+            if len(dim) == 1:
+                dim = dim[0]
         skill.attrs["dim"] = dim
     if reference is not None:
         skill.attrs["reference"] = reference

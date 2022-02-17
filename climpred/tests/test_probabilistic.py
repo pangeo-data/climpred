@@ -40,6 +40,7 @@ references_ids = [
 xr.set_options(display_style="text")
 
 
+# todo: param resample_dim and metric
 @pytest.mark.parametrize("reference", references, ids=references_ids)
 @pytest.mark.parametrize("metric", PROBABILISTIC_METRICS)
 @pytest.mark.parametrize("comparison", PROBABILISTIC_HINDCAST_COMPARISONS)
@@ -50,7 +51,7 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
     Checks that HindcastEnsemble.verify() and HindcastEnsemble.bootstrap() works
     without breaking for all probabilistic metrics.
     """
-    he = hindcast_hist_obs_1d  # .isel(lead=[0, 1], init=range(10))
+    he = hindcast_hist_obs_1d.isel(lead=[0, 1], init=range(10))
 
     category_edges = np.array([-0.5, 0, 0.5])
     if metric in probabilistic_metrics_requiring_logical:
@@ -83,7 +84,7 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
             "metric": metric,
             "dim": dim,
             "reference": reference,
-            "alignment": "same_verifs",
+            "alignment": "same_inits",
         }
     )
     actual_verify = he.verify(**kwargs)["SST"]

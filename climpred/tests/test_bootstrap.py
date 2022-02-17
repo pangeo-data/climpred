@@ -9,6 +9,7 @@ from xskillscore.core.resampling import (
     resample_iterations_idx as _resample_iterations_idx,
 )
 
+from climpred import HindcastEnsemble
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
     _chunk_before_resample_iterations_idx,
@@ -20,7 +21,6 @@ from climpred.constants import CONCAT_KWARGS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
 
-# TODO: move to conftest.py
 ITERATIONS = 2
 
 comparison_dim_PM = [
@@ -37,6 +37,80 @@ comparison_dim_PM = [
 ]
 
 xr.set_options(display_style="text")
+
+
+@pytest.mark.parametrize(
+    "initialized",
+    [
+        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+    ],
+    ids=["PerfectModelEnsemble", "HindcastEnsemble"],
+)
+@pytest.mark.parametrize("metric", ["pearson_r", "crps", "rmse"])
+@pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
+def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment):
+    """Test that bootstrap with resample_dim='init' generates uncertainty in all skills."""
+    v = list(initialized.data_vars)[0]
+    kwargs = dict(
+        metric=metric,
+        comparison="m2c",
+        dim=["init", "member"],
+        resample_dim="init",
+        iterations=5,
+        reference=["climatology", "persistence", "uninitialized"],
+    )
+    if isinstance(initialized, HindcastEnsemble):
+        kwargs["alignment"] = alignment
+        kwargs["comparison"] = "m2o"
+    if alignment == "same_verifs" and isinstance(initialized, HindcastEnsemble):
+        with pytest.raises(
+            KeywordError,
+            match="resample_dim='init'. Change `resample_dim` to 'member' to keep",
+        ):
+            initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
+    else:
+        bskill = initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
+        # expect iteration variance
+        assert (
+            bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v].notnull().all()
+        )
+
+
+@pytest.mark.parametrize(
+    "initialized",
+    [
+        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+    ],
+    ids=["PerfectModelEnsemble", "HindcastEnsemble"],
+)
+@pytest.mark.parametrize("metric", ["pearson_r", "crps", "rmse"])
+@pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
+def test_bootstrap_resample_dim_member_init_uninit_ci(initialized, metric, alignment):
+    """Test bootstrap(resample_dim='member') generates uncertainty in (un)init skill."""
+    v = list(initialized.data_vars)[0]
+    kwargs = dict(
+        metric=metric,
+        comparison="m2c",
+        dim=["init", "member"],
+        resample_dim="member",
+        iterations=5,
+        reference=["climatology", "persistence", "uninitialized"],
+    )
+    if isinstance(initialized, HindcastEnsemble):
+        kwargs["alignment"] = alignment
+        kwargs["comparison"] = "m2o"
+    bskill = initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
+    ci_diff = bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v]
+    # expect iteration variance
+    assert ci_diff.sel(skill=["initialized", "uninitialized"]).notnull().all(), print(
+        ci_diff.sel(skill=["initialized", "uninitialized"])
+    )
+    # no iteration variance
+    assert (ci_diff.sel(skill=["persistence", "climatology"]) == 0).all(), print(
+        ci_diff.sel(skill=["persistence", "climatology"])
+    )
 
 
 def test_bootstrap_PM_keep_lead_attrs(perfectModelEnsemble_initialized_control):
@@ -89,8 +163,9 @@ def test_bootstrap_hindcast_lazy(
         iterations=ITERATIONS,
         comparison="e2o",
         metric="mse",
-        alignment="same_verifs",
+        alignment="same_inits",
         dim="init",
+        resample_dim="init",
     )
     assert dask.is_dask_collection(s) == chunk
 

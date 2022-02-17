@@ -110,9 +110,14 @@ def test_inplace(
 )
 def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     """Test verify and bootstrap for different dim types."""
-    kw = dict(iterations=2) if call == "bootstrap" else {}
+    kw = dict(iterations=2, resample_dim="init") if call == "bootstrap" else {}
     assert getattr(hindcast_hist_obs_1d.isel(lead=range(3)), call)(
-        metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
+        metric="rmse",
+        comparison="e2o",
+        dim=dim,
+        reference=[],
+        alignment="same_inits",
+        **kw
     )
 
 
@@ -385,10 +390,10 @@ def test_HindcastEnsemble_verify_groupby(
         alignment="same_inits",
     )
     grouped_skill = hindcast_hist_obs_1d.verify(**kw, groupby="month")
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
     grouped_skill = hindcast_hist_obs_1d.verify(
         **kw, groupby=hindcast_hist_obs_1d.get_initialized().init.dt.month
     )
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
     grouped_skill = hindcast_hist_obs_1d.bootstrap(iterations=2, **kw, groupby="month")
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords

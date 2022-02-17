@@ -1,6 +1,7 @@
 """Prediction module: _apply_metric_at_given_lead and compute functions."""
 
 import xarray as xr
+from dask import is_dask_collection
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units, is_in_list
@@ -109,6 +110,9 @@ def _apply_metric_at_given_lead(
     if "time" in result.dims:
         n, freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], lead)
         result = result.assign_coords(time=shift_cftime_singular(result.time, -n, freq))
+    if "valid_time" in result.coords:
+        if is_dask_collection(result.coords["valid_time"]):
+            result.coords["valid_time"] = result.coords["valid_time"].compute()
     return result
 
 

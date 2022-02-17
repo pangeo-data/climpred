@@ -427,15 +427,17 @@ def testPerfectModelEnsemble_verify_groupby(
     grouped_skill = perfectModelEnsemble_initialized_control.verify(
         **kw, groupby="month"
     )
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
     grouped_skill = perfectModelEnsemble_initialized_control.verify(
         **kw,
         groupby=perfectModelEnsemble_initialized_control.get_initialized().init.dt.month,
     )
-    assert "month" in grouped_skill.dims
-    grouped_skill = perfectModelEnsemble_initialized_control.bootstrap(
-        iterations=2,
-        groupby="month",
-        **kw,
-    )
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
+    for resample_dim in ["member", "init"]:
+        grouped_skill = perfectModelEnsemble_initialized_control.bootstrap(
+            iterations=2,
+            groupby="month",
+            resample_dim=resample_dim,
+            **kw,
+        )
+        assert "month" in grouped_skill.coords

@@ -119,6 +119,6 @@ def test_HindcastEnsemble_keeps_lead_units(hindcast_hist_obs_1d):
         comparison="e2o",
         sig=sig,
         dim="init",
-        alignment="same_verif",
+        alignment="same_inits",
     )
     assert actual.lead.attrs["units"] == "years"

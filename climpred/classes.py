@@ -985,14 +985,16 @@ class PredictionEnsemble:
         comparison=None,
         dim=None,
         alignment=None,
-        resample_dim="init",
+        resample_dim="init",  # todo: change to None
         iterations=None,
         reference=None,
         sig=95,
+        groupby=None,
         **metric_kwargs,
     ):
         """docstring, add typing"""
         import logging
+        from copy import copy
 
         import xskillscore as xs
         from tqdm.auto import tqdm
@@ -1004,22 +1006,21 @@ class PredictionEnsemble:
             _resample,
         )
 
+        from .exceptions import KeywordError
+        from .prediction import _sanitize_to_list
+
         _metric, _comparison, _ = _get_metric_comparison_dim(
             self.get_initialized(),
             metric,
             comparison,
             dim,
-            kind="hindcast" if type(self) == HindcastEnsemble else "PM",
+            kind="hindcast" if type(self) == HindcastEnsemble else "PM",  # cleanup
         )
 
-        def sanitize(keyword):
-            if keyword is None:
-                keyword = []
-            if isinstance(keyword, str):
-                keyword = [keyword]
-            return keyword
-
-        reference = sanitize(reference)
+        reference = _sanitize_to_list(reference)
+        if reference is None:
+            reference = []
+        dim = _sanitize_to_list(dim)
         if dim is None:
             dim = list(self.get_initialized().isel(lead=0).dims)
 
@@ -1033,14 +1034,26 @@ class PredictionEnsemble:
             reference=reference,
             **metric_kwargs,
         )
+        if groupby is not None:
+            verify_kwargs_no_dim["groupby"] = groupby
+            verify_kwargs["groupby"] = groupby
         if "Hindcast" in str(type(self)):
             verify_kwargs_no_dim["alignment"] = alignment
             verify_kwargs["alignment"] = alignment
 
         skill = self.verify(dim=dim, **verify_kwargs_no_dim)
 
-        resample_func = xs.resample_iterations_idx
+        resample_func = xs.resample_iterations  # todo: make option
         from .metrics import PEARSON_R_CONTAINING_METRICS
+
+        if isinstance(self, HindcastEnsemble):
+            if ("same_verif" in alignment) & (resample_dim == "init"):
+                raise KeywordError(
+                    "Cannot have both alignment='same_verifs' and "
+                    "resample_dim='init'. Change `resample_dim` to 'member' to keep "
+                    "common verification alignment or `alignment` to 'same_inits' to "
+                    "resample over initializations."
+                )
 
         def resample_skill_loop(self, iterations, resample_dim, verify_kwargs):
             # slow: loop and verify each time
@@ -1080,10 +1093,18 @@ class PredictionEnsemble:
             logging.info("use resample_skill_empty_dim")
             verify_kwargs_no_dim = verify_kwargs.copy()
             del verify_kwargs_no_dim["dim"]
-            verify_skill = self.verify(dim=[], **verify_kwargs_no_dim)
+            dim = verify_kwargs.get("dim", [])
+            if "init" in dim:
+                remaining_dim = copy(dim)
+                remaining_dim.remove("init")
+                post_dim = "init"
+            else:
+                remaining_dim = dim
+                post_dim = []
+            verify_skill = self.verify(dim=remaining_dim, **verify_kwargs_no_dim)
             resampled_skills = resample_func(
                 verify_skill, iterations, dim=resample_dim
-            ).mean(dim)
+            ).mean(post_dim)
             resampled_skills.lead.attrs = self.get_initialized().lead.attrs
             return resampled_skills
 
@@ -1098,6 +1119,7 @@ class PredictionEnsemble:
             # - how to handle persistence and climatology
             #   dont way now somehow if resample_dim='init'
             logging.info("use resample_skill_resample_before")
+
             copy_self = self.copy()
             copy_self._datasets["initialized"] = resample_func(
                 self.get_initialized(), iterations, resample_dim
@@ -1134,6 +1156,19 @@ class PredictionEnsemble:
             resample_dim == "init"
             and self.kind != "perfect"
             and not _metric.probabilistic
+        ):
+            # fast way by verify(dim=[]) and then resampling init
+            # used for HindcastEnsemble.bootstrap(resample_dim='init')
+            resampled_skills = resample_skill_empty_dim(
+                self, iterations, resample_dim, verify_kwargs
+            )
+
+        elif (
+            resample_dim == "init"
+            and self.kind != "perfect"
+            and _metric.probabilistic
+            and "member" in dim
+            and _metric.name not in ["rank_histogram", "discrimination", "reliability"]
         ):
             # fast way by verify(dim=[]) and then resampling init
             # used for HindcastEnsemble.bootstrap(resample_dim='init')
@@ -1180,24 +1215,24 @@ class PredictionEnsemble:
             )
             results.insert(1, pvalue)
             results_labels.insert(1, "p")
-        # print(results)
+
         results_dims = (
             ["skill", "results", "lead"]
             if "skill" in list(results[0].dims)
             else ["results", "lead"]
         )
-        results = [i.transpose("lead", ...) for i in results]
-        # print(results)
-        results = (
-            xr.concat(
-                results, dim="results", coords="minimal"  # , compat="no_conflicts"
-            )  # todo: check compat no_conflicts, override or default
-            .assign_coords(
-                skill=["initialized"] + reference,
-                results=("results", results_labels),
-            )
-            .squeeze()
+
+        results = xr.concat(
+            results,
+            dim="results",
+            coords="minimal",
+            compat="override",  # take vars/coords from first
+        ).assign_coords(
+            skill=["initialized"] + reference,
+            results=("results", results_labels),
         )
+        if results.skill.size == 1:
+            results = results.isel(skill=0)
 
         results = results.transpose(*results_dims, ...)
         from climpred.utils import assign_attrs
@@ -1426,7 +1461,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.1188 0.09737
+                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.1015 0.1268
             Attributes:
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.v...
@@ -1770,10 +1805,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.1607 0.1439
+                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.1241 0.1406
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...
@@ -2510,10 +2545,10 @@ class HindcastEnsemble(PredictionEnsemble):
               * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
                 valid_time  (lead, init) object 1956-01-01 00:00:00 ... 2015-01-01 00:00:00
-              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.1033
+                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.6653
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()

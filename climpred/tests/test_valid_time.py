@@ -66,7 +66,7 @@ def test_verify_valid_time(hindcast_hist_obs_1d, alignment, reference):
 @pytest.mark.parametrize(
     "reference", [None, "climatology", "uninitialized", "persistence"]
 )
-@pytest.mark.parametrize("alignment", ["same_verif", "same_inits", "maximize"])
+@pytest.mark.parametrize("alignment", ["same_inits", "maximize"])
 def test_bootstrap_valid_time(hindcast_hist_obs_1d, alignment, reference):
     """Test that bootstrap has 2d valid_time coordinate."""
     result = hindcast_hist_obs_1d.bootstrap(

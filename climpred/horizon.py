@@ -96,10 +96,10 @@ def horizon(cond):
         <xarray.Dataset>
         Dimensions:  ()
         Coordinates:
-            results  <U12 'p'
             skill    <U13 'uninitialized'
+            results  <U12 'p'
         Data variables:
-            tos      float64 10.0
+            tos      float64 2.0
         Attributes:
             units:          years
             standard_name:  forecast_period

@@ -506,6 +506,8 @@ def compute_persistence_from_first_lead(
         forecast.isel(lead=0, drop=True), observations, dim=dim, **metric_kwargs
     )
     persistence_skill["lead"] = persistence_skill.lead.values
+    if "forecast_member" in persistence_skill.dims:
+        persistence_skill = persistence_skill.mean("forecast_member")
     return persistence_skill
 
 

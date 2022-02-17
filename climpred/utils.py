@@ -24,6 +24,7 @@ def add_attrs_to_climpred_coords(results):
     """Write attrs for coords added by climpred."""
     try:
         from . import __version__ as version
+
         version = f"v{version}"
     except ImportError:
         version = "stable"

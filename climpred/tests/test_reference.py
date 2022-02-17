@@ -37,6 +37,8 @@ def test_PerfectModelEnsemble_verify_persistence_from_first_lead(
     assert not new_persistence.sel(skill="persistence").equals(
         old_persistence.sel(skill="persistence")
     )
+    assert "forecast_member" not in new_persistence.dims
+    assert "forecast_member" not in old_persistence.dims
 
 
 @pytest.mark.parametrize("call", ["verify", "bootstrap"])

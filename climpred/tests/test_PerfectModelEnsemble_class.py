@@ -4,7 +4,7 @@ import xarray as xr
 
 from climpred import PerfectModelEnsemble
 from climpred.exceptions import DatasetError
-from climpred.metrics import DETERMINISTIC_PM_METRICS
+from climpred.metrics import DETERMINISTIC_PM_METRICS, PEARSON_R_CONTAINING_METRICS
 
 xr.set_options(display_style="text")
 
@@ -353,19 +353,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     else:
         metric_kwargs = {}
     # acc on dim member only is ill defined
-    pearson_r_containing_metrics = [
-        "pearson_r",
-        "spearman_r",
-        "pearson_r_p_value",
-        "spearman_r_p_value",
-        "msess_murphy",
-        "bias_slope",
-        "conditional_bias",
-        "std_ratio",
-        "conditional_bias",
-        "uacc",
-    ]
-    if dim == "member" and metric in pearson_r_containing_metrics:
+    if dim == "member" and metric in PEARSON_R_CONTAINING_METRICS:
         dim = ["init", "member"]
 
     actual = pm.verify(
@@ -375,7 +363,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
         reference=reference,
         **metric_kwargs,
     ).tos
-    if metric in ["contingency"] or metric in pearson_r_containing_metrics:
+    if metric in ["contingency"] or metric in PEARSON_R_CONTAINING_METRICS:
         # less strict here with all NaNs, pearson_r yields NaNs for climatology
         if "climatology" in reference:
             actual = actual.drop_sel(skill="climatology")
@@ -395,7 +383,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     if len(reference) > 0:
         actual = actual.drop_sel(results="p")
 
-    if metric in ["contingency"] or metric in pearson_r_containing_metrics:
+    if metric in ["contingency"] or metric in PEARSON_R_CONTAINING_METRICS:
         # less strict here with all NaNs, pearson_r yields NaNs for climatology
         if "climatology" in reference:
             actual = actual.drop_sel(skill="climatology")

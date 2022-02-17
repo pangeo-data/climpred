@@ -4102,6 +4102,19 @@ __ALL_METRICS__ = [
 ]
 
 
+PEARSON_R_CONTAINING_METRICS = [
+    "pearson_r",
+    "spearman_r",
+    "pearson_r_p_value",
+    "spearman_r_p_value",
+    "msess_murphy",
+    "bias_slope",
+    "conditional_bias",
+    "std_ratio",
+    "conditional_bias",
+    "uacc",
+]
+
 # To match a metric/comparison for (multiple) keywords.
 METRIC_ALIASES = dict()
 for m in __ALL_METRICS__:

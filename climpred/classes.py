@@ -1088,6 +1088,7 @@ class PredictionEnsemble:
             )
             .squeeze()
         )
+        results = results.tranpose("skill", "results", "lead", ...)
         from climpred.utils import assign_attrs
 
         results = assign_attrs(

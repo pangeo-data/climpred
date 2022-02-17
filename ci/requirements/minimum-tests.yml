@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.7
+  - python>=3.8
   - cftime>=1.5.0
   - coveralls
   - dask-core
@@ -15,6 +15,7 @@ dependencies:
   - scipy
   - xarray>=0.19.0
   - xskillscore>=0.0.18
+  - tqdm
   - pip:
     - pytest-lazy-fixture
     - -e ../..

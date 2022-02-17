@@ -355,7 +355,7 @@ def _pearson_r(
             alignment:                     same_verifs
             metric:                        pearson_r
             comparison:                    e2o
-            dim:                           ['init']
+            dim:                           init
             reference:                     []
     """
     with warnings.catch_warnings():

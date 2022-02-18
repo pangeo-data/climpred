@@ -168,7 +168,7 @@ class GenerateHindcastEnsemble(Compute):
     def setup(self, *args, **kwargs):
         _skip_slow()
         self.get_data()
-        self.alignment = "same_verif"
+        self.alignment = "same_inits"
         self.reference = None
 
 

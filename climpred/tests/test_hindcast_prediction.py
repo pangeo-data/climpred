@@ -3,28 +3,25 @@
 import dask
 import pytest
 
-from climpred.prediction import compute_hindcast
 from climpred.reference import compute_persistence
 
 ITERATIONS = 2
 
+kw = dict(alignment="same_inits", dim="init")
 
-def test_compute_hindcast_lead0_lead1(
-    hind_ds_initialized_1d, hind_ds_initialized_1d_lead0, reconstruction_ds_1d
-):
+
+def test_hindcast_verify_lead0_lead1(hindcast_hist_obs_1d):
     """
-    Checks that compute hindcast returns the same results with a lead-0 and lead-1
-    framework.
+    Checks that HindcastEnsemble.verify() returns the same results with a lead-0 and
+    lead-1 framework.
     """
-    res1 = compute_hindcast(
-        hind_ds_initialized_1d,
-        reconstruction_ds_1d,
+    res1 = hindcast_hist_obs_1d.verify(
+        **kw,
         metric="rmse",
         comparison="e2o",
     )
-    res2 = compute_hindcast(
-        hind_ds_initialized_1d_lead0,
-        reconstruction_ds_1d,
+    res2 = hindcast_hist_obs_1d.verify(
+        **kw,
         metric="rmse",
         comparison="e2o",
     )
@@ -48,33 +45,27 @@ def test_persistence_lead0_lead1(
 
 
 @pytest.mark.parametrize("metric", ("AnomCorr", "test", "None"))
-def test_compute_hindcast_metric_keyerrors(
-    hind_ds_initialized_1d, reconstruction_ds_1d, metric
-):
+def test_hindcast_verify_metric_keyerrors(hindcast_hist_obs_1d, metric):
     """
     Checks that wrong metric names get caught.
     """
     with pytest.raises(KeyError) as excinfo:
-        compute_hindcast(
-            hind_ds_initialized_1d,
-            reconstruction_ds_1d,
-            comparison="e2o",
+        hindcast_hist_obs_1d.verify(
             metric=metric,
+            **kw,
+            comparison="e2o",
         )
     assert "Specify metric from" in str(excinfo.value)
 
 
 @pytest.mark.parametrize("comparison", ("ensemblemean", "test", "None"))
-def test_compute_hindcast_comparison_keyerrors(
-    hind_ds_initialized_1d, reconstruction_ds_1d, comparison
-):
+def test_hindcast_verify_comparison_keyerrors(hindcast_hist_obs_1d, comparison):
     """
     Checks that wrong comparison names get caught.
     """
     with pytest.raises(KeyError) as excinfo:
-        compute_hindcast(
-            hind_ds_initialized_1d,
-            reconstruction_ds_1d,
+        hindcast_hist_obs_1d.verify(
+            **kw,
             comparison=comparison,
             metric="mse",
         )
@@ -82,31 +73,35 @@ def test_compute_hindcast_comparison_keyerrors(
 
 
 @pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
-def test_compute_hindcast_dask_spatial(
-    hind_da_initialized_3d, reconstruction_da_3d, metric
-):
+def test_hindcast_verify_dask_spatial(hindcast_recon_3d, metric):
     """Chunking along spatial dims."""
     # chunk over dims in both
-    for dim in hind_da_initialized_3d.dims:
-        if dim in reconstruction_da_3d.dims:
+    for dim in hindcast_recon_3d.get_initialized().dims:
+        if dim in hindcast_recon_3d.get_observations().dims:
             step = 5
-            res_chunked = compute_hindcast(
-                hind_da_initialized_3d.chunk({dim: step}),
-                reconstruction_da_3d.chunk({dim: step}),
-                comparison="e2o",
-                metric=metric,
+            res_chunked = (
+                hindcast_recon_3d.chunk({dim: step})
+                .verify(
+                    metric=metric,
+                    **kw,
+                    comparison="e2o",
+                )
+                .to_array()
             )
             # check for chunks
             assert dask.is_dask_collection(res_chunked)
             assert res_chunked.chunks is not None
 
 
-def test_compute_hindcast_CESM_3D_keep_coords(
-    hind_da_initialized_3d, reconstruction_da_3d
-):
+def test_hindcast_verify_CESM_3D_keep_coords(hindcast_recon_3d):
     """Test that no coords are lost in compute_hindcast with the CESM sample data."""
-    s = compute_hindcast(hind_da_initialized_3d, reconstruction_da_3d)
-    for c in hind_da_initialized_3d.drop_vars("init").coords:
+    s = hindcast_recon_3d.verify(metric="mse", comparison="e2o", **kw)
+    for c in (
+        hindcast_recon_3d.get_initialized()
+        .drop_vars("init")
+        .drop_vars("valid_time")
+        .coords
+    ):
         assert c in s.coords
 
 

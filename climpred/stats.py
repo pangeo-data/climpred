@@ -212,7 +212,7 @@ def varweighted_mean_period(
             "https://xrft.readthedocs.io/en/latest/installation.html"
         )
     if isinstance(da, xr.Dataset):
-        raise ValueError("require xr.DataArray, try xr.Dataset.map(func)")
+        return da.map(varweighted_mean_period, dim=dim, **kwargs)
     da = da.fillna(0.0)
     # dim should be list
     if isinstance(dim, str):

@@ -18,13 +18,13 @@ def assert_repr(pe, display_style):
 
 @pytest.mark.parametrize("display_style", ("html", "text"))
 def test_repr_PerfectModelEnsemble(
-    PM_da_initialized_1d, PM_da_control_1d, display_style
+    PM_ds_initialized_1d, PM_ds_control_1d, display_style
 ):
     """Test html and text repr."""
     with xr.set_options(display_style=display_style):
-        pm = PerfectModelEnsemble(PM_da_initialized_1d)
+        pm = PerfectModelEnsemble(PM_ds_initialized_1d)
         assert_repr(pm, display_style)
-        pm = pm.add_control(PM_da_control_1d)
+        pm = pm.add_control(PM_ds_control_1d)
         assert_repr(pm, display_style)
         pm = pm.generate_uninitialized()
         assert_repr(pm, display_style)

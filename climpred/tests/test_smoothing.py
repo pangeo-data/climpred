@@ -19,48 +19,48 @@ except ImportError:
 from . import requires_xesmf
 
 
-def test_reset_temporal_axis(PM_da_control_3d_full):
+def test_reset_temporal_axis(PM_ds_control_3d_full):
     """Test whether correct new labels are set."""
     smooth = 10
     tsmooth_kws = {"time": smooth}
-    first_ori = PM_da_control_3d_full.time[0].values
+    first_ori = PM_ds_control_3d_full.time[0].values
     first_actual = _reset_temporal_axis(
-        PM_da_control_3d_full, tsmooth_kws=tsmooth_kws, dim="time"
+        PM_ds_control_3d_full, tsmooth_kws=tsmooth_kws, dim="time"
     ).time.values[0]
     first_expected = f"{first_ori}-{first_ori+smooth*1-1}"
     assert first_actual == first_expected
 
 
-def test_reset_temporal_axis_lead(PM_da_initialized_3d_full):
+def test_reset_temporal_axis_lead(PM_ds_initialized_3d_full):
     """Test whether correct new labels are set."""
     smooth = 10
     dim = "lead"
     tsmooth_kws = {dim: smooth}
-    first_ori = PM_da_initialized_3d_full.lead[0].values
+    first_ori = PM_ds_initialized_3d_full.lead[0].values
     first_actual = _reset_temporal_axis(
-        PM_da_initialized_3d_full, tsmooth_kws=tsmooth_kws
+        PM_ds_initialized_3d_full, tsmooth_kws=tsmooth_kws
     )[dim].values[0]
     first_expected = f"{first_ori}-{first_ori+smooth*1-1}"
     assert first_actual == first_expected
 
 
-def test_temporal_smoothing_reduce_length(PM_da_control_3d_full):
+def test_temporal_smoothing_reduce_length(PM_ds_control_3d_full):
     """Test whether dimsize is reduced properly."""
     smooth = 10
     tsmooth_kws = {"time": smooth}
     actual = temporal_smoothing(
-        PM_da_control_3d_full, tsmooth_kws=tsmooth_kws
+        PM_ds_control_3d_full, tsmooth_kws=tsmooth_kws
     ).time.size
-    expected = PM_da_control_3d_full.time.size - smooth + 1
+    expected = PM_ds_control_3d_full.time.size - smooth + 1
     assert actual == expected
 
 
 @requires_xesmf
 def test_spatial_smoothing_xesmf_reduce_spatial_dims_MPI_curv(
-    PM_da_control_3d_full,
+    PM_ds_control_3d_full,
 ):
     """Test whether spatial dimsizes are properly reduced."""
-    da = PM_da_control_3d_full
+    da = PM_ds_control_3d_full
     step = 5
     actual = spatial_smoothing_xesmf(
         da,
@@ -88,10 +88,10 @@ def test_spatial_smoothing_xesmf_reduce_spatial_dims_CESM(
 
 
 @requires_xesmf
-def test_smooth_goddard_2013(PM_da_control_3d_full):
+def test_smooth_goddard_2013(PM_ds_control_3d_full):
     """Test whether Goddard 2013 recommendations are fulfilled by
     smooth_Goddard_2013."""
-    da = PM_da_control_3d_full
+    da = PM_ds_control_3d_full
     actual = smooth_goddard_2013(
         da,
     )
@@ -106,16 +106,16 @@ def test_smooth_goddard_2013(PM_da_control_3d_full):
 
 @requires_xesmf
 def test_compute_after_smooth_goddard_2013(
-    PM_da_initialized_3d_full, PM_da_control_3d_full
+    PM_ds_initialized_3d_full, PM_ds_control_3d_full
 ):
     """Test compute_perfect_model works after smoothings."""
-    PM_da_control_3d_full = smooth_goddard_2013(
-        PM_da_control_3d_full,
+    PM_ds_control_3d_full = smooth_goddard_2013(
+        PM_ds_control_3d_full,
     )
-    PM_da_initialized_3d_full = smooth_goddard_2013(
-        PM_da_initialized_3d_full,
+    PM_ds_initialized_3d_full = smooth_goddard_2013(
+        PM_ds_initialized_3d_full,
     )
-    actual = compute_perfect_model(PM_da_initialized_3d_full, PM_da_control_3d_full)
+    actual = compute_perfect_model(PM_ds_initialized_3d_full, PM_ds_control_3d_full)
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()
 

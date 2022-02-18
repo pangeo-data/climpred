@@ -283,11 +283,6 @@ def get_metric_class(metric: Union[str, Metric], list_: List) -> Metric:
     """
     Convert string representing the desired metric to corresponding metric class.
 
-    Currently compatable with functions:
-    * compute_persistence()
-    * compute_perfect_model()
-    * compute_hindcast()
-
     Args:
         metric: name of metric.
         list_: check whether metric in list

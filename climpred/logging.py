@@ -2,10 +2,10 @@ import logging
 from datetime import datetime
 
 
-def log_compute_hindcast_header(metric, comparison, dim, alignment, reference) -> None:
+def log_hindcast_verify_header(metric, comparison, dim, alignment, reference) -> None:
     """Add header to the log for a `compute_hindcast` instance."""
     logging.info(
-        f"`compute_hindcast` for metric {metric.name}, "
+        f"`HindcastEnsemble.verify()` for metric {metric.name}, "
         f"comparison {comparison.name}, dim {dim}, alignment {alignment} and "
         f"reference {reference} at {str(datetime.now())}\n"
         f"++++++++++++++++++++++++++++++++++++++++++++++++"

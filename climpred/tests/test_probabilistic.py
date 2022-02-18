@@ -197,7 +197,9 @@ def test_compute_pm_probabilistic_metric_non_probabilistic_comparison_fails(
 
 
 @pytest.mark.parametrize("metric", ["crps"])
-def test_compute_hindcast_probabilistic_metric_e2o_fails(hindcast_hist_obs_1d, metric):
+def test_HindcastEnsemble_verify_probabilistic_metric_e2o_fails(
+    hindcast_hist_obs_1d, metric
+):
     with pytest.raises(
         ValueError, match="Comparison must equal 'm2o' with dim='member'"
     ):

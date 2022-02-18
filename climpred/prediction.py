@@ -1,5 +1,7 @@
 """Prediction module: _apply_metric_at_given_lead and compute functions."""
 
+from typing import List, Optional, Set, Tuple, Union
+
 import xarray as xr
 from dask import is_dask_collection
 
@@ -14,7 +16,7 @@ from .comparisons import (
 )
 from .constants import CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .exceptions import DimensionError
-from .logging import log_compute_hindcast_header, log_hindcast_verify_inits_and_verifs
+from .logging import log_hindcast_verify_header, log_hindcast_verify_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .reference import (
     _adapt_member_for_reference_forecast,
@@ -77,12 +79,6 @@ def _apply_metric_at_given_lead(
         lverif = verif.sel(time=verif_dates[lead])
     elif reference == "persistence":
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
-        # print('lforecast',lforecast.time.size,'vs',lverif.time.size,'lverif')
-        # print('verif',verif,'inits',inits, 'verif_dates',verif_dates)
-        # from IPython.core.debugger import Pdb;
-        # Pdb().set_trace()
-        # assert False
-        # return lforecast, lverif, verif, inits, verif_dates, lead
     elif reference == "uninitialized":
         lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
     elif reference == "climatology":
@@ -100,7 +96,7 @@ def _apply_metric_at_given_lead(
     # https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645
     dim = _rename_dim(
         dim, initialized, verif
-    )  # dim should be much clearer once time in initialized.coords
+    )  # dim should be much clearer once time_valid in initialized.coords
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
 
@@ -133,7 +129,7 @@ def _rename_dim(dim, forecast, verif):
     return dim
 
 
-def _sanitize_to_list(dim):
+def _sanitize_to_list(dim: Union[str, Set, Tuple, List, None]) -> Optional[List[str]]:
     """Ensure dim is List, raises ValueError if not str, set, tuple or None."""
     if isinstance(dim, str):
         dim = [dim]
@@ -168,7 +164,7 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     dim = _sanitize_to_list(dim)
 
     # check kind allowed
-    is_in_list(kind, ["hindcast", "PM"], "kind")
+    is_in_list(kind, ["hindcast", "perfect"], "kind")
 
     if dim is None:  # take all dimension from initialized except lead
         dim = list(initialized.dims)
@@ -256,7 +252,7 @@ def compute_perfect_model(
 
     # check args compatible with each other
     metric, comparison, dim = _get_metric_comparison_dim(
-        initialized, metric, comparison, dim, kind="PM"
+        initialized, metric, comparison, dim, kind="perfect"
     )
 
     forecast, verif = comparison.function(initialized, metric=metric)
@@ -314,6 +310,7 @@ def compute_hindcast(
         result (xr.Dataset):
             Verification metric over ``lead`` reduced by dimension(s) ``dim``.
     """
+    assert False, "dont use"
     metric, comparison, dim = _get_metric_comparison_dim(
         initialized, metric, comparison, dim, kind="hindcast"
     )
@@ -335,7 +332,7 @@ def compute_hindcast(
     if "iteration" in forecast.dims and "iteration" not in verif.dims:
         verif = verif.expand_dims(iteration=forecast.iteration)
 
-    log_compute_hindcast_header(metric, comparison, dim, alignment, "initialized")
+    log_hindcast_verify_header(metric, comparison, dim, alignment, "initialized")
 
     metric_over_leads = [
         _apply_metric_at_given_lead(

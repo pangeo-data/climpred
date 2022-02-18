@@ -7,6 +7,7 @@ OPTIONS = {
     "warn_for_rename_to_climpred_dims": True,
     "warn_for_init_coords_int_to_annual": True,
     "climpred_warnings": True,
+    "bootstrap_resample_skill_func": "default",
 }  # defaults
 
 _SEASONALITY_OPTIONS = frozenset(GROUPBY_SEASONALITIES)
@@ -22,6 +23,8 @@ _VALIDATORS = {
     "warn_for_init_coords_int_to_annual": lambda choice: choice
     in [True, False, "default"],
     "climpred_warnings": lambda choice: choice in [True, False, "default"],
+    "bootstrap_resample_skill_func": lambda choice: choice
+    in ["loop", "empty_dim", "resample_before"],
 }
 
 

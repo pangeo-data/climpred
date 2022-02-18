@@ -631,6 +631,7 @@ def bootstrap_compute(
         * :py:func:`.climpred.bootstrap.bootstrap_hindcast`
         * :py:func:`.climpred.bootstrap.bootstrap_perfect_model`
     """
+    assert False, "dont use"
     warn_if_chunking_would_increase_performance(initialized, crit_size_in_MB=5)
     if pers_sig is None:
         pers_sig = sig

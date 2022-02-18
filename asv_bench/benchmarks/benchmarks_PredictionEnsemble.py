@@ -51,6 +51,7 @@ class Compute:
         )
         if bootstrap:
             metric_kwargs["iterations"] = self.iterations
+            metric_kwargs["resample_dim"] = self.resample_dim
         if self.PredictionEnsemble.kind == "hindcast":
             metric_kwargs["alignment"] = self.alignment
         return metric_kwargs
@@ -197,6 +198,7 @@ class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
             .add_observations(self.observations)
         )
         self.alignment = "same_inits"
+        self.resample_dim = "init"
         self.reference = None
 
 
@@ -269,6 +271,7 @@ class S2S(Compute):
     def setup(self, *args, **kwargs):
         self.get_data()
         self.alignment = "same_inits"
+        self.resample_dim = "init"
         self.reference = None  # ['uninitialized','climatology','persistence']
         self.iterations = 16
 
@@ -284,5 +287,6 @@ class NMME(Compute):
     def setup(self, *args, **kwargs):
         self.get_data()
         self.alignment = "same_inits"
+        self.resample_dim = "init"
         self.reference = None  # ['uninitialized','climatology','persistence']
         self.iterations = 16

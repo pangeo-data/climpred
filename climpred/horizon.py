@@ -91,6 +91,7 @@ def horizon(cond):
         ...     dim=["init", "member"],
         ...     reference="uninitialized",
         ...     iterations=201,
+        ...     resample_dim="init",
         ... )
         >>> horizon(bskill.sel(skill="uninitialized", results="p") <= 0.05)
         <xarray.Dataset>

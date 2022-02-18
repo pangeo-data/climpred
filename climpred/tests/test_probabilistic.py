@@ -40,7 +40,6 @@ references_ids = [
 xr.set_options(display_style="text")
 
 
-# todo: param resample_dim and metric
 @pytest.mark.parametrize("reference", references, ids=references_ids)
 @pytest.mark.parametrize("metric", PROBABILISTIC_METRICS)
 @pytest.mark.parametrize("comparison", PROBABILISTIC_HINDCAST_COMPARISONS)
@@ -91,7 +90,7 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
     not actual_verify.isnull().all()
 
     # bootstrap()
-    actual = he.bootstrap(iterations=3, **kwargs)["SST"]
+    actual = he.bootstrap(iterations=3, resample_dim="member", **kwargs)["SST"]
     assert "dayofyear" not in actual.coords
 
     if isinstance(reference, str):

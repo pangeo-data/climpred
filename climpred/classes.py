@@ -984,7 +984,7 @@ class PredictionEnsemble:
                 )
             warnings.warn(msg)
 
-    def bootstrap(
+    def _bootstrap(
         self,
         metric: metricType = None,
         comparison: comparisonType = None,
@@ -997,13 +997,15 @@ class PredictionEnsemble:
         resample_dim: str = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
-        """docstring, add typing"""
+        """see docstring"""
         _metric, _, _ = _get_metric_comparison_dim(
             self.get_initialized(), metric, comparison, dim, kind=self.kind
         )
 
         if iterations is None:
             raise ValueError("Designate number of bootstrapping `iterations`.")
+        if resample_dim is None:
+            resample_dim = "member"
 
         reference = _check_valid_reference(reference)
 
@@ -1066,6 +1068,15 @@ class PredictionEnsemble:
             # fast way by verify(dim=[]) and then resampling init
             # used for HindcastEnsemble.bootstrap(resample_dim='init')
             resampled_skills = resample_skill_empty_dim(
+                self, iterations, resample_dim, verify_kwargs
+            )
+        elif (
+            resample_dim == "member"
+            and self.kind == "hindcast"
+            and _metric.name
+            in ["threshold_brier_score", "reliability", "rank_histogram"]
+        ):
+            resampled_skills = resample_skill_loop(
                 self, iterations, resample_dim, verify_kwargs
             )
 
@@ -1605,7 +1616,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             res["lead"].attrs = self.get_initialized().lead.attrs
         return res
 
-    def _bootstrap(
+    def bootstrap(
         self,
         metric: metricType = None,
         comparison: comparisonType = None,
@@ -1615,7 +1626,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         iterations: Optional[int] = None,
         sig: int = 95,
         resample_dim: str = "member",
-        pers_sig: Optional[int] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Bootstrap with replacement according to :cite:t:`Goddard2013`.
@@ -1649,8 +1659,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
             sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
-            pers_sig: If not ``None``, the separate significance level for
-                persistence. Defaults to ``None``, or the same significance as ``sig``.
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
 
@@ -1718,6 +1726,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 confidence_interval_levels:                        0.975-0.025
 
         """
+        return self._bootstrap(
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            reference=reference,
+            groupby=groupby,
+            iterations=iterations,
+            sig=sig,
+            resample_dim=resample_dim,
+            **metric_kwargs,
+        )
 
 
 class HindcastEnsemble(PredictionEnsemble):
@@ -2282,7 +2301,7 @@ class HindcastEnsemble(PredictionEnsemble):
         )
         return res
 
-    def _bootstrap(
+    def bootstrap(
         self,
         metric: metricType = None,
         comparison: comparisonType = None,
@@ -2293,7 +2312,6 @@ class HindcastEnsemble(PredictionEnsemble):
         iterations: Optional[int] = None,
         sig: int = 95,
         resample_dim: str = "member",
-        pers_sig: Optional[int] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Bootstrap with replacement according to :cite:t:`Goddard2013`.
@@ -2331,7 +2349,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 - ``"member"``: select a different set of members from hind
                 - ``"init"``: select a different set of initializations from hind
 
-            pers_sig: If not ``None``, the separate significance level for persistence.
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
 
@@ -2403,6 +2420,18 @@ class HindcastEnsemble(PredictionEnsemble):
                 confidence_interval_levels:    0.975-0.025
 
         """
+        return self._bootstrap(
+            metric=metric,
+            comparison=comparison,
+            dim=dim,
+            alignment=alignment,
+            reference=reference,
+            groupby=groupby,
+            iterations=iterations,
+            sig=sig,
+            resample_dim=resample_dim,
+            **metric_kwargs,
+        )
 
     def remove_bias(
         self,

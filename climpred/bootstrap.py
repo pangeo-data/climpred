@@ -459,6 +459,7 @@ def resample_skill_loop(self, iterations, resample_dim, verify_kwargs):
     # slow: loop and verify each time
     # used for HindcastEnsemble.bootstrap(metric='acc')
     logging.info("use resample_skill_loop")
+    print("use resample_skill_loop")
     resampled_skills = []
     if not self.get_initialized():
         # warn not found and therefore generate
@@ -492,7 +493,9 @@ def resample_skill_empty_dim(self, iterations, resample_dim, verify_kwargs):
     # used for HindcastEnsemble.bootstrap(resample_dim='init')
     # assert dim==resample_dim ?
     logging.info("use resample_skill_empty_dim")
-    if verify_kwargs["groupby"] is not None:
+    print("use resample_skill_empty_dim")
+
+    if "groupby" in verify_kwargs:
         resample_func = _resample_iterations
     else:
         resample_func = _get_resample_func(self.get_initialized())
@@ -524,7 +527,9 @@ def resample_skill_resample_before(self, iterations, resample_dim, verify_kwargs
     # - how to handle persistence and climatology
     #   dont way now somehow if resample_dim='init'
     logging.info("use resample_skill_resample_before")
-    if verify_kwargs["groupby"] is not None:
+    print("use resample_skill_resample_before")
+
+    if "groupby" in verify_kwargs:
         resample_func = _resample_iterations
     else:
         resample_func = _get_resample_func(self.get_initialized())

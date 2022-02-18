@@ -14,7 +14,7 @@ from .comparisons import (
 )
 from .constants import CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .exceptions import DimensionError
-from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
+from .logging import log_compute_hindcast_header, log_hindcast_verify_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .reference import (
     _adapt_member_for_reference_forecast,
@@ -105,7 +105,7 @@ def _apply_metric_at_given_lead(
         metric_kwargs["comparison"] = comparison
 
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
-    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
+    log_hindcast_verify_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     # push time (later renamed to init) back by lead
     if "time" in result.dims:
         n, freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], lead)

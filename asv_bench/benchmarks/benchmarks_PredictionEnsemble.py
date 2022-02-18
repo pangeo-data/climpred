@@ -196,7 +196,7 @@ class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
             .add_uninitialized(self.uninitialized)
             .add_observations(self.observations)
         )
-        self.alignment = "same_verif"
+        self.alignment = "same_inits"
         self.reference = None
 
 

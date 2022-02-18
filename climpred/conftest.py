@@ -604,6 +604,7 @@ def small_initialized_da():
         np.random.rand(len(inits), len(lead)),
         dims=["init", "lead"],
         coords=[inits, lead],
+        name="var",
     )
 
 
@@ -611,4 +612,6 @@ def small_initialized_da():
 def small_verif_da():
     """Very small simulation of a verification product."""
     time = [1990, 1991, 1992, 1993, 1994]
-    return xr.DataArray(np.random.rand(len(time)), dims=["time"], coords=[time])
+    return xr.DataArray(
+        np.random.rand(len(time)), dims=["time"], coords=[time], name="var"
+    )

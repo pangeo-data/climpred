@@ -56,7 +56,8 @@ New Features
   (:issue:``, :pr:`731`) `Aaron Spring`_.
 - ``climpred.set_option(resample_skill_func='empty_dim')`` allows
   ``HindcastEnsemble.bootstrap(alignment='same_verifs', resample_dim='init')``.
-  Does not work for ACC-derived metrics. (:issue:`582`, :pr:`731`) `Aaron Spring`_.
+  Does not work for ``pearson_r``-derived metrics.
+  (:issue:`582`, :pr:`731`) `Aaron Spring`_.
 
 Internals/Minor Fixes
 ---------------------

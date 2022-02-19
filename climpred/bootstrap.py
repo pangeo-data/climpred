@@ -478,12 +478,13 @@ def resample_skill_loop(self, iterations, resample_dim, verify_kwargs):
         )
         if "uninitialized" in verify_kwargs["reference"]:
             # resample uninitialized
-            if not self.get_initialized():
+            if not self.get_uninitialized():
                 # warn not found and therefore generate
                 self_for_loop._datasets[
                     "uninitialized"
                 ] = self.generate_uninitialized().get_uninitialized()
             else:
+                print(self.get_uninitialized())
                 self_for_loop._datasets["uninitialized"] = _resample(
                     self.get_uninitialized(), "member"
                 )

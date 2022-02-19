@@ -1041,7 +1041,11 @@ class PredictionEnsemble:
             verify_kwargs["alignment"] = alignment
 
         if "uninitialized" in reference and not self.get_uninitialized():
-            # warn
+            warnings.warn(
+                "'uninitialized' in `reference` but not `uninitialized` "
+                "dataset. Therefore climpred does "
+                f"`{str(type(self))}.generate_uninitialized()`."
+            )
             self2 = self.generate_uninitialized()
         else:
             self2 = self

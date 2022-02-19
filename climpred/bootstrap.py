@@ -363,7 +363,6 @@ def _get_resample_func(ds):
       callable: `_resample_iterations`: if big and chunked `ds`
                 `_resample_iterations_idx`: else (if small and eager `ds`)
     """
-    # todo: make option via to use: default use this logic, or decide
     if OPTIONS["resample_iterations_func"] == "default":
         resample_func = (
             _resample_iterations

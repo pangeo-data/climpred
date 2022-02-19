@@ -57,6 +57,5 @@ Misc
 .. toctree::
   :maxdepth: 1
 
-  examples/misc/efficient_dask.ipynb
   examples/misc/climpred_gpu.ipynb
   examples/misc/setup_your_own_data.ipynb

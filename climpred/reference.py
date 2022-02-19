@@ -166,6 +166,7 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
     # required
     # some metrics dont allow member dimension, remove and try mean
     # delete member from dim if needed
+    print(dim)
     if "member" in dim:
         if (
             "member" in lforecast.dims
@@ -190,14 +191,16 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
         not metric.requires_member_dim and metric.probabilistic
     ):  # require probabilistic to solve https://github.com/pangeo-data/climpred/issues/735
         if "member" in lforecast.dims and "member" not in dim:
-            lforecast = lforecast.mean("member")
-    # multi member comparisons expect member dim
+            lforecast = lforecast.mean(
+                "member"
+            )  # multi member comparisons expect member dim
     if (
         comparison.name in ["m2o", "m2m", "m2c", "m2e"]
         and "member" not in lforecast.dims
         and metric.requires_member_dim
     ):
         lforecast = lforecast.expand_dims("member")  # add fake member dim
+    print("dim", dim)
     return lforecast, dim
 
 

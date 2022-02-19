@@ -2304,6 +2304,13 @@ class HindcastEnsemble(PredictionEnsemble):
                         ref = ref.mean("member")
                         if "time" in ref.dims and "time" not in result.dims:
                             ref = ref.rename({"time": "init"})
+                    # fix #735
+                    if (
+                        r == "uninitialized"
+                        and "member" in dim
+                        and "member" in ref.dims
+                    ):
+                        ref = ref.mean("member")
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
             if "time" in result.dims:

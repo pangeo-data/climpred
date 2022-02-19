@@ -166,7 +166,6 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
     # required
     # some metrics dont allow member dimension, remove and try mean
     # delete member from dim if needed
-    print(dim)
     if "member" in dim:
         if (
             "member" in lforecast.dims
@@ -200,7 +199,6 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
         and metric.requires_member_dim
     ):
         lforecast = lforecast.expand_dims("member")  # add fake member dim
-    print("dim", dim)
     return lforecast, dim
 
 

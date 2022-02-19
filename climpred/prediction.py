@@ -354,13 +354,4 @@ def compute_hindcast(
     # rename back to 'init'
     if "time" in result.dims:
         result = result.rename({"time": "init"})
-    #    result.coords['valid_time']=forecast.coords['valid_time']
-    # These computations sometimes drop coordinates along the way. This appends them
-    # back onto the results of the metric.
-
-    # dirty fix:
-    # if "init" in result.dims and "init" in result.coords:
-    #    if "valid_time" in result.coords:
-    #        if "lead" not in result.valid_time.dims:
-    #            result = add_time_from_init_lead(result.drop_vars("valid_time"))
     return result

@@ -1136,22 +1136,6 @@ class PredictionEnsemble:
 
         ci = _distribution_to_ci(resampled_skills, ci_low, ci_high)
 
-        # take uninit skill from resampled skills
-        try:  # make option
-            if "uninitialized" in reference and False:
-                skill = xr.concat(
-                    [
-                        skill.sel(skill="initialized"),
-                        resampled_skills.sel(skill="uninitialized").mean("iteration"),
-                        skill.drop_sel(skill=["initialized", "uninitialized"]),
-                    ],
-                    "skill",
-                    coords="minimal",
-                )
-                print("exchange uninit passed")
-        except Exception:
-            print("exchange uninit failed")
-
         results_list = [
             skill,
             ci.sel(quantile=ci_low, drop=True),
@@ -1169,7 +1153,7 @@ class PredictionEnsemble:
                 [
                     pvalue.isel(skill=0, drop=True)
                     .assign_coords(skill="initialized")
-                    .where(1 == 2),
+                    .where(1 == 2),  # adds all NaN
                     pvalue,
                 ],
                 "skill",
@@ -1177,12 +1161,6 @@ class PredictionEnsemble:
             )
             results_list.insert(1, pvalue)
             results_labels.insert(1, "p")
-
-        results_dims = (
-            ["skill", "results", "lead"]
-            if "skill" in list(results_list[0].dims)
-            else ["results", "lead"]
-        )
 
         results = xr.concat(
             results_list,
@@ -1196,6 +1174,11 @@ class PredictionEnsemble:
         if results.skill.size == 1:
             results = results.isel(skill=0)
 
+        results_dims = (
+            ["skill", "results", "lead"]
+            if "skill" in list(results_list[0].dims)
+            else ["results", "lead"]
+        )
         results = results.transpose(*results_dims, ...)
 
         results = assign_attrs(
@@ -1421,7 +1404,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.1015 0.1268
+                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.122 0.1246
             Attributes:
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.v...
@@ -1765,7 +1748,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
               * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.1241 0.1406
+                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.117 0.09826
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...
@@ -2187,7 +2170,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.07377 0.07409
+                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.1012 0.1017
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2467,7 +2450,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
               * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.6653
+                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.07578
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()

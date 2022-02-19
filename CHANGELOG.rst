@@ -18,6 +18,46 @@ What's New
 climpred unreleased
 ===================
 
+Bug Fixes
+---------
+- Fix ``reference="persistence"`` for resampled ``init``.
+  (:issue:`730`, :pr:`731`) `Aaron Spring`_.
+- :py:meth:`.HindcastEnsemble.verify`
+`(comparison="m2o", reference="uninitialized", dim="init").
+(:issue:`735`, :pr:`731`) `Aaron Spring`_.
+
+New Features
+------------
+- Refactored :py:meth:`.HindcastEnsemble.bootstrap` and
+  :py:meth:`.PerfectModelEnsemble.bootstrap` based on
+  :py:meth:`.HindcastEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.verify`,
+  which makes them more comparable.
+  ``pers_sig`` is removed.
+  Also ``reference=["climatology","persistence"]`` skill has variance if
+  ``resample_dim='init'``.
+  ``bootstrap`` relies on either ``set_optionresample_skill_func="..."]``:
+
+  * ``"loop"`` calls :py:func:`climpred.bootstrap.resample_skill_loop` which
+      loops over iterations and calls ``verify`` every single time. Most
+      understandable and stable, but slow.
+  * ``"empty_dim"`` calls
+      :py:func:`climpred.bootstrap.resample_skill_empty_dim` which calls
+      ``verify(dim=dim_without_resample_dim)``, resamples over
+      ``resample_dim`` and then takes a mean over ``resample_dim`` if in
+      ``dim``. Enables
+      ``HindcastEnsemble.bootstrap(resample_dim="init", alignment="same_verifs")``.
+      Fast alternative for ``resample_dim="init"``.
+  * ``"resample_before"`` calls
+      :py:func:`climpred.bootstrap.resample_skill_resample_before` which
+      resamples ``iteration`` dimension and then calls ``verify`` vectorized.
+      Fast alternative for ``resample_dim="member"``.
+  * ``"default"``: ``climpred`` decides which to use
+
+  (:issue:``, :pr:`731`) `Aaron Spring`_.
+- ``climpred.set_option(resample_skill_func='empty_dim')`` allows
+  ``HindcastEnsemble.bootstrap(alignment='same_verifs', resample_dim='init')``.
+  Does not work for ACC-derived metrics. (:issue:`582`, :pr:`731`) `Aaron Spring`_.
+
 Internals/Minor Fixes
 ---------------------
 - Refactor ``asv`` benchmarking. Add ``run-benchmarks`` label to ``PR`` to run ``asv``
@@ -26,6 +66,14 @@ Internals/Minor Fixes
 - Calculating ``np.isin`` on ``asi8``(``float``) instead of ``xr.CFTimeIndex`` speeds up
   :py:meth:`.HindcastEnsemble.verify` and :py:meth:`.HindcastEnsemble.bootstrap` with
   large number of inits. (:issue:`414`, :pr:`724`) `Aaron Spring`_.
+- Add option ``bootstrap_resample_skill_func`` for they what skill is resampled in
+  :py:meth:`.HindcastEnsemble.bootstrap` and
+  :py:meth:`.PerfectModelEnsemble.bootstrap`, see
+  :py:class:`~climpred.options.set_options`. (:pr:`731`) `Aaron Spring`_.
+- Add option ``resample_iterations_func`` to decide whether
+  :py:func:`xskillscore.resample_iterations` or
+  :py:func:`xskillscore.resample_iterations` should be used, see
+  :py:class:`~climpred.options.set_options`. (:pr:`731`) `Aaron Spring`_.
 
 
 climpred v2.2.0 (2021-12-20)

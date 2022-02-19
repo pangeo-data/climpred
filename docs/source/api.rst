@@ -220,8 +220,12 @@ Bootstrap
 
     bootstrap_uninit_pm_ensemble_from_control_cftime
     bootstrap_uninitialized_ensemble
+    resample_skill_empty_dim,
+    resample_skill_loop,
+    resample_skill_resample_before,
     dpp_threshold
     varweighted_mean_period_threshold
+
 
 Prediction
 ~~~~~~~~~~

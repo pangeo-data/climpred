@@ -76,3 +76,27 @@ def test_climpred_warnings(hindcast_recon_1d_dm, option_bool):
                 hindcast_recon_1d_dm.sel(lead=[1, 2])
             if not option_bool:
                 assert len(record) == 0, print(record[0])
+
+
+def test_option_resample_iterations_func(hindcast_recon_1d_ym):
+    """Singleton dimension makes resample_iterations_idx fail."""
+    with climpred.set_options(resample_iterations_func="resample_iterations_idx"):
+        with pytest.raises(ValueError):
+            hindcast_recon_1d_ym.expand_dims("lon").bootstrap(
+                metric="mse",
+                comparison="e2o",
+                dim="init",
+                alignment="maximize",
+                iterations=2,
+                resample_dim="member",
+            )
+
+    with climpred.set_options(resample_iterations_func="resample_iterations"):
+        hindcast_recon_1d_ym.expand_dims("lon").bootstrap(
+            metric="mse",
+            comparison="e2o",
+            dim="init",
+            alignment="maximize",
+            iterations=2,
+            resample_dim="member",
+        )

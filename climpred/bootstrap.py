@@ -7,19 +7,20 @@ from copy import copy
 import dask
 import numpy as np
 import xarray as xr
+import xskillscore as xs
 from tqdm.auto import tqdm
 from xskillscore.core.resampling import (
     resample_iterations as _resample_iterations,
     resample_iterations_idx as _resample_iterations_idx,
 )
 
-from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS
-
 from .checks import (
     has_dims,
     has_valid_lead_units,
     warn_if_chunking_would_increase_performance,
 )
+from .constants import CLIMPRED_DIMS, CONCAT_KWARGS
+from .options import OPTIONS
 from .stats import dpp
 
 try:
@@ -363,19 +364,22 @@ def _get_resample_func(ds):
                 `_resample_iterations_idx`: else (if small and eager `ds`)
     """
     # todo: make option via to use: default use this logic, or decide
-    resample_func = (
-        _resample_iterations
-        if (
-            dask.is_dask_collection(ds)
-            and len(ds.dims) > 3
-            # > 2MB
-            and ds.nbytes > 2000000
+    if OPTIONS["resample_iterations_func"] == "default":
+        resample_func = (
+            _resample_iterations
+            if (
+                dask.is_dask_collection(ds)
+                and len(ds.dims) > 3
+                # > 2MB
+                and ds.nbytes > 2000000
+            )
+            else _resample_iterations_idx
         )
-        else _resample_iterations_idx
-    )
-    for d in ds.dims:
-        if ds.sizes[d] == 1:
-            resample_func = _resample_iterations
+        for d in ds.dims:
+            if ds.sizes[d] == 1:
+                resample_func = _resample_iterations
+    else:
+        resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
     return resample_func
 
 
@@ -493,11 +497,13 @@ def resample_skill_empty_dim(self, iterations, resample_dim, verify_kwargs):
     # fast way by verify(dim=dim_no_resample_dim) and then resampling init
     # used for HindcastEnsemble.bootstrap(resample_dim='init')
     logging.info("use resample_skill_empty_dim")
-
-    if "groupby" in verify_kwargs:
-        resample_func = _resample_iterations
+    if OPTIONS["resample_iterations_func"] == "default":
+        if "groupby" in verify_kwargs:
+            resample_func = _resample_iterations
+        else:
+            resample_func = _get_resample_func(self.get_initialized())
     else:
-        resample_func = _get_resample_func(self.get_initialized())
+        resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
 
     verify_kwargs_no_dim = verify_kwargs.copy()
     del verify_kwargs_no_dim["dim"]
@@ -528,11 +534,13 @@ def resample_skill_resample_before(self, iterations, resample_dim, verify_kwargs
 
     # assert resample_dim == 'member'
     logging.info("use resample_skill_resample_before")
-
-    if "groupby" in verify_kwargs:
-        resample_func = _resample_iterations
+    if OPTIONS["resample_iterations_func"] == "default":
+        if "groupby" in verify_kwargs:
+            resample_func = _resample_iterations
+        else:
+            resample_func = _get_resample_func(self.get_initialized())
     else:
-        resample_func = _get_resample_func(self.get_initialized())
+        resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
     logging.info("using resample_func:", resample_func.__name__)
 
     copy_self = self.copy()

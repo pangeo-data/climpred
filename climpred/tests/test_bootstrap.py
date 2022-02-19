@@ -69,7 +69,8 @@ def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment
     ):
         with pytest.raises(
             KeywordError,
-            match="resample_dim='init' and metric='pearson_r'. Change `resample_dim` to 'member' to keep",
+            match="resample_dim='init' and metric='pearson_r'. "
+            "Change `resample_dim` to 'member' to keep",
         ):
             initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
     else:

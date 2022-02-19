@@ -115,7 +115,8 @@ def test_compute_after_smooth_goddard_2013(
     PM_ds_initialized_3d_full = smooth_goddard_2013(
         PM_ds_initialized_3d_full,
     )
-    actual = compute_perfect_model(PM_ds_initialized_3d_full, PM_ds_control_3d_full)
+    actual = compute_perfect_model(PM_ds_initialized_3d_full, PM_ds_control_3d_full).tos
+
     north_atlantic = actual.sel(lat=slice(40, 50), lon=slice(-30, -20))
     assert not north_atlantic.isnull().any()
 

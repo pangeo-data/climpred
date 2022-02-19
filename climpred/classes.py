@@ -1000,6 +1000,8 @@ class PredictionEnsemble:
     ) -> xr.Dataset:
         """PredictionEnsemble.bootstrap() parent method.
 
+        explain: OPTIONS['bootstrap_resample_skill_func']
+
         See also:
         * :py:meth:`~climpred.PerfectModelEnsemble.bootstrap`
         * :py:meth:`~climpred.HindcastEnsemble.bootstrap`
@@ -1040,11 +1042,15 @@ class PredictionEnsemble:
         skill = self.verify(**verify_kwargs)
 
         # different ways to compute resample_skill
-        if isinstance(self, HindcastEnsemble) and isinstance(alignment, str):
+        if (
+            _metric.name in PEARSON_R_CONTAINING_METRICS
+            and self.kind == "hindcast"
+            and alignment
+        ):
             if ("same_verif" in alignment) & (resample_dim == "init"):
                 raise KeywordError(
-                    "Cannot have both alignment='same_verifs' and "
-                    "resample_dim='init'. Change `resample_dim` to 'member' to keep "
+                    "Cannot have alignment='same_verifs' and resample_dim='init' and "
+                    "metric='pearson_r'. Change `resample_dim` to 'member' to keep "
                     "common verification alignment or `alignment` to 'same_inits' to "
                     "resample over initializations."
                 )
@@ -1058,6 +1064,15 @@ class PredictionEnsemble:
                 # slow: loop and verify each time
                 # used for HindcastEnsemble.bootstrap(metric='acc')
                 resampled_skills = resample_skill_loop(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+            elif (
+                alignment in ["same_verifs", "same_verif"]
+                and self.kind == "hindcast"
+                and resample_dim == "init"
+            ):
+                # allow https://github.com/pangeo-data/climpred/issues/582
+                resampled_skills = resample_skill_empty_dim(
                     self, iterations, resample_dim, verify_kwargs
                 )
 
@@ -1075,7 +1090,7 @@ class PredictionEnsemble:
 
             elif (
                 resample_dim == "init"
-                and self.kind != "perfect"
+                and self.kind == "hindcast"
                 and _metric.probabilistic
                 and "member" in dim
                 and _metric.name
@@ -1103,6 +1118,7 @@ class PredictionEnsemble:
                 )
 
             else:
+                # slow: loop and verify each time, but always works
                 resampled_skills = resample_skill_loop(
                     self, iterations, resample_dim, verify_kwargs
                 )
@@ -1119,6 +1135,22 @@ class PredictionEnsemble:
         p, ci_low, ci_high = _p_ci_from_sig(sig)
 
         ci = _distribution_to_ci(resampled_skills, ci_low, ci_high)
+
+        # take uninit skill from resampled skills
+        try:  # make option
+            if "uninitialized" in reference and False:
+                skill = xr.concat(
+                    [
+                        skill.sel(skill="initialized"),
+                        resampled_skills.sel(skill="uninitialized").mean("iteration"),
+                        skill.drop_sel(skill=["initialized", "uninitialized"]),
+                    ],
+                    "skill",
+                    coords="minimal",
+                )
+                print("exchange uninit passed")
+        except:
+            print("exchange uninit failed")
 
         results_list = [
             skill,
@@ -2270,6 +2302,7 @@ class HindcastEnsemble(PredictionEnsemble):
                         and "member" in ref.dims
                     ):
                         ref = ref.mean("member")
+                        print("member mean fix applied")
                         if "time" in ref.dims and "time" not in result.dims:
                             ref = ref.rename({"time": "init"})
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)

@@ -8,6 +8,7 @@ OPTIONS = {
     "warn_for_init_coords_int_to_annual": True,
     "climpred_warnings": True,
     "bootstrap_resample_skill_func": "default",
+    "resample_iterations_func": "default",
 }  # defaults
 
 _SEASONALITY_OPTIONS = frozenset(GROUPBY_SEASONALITIES)
@@ -24,7 +25,9 @@ _VALIDATORS = {
     in [True, False, "default"],
     "climpred_warnings": lambda choice: choice in [True, False, "default"],
     "bootstrap_resample_skill_func": lambda choice: choice
-    in ["loop", "empty_dim", "resample_before"],
+    in ["loop", "empty_dim", "resample_before", "default"],
+    "resample_iterations_func": lambda choice: choice
+    in ["default", "resample_iterations", "resample_iterations_idx"],
 }
 
 
@@ -58,6 +61,29 @@ class set_options:
             :py:class:`.PredictionEnsemble` is instantiated.
         ``climpred_warnings`` : {``True``, ``False``}, default ``True``
             Overwrites all options containing ``"*warn*"``.
+        ``bootstrap_resample_skill_func`` : {"loop", "empty_dim", "resample_before","default"} Decide which resampling method to use in
+            PredictionEnsemble.bootstrap(). ``default`` as in code.
+
+            * ``loop`` calls :py:func:`climpred.bootstrap.resample_skill_loop` which
+                loops over iterations and calls ``verify`` every single time. Most
+                understandable and stable, but slow.
+            * ``empty_dim`` calls
+                :py:func:`climpred.bootstrap.resample_skill_empty_dim` which calls
+                ``verify(dim=dim_without_resample_dim)``, resamples over
+                ``resample_dim`` and then takes a mean over ``resample_dim`` if in
+                ``dim``. Enables ``HindcastEnsemble.bootstrap(resample_dim="init", alignment="same_verifs")``.
+                Fast alternative for ``resample_dim="init"``.
+            * ``resample_before`` calls :py:func:`climpred.bootstrap.resample_skill_resample_before` which
+                resamples ``iteration`` dimension and then calls ``verify`` vectorized.
+                Fast alternative for ``resample_dim="member"``.
+
+        ``resample_iterations_func``: {"default", 'resample_iterations',
+            'resample_iterations_idx'} Decide which resample_iterations function to use
+            from xskillscore. ``default`` as in code:
+
+            * :py:func:`xskillscore.resample_iterations_idx` creates one large chunk and consumes much memory and is not recommended for large files
+            * :py:func:`xskillscore.resample_iterations` create many tasks but is more stable
+
 
     Examples:
 

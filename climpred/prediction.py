@@ -80,13 +80,16 @@ def _apply_metric_at_given_lead(
     elif reference == "persistence":
         lforecast, lverif = persistence(verif, inits, verif_dates, lead)
     elif reference == "uninitialized":
+        print(hist.sizes)
         lforecast, lverif = uninitialized(hist, verif, verif_dates, lead)
+        print(lforecast.sizes, lverif.sizes)
     elif reference == "climatology":
         lforecast, lverif = climatology(verif, inits, verif_dates, lead)
     if reference is not None:
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
+        print(lforecast.sizes, lverif.sizes)
     assert lforecast.time.size == lverif.time.size, print(
         lforecast.time.to_index(), lverif.time.to_index(), reference
     )
@@ -100,7 +103,12 @@ def _apply_metric_at_given_lead(
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
 
+    if reference == "uninitialized":
+        print(lforecast.sizes, lverif.sizes, dim)
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
+    if reference == "uninitialized":
+        print(result.sizes, result)
+
     log_hindcast_verify_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     # push time (later renamed to init) back by lead
     if "time" in result.dims:

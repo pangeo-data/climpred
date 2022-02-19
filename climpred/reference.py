@@ -188,7 +188,10 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
     # member not required by metric and not in dim but present in forecast
     if not metric.requires_member_dim:
         if "member" in lforecast.dims and "member" not in dim:
-            lforecast = lforecast.mean("member")
+            lforecast = lforecast.mean(
+                "member"
+            )  # rm to solve https://github.com/pangeo-data/climpred/issues/735
+            print('lforecast = lforecast.mean("member")')
     # multi member comparisons expect member dim
     if (
         comparison.name in ["m2o", "m2m", "m2c", "m2e"]

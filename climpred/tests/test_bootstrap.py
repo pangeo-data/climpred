@@ -62,10 +62,14 @@ def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment
     if isinstance(initialized, HindcastEnsemble):
         kwargs["alignment"] = alignment
         kwargs["comparison"] = "m2o"
-    if alignment == "same_verifs" and isinstance(initialized, HindcastEnsemble):
+    if (
+        metric == "pearson_r"
+        and alignment == "same_verifs"
+        and isinstance(initialized, HindcastEnsemble)
+    ):
         with pytest.raises(
             KeywordError,
-            match="resample_dim='init'. Change `resample_dim` to 'member' to keep",
+            match="resample_dim='init' and metric='pearson_r'. Change `resample_dim` to 'member' to keep",
         ):
             initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
     else:

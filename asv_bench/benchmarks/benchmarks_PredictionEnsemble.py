@@ -9,7 +9,7 @@ from climpred.tutorial import load_dataset
 from . import _skip_slow, ensure_loaded, parameterized, randn, requires_dask
 
 # only take subselection of all possible metrics
-METRICS = ["rmse", "crps"]
+METRICS = ["mse", "crps"]
 REFERENCES = ["uninitialized", "climatology", "persistence"]
 ITERATIONS = 16
 
@@ -38,7 +38,7 @@ class Compute:
             self.PredictionEnsemble, (PerfectModelEnsemble, HindcastEnsemble)
         ):
             raise NotImplementedError()
-        dim = "member" if metric in PROBABILISTIC_METRICS else "init"
+        dim = ["init", "member"] if metric in PROBABILISTIC_METRICS else "init"
         if self.PredictionEnsemble.kind == "hindcast":
             comparison = "m2o" if metric in PROBABILISTIC_METRICS else "e2o"
         elif self.PredictionEnsemble.kind == "perfect":

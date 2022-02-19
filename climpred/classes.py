@@ -1,5 +1,6 @@
 """Main module instantiating ``PerfectModelEnsemble`` and ``HindcastEnsemble."""
 
+import logging
 import warnings
 from copy import deepcopy
 from typing import (
@@ -1039,7 +1040,12 @@ class PredictionEnsemble:
         if self.kind == "hindcast":
             verify_kwargs["alignment"] = alignment
 
-        skill = self.verify(**verify_kwargs)
+        if "uninitialized" in reference and not self.get_uninitialized():
+            # warn
+            self2 = self.generate_uninitialized()
+        else:
+            self2 = self
+        skill = self2.verify(**verify_kwargs)
 
         # different ways to compute resample_skill
         if (
@@ -1131,6 +1137,21 @@ class PredictionEnsemble:
             )
 
         # continue with skill and resampled_skills
+
+        if (
+            "uninitialized" in reference
+            and OPTIONS["bootstrap_uninitialized_from_iterations_mean"]
+        ):
+            skill = xr.concat(
+                [
+                    skill.sel(skill="initialized"),
+                    resampled_skills.sel(skill="uninitialized").mean("iteration"),
+                    skill.drop_sel(skill=["initialized", "uninitialized"]),
+                ],
+                "skill",
+                coords="minimal",
+            )
+            logging.info("exchange uninit with iteration mean skill passed")
 
         p, ci_low, ci_high = _p_ci_from_sig(sig)
 
@@ -2276,8 +2297,9 @@ class HindcastEnsemble(PredictionEnsemble):
                         )
                         for lead in forecast["lead"].data
                     ]
-                    ref = xr.concat(metric_over_leads, dim="lead")  # , **CONCAT_KWARGS)
-                    ref["lead"] = forecast["lead"]
+                    ref = xr.concat(
+                        metric_over_leads, dim="lead", **CONCAT_KWARGS
+                    ).assign_coords(lead=forecast.lead.values)
                     # fix to get no member dim for uninitialized e2o skill #477
                     if (
                         r == "uninitialized"

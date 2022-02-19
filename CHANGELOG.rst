@@ -74,6 +74,10 @@ Internals/Minor Fixes
   :py:func:`xskillscore.resample_iterations` or
   :py:func:`xskillscore.resample_iterations` should be used, see
   :py:class:`~climpred.options.set_options`. (:pr:`731`) `Aaron Spring`_.
+  - Add option ``bootstrap_uninitialized_from_iterations_mean`` to exchange
+  ``uninitialized`` skill with the iteration mean ``uninitialized``.
+  Defaults to False., see :py:class:`~climpred.options.set_options`.
+  (:pr:`731`) `Aaron Spring`_.
 
 
 climpred v2.2.0 (2021-12-20)

@@ -9,6 +9,7 @@ OPTIONS = {
     "climpred_warnings": True,
     "bootstrap_resample_skill_func": "default",
     "resample_iterations_func": "default",
+    "bootstrap_uninitialized_from_iterations_mean": False,
 }  # defaults
 
 _SEASONALITY_OPTIONS = frozenset(GROUPBY_SEASONALITIES)
@@ -28,6 +29,8 @@ _VALIDATORS = {
     in ["loop", "empty_dim", "resample_before", "default"],
     "resample_iterations_func": lambda choice: choice
     in ["default", "resample_iterations", "resample_iterations_idx"],
+    "bootstrap_uninitialized_from_iterations_mean": lambda choice: choice
+    in [True, False],
 }
 
 
@@ -83,6 +86,10 @@ class set_options:
 
             * :py:func:`xskillscore.resample_iterations_idx` creates one large chunk and consumes much memory and is not recommended for large files
             * :py:func:`xskillscore.resample_iterations` create many tasks but is more stable
+
+        ``bootstrap_uninitialized_from_iterations_mean``: {``True``, ``False``}
+            Exchange ``uninitialized`` skill with the iteration mean ``uninitialized``.
+            Defaults to False.
 
 
     Examples:

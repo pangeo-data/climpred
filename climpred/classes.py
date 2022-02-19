@@ -1149,7 +1149,7 @@ class PredictionEnsemble:
                     coords="minimal",
                 )
                 print("exchange uninit passed")
-        except:
+        except Exception:
             print("exchange uninit failed")
 
         results_list = [
@@ -2302,7 +2302,6 @@ class HindcastEnsemble(PredictionEnsemble):
                         and "member" in ref.dims
                     ):
                         ref = ref.mean("member")
-                        print("member mean fix applied")
                         if "time" in ref.dims and "time" not in result.dims:
                             ref = ref.rename({"time": "init"})
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)

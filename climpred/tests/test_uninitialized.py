@@ -40,3 +40,16 @@ def test_compute_uninitialized_same_verifs(
         alignment="same_verifs",
     ).to_array()
     assert ((res - res[0]) == 0).all()
+
+
+def test_uninitialized_keeps_member_dim(hindcast_hist_obs_1d):
+    """https://github.com/pangeo-data/climpred/issues/735"""
+    skill = hindcast_hist_obs_1d.verify(
+        dim="init",
+        metric="mse",
+        comparison="m2o",
+        reference="uninitialized",
+        alignment="maximize",
+    ).SST
+    assert "member" in skill.dims
+    assert (skill.std("member") > 0).all()

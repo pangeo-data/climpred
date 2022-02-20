@@ -23,7 +23,7 @@ Bug Fixes
 - Fix ``reference="persistence"`` for resampled ``init``.
   (:issue:`730`, :pr:`731`) `Aaron Spring`_.
 - :py:meth:`.HindcastEnsemble.verify`
-  `(comparison="m2o", reference="uninitialized", dim="init").
+  ``(comparison="m2o", reference="uninitialized", dim="init")``.
   (:issue:`735`, :pr:`731`) `Aaron Spring`_.
 
 New Features
@@ -35,22 +35,15 @@ New Features
   ``pers_sig`` is removed.
   Also ``reference=["climatology", "persistence"]`` skill has variance if
   ``resample_dim='init'``.
-  ``bootstrap`` relies on either ``set_optionresample_skill_func="..."]``:
+  ``bootstrap`` relies on either ``set_option(resample_skill_func="...")``:
 
-  * ``"loop"``: calls :py:func:`climpred.bootstrap.resample_skill_loop` which
-      loops over iterations and calls ``verify`` every single time. Most
-      understandable and stable, but slow.
-  * ``"exclude_resample_dim_from_dim"``: calls
-      :py:func:`climpred.bootstrap.resample_skill_exclude_resample_dim_from_dim` which calls
-      ``verify(dim=dim_without_resample_dim)``, resamples over
-      ``resample_dim`` and then takes a mean over ``resample_dim`` if in
-      ``dim``. Enables
-      ``HindcastEnsemble.bootstrap(resample_dim="init", alignment="same_verifs")``.
-      Fast alternative for ``resample_dim="init"``.
-  * ``"resample_before"``: calls
-      :py:func:`climpred.bootstrap.resample_skill_resample_before` which
-      resamples ``iteration`` dimension and then calls ``verify`` vectorized.
-      Fast alternative for ``resample_dim="member"``.
+  * ``"loop"``: calls :py:func:`climpred.bootstrap.resample_skill_loop` which loops over iterations and calls ``verify`` every single time. Most understandable and stable, but slow.
+  * ``"exclude_resample_dim_from_dim"``: calls :py:func:`climpred.bootstrap.resample_skill_exclude_resample_dim_from_dim` which calls ``verify(dim=dim_without_resample_dim)``, resamples over ``resample_dim`` and then takes a mean over ``resample_dim`` if in ``dim``.
+    Enables
+    ``HindcastEnsemble.bootstrap(resample_dim="init", alignment="same_verifs")``.
+    Fast alternative for ``resample_dim="init"``.
+  * ``"resample_before"``: calls :py:func:`climpred.bootstrap.resample_skill_resample_before` which resamples ``iteration`` dimension and then calls ``verify`` vectorized.
+    Fast alternative for ``resample_dim="member"``.
   * ``"default"``: ``climpred`` decides which to use
 
   (relates to :issue:`375`, :pr:`731`) `Aaron Spring`_.

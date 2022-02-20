@@ -355,7 +355,7 @@ def _pearson_r(
             alignment:                     same_verifs
             metric:                        pearson_r
             comparison:                    e2o
-            dim:                           ['init']
+            dim:                           init
             reference:                     []
     """
     with warnings.catch_warnings():
@@ -4101,6 +4101,19 @@ __ALL_METRICS__ = [
     __less,
 ]
 
+
+PEARSON_R_CONTAINING_METRICS = [
+    "pearson_r",
+    "spearman_r",
+    "pearson_r_p_value",
+    "spearman_r_p_value",
+    "msess_murphy",
+    "bias_slope",
+    "conditional_bias",
+    "std_ratio",
+    "conditional_bias",
+    "uacc",
+]
 
 # To match a metric/comparison for (multiple) keywords.
 METRIC_ALIASES = dict()

@@ -4,7 +4,7 @@ import xarray as xr
 
 from climpred import PerfectModelEnsemble
 from climpred.exceptions import DatasetError
-from climpred.metrics import DETERMINISTIC_PM_METRICS
+from climpred.metrics import DETERMINISTIC_PM_METRICS, PEARSON_R_CONTAINING_METRICS
 
 xr.set_options(display_style="text")
 
@@ -46,9 +46,9 @@ def test_perfectModelEnsemble_init(PM_ds_initialized_1d):
     assert pm
 
 
-def test_perfectModelEnsemble_init_da(PM_da_initialized_1d):
-    """Test to see if perfect model ensemble can be initialized with da"""
-    pm = PerfectModelEnsemble(PM_da_initialized_1d)
+def test_perfectModelEnsemble_init_da(PM_ds_initialized_1d):
+    """Test to see if perfect model ensemble can be initialized with xr.DataArray"""
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d.tos)
     assert pm
 
 
@@ -189,9 +189,9 @@ def test_bootstrap_metric_kwargs(perfectModelEnsemble_initialized_control):
     )
 
 
-def test_calendar_matching_control(PM_da_initialized_1d, PM_ds_control_1d):
+def test_calendar_matching_control(PM_ds_initialized_1d, PM_ds_control_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
-    pm = PerfectModelEnsemble(PM_da_initialized_1d)
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     PM_ds_control_1d["time"] = xr.cftime_range(
         start="1950", periods=PM_ds_control_1d.time.size, freq="MS", calendar="all_leap"
     )
@@ -255,12 +255,12 @@ def test_HindcastEnsemble_as_PerfectModelEnsemble(hindcast_recon_1d_mm):
     )
 
 
-def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
+def test_verify_no_need_for_control(PM_ds_initialized_1d, PM_ds_control_1d):
     """Tests that no error is thrown when no control present
     when calling verify(reference=['uninitialized'])."""
     v = "tos"
     comparison = "m2e"
-    pm = PerfectModelEnsemble(PM_da_initialized_1d).isel(lead=[0, 1, 2])
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d).isel(lead=[0, 1, 2])
     # verify needs to control
     skill = pm.verify(metric="mse", comparison=comparison, dim="init")
     assert not skill[v].isnull().any()
@@ -280,7 +280,7 @@ def test_verify_no_need_for_control(PM_da_initialized_1d, PM_da_control_1d):
     assert "at least one control dataset" in str(e.value)
 
     # unlikely case that control gets deleted after generating uninitialized
-    pm = pm.add_control(PM_da_control_1d).generate_uninitialized()
+    pm = pm.add_control(PM_ds_control_1d).generate_uninitialized()
     pm._datasets["control"] = {}
     assert (
         not pm._compute_uninitialized(metric="mse", comparison=comparison, dim="init")[
@@ -353,19 +353,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     else:
         metric_kwargs = {}
     # acc on dim member only is ill defined
-    pearson_r_containing_metrics = [
-        "pearson_r",
-        "spearman_r",
-        "pearson_r_p_value",
-        "spearman_r_p_value",
-        "msess_murphy",
-        "bias_slope",
-        "conditional_bias",
-        "std_ratio",
-        "conditional_bias",
-        "uacc",
-    ]
-    if dim == "member" and metric in pearson_r_containing_metrics:
+    if dim == "member" and metric in PEARSON_R_CONTAINING_METRICS:
         dim = ["init", "member"]
 
     actual = pm.verify(
@@ -375,7 +363,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
         reference=reference,
         **metric_kwargs,
     ).tos
-    if metric in ["contingency"] or metric in pearson_r_containing_metrics:
+    if metric in ["contingency"] or metric in PEARSON_R_CONTAINING_METRICS:
         # less strict here with all NaNs, pearson_r yields NaNs for climatology
         if "climatology" in reference:
             actual = actual.drop_sel(skill="climatology")
@@ -395,7 +383,7 @@ def test_PerfectModel_verify_bootstrap_deterministic(
     if len(reference) > 0:
         actual = actual.drop_sel(results="p")
 
-    if metric in ["contingency"] or metric in pearson_r_containing_metrics:
+    if metric in ["contingency"] or metric in PEARSON_R_CONTAINING_METRICS:
         # less strict here with all NaNs, pearson_r yields NaNs for climatology
         if "climatology" in reference:
             actual = actual.drop_sel(skill="climatology")
@@ -439,15 +427,49 @@ def testPerfectModelEnsemble_verify_groupby(
     grouped_skill = perfectModelEnsemble_initialized_control.verify(
         **kw, groupby="month"
     )
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
     grouped_skill = perfectModelEnsemble_initialized_control.verify(
         **kw,
         groupby=perfectModelEnsemble_initialized_control.get_initialized().init.dt.month,
     )
-    assert "month" in grouped_skill.dims
-    grouped_skill = perfectModelEnsemble_initialized_control.bootstrap(
-        iterations=2,
-        groupby="month",
-        **kw,
-    )
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
+    for resample_dim in ["member", "init"]:
+        grouped_skill = perfectModelEnsemble_initialized_control.bootstrap(
+            iterations=2,
+            groupby="month",
+            resample_dim=resample_dim,
+            **kw,
+        )
+        assert "month" in grouped_skill.coords
+
+
+@pytest.mark.parametrize("metric", ("AnomCorr", "test", "None"))
+def test_PerfectModel_verify_metric_keyerrors(
+    perfectModelEnsemble_initialized_control, metric
+):
+    """
+    Checks that wrong metric names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        perfectModelEnsemble_initialized_control.verify(
+            comparison="e2c",
+            metric=metric,
+            dim=[],
+        )
+    assert "Specify metric from" in str(excinfo.value)
+
+
+@pytest.mark.parametrize("comparison", ("ensemblemean", "test", "None"))
+def test_PerfectModel_verify_comparison_keyerrors(
+    perfectModelEnsemble_initialized_control, comparison
+):
+    """
+    Checks that wrong comparison names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        perfectModelEnsemble_initialized_control.verify(
+            comparison=comparison,
+            metric="mse",
+            dim=[],
+        )
+    assert "Specify comparison from" in str(excinfo.value)

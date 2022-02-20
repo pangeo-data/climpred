@@ -31,7 +31,15 @@ def test_horizon_bootstrap_1d(perfectModelEnsemble_initialized_control):
     )
     ph = horizon(bskill.sel(results="p", skill="uninitialized") <= 0.05)
     assert ph.tos.attrs["units"] == "years", print(ph.tos)
-    assert int(ph.tos) in [4, 5, 6, 7, 8]  # should be 6, testing on the safe side
+    assert int(ph.tos) in [
+        2,
+        3,
+        4,
+        5,
+        6,
+        7,
+        8,
+    ]  # used to be 6, testing on the safe side
 
 
 def test_horizon_3d(hindcast_recon_3d):

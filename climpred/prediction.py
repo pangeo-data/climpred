@@ -1,9 +1,10 @@
 """Prediction module: _apply_metric_at_given_lead and compute functions."""
 
-import xarray as xr
+from typing import List, Optional, Set, Tuple, Union
 
-from .alignment import return_inits_and_verif_dates
-from .checks import has_valid_lead_units, is_in_list
+from dask import is_dask_collection
+
+from .checks import is_in_list
 from .comparisons import (
     COMPARISON_ALIASES,
     HINDCAST_COMPARISONS,
@@ -11,9 +12,9 @@ from .comparisons import (
     PROBABILISTIC_HINDCAST_COMPARISONS,
     PROBABILISTIC_PM_COMPARISONS,
 )
-from .constants import CONCAT_KWARGS, M2M_MEMBER_DIM, PM_CALENDAR_STR
+from .constants import M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .exceptions import DimensionError
-from .logging import log_compute_hindcast_header, log_compute_hindcast_inits_and_verifs
+from .logging import log_hindcast_verify_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
 from .reference import (
     _adapt_member_for_reference_forecast,
@@ -22,7 +23,6 @@ from .reference import (
     uninitialized,
 )
 from .utils import (
-    add_time_from_init_lead,
     convert_time_index,
     get_comparison_class,
     get_lead_cftime_shift_args,
@@ -84,23 +84,29 @@ def _apply_metric_at_given_lead(
         lforecast, dim = _adapt_member_for_reference_forecast(
             lforecast, lverif, metric, comparison, dim
         )
-
+    assert lforecast.time.size == lverif.time.size, print(
+        lforecast.time.to_index(), lverif.time.to_index(), reference
+    )
     lforecast["time"] = lverif[
         "time"
     ]  # a bit dangerous: what if different? more clear once implemented
     # https://github.com/pangeo-data/climpred/issues/523#issuecomment-728951645
     dim = _rename_dim(
         dim, initialized, verif
-    )  # dim should be much clearer once time in initialized.coords
+    )  # dim should be much clearer once time_valid in initialized.coords
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
 
     result = metric.function(lforecast, lverif, dim=dim, **metric_kwargs)
-    log_compute_hindcast_inits_and_verifs(dim, lead, inits, verif_dates, reference)
+
+    log_hindcast_verify_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     # push time (later renamed to init) back by lead
     if "time" in result.dims:
         n, freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], lead)
         result = result.assign_coords(time=shift_cftime_singular(result.time, -n, freq))
+    if "valid_time" in result.coords:
+        if is_dask_collection(result.coords["valid_time"]):
+            result.coords["valid_time"] = result.coords["valid_time"].compute()
     return result
 
 
@@ -121,7 +127,7 @@ def _rename_dim(dim, forecast, verif):
     return dim
 
 
-def _sanitize_to_list(dim):
+def _sanitize_to_list(dim: Union[str, Set, Tuple, List, None]) -> Optional[List[str]]:
     """Ensure dim is List, raises ValueError if not str, set, tuple or None."""
     if isinstance(dim, str):
         dim = [dim]
@@ -156,7 +162,7 @@ def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
     dim = _sanitize_to_list(dim)
 
     # check kind allowed
-    is_in_list(kind, ["hindcast", "PM"], "kind")
+    is_in_list(kind, ["hindcast", "perfect"], "kind")
 
     if dim is None:  # take all dimension from initialized except lead
         dim = list(initialized.dims)
@@ -244,7 +250,7 @@ def compute_perfect_model(
 
     # check args compatible with each other
     metric, comparison, dim = _get_metric_comparison_dim(
-        initialized, metric, comparison, dim, kind="PM"
+        initialized, metric, comparison, dim, kind="perfect"
     )
 
     forecast, verif = comparison.function(initialized, metric=metric)
@@ -255,102 +261,3 @@ def compute_perfect_model(
     if comparison.name == "m2m" and M2M_MEMBER_DIM in skill.dims:
         skill = skill.mean(M2M_MEMBER_DIM)
     return skill
-
-
-def compute_hindcast(
-    initialized,
-    verif,
-    metric="pearson_r",
-    comparison="e2o",
-    dim="init",
-    alignment="same_verifs",
-    **metric_kwargs,
-):
-    """Verify hindcast predictions against verification data.
-
-    Args:
-        initialized (xr.Dataset): Initialized hindcast ensemble.
-            Expected to follow package conventions:
-            * ``init`` : dim of initialization dates
-            * ``lead`` : dim of lead time from those initializations
-            Additional dims can be member, lat, lon, depth, ...
-        verif (xr.Dataset): Verification data with some temporal overlap with the
-            hindcast.
-        metric (str): Metric used in comparing the decadal prediction ensemble with the
-            verification data. (see :py:func:`~climpred.utils.get_metric_class` and
-            :ref:`Metrics`).
-        comparison (str):
-            How to compare the decadal prediction ensemble to the verification data:
-
-                * e2o : ensemble mean to verification data (Default)
-                * m2o : each member to the verification data
-                (see :ref:`Comparisons`)
-        dim (str or list): dimension to apply metric over. default: 'init'
-        alignment (str): which inits or verification times should be aligned?
-            - maximize: maximize the degrees of freedom by slicing ``initialized`` and
-            ``verif`` to a common time frame at each lead.
-            - same_inits: slice to a common ``init`` frame prior to computing
-            metric. This philosophy follows the thought that each lead should be based
-            on the same set of initializations.
-            - same_verif: slice to a common/consistent verification time frame prior to
-            computing metric. This philosophy follows the thought that each lead
-            should be based on the same set of verification dates.
-        **metric_kwargs (dict): additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
-
-    Returns:
-        result (xr.Dataset):
-            Verification metric over ``lead`` reduced by dimension(s) ``dim``.
-    """
-    metric, comparison, dim = _get_metric_comparison_dim(
-        initialized, metric, comparison, dim, kind="hindcast"
-    )
-    initialized = convert_time_index(initialized, "init", "initialized[init]")
-    verif = convert_time_index(verif, "time", "verif[time]")
-    has_valid_lead_units(initialized)
-
-    forecast, verif = comparison.function(initialized, verif, metric=metric)
-
-    # think in real time dimension: real time = init + lag
-    forecast = add_time_from_init_lead(forecast)  # add time afterwards
-
-    forecast = forecast.rename({"init": "time"})
-
-    inits, verif_dates = return_inits_and_verif_dates(
-        forecast, verif, alignment=alignment
-    )
-
-    if "iteration" in forecast.dims and "iteration" not in verif.dims:
-        verif = verif.expand_dims(iteration=forecast.iteration)
-
-    log_compute_hindcast_header(metric, comparison, dim, alignment, "initialized")
-
-    metric_over_leads = [
-        _apply_metric_at_given_lead(
-            verif,
-            verif_dates,
-            lead,
-            initialized=forecast,
-            inits=inits,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            **metric_kwargs,
-        )
-        for lead in forecast["lead"].data
-    ]
-    result = xr.concat(metric_over_leads, dim="lead", **CONCAT_KWARGS)
-    result["lead"] = forecast["lead"]
-    # rename back to 'init'
-    if "time" in result.dims:
-        result = result.rename({"time": "init"})
-    #    result.coords['valid_time']=forecast.coords['valid_time']
-    # These computations sometimes drop coordinates along the way. This appends them
-    # back onto the results of the metric.
-
-    # dirty fix:
-    if "init" in result.dims and "init" in result.coords:
-        if "valid_time" in result.coords:
-            if "lead" not in result.valid_time.dims:
-                result = add_time_from_init_lead(result.drop_vars("valid_time"))
-    return result

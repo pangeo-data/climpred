@@ -81,7 +81,10 @@ def persistence(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Create forecast, verification tuple at lead for persistence forecast."""
     lforecast = verif.where(verif.time.isin(inits[lead]), drop=True)
-    lverif = verif.sel(time=verif_dates[lead])
+    if lforecast.time.size == len(verif_dates[lead]):
+        lverif = verif.sel(time=verif_dates[lead])
+    else:
+        lverif = verif.where(verif.time.isin(verif_dates[lead]), drop=True)
     return lforecast, lverif
 
 
@@ -149,8 +152,7 @@ def uninitialized(
     return lforecast, lverif
 
 
-# needed for PerfectModelEnsemble.verify(reference=...) and PredictionEnsemble.bootstrap
-# TODO: should be refactored for better non-functional use within verify and bootstrap
+# needed for PerfectModelEnsemble.verify(reference=...)
 
 
 def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, dim):
@@ -183,10 +185,13 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
                 dim.append("member")
         assert "member" in lforecast.dims and "member" not in lverif.dims
     # member not required by metric and not in dim but present in forecast
-    if not metric.requires_member_dim:
+    if (
+        not metric.requires_member_dim and metric.probabilistic
+    ):  # require probabilistic to solve https://github.com/pangeo-data/climpred/issues/735
         if "member" in lforecast.dims and "member" not in dim:
-            lforecast = lforecast.mean("member")
-    # multi member comparisons expect member dim
+            lforecast = lforecast.mean(
+                "member"
+            )  # multi member comparisons expect member dim
     if (
         comparison.name in ["m2o", "m2m", "m2c", "m2e"]
         and "member" not in lforecast.dims

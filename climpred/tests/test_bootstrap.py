@@ -9,18 +9,17 @@ from xskillscore.core.resampling import (
     resample_iterations_idx as _resample_iterations_idx,
 )
 
+from climpred import HindcastEnsemble
 from climpred.bootstrap import (
     _bootstrap_by_stacking,
     _chunk_before_resample_iterations_idx,
     _resample,
-    bootstrap_hindcast,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
 from climpred.constants import CONCAT_KWARGS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to
 
-# TODO: move to conftest.py
 ITERATIONS = 2
 
 comparison_dim_PM = [
@@ -37,6 +36,85 @@ comparison_dim_PM = [
 ]
 
 xr.set_options(display_style="text")
+
+
+@pytest.mark.parametrize(
+    "initialized",
+    [
+        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+    ],
+    ids=["PerfectModelEnsemble", "HindcastEnsemble"],
+)
+@pytest.mark.parametrize("metric", ["pearson_r", "crps", "rmse"])
+@pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
+def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment):
+    """Test that bootstrap with resample_dim='init' generates uncertainty in all skills."""
+    v = list(initialized.data_vars)[0]
+    kwargs = dict(
+        metric=metric,
+        comparison="m2c",
+        dim=["init", "member"],
+        resample_dim="init",
+        iterations=5,
+        reference=["climatology", "persistence", "uninitialized"],
+    )
+    if isinstance(initialized, HindcastEnsemble):
+        kwargs["alignment"] = alignment
+        kwargs["comparison"] = "m2o"
+    if (
+        metric == "pearson_r"
+        and alignment == "same_verifs"
+        and isinstance(initialized, HindcastEnsemble)
+    ):
+        with pytest.raises(
+            KeywordError,
+            match="resample_dim='init' and metric='pearson_r'. "
+            "Change `resample_dim` to 'member' to keep",
+        ):
+            initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
+    else:
+        bskill = initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
+        # expect iteration variance
+        assert (
+            bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v].notnull().all()
+        )
+
+
+@pytest.mark.parametrize(
+    "initialized",
+    [
+        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+    ],
+    ids=["PerfectModelEnsemble", "HindcastEnsemble"],
+)
+@pytest.mark.parametrize("metric", ["pearson_r", "crps", "rmse"])
+@pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
+def test_bootstrap_resample_dim_member_init_uninit_ci(initialized, metric, alignment):
+    """Test bootstrap(resample_dim='member') generates uncertainty in (un)init skill."""
+    v = list(initialized.data_vars)[0]
+    kwargs = dict(
+        metric=metric,
+        comparison="m2c",
+        dim=["init", "member"],
+        resample_dim="member",
+        iterations=5,
+        reference=["climatology", "persistence", "uninitialized"],
+    )
+    if isinstance(initialized, HindcastEnsemble):
+        kwargs["alignment"] = alignment
+        kwargs["comparison"] = "m2o"
+    bskill = initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
+    ci_diff = bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v]
+    # expect iteration variance
+    assert ci_diff.sel(skill=["initialized", "uninitialized"]).notnull().all(), print(
+        ci_diff.sel(skill=["initialized", "uninitialized"])
+    )
+    # no iteration variance
+    assert (ci_diff.sel(skill=["persistence", "climatology"]) == 0).all(), print(
+        ci_diff.sel(skill=["persistence", "climatology"])
+    )
 
 
 def test_bootstrap_PM_keep_lead_attrs(perfectModelEnsemble_initialized_control):
@@ -89,8 +167,9 @@ def test_bootstrap_hindcast_lazy(
         iterations=ITERATIONS,
         comparison="e2o",
         metric="mse",
-        alignment="same_verifs",
+        alignment="same_inits",
         dim="init",
+        resample_dim="init",
     )
     assert dask.is_dask_collection(s) == chunk
 
@@ -305,74 +384,56 @@ def test_bootstrap_by_stacking_two_var_dataset(
     assert res["init"].size == res_cf["init"].size
 
 
-def test_bootstrap_hindcast_raises_error(
-    hind_da_initialized_1d, hist_da_uninitialized_1d, observations_da_1d
-):
-    """Test that error is raised when user tries to resample over init and align over
-    same_verifs."""
-    with pytest.raises(KeywordError):
-        bootstrap_hindcast(
-            hind_da_initialized_1d,
-            hist_da_uninitialized_1d,
-            observations_da_1d,
-            iterations=ITERATIONS,
-            comparison="e2o",
-            metric="mse",
-            resample_dim="init",
-            alignment="same_verifs",
-        )
-
-
-def test_resample_1_size(PM_da_initialized_1d):
+def test_resample_1_size(PM_ds_initialized_1d):
     """Tests that the resampled dimensions are appropriate for a single iteration."""
     dim = "member"
-    expected = _resample(PM_da_initialized_1d, resample_dim=dim)
+    expected = _resample(PM_ds_initialized_1d, resample_dim=dim).tos
     # 1 somehow fails
-    actual = _resample_iterations_idx(PM_da_initialized_1d, 2, dim=dim).isel(
-        iteration=0
+    actual = (
+        _resample_iterations_idx(PM_ds_initialized_1d, 2, dim=dim).isel(iteration=0).tos
     )
     assert expected.size == actual.size
     assert expected[dim].size == actual[dim].size
 
 
-def test_resample_size(PM_da_initialized_1d):
+def test_resample_size(PM_ds_initialized_1d):
     """Tests that the resampled dimensions are appropriate for many iterations."""
     dim = "member"
     expected = xr.concat(
-        [_resample(PM_da_initialized_1d, resample_dim=dim) for i in range(ITERATIONS)],
+        [_resample(PM_ds_initialized_1d, resample_dim=dim) for i in range(ITERATIONS)],
         "iteration",
-    )
-    actual = _resample_iterations_idx(PM_da_initialized_1d, ITERATIONS, dim=dim)
+    ).tos
+    actual = _resample_iterations_idx(PM_ds_initialized_1d, ITERATIONS, dim=dim).tos
     assert expected.size == actual.size
     assert expected[dim].size == actual[dim].size
 
 
 @pytest.mark.parametrize("chunk", [True, False])
 @pytest.mark.parametrize("replace", [True, False])
-def test_resample_iterations_same(PM_da_initialized_1d, chunk, replace):
+def test_resample_iterations_same(PM_ds_initialized_1d, chunk, replace):
     """Test that both `resample_iterations` functions yield same result shape."""
-    ds = PM_da_initialized_1d.isel(lead=range(3), init=range(5))
+    ds = PM_ds_initialized_1d.isel(lead=range(3), init=range(5))
     if chunk:
         ds = ds.chunk()
     ds_r_idx = _resample_iterations_idx(ds, ITERATIONS, "member", replace=replace)
     ds_r = _resample_iterations(ds, ITERATIONS, "member", replace=replace)
     for d in ds.dims:
         xr.testing.assert_identical(ds_r[d], ds_r_idx[d])
-        assert ds_r.size == ds_r_idx.size
+        assert ds_r.tos.size == ds_r_idx.tos.size
 
 
-def test_chunk_before_resample_iterations_idx(PM_da_initialized_3d_full):
+def test_chunk_before_resample_iterations_idx(PM_ds_initialized_3d_full):
     """Test that chunksize after `_resample_iteration_idx` is lower than
     `optimal_blocksize`."""
     chunking_dims = ["x", "y"]
     iterations = 50
     optimal_blocksize = 100000000
     ds_chunked = _chunk_before_resample_iterations_idx(
-        PM_da_initialized_3d_full.chunk(),
+        PM_ds_initialized_3d_full.chunk(),
         iterations,
         chunking_dims,
         optimal_blocksize=optimal_blocksize,
-    )
+    ).tos
     ds_chunked_chunksize = ds_chunked.data.nbytes / ds_chunked.data.npartitions
     print(
         dask.utils.format_bytes(ds_chunked_chunksize * iterations),
@@ -384,9 +445,9 @@ def test_chunk_before_resample_iterations_idx(PM_da_initialized_3d_full):
 
 @pytest.mark.parametrize("chunk", [True, False])
 @pytest.mark.parametrize("replace", [True, False])
-def test_resample_iterations_dim_max(PM_da_initialized_1d, chunk, replace):
+def test_resample_iterations_dim_max(PM_ds_initialized_1d, chunk, replace):
     """Test that both `resample_iterations(dim_max=n)` gives n members."""
-    ds = PM_da_initialized_1d.isel(lead=range(3), init=range(5))
+    ds = PM_ds_initialized_1d.isel(lead=range(3), init=range(5))
     ds = ds.sel(member=list(ds.member.values) * 2)
     ds["member"] = np.arange(1, 1 + ds.member.size)
     if chunk:
@@ -396,13 +457,13 @@ def test_resample_iterations_dim_max(PM_da_initialized_1d, chunk, replace):
         ITERATIONS,
         "member",
         replace=replace,
-        dim_max=PM_da_initialized_1d.member.size,
+        dim_max=PM_ds_initialized_1d.member.size,
     )
-    assert (ds_r["member"] == PM_da_initialized_1d.member).all()
+    assert (ds_r["member"] == PM_ds_initialized_1d.member).all()
 
 
 @pytest.mark.skip(reason="this is a bug, test fails and should be resolved.")
-def test_resample_iterations_dix_no_squeeze(PM_da_initialized_1d):
+def test_resample_iterations_dix_no_squeeze(PM_ds_initialized_1d):
     """Test _resample_iteration_idx with singular dimension.
 
     Currently this fails for dimensions with just a single index as we use `squeeze` in
@@ -410,9 +471,9 @@ def test_resample_iterations_dix_no_squeeze(PM_da_initialized_1d):
     _resample_iteration_idx should not be called on singleton dimension inputs (which
     is not critical and can be circumvented when using squeeze before climpred.).
     """
-    da = PM_da_initialized_1d.expand_dims("test_dim")
-    print(da)
-    actual = _resample_iterations_idx(da, iterations=ITERATIONS)
+    ds = PM_ds_initialized_1d.expand_dims("test_dim")
+    print(ds)
+    actual = _resample_iterations_idx(ds, iterations=ITERATIONS)
     assert "test_dim" in actual.dims
 
 

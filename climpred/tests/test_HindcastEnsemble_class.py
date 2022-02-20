@@ -1,8 +1,11 @@
+import dask
 import pytest
 import xarray as xr
 
 from climpred import HindcastEnsemble
 from climpred.exceptions import CoordinateError, DimensionError
+
+v = "SST"
 
 
 def test_hindcastEnsemble_init(hind_ds_initialized_1d):
@@ -11,9 +14,9 @@ def test_hindcastEnsemble_init(hind_ds_initialized_1d):
     assert hindcast
 
 
-def test_hindcastEnsemble_init_da(hind_da_initialized_1d):
+def test_hindcastEnsemble_init_da(hind_ds_initialized_1d):
     """Test to see hindcast ensemble can be initialized with xr.DataArray."""
-    hindcast = HindcastEnsemble(hind_da_initialized_1d)
+    hindcast = HindcastEnsemble(hind_ds_initialized_1d[v])
     assert hindcast
 
 
@@ -24,10 +27,10 @@ def test_add_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     assert hindcast.get_observations()
 
 
-def test_add_observations_da_1d(hind_ds_initialized_1d, observations_da_1d):
-    """Test to see if observations can be added to the HindcastEnsemble as a da"""
+def test_add_observations_da_1d(hind_ds_initialized_1d, observations_ds_1d):
+    """Test to see if observations can be added to the HindcastEnsemble as a xr.DataArray"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hindcast = hindcast.add_observations(observations_da_1d)
+    hindcast = hindcast.add_observations(observations_ds_1d[v])
     assert hindcast.get_observations()
 
 
@@ -38,10 +41,10 @@ def test_add_uninitialized(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
     assert hindcast.get_uninitialized()
 
 
-def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_da_uninitialized_1d):
-    """Test to see if da uninitialized ensemble can be added to the HindcastEnsemble"""
+def test_add_hist_da_uninitialized_1d(hind_ds_initialized_1d, hist_ds_uninitialized_1d):
+    """Test to see if uninitialized xr.DataArray can be added to the HindcastEnsemble"""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d).add_uninitialized(
-        hist_da_uninitialized_1d
+        hist_ds_uninitialized_1d[v]
     )
     assert hindcast.get_uninitialized()
 
@@ -110,9 +113,14 @@ def test_inplace(
 )
 def test_dim_input_type(hindcast_hist_obs_1d, dim, call):
     """Test verify and bootstrap for different dim types."""
-    kw = dict(iterations=2) if call == "bootstrap" else {}
+    kw = dict(iterations=2, resample_dim="init") if call == "bootstrap" else {}
     assert getattr(hindcast_hist_obs_1d.isel(lead=range(3)), call)(
-        metric="rmse", comparison="e2o", dim=dim, alignment="same_verifs", **kw
+        metric="rmse",
+        comparison="e2o",
+        dim=dim,
+        reference=[],
+        alignment="same_inits",
+        **kw,
     )
 
 
@@ -370,7 +378,7 @@ def test_HindcastEnsemble_remove_seasonality(
     )
     skill_no_seasonality = no_seasonality.verify(**kw)
     skill_seasonality = hindcast_offset.verify(**kw)
-    assert (skill_seasonality >= skill_no_seasonality).to_array().all()
+    assert (skill_seasonality >= skill_no_seasonality)[v].all()
 
 
 def test_HindcastEnsemble_verify_groupby(
@@ -385,10 +393,119 @@ def test_HindcastEnsemble_verify_groupby(
         alignment="same_inits",
     )
     grouped_skill = hindcast_hist_obs_1d.verify(**kw, groupby="month")
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
     grouped_skill = hindcast_hist_obs_1d.verify(
         **kw, groupby=hindcast_hist_obs_1d.get_initialized().init.dt.month
     )
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
     grouped_skill = hindcast_hist_obs_1d.bootstrap(iterations=2, **kw, groupby="month")
-    assert "month" in grouped_skill.dims
+    assert "month" in grouped_skill.coords
+
+
+ITERATIONS = 2
+
+kw = dict(alignment="same_inits", dim="init")
+
+
+@pytest.mark.skip(reason="worked for compute_hindcast and should work here")
+def test_HindcastEnsemble_verify_lead0_lead1(
+    hindcast_hist_obs_1d, hind_ds_initialized_1d_lead0
+):
+    """
+    Checks that HindcastEnsemble.verify() returns the same results with a lead-0 and
+    lead-1 framework.
+    """
+    kw = dict(metric="rmse", comparison="e2o", dim="init", alignment="same_verifs")
+    res = hindcast_hist_obs_1d.verify(**kw)
+    hind_shifted_lead = HindcastEnsemble(hind_ds_initialized_1d_lead0).add_observations(
+        hindcast_hist_obs_1d.get_observations()
+    )
+    print(
+        hindcast_hist_obs_1d.plot_alignment(
+            return_xr=True, alignment=kw["alignment"], reference=[]
+        )
+    )
+    print(
+        hind_shifted_lead.plot_alignment(
+            return_xr=True, alignment=kw["alignment"], reference=[]
+        )
+    )
+    res_lead_init_shift = hind_shifted_lead.verify(**kw)
+    assert res.equals(res_lead_init_shift), print(
+        res, res_lead_init_shift, res - res_lead_init_shift, sep="\n"
+    )
+
+
+@pytest.mark.parametrize("metric", ("AnomCorr", "test", "None"))
+def test_HindcastEnsemble_verify_metric_keyerrors(hindcast_hist_obs_1d, metric):
+    """
+    Checks that wrong metric names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        hindcast_hist_obs_1d.verify(
+            metric=metric,
+            **kw,
+            comparison="e2o",
+        )
+    assert "Specify metric from" in str(excinfo.value)
+
+
+@pytest.mark.parametrize("comparison", ("ensemblemean", "test", "None"))
+def test_HindcastEnsemble_verify_comparison_keyerrors(hindcast_hist_obs_1d, comparison):
+    """
+    Checks that wrong comparison names get caught.
+    """
+    with pytest.raises(KeyError) as excinfo:
+        hindcast_hist_obs_1d.verify(
+            **kw,
+            comparison=comparison,
+            metric="mse",
+        )
+    assert "Specify comparison from" in str(excinfo.value)
+
+
+@pytest.mark.parametrize("metric", ("rmse", "pearson_r"))
+def test_HindcastEnsemble_verify_dask_spatial(hindcast_recon_3d, metric):
+    """Chunking along spatial dims."""
+    # chunk over dims in both
+    for dim in hindcast_recon_3d.get_initialized().dims:
+        if dim in hindcast_recon_3d.get_observations().dims:
+            step = 5
+            res_chunked = (
+                hindcast_recon_3d.chunk({dim: step})
+                .verify(
+                    metric=metric,
+                    **kw,
+                    comparison="e2o",
+                )
+                .to_array()
+            )
+            # check for chunks
+            assert dask.is_dask_collection(res_chunked)
+            assert res_chunked.chunks is not None
+
+
+def test_HindcastEnsemble_verify_CESM_3D_keep_coords(hindcast_recon_3d):
+    """Test no coords are lost in HindcastEnsemble.verify() with CESM sample data."""
+    s = hindcast_recon_3d.verify(metric="mse", comparison="e2o", **kw)
+    for c in (
+        hindcast_recon_3d.get_initialized()
+        .drop_vars("init")
+        .drop_vars("valid_time")
+        .coords
+    ):
+        assert c in s.coords
+
+
+def test_HindcastEnsemble_keeps_lead_units(hindcast_hist_obs_1d):
+    """Test that lead units is kept in bootstrap."""
+    sig = 95
+    actual = hindcast_hist_obs_1d.bootstrap(
+        metric="mse",
+        iterations=ITERATIONS,
+        comparison="e2o",
+        sig=sig,
+        dim="init",
+        alignment="same_inits",
+    )
+    assert actual.lead.attrs["units"] == "years"

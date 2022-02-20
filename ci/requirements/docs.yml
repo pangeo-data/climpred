@@ -11,6 +11,7 @@ dependencies:
   - cftime>=0.1.5
   # docs
   - jupyterlab
+  - tqdm
   - sphinx
   - nbstripout
   - myst-nb

@@ -84,13 +84,13 @@ def test_PerfectModelEnsemble_time_resolution_verify(HindcastEnsemble_time_resol
 @pytest.mark.parametrize(
     "lead_res", ["seconds", "minutes", "hours", "days", "pentads", "weeks"]
 )
-def test_HindcastEnsemble_lead_pdTimedelta(hind_da_initialized_1d, lead_res):
+def test_HindcastEnsemble_lead_pdTimedelta(hind_ds_initialized_1d, lead_res):
     """Test to see HindcastEnsemble can be initialized with lead as pd.Timedelta."""
     if lead_res == "pentads":
         n, freq = 5, "d"
     else:
         n, freq = 1, lead_res[0].lower()
-    initialized = hind_da_initialized_1d
+    initialized = hind_ds_initialized_1d
 
     initialized["lead"] = [
         pd.Timedelta(f"{i*n} {freq}") for i in initialized.lead.values

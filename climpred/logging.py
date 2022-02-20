@@ -2,19 +2,19 @@ import logging
 from datetime import datetime
 
 
-def log_compute_hindcast_header(metric, comparison, dim, alignment, reference):
-    """Add header to the log for a `compute_hindcast` instance."""
+def log_hindcast_verify_header(metric, comparison, dim, alignment, reference) -> None:
+    """Add header to the log for a `HindcastEnsemble.verify()` instance."""
     logging.info(
-        f"`compute_hindcast` for metric {metric.name}, "
+        f"`HindcastEnsemble.verify()` for metric {metric.name}, "
         f"comparison {comparison.name}, dim {dim}, alignment {alignment} and "
         f"reference {reference} at {str(datetime.now())}\n"
         f"++++++++++++++++++++++++++++++++++++++++++++++++"
     )
 
 
-def log_compute_hindcast_inits_and_verifs(
+def log_hindcast_verify_inits_and_verifs(
     dim, lead, inits, verif_dates, reference=None
-):
+) -> None:
     """At each lead, log the inits and verification dates being used in computations."""
     if reference is None:
         reference = "initialized"

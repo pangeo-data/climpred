@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import xarray as xr
 from dask.distributed import Client
@@ -9,11 +11,14 @@ from climpred.tutorial import load_dataset
 from . import _skip_slow, ensure_loaded, parameterized, randn, requires_dask
 
 # only take subselection of all possible metrics
-METRICS = ["rmse", "crps"]
+METRICS = ["mse", "crps"]
 REFERENCES = ["uninitialized", "climatology", "persistence"]
-ITERATIONS = 16
+ITERATIONS = 8
 
 set_options(climpred_warnings=False)
+
+
+warnings.filterwarnings("ignore", message="Index.ravel returning ndarray is deprecated")
 
 
 class Compute:
@@ -29,8 +34,6 @@ class Compute:
 
     def setup(self, *args, **kwargs):
         raise NotImplementedError()
-        self.alignment = None
-        self.reference = None  # ['uninitialized','climatology','persistence']
 
     def get_kwargs(self, metric=None, bootstrap=False):
         """Adjust kwargs for verify/bootstrap matching with metric."""
@@ -38,7 +41,7 @@ class Compute:
             self.PredictionEnsemble, (PerfectModelEnsemble, HindcastEnsemble)
         ):
             raise NotImplementedError()
-        dim = "member" if metric in PROBABILISTIC_METRICS else "init"
+        dim = ["init", "member"] if metric in PROBABILISTIC_METRICS else "init"
         if self.PredictionEnsemble.kind == "hindcast":
             comparison = "m2o" if metric in PROBABILISTIC_METRICS else "e2o"
         elif self.PredictionEnsemble.kind == "perfect":
@@ -51,6 +54,7 @@ class Compute:
         )
         if bootstrap:
             metric_kwargs["iterations"] = self.iterations
+            metric_kwargs["resample_dim"] = self.resample_dim
         if self.PredictionEnsemble.kind == "hindcast":
             metric_kwargs["alignment"] = self.alignment
         return metric_kwargs
@@ -58,12 +62,20 @@ class Compute:
     @parameterized(["metric"], (METRICS))
     def time_verify(self, metric):
         """Take time for `PredictionEnsemble.verify`."""
-        ensure_loaded(self.PredictionEnsemble.verify(**self.get_kwargs(metric=metric)))
+        ensure_loaded(
+            self.PredictionEnsemble.verify(
+                **self.get_kwargs(metric=metric, bootstrap=False)
+            )
+        )
 
     @parameterized(["metric"], (METRICS))
     def peakmem_verify(self, metric):
         """Take memory peak for `PredictionEnsemble.verify`."""
-        ensure_loaded(self.PredictionEnsemble.verify(**self.get_kwargs(metric=metric)))
+        ensure_loaded(
+            self.PredictionEnsemble.verify(
+                **self.get_kwargs(metric=metric, bootstrap=False)
+            )
+        )
 
     @parameterized(["metric"], (METRICS))
     def time_bootstrap(self, metric):
@@ -89,7 +101,7 @@ class GenerateHindcastEnsemble(Compute):
     Generate random input data.
     """
 
-    def get_data(self, spatial_res=2):
+    def get_data(self, spatial_res=5):
         """Generates initialized hindcast, uninitialized historical and observational
         data, mimicking a hindcast experiment."""
         self.initialized = xr.Dataset()
@@ -166,24 +178,25 @@ class GenerateHindcastEnsemble(Compute):
         )
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
         self.get_data()
-        self.alignment = "same_verif"
+        self.alignment = "same_inits"
         self.reference = None
+        self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
     """Generate `PerfectModelEnsemble` out of `HindcastEnsemble`."""
 
     def setup(self, *args, **kwargs):
-        _skip_slow()
         self.get_data()
         self.PredictionEnsemble = PerfectModelEnsemble(self.initialized).add_control(
             self.observations
         )
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
-        self.alignment = None
         self.reference = None
+        self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
@@ -196,8 +209,10 @@ class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
             .add_uninitialized(self.uninitialized)
             .add_observations(self.observations)
         )
-        self.alignment = "same_verif"
+        self.alignment = "same_inits"
+        self.resample_dim = "member"
         self.reference = None
+        self.iterations = ITERATIONS
 
 
 class GenerateHindcastEnsembleSmallReferences(GenerateHindcastEnsembleSmall):
@@ -207,6 +222,9 @@ class GenerateHindcastEnsembleSmallReferences(GenerateHindcastEnsembleSmall):
         _skip_slow()
         super().setup(**kwargs)
         self.reference = REFERENCES
+        self.alignment = "maximize"
+        self.reference = None
+        self.resample_dim = "member"
 
 
 class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
@@ -220,6 +238,8 @@ class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.alignment = None
         self.reference = None
+        self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):
@@ -229,6 +249,10 @@ class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSm
         _skip_slow()
         super().setup(**kwargs)
         self.reference = REFERENCES
+        self.alignment = None
+        self.reference = None
+        self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GenerateHindcastEnsembleDask(GenerateHindcastEnsemble):
@@ -262,27 +286,37 @@ class S2S(Compute):
 
     def get_data(self):
         _skip_slow()
-        init = load_dataset("ECMWF_S2S_Germany").t2m
+        init = load_dataset("ECMWF_S2S_Germany").t2m.isel(lead=slice(None, None, 7))
         obs = load_dataset("Observations_Germany").t2m
-        self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
+        self.PredictionEnsemble = (
+            HindcastEnsemble(init).add_observations(obs).generate_uninitialized()
+        )
 
     def setup(self, *args, **kwargs):
         self.get_data()
-        self.alignment = "same_inits"
-        self.reference = None  # ['uninitialized','climatology','persistence']
-        self.iterations = 16
+        self.alignment = "maximize"
+        self.resample_dim = "init"
+        self.reference = None
+        self.iterations = ITERATIONS
 
 
 class NMME(Compute):
     """Tutorial data from NMME project."""
 
     def get_data(self):
-        init = load_dataset("NMME_hindcast_Nino34_sst").isel(model=0)
+        init = (
+            load_dataset("NMME_hindcast_Nino34_sst")
+            .isel(model=0)
+            .sel(S=slice("1985", "2005"))
+        )
         obs = load_dataset("NMME_OIv2_Nino34_sst")
-        self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
+        self.PredictionEnsemble = (
+            HindcastEnsemble(init).add_observations(obs).generate_uninitialized()
+        )
 
     def setup(self, *args, **kwargs):
         self.get_data()
-        self.alignment = "same_inits"
-        self.reference = None  # ['uninitialized','climatology','persistence']
-        self.iterations = 16
+        self.alignment = "maximize"
+        self.resample_dim = "init"
+        self.reference = None
+        self.iterations = ITERATIONS

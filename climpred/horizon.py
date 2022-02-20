@@ -91,15 +91,16 @@ def horizon(cond):
         ...     dim=["init", "member"],
         ...     reference="uninitialized",
         ...     iterations=201,
+        ...     resample_dim="init",
         ... )
         >>> horizon(bskill.sel(skill="uninitialized", results="p") <= 0.05)
         <xarray.Dataset>
         Dimensions:  ()
         Coordinates:
-            results  <U12 'p'
             skill    <U13 'uninitialized'
+            results  <U12 'p'
         Data variables:
-            tos      float64 10.0
+            tos      float64 2.0
         Attributes:
             units:          years
             standard_name:  forecast_period

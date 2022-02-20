@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.7
+  - python>=3.8
   # Documentation
   - myst-nb
   - nbstripout
@@ -12,6 +12,7 @@ dependencies:
   - sphinx-copybutton
   # IDE
   - jupyterlab
+  - tqdm
   - nb_conda_kernels # switch conda envs in jupyter
   # Input/Output
   - netcdf4

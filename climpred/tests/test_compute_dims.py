@@ -32,11 +32,11 @@ comparison_dim_PM = [
 @pytest.mark.parametrize("metric", ["crps", "mse"])
 @pytest.mark.parametrize("comparison", PROBABILISTIC_PM_COMPARISONS)
 def test_pm_comparison_stack_dims_when_deterministic(
-    PM_da_initialized_1d, comparison, metric
+    PM_ds_initialized_1d, comparison, metric
 ):
     metric = get_metric_class(metric, PM_METRICS)
     comparison = get_comparison_class(comparison, PM_COMPARISONS)
-    actual_f, actual_r = comparison.function(PM_da_initialized_1d, metric=metric)
+    actual_f, actual_r = comparison.function(PM_ds_initialized_1d, metric=metric)
     if not metric.probabilistic:
         assert "member" in actual_f.dims
         assert "member" in actual_r.dims
@@ -64,7 +64,7 @@ def test_compute_perfect_model_dim_over_member(
 
 # cannot work for e2o comparison because only 1:1 comparison
 @pytest.mark.parametrize("comparison", PROBABILISTIC_HINDCAST_COMPARISONS)
-def test_compute_hindcast_dim_over_member(hindcast_hist_obs_1d, comparison):
+def test_verify_dim_over_member(hindcast_hist_obs_1d, comparison):
     """Test deterministic metric calc skill over member dim."""
     print(hindcast_hist_obs_1d.get_initialized().coords)
     actual = hindcast_hist_obs_1d.verify(
@@ -125,8 +125,8 @@ def test_compute_pm_dims(
 @pytest.mark.parametrize(
     "metric,dim", [("rmse", "init"), ("rmse", "member"), ("crps", "member")]
 )
-def test_compute_hindcast_dims(hindcast_hist_obs_1d, dim, metric):
-    """Test whether compute_hindcast calcs skill over all possible dims
+def test_verify_dims(hindcast_hist_obs_1d, dim, metric):
+    """Test whether verify calcs skill over all possible dims
     and comparisons and just reduces the result by dim."""
     actual = hindcast_hist_obs_1d.verify(
         metric=metric, dim=dim, comparison="m2o", alignment="same_verif"

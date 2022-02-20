@@ -49,20 +49,14 @@ def PM_ds_initialized_1d(PM_ds3v_initialized_1d):
 
 
 @pytest.fixture()
-def PM_da_initialized_1d(PM_ds_initialized_1d):
-    """MPI Perfect-model-framework initialized timeseries xr.DataArray."""
-    return PM_ds_initialized_1d["tos"]
-
-
-@pytest.fixture()
-def PM_da_initialized_1d_lead0(PM_da_initialized_1d):
-    """MPI Perfect-model-framework initialized timeseries xr.DataArray in lead-0
+def PM_ds_initialized_1d_lead0(PM_ds_initialized_1d):
+    """MPI Perfect-model-framework initialized timeseries in lead-0
     framework."""
-    da = PM_da_initialized_1d
+    ds = PM_ds_initialized_1d
     # Convert to lead zero for testing
-    da["lead"] = da["lead"] - 1
-    da["init"] = da["init"] + 1
-    return da
+    ds["lead"] = ds["lead"] - 1
+    ds["init"] = ds["init"] + 1
+    return ds
 
 
 @pytest.fixture()
@@ -72,23 +66,10 @@ def PM_ds_initialized_3d_full():
 
 
 @pytest.fixture()
-def PM_da_initialized_3d_full(PM_ds_initialized_3d_full):
-    """MPI Perfect-model-framework initialized global maps xr.Dataset."""
-    return PM_ds_initialized_3d_full["tos"]
-
-
-@pytest.fixture()
 def PM_ds_initialized_3d(PM_ds_initialized_3d_full):
     """MPI Perfect-model-framework initialized maps xr.Dataset of subselected North
     Atlantic."""
     return PM_ds_initialized_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
-
-
-@pytest.fixture()
-def PM_da_initialized_3d(PM_ds_initialized_3d):
-    """MPI Perfect-model-framework initialized maps xr.DataArray of subselected North
-    Atlantic."""
-    return PM_ds_initialized_3d["tos"]
 
 
 @pytest.fixture()
@@ -105,21 +86,9 @@ def PM_ds_control_1d(PM_ds3v_control_1d):
 
 
 @pytest.fixture()
-def PM_da_control_1d(PM_ds_control_1d):
-    """To MPI Perfect-model-framework corresponding control timeseries xr.DataArray."""
-    return PM_ds_control_1d["tos"]
-
-
-@pytest.fixture()
 def PM_ds_control_3d_full():
     """To MPI Perfect-model-framework corresponding control global maps xr.Dataset."""
     return load_dataset("MPI-control-3D")
-
-
-@pytest.fixture()
-def PM_da_control_3d_full(PM_ds_control_3d_full):
-    """To MPI Perfect-model-framework corresponding control global maps xr.DataArray."""
-    return PM_ds_control_3d_full["tos"]
 
 
 @pytest.fixture()
@@ -127,13 +96,6 @@ def PM_ds_control_3d(PM_ds_control_3d_full):
     """To MPI Perfect-model-framework corresponding control maps xr.Dataset of
     subselected North Atlantic."""
     return PM_ds_control_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
-
-
-@pytest.fixture()
-def PM_da_control_3d(PM_ds_control_3d):
-    """To MPI Perfect-model-framework corresponding control maps xr.DataArray of
-    subselected North Atlantic."""
-    return PM_ds_control_3d["tos"]
 
 
 @pytest.fixture()
@@ -182,17 +144,12 @@ def hind_ds_initialized_1d_cftime(hind_ds_initialized_1d):
 def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset in lead-0
     framework."""
-    da = hind_ds_initialized_1d
+    ds = hind_ds_initialized_1d
     # Change to a lead-0 framework
-    da["init"] = da["init"] + 1
-    da["lead"] = da["lead"] - 1
-    return da
-
-
-@pytest.fixture()
-def hind_da_initialized_1d(hind_ds_initialized_1d):
-    """CESM-DPLE initialized hindcast timeseries mean removed xr.DataArray."""
-    return hind_ds_initialized_1d["SST"]
+    with xr.set_options(keep_attrs=True):
+        ds["init"] = ds["init"] + 1
+        ds["lead"] = ds["lead"] - 1
+    return ds
 
 
 @pytest.fixture()
@@ -209,12 +166,6 @@ def hind_ds_initialized_3d(hind_ds_initialized_3d_full):
 
 
 @pytest.fixture()
-def hind_da_initialized_3d(hind_ds_initialized_3d):
-    """CESM-DPLE initialized hindcast Pacific maps mean removed xr.DataArray."""
-    return hind_ds_initialized_3d["SST"]
-
-
-@pytest.fixture()
 def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
     ds = load_dataset("CESM-LE")
@@ -224,12 +175,6 @@ def hist_ds_uninitialized_1d():
     ds = ds - ds.mean("time")
     ds["SST"].attrs["units"] = "C"
     return ds
-
-
-@pytest.fixture()
-def hist_da_uninitialized_1d(hist_ds_uninitialized_1d):
-    """CESM-LE uninitialized historical timeseries members mean removed xr.DataArray."""
-    return hist_ds_uninitialized_1d["SST"]
 
 
 @pytest.fixture()
@@ -251,13 +196,6 @@ def reconstruction_ds_1d_cftime(reconstruction_ds_1d):
 
 
 @pytest.fixture()
-def reconstruction_da_1d(reconstruction_ds_1d):
-    """CESM-FOSI historical reconstruction timeseries members mean removed
-    xr.DataArray."""
-    return reconstruction_ds_1d["SST"]
-
-
-@pytest.fixture()
 def reconstruction_ds_3d_full():
     """CESM-FOSI historical Pacific reconstruction maps members mean removed
     xr.Dataset."""
@@ -273,27 +211,13 @@ def reconstruction_ds_3d(reconstruction_ds_3d_full):
 
 
 @pytest.fixture()
-def reconstruction_da_3d(reconstruction_ds_3d):
-    """CESM-FOSI historical reconstruction maps members mean removed
-    xr.DataArray."""
-    return reconstruction_ds_3d["SST"]
-
-
-@pytest.fixture()
 def observations_ds_1d():
-    """Historical timeseries from observations matching `hind_da_initialized_1d` and
-    `hind_da_uninitialized_1d` mean removed xr.Dataset."""
+    """Historical timeseries from observations matching `hind_ds_initialized_1d` and
+    `hind_ds_uninitialized_1d` mean removed."""
     ds = load_dataset("ERSST")
     ds = ds - ds.mean("time")
     ds["SST"].attrs["units"] = "C"
     return ds
-
-
-@pytest.fixture()
-def observations_da_1d(observations_ds_1d):
-    """Historical timeseries from observations matching `hind_da_initialized_1d` and
-    `hind_da_uninitialized_1d` mean removed xr.DataArray."""
-    return observations_ds_1d["SST"]
 
 
 @pytest.fixture()
@@ -437,7 +361,7 @@ def ds2():
 
 @pytest.fixture()
 def da1():
-    """Small plain two-dimensional xr.DataArray."""
+    """Small plain two-dimensional"""
     return xr.DataArray([[0, 1], [3, 4], [6, 7]], dims=("x", "y"))
 
 
@@ -604,6 +528,7 @@ def small_initialized_da():
         np.random.rand(len(inits), len(lead)),
         dims=["init", "lead"],
         coords=[inits, lead],
+        name="var",
     )
 
 
@@ -611,4 +536,6 @@ def small_initialized_da():
 def small_verif_da():
     """Very small simulation of a verification product."""
     time = [1990, 1991, 1992, 1993, 1994]
-    return xr.DataArray(np.random.rand(len(time)), dims=["time"], coords=[time])
+    return xr.DataArray(
+        np.random.rand(len(time)), dims=["time"], coords=[time], name="var"
+    )

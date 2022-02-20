@@ -92,9 +92,7 @@ def assign_attrs(
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords and "init" not in skill.dims:
-        skill.attrs[
-            "number_of_initializations"
-        ] = ds.init.size  # TODO: take less depending on alignment
+        skill.attrs["number_of_initializations"] = ds.init.size
     if "member" in ds.coords and "member" not in skill.coords:
         skill.attrs["number_of_members"] = ds.member.size
     if alignment is not None:
@@ -106,6 +104,9 @@ def assign_attrs(
     if comparison is not None:
         skill.attrs["comparison"] = comparison
     if dim is not None:
+        if isinstance(dim, list):
+            if len(dim) == 1:
+                dim = dim[0]
         skill.attrs["dim"] = dim
     if reference is not None:
         skill.attrs["reference"] = reference
@@ -284,11 +285,6 @@ def return_time_series_freq(ds, dim):
 def get_metric_class(metric: Union[str, Metric], list_: List) -> Metric:
     """
     Convert string representing the desired metric to corresponding metric class.
-
-    Currently compatable with functions:
-    * compute_persistence()
-    * compute_perfect_model()
-    * compute_hindcast()
 
     Args:
         metric: name of metric.

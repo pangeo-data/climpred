@@ -1,5 +1,6 @@
 """Main module instantiating ``PerfectModelEnsemble`` and ``HindcastEnsemble."""
 
+import logging
 import warnings
 from copy import deepcopy
 from typing import (
@@ -28,10 +29,15 @@ from xarray.core.utils import Frozen
 from .alignment import return_inits_and_verif_dates
 from .bias_removal import bias_correction, gaussian_bias_removal, xclim_sdba
 from .bootstrap import (
-    bootstrap_hindcast,
-    bootstrap_perfect_model,
+    _distribution_to_ci,
+    _p_ci_from_sig,
+    _pvalue_from_distributions,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
+    resample_skill_exclude_resample_dim_from_dim,
+    resample_skill_loop,
+    resample_skill_resample_before,
     resample_uninitialized_from_initialized,
+    warn_if_chunking_would_increase_performance,
 )
 from .checks import (
     _check_valid_alignment,
@@ -56,12 +62,13 @@ from .constants import (
     INTERNAL_BIAS_CORRECTION_METHODS,
     XCLIM_BIAS_CORRECTION_METHODS,
 )
-from .exceptions import CoordinateError, DimensionError, VariableError
-from .metrics import Metric
+from .exceptions import CoordinateError, DimensionError, KeywordError, VariableError
+from .metrics import PEARSON_R_CONTAINING_METRICS, Metric
 from .options import OPTIONS, set_options
 from .prediction import (
     _apply_metric_at_given_lead,
     _get_metric_comparison_dim,
+    _sanitize_to_list,
     compute_perfect_model,
 )
 from .reference import (
@@ -208,9 +215,9 @@ class PredictionEnsemble:
                 )
                 group_label.append(group)
         new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
-        skill_group = xr.concat(skill_group, new_dim_name).assign_coords(
-            {new_dim_name: group_label}
-        )
+        skill_group = xr.concat(
+            skill_group, dim=new_dim_name, **CONCAT_KWARGS
+        ).assign_coords({new_dim_name: group_label})
         skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore # noqa: E501
             {
                 "description": "new dimension showing skill grouped by init.{groupby}"
@@ -979,6 +986,237 @@ class PredictionEnsemble:
                 )
             warnings.warn(msg)
 
+    def _bootstrap(
+        self,
+        metric: metricType = None,
+        comparison: comparisonType = None,
+        dim: dimType = None,
+        alignment: alignmentType = None,
+        reference: referenceType = None,
+        groupby: groupbyType = None,
+        iterations: int = None,
+        sig: int = 95,
+        resample_dim: str = None,
+        **metric_kwargs: metric_kwargsType,
+    ) -> xr.Dataset:
+        """PredictionEnsemble.bootstrap() parent method.
+
+        explain: OPTIONS['bootstrap_resample_skill_func']
+
+        See also:
+        * :py:meth:`~climpred.PerfectModelEnsemble.bootstrap`
+        * :py:meth:`~climpred.HindcastEnsemble.bootstrap`
+        """
+        warn_if_chunking_would_increase_performance(
+            self.get_initialized(), crit_size_in_MB=50
+        )
+        _metric, _, _ = _get_metric_comparison_dim(
+            self.get_initialized(), metric, comparison, dim, kind=self.kind
+        )
+
+        if iterations is None:
+            raise ValueError("Designate number of bootstrapping `iterations`.")
+        if resample_dim is None:
+            resample_dim = "member"
+
+        reference = _check_valid_reference(reference)
+
+        reference = _sanitize_to_list(reference)
+        if reference is None:
+            reference = []
+        dim = _sanitize_to_list(dim)
+        if dim is None:
+            dim = list(self.get_initialized().isel(lead=0).dims)
+
+        verify_kwargs = dict(
+            dim=dim,
+            metric=metric,
+            comparison=comparison,
+            reference=reference,
+            **metric_kwargs,
+        )
+        if groupby is not None:
+            verify_kwargs["groupby"] = groupby
+        if self.kind == "hindcast":
+            verify_kwargs["alignment"] = alignment
+
+        if "uninitialized" in reference and not self.get_uninitialized():
+            warnings.warn(
+                "'uninitialized' in `reference` but not `uninitialized` "
+                "dataset. Therefore climpred does "
+                f"`{str(type(self))}.generate_uninitialized()`."
+            )
+            self2 = self.generate_uninitialized()
+        else:
+            self2 = self
+        skill = self2.verify(**verify_kwargs)
+
+        # different ways to compute resample_skill
+        if (
+            _metric.name in PEARSON_R_CONTAINING_METRICS
+            and self.kind == "hindcast"
+            and alignment
+        ):
+            if ("same_verif" in alignment) & (resample_dim == "init"):
+                raise KeywordError(
+                    "Cannot have alignment='same_verifs' and resample_dim='init' and "
+                    "metric='pearson_r'. Change `resample_dim` to 'member' to keep "
+                    "common verification alignment or `alignment` to 'same_inits' to "
+                    "resample over initializations."
+                )
+
+        if OPTIONS["bootstrap_resample_skill_func"] == "default":
+            if (
+                _metric.name in PEARSON_R_CONTAINING_METRICS
+                and self.kind == "hindcast"
+                and resample_dim == "init"
+            ):
+                # slow: loop and verify each time
+                # used for HindcastEnsemble.bootstrap(metric='acc')
+                resampled_skills = resample_skill_loop(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+            elif (
+                alignment in ["same_verifs", "same_verif"]
+                and self.kind == "hindcast"
+                and resample_dim == "init"
+            ):
+                # allow https://github.com/pangeo-data/climpred/issues/582
+                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+
+            elif (
+                resample_dim == "init"
+                and self.kind == "hindcast"
+                and not _metric.probabilistic
+                and _metric.name != "rmse"
+            ):
+                # fast way by verify(dim=[]) and then resampling init
+                # used for HindcastEnsemble.bootstrap(resample_dim='init')
+                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+
+            elif (
+                resample_dim == "init"
+                and self.kind == "hindcast"
+                and _metric.probabilistic
+                and "member" in dim
+                and _metric.name
+                not in ["rank_histogram", "discrimination", "reliability"]
+            ):
+                # fast way by verify(dim=[]) and then resampling init
+                # used for HindcastEnsemble.bootstrap(resample_dim='init')
+                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+            elif (
+                resample_dim == "member"
+                and self.kind == "hindcast"
+                and _metric.name
+                in ["threshold_brier_score", "reliability", "rank_histogram"]
+            ):
+                resampled_skills = resample_skill_loop(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+
+            elif resample_dim == "member" or self.kind == "perfect":
+
+                resampled_skills = resample_skill_resample_before(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+
+            else:
+                # slow: loop and verify each time, but always works
+                resampled_skills = resample_skill_loop(
+                    self, iterations, resample_dim, verify_kwargs
+                )
+        else:
+            resample_skill_func = eval(
+                f"resample_skill_{OPTIONS['bootstrap_resample_skill_func']}"
+            )
+            resampled_skills = resample_skill_func(
+                self, iterations, resample_dim, verify_kwargs
+            )
+
+        # continue with skill and resampled_skills
+
+        if (
+            "uninitialized" in reference
+            and OPTIONS["bootstrap_uninitialized_from_iterations_mean"]
+        ):
+            skill = xr.concat(
+                [
+                    skill.sel(skill="initialized"),
+                    resampled_skills.sel(skill="uninitialized").mean("iteration"),
+                    skill.drop_sel(skill=["initialized", "uninitialized"]),
+                ],
+                "skill",
+                coords="minimal",
+            )
+            logging.info("exchange uninit with iteration mean skill passed")
+
+        p, ci_low, ci_high = _p_ci_from_sig(sig)
+
+        ci = _distribution_to_ci(resampled_skills, ci_low, ci_high)
+
+        results_list = [
+            skill,
+            ci.sel(quantile=ci_low, drop=True),
+            ci.sel(quantile=ci_high, drop=True),
+        ]
+        results_labels = ["verify skill", "low_ci", "high_ci"]
+
+        if reference != []:
+            pvalue = _pvalue_from_distributions(
+                resampled_skills.drop_sel(skill="initialized"),
+                resampled_skills.sel(skill="initialized"),
+                metric=_metric,
+            )
+            pvalue = xr.concat(
+                [
+                    pvalue.isel(skill=0, drop=True)
+                    .assign_coords(skill="initialized")
+                    .where(1 == 2),  # adds all NaN
+                    pvalue,
+                ],
+                "skill",
+                **CONCAT_KWARGS,
+            )
+            results_list.insert(1, pvalue)
+            results_labels.insert(1, "p")
+
+        results = xr.concat(
+            results_list,
+            dim="results",
+            coords="minimal",
+            compat="override",  # take vars/coords from first
+        ).assign_coords(
+            skill=["initialized"] + reference,
+            results=("results", results_labels),
+        )
+        if results.skill.size == 1:
+            results = results.isel(skill=0)
+
+        results_dims = (
+            ["skill", "results", "lead"]
+            if "skill" in list(results_list[0].dims)
+            else ["results", "lead"]
+        )
+        results = results.transpose(*results_dims, ...)
+
+        results = assign_attrs(
+            results,
+            self.get_initialized(),
+            function_name=f"{type(self).__name__}.bootstrap()",
+            **verify_kwargs,
+            resample_dim=resample_dim,
+            sig=sig,
+            iterations=iterations,
+        )
+        return results
+
 
 class PerfectModelEnsemble(PredictionEnsemble):
     """An object for "perfect model" prediction ensembles.
@@ -1191,7 +1429,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.1188 0.09737
+                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.122 0.1246
             Attributes:
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.v...
@@ -1452,7 +1690,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
         iterations: Optional[int] = None,
         sig: int = 95,
         resample_dim: str = "member",
-        pers_sig: Optional[int] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Bootstrap with replacement according to :cite:t:`Goddard2013`.
@@ -1486,8 +1723,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
             sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
-            pers_sig: If not ``None``, the separate significance level for
-                persistence. Defaults to ``None``, or the same significance as ``sig``.
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
 
@@ -1535,10 +1770,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
               * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.1607 0.1439
+                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.117 0.09826
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...
@@ -1555,58 +1790,17 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 confidence_interval_levels:                        0.975-0.025
 
         """
-        if groupby is not None:
-            return self._groupby(
-                "bootstrap",
-                groupby,
-                reference=reference,
-                metric=metric,
-                comparison=comparison,
-                dim=dim,
-                iterations=iterations,
-                resample_dim=resample_dim,
-                sig=sig,
-                pers_sig=pers_sig,
-                **metric_kwargs,
-            )
-
-        if iterations is None:
-            raise ValueError("Designate number of bootstrapping `iterations`.")
-        reference = _check_valid_reference(reference)
-        has_dataset(self._datasets["control"], "control", "iteration")
-        input_dict = {
-            "ensemble": self._datasets["initialized"],
-            "control": self._datasets["control"],
-            "init": True,
-        }
-        bootstrapped_skill = self._apply_climpred_function(
-            bootstrap_perfect_model,
-            input_dict=input_dict,
+        return self._bootstrap(
             metric=metric,
             comparison=comparison,
             dim=dim,
             reference=reference,
-            resample_dim=resample_dim,
-            sig=sig,
+            groupby=groupby,
             iterations=iterations,
-            pers_sig=pers_sig,
+            sig=sig,
+            resample_dim=resample_dim,
             **metric_kwargs,
         )
-        bootstrapped_skill = assign_attrs(
-            bootstrapped_skill,
-            self.get_initialized(),
-            function_name="PerfectModelEnsemble.bootstrap()",
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            reference=reference,
-            resample_dim=resample_dim,
-            sig=sig,
-            iterations=iterations,
-            pers_sig=pers_sig,
-            **metric_kwargs,
-        )
-        return bootstrapped_skill
 
 
 class HindcastEnsemble(PredictionEnsemble):
@@ -1645,7 +1839,6 @@ class HindcastEnsemble(PredictionEnsemble):
             func: climpred function to apply to object.
             init: Whether or not it's the initialized ensemble.
         """
-        # fixme: essentially the same as map?
         hind = self._datasets["initialized"]
         verif = self._datasets["observations"]
         drop_init, drop_obs = self._vars_to_drop(init=init)
@@ -2001,7 +2194,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.07377 0.07409
+                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.1012 0.1017
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2025,8 +2218,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 **metric_kwargs,
             )
 
-        # Have to do checks here since this doesn't call `compute_hindcast` directly.
-        # Will be refactored when `climpred` migrates to inheritance-based.
         if dim is None:
             viable_dims = list(self.get_initialized().isel(lead=0).dims) + [[]]
             raise ValueError(
@@ -2109,8 +2300,9 @@ class HindcastEnsemble(PredictionEnsemble):
                         )
                         for lead in forecast["lead"].data
                     ]
-                    ref = xr.concat(metric_over_leads, dim="lead")  # , **CONCAT_KWARGS)
-                    ref["lead"] = forecast["lead"]
+                    ref = xr.concat(
+                        metric_over_leads, dim="lead", **CONCAT_KWARGS
+                    ).assign_coords(lead=forecast.lead.values)
                     # fix to get no member dim for uninitialized e2o skill #477
                     if (
                         r == "uninitialized"
@@ -2120,6 +2312,13 @@ class HindcastEnsemble(PredictionEnsemble):
                         ref = ref.mean("member")
                         if "time" in ref.dims and "time" not in result.dims:
                             ref = ref.rename({"time": "init"})
+                    # fix #735
+                    if (
+                        r == "uninitialized"
+                        and "member" in dim
+                        and "member" in ref.dims
+                    ):
+                        ref = ref.mean("member")
                     result = xr.concat([result, ref], dim="skill", **CONCAT_KWARGS)
             # rename back to 'init'
             if "time" in result.dims:
@@ -2184,7 +2383,6 @@ class HindcastEnsemble(PredictionEnsemble):
         iterations: Optional[int] = None,
         sig: int = 95,
         resample_dim: str = "member",
-        pers_sig: Optional[int] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Bootstrap with replacement according to :cite:t:`Goddard2013`.
@@ -2222,7 +2420,6 @@ class HindcastEnsemble(PredictionEnsemble):
                 - ``"member"``: select a different set of members from hind
                 - ``"init"``: select a different set of initializations from hind
 
-            pers_sig: If not ``None``, the separate significance level for persistence.
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
 
@@ -2275,10 +2472,10 @@ class HindcastEnsemble(PredictionEnsemble):
               * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
                 valid_time  (lead, init) object 1956-01-01 00:00:00 ... 2015-01-01 00:00:00
-              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
               * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.1033
+                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.07578
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()
@@ -2294,67 +2491,18 @@ class HindcastEnsemble(PredictionEnsemble):
                 confidence_interval_levels:    0.975-0.025
 
         """
-        if groupby is not None:
-            return self._groupby(
-                "bootstrap",
-                groupby,
-                reference=reference,
-                metric=metric,
-                comparison=comparison,
-                dim=dim,
-                iterations=iterations,
-                alignment=alignment,
-                resample_dim=resample_dim,
-                sig=sig,
-                pers_sig=pers_sig,
-                **metric_kwargs,
-            )
-
-        if iterations is None:
-            raise ValueError("Designate number of bootstrapping `iterations`.")
-        # TODO: replace with more computationally efficient classes implementation
-        # https://github.com/pangeo-data/climpred/issues/375
-        reference = _check_valid_reference(reference)
-        if "uninitialized" in reference and not isinstance(
-            self.get_uninitialized(), xr.Dataset
-        ):
-            raise ValueError(
-                "`reference='uninitialized'` requires `uninitialized` dataset."
-                "Use `HindcastEnsemble.add_uninitialized(uninitialized_ds)``."
-            )
-        bootstrapped_skill = bootstrap_hindcast(
-            self.get_initialized(),
-            self.get_uninitialized()
-            if isinstance(self.get_uninitialized(), xr.Dataset)
-            else None,
-            self.get_observations(),
+        return self._bootstrap(
             metric=metric,
             comparison=comparison,
             dim=dim,
             alignment=alignment,
             reference=reference,
-            resample_dim=resample_dim,
-            sig=sig,
+            groupby=groupby,
             iterations=iterations,
-            pers_sig=pers_sig,
+            sig=sig,
+            resample_dim=resample_dim,
             **metric_kwargs,
         )
-        bootstrapped_skill = assign_attrs(
-            bootstrapped_skill,
-            self.get_initialized(),
-            function_name="HindcastEnsemble.bootstrap()",
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            alignment=alignment,
-            reference=reference,
-            resample_dim=resample_dim,
-            sig=sig,
-            iterations=iterations,
-            pers_sig=pers_sig,
-            **metric_kwargs,
-        )
-        return bootstrapped_skill
 
     def remove_bias(
         self,

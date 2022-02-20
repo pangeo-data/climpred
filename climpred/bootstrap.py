@@ -1,37 +1,26 @@
 """Bootstrap or resampling operators for functional compute_ functions."""
 
+import logging
 import warnings
+from copy import copy
 
 import dask
 import numpy as np
 import xarray as xr
+import xskillscore as xs
+from tqdm.auto import tqdm
 from xskillscore.core.resampling import (
     resample_iterations as _resample_iterations,
     resample_iterations_idx as _resample_iterations_idx,
 )
-
-from climpred.constants import CLIMPRED_DIMS, CONCAT_KWARGS, PM_CALENDAR_STR
 
 from .checks import (
     has_dims,
     has_valid_lead_units,
     warn_if_chunking_would_increase_performance,
 )
-from .comparisons import (
-    ALL_COMPARISONS,
-    COMPARISON_ALIASES,
-    HINDCAST_COMPARISONS,
-    __m2o,
-)
-from .exceptions import KeywordError
-from .metrics import ALL_METRICS, METRIC_ALIASES
+from .constants import CLIMPRED_DIMS, CONCAT_KWARGS
 from .options import OPTIONS
-from .prediction import compute_hindcast, compute_perfect_model
-from .reference import (
-    compute_climatology,
-    compute_persistence,
-    compute_persistence_from_first_lead,
-)
 from .stats import dpp
 
 try:
@@ -40,11 +29,8 @@ except ImportError:
     varweighted_mean_period = None  # type: ignore
 from .utils import (
     _transpose_and_rechunk_to,
-    convert_time_index,
     find_start_dates_for_given_init,
-    get_comparison_class,
     get_lead_cftime_shift_args,
-    get_metric_class,
     lead_units_equal_control_time_stride,
     rechunk_to_single_chunk_if_more_than_one_chunk_along_dim,
     shift_cftime_singular,
@@ -369,97 +355,6 @@ def _bootstrap_by_stacking(init_pm, control):
     return fake_uninit
 
 
-def _bootstrap_hindcast_over_init_dim(
-    initialized,
-    hist,
-    verif,
-    dim,
-    reference,
-    resample_dim,
-    iterations,
-    metric,
-    comparison,
-    compute,
-    resample_uninit,
-    **metric_kwargs,
-):
-    """Bootstrap hindcast skill over the ``init`` dimension.
-
-    When bootstrapping over the ``member`` dimension, an additional dimension
-    ``iteration`` can be added and skill can be computing over that entire
-    dimension in parallel, since all members are being aligned the same way.
-    However, to our knowledge, when bootstrapping over the ``init`` dimension,
-    one must evaluate each iteration independently. I.e., in a looped fashion,
-    since alignment of initializations and target dates is unique to each
-    iteration.
-
-    See ``bootstrap_compute`` for explanation of inputs.
-    """
-    pers_skill = []
-    bootstrapped_init_skill = []
-    bootstrapped_uninit_skill = []
-    for i in range(iterations):
-        # resample with replacement
-        smp_initialized = _resample(initialized, resample_dim)
-        # compute init skill
-        init_skill = compute(
-            smp_initialized,
-            verif,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            **metric_kwargs,
-        )
-        # reset inits when probabilistic, otherwise tests fail
-        if (
-            resample_dim == "init"
-            and metric.probabilistic
-            and "init" in init_skill.coords
-        ):
-            init_skill["init"] = initialized.init.values
-        bootstrapped_init_skill.append(init_skill)
-        if "uninitialized" in reference:
-            # generate uninitialized ensemble from hist
-            uninit_initialized = resample_uninit(initialized, hist)
-            # compute uninit skill
-            bootstrapped_uninit_skill.append(
-                compute(
-                    uninit_initialized,
-                    verif,
-                    metric=metric,
-                    comparison=comparison,
-                    dim=dim,
-                    **metric_kwargs,
-                )
-            )
-        if "persistence" in reference:
-            pers_skill.append(
-                compute_persistence(
-                    smp_initialized,
-                    verif,
-                    metric=metric,
-                    dim=dim,
-                    **metric_kwargs,
-                )
-            )
-    bootstrapped_init_skill = xr.concat(
-        bootstrapped_init_skill, dim="iteration", **CONCAT_KWARGS
-    )
-    if "uninitialized" in reference:
-        bootstrapped_uninit_skill = xr.concat(
-            bootstrapped_uninit_skill, dim="iteration", **CONCAT_KWARGS
-        )
-    else:
-        bootstrapped_uninit_skill = None
-    if "persistence" in reference:
-        bootstrapped_pers_skill = xr.concat(
-            pers_skill, dim="iteration", **CONCAT_KWARGS
-        )
-    else:
-        bootstrapped_pers_skill = None
-    return (bootstrapped_init_skill, bootstrapped_uninit_skill, bootstrapped_pers_skill)
-
-
 def _get_resample_func(ds):
     """
     Decide for resample function based on input `ds`.
@@ -468,16 +363,22 @@ def _get_resample_func(ds):
       callable: `_resample_iterations`: if big and chunked `ds`
                 `_resample_iterations_idx`: else (if small and eager `ds`)
     """
-    resample_func = (
-        _resample_iterations
-        if (
-            dask.is_dask_collection(ds)
-            and len(ds.dims) > 3
-            # > 2MB
-            and ds.nbytes > 2000000
+    if OPTIONS["resample_iterations_func"] == "default":
+        resample_func = (
+            _resample_iterations
+            if (
+                dask.is_dask_collection(ds)
+                and len(ds.dims) > 3
+                # > 2MB
+                and ds.nbytes > 2000000
+            )
+            else _resample_iterations_idx
         )
-        else _resample_iterations_idx
-    )
+        for d in ds.dims:
+            if ds.sizes[d] == 1:
+                resample_func = _resample_iterations
+    else:
+        resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
     return resample_func
 
 
@@ -557,595 +458,153 @@ def _chunk_before_resample_iterations_idx(
     return ds
 
 
-def bootstrap_compute(
-    initialized,
-    verif,
-    hist=None,
-    alignment="same_verifs",
-    metric="pearson_r",
-    comparison="m2e",
-    dim="init",
-    reference=None,
-    resample_dim="member",
-    sig=95,
-    iterations=500,
-    pers_sig=None,
-    compute=compute_hindcast,
-    resample_uninit=bootstrap_uninitialized_ensemble,
-    **metric_kwargs,
+def resample_skill_loop(self, iterations, resample_dim, verify_kwargs):
+    # slow: loop and verify each time
+    # used for HindcastEnsemble.bootstrap(metric='acc') and if
+    # other resample_skill funcs dont work
+    logging.info("use resample_skill_loop")
+
+    resampled_skills = []
+    if not self.get_initialized():
+        # warn not found and therefore generate
+        warnings.warn(
+            "uninitialized not found and are therefore generated by generate_uninitialized()"
+        )
+    self_for_loop = self.copy()
+    for i in tqdm(range(iterations)):
+        # resample initialized
+        self_for_loop._datasets["initialized"] = _resample(
+            self.get_initialized(), resample_dim
+        )
+        if "uninitialized" in verify_kwargs["reference"]:
+            # resample uninitialized
+            if not self.get_uninitialized():
+                # warn not found and therefore generate
+                self_for_loop._datasets[
+                    "uninitialized"
+                ] = self.generate_uninitialized().get_uninitialized()
+            else:
+                self_for_loop._datasets["uninitialized"] = _resample(
+                    self.get_uninitialized(), "member"
+                )
+        resampled_skills.append(self_for_loop.verify(**verify_kwargs))
+    resampled_skills = xr.concat(resampled_skills, "iteration")
+    return resampled_skills
+
+
+def resample_skill_exclude_resample_dim_from_dim(
+    self, iterations, resample_dim, verify_kwargs
 ):
-    """Bootstrap compute with replacement.
-
-    Args:
-        initialized (xr.Dataset): prediction ensemble.
-        verif (xr.Dataset): Verification data.
-        hist (xr.Dataset): historical/uninitialized simulation.
-        metric (str): `metric`. Defaults to ``"pearson_r"``.
-        comparison (str): `comparison`. Defaults to ``"m2e"``.
-        dim (str or list): dimension(s) to apply metric over. Defaults to: "init".
-        reference (str, list of str): Type of reference forecasts with which to
-            verify. One or more of ["persistence", "uninitialized"].
-            If None or empty, returns no p value.
-        resample_dim (str): dimension to resample from. Defaults to: "member"
-
-            - "member": select a different set of members from initialized
-            - "init": select a different set of initializations from initialized
-
-        sig (int): Significance level for uninitialized and
-                   initialized skill. Defaults to ``95``.
-        pers_sig (int): Significance level for persistence skill confidence levels.
-            Defaults to ``sig``.
-        iterations (int): number of resampling iterations (bootstrap with replacement).
-            Defaults to ``500``.
-        compute (Callable): function to compute skill. Choose from
-            [:py:func:`climpred.prediction.compute_perfect_model`,
-            :py:func:`climpred.prediction.compute_hindcast`].
-        resample_uninit (Callable): function to create an uninitialized ensemble
-            from a control simulation or uninitialized large ensemble. Choose from:
-            [:py:func:`bootstrap_uninitialized_ensemble`,
-             :py:func:`bootstrap_uninit_pm_ensemble_from_control`].
-        ** metric_kwargs (dict): additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
-
-    Returns:
-        results: (xr.Dataset): bootstrapped results for the three different skills:
-
-            - ``initialized`` for the initialized hindcast ``initialized`` and
-             describes skill due to initialization and external forcing
-            - ``uninitialized`` for the uninitialized/historical and approximates skill
-             from external forcing
-            - ``persistence``
-            - ``climatology``
-
-        the different results:
-            - ``verify skill``: skill values
-            - ``p``: p value
-            - ``low_ci`` and ``high_ci``: high and low ends of confidence intervals
-             based on significance threshold ``sig``
-
-
-    Reference:
-        :cite:t:`Goddard2013`
-
-    See also:
-        * :py:func:`.climpred.bootstrap.bootstrap_hindcast`
-        * :py:func:`.climpred.bootstrap.bootstrap_perfect_model`
-    """
-    warn_if_chunking_would_increase_performance(initialized, crit_size_in_MB=5)
-    if pers_sig is None:
-        pers_sig = sig
-    if isinstance(dim, str):
-        dim = [dim]
-    if isinstance(reference, str):
-        reference = [reference]
-    if reference is None:
-        reference = []
-
-    compute_persistence_func = compute_persistence_from_first_lead
-    if (
-        OPTIONS["PerfectModel_persistence_from_initialized_lead_0"]
-        and compute.__name__ == "compute_perfect_model"
-    ):
-        compute_persistence_func = compute_persistence_from_first_lead
-        if initialized.lead[0] != 0:
-            if OPTIONS["warn_for_failed_PredictionEnsemble_xr_call"]:
-                warnings.warn(
-                    f"Calculate persistence from lead={int(initialized.lead[0].values)} "
-                    "instead of lead=0 (recommended)."
-                )
+    # fast way by verify(dim=dim_no_resample_dim) and then resampling init
+    # used for HindcastEnsemble.bootstrap(resample_dim='init')
+    logging.info("use resample_skill_exclude_resample_dim_from_dim")
+    if OPTIONS["resample_iterations_func"] == "default":
+        if "groupby" in verify_kwargs:
+            resample_func = _resample_iterations
+        else:
+            resample_func = _get_resample_func(self.get_initialized())
     else:
-        compute_persistence_func = compute_persistence
+        resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
 
-    p, ci_low, ci_high = _p_ci_from_sig(sig)
-    p_pers, ci_low_pers, ci_high_pers = _p_ci_from_sig(pers_sig)
+    verify_kwargs_no_dim = verify_kwargs.copy()
+    del verify_kwargs_no_dim["dim"]
+    dim = verify_kwargs.get("dim", [])
+    if resample_dim in dim:
+        remaining_dim = copy(dim)
+        remaining_dim.remove(resample_dim)
+        post_dim = resample_dim
+    else:
+        remaining_dim = []  # dim
+        post_dim = dim
+    verify_skill = self.verify(dim=remaining_dim, **verify_kwargs_no_dim)
+    resampled_skills = resample_func(verify_skill, iterations, dim=resample_dim).mean(
+        post_dim
+    )
+    resampled_skills.lead.attrs = self.get_initialized().lead.attrs
+    return resampled_skills
 
-    # get metric/comparison function name, not the alias
-    metric = METRIC_ALIASES.get(metric, metric)
-    comparison = COMPARISON_ALIASES.get(comparison, comparison)
 
-    # get class Metric(metric)
-    metric = get_metric_class(metric, ALL_METRICS)
-    # get comparison function
-    comparison = get_comparison_class(comparison, ALL_COMPARISONS)
+def resample_skill_resample_before(self, iterations, resample_dim, verify_kwargs):
+    # fast way by resampling member and do vectorized verify
+    # used for PerfectModelEnsemble.bootstrap()
+    # used for HindcastEnsemble.bootstrap(resample_dim='member')
+    logging.info("use resample_skill_resample_before")
+    if OPTIONS["resample_iterations_func"] == "default":
+        if "groupby" in verify_kwargs:
+            resample_func = _resample_iterations
+        else:
+            resample_func = _get_resample_func(self.get_initialized())
+    else:
+        resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
+    logging.info("using resample_func:", resample_func.__name__)
 
-    # Perfect Model requires `same_inits` setup
-    isHindcast = True if comparison.name in HINDCAST_COMPARISONS else False
-    reference_alignment = alignment if isHindcast else "same_inits"
-    chunking_dims = [d for d in initialized.dims if d not in CLIMPRED_DIMS]
-
-    # carry alignment for compute_reference separately
-    metric_kwargs_reference = metric_kwargs.copy()
-    metric_kwargs_reference["alignment"] = reference_alignment
-    # carry alignment in metric_kwargs
-    if isHindcast:
-        metric_kwargs["alignment"] = alignment
-
-    if hist is None:  # PM path, use verif = control
-        hist = verif
-
-    # slower path for hindcast and resample_dim init
-    if resample_dim == "init" and isHindcast:
-        warnings.warn("resample_dim=`init` will be slower than resample_dim=`member`.")
-        (
-            bootstrapped_init_skill,
-            bootstrapped_uninit_skill,
-            bootstrapped_pers_skill,
-        ) = _bootstrap_hindcast_over_init_dim(
-            initialized,
-            hist,
-            verif,
-            dim,
-            reference,
-            resample_dim,
-            iterations,
-            metric,
-            comparison,
-            compute,
-            resample_uninit,
-            **metric_kwargs,
-        )
-    else:  # faster: first _resample_iterations_idx, then compute skill
-        resample_func = _get_resample_func(initialized)
-        if not isHindcast:
-            if "uninitialized" in reference:
-                # create more members than needed in PM to make the uninitialized
-                # distribution more robust
-                members_to_sample_from = 50
-                repeat = members_to_sample_from // initialized.member.size + 1
-                uninit_initialized = xr.concat(
-                    [resample_uninit(initialized, hist) for i in range(repeat)],
-                    dim="member",
-                    **CONCAT_KWARGS,
-                )
-                uninit_initialized["member"] = np.arange(
-                    1, 1 + uninit_initialized.member.size
-                )
-                if dask.is_dask_collection(uninit_initialized):
-                    # too minimize tasks: ensure uninit_initialized get pre-computed
-                    # alternativly .chunk({'member':-1})
-                    uninit_initialized = uninit_initialized.compute().chunk()
-                # resample uninit always over member and select only initialized.member.size
-                bootstrapped_uninit = resample_func(
-                    uninit_initialized,
-                    iterations,
-                    "member",
-                    replace=False,
-                    dim_max=initialized["member"].size,
-                )
-                bootstrapped_uninit["lead"] = initialized["lead"]
-                # effectively only when _resample_iteration_idx which doesnt use dim_max
-                bootstrapped_uninit = bootstrapped_uninit.isel(
-                    member=slice(None, initialized.member.size)
-                )
-                bootstrapped_uninit["member"] = np.arange(
-                    1, 1 + bootstrapped_uninit.member.size
-                )
-                if dask.is_dask_collection(bootstrapped_uninit):
-                    bootstrapped_uninit = bootstrapped_uninit.chunk({"member": -1})
-                    bootstrapped_uninit = _maybe_auto_chunk(
-                        bootstrapped_uninit, ["iteration"] + chunking_dims
-                    )
-        else:  # hindcast
-            if "uninitialized" in reference:
-                uninit_initialized = resample_uninit(initialized, hist)
-                if dask.is_dask_collection(uninit_initialized):
-                    # too minimize tasks: ensure uninit_initialized get pre-computed
-                    # maybe not needed
-                    uninit_initialized = uninit_initialized.compute().chunk()
-                bootstrapped_uninit = resample_func(
-                    uninit_initialized, iterations, resample_dim
-                )
-                bootstrapped_uninit = bootstrapped_uninit.isel(
-                    member=slice(None, initialized.member.size)
-                )
-                bootstrapped_uninit["lead"] = initialized["lead"]
-                if dask.is_dask_collection(bootstrapped_uninit):
-                    bootstrapped_uninit = _maybe_auto_chunk(
-                        bootstrapped_uninit.chunk({"lead": 1}),
-                        ["iteration"] + chunking_dims,
-                    )
-
-        if "uninitialized" in reference:
-            bootstrapped_uninit_skill = compute(
-                bootstrapped_uninit,
-                verif,
-                metric=metric,
-                comparison="m2o" if isHindcast else comparison,
-                dim=dim,
-                **metric_kwargs,
-            )
-            # take mean if 'm2o' comparison forced before
-            if isHindcast and comparison != __m2o:
-                bootstrapped_uninit_skill = bootstrapped_uninit_skill.mean("member")
-
-        with xr.set_options(keep_attrs=True):
-            bootstrapped_initialized = resample_func(
-                initialized, iterations, resample_dim
-            )
-        if dask.is_dask_collection(bootstrapped_initialized):
-            bootstrapped_initialized = bootstrapped_initialized.chunk({"member": -1})
-
-        bootstrapped_init_skill = compute(
-            bootstrapped_initialized,
-            verif,
-            metric=metric,
-            comparison=comparison,
-            dim=dim,
-            **metric_kwargs,
-        )
-        if "persistence" in reference:
-            pers_skill = compute_persistence_func(
-                initialized,
-                verif,
-                metric=metric,
-                dim=dim,
-                **metric_kwargs_reference,
-            )
-            # bootstrap pers
-            if resample_dim == "init":
-                bootstrapped_pers_skill = compute_persistence_func(
-                    bootstrapped_initialized,
-                    verif,
-                    metric=metric,
-                    **metric_kwargs_reference,
-                )
-            else:  # member no need to calculate all again
-                bootstrapped_pers_skill, _ = xr.broadcast(
-                    pers_skill, bootstrapped_init_skill
-                )
-
-    # calc mean skill without any resampling
-    init_skill = compute(
-        initialized,
-        verif,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        **metric_kwargs,
+    chunking_dims = [d for d in self.get_initialized().dims if d not in CLIMPRED_DIMS]
+    copy_self = self.copy()
+    copy_self._datasets["initialized"] = resample_func(
+        self.get_initialized(), iterations, resample_dim
+    )
+    copy_self._datasets["initialized"] = _maybe_auto_chunk(
+        copy_self._datasets["initialized"], ["iteration"] + chunking_dims
     )
 
-    if "uninitialized" in reference:
-        # uninit skill as mean resampled uninit skill
-        unin_skill = bootstrapped_uninit_skill.mean("iteration")  # noqa: F841
-    if "persistence" in reference:
-        pers_skill = compute_persistence_func(
-            initialized, verif, metric=metric, dim=dim, **metric_kwargs_reference
-        )
-    if "climatology" in reference:
-        clim_skill = compute_climatology(
-            initialized,
-            verif,
-            metric=metric,
-            dim=dim,
-            comparison=comparison,
-            **metric_kwargs,
-        )
-        # get clim_skill into init,lead dimensions
-        if "time" in clim_skill.dims and "valid_time" in init_skill.coords:
-            # for idea see https://github.com/pydata/xarray/discussions/4593
-            valid_time_overlap = init_skill.coords["valid_time"].where(
-                init_skill.coords["valid_time"].isin(clim_skill.time)
+    copy_self._datasets["initialized"].lead.attrs = self.get_initialized().lead.attrs
+
+    if "uninitialized" in verify_kwargs["reference"]:
+        if not self.get_uninitialized():
+            # warn not found and therefore generate
+            warnings.warn(
+                "uninitialized not found therefore generated by"
+                " generate_uninitialized()"
             )
-            clim_skill = clim_skill.rename({"time": "valid_time"})
-            clim_skill = clim_skill.sel(
-                valid_time=init_skill.coords["valid_time"], method="nearest"
+            members_to_sample_from = 50
+            repeat = (
+                members_to_sample_from // copy_self.get_initialized().member.size + 1
             )
-            # mask wrongly taken method nearest values
-            clim_skill = clim_skill.where(valid_time_overlap.notnull())
-            # print('after special sel', clim_skill.coords, clim_skill.sizes)
-        bootstrapped_clim_skill, _ = xr.broadcast(clim_skill, bootstrapped_init_skill)
-
-    # get confidence intervals CI
-    init_ci = _distribution_to_ci(bootstrapped_init_skill, ci_low, ci_high)
-    if "uninitialized" in reference:
-        unin_ci = _distribution_to_ci(  # noqa: F841
-            bootstrapped_uninit_skill, ci_low, ci_high
-        )
-    if "climatology" in reference:
-        clim_ci = _distribution_to_ci(  # noqa: F841
-            bootstrapped_clim_skill, ci_low, ci_high
-        )
-    if "persistence" in reference:
-        pers_ci = _distribution_to_ci(  # noqa: F841
-            bootstrapped_pers_skill, ci_low_pers, ci_high_pers
-        )
-
-    # pvalue whether uninit or pers better than init forecast
-    if "uninitialized" in reference:
-        p_unin_over_init = _pvalue_from_distributions(  # noqa: F841
-            bootstrapped_uninit_skill, bootstrapped_init_skill, metric=metric
-        )
-    if "climatology" in reference:
-        p_clim_over_init = _pvalue_from_distributions(  # noqa: F841
-            bootstrapped_clim_skill, bootstrapped_init_skill, metric=metric
-        )
-    if "persistence" in reference:
-        p_pers_over_init = _pvalue_from_distributions(  # noqa: F841
-            bootstrapped_pers_skill, bootstrapped_init_skill, metric=metric
-        )
-
-    # gather return
-    # p defined as probability that reference better than
-    # initialized, therefore not defined for initialized skill
-    # itself
-    results = xr.concat(
-        [
-            init_skill,
-            init_skill.where(init_skill == -999),
-            init_ci.isel(quantile=0, drop=True),
-            init_ci.isel(quantile=1, drop=True),
-        ],
-        dim="results",
-        coords="minimal",
-    ).assign_coords(
-        results=("results", ["verify skill", "p", "low_ci", "high_ci"]),
-        skill="initialized",
-    )
-
-    if reference != []:
-        for r in reference:
-            ref_skill = eval(f"{r[:4]}_skill")
-            ref_p = eval(f"p_{r[:4]}_over_init")
-            ref_ci_low = eval(f"{r[:4]}_ci").isel(quantile=0, drop=True)
-            ref_ci_high = eval(f"{r[:4]}_ci").isel(quantile=1, drop=True)
-            ref_results = xr.concat(
-                [ref_skill, ref_p, ref_ci_low, ref_ci_high],
-                dim="results",
+            uninit_initialized = xr.concat(
+                [
+                    self.generate_uninitialized().get_uninitialized()
+                    for i in range(repeat)
+                ],
+                dim="member",
                 **CONCAT_KWARGS,
-            ).assign_coords(
-                skill=r, results=("results", ["verify skill", "p", "low_ci", "high_ci"])
             )
-            if "member" in ref_results.dims:
-                if not ref_results["member"].identical(results["member"]):
-                    ref_results["member"] = results[
-                        "member"
-                    ]  # fixes m2c different member names in reference forecasts
-            results = xr.concat([results, ref_results], dim="skill", **CONCAT_KWARGS)
-        results = results.assign_coords(skill=["initialized"] + reference).squeeze()
-    else:
-        results = results.drop_sel(results="p")
-    results = results.squeeze()
-
-    # Ensure that the lead units get carried along for the calculation. The attribute
-    # tends to get dropped along the way due to ``xarray`` functionality.
-    results["lead"] = initialized["lead"]
-    if "units" in initialized["lead"].attrs and "units" not in results["lead"].attrs:
-        results["lead"].attrs["units"] = initialized["lead"].attrs["units"]
-    return results
-
-
-def bootstrap_hindcast(
-    initialized,
-    hist,
-    verif,
-    alignment="same_verifs",
-    metric="pearson_r",
-    comparison="e2o",
-    dim="init",
-    reference=None,
-    resample_dim="member",
-    sig=95,
-    iterations=500,
-    pers_sig=None,
-    **metric_kwargs,
-):
-    """Wrap py:func:`bootstrap_compute` for hindcasts.
-
-    Args:
-        initialized (xr.Dataset): prediction ensemble.
-        verif (xr.Dataset): Verification data.
-        hist (xr.Dataset): historical/uninitialized simulation.
-        metric (str): `metric`. Defaults to ``"pearson_r"``.
-        comparison (str): `comparison`. Defaults to "e2o".
-        dim (str): dimension to apply metric over. Defaults to: "init".
-        reference (str, list of str): Type of reference forecasts with which to
-            verify. One or more of ["persistence", "uninitialized"].
-            If None or empty, returns no p value.
-        resample_dim (str or list): dimension to resample from.
-            Defaults to: ``"member"``.
-
-            - "member": select a different set of members from initialized
-            - "init": select a different set of initializations from initialized
-
-        sig (int): Significance level for uninitialized and initialized skill.
-            Defaults to ``95``.
-        pers_sig (int): Significance level for persistence skill confidence levels.
-            Defaults to ``sig``.
-        iterations (int): number of resampling iterations (bootstrap with replacement).
-            Defaults to 500.
-        ** metric_kwargs (dict): additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
-
-    Returns:
-        results: (xr.Dataset): bootstrapped results for the three different kinds of
-            predictions:
-
-            - ``initialized`` for the initialized hindcast ``initialized`` and
-             describes skill due to initialization and external forcing
-            - ``uninitialized`` for the uninitialized/historical and approximates skill
-             from external forcing
-            - ``persistence``
-            - ``climatology``
-
-        the different results:
-            - ``verify skill``: skill values
-            - ``p``: p value
-            - ``low_ci`` and ``high_ci``: high and low ends of confidence intervals
-             based on significance threshold ``sig``
-
-    Reference:
-        :cite:t:`Goddard2013`
-
-    See also:
-        * :py:func:`.climpred.bootstrap.bootstrap_compute`
-        * :py:func:`.climpred.prediction.compute_hindcast`
-
-    """
-    # Check that init is int, cftime, or datetime; convert ints or datetime to cftime.
-    initialized = convert_time_index(initialized, "init", "initialized[init]")
-    if isinstance(hist, xr.Dataset):
-        hist = convert_time_index(hist, "time", "uninitialized[time]")
-    else:
-        hist = False
-    verif = convert_time_index(verif, "time", "verif[time]")
-    # Put this after `convert_time_index` since it assigns 'years' attribute if the
-    # `init` dimension is a `float` or `int`.
-    has_valid_lead_units(initialized)
-
-    if ("same_verif" in alignment) & (resample_dim == "init"):
-        raise KeywordError(
-            "Cannot have both alignment='same_verifs' and "
-            "resample_dim='init'. Change `resample_dim` to 'member' to keep "
-            "common verification alignment or `alignment` to 'same_inits' to "
-            "resample over initializations."
-        )
-
-    # Kludge for now. Since we're computing persistence here we need to ensure that
-    # all products have a union in their time axis.
-    if hist not in [None, False]:
-        times = np.sort(
-            list(
-                set(initialized.init.data) & set(hist.time.data) & set(verif.time.data)
+            uninit_initialized["member"] = np.arange(
+                1, 1 + uninit_initialized.member.size
             )
-        )
-    else:
-        times = np.sort(list(set(initialized.init.data) & set(verif.time.data)))
-    initialized = initialized.sel(init=times)
-    if isinstance(hist, xr.Dataset):
-        hist = hist.sel(time=times)
-    verif = verif.sel(time=times)
-
-    return bootstrap_compute(
-        initialized,
-        verif,
-        hist=hist,
-        alignment=alignment,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        reference=reference,
-        resample_dim=resample_dim,
-        sig=sig,
-        iterations=iterations,
-        pers_sig=pers_sig,
-        compute=compute_hindcast,
-        resample_uninit=bootstrap_uninitialized_ensemble,
-        **metric_kwargs,
-    )
-
-
-def bootstrap_perfect_model(
-    init_pm,
-    control,
-    metric="pearson_r",
-    comparison="m2e",
-    dim=None,
-    reference=None,
-    resample_dim="member",
-    sig=95,
-    iterations=500,
-    pers_sig=None,
-    **metric_kwargs,
-):
-    """Wrap py:func:`bootstrap_compute` for perfect-model framework.
-
-    Args:
-        initialized (xr.Dataset): prediction ensemble.
-        verif (xr.Dataset): Verification data.
-        hist (xr.Dataset): historical/uninitialized simulation.
-        metric (str): `metric`. Defaults to ``"pearson_r"``.
-        comparison (str): `comparison`. Defaults to ``"m2e"``.
-        dim (str): dimension to apply metric over. Defaults to: ``["init", "member"]``.
-        reference (str, list of str): Type of reference forecasts with which to
-            verify. One or more of ``["persistence", "uninitialized", "climatology"]``.
-            If ``None`` or ``[]``, returns no p value.
-        resample_dim (str or list): dimension to resample from.
-            Defaults to: ``"member"``.
-
-            - "member": select a different set of members from initialized
-            - "init": select a different set of initializations from initialized
-
-        sig (int): Significance level for uninitialized and initialized skill.
-            Defaults to ``95``.
-        pers_sig (int): Significance level for persistence skill confidence levels.
-            Defaults to ``sig``.
-        iterations (int): number of resampling iterations (bootstrap with replacement).
-            Defaults to ``500``.
-        ** metric_kwargs (dict): additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
-
-    Returns:
-        results: (xr.Dataset): bootstrapped results for the three different kinds of
-            predictions:
-
-            - ``initialized`` for the initialized hindcast ``initialized`` and
-             describes skill due to initialization and external forcing
-            - ``uninitialized`` for the uninitialized/historical and approximates skill
-             from external forcing
-            - ``persistence`` for the persistence forecast computed by
-             `compute_persistence` or `compute_persistence_from_first_lead` depending
-             on set_options("PerfectModel_persistence_from_initialized_lead_0")
-            - ``climatology``
-
-        the different results:
-            - ``skill``: skill values
-            - ``p``: p value
-            - ``low_ci`` and ``high_ci``: high and low ends of confidence intervals
-             based on significance threshold ``sig``
-
-    Reference:
-        :cite:t:`Goddard2013`
-
-    See also:
-        * :py:func:`.climpred.bootstrap.bootstrap_compute`
-        * :py:func:`.climpred.prediction.compute_perfect_model`
-    """
-    if dim is None:
-        dim = ["init", "member"]
-    # Check init & time is int, cftime, or datetime; convert ints or datetime to cftime.
-    init_pm = convert_time_index(
-        init_pm, "init", "init_pm[init]", calendar=PM_CALENDAR_STR
-    )
-    control = convert_time_index(
-        control, "time", "control[time]", calendar=PM_CALENDAR_STR
-    )
-    lead_units_equal_control_time_stride(init_pm, control)
-    return bootstrap_compute(
-        init_pm,
-        control,
-        hist=None,
-        metric=metric,
-        comparison=comparison,
-        dim=dim,
-        reference=reference,
-        resample_dim=resample_dim,
-        sig=sig,
-        iterations=iterations,
-        pers_sig=pers_sig,
-        compute=compute_perfect_model,
-        resample_uninit=bootstrap_uninit_pm_ensemble_from_control_cftime,
-        **metric_kwargs,
-    )
+            if dask.is_dask_collection(uninit_initialized):
+                # too minimize tasks: ensure uninit_initialized get pre-computed
+                # alternativly .chunk({'member':-1})
+                uninit_initialized = uninit_initialized.compute().chunk()
+            # resample uninit always over member and select only initialized.member.size
+            bootstrapped_uninit = resample_func(
+                uninit_initialized,
+                iterations,
+                "member",
+                replace=False,
+                dim_max=self.get_initialized()["member"].size,
+            )
+            # bootstrapped_uninit["lead"] = self.get_initialized()["lead"]
+            # effectively only when _resample_iteration_idx which doesnt use dim_max
+            bootstrapped_uninit = bootstrapped_uninit.isel(
+                member=slice(None, self.get_initialized().member.size)
+            )
+            bootstrapped_uninit["member"] = np.arange(
+                1, 1 + bootstrapped_uninit.member.size
+            )
+            copy_self._datasets["uninitialized"] = bootstrapped_uninit
+        else:
+            copy_self._datasets["uninitialized"] = resample_func(
+                copy_self._datasets["uninitialized"], iterations, "member"
+            )
+        if dask.is_dask_collection(copy_self._datasets["uninitialized"]):
+            copy_self._datasets["uninitialized"] = copy_self._datasets[
+                "uninitialized"
+            ].chunk({"member": -1})
+            copy_self._datasets["uninitialized"] = _maybe_auto_chunk(
+                copy_self._datasets["uninitialized"], ["iteration"] + chunking_dims
+            )
+    resampled_skills = copy_self.verify(**verify_kwargs)
+    return resampled_skills
 
 
 def _bootstrap_func(

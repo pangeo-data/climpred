@@ -275,7 +275,7 @@ class S2S(Compute):
 
     def get_data(self):
         _skip_slow()
-        init = load_dataset("ECMWF_S2S_Germany").t2m
+        init = load_dataset("ECMWF_S2S_Germany").t2m.isel(lead=slice(None, None, 7))
         obs = load_dataset("Observations_Germany").t2m
         self.PredictionEnsemble = (
             HindcastEnsemble(init).add_observations(obs).generate_uninitialized()
@@ -283,9 +283,9 @@ class S2S(Compute):
 
     def setup(self, *args, **kwargs):
         self.get_data()
-        self.alignment = "same_inits"
+        self.alignment = "maximize"
         self.resample_dim = "init"
-        self.reference = REFERENCES
+        self.reference = None
         self.iterations = ITERATIONS
 
 
@@ -305,7 +305,7 @@ class NMME(Compute):
 
     def setup(self, *args, **kwargs):
         self.get_data()
-        self.alignment = "same_inits"
+        self.alignment = "maximize"
         self.resample_dim = "init"
         self.reference = REFERENCES
         self.iterations = ITERATIONS

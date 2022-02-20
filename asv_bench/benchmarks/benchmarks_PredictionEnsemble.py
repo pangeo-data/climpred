@@ -295,7 +295,7 @@ class S2S(Compute):
     def setup(self, *args, **kwargs):
         self.get_data()
         self.alignment = "maximize"
-        self.resample_dim = "member"
+        self.resample_dim = "init"
         self.reference = None
         self.iterations = ITERATIONS
 
@@ -317,6 +317,6 @@ class NMME(Compute):
     def setup(self, *args, **kwargs):
         self.get_data()
         self.alignment = "maximize"
-        self.resample_dim = "member"
+        self.resample_dim = "init"
         self.reference = None
         self.iterations = ITERATIONS

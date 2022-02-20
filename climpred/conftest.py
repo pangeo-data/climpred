@@ -146,8 +146,9 @@ def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     framework."""
     ds = hind_ds_initialized_1d
     # Change to a lead-0 framework
-    ds["init"] = ds["init"] + 1
-    ds["lead"] = ds["lead"] - 1
+    with xr.set_options(keep_attrs=True):
+        ds["init"] = ds["init"] + 1
+        ds["lead"] = ds["lead"] - 1
     return ds
 
 

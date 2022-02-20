@@ -492,10 +492,12 @@ def resample_skill_loop(self, iterations, resample_dim, verify_kwargs):
     return resampled_skills
 
 
-def resample_skill_empty_dim(self, iterations, resample_dim, verify_kwargs):
+def resample_skill_exclude_resample_dim_from_dim(
+    self, iterations, resample_dim, verify_kwargs
+):
     # fast way by verify(dim=dim_no_resample_dim) and then resampling init
     # used for HindcastEnsemble.bootstrap(resample_dim='init')
-    logging.info("use resample_skill_empty_dim")
+    logging.info("use resample_skill_exclude_resample_dim_from_dim")
     if OPTIONS["resample_iterations_func"] == "default":
         if "groupby" in verify_kwargs:
             resample_func = _resample_iterations

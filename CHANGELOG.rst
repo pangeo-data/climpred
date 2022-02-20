@@ -40,8 +40,8 @@ New Features
   * ``"loop"`` calls :py:func:`climpred.bootstrap.resample_skill_loop` which
       loops over iterations and calls ``verify`` every single time. Most
       understandable and stable, but slow.
-  * ``"empty_dim"`` calls
-      :py:func:`climpred.bootstrap.resample_skill_empty_dim` which calls
+  * ``"exclude_resample_dim_from_dim"`` calls
+      :py:func:`climpred.bootstrap.resample_skill_exclude_resample_dim_from_dim` which calls
       ``verify(dim=dim_without_resample_dim)``, resamples over
       ``resample_dim`` and then takes a mean over ``resample_dim`` if in
       ``dim``. Enables
@@ -54,7 +54,7 @@ New Features
   * ``"default"``: ``climpred`` decides which to use
 
   (:issue:``, :pr:`731`) `Aaron Spring`_.
-- ``climpred.set_option(resample_skill_func='empty_dim')`` allows
+- ``climpred.set_option(resample_skill_func='exclude_resample_dim_from_dim')`` allows
   ``HindcastEnsemble.bootstrap(alignment='same_verifs', resample_dim='init')``.
   Does not work for ``pearson_r``-derived metrics.
   (:issue:`582`, :pr:`731`) `Aaron Spring`_.

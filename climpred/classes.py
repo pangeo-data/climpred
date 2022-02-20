@@ -33,7 +33,7 @@ from .bootstrap import (
     _p_ci_from_sig,
     _pvalue_from_distributions,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
-    resample_skill_empty_dim,
+    resample_skill_exclude_resample_dim_from_dim,
     resample_skill_loop,
     resample_skill_resample_before,
     resample_uninitialized_from_initialized,
@@ -1082,7 +1082,7 @@ class PredictionEnsemble:
                 and resample_dim == "init"
             ):
                 # allow https://github.com/pangeo-data/climpred/issues/582
-                resampled_skills = resample_skill_empty_dim(
+                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
                     self, iterations, resample_dim, verify_kwargs
                 )
 
@@ -1094,7 +1094,7 @@ class PredictionEnsemble:
             ):
                 # fast way by verify(dim=[]) and then resampling init
                 # used for HindcastEnsemble.bootstrap(resample_dim='init')
-                resampled_skills = resample_skill_empty_dim(
+                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
                     self, iterations, resample_dim, verify_kwargs
                 )
 
@@ -1108,7 +1108,7 @@ class PredictionEnsemble:
             ):
                 # fast way by verify(dim=[]) and then resampling init
                 # used for HindcastEnsemble.bootstrap(resample_dim='init')
-                resampled_skills = resample_skill_empty_dim(
+                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
                     self, iterations, resample_dim, verify_kwargs
                 )
             elif (

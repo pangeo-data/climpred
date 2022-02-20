@@ -1839,7 +1839,6 @@ class HindcastEnsemble(PredictionEnsemble):
             func: climpred function to apply to object.
             init: Whether or not it's the initialized ensemble.
         """
-        # fixme: essentially the same as map?
         hind = self._datasets["initialized"]
         verif = self._datasets["observations"]
         drop_init, drop_obs = self._vars_to_drop(init=init)

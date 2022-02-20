@@ -152,8 +152,7 @@ def uninitialized(
     return lforecast, lverif
 
 
-# needed for PerfectModelEnsemble.verify(reference=...) and PredictionEnsemble.bootstrap
-# TODO: should be refactored for better non-functional use within verify and bootstrap
+# needed for PerfectModelEnsemble.verify(reference=...)
 
 
 def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, dim):

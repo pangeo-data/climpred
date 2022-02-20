@@ -87,9 +87,7 @@ def assign_attrs(
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords and "init" not in skill.dims:
-        skill.attrs[
-            "number_of_initializations"
-        ] = ds.init.size  # TODO: take less depending on alignment
+        skill.attrs["number_of_initializations"] = ds.init.size
     if "member" in ds.coords and "member" not in skill.coords:
         skill.attrs["number_of_members"] = ds.member.size
     if alignment is not None:

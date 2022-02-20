@@ -177,6 +177,7 @@ class GenerateHindcastEnsemble(Compute):
         self.get_data()
         self.alignment = "same_inits"
         self.reference = None
+        self.resample_dim = None
 
 
 class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):

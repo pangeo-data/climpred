@@ -181,7 +181,8 @@ class GenerateHindcastEnsemble(Compute):
         self.get_data()
         self.alignment = "same_inits"
         self.reference = None
-        self.resample_dim = None
+        self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
@@ -195,6 +196,7 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.reference = None
         self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
@@ -210,6 +212,7 @@ class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
         self.alignment = "same_inits"
         self.resample_dim = "member"
         self.reference = None
+        self.iterations = ITERATIONS
 
 
 class GenerateHindcastEnsembleSmallReferences(GenerateHindcastEnsembleSmall):
@@ -219,6 +222,9 @@ class GenerateHindcastEnsembleSmallReferences(GenerateHindcastEnsembleSmall):
         _skip_slow()
         super().setup(**kwargs)
         self.reference = REFERENCES
+        self.alignment = "maximize"
+        self.reference = None
+        self.resample_dim = "member"
 
 
 class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
@@ -233,6 +239,7 @@ class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
         self.alignment = None
         self.reference = None
         self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):
@@ -242,6 +249,10 @@ class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSm
         _skip_slow()
         super().setup(**kwargs)
         self.reference = REFERENCES
+        self.alignment = None
+        self.reference = None
+        self.resample_dim = "member"
+        self.iterations = ITERATIONS
 
 
 class GenerateHindcastEnsembleDask(GenerateHindcastEnsemble):

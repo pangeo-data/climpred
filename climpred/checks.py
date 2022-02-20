@@ -223,38 +223,39 @@ def warn_if_chunking_would_increase_performance(ds, crit_size_in_MB=100):
     - there should be several CPU available for the computation, like on a
      cluster or multi-core computer
     """
-    nbytes_in_MB = ds.nbytes / (1024**2)
-    if not dask.is_dask_collection(ds):
-        if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
-            warnings.warn(
-                "Consider chunking input `ds` along other dimensions than "
-                "needed by algorithm, e.g. spatial dimensions, for parallelized "
-                "performance increase."
+    if OPTIONS["climpred_warnings"]:
+        nbytes_in_MB = ds.nbytes / (1024**2)
+        if not dask.is_dask_collection(ds):
+            if nbytes_in_MB > crit_size_in_MB and NCPU >= 4:
+                warnings.warn(
+                    "Consider chunking input `ds` along other dimensions than "
+                    "needed by algorithm, e.g. spatial dimensions, for parallelized "
+                    "performance increase."
+                )
+        else:
+            if nbytes_in_MB < crit_size_in_MB:
+                warnings.warn(
+                    "Chunking might not bring parallelized performance increase, "
+                    f"because input size quite small, found {nbytes_in_MB} MB <"
+                    f" {crit_size_in_MB} MB."
+                )
+            if NCPU < 4:
+                warnings.warn(
+                    f"Chunking might not bring parallelized performance increase, "
+                    f"because only few CPUs available, found {NCPU} CPUs."
+                )
+            number_of_chunks = (
+                ds.data.npartitions
+                if isinstance(ds, xr.DataArray)
+                else ds.to_array().data.npartitions
             )
-    else:
-        if nbytes_in_MB < crit_size_in_MB:
-            warnings.warn(
-                "Chunking might not bring parallelized performance increase, "
-                f"because input size quite small, found {nbytes_in_MB} MB <"
-                f" {crit_size_in_MB} MB."
-            )
-        if NCPU < 4:
-            warnings.warn(
-                f"Chunking might not bring parallelized performance increase, "
-                f"because only few CPUs available, found {NCPU} CPUs."
-            )
-        number_of_chunks = (
-            ds.data.npartitions
-            if isinstance(ds, xr.DataArray)
-            else ds.to_array().data.npartitions
-        )
-        if number_of_chunks > 16 * NCPU:
-            # much larger than nworkers, warn smaller chunks
-            warnings.warn(
-                f"Chunking might not bring parallelized performance increase, "
-                f"because of much more chunks than CPUs, found {number_of_chunks} "
-                f"chunks and {NCPU} CPUs."
-            )
+            if number_of_chunks > 16 * NCPU:
+                # much larger than nworkers, warn smaller chunks
+                warnings.warn(
+                    f"Chunking might not bring parallelized performance increase, "
+                    f"because of much more chunks than CPUs, found {number_of_chunks} "
+                    f"chunks and {NCPU} CPUs."
+                )
 
 
 def _check_valid_reference(reference: Optional[Union[List[str], str]]) -> List[str]:

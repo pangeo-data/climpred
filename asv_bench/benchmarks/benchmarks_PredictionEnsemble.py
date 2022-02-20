@@ -1,3 +1,5 @@
+import warnings
+
 import numpy as np
 import xarray as xr
 from dask.distributed import Client
@@ -14,6 +16,9 @@ REFERENCES = ["uninitialized", "climatology", "persistence"]
 ITERATIONS = 16
 
 set_options(climpred_warnings=False)
+
+
+warnings.filterwarnings("ignore", message="Index.ravel returning ndarray is deprecated")
 
 
 class Compute:

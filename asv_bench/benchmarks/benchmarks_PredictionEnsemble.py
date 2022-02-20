@@ -13,7 +13,7 @@ from . import _skip_slow, ensure_loaded, parameterized, randn, requires_dask
 # only take subselection of all possible metrics
 METRICS = ["mse", "crps"]
 REFERENCES = ["uninitialized", "climatology", "persistence"]
-ITERATIONS = 16
+ITERATIONS = 8
 
 set_options(climpred_warnings=False)
 
@@ -101,7 +101,7 @@ class GenerateHindcastEnsemble(Compute):
     Generate random input data.
     """
 
-    def get_data(self, spatial_res=2):
+    def get_data(self, spatial_res=5):
         """Generates initialized hindcast, uninitialized historical and observational
         data, mimicking a hindcast experiment."""
         self.initialized = xr.Dataset()
@@ -195,9 +195,8 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
             self.observations
         )
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
-        self.alignment = None
         self.reference = None
-        self.resample_dim = None
+        self.resample_dim = "init"
 
 
 class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
@@ -235,7 +234,7 @@ class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.alignment = None
         self.reference = None
-        self.resample_dim = None
+        self.resample_dim = "init"
 
 
 class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):
@@ -286,15 +285,19 @@ class S2S(Compute):
         self.get_data()
         self.alignment = "same_inits"
         self.resample_dim = "init"
-        self.reference = None  # ['uninitialized','climatology','persistence']
-        self.iterations = 16
+        self.reference = REFERENCES
+        self.iterations = ITERATIONS
 
 
 class NMME(Compute):
     """Tutorial data from NMME project."""
 
     def get_data(self):
-        init = load_dataset("NMME_hindcast_Nino34_sst").isel(model=0)
+        init = (
+            load_dataset("NMME_hindcast_Nino34_sst")
+            .isel(model=0)
+            .sel(S=slice("1985", "2005"))
+        )
         obs = load_dataset("NMME_OIv2_Nino34_sst")
         self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
 
@@ -302,5 +305,5 @@ class NMME(Compute):
         self.get_data()
         self.alignment = "same_inits"
         self.resample_dim = "init"
-        self.reference = None  # ['uninitialized','climatology','persistence']
-        self.iterations = 16
+        self.reference = REFERENCES
+        self.iterations = ITERATIONS

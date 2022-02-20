@@ -29,8 +29,6 @@ class Compute:
 
     def setup(self, *args, **kwargs):
         raise NotImplementedError()
-        self.alignment = None
-        self.reference = None  # ['uninitialized','climatology','persistence']
 
     def get_kwargs(self, metric=None, bootstrap=False):
         """Adjust kwargs for verify/bootstrap matching with metric."""
@@ -51,9 +49,7 @@ class Compute:
         )
         if bootstrap:
             metric_kwargs["iterations"] = self.iterations
-            metric_kwargs["resample_dim"] = (
-                self.resample_dim if self.resample_dim else None
-            )
+            metric_kwargs["resample_dim"] = self.resample_dim
         if self.PredictionEnsemble.kind == "hindcast":
             metric_kwargs["alignment"] = self.alignment
         return metric_kwargs
@@ -195,6 +191,7 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.alignment = None
         self.reference = None
+        self.resample_dim = None
 
 
 class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
@@ -232,6 +229,7 @@ class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.alignment = None
         self.reference = None
+        self.resample_dim = None
 
 
 class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):

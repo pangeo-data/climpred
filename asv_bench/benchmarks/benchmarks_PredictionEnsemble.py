@@ -51,7 +51,9 @@ class Compute:
         )
         if bootstrap:
             metric_kwargs["iterations"] = self.iterations
-            metric_kwargs["resample_dim"] = self.resample_dim
+            metric_kwargs["resample_dim"] = (
+                self.resample_dim if self.resample_dim else None
+            )
         if self.PredictionEnsemble.kind == "hindcast":
             metric_kwargs["alignment"] = self.alignment
         return metric_kwargs
@@ -59,12 +61,20 @@ class Compute:
     @parameterized(["metric"], (METRICS))
     def time_verify(self, metric):
         """Take time for `PredictionEnsemble.verify`."""
-        ensure_loaded(self.PredictionEnsemble.verify(**self.get_kwargs(metric=metric)))
+        ensure_loaded(
+            self.PredictionEnsemble.verify(
+                **self.get_kwargs(metric=metric, bootstrap=False)
+            )
+        )
 
     @parameterized(["metric"], (METRICS))
     def peakmem_verify(self, metric):
         """Take memory peak for `PredictionEnsemble.verify`."""
-        ensure_loaded(self.PredictionEnsemble.verify(**self.get_kwargs(metric=metric)))
+        ensure_loaded(
+            self.PredictionEnsemble.verify(
+                **self.get_kwargs(metric=metric, bootstrap=False)
+            )
+        )
 
     @parameterized(["metric"], (METRICS))
     def time_bootstrap(self, metric):

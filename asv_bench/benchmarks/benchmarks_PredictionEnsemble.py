@@ -194,7 +194,7 @@ class GeneratePerfectModelEnsemble(GenerateHindcastEnsemble):
         )
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.reference = None
-        self.resample_dim = "init"
+        self.resample_dim = "member"
 
 
 class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
@@ -208,7 +208,7 @@ class GenerateHindcastEnsembleSmall(GenerateHindcastEnsemble):
             .add_observations(self.observations)
         )
         self.alignment = "same_inits"
-        self.resample_dim = "init"
+        self.resample_dim = "member"
         self.reference = None
 
 
@@ -232,7 +232,7 @@ class GeneratePerfectModelEnsembleSmall(GeneratePerfectModelEnsemble):
         self.PredictionEnsemble = self.PredictionEnsemble.generate_uninitialized()
         self.alignment = None
         self.reference = None
-        self.resample_dim = "init"
+        self.resample_dim = "member"
 
 
 class GeneratePerfectModelEnsembleSmallReferences(GeneratePerfectModelEnsembleSmall):
@@ -284,7 +284,7 @@ class S2S(Compute):
     def setup(self, *args, **kwargs):
         self.get_data()
         self.alignment = "maximize"
-        self.resample_dim = "init"
+        self.resample_dim = "member"
         self.reference = None
         self.iterations = ITERATIONS
 
@@ -306,6 +306,6 @@ class NMME(Compute):
     def setup(self, *args, **kwargs):
         self.get_data()
         self.alignment = "maximize"
-        self.resample_dim = "init"
+        self.resample_dim = "member"
         self.reference = REFERENCES
         self.iterations = ITERATIONS

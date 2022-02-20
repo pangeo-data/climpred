@@ -279,7 +279,9 @@ class S2S(Compute):
         _skip_slow()
         init = load_dataset("ECMWF_S2S_Germany").t2m
         obs = load_dataset("Observations_Germany").t2m
-        self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
+        self.PredictionEnsemble = (
+            HindcastEnsemble(init).add_observations(obs).generate_uninitialized()
+        )
 
     def setup(self, *args, **kwargs):
         self.get_data()
@@ -299,7 +301,9 @@ class NMME(Compute):
             .sel(S=slice("1985", "2005"))
         )
         obs = load_dataset("NMME_OIv2_Nino34_sst")
-        self.PredictionEnsemble = HindcastEnsemble(init).add_observations(obs)
+        self.PredictionEnsemble = (
+            HindcastEnsemble(init).add_observations(obs).generate_uninitialized()
+        )
 
     def setup(self, *args, **kwargs):
         self.get_data()

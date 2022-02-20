@@ -318,5 +318,5 @@ class NMME(Compute):
         self.get_data()
         self.alignment = "maximize"
         self.resample_dim = "member"
-        self.reference = REFERENCES
+        self.reference = None
         self.iterations = ITERATIONS

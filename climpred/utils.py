@@ -656,23 +656,23 @@ def my_shift(init, lead):
         return init + pd.Timedelta(float(lead), lead_unit)
 
 
-def add_time_from_init_lead(ds):
+def add_time_from_init_lead(ds, lead_dim="lead", init_dim="init"):
     """Add valid_time = init + lead to ds coords."""
     if "valid_time" not in ds.coords and "time" not in ds.dims:
         times = xr.concat(
             [
                 xr.DataArray(
-                    my_shift(ds.init, lead),
-                    dims="init",
-                    coords={"init": ds.init},
+                    my_shift(ds[init_dim], lead),
+                    dims=init_dim,
+                    coords={init_dim: ds[init_dim]},
                 )
-                for lead in ds.lead
+                for lead in ds[lead_dim]
             ],
-            dim="lead",
+            dim=lead_dim,
             join="inner",
             compat="broadcast_equals",
         )
-        times["lead"] = ds.lead
+        times[lead_dim] = ds[lead_dim]
         ds = ds.copy()  # otherwise inplace coords setting
         if dask.is_dask_collection(times):
             times = times.compute()

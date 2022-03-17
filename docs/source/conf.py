@@ -71,7 +71,13 @@ autodoc_member_order = "groupwise"
 
 
 # MyST config
-myst_enable_extensions = ["amsmath", "colon_fence", "deflist", "html_image"]
+myst_enable_extensions = [
+    "amsmath",
+    "colon_fence",
+    "deflist",
+    "html_image",
+    "dollarmath",
+]
 myst_url_schemes = ["http", "https", "mailto"]
 
 # Cupybutton configuration

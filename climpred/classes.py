@@ -427,6 +427,31 @@ class PredictionEnsemble:
             return False
         return id
 
+    def _convert_calendar(self, calendar, **kwargs):
+        """Apply convert_calendar on dimensions time and init."""
+        self._datasets["initialized"] = self._datasets["initialized"].convert_calendar(
+            calendar, dim="init", **kwargs
+        )
+        self._datasets["initialized"]["valid_time"] = xr.concat(
+            [
+                self._datasets["initialized"]
+                .sel(lead=lead)
+                .swap_dims({"init": "valid_time"})
+                .convert_calendar(calendar, dim="valid_time", **kwargs)
+                .swap_dims({"valid_time": "init"})
+                .valid_time
+                for lead in self._datasets["initialized"].lead
+            ],
+            "lead",
+        )
+        for d in ["observations", "control", "uninitialized"]:
+            if d in self._datasets.keys():
+                if self._datasets[d]:
+                    self._datasets[d] = self._datasets[d].convert_calendar(
+                        calendar, dim="time", **kwargs
+                    )
+        return self
+
     def plot(
         self,
         variable: Optional[str] = None,

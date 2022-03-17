@@ -78,6 +78,13 @@ Bug Fixes
 - Fix ``PerfectModel_persistence_from_initialized_lead_0=True`` with multiple
   references. (:issue:`732`, :pr:`733`) `Aaron Spring`_.
 
+Documentation
+-------------
+- Add  `verify dim example <examples/decadal/verify_dim_implications.ipynb>`_ showing
+  how :py:meth:`.HindcastEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.verify`
+  are sensitive to ``dim`` and how ``dim`` answers different research questions.
+  (:pr:`740`) `Aaron Spring`_.
+
 
 climpred v2.2.0 (2021-12-20)
 ============================

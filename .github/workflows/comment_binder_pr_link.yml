@@ -5,16 +5,21 @@ on:
   pull_request:
     types: [opened]
 
-
 jobs:
   comment_PR_link_binder:
-    runs-on: ubuntu-latest
-    steps:
-      - name: Comment PR
-        uses: thollander/actions-comment-pull-request@main
+      if: github.event_name == 'pull_request'
+      runs-on: ubuntu-latest
+      steps:
+      - name: PR Comment
+        uses: actions/github-script@v2
         with:
-          message: >-
-            Checkout your PR on
+          github-token: ${{secrets.GITHUB_TOKEN}}
+          script: |
+            github.issues.createComment({
+              issue_number: ${{ github.event.number }},
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: 'Checkout your PR on
             [![Binder](https://mybinder.org/badge_logo.svg)](https://mybinder.org/v2/gh/pangeo-data/climpred/${{github.head_ref}}?urlpath=lab%2Ftree%2Fdocs%2Fsource%2Fquick-start.ipynb).
-            Open the console and `pip install -e .` before using the notebooks to use `climpred` from this PR.
-          GITHUB_TOKEN: ${{secrets.GITHUB_TOKEN}}
+            Open the console and `pip install -e .` before using the notebooks to use `climpred` from this PR.'
+            })

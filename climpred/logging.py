@@ -18,23 +18,26 @@ def log_hindcast_verify_inits_and_verifs(
     """At each lead, log the inits and verification dates being used in computations."""
     if reference is None:
         reference = "initialized"
-    logging.info(
-        f"{reference} | lead: {str(lead).zfill(2)} | "
-        # This is the init-sliced forecast, thus displaying actual
-        # initializations.
-        f"inits: {inits[lead].min().values}"
-        f"-{inits[lead].max().values} | "
-        # This is the verification window, thus displaying the
-        # verification dates.
-        f"verifs: {verif_dates[lead].min()}"
-        f"-{verif_dates[lead].max()}"
-    )
-    init_output = [
-        f"{i.year}-{str(i.month).zfill(2)}-{str(i.day).zfill(2)}"
-        for i in inits[lead].values
-    ]
-    verif_output = [
-        f"{i.year}-{str(i.month).zfill(2)}-{str(i.day).zfill(2)}"
-        for i in verif_dates[lead].values
-    ]
-    logging.debug(f"\ninits: {init_output}" f"\nverifs: {verif_output}")
+    try:
+        logging.info(
+            f"{reference} | lead: {str(lead).zfill(2)} | "
+            # This is the init-sliced forecast, thus displaying actual
+            # initializations.
+            f"inits: {inits[lead].min().values}"
+            f"-{inits[lead].max().values} | "
+            # This is the verification window, thus displaying the
+            # verification dates.
+            f"verifs: {verif_dates[lead].min()}"
+            f"-{verif_dates[lead].max()}"
+        )
+        init_output = [
+            f"{i.year}-{str(i.month).zfill(2)}-{str(i.day).zfill(2)}"
+            for i in inits[lead].values
+        ]
+        verif_output = [
+            f"{i.year}-{str(i.month).zfill(2)}-{str(i.day).zfill(2)}"
+            for i in verif_dates[lead].values
+        ]
+        logging.debug(f"\ninits: {init_output}" f"\nverifs: {verif_output}")
+    except Exception:
+        pass

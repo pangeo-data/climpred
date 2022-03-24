@@ -524,6 +524,7 @@ def test_generate_uninitialized(hindcast_hist_obs_1d):
     assert not hindcast_hist_obs_1d_new.get_initialized().equals(
         hindcast_hist_obs_1d.get_initialized()
     )
+    print(hindcast_hist_obs_1d_new.get_uninitialized().lead.attrs)
     # skill different
     kw = dict(
         metric="mse",

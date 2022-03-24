@@ -311,7 +311,6 @@ def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"
             "documentation": f"https://climpred.readthedocs.io/en/v{version}/api/climpred.classes.HindcastEnsemble.generate_uninitialized.html#climpred.classes.HindcastEnsemble.generate_uninitialized",  # noqa: E501
         }
     )
-    resampled_uninit.lead.attrs = init.lead.attrs
     return resampled_uninit
 
 

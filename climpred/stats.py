@@ -29,7 +29,8 @@ def rm_poly(
         name = ds.name
         v = list(coefficients.data_vars)[0]
         fits = xr.polyval(coord, coefficients[v]).rename(name)
-    ds_rm_poly = ds - fits
+    with xr.set_options(keep_attrs=True):
+        ds_rm_poly = ds - fits
     return ds_rm_poly
 
 

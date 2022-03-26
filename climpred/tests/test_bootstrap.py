@@ -518,8 +518,7 @@ def test_generate_uninitialized(hindcast_hist_obs_1d):
     from climpred.stats import rm_poly
 
     hindcast_hist_obs_1d_new = (
-        hindcast_hist_obs_1d.copy()
-        .map(rm_poly, dim="init_or_time", deg=2)
+        hindcast_hist_obs_1d.map(rm_poly, dim="init_or_time", deg=2)
         .generate_uninitialized()
     )
     # new created

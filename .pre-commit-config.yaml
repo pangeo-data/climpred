@@ -33,7 +33,7 @@ repos:
     -   id: blackdoc
 
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v0.941
+      rev: v0.942
       hooks:
       - id: mypy
         exclude: "asv_bench"

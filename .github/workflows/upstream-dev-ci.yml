@@ -10,6 +10,7 @@ concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+
 jobs:
   detect-ci-trigger:
     name: detect upstream-dev ci trigger
@@ -155,7 +156,7 @@ jobs:
             // If no issue is open, create a new issue,
             // else update the body of the existing issue.
             if (result.repository.issues.edges.length === 0) {
-                github.issues.create({
+                github.rest.issues.create({
                     owner: variables.owner,
                     repo: variables.name,
                     body: issue_body,
@@ -163,7 +164,7 @@ jobs:
                     labels: [variables.label]
                 })
             } else {
-                github.issues.update({
+                github.rest.issues.update({
                     owner: variables.owner,
                     repo: variables.name,
                     issue_number: result.repository.issues.edges[0].node.number,

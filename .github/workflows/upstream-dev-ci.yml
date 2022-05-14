@@ -3,7 +3,7 @@ on:
   push:
   pull_request:
   schedule:
-    - cron: "0 7 * * 6" # Sat 07:00 UTC
+    - cron: "0 10 * * 6" # Sat 07:00 UTC
   workflow_dispatch: # allows you to trigger the workflow run manually
 
 concurrency:

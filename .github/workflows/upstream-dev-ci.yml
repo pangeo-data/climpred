@@ -85,7 +85,6 @@ jobs:
         if: |
           failure()
           && steps.status.outcome == 'failure'
-          # && github.event_name == 'schedule'
           && github.repository == 'pangeo-data/climpred'
         uses: actions/upload-artifact@v3
         with:
@@ -93,13 +92,11 @@ jobs:
           path: output-${{ matrix.python-version }}-log
           retention-days: 5
 
-
   report:
     name: report
     needs: upstream-dev
     if: |
       always()
-      # && github.event_name == 'schedule'
       && github.repository == 'pangeo-data/climpred'
       && needs.upstream-dev.outputs.artifacts_availability == 'true'
     runs-on: ubuntu-latest

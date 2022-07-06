@@ -806,8 +806,8 @@ class PredictionEnsemble:
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7
-              * lon         (lon) float64 250.8 255.8 260.8 265.8
               * lat         (lat) float64 -9.75 -4.75
+              * lon         (lon) float64 250.8 255.8 260.8 265.8
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
 
 

@@ -3242,16 +3242,16 @@ def _discrimination(
         Data variables:
             SST                   (lead, event, forecast_probability) float64 0.07407...
         Attributes:
-           prediction_skill_software:     climpred https://climpred.readthedocs.io/
-           skill_calculated_by_function:  HindcastEnsemble.verify()
-           number_of_initializations:     64
-           number_of_members:             10
-           alignment:                     same_verifs
-           metric:                        discrimination
-           comparison:                    m2o
-           dim:                           ['member', 'init']
-           reference:                     []
-           logical:                       Callable
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        discrimination
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            logical:                       Callable
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 

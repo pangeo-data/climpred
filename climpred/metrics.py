@@ -3262,14 +3262,24 @@ def _discrimination(
         ...     alignment="same_verifs",
         ... )
         <xarray.Dataset>
-        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
+        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
           * event                 (event) bool True False
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 0.07407...
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        discrimination
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
@@ -3282,14 +3292,24 @@ def _discrimination(
         ...     alignment="same_verifs",
         ... )
         <xarray.Dataset>
-        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
+        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
           * event                 (event) bool True False
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 0.07407...
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        discrimination
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
 
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(

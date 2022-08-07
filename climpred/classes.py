@@ -116,7 +116,7 @@ def _display_metadata(self) -> str:
         >>> print(hindcast)
         <climpred.HindcastEnsemble>
         Initialized:
-            SST      (init, lead, member) float64 -0.2404 -0.2085 ... 0.7442 0.7384
+            SST      (init, lead, member) float64 ...
         Uninitialized:
             None
         Observations:
@@ -799,15 +799,15 @@ class PredictionEnsemble:
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7 8 9
-              * lon         (lon) float64 250.8 254.8 258.8 262.8
               * lat         (lat) float64 -9.75 -4.75
+              * lon         (lon) float64 250.8 254.8 258.8 262.8
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2026-01-01 00:00:00
             >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7
-              * lon         (lon) float64 250.8 255.8 260.8 265.8
               * lat         (lat) float64 -9.75 -4.75
+              * lon         (lon) float64 250.8 255.8 260.8 265.8
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
 
 

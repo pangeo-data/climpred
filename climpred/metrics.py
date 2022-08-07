@@ -3233,14 +3233,25 @@ def _discrimination(
         ...     logical=pos,
         ... )
         <xarray.Dataset>
-        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
+        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
           * event                 (event) bool True False
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 0.07407...
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        discrimination
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
+            logical:                       Callable
 
         Option 2. Pre-process to generate a binary forecast and verification product:
 
@@ -3251,14 +3262,24 @@ def _discrimination(
         ...     alignment="same_verifs",
         ... )
         <xarray.Dataset>
-        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
+        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
           * event                 (event) bool True False
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 0.07407...
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        discrimination
+            comparison:                    m2o
+            dim:                           ['member', 'init']
+            reference:                     []
 
         Option 3. Pre-process to generate a probability forecast and binary
         verification product. because ``member`` not present in ``hindcast``, use
@@ -3271,14 +3292,23 @@ def _discrimination(
         ...     alignment="same_verifs",
         ... )
         <xarray.Dataset>
-        Dimensions:               (lead: 10, forecast_probability: 5, event: 2)
+        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
           * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
           * event                 (event) bool True False
+          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 0.07407...
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            alignment:                     same_verifs
+            metric:                        discrimination
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
 
     """
     forecast, verif, metric_kwargs, dim = _extract_and_apply_logical(
@@ -3496,10 +3526,10 @@ def _rank_histogram(
         ...     alignment="same_verifs",
         ... )
         <xarray.Dataset>
-        Dimensions:  (lead: 10, rank: 11)
+        Dimensions:  (rank: 11, lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
           * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
             SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
@@ -3794,11 +3824,11 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
                 [ 75, 194,   1],
                 [  0,   0,   0]]])
         Coordinates:
-          * lead                          (lead) int32 1 2
             observations_category_bounds  (observations_category) <U11 '[-0.5, 0.0)' ...
             forecasts_category_bounds     (forecasts_category) <U11 '[-0.5, 0.0)' ......
           * observations_category         (observations_category) int64 1 2 3
           * forecasts_category            (forecasts_category) int64 1 2 3
+          * lead                          (lead) int32 1 2
             skill                         <U11 'initialized'
         Attributes:
             units:    None

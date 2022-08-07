@@ -3304,7 +3304,6 @@ def _discrimination(
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
             number_of_initializations:     64
-            number_of_members:             10
             alignment:                     same_verifs
             metric:                        discrimination
             comparison:                    e2o

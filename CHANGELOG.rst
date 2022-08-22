@@ -14,7 +14,6 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
-
 climpred unreleased
 ===================
 

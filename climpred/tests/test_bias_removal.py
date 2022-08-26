@@ -547,6 +547,8 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
 
 def test_remove_bias_errors(hindcast_NMME_Nino34):
     """Test remove_bias doesnt drop single-item lead dimension."""
-    detrended = hindcast_NMME_Nino34.isel(lead=[0]).remove_bias(how="additive_mean", alignment="same_verifs")
+    detrended = hindcast_NMME_Nino34.isel(lead=[0]).remove_bias(
+        how="additive_mean", alignment="same_verifs"
+    )
     assert "lead" in detrended.get_initialized().dims
     detrended.verify()

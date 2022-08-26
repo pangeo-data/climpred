@@ -551,4 +551,7 @@ def test_remove_bias_dont_drop(hindcast_NMME_Nino34):
         how="additive_mean", alignment="same_verifs"
     )
     assert "lead" in detrended.get_initialized().dims
-    detrended.verify()
+    detrended.verify(metric="rmse",
+            comparison="e2o",
+            dim="init",
+            alignment="same_inits")

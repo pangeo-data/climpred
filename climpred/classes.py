@@ -2818,7 +2818,9 @@ class HindcastEnsemble(PredictionEnsemble):
         for c in ["lead", "init"]:
             if c not in self.get_initialized().dims and c in old_coords:
                 if old_coords[c].size == 1:
-                    self._datasets["initialized"] = self._datasets[
-                    "initialized"
-                ].assign_coords(c=old_coords_c).expand_dims(c)
+                    self._datasets["initialized"] = (
+                        self._datasets["initialized"]
+                        .assign_coords(c=old_coords_c)
+                        .expand_dims(c)
+                    )
         return self

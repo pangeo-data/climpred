@@ -543,3 +543,10 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
             NotImplementedError, match="Please choose `train_test_split` from"
         ):
             he.remove_bias(how="new", alignment="same_verif", train_test_split="tts")
+
+
+def test_remove_bias_errors(hindcast_NMME_Nino34):
+    """Test remove_bias doesnt drop single-item lead dimension."""
+    detrended = hindcast_NMME_Nino34.isel(lead=[0]).remove_bias(how="additive_mean", alignment="same_verifs")
+    assert "lead" in detrended.get_initialized().dims
+    detrended.verify()

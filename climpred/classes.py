@@ -2789,6 +2789,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
             metric_kwargs["cv"] = cv
 
+        old_coords = self.get_initialized().coords
         self = func(
             self,
             alignment=alignment,
@@ -2815,11 +2816,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
         # avoid single-item lead dimension being dropped, see #771
         for c in ["lead", "init"]:
-            if (
-                c in self.get_initialized().coords
-                and c not in self.get_initialized().dims
-            ):
-                self._datasets["initialized"] = self._datasets[
+            if c not in self.get_initialized().dims and c in old_coords:
+                if old_coords[c].size == 1:
+                    self._datasets["initialized"] = self._datasets[
                     "initialized"
-                ].expand_dims(c)
+                ].assign_coords(c=old_coords_c).expand_dims(c)
         return self

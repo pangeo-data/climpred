@@ -2821,6 +2821,5 @@ class HindcastEnsemble(PredictionEnsemble):
                     self._datasets["initialized"] = (
                         self._datasets["initialized"]
                         .assign_coords(c=old_coords[c])
-                        .expand_dims(c)
                     )
         return self

@@ -2813,4 +2813,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 self._datasets["initialized"] = self._datasets["initialized"].dropna(
                     "init"
                 )
+        # avoid single-item lead dimension being dropped, see #771
+        for c in ["lead", "init"]:
+            if c in self.get_initialized().coords and c not in self.get_initialized().dims:
+                self._datasets["initialized"] = self._datasets["initialized"].expand_dims(c)
         return self

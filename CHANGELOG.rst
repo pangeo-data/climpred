@@ -78,6 +78,8 @@ Internals/Minor Fixes
   (:pr:`731`) `Aaron Spring`_.
 - ``alignment="same_verifs"`` will not result in ``NaN``s in ``valid_time``.
   (:pr:`777`) `Aaron Spring`_.
+- :py:meth:`.HindcastEnsemble.plot_alignment` ``(return_xr=True)`` contains ``valid_time``
+  coordinate. (:pr:`779`) `Aaron Spring`_.
 
 Bug Fixes
 ---------

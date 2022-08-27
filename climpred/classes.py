@@ -2170,7 +2170,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 number_of_initializations:     64
                 number_of_members:             10
                 alignment:                     same_verifs
-                metric:                        rmse
+                metric:                        crps
                 comparison:                    m2o
                 dim:                           ['init', 'member']
                 reference:                     []
@@ -2221,7 +2221,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.1012 0.1017
+                SST      (skill, lead) float64 0.05208 0.05009 0.05489 ... 0.09261 0.1083 0.1176
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()

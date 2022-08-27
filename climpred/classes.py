@@ -2091,7 +2091,7 @@ class HindcastEnsemble(PredictionEnsemble):
             plot_kwargs["col"] = "alignment"
 
         if return_xr:
-            return add_time_from_init_lead(dsverif_dates_xr)
+            return add_time_from_init_lead(verif_dates_xr)
         try:
             import nc_time_axis  # noqa:
 

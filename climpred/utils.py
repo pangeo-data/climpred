@@ -233,6 +233,72 @@ def convert_cftime_to_datetime_coords(ds, dim):
     )
 
 
+def convert_init_lead_to_valid_time_lead(
+    skill: Union[xr.Dataset, xr.DataArray]
+) -> Union[xr.Dataset, xr.DataArray]:
+    """Convert ``data(init,lead)`` to ``data(valid_time,lead)`` visualizing predict barrier.
+
+    Args:
+        skill with dimensions init and lead and coordinate valid_time(init, lead).
+
+    Returns:
+        skill with dimensions valid_time and lead
+
+    Examples:
+        Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
+
+        >>> skill_init_lead = HindcastEnsemble.sel(
+        ...     lead=[1, 2, 3], init=slice("1990", "2000")
+        ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
+        >>> skill_init_lead.SST
+        <xarray.DataArray 'SST' (lead: 3, init: 11)>
+        array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
+                0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
+                0.13758603],
+               [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
+                0.20424354, 0.18043845, 0.06553673, 0.00906034, 0.13045045,
+                       nan],
+               [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
+                0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
+                       nan]])
+        Coordinates:
+          * init        (init) object 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
+          * lead        (lead) int32 1 2 3
+            valid_time  (lead, init) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
+            skill       <U11 'initialized'
+        Attributes:
+            units:    C
+        >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead).SST
+        <xarray.DataArray 'SST' (lead: 3, valid_time: 13)>
+        array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
+                0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
+                0.13758603,        nan,        nan],
+               [       nan,        nan, 0.07732193, 0.06369554, 0.08282175,
+                0.0761979 , 0.20424354, 0.18043845, 0.06553673, 0.00906034,
+                0.13045045,        nan,        nan],
+               [       nan,        nan, 0.06212777, 0.11822992, 0.15282457,
+                0.05752934, 0.20133476, 0.19931679, 0.00987793, 0.06375334,
+                0.07705835,        nan,        nan]])
+        Coordinates:
+          * valid_time  (valid_time) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
+            init        (lead, valid_time) object 1990-01-01 00:00:00 ... 2000-01-01 ...
+          * lead        (lead) int32 1 2 3
+            skill       <U11 'initialized'
+        Attributes:
+            units:    C
+
+    See also:
+        https://github.com/pydata/xarray/discussions/6943
+    """
+    # ensure valid_time 2d
+    assert "valid_time" in skill.coords
+    assert len(skill.coords["valid_time"].dims) == 2
+    return xr.concat(
+        [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
+        "lead",
+    )
+
+
 def find_start_dates_for_given_init(control, single_init):
     """
     Find same start dates for cftime single_init in different years in control.

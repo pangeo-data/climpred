@@ -247,9 +247,9 @@ def convert_init_lead_to_valid_time_lead(
     Examples:
         Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
 
-        >>> skill_init_lead = HindcastEnsemble.sel(lead=[1, 2, 3], init=slice("1990", "2000")).verify(
-        ...     metric="rmse", comparison="e2o", dim=[], alignment="same_verifs"
-        ... )
+        >>> skill_init_lead = HindcastEnsemble.sel(
+        ...     lead=[1, 2, 3], init=slice("1990", "2000")
+        ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
         >>> skill_init_lead.SST
         <xarray.DataArray>
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)

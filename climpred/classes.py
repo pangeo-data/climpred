@@ -2230,7 +2230,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 metric:                        rmse
                 comparison:                    e2o
                 dim:                           []
-                
+
         """
         if groupby is not None:
             return self._groupby(

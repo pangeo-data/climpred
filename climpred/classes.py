@@ -2048,9 +2048,10 @@ class HindcastEnsemble(PredictionEnsemble):
                     [ 1096.,  1461.,  1827., ...,    nan,    nan,    nan],
                     [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]])
             Coordinates:
-              * init       (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
-              * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * alignment  (alignment) <U10 'same_init' 'same_verif' 'maximize'
+              * init        (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+              * alignment   (alignment) <U10 'same_init' 'same_verif' 'maximize'
+                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
             Attributes:
                 units:    days since 1960-01-01
 
@@ -2163,7 +2164,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
                 skill    <U11 'initialized'
             Data variables:
-                SST      (lead) float64 0.08516 0.09492 0.1041 ... 0.1525 0.1697 0.1785
+                SST      (lead) float64 0.05208 0.05009 0.05489 ... 0.09261 0.1083 0.1176
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()

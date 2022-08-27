@@ -553,5 +553,5 @@ def test_remove_bias_dont_drop(hindcast_NMME_Nino34):
     assert "lead" in detrended.get_initialized().dims
     print(detrended.get_initialized())
     detrended.verify(
-        metric="rmse", comparison="e2o", dim="init", alignment="same_inits"
+        metric="rmse", comparison="e2o", dim="init", alignment="same_verifs“
     )

@@ -236,7 +236,7 @@ def convert_cftime_to_datetime_coords(ds, dim):
 def convert_init_lead_to_valid_time_lead(
     skill: Union[xr.Dataset, xr.DataArray]
 ) -> Union[xr.Dataset, xr.DataArray]:
-    """Convert data(init, lead) to data(valid_time, lead) to visualize predictability barrier.
+    """Convert ``data(init,lead)`` to ``data(valid_time,lead)`` visualizing predict. barrier.
 
     Args:
         skill with dimensions init and lead and coordinate valid_time(init, lead).
@@ -248,6 +248,7 @@ def convert_init_lead_to_valid_time_lead(
         Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
 
         >>> skill_init_lead = HindcastEnsemble.verify(
+        ...    metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
         >>> skill_init_lead
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)
 

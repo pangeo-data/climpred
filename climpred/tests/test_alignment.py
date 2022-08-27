@@ -199,9 +199,9 @@ def test_my_isin(hindcast_recon_1d_ym):
 def test_same_verifs_valid_time_no_nan(hindcast_hist_obs_1d):
     """Test that no NaNs are in valid_time coordinate for same_verifs."""
     skill = hindcast_hist_obs_1d.verify(
-            metric="rmse",
-            comparison="e2o",
-            dim=[], # important
-            alignment="same_verifs",
-        )
+        metric="rmse",
+        comparison="e2o",
+        dim=[],  # important
+        alignment="same_verifs",
+    )
     assert not skill.coords["valid_time"].isnull().any()

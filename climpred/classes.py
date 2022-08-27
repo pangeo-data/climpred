@@ -2207,8 +2207,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 dim:                           init
                 reference:                     ['persistence', 'climatology', 'uninitiali...
 
-            The verification does not need to reduce a dimension. To obtain the skill for each
-            initialization, set ``dim=[]``.
+            The verification does not need to reduce a dimension. To obtain the skill for
+            each initialization, set ``dim=[]``.
 
             >>> HindcastEnsemble.verify(
             ...     metric="rmse",
@@ -2222,7 +2222,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.05208 0.05009 0.05489 ... 0.09261 0.1083 0.1176
+                SST      (skill, lead) float64 0.05208 0.05009 0.05489 ... 0.1083 0.1176
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()

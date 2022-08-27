@@ -269,20 +269,20 @@ def convert_init_lead_to_valid_time_lead(
         Attributes:
             units:    C
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead).SST
-        <xarray.DataArray 'SST' (lead: 3, valid_time: 11)>
+        <xarray.DataArray 'SST' (lead: 3, valid_time: 13)>
         array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
                 0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
-                0.13758603],
-               [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
-                0.20424354, 0.18043845, 0.06553673, 0.00906034, 0.13045045,
-                       nan],
-               [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
-                0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
-                       nan]])
+                0.13758603,        nan,        nan],
+               [       nan,        nan, 0.07732193, 0.06369554, 0.08282175,
+                0.0761979 , 0.20424354, 0.18043845, 0.06553673, 0.00906034,
+                0.13045045,        nan,        nan],
+               [       nan,        nan, 0.06212777, 0.11822992, 0.15282457,
+                0.05752934, 0.20133476, 0.19931679, 0.00987793, 0.06375334,
+                0.07705835,        nan,        nan]])
         Coordinates:
           * valid_time  (valid_time) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
+            init        (lead, valid_time) object 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
           * lead        (lead) int32 1 2 3
-            init        (lead, valid_time) 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
             skill       <U11 'initialized'
         Attributes:
             units:    C

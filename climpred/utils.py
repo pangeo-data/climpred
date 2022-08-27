@@ -291,8 +291,9 @@ def convert_init_lead_to_valid_time_lead(
     See also:
         https://github.com/pydata/xarray/discussions/6943
     """
+    # ensure valid_time 2d
     assert "valid_time" in skill.coords
-    assert skill.coords["valid_time"].size == 2
+    assert len(skill.coords["valid_time"].dims) == 2
     return xr.concat(
         [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
         "lead",

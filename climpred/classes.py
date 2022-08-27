@@ -2358,8 +2358,10 @@ class HindcastEnsemble(PredictionEnsemble):
         if self._temporally_smoothed:
             res = _reset_temporal_axis(res, self._temporally_smoothed, dim="lead")
             res["lead"].attrs = self.get_initialized().lead.attrs
-        
-        if "valid_time" in res.coords: # NaNs in valid_time only happen for same_verifs and dim=[]
+
+        if (
+            "valid_time" in res.coords
+        ):  # NaNs in valid_time only happen for same_verifs and dim=[]
             if res.coords["valid_time"].isnull().any():
                 res.coords["valid_time"] = self.get_initialized().coords["valid_time"]
 

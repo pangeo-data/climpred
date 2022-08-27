@@ -76,6 +76,8 @@ Internals/Minor Fixes
   ``uninitialized`` skill with the iteration mean ``uninitialized``.
   Defaults to False., see :py:class:`~climpred.options.set_options`.
   (:pr:`731`) `Aaron Spring`_.
+- ``alignment="same_verifs"`` will not result in ``NaN``s in ``valid_time``.
+  (:pr:`777`) `Aaron Spring`_.
 
 Bug Fixes
 ---------

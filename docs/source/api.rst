@@ -321,6 +321,14 @@ Visualization
     plot_ensemble_perfect_model
     plot_lead_timeseries_hindcast
 
+Utils
+~~~~~
+.. currentmodule:: climpred.utils
+
+.. autosummary::
+    :toctree: api/
+    
+    convert_init_lead_to_valid_time_lead
 
 Metrics
 -------

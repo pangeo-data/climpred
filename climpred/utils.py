@@ -233,28 +233,33 @@ def convert_cftime_to_datetime_coords(ds, dim):
     )
 
 
-def convert_init_lead_to_valid_time_lead(skill: Union[xr.Dataset, xr.DataArray]) -> Union[xr.Dataset, xr.DataArray]:
+def convert_init_lead_to_valid_time_lead(
+    skill: Union[xr.Dataset, xr.DataArray]
+) -> Union[xr.Dataset, xr.DataArray]:
     """Convert data(init, lead) to data(valid_time, lead) to visualize predictability barrier.
-    
+
     Args:
         skill with dimensions init and lead and coordinate valid_time(init, lead).
-        
+
     Returns:
         skill with dimensions valid_time and lead
-    
+
     Examples:
         Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
-        
-        >>> skill_init_lead = HindcastEnsemble.verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
+
+        >>> skill_init_lead = HindcastEnsemble.verify(
         >>> skill_init_lead
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)
-        
+
     See also:
         https://github.com/pydata/xarray/discussions/6943
     """
     assert "valid_time" in skill.coords
     assert skill.coords["valid_time"].size == 2
-    return xr.concat([skill.sel(lead=lead).swap_dims({"init":"valid_time"}) for lead in skill.lead],"lead")
+    return xr.concat(
+        [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
+        "lead",
+    )
 
 
 def find_start_dates_for_given_init(control, single_init):

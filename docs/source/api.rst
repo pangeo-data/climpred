@@ -327,7 +327,7 @@ Utils
 
 .. autosummary::
     :toctree: api/
-    
+
     convert_init_lead_to_valid_time_lead
 
 Metrics

@@ -544,9 +544,11 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
         ):
             he.remove_bias(how="new", alignment="same_verif", train_test_split="tts")
 
-            
+
 def test_remove_bias_keeps_valid_time(hindcast_NMME_Nino34):
     """Test remove_bias keeps valid_time."""
-    bias_removed = hindcast_NMME_Nino34.sel(lead=[1, 2]).remove_bias(how="additive_mean", alignment="same_verif")
+    bias_removed = hindcast_NMME_Nino34.sel(lead=[1, 2]).remove_bias(
+        how="additive_mean", alignment="same_verif"
+    )
     assert "valid_time" in bias_removed.coords
     assert len(bias_removed.coords["valid_time"].dims) == 2

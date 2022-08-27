@@ -2091,7 +2091,7 @@ class HindcastEnsemble(PredictionEnsemble):
             plot_kwargs["col"] = "alignment"
 
         if return_xr:
-            return verif_dates_xr
+            return add_time_from_init_lead(dsverif_dates_xr)
         try:
             import nc_time_axis  # noqa:
 
@@ -2152,7 +2152,7 @@ class HindcastEnsemble(PredictionEnsemble):
             for all leads reducing dimensions ``init`` and ``member``:
 
             >>> HindcastEnsemble.verify(
-            ...     metric="rmse",
+            ...     metric="crps",
             ...     comparison="m2o",
             ...     alignment="same_verifs",
             ...     dim=["init", "member"],
@@ -2205,6 +2205,32 @@ class HindcastEnsemble(PredictionEnsemble):
                 comparison:                    e2o
                 dim:                           init
                 reference:                     ['persistence', 'climatology', 'uninitiali...
+
+            The verification does not need to reduce a dimension. To obtain the skill for each
+            initialization, set ``dim=[]``.
+
+            >>> HindcastEnsemble.verify(
+            ...     metric="rmse",
+            ...     comparison="e2o",
+            ...     alignment="same_verifs",
+            ...     dim=[],
+            ... )
+            <xarray.Dataset>
+            Dimensions:  (skill: 4, lead: 10)
+            Coordinates:
+              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+            Data variables:
+                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.1012 0.1017
+            Attributes:
+                prediction_skill_software:     climpred https://climpred.readthedocs.io/
+                skill_calculated_by_function:  HindcastEnsemble.verify()
+                number_of_members:             10
+                alignment:                     same_verifs
+                metric:                        rmse
+                comparison:                    e2o
+                dim:                           []
+                
         """
         if groupby is not None:
             return self._groupby(

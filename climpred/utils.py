@@ -281,7 +281,7 @@ def convert_init_lead_to_valid_time_lead(
                 0.07705835,        nan,        nan]])
         Coordinates:
           * valid_time  (valid_time) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
-            init        (lead, valid_time) object 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
+            init        (lead, valid_time) object 1990-01-01 00:00:00 ... 2000-01-01 ...
           * lead        (lead) int32 1 2 3
             skill       <U11 'initialized'
         Attributes:

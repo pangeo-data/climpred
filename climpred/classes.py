@@ -2217,12 +2217,14 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     dim=[],
             ... )
             <xarray.Dataset>
-            Dimensions:  (skill: 4, lead: 10)
+            Dimensions:     (init: 61, lead: 10)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * init        (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
+                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
+                skill       <U11 'initialized'
             Data variables:
-                SST      (skill, lead) float64 0.05208 0.05009 0.05489 ... 0.1083 0.1176
+                SST         (lead, init) float64 nan nan nan nan nan ... nan nan nan nan nan
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2231,6 +2233,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 metric:                        rmse
                 comparison:                    e2o
                 dim:                           []
+                reference:                     []
 
         """
         if groupby is not None:

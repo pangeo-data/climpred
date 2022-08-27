@@ -51,6 +51,10 @@ New Features
   ``HindcastEnsemble.bootstrap(alignment='same_verifs', resample_dim='init')``.
   Does not work for ``pearson_r``-derived metrics.
   (:issue:`582`, :pr:`731`) `Aaron Spring`_.
+- :py:func:`climpred.utils.convert_init_lead_to_valid_time_lead` converts ``data(init, lead)``
+  to ``data(valid_time, lead)`` to visualize predictability barrier.
+  (:issue:`774`, :pr:`775`) `Aaron Spring`_.
+
 
 Internals/Minor Fixes
 ---------------------

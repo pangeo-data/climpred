@@ -249,6 +249,7 @@ def convert_init_lead_to_valid_time_lead(
 
         >>> skill_init_lead = HindcastEnsemble.verify(
         ...     metric="rmse", comparison="e2o", dim=[], alignment="same_verifs"
+        ... )
         >>> skill_init_lead
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)
 

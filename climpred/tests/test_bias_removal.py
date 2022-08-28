@@ -552,6 +552,7 @@ def test_remove_bias_dont_drop(hindcast_NMME_Nino34):
         how="additive_mean", alignment=alignment
     )
     assert "lead" in detrended.get_initialized().dims
+    assert len(detrended.get_initialized().coords["valid_time"].dims) == 2
     detrended.verify(
         metric="rmse",
         comparison="e2o",

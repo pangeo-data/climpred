@@ -2821,4 +2821,15 @@ class HindcastEnsemble(PredictionEnsemble):
                     self._datasets["initialized"] = self._datasets[
                         "initialized"
                     ].assign_coords({c: old_coords[c]})
+        if "valid_time" in self.get_initialized().coords:
+            if len(self.get_initialized().coords["valid_time"].dims) == 1 and set(
+                ["init", "lead"]
+            ).issubset(set(self.get_initialized().dims)):
+                self._datasets["initialized"].coords[
+                    "valid_time"
+                ] = add_time_from_init_lead(
+                    self.get_initialized().drop("valid_time")
+                ).coords[
+                    "valid_time"
+                ]
         return self

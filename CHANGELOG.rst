@@ -24,6 +24,9 @@ Bug Fixes
 - :py:meth:`.HindcastEnsemble.verify`
   ``(comparison="m2o", reference="uninitialized", dim="init")``.
   (:issue:`735`, :pr:`731`) `Aaron Spring`_.
+- :py:meth:`.HindcastEnsemble.remove_bias`
+  does not drop single item ``lead`` dimension.
+  (:issue:`771`, :pr:`773`) `Aaron Spring`_.
 
 New Features
 ------------

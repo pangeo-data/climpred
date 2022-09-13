@@ -54,7 +54,7 @@ New Features
   Does not work for ``pearson_r``-derived metrics.
   (:issue:`582`, :pr:`731`) `Aaron Spring`_.
 - :py:func:`climpred.utils.convert_init_lead_to_valid_time_lead` converts ``data(init, lead)``
-  to ``data(valid_time, lead)`` to visualize predictability barrier and the reverse 
+  to ``data(valid_time, lead)`` to visualize predictability barrier and the reverse
   :py:func:`climpred.utils.convert_valid_time_lead_to_init_lead`.
   (:issue:`774`, :pr:`775`, :pr:`783`) `Aaron Spring`_.
 

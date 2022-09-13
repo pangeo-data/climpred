@@ -341,7 +341,7 @@ def convert_valid_time_lead_to_init_lead(
     assert "init" in skill.coords
     assert len(skill.coords["init"].dims) == 2
     return xr.concat(
-        [skill.sel(lead=lead).swap_dims({"valid_time":"init"}) for lead in skill.lead],
+        [skill.sel(lead=lead).swap_dims({"valid_time": "init"}) for lead in skill.lead],
         "lead",
     )
 

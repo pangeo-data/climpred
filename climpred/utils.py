@@ -331,7 +331,9 @@ def convert_valid_time_lead_to_init_lead(
             skill       <U11 'initialized'
         Attributes:
             units:    C
-        >>> assert climpred.utils.convert_valid_time_lead_to_init_lead(climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)).equals(skill_init_lead)
+        >>> assert climpred.utils.convert_valid_time_lead_to_init_lead(
+        ...     climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)
+        ... ).equals(skill_init_lead)
         True
     See also:
         https://github.com/pydata/xarray/discussions/6943

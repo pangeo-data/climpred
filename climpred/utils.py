@@ -784,7 +784,6 @@ def _add_coord2d_from_coords1d(
 ):
     """Add valid_time = init + lead to ds coords."""
     if "time" not in ds.dims:
-        print(init_dim, ds.coords)
         new_time = xr.concat(
             [
                 xr.DataArray(

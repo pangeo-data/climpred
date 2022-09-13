@@ -269,34 +269,82 @@ def convert_init_lead_to_valid_time_lead(
         Attributes:
             units:    C
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead).SST
-        <xarray.DataArray 'SST' (lead: 3, valid_time: 13)>
-        array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
-                0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
-                0.13758603,        nan,        nan],
-               [       nan,        nan, 0.07732193, 0.06369554, 0.08282175,
-                0.0761979 , 0.20424354, 0.18043845, 0.06553673, 0.00906034,
-                0.13045045,        nan,        nan],
-               [       nan,        nan, 0.06212777, 0.11822992, 0.15282457,
-                0.05752934, 0.20133476, 0.19931679, 0.00987793, 0.06375334,
-                0.07705835,        nan,        nan]])
+        <xarray.DataArray 'SST' (lead: 3, valid_time: 9)>
+        array([[0.07668081, 0.06826989, 0.08174487, 0.06208846, 0.1537402 ,
+                0.15632479, 0.01302786, 0.06343324, 0.13758603],
+               [0.07732193, 0.06369554, 0.08282175, 0.0761979 , 0.20424354,
+                0.18043845, 0.06553673, 0.00906034, 0.13045045],
+               [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
+                0.19931679, 0.00987793, 0.06375334, 0.07705835]])
         Coordinates:
-          * valid_time  (valid_time) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
-            init        (lead, valid_time) object 1990-01-01 00:00:00 ... 2000-01-01 ...
+          * valid_time  (valid_time) object 1993-01-01 00:00:00 ... 2001-01-01 00:00:00
           * lead        (lead) int32 1 2 3
             skill       <U11 'initialized'
+            init        (lead, valid_time) object 1992-01-01 00:00:00 ... 1998-01-01 ...
         Attributes:
             units:    C
 
     See also:
         https://github.com/pydata/xarray/discussions/6943
+        :py:func:`climpred.utils.convert_valid_time_lead_to_init_lead`
     """
     # ensure valid_time 2d
     assert "valid_time" in skill.coords
     assert len(skill.coords["valid_time"].dims) == 2
-    return xr.concat(
+    swapped = xr.concat(
         [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
         "lead",
     )
+    return add_init_from_time_lead(swapped.drop("init")).dropna("valid_time", how="all")
+
+
+def convert_valid_time_lead_to_init_lead(
+    skill: Union[xr.Dataset, xr.DataArray]
+) -> Union[xr.Dataset, xr.DataArray]:
+    """Convert ``data(valid_time,lead)`` to ``data(init,lead)``.
+    Args:
+        skill with dimensions valid_time and lead and coordinate init(valid_time, lead).
+    Returns:
+        skill with dimensions init and lead
+    Examples:
+        Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
+        >>> skill_init_lead = HindcastEnsemble.sel(
+        ...     lead=[1, 2, 3], init=slice("1990", "2000")
+        ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
+        >>> skill_init_lead.SST
+        <xarray.DataArray 'SST' (lead: 3, init: 11)>
+        array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
+                0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
+                0.13758603],
+               [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
+                0.20424354, 0.18043845, 0.06553673, 0.00906034, 0.13045045,
+                       nan],
+               [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
+                0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
+                       nan]])
+        Coordinates:
+          * init        (init) object 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
+          * lead        (lead) int32 1 2 3
+            valid_time  (lead, init) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
+            skill       <U11 'initialized'
+        Attributes:
+            units:    C
+        >>> assert climpred.utils.convert_valid_time_lead_to_init_lead(
+        ...     climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead)
+        ... ).equals(skill_init_lead)
+
+    See also:
+        https://github.com/pydata/xarray/discussions/6943
+        :py:func:`climpred.utils.convert_init_lead_to_valid_time_lead`
+    """
+    # ensure init 2d
+    assert "init" in skill.coords
+    assert len(skill.coords["init"].dims) == 2
+    swapped = xr.concat(
+        [skill.sel(lead=lead).swap_dims({"valid_time": "init"}) for lead in skill.lead],
+        "lead",
+    )
+    return add_time_from_init_lead(swapped.drop("valid_time")).dropna("init", how="all")
 
 
 def find_start_dates_for_given_init(control, single_init):
@@ -656,79 +704,87 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
         return metric_kwargs
 
 
-def my_shift(init, lead):
-    """Shift CFTimeIndex init by amount lead in units lead_unit."""
-    if isinstance(init, xr.DataArray):
-        init = init.to_index()
-    init_calendar = init.calendar
-    if isinstance(lead, xr.DataArray):
-        lead_unit = lead.attrs["units"]
-        lead = lead.values
+def my_shift(dim, other_dim="lead", operator="add"):
+    """operator(dim,other_dim) adds/subtracts lead to/from time (init/valid_time)."""
+    assert operator in ["add", "subtract"]
 
-    if lead_unit in ["years", "seasons", "months"] and "360" not in init_calendar:
-        if int(lead) != float(lead):
+    if isinstance(dim, xr.DataArray):
+        dim = dim.to_index()
+    dim_calendar = dim.calendar
+    if isinstance(other_dim, xr.DataArray):
+        other_dim_unit = other_dim.attrs["units"]
+        other_dim = other_dim.values
+
+    if other_dim_unit in ["years", "seasons", "months"] and "360" not in dim_calendar:
+        if int(other_dim) != float(other_dim):
             raise CoordinateError(
-                f'Require integer leads if lead.attrs["units"]="{lead_unit}" in '
-                f'["years", "seasons", "months"] and calendar="{init_calendar}" '
+                f'Require integer leads if lead.attrs["units"]="{other_dim_unit}" in '
+                f'["years", "seasons", "months"] and calendar="{dim_calendar}" '
                 'not "360_day".'
             )
-        lead = int(lead)
+        other_dim = int(other_dim)
 
-    if "360" in init_calendar:  # use pd.Timedelta
-        if lead_unit == "years":
-            lead = lead * 360
-            lead_unit = "D"
-        elif lead_unit == "seasons":
-            lead = lead * 90
-            lead_unit = "D"
-        elif lead_unit == "months":
-            lead_unit = "D"
-            lead = lead * 30
+    if "360" in dim_calendar:  # use pd.Timedelta
+        if other_dim_unit == "years":
+            other_dim = other_dim * 360
+            other_dim_unit = "D"
+        elif other_dim_unit == "seasons":
+            other_dim = other_dim * 90
+            other_dim_unit = "D"
+        elif other_dim_unit == "months":
+            other_dim_unit = "D"
+            other_dim = other_dim * 30
 
-    if lead_unit in ["years", "seasons", "months"]:
+    if other_dim_unit in ["years", "seasons", "months"]:
         # use init_freq reconstructed from anchor and lead unit
         from xarray.coding.frequencies import month_anchor_check
 
-        anchor_check = month_anchor_check(init)  # returns None, ce or cs
+        anchor_check = month_anchor_check(dim)  # returns None, ce or cs
         if anchor_check is not None:
-            lead_freq_string = lead_unit[0].upper()  # A for years, D for days
+            other_dim_freq_string = other_dim_unit[0].upper()  # A for years, D for days
             # go down to monthly freq
-            if lead_freq_string == "Y":
-                lead_freq_string = "12M"
-            elif lead_freq_string == "S":
-                lead_freq_string = "3M"
+            if other_dim_freq_string == "Y":
+                other_dim_freq_string = "12M"
+            elif other_dim_freq_string == "S":
+                other_dim_freq_string = "3M"
             anchor = anchor_check[-1].upper()  # S/E for start/end of month
             if anchor == "E":
                 anchor = ""
-            lead_freq = f"{lead_freq_string}{anchor}"
-            if lead_freq_string in ["A", "Q"]:  # add month info again
-                init_freq = xr.infer_freq(init)
-                if init_freq:
-                    if "-" in init_freq:
-                        lead_freq = lead_freq + "-" + init_freq.split("-")[-1]
+            other_dim_freq = f"{other_dim_freq_string}{anchor}"
+            if other_dim_freq_string in ["A", "Q"]:  # add month info again
+                dim_freq = xr.infer_freq(dim)
+                if dim_freq:
+                    if "-" in dim_freq:
+                        other_dim_freq = other_dim_freq + "-" + dim_freq.split("-")[-1]
         else:
             raise ValueError(
-                f"could not shift init={init} in calendar={init_calendar} by "
-                f" lead={lead} {lead_unit}"
+                f"could not shift dim={dim} in calendar={dim_calendar} by "
+                f" other_dim={other_dim} {other_dim_unit}"
             )
-        return init.shift(lead, lead_freq)
+        if operator == "subtract":
+            other_dim = other_dim * -1
+        return dim.shift(other_dim, other_dim_freq)
     else:  # lower freq
         # reducing pentads, weeks (W) to days
-        if lead_unit == "weeks":
-            lead_unit = "W"
-        elif lead_unit == "pentads":
-            lead = lead * 5
-            lead_unit = "D"
-        return init + pd.Timedelta(float(lead), lead_unit)
+        if other_dim_unit == "weeks":
+            other_dim_unit = "W"
+        elif other_dim_unit == "pentads":
+            other_dim = other_dim * 5
+            other_dim_unit = "D"
+        if operator == "subtract":
+            other_dim = other_dim * -1
+        return dim + pd.Timedelta(float(other_dim), other_dim_unit)
 
 
-def add_time_from_init_lead(ds, lead_dim="lead", init_dim="init"):
+def _add_coord2d_from_coords1d(
+    ds, lead_dim="lead", init_dim="init", time_dim="valid_time", operator="add"
+):
     """Add valid_time = init + lead to ds coords."""
-    if "valid_time" not in ds.coords and "time" not in ds.dims:
-        times = xr.concat(
+    if "time" not in ds.dims:
+        new_time = xr.concat(
             [
                 xr.DataArray(
-                    my_shift(ds[init_dim], lead),
+                    my_shift(ds[init_dim], lead, operator=operator),
                     dims=init_dim,
                     coords={init_dim: ds[init_dim]},
                 )
@@ -738,17 +794,46 @@ def add_time_from_init_lead(ds, lead_dim="lead", init_dim="init"):
             join="inner",
             compat="broadcast_equals",
         )
-        times[lead_dim] = ds[lead_dim]
+        new_time[lead_dim] = ds[lead_dim]
         ds = ds.copy()  # otherwise inplace coords setting
-        if dask.is_dask_collection(times):
-            times = times.compute()
-        ds.coords["valid_time"] = times
-        ds.coords["valid_time"].attrs.update(
-            {
-                "long_name": "validity time",
-                "standard_name": "time",
-                "description": "time for which the forecast is valid",
-                "calculate": "init + lead",
-            }
-        )
+        if dask.is_dask_collection(new_time):
+            new_time = new_time.compute()
+        ds = ds.assign_coords({time_dim: new_time})
+    return ds
+
+
+def add_time_from_init_lead(
+    ds, lead_dim="lead", init_dim="init", time_dim="valid_time", operator="add"
+):
+    """Add init(valid_time, lead) from valid_time and lead."""
+    ds = _add_coord2d_from_coords1d(
+        ds, operator="add", init_dim="init", lead_dim="lead", time_dim="valid_time"
+    )
+    ds.coords["valid_time"].attrs.update(
+        {
+            "long_name": "validity time",
+            "standard_name": "time",
+            "description": "time for which the forecast is valid",
+            "calculate": "init + lead",
+        }
+    )
+    return ds
+
+
+def add_init_from_time_lead(ds):
+    """Add init(valid_time, lead) from valid_time and lead."""
+    ds = _add_coord2d_from_coords1d(
+        ds, operator="subtract", init_dim="valid_time", lead_dim="lead", time_dim="init"
+    )
+    ds.coords["init"].attrs.update(
+        {
+            "long_name": "forecast_reference_time",
+            "standard_name": "initialization",
+            "description": "The forecast reference time in NWP is the 'data time', "
+            "the time of the analysis from which the forecast was made. It is not the "
+            "time for which the forecast is valid; the standard name of time should be "
+            "used for that time.",
+            "calculate": "valid_time - lead",
+        }
+    )
     return ds

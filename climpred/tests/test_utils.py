@@ -10,7 +10,9 @@ from xarray.testing import assert_allclose
 from climpred.comparisons import PM_COMPARISONS, __m2c
 from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
 from climpred.utils import (
+    convert_init_lead_to_valid_time_lead,
     convert_time_index,
+    convert_valid_time_lead_to_init_lead,
     find_start_dates_for_given_init,
     get_comparison_class,
     get_metric_class,
@@ -283,3 +285,22 @@ def test_add_time_from_init_lead(hindcast_recon_1d_mm):
         str(hindcast_recon_1d_mm.coords["valid_time"].isel(lead=0).to_index()[0])
         != "1965-01-01 00:00:00"
     ), print(hindcast_recon_1d_mm.coords)
+
+
+def test_init_lead_to_valid_time_lead_roundtrip(hindcast_recon_1d_mm):
+    """Test convert_init_lead_to_valid_time_lead and convert_valid_time_lead_to_init_lead."""
+    result = hindcast_recon_1d_mm.verify(
+        metric="rmse", comparison="e2o", dim=[], alignment="same_inits"
+    )
+    assert result.valid_time.notnull().all()
+    assert result.init.notnull().all()
+
+    result_swapped = convert_init_lead_to_valid_time_lead(result)
+    assert result.valid_time.notnull().all()
+    assert result.init.notnull().all()
+
+    result_swapped_again = convert_valid_time_lead_to_init_lead(result_swapped)
+    assert result_swapped_again.valid_time.notnull().all()
+    assert result_swapped_again.init.notnull().all()
+
+    assert result_swapped_again.equals(result)

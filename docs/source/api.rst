@@ -329,6 +329,7 @@ Utils
     :toctree: api/
 
     convert_init_lead_to_valid_time_lead
+    convert_valid_time_lead_to_init_lead
 
 Metrics
 -------

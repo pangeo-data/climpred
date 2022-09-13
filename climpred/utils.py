@@ -305,7 +305,7 @@ def convert_valid_time_lead_to_init_lead(
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Convert ``data(valid_time,lead)`` to ``data(init,lead)``.
     Args:
-        skill with dimensions valid_time and lead and coordinate valid_time(valid_time, lead).
+        skill with dimensions valid_time and lead and coordinate init(valid_time, lead).
     Returns:
         skill with dimensions init and lead
     Examples:

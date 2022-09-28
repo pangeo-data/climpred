@@ -123,6 +123,8 @@ jobs:
           shopt -s globstar
           wget https://raw.githubusercontent.com/pydata/xarray/master/.github/workflows/parse_logs.py
           pip install pytest
+          ls logs/**/*-log*
+          ls
           python parse_logs.py logs/**/*-log*
       - name: Report failures
         uses: actions/github-script@v6

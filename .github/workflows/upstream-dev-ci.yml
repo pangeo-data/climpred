@@ -1,4 +1,5 @@
 name: CI Upstream
+
 on:
   push:
   pull_request:

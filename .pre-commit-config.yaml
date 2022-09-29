@@ -28,7 +28,7 @@ repos:
       -   id: isort
 
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.3.6
+    rev: v0.3.7
     hooks:
     -   id: blackdoc
 

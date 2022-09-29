@@ -1,4 +1,5 @@
 name: CI Upstream
+
 on:
   push:
   pull_request:
@@ -9,7 +10,6 @@ on:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 
 jobs:
   detect-ci-trigger:
@@ -51,17 +51,16 @@ jobs:
       - uses: actions/checkout@v3
         with:
           fetch-depth: 0 # Fetch all history for all branches and tags.
-      - uses: conda-incubator/setup-miniconda@v2
+      - name: Set up conda environment
+        uses: mamba-org/provision-with-micromamba@34071ca7df4983ccd272ed0d3625818b27b70dcc
         with:
-          channels: conda-forge
-          channel-priority: strict
-          mamba-version: "*"
-          activate-environment: climpred-dev
-          auto-update-conda: false
-          python-version: ${{ matrix.python-version }}
+          environment-file: ci/requirements/climpred-dev.yml
+          environment-name: climpred-dev
+          extra-specs: |
+            python=${{ matrix.python-version }}
+            pytest-reportlog
       - name: Set up conda environment
         run: |
-          mamba env update -f ci/requirements/climpred-dev.yml
           bash ci/install-upstream-wheels.sh
       - name: Install climpred
         run: |
@@ -77,20 +76,21 @@ jobs:
         if: success()
         id: status
         run: |
-          set -euo pipefail
-          python -m pytest --timeout=60 -rf | tee output-${{ matrix.python-version }}-log || (
+          python -m pytest --timeout=60 -rf \
+            --report-log output-${{ matrix.python-version }}-log.jsonl \
+            || (
               echo '::set-output name=ARTIFACTS_AVAILABLE::true' && false
           )
       - name: Upload artifacts
         if: |
           failure()
-          && steps.status.outcome == 'failure'
           && github.event_name == 'schedule'
+          && steps.status.outcome == 'failure'
           && github.repository == 'pangeo-data/climpred'
         uses: actions/upload-artifact@v3
         with:
-          name: output-${{ matrix.python-version }}-log
-          path: output-${{ matrix.python-version }}-log
+          name: output-${{ matrix.python-version }}-log.jsonl
+          path: output-${{ matrix.python-version }}-log.jsonl
           retention-days: 5
 
   report:
@@ -120,9 +120,12 @@ jobs:
       - name: Parse logs
         run: |
           shopt -s globstar
-          wget https://raw.githubusercontent.com/pydata/xarray/master/.github/workflows/parse_logs.py
-          pip install pytest
-          python parse_logs.py logs/**/*-log
+          wget https://raw.githubusercontent.com/pydata/xarray/main/.github/workflows/parse_logs.py
+          python -m pip install pytest
+          ls logs/**/*-log*
+          ls
+          python parse_logs.py logs/**/*-log*
+          cat pytest-logs.txt
       - name: Report failures
         uses: actions/github-script@v6
         with:

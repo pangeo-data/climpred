@@ -84,6 +84,7 @@ jobs:
       - name: Upload artifacts
         if: |
           failure()
+          && github.event_name == 'schedule'
           && steps.status.outcome == 'failure'
           && github.repository == 'pangeo-data/climpred'
         uses: actions/upload-artifact@v3
@@ -97,6 +98,7 @@ jobs:
     needs: upstream-dev
     if: |
       always()
+      && github.event_name == 'schedule'
       && github.repository == 'pangeo-data/climpred'
       && needs.upstream-dev.outputs.artifacts_availability == 'true'
     runs-on: ubuntu-latest

@@ -18,8 +18,8 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
     Checks plots from PerfectModelEnsemble.bootstrap().
     """
     res = perfectModelEnsemble_initialized_control.bootstrap(
-        metric="pearson_r",
-        iterations=ITERATIONS * 10,
+        metric="rmse",
+        iterations=ITERATIONS,
         reference=["uninitialized", "persistence"],
         comparison="m2e",
         dim=["init", "member"],

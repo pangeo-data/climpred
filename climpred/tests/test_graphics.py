@@ -20,7 +20,7 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
     res = perfectModelEnsemble_initialized_control.bootstrap(
         metric="rmse",
         iterations=ITERATIONS,
-        reference=["uninitialized", "persistence"],
+        reference=["persistence"],
         comparison="m2e",
         dim=["init", "member"],
     )

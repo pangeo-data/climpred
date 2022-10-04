@@ -125,6 +125,9 @@ def plot_bootstrapped_skill_over_leadyear(
             bootstrapped = bootstrapped[var]
             bootstrapped.attrs = attrs
 
+    if "skill" not in bootstrapped.dims:
+        bootstrapped = bootstrapped.expand_dims("skill")
+
     assert isinstance(bootstrapped, xr.DataArray)
     reference = list(bootstrapped.drop_sel(skill="initialized").coords["skill"].values)
 

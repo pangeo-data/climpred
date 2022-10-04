@@ -83,6 +83,7 @@ Internals/Minor Fixes
   (:pr:`777`) `Aaron Spring`_.
 - :py:meth:`.HindcastEnsemble.plot_alignment` ``(return_xr=True)`` contains ``valid_time``
   coordinate. (:pr:`779`) `Aaron Spring`_.
+- Fix ``matplotlib<3.6``. (:issue:`787`, :pr:`789`) `Aaron Spring`_.
 
 Bug Fixes
 ---------

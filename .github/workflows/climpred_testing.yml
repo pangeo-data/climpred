@@ -118,7 +118,7 @@ jobs:
           mamba env update -f ci/requirements/maximum-tests.yml
       - name: Install climpred
         run: |
-          python -m pip install -e .
+          python -m pip install -e .[complete]
       - name: Conda info
         run: conda info
       - name: Conda list

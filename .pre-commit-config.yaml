@@ -36,6 +36,7 @@ repos:
       rev: v0.990
       hooks:
       - id: mypy
+        args: [--no-strict-optional]
         exclude: "asv_bench"
         additional_dependencies: [
             # Type stubs

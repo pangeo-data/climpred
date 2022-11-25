@@ -117,6 +117,7 @@ climpred: verification of weather and climate forecasts
     more than we could have ever expected.
     Feel free to implement your own new feature or take a look at the
     `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_.
+    If you are interested in maintaining climpred, please ping us.
 
 
 

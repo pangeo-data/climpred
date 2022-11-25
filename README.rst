@@ -109,12 +109,10 @@ Verification of weather and climate forecasts.
 ..
 
 
-.. note::
-
     We are actively looking for new contributors for climpred!
-    [Riley](https://www.linkedin.com/in/rileybrady/) moved to McKinsey's
+    `Riley <https://www.linkedin.com/in/rileybrady/>`_ moved to McKinsey's
     Climate Analytics team as a climate software engineer.
-    [Aaron](https://www.linkedin.com/in/springaaron/) moved to XING as a data scientist.
+    `Aaron <https://www.linkedin.com/in/springaaron/>`_ moved to XING as a data scientist.
     We especially hope for python enthusiasts from seasonal, subseasonal or weather
     prediction community. In our past coding journey, collaborative coding, feedbacking
     issues and pull requests advanced our code and thinking about forecast verification

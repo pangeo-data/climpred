@@ -14,8 +14,13 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
-climpred unreleased
-===================
+climpred v2.3.0 (2021-11-25)
+============================
+
+.. note::
+    As both maintainers moved out of academia into industry,
+    this will be probably the last release for a while.
+    If you are interested in maintaining climpred, please ping us.
 
 Bug Fixes
 ---------

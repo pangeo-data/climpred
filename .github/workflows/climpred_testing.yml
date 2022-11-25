@@ -54,7 +54,7 @@ jobs:
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
-        run: pytest --durations=20
+        run: pytest -n 4 --durations=20
 
   maximum-test:  # Runs testing suite with all optional dependencies
     name: Test optional dependencies, python ${{ matrix.python-version }}

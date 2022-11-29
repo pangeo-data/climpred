@@ -1,5 +1,5 @@
 ci:
-    autoupdate_schedule: ['quarterly']
+    autoupdate_schedule: quarterly
 
 repos:
 

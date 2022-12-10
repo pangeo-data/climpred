@@ -26,6 +26,7 @@ Contributors
 * Kathy Pegion (`github <https://github.com/kpegion/>`__)
 * Anderson Banihirwe (`github <https://github.com/andersy005/>`__)
 * Ray Bell (`github <https://github.com/raybellwaves/>`__)
+* Trevor Gamblin (`github <https://github.com/threexc/>`__)
 
 For a list of all the contributions, see the github
 `contribution graph <https://github.com/pangeo-data/climpred/graphs/contributors>`_.

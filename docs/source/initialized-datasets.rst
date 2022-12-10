@@ -52,7 +52,7 @@ examples:
      - `IRIDL <examples/subseasonal/daily-S2S-IRIDL.html>`_, `EWC Cloud/climetlab <examples/subseasonal/daily-S2S-ECMWF.html>`_
    * - GEFS
      - weather
-     - `Global Ensemble Forecast System (GEFS) <https://www.ncdc.noaa.gov/data-access/model-data/model-datasets/global-ensemble-forecast-system-gefs>`_
+     - `Global Ensemble Forecast System (GEFS) <https://www.ncei.noaa.gov/products/weather-climate-models/global-ensemble-forecast>`_
      - `NOAA THREDDS <https://www.ncei.noaa.gov/thredds/catalog/model-gefs-003/catalog.html>`_
      - :cite:t:`Toth1993`
      - `GEFS NWP <examples/NWP/NWP_GEFS_6h_forecasts.html>`_

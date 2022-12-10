@@ -14,6 +14,10 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
+Internals/Minor Fixes
+---------------------
+- Fix broken GEFS link (:pr:`807`) `Trevor Gamblin`_
+
 climpred v2.3.0 (2022-11-25)
 ============================
 

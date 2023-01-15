@@ -19,6 +19,7 @@ Numerical Weather Prediction
   :maxdepth: 1
 
   examples/NWP/NWP_GEFS_6h_forecasts.ipynb
+  examples/NWP/Herbie.ipynb
 
 
 Subseasonal

@@ -2,7 +2,9 @@ name: CI  # based on https://github.com/pydata/xarray/blob/master/.github/workfl
 
 on:
   pull_request:
-  workflow_dispatch: # allows you to trigger manually
+  schedule:
+    - cron: "0 23 * * 0" # Sun 23:00 UTC
+  workflow_dispatch: # allows you to trigger the workflow run manually
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}

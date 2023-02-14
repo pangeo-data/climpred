@@ -43,9 +43,9 @@ jobs:
         with:
           auto-update-conda: false
           channels: conda-forge
-          mamba-version: '*'
+          miniforge-variant: Mambaforge
           activate-environment: climpred-minimum-tests
-          python-version: 3.8
+          python-version: 3.9
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/minimum-tests.yml
@@ -69,7 +69,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.8", "3.9", "3.10"]
+        python-version: [ "3.9", "3.10"]
     steps:
       - uses: actions/checkout@v3
         with:
@@ -79,7 +79,7 @@ jobs:
         with:
           auto-update-conda: false
           channels: conda-forge
-          mamba-version: '*'
+          miniforge-variant: Mambaforge
           activate-environment: climpred-maximum-tests
           python-version: ${{ matrix.python-version }}
       - name: Set up conda environment
@@ -111,10 +111,10 @@ jobs:
       - uses: conda-incubator/setup-miniconda@v2
         with:
           channels: conda-forge
-          mamba-version: "*"
+          miniforge-variant: Mambaforge
           activate-environment: climpred-maximum-tests
           auto-update-conda: false
-          python-version: 3.8
+          python-version: 3.9
       - name: Install conda dependencies
         run: |
           mamba env update -f ci/requirements/maximum-tests.yml
@@ -141,9 +141,9 @@ jobs:
         with:
           auto-update-conda: false
           channels: conda-forge
-          mamba-version: '*'
+          miniforge-variant: Mambaforge
           activate-environment: climpred-docs
-          python-version: 3.8
+          python-version: 3.9
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/docs.yml

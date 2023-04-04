@@ -45,7 +45,7 @@ jobs:
           channels: conda-forge
           miniforge-variant: Mambaforge
           activate-environment: climpred-minimum-tests
-          python-version: 3.9
+          python-version: 3.8
       - name: Set up conda environment
         run: |
           mamba env update -f ci/requirements/minimum-tests.yml

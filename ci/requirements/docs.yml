@@ -26,11 +26,11 @@ dependencies:
   - xesmf
   - esmtools
   - nc-time-axis>=1.4.0
+  - nb_black
   - pip
   - pip:
     # Install latest version of climpred
     - -e ../..
-    - nb_black
     - sphinx_book_theme
     - sphinxcontrib-bibtex
     - sphinxext-opengraph

@@ -1,4 +1,4 @@
-xarray<2022.10
+xarray<2023.01
 dask>=2021.10.0
 cftime>=1.5.0
 xskillscore>=0.0.20

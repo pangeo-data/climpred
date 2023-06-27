@@ -16,6 +16,7 @@ from xskillscore import (
     effective_sample_size,
     mae,
     mape,
+    me,
     median_absolute_error,
     mse,
     pearson_r,
@@ -1024,6 +1025,76 @@ __mse = Metric(
     long_name="Mean Squared Error",
     minimum=0.0,
     maximum=np.inf,
+    perfect=0.0,
+)
+
+def _me(
+    forecast: xr.Dataset,
+    verif: xr.Dataset,
+    dim: dimType = None,
+    **metric_kwargs: metric_kwargsType,
+) -> xr.Dataset:
+    r"""Mean Error (ME).
+
+    .. math::
+        ME = f - o
+
+    Args:
+        forecast: Forecast.
+        verif: Verification data.
+        dim: Dimension(s) to perform metric over.
+        metric_kwargs: see :py:func:`.xskillscore.me`
+
+    Notes:
+        +-----------------+-----------+
+        | **minimum**     | 0.0       |
+        +-----------------+-----------+
+        | **maximum**     | -/+∞      |
+        +-----------------+-----------+
+        | **perfect**     | 0.0       |
+        +-----------------+-----------+
+        | **orientation** | negative  |
+        +-----------------+-----------+
+
+    See also:
+        * :py:func:`.xskillscore.me`
+
+    References:
+        :cite:t:`Jolliffe2011`
+
+    Example:
+        >>> HindcastEnsemble.verify(
+        ...     metric="me", comparison="e2o", alignment="same_verifs", dim="init"
+        ... )
+        <xarray.Dataset>
+        Dimensions:  (lead: 10)
+        Coordinates:
+          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 'initialized'
+        Data variables:
+            SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
+        Attributes:
+            prediction_skill_software:     climpred https://climpred.readthedocs.io/
+            skill_calculated_by_function:  HindcastEnsemble.verify()
+            number_of_initializations:     64
+            number_of_members:             10
+            alignment:                     same_verifs
+            metric:                        me
+            comparison:                    e2o
+            dim:                           init
+            reference:                     []
+    """
+    return me(forecast, verif, dim=dim, **metric_kwargs)
+
+ __me = Metric(
+    name="me",
+    function=_me,
+    positive=False,
+    probabilistic=False,
+    unit_power=1,
+    long_name="Mean Error",
+    minimum=0.0,
+    maximum=np.inf, # also -np.inf
     perfect=0.0,
 )
 

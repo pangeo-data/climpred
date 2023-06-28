@@ -1086,7 +1086,7 @@ def _me(
     """
     return me(forecast, verif, dim=dim, **metric_kwargs)
 
- __me = Metric(
+__me = Metric(
     name="me",
     function=_me,
     positive=False,

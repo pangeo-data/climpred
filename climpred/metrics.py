@@ -4174,6 +4174,7 @@ __ALL_METRICS__ = [
     __spearman_r_eff_p_value,
     __mse,
     __mae,
+    __me,
     __rmse,
     __median_absolute_error,
     __mape,

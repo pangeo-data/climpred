@@ -1028,6 +1028,7 @@ __mse = Metric(
     perfect=0.0,
 )
 
+
 def _me(
     forecast: xr.Dataset,
     verif: xr.Dataset,
@@ -1086,6 +1087,7 @@ def _me(
     """
     return me(forecast, verif, dim=dim, **metric_kwargs)
 
+
 __me = Metric(
     name="me",
     function=_me,
@@ -1094,7 +1096,7 @@ __me = Metric(
     unit_power=1,
     long_name="Mean Error",
     minimum=0.0,
-    maximum=np.inf, # also -np.inf
+    maximum=np.inf,  # also -np.inf
     perfect=0.0,
 )
 

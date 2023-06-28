@@ -1073,7 +1073,7 @@ def _me(
           * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
             skill    <U11 'initialized'
         Data variables:
-            SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
+            SST      (lead) float64 -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()

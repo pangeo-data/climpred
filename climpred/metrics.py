@@ -1087,15 +1087,15 @@ def _me(
     return me(forecast, verif, dim=dim, **metric_kwargs)
 
  __me = Metric(
-     name="me",
-     function=_me,
-     positive=False,
-     probabilistic=False,
-     unit_power=1,
-     long_name="Mean Error",
-     minimum=0.0,
-     maximum=np.inf, # also -np.inf
-     perfect=0.0,
+    name="me",
+    function=_me,
+    positive=False,
+    probabilistic=False,
+    unit_power=1,
+    long_name="Mean Error",
+    minimum=0.0,
+    maximum=np.inf, # also -np.inf
+    perfect=0.0,
 )
 
 

@@ -96,13 +96,9 @@ jobs:
         run: conda info
       - name: Conda list
         run: conda list
-      - name: activate
-        run: |
-           micromamba activate climpred-maximum-tests
       - name: install
         run: |
            python -m pip install --no-deps -e .[complete]
-           python -m pip install netcdf4 pytest
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests

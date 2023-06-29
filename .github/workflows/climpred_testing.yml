@@ -54,7 +54,9 @@ jobs:
       - name: Conda list
         run: conda list
       - name: Cache datasets  # pytest-xdist fails otherwise
-        run: python -c "import climpred; climpred.tutorial._cache_all()"
+        run: |
+          python -c "import climpred; climpred.tutorial._cache_all()"
+          python -c 'import climpred; climpred.show_versions()'
       - name: Run tests
         run: pytest -n 4 --durations=20
 

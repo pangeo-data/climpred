@@ -100,7 +100,7 @@ jobs:
         run: |
            micromamba activate climpred-maximum-tests
       - name: install
-        run: python -m pip install --no-deps -e . 
+        run: python -m pip install --no-deps -e .
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests

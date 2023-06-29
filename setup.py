@@ -20,7 +20,7 @@ CLASSIFIERS = [
     "Natural Language :: English",
     "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
@@ -28,7 +28,7 @@ CLASSIFIERS = [
 
 extras_require = {
     "accel": ["numba>=0.52", "bottleneck"],
-    "bias-correction": ["xclim<=0.43", "bias-correction>=0.4"],
+    "bias-correction": ["xclim<=0.42", "bias-correction>=0.4"],
     "viz": ["matplotlib", "nc-time-axis>=1.4.0"],
     "io": ["netcdf4"],
     "regridding": [
@@ -66,7 +66,7 @@ setup(
     maintainer_email="aaron.spring@mpimet.mpg.de",
     description="Verification of weather and climate forecasts." + " prediction.",
     install_requires=install_requires,
-    python_requires=">=3.7",
+    python_requires=">=3.8",
     license="MIT",
     long_description=long_description,
     classifiers=CLASSIFIERS,

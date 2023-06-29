@@ -175,6 +175,17 @@ Mean Absolute Error (MAE)
 .. autofunction:: _mae
 
 
+Mean Error (ME)
+---------------
+
+.. ipython:: python
+
+    # Enter any of the below keywords in ``metric=...`` for the compute functions.
+    print(f"Keywords: {metric_aliases['me']}")
+
+.. autofunction:: _me
+
+
 Median Absolute Error
 ---------------------
 

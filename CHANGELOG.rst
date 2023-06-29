@@ -17,6 +17,9 @@ What's New
 Internals/Minor Fixes
 ---------------------
 - Fix broken GEFS link (:pr:`807`) `Trevor Gamblin`_
+- New metric :py:class:`~climpred.metrics._me` Mean Error as ``metric='me'``:
+  (:issue:`826`, :pr:`827`) `Aaron Spring`_
+
 
 climpred v2.3.0 (2022-11-25)
 ============================

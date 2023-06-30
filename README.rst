@@ -22,7 +22,7 @@ Verification of weather and climate forecasts.
     * - tutorials
       - |gallery| |workshop| |cloud|
 
-.. |docs| image:: https://img.shields.io/readthedocs/climpred/stable.svg?style=flat
+.. |docs| image:: https://img.shields.io/readthedocs/climpred/latest.svg?style=flat
     :target: https://climpred.readthedocs.io/en/stable/?badge=stable
     :alt: Documentation Status
 

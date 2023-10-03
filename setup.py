@@ -58,7 +58,6 @@ extras_require["docs"] = extras_require["complete"] + [
     "sphinx-copybutton",
     "sphinxcontrib-bibtex",
     "sphinx_book_theme",
-    "nb_black",
 ]
 
 setup(

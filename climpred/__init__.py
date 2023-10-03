@@ -1,5 +1,5 @@
 # flake8: noqa
-from pkg_resources import DistributionNotFound, get_distribution
+from importlib_metadata import distribution
 
 from . import (
     bias_removal,
@@ -22,8 +22,4 @@ from .options import set_options
 from .preprocessing import mpi, shared
 from .versioning.print_versions import show_versions
 
-try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:  # pragma: no cover
-    # package is not installed
-    pass  # pragma: no cover
+__version__ = distribution(__name__).version

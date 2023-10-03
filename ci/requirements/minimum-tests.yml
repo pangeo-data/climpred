@@ -13,7 +13,7 @@ dependencies:
   - pytest-cov
   - pytest-xdist
   - scipy
-  - xarray<=2022.10.0
+  - xarray
   - xskillscore>=0.0.18
   - tqdm
   - pip:

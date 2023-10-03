@@ -180,7 +180,6 @@ def convert_time_index(
     time_index = xobj[time_string].to_index()
 
     if not isinstance(time_index, xr.CFTimeIndex):
-
         if isinstance(time_index, pd.DatetimeIndex):
             # Extract year, month, day strings from datetime.
             time_strings = [str(t) for t in time_index]

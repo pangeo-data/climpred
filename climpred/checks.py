@@ -66,7 +66,6 @@ def has_valid_lead_units(xobj):
     # Use `hasattr` here, as it doesn't throw an error if `xobj` doesn't have a
     # coordinate for lead.
     if hasattr(xobj["lead"], "units"):
-
         units = xobj["lead"].attrs["units"]
 
         # Check if letter s is appended to lead units string and add it if needed

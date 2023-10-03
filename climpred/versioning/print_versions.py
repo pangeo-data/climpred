@@ -90,7 +90,7 @@ def show_versions(as_json=False):
     ]
 
     deps_blob = list()
-    for (modname, ver_f) in deps:
+    for modname, ver_f in deps:
         try:
             if modname in sys.modules:
                 mod = sys.modules[modname]
@@ -117,7 +117,6 @@ def show_versions(as_json=False):
                 json.dump(j, f, indent=2)
 
     else:
-
         print("\nINSTALLED VERSIONS")
         print("------------------")
 

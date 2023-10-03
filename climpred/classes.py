@@ -1122,7 +1122,6 @@ class PredictionEnsemble:
                 )
 
             elif resample_dim == "member" or self.kind == "perfect":
-
                 resampled_skills = resample_skill_resample_before(
                     self, iterations, resample_dim, verify_kwargs
                 )

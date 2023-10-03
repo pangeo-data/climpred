@@ -3825,7 +3825,6 @@ def _rps(
     if "lead" not in forecast.dims and "lead" in forecast.coords and "lead":
         if isinstance(category_edges, tuple):
             if "lead" in category_edges[1].dims:
-
                 forecast_edges = (
                     category_edges[1].sel(lead=forecast.lead).rename({"init": "time"})
                 )

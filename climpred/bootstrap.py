@@ -688,6 +688,11 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
             "xrft is not installed; see "
             "https://xrft.readthedocs.io/en/latest/installation.html"
         )
+
+
+
+
+
     return _bootstrap_func(
         varweighted_mean_period,
         control,

@@ -44,21 +44,20 @@ extras_require["complete"].remove(
 )  # circumventing esmpy/xesmf installation issues; use conda
 # after complete is set, add in test
 extras_require["test"] = [
+    "netcdf4",
+    "pre-commit",
     "pytest",
     "pytest-cov",
-    "pytest-lazyfixures",
+    "pytest-lazy-fixture",
     "pytest-xdist",
-    "pre-commit",
-    "netcdf4",
 ]
 extras_require["docs"] = extras_require["complete"] + [
     "myst_nb",
     "sphinx",
-    "sphinxcontrib-napoleon",
-    "sphinx_rtd_theme",
     "sphinx-copybutton",
-    "sphinxcontrib-bibtex",
     "sphinx_book_theme",
+    "sphinxcontrib-bibtex",
+    "sphinxcontrib-napoleon",
 ]
 
 setup(

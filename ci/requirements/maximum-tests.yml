@@ -14,6 +14,7 @@ dependencies:
   - nc-time-axis >=1.4.0
   - netcdf4
   - pip
+  - pooch
   - pytest
   - pytest-cov
   - pytest-lazy-fixture

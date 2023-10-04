@@ -9,6 +9,7 @@ dependencies:
   - dask-core
   - netcdf4
   - pip
+  - pooch
   - pytest
   - pytest-cov
   - pytest-lazy-fixture

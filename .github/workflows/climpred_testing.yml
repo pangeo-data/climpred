@@ -173,4 +173,3 @@ jobs:
           nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/monseas/*.ipynb examples/subseasonal/*ly-subx-example.html
           make -j4 html
           popd
-

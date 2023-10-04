@@ -27,7 +27,7 @@ jobs:
           keyword: "[skip-ci]"
 
   minimum-test:  # Runs testing suite with minimal dependencies
-    name: Test minimum dependencies, python 3.9
+    name: Test minimum dependencies, Python3.9
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
@@ -62,7 +62,7 @@ jobs:
           pytest -n 4 --durations=20
 
   maximum-test:  # Runs testing suite with all optional dependencies
-    name: Test optional dependencies, python ${{ matrix.python-version }}
+    name: Test optional dependencies, Python${{ matrix.python-version }}
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
@@ -115,7 +115,7 @@ jobs:
           fail_ci_if_error: false
 
   doctest:  # tests all docstrings
-    name: Doctests
+    name: Doctests, Python3.9
     runs-on: "ubuntu-latest"
     defaults:
       run:
@@ -125,7 +125,7 @@ jobs:
       - name: Setup conda (micromamba)
         uses: mamba-org/setup-micromamba@v1
         with:
-          environment-file: ci/requirements/minimum-tests.yml
+          environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
           cache-environment: true
           create-args: >-
@@ -144,6 +144,7 @@ jobs:
           python -m pytest --doctest-modules climpred --ignore climpred/tests
 
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
+    name: Notebooks, Python3.9
     runs-on: ubuntu-latest
     defaults:
         run:
@@ -172,3 +173,4 @@ jobs:
           nbstripout source/*.ipynb source/examples/decadal/*.ipynb source/examples/monseas/*.ipynb examples/subseasonal/*ly-subx-example.html
           make -j4 html
           popd
+

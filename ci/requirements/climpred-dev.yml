@@ -15,8 +15,8 @@ dependencies:
   - sphinxext-opengraph
   # IDE
   - jupyterlab
-  - tqdm
   - nb_conda_kernels # switch conda envs in jupyter
+  - tqdm
   # Input/Output
   - netcdf4
   # Miscellaneous
@@ -31,8 +31,8 @@ dependencies:
   - black==19.10b0
   - coveralls
   - flake8
-  - mypy
   - isort
+  - mypy
   - pre-commit
   - pylint
   - pytest
@@ -42,18 +42,18 @@ dependencies:
   - pytest-xdist
   # Performance
   - bottleneck
-  - numba
   - dask-core
+  - numba
   # Regridding
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - xesmf
   # Statistics
+  - bias_correction
   - eofs
   - esmtools >=1.1.3
-  - xskillscore >=0.0.20
-  - xrft
   - xclim >=0.30.0
-  - bias_correction
+  - xrft
+  - xskillscore >=0.0.20
   # Visualization
   - matplotlib-base
   - nc-time-axis>=1.4.0

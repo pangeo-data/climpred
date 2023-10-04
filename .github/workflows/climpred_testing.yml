@@ -18,7 +18,7 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
       - uses: xarray-contrib/ci-trigger@v1.2
@@ -35,20 +35,21 @@ jobs:
         run:
           shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
-      - name: Set up conda
-        uses: conda-incubator/setup-miniconda@v2
+      - name: Set up conda (micromamba)
+        uses: mamba-org/setup-micromamba@v1
         with:
-          auto-update-conda: false
-          channels: conda-forge
-          miniforge-variant: Mambaforge
-          activate-environment: climpred-minimum-tests
-          python-version: 3.9
-      - name: Set up conda environment
+          environment-file: ci/requirements/minimum-tests.yml
+          environment-name: climpred-minimum-tests
+          cache-environment: true
+          create-args: >-
+            python=3.9
+            conda
+      - name: Install climpred
         run: |
-          mamba env update -f ci/requirements/minimum-tests.yml
+          python -m pip install -e .
       - name: Conda info
         run: conda info
       - name: Conda list
@@ -57,7 +58,8 @@ jobs:
         run: |
           python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
-        run: pytest -n 4 --durations=20
+        run: |
+          pytest -n 4 --durations=20
 
   maximum-test:  # Runs testing suite with all optional dependencies
     name: Test optional dependencies, python ${{ matrix.python-version }}
@@ -70,7 +72,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # python-version: [ "3.9", "3.10"]
         env: [""]
         include:
           - env: "climpred-maximum-tests"
@@ -80,10 +81,10 @@ jobs:
             python-version: "3.10"
             os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
-      - name: Setup micromamba
+      - name: Setup conda (micromamba)
         uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: ci/requirements/maximum-tests.yml
@@ -93,18 +94,19 @@ jobs:
           create-args: >-
             python=${{matrix.python-version}}
             conda
+      - name: Install climpred[complete]
+        run: |
+          python -m pip install -e .[complete]
+          conda list xclim
       - name: Conda info
         run: conda info
       - name: Conda list
         run: conda list
-      - name: install
-        run: |
-           python -m pip install -e .[complete]
-           conda list xclim
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
-        run: pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
+        run: |
+          pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v3
         with:
@@ -120,19 +122,19 @@ jobs:
         shell: bash -l {0}
     steps:
       - uses: actions/checkout@v3
-      - uses: conda-incubator/setup-miniconda@v2
+      - name: Setup conda (micromamba)
+        uses: mamba-org/setup-micromamba@v1
         with:
-          channels: conda-forge
-          miniforge-variant: Mambaforge
-          activate-environment: climpred-maximum-tests
-          auto-update-conda: false
-          python-version: 3.9
-      - name: Install conda dependencies
-        run: |
-          mamba env update -f ci/requirements/maximum-tests.yml
-      - name: Install climpred
+          environment-file: ci/requirements/minimum-tests.yml
+          environment-name: climpred-maximum-tests
+          cache-environment: true
+          create-args: >-
+            python=3.9
+            conda
+      - name: Install climpred[complete]
         run: |
           python -m pip install -e .[complete]
+          conda list xclim
       - name: Conda info
         run: conda info
       - name: Conda list
@@ -147,18 +149,19 @@ jobs:
         run:
           shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v3
-      - name: Set up Conda
-        uses: conda-incubator/setup-miniconda@v2
+      - uses: actions/checkout@v4
+      - name: Set up conda (micromamba)
+        uses: mamba-org/setup-micromamba@v1
         with:
-          auto-update-conda: false
-          channels: conda-forge
-          miniforge-variant: Mambaforge
-          activate-environment: climpred-docs
-          python-version: 3.9
-      - name: Set up conda environment
+          environment-file: ci/requirements/docs.yml
+          environment-name: climpred-docs
+          cache-environment: true
+          create-args: >-
+            python=3.9
+            conda
+      - name: Install climpred
         run: |
-          mamba env update -f ci/requirements/docs.yml
+          python -m pip install -e .
       - name: Conda info
         run: conda info
       - name: Conda list

@@ -3,6 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
+  - python >=3.9
   - bias_correction
   - cftime >=1.5.0
   - coveralls
@@ -12,11 +13,11 @@ dependencies:
   - matplotlib-base
   - nc-time-axis >=1.4.0
   - netcdf4
+  - pip
   - pytest
   - pytest-cov
   - pytest-lazy-fixture
   - pytest-xdist
-  - python >=3.9
   - scipy
   - tqdm
   - xarray <=2023.8.0
@@ -24,6 +25,3 @@ dependencies:
   - xesmf
   - xrft
   - xskillscore >=0.0.18
-  - pip
-  - pip:
-    - -e ../..

@@ -4,11 +4,12 @@ channels:
   - nodefaults
 dependencies:
   - python >=3.9,<3.10
+  - cftime >=0.1.5
   - matplotlib-base
   - netcdf4
+  - pip
   - xarray >=0.19.0,<=2023.8.0
   - xskillscore >=0.0.18
-  - cftime >=0.1.5
   # docs
   - jupyterlab
   - myst-nb
@@ -30,7 +31,3 @@ dependencies:
   - xclim
   - xesmf
   - xrft
-  - pip
-  - pip:
-    # Install latest version of climpred
-    - -e ../..

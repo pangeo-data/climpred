@@ -27,4 +27,3 @@ try:
 except PackageNotFoundError:  # pragma: no cover
     # package is not installed
     pass  # pragma: no cover
-

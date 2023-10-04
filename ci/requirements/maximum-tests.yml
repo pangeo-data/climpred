@@ -20,7 +20,7 @@ dependencies:
   - pytest-xdist
   - scipy
   - tqdm
-  - xarray <=2023.8.0
+  - xarray <=2022.10.0
   - xclim
   - xesmf
   - xrft

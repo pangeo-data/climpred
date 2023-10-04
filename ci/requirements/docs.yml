@@ -3,34 +3,34 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.9
+  - python >=3.9,<3.10
   - matplotlib-base
   - netcdf4
-  - xarray>=0.19.0
-  - xskillscore>=0.0.18
-  - cftime>=0.1.5
+  - xarray >=0.19.0,<=2023.8.0
+  - xskillscore >=0.0.18
+  - cftime >=0.1.5
   # docs
   - jupyterlab
-  - tqdm
-  - sphinx
-  - nbstripout
   - myst-nb
-  - sphinxcontrib-napoleon
+  - nbstripout
+  - sphinx
+  - sphinx-book-theme
   - sphinx-copybutton
+  - sphinxcontrib-bibtex
+  - sphinxcontrib-napoleon
+  - sphinxext-opengraph
+  - tqdm
   # optionals
-  - numba>=0.52
-  - xclim
-  - xrft
   - bias_correction
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
-  - xesmf
   - esmtools
-  - nc-time-axis>=1.4.0
   - nb_black
+  - nc-time-axis>=1.4.0
+  - numba>=0.52
+  - xclim
+  - xesmf
+  - xrft
   - pip
   - pip:
     # Install latest version of climpred
     - -e ../..
-    - sphinx_book_theme
-    - sphinxcontrib-bibtex
-    - sphinxext-opengraph

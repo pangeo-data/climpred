@@ -4,18 +4,19 @@ channels:
   - nodefaults
 dependencies:
   - python=3.9
-  - cftime>=1.5.0
+  - cftime >=1.5.0
   - coveralls
   - dask-core
   - netcdf4
   - pip
   - pytest
   - pytest-cov
+  - pytest-lazy-fixture
   - pytest-xdist
   - scipy
-  - xarray<=2022.10.0
-  - xskillscore>=0.0.18
+  - xarray <=2023.8.0
+  - xskillscore >=0.0.18
   - tqdm
+  - pip
   - pip:
-    - pytest-lazy-fixture
     - -e ../..

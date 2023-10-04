@@ -3,27 +3,27 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.9
-  - cftime>=1.5.0
+  - bias_correction
+  - cftime >=1.5.0
   - coveralls
   - dask-core
   - eofs
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - matplotlib-base
-  - nc-time-axis>=1.4.0
+  - nc-time-axis >=1.4.0
   - netcdf4
-  - pip
   - pytest
   - pytest-cov
+  - pytest-lazy-fixture
   - pytest-xdist
+  - python >=3.9
   - scipy
-  - xarray<=2022.10.0
+  - tqdm
+  - xarray <=2023.8.0
+  - xclim
   - xesmf
   - xrft
-  - xskillscore>=0.0.18
-  - xclim
-  - bias_correction
-  - tqdm
+  - xskillscore >=0.0.18
+  - pip
   - pip:
-    - pytest-lazy-fixture
     - -e ../..

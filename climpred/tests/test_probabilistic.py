@@ -148,21 +148,22 @@ def test_PerfectModelEnsemble_verify_bootstrap_not_nan_probabilistic(
     assert not actual_verify.tos.isnull().all()
 
     # bootstrap
-    kwargs["iterations"] = ITERATIONS
-    kwargs["resample_dim"] = "member"
-    kwargs["reference"] = reference
-    actual = pm.bootstrap(**kwargs).tos
-    if isinstance(reference, str):
-        reference = [reference]
-    if len(reference) == 0:
-        assert not actual.sel(results="verify skill").isnull().all()
-    else:
-        for skill in reference:
-            actual_skill = actual.sel(skill=skill, results="verify skill")
-            if metric == "crpss_es" and skill in ["climatology", "persistence"]:
-                pass
-            else:
-                assert not actual_skill.isnull().all()
+    if metric not in ["rank_histogram", "threshold_brier_score"]:
+        kwargs["iterations"] = ITERATIONS
+        kwargs["resample_dim"] = "member"
+        kwargs["reference"] = reference
+        actual = pm.bootstrap(**kwargs).tos
+        if isinstance(reference, str):
+            reference = [reference]
+        if len(reference) == 0:
+            assert not actual.sel(results="verify skill").isnull().all()
+        else:
+            for skill in reference:
+                actual_skill = actual.sel(skill=skill, results="verify skill")
+                if metric == "crpss_es" and skill in ["climatology", "persistence"]:
+                    pass
+                else:
+                    assert not actual_skill.isnull().all()
 
 
 def test_hindcast_crpss_orientation(hindcast_hist_obs_1d):

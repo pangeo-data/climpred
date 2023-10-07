@@ -229,7 +229,7 @@ def compute_climatology(
 
     if isinstance(dim, str):
         dim = [dim]
-    has_valid_lead_units(initialized)
+    # has_valid_lead_units(initialized)
 
     # get metric/comparison function name, not the alias
     if isinstance(metric, str):

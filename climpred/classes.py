@@ -2216,6 +2216,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * member      (member) int32 1 2 3 4 5 6 7 8 9 10
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2027-01-01 00:00:00
+              * time        (time) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
             >>> HindcastEnsemble.verify(
             ...     metric="rmse",
             ...     comparison="e2o",

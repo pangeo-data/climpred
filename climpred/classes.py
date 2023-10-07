@@ -2394,9 +2394,9 @@ class HindcastEnsemble(PredictionEnsemble):
         ):  # NaNs in valid_time only happen for same_verifs and dim=[]
             if (
                 res.coords["valid_time"].isnull().any()
-                and res.coords["valid_time"].size
+                and (res.coords["valid_time"].size
                 == self.get_initialized().coords["valid_time"].size
-            ):
+            )):
                 res.coords["valid_time"] = self.get_initialized().coords["valid_time"]
 
         res = assign_attrs(

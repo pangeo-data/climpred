@@ -1440,7 +1440,6 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 reference:                                         ['persistence', 'clima...
                 PerfectModel_persistence_from_initialized_lead_0:  False
         """
-        lead_attrs = self.get_initialized().lead.attrs
         if groupby is not None:
             return self._groupby(
                 "verify",

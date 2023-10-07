@@ -3,7 +3,7 @@ import pytest
 import climpred
 
 
-@pytest.mark.skip # some error when unpinning xarray <= 2022.10.0
+@pytest.mark.skip  # some error when unpinning xarray <= 2022.10.0
 @pytest.mark.parametrize("cross_validate", [False, True])
 def test_seasonality_remove_bias(hindcast_recon_1d_dm, cross_validate):
     """Test the climpred.set_option(seasonality) changes bias reduction."""

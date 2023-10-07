@@ -21,8 +21,8 @@ dependencies:
   - pytest-xdist
   - scipy
   - tqdm
-  - xarray <=2022.10.0
   - xclim
+  - xarray
   - xesmf
   - xrft
   - xskillscore >=0.0.18

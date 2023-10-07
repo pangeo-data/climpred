@@ -2796,10 +2796,10 @@ def _threshold_brier_score(
         <xarray.Dataset>
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
             valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
             threshold   float64 0.2
+            init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
@@ -2926,9 +2926,9 @@ def _crps(
         <xarray.Dataset>
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
             valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
+            init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
@@ -3047,11 +3047,11 @@ def _crpss(
         ...     metric="crpss", comparison="m2o", alignment="same_inits", dim="member"
         ... )
         <xarray.Dataset>
-        Dimensions:     (init: 52, lead: 10)
+        Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
           * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
             valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
+            init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 'initialized'
         Data variables:
             SST         (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7702 0.5126

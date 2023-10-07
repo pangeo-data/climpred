@@ -15,6 +15,6 @@ dependencies:
   - pytest-lazy-fixture
   - pytest-xdist
   - scipy
-  - xarray <=2022.10.0
-  - xskillscore >=0.0.18
+  - xarray
+  - xskillscore>=0.0.18
   - tqdm

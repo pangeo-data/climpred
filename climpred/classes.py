@@ -2512,9 +2512,9 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset>
             Dimensions:     (skill: 4, results: 4, lead: 10, init: 51)
             Coordinates:
-              * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
                 valid_time  (lead, init) object 1956-01-01 00:00:00 ... 2015-01-01 00:00:00
+              * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
               * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
               * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:

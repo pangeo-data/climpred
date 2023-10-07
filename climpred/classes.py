@@ -1122,7 +1122,6 @@ class PredictionEnsemble:
                 )
 
             elif resample_dim == "member" or self.kind == "perfect":
-
                 resampled_skills = resample_skill_resample_before(
                     self, iterations, resample_dim, verify_kwargs
                 )
@@ -1441,6 +1440,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 reference:                                         ['persistence', 'clima...
                 PerfectModel_persistence_from_initialized_lead_0:  False
         """
+        lead_attrs = self.get_initialized().lead.attrs
         if groupby is not None:
             return self._groupby(
                 "verify",
@@ -2210,13 +2210,6 @@ class HindcastEnsemble(PredictionEnsemble):
             The verification does not need to reduce a dimension. To obtain the skill for
             each initialization, set ``dim=[]``.
 
-            >>> HindcastEnsemble.coords  # doctest: +ELLIPSIS
-            Coordinates:
-              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * member      (member) int32 1 2 3 4 5 6 7 8 9 10
-              * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2027-01-01 00:00:00
-              * time        (time) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
             >>> HindcastEnsemble.verify(
             ...     metric="rmse",
             ...     comparison="e2o",

@@ -2210,6 +2210,7 @@ class HindcastEnsemble(PredictionEnsemble):
             The verification does not need to reduce a dimension. To obtain the skill for
             each initialization, set ``dim=[]``.
 
+            >>> HindcastEnsemble.get_initialized().coords # doctest:+ELLIPSIS
             >>> HindcastEnsemble.verify(
             ...     metric="rmse",
             ...     comparison="e2o",

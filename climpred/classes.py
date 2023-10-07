@@ -2399,11 +2399,8 @@ class HindcastEnsemble(PredictionEnsemble):
         if (
             "valid_time" in res.coords
         ):  # NaNs in valid_time only happen for same_verifs and dim=[]
-            if res.coords["valid_time"].isnull().any() and (
-                res.coords["valid_time"].size
-                == self.get_initialized().coords["valid_time"].size
-            ):
-                res.coords["valid_time"] = self.get_initialized().coords["valid_time"]
+            if res.coords["valid_time"].isnull().any():
+                res = add_time_from_init_lead(res)
 
         res = assign_attrs(
             res,

@@ -2605,6 +2605,10 @@ class HindcastEnsemble(PredictionEnsemble):
               Defaults to ``False``.
 
                 - ``True/"LOO"``: Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+
+                    .. note::
+                    Don't use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.
+
                 - ``False``: include all initializations in the calculation of bias,
                   which is much faster and but yields similar skill with a large N of
                   initializations.
@@ -2765,6 +2769,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 "https://github.com/pangeo-data/climpred/issues/648 for implementation "
                 "status."
             )
+
+        if cv == "LOO":
+            warnings.warn('Do not use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.')
 
         alignment = _check_valid_alignment(alignment)
 

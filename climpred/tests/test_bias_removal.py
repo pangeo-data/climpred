@@ -176,6 +176,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
 
 @requires_xclim
 @requires_bias_correction
+@pytest.mark.skip(reason="LOO deprecated: https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832")
 @pytest.mark.parametrize(
     "alignment", ["same_inits", "maximize"]
 )  # same_verifs  # no overlap here for same_verifs
@@ -232,14 +233,15 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
 
         unfair_skill = he_unfair.verify(**verify_kwargs)
 
-        print("\n unfair-cv \n")
-        he_unfair_cv = he.remove_bias(
-            how=how,
-            alignment=alignment,
-            train_test_split="unfair-cv",
-            cv="LOO",
-        )
-        unfair_cv_skill = he_unfair_cv.verify(**verify_kwargs)
+        #print("\n unfair-cv \n")
+        # https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832
+        #he_unfair_cv = he.remove_bias(
+        #    how=how,
+        #    alignment=alignment,
+        #    train_test_split="unfair-cv",
+        #    cv="LOO",
+        #)
+        #unfair_cv_skill = he_unfair_cv.verify(**verify_kwargs)
 
         print("\n fair \n")
         kw = (
@@ -264,11 +266,11 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         assert (fair_skill * f > unfair_skill)[v].all(), print(
             fair_skill[v], unfair_skill[v]
         )
-        print("checking unfair-cv")
-        assert not unfair_cv_skill[v].isnull().all()
-        assert (fair_skill * f > unfair_cv_skill)[v].all(), print(
-            fair_skill[v], unfair_cv_skill[v]
-        )
+        #print("checking unfair-cv")
+        #assert not unfair_cv_skill[v].isnull().all()
+        #assert (fair_skill * f > unfair_cv_skill)[v].all(), print(
+        #    fair_skill[v], unfair_cv_skill[v]
+        #)
 
 
 @requires_xclim

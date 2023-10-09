@@ -2771,7 +2771,7 @@ class HindcastEnsemble(PredictionEnsemble):
             )
 
         if cv == "LOO":
-            warnings.warn("Do not use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.")  # flake8: noqa
+            warnings.warn('Do not use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.')  # flake8: noqa
 
         alignment = _check_valid_alignment(alignment)
 

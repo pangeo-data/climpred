@@ -1,5 +1,5 @@
 """Test bias_removal.py."""
-
+import copy
 import numpy as np
 import pytest
 import xarray as xr
@@ -21,8 +21,10 @@ BIAS_CORRECTION_METHODS = (
 BIAS_CORRECTION_METHODS.remove("normal_mapping")
 BIAS_CORRECTION_METHODS.remove("gamma_mapping")
 # fails with these conftest files somehow
+XCLIM_BIAS_CORRECTION_METHODS = copy.copy(XCLIM_BIAS_CORRECTION_METHODS)
 XCLIM_BIAS_CORRECTION_METHODS.remove("LOCI")
 XCLIM_BIAS_CORRECTION_METHODS.remove("PrincipalComponents")
+XCLIM_BIAS_CORRECTION_METHODS.remove("DetrendedQuantileMapping")
 
 
 def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):

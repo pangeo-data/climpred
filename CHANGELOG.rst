@@ -19,6 +19,9 @@ Internals/Minor Fixes
 - Fix broken GEFS link (:pr:`807`) `Trevor Gamblin`_
 - New metric :py:class:`~climpred.metrics._me` Mean Error as ``metric='me'``:
   (:issue:`826`, :pr:`827`) `Aaron Spring`_
+- Unpin ``xarray`` and ``xclim`` and update package health.
+  (:issue:`815`, `feedstock-issue <https://github.com/conda-forge/climpred-feedstock/issues/26>`_, :pr:`831`, :pr:`832`) `Aaron Spring`_, `Trevor James Smith`_, `Mathias Hauser`_
+
 
 
 climpred v2.3.0 (2022-11-25)

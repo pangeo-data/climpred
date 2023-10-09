@@ -180,7 +180,8 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
 @requires_xclim
 @requires_bias_correction
 @pytest.mark.skip(
-    reason="LOO deprecated: https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832"
+    reason="""LOO deprecated:
+    https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832"""
 )
 @pytest.mark.parametrize(
     "alignment", ["same_inits", "maximize"]

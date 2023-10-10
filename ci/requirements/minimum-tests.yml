@@ -16,5 +16,5 @@ dependencies:
   - pytest-xdist
   - scipy
   - xarray
-  - xskillscore>=0.0.18
+  - xskillscore >=0.0.18
   - tqdm

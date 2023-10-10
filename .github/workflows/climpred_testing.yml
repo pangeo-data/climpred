@@ -181,7 +181,7 @@ jobs:
         run: |
           conda info
       - name: Conda list
-        run: |  
+        run: |
           conda list
       - name: Test notebooks in docs
         run: |

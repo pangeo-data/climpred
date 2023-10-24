@@ -80,4 +80,3 @@ ci:
     autoupdate_schedule: quarterly
     skip: []
     submodules: false
-

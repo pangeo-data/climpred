@@ -21,8 +21,8 @@ repos:
         exclude: '.ipynb|asv.conf.json'
       - id: trailing-whitespace
 
-  -   repo: https://github.com/psf/black
-      rev: 23.9.1
+  -   repo: https://github.com/psf/black-pre-commit-mirror
+      rev: 23.10.1
       hooks:
       - id: black
 
@@ -40,7 +40,7 @@ repos:
       rev: v0.3.8
       hooks:
       - id: blackdoc
-        additional_dependencies: [ 'black==23.9.1' ]
+        additional_dependencies: [ 'black==23.10.1' ]
 
   -   repo: https://github.com/pre-commit/mirrors-mypy
       rev: v0.982
@@ -80,3 +80,4 @@ ci:
     autoupdate_schedule: quarterly
     skip: []
     submodules: false
+

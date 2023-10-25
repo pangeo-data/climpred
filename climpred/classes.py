@@ -2710,7 +2710,7 @@ class HindcastEnsemble(PredictionEnsemble):
             >>> HindcastEnsemble.remove_bias(
             ...     alignment="same_init",
             ...     group="init",
-            ...     how="DetrendedQuantileMapping",
+            ...     how="EmpiricalQuantileMapping",
             ...     train_test_split="unfair",
             ... ).verify(
             ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"

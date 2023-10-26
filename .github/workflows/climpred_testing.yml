@@ -61,7 +61,7 @@ jobs:
           python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
         run: |
-          pytest --durations=20
+          pytest -n 4 --durations=20
 
   maximum-test:  # Runs testing suite with all optional dependencies
     name: Test optional dependencies, Python${{ matrix.python-version }}

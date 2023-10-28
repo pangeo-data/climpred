@@ -12,7 +12,7 @@ dependencies:
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - matplotlib-base
   - nc-time-axis >=1.4.0
-  - netcdf4
+  - h5netcdf
   - pip
   - pooch
   - pytest

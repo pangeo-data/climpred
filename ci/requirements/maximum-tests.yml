@@ -21,7 +21,7 @@ dependencies:
   - pytest-xdist
   - scipy
   - tqdm
-  - xclim
+  - xclim >=0.46
   - xarray
   - xesmf
   - xrft

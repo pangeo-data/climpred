@@ -120,10 +120,10 @@ jobs:
           python -c "import climpred; climpred.tutorial._cache_all()"
           mamba uninstall netcdf4 -y
           python -m pip uninstall -y netcdf4
-          python -m pip install h5netcdf
+          python -m pip install h5netcdf xarray
       - name: Run tests
         run: |
-          pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
+          pytest --durations=20 --cov=climpred --cov-report=xml
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v3
         with:

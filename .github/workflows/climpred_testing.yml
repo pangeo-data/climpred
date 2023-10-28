@@ -52,7 +52,7 @@ jobs:
           python -m pip install -e .
           python -m pip uninstall -y netcdf4
           mamba uninstall netcdf4 -y
-          python -m pip install h5py
+          python -m pip install h5py h5netcdf
       - name: Conda info
         run: |
           conda info

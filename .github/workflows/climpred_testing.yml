@@ -115,7 +115,6 @@ jobs:
       - name: Conda list
         run: |
           conda list
-          conda list xclim
       - name: Cache datasets  # pytest-xdist fails otherwise
         run: |
           python -c "import climpred; climpred.tutorial._cache_all()"
@@ -158,7 +157,6 @@ jobs:
       - name: Conda list
         run: |
           conda list
-          conda list xclim
       - name: Run doctests
         run: |
           python -m pytest --doctest-modules climpred --ignore climpred/tests

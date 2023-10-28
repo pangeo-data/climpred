@@ -50,7 +50,7 @@ jobs:
       - name: Install climpred
         run: |
           python -m pip install -e .
-          python -m pip uninstall netcdf4
+          python -m pip uninstall -y netcdf4
           python -m pip install h5py
       - name: Conda info
         run: |

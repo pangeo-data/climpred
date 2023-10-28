@@ -52,7 +52,7 @@ jobs:
           python -m pip install -e .
           mamba uninstall netcdf4 -y
           python -m pip uninstall -y netcdf4
-          python -m pip install h5netcdf
+          mamba install h5py h5netcdf -y xarray
       - name: Conda info
         run: |
           conda info

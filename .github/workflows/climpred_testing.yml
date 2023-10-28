@@ -105,9 +105,8 @@ jobs:
       - name: Install climpred[complete]
         run: |
           python -m pip install -e .[complete]
-          conda uninstall netcdf4 -y
           python -m pip uninstall -y netcdf
-          conda install h5py h5netcdf xarray -y
+          conda install h5netcdf xarray -y
       - name: Install bleeding edge
         if: matrix.env == 'climpred-maximum-tests-upstream'
         run: |

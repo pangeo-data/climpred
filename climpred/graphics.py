@@ -347,7 +347,7 @@ def plot_ensemble_perfect_model(
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
 
-    _cmap = plt.get_cmap(cmap, initialized.lead.size)
+    _cmap = plt.get_cmap(cmap, initialized.init.size)
 
     for ii, i in enumerate(initialized.init.values):
         dsi = initialized.sel(init=i)

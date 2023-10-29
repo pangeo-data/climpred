@@ -374,7 +374,7 @@ def plot_ensemble_perfect_model(
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
             dsi.mean("member").plot(ax=ax, x=x, color="white", lw=3, zorder=10)
-            dsi.mean("member").plot(ax=ax, x=x, color=_cmap(ii), lw=2, zorder=11)
+            dsi.mean("member").plot(ax=ax, x=x, color=_cmap[ii], lw=2, zorder=11)
         dsi.plot(
             ax=ax,
             x=x,

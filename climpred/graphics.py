@@ -245,7 +245,7 @@ def plot_lead_timeseries_hindcast(
     if isinstance(obs, xr.Dataset):
         obs = obs[variable]
 
-    _cmap = plt.get_cmap(cmap)(np.linspace(0.0, 1.0, hind.lead.size))
+    _cmap = plt.get_cmap(cmap, hind.lead.size)
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
     if isinstance(hist, xr.DataArray) and x == "valid_time":
@@ -277,7 +277,7 @@ def plot_lead_timeseries_hindcast(
             ax=ax,
             x=x,
             hue="member",
-            color=_cmap[i - 1],
+            color=_cmap(i),
             label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
@@ -347,7 +347,7 @@ def plot_ensemble_perfect_model(
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
 
-    _cmap = plt.get_cmap(cmap)(np.linspace(0.0, 1.0, initialized.lead.size))
+    _cmap = plt.get_cmap(cmap, initialized.lead.size)
 
     for ii, i in enumerate(initialized.init.values):
         dsi = initialized.sel(init=i)
@@ -374,12 +374,12 @@ def plot_ensemble_perfect_model(
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
             dsi.mean("member").plot(ax=ax, x=x, color="white", lw=3, zorder=10)
-            dsi.mean("member").plot(ax=ax, x=x, color=_cmap[ii - 1], lw=2, zorder=11)
+            dsi.mean("member").plot(ax=ax, x=x, color=_cmap(ii), lw=2, zorder=11)
         dsi.plot(
             ax=ax,
             x=x,
             hue="member",
-            color=_cmap[ii - 1],
+            color=_cmap(ii),
             alpha=member_alpha,
             lw=lw,
             label=labelstr,

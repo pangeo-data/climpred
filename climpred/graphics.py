@@ -14,7 +14,6 @@ from .metrics import ALL_METRICS
 from .utils import get_metric_class
 
 try:
-    import matplotlib as mpl
     import matplotlib.pyplot as plt
 except ImportError:
     pass

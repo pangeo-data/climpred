@@ -277,7 +277,7 @@ def plot_lead_timeseries_hindcast(
             ax=ax,
             x=x,
             hue="member",
-            color=_cmap[i-1],
+            color=_cmap[i - 1],
             label=f"initialized: lead={lead} {hind.lead.attrs['units'][:-1]}",
             alpha=lead_alpha,
             zorder=hind.lead.size - i,
@@ -374,12 +374,12 @@ def plot_ensemble_perfect_model(
                 )
             # plot ensemble mean, first white then color to highlight ensemble mean
             dsi.mean("member").plot(ax=ax, x=x, color="white", lw=3, zorder=10)
-            dsi.mean("member").plot(ax=ax, x=x, color=_cmap[ii-1], lw=2, zorder=11)
+            dsi.mean("member").plot(ax=ax, x=x, color=_cmap[ii - 1], lw=2, zorder=11)
         dsi.plot(
             ax=ax,
             x=x,
             hue="member",
-            color=_cmap[ii-1],
+            color=_cmap[ii - 1],
             alpha=member_alpha,
             lw=lw,
             label=labelstr,

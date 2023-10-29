@@ -246,7 +246,7 @@ def plot_lead_timeseries_hindcast(
     if isinstance(obs, xr.Dataset):
         obs = obs[variable]
 
-    _cmap = plt.get_cmap(cmap)(np.linspace(0., 1., hind.lead.size))
+    _cmap = plt.get_cmap(cmap)(np.linspace(0.0, 1.0, hind.lead.size))
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
     if isinstance(hist, xr.DataArray) and x == "valid_time":
@@ -348,7 +348,7 @@ def plot_ensemble_perfect_model(
     if ax is None:
         _, ax = plt.subplots(figsize=(10, 4))
 
-    _cmap = plt.get_cmap(cmap)(np.linspace(0., 1., hind.lead.size))
+    _cmap = plt.get_cmap(cmap)(np.linspace(0.0, 1.0, hind.lead.size))
 
     for ii, i in enumerate(initialized.init.values):
         dsi = initialized.sel(init=i)

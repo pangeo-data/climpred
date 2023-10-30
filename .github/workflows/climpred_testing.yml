@@ -134,7 +134,7 @@ jobs:
       run:
         shell: bash -l {0}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup conda (micromamba)
         uses: mamba-org/setup-micromamba@v1
         with:

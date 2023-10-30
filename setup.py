@@ -31,7 +31,7 @@ extras_require = {
     "accel": ["numba>=0.52", "bottleneck"],
     "bias-correction": ["xclim>=0.46", "bias-correction>=0.4"],
     "viz": ["matplotlib", "nc-time-axis>=1.4.0"],
-    "io": ["netcdf4"],
+    "io": ["netcdf4"],  # use h5netcdf when encountering seg faults as in GHA CI
     "regridding": [
         "xesmf"
     ],  # for installation see https://pangeo-xesmf.readthedocs.io/

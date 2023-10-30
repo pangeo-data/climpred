@@ -13,24 +13,25 @@ with open("requirements.txt") as f:
 
 CLASSIFIERS = [
     "Development Status :: 5 - Production/Stable",
-    "License :: OSI Approved :: MIT License",
-    "Operating System :: OS Independent",
-    "Intended Audience :: Science/Research",
     "Intended Audience :: Education",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
     "Natural Language :: English",
     "Operating System :: OS Independent",
+    "Operating System :: OS Independent",
     "Programming Language :: Python :: 3 :: Only",
-    "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
     "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 
 extras_require = {
     "accel": ["numba>=0.52", "bottleneck"],
-    "bias-correction": ["xclim<=0.42", "bias-correction>=0.4"],
+    "bias-correction": ["xclim>=0.46", "bias-correction>=0.4"],
     "viz": ["matplotlib", "nc-time-axis>=1.4.0"],
-    "io": ["netcdf4"],
+    "io": ["netcdf4"],  # use h5netcdf when encountering seg faults as in GHA CI
     "regridding": [
         "xesmf"
     ],  # for installation see https://pangeo-xesmf.readthedocs.io/
@@ -43,22 +44,20 @@ extras_require["complete"].remove(
 )  # circumventing esmpy/xesmf installation issues; use conda
 # after complete is set, add in test
 extras_require["test"] = [
+    "netcdf4",
+    "pre-commit",
     "pytest",
     "pytest-cov",
-    "pytest-lazyfixures",
+    "pytest-lazy-fixture",
     "pytest-xdist",
-    "pre-commit",
-    "netcdf4",
 ]
 extras_require["docs"] = extras_require["complete"] + [
     "myst_nb",
     "sphinx",
-    "sphinxcontrib-napoleon",
-    "sphinx_rtd_theme",
     "sphinx-copybutton",
-    "sphinxcontrib-bibtex",
     "sphinx_book_theme",
-    "nb_black",
+    "sphinxcontrib-bibtex",
+    "sphinxcontrib-napoleon",
 ]
 
 setup(

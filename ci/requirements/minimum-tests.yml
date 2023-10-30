@@ -3,19 +3,18 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python=3.9
-  - cftime>=1.5.0
+  - python >=3.9,<3.10
+  - cftime >=1.5.0
   - coveralls
   - dask-core
-  - netcdf4
+  - h5netcdf
   - pip
+  - pooch
   - pytest
   - pytest-cov
+  - pytest-lazy-fixture
   - pytest-xdist
   - scipy
   - xarray
-  - xskillscore>=0.0.18
+  - xskillscore >=0.0.18
   - tqdm
-  - pip:
-    - pytest-lazy-fixture
-    - -e ../..

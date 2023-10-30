@@ -3,60 +3,58 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python>=3.9
+  - python >=3.9,<3.12
   # Documentation
   - myst-nb
   - nbstripout
   - sphinx
-  - sphinxcontrib-napoleon
+  - sphinx-book-theme
   - sphinx-copybutton
+  - sphinxcontrib-bibtex
+  - sphinxcontrib-napoleon
+  - sphinxext-opengraph
   # IDE
   - jupyterlab
-  - tqdm
   - nb_conda_kernels # switch conda envs in jupyter
+  - tqdm
   # Input/Output
   - netcdf4
+  - pooch
   # Miscellaneous
-  - cftime>=1.5.0
+  - cftime >=1.5.0
   # Numerics
   - numpy
   - pandas
   - scipy
-  - xarray>=0.19.0
+  - xarray
   # Package Management
   - asv
   - black==19.10b0
   - coveralls
   - flake8
-  - mypy
   - isort
+  - mypy
   - pre-commit
   - pylint
   - pytest
   - pytest-cov
+  - pytest-lazy-fixture
   - pytest-sugar
   - pytest-xdist
   # Performance
   - bottleneck
-  - numba
   - dask-core
+  - numba
   # Regridding
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - xesmf
   # Statistics
-  - eofs
-  - esmtools>=1.1.3
-  - xskillscore>=0.0.20
-  - xrft
-  - xclim>=0.30.0
   - bias_correction
+  - eofs
+  - esmtools >=1.1.3
+  - xclim >=0.30.0
+  - xrft
+  - xskillscore >=0.0.20
   # Visualization
   - matplotlib-base
   - nc-time-axis>=1.4.0
-  - pip
-  - pip:
-      - pytest-lazy-fixture
-      - nb_black
-      - sphinx_book_theme
-      - sphinxcontrib-bibtex
-      - sphinxext-opengraph

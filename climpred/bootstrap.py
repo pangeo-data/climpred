@@ -254,8 +254,7 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
 
 
 def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"]):
-    """
-    Generate ``uninitialized`` by resamplling from ``initialized``.
+    """Generate ``uninitialized`` by resampling from ``initialized``.
 
     Generate an uninitialized ensemble by resampling without replacement from the
     initialized prediction ensemble. Full years of the first lead present from the
@@ -319,13 +318,12 @@ def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"
 
 
 def _bootstrap_by_stacking(init_pm, control):
-    """
-    Bootstrap member, lead, init from control by reshaping.
+    """Bootstrap member, lead, init from control by reshaping.
 
     Fast track of function
     `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'.
     """
-    assert type(init_pm) == type(control)
+    assert isinstance(init_pm, type(control))
     lead_unit = init_pm.lead.attrs["units"]
     if isinstance(init_pm, xr.Dataset):
         init_pm = init_pm.to_array()
@@ -360,8 +358,7 @@ def _bootstrap_by_stacking(init_pm, control):
 
 
 def _get_resample_func(ds):
-    """
-    Decide for resample function based on input `ds`.
+    """Decide for resample function based on input `ds`.
 
     Returns:
       callable: `_resample_iterations`: if big and chunked `ds`
@@ -691,6 +688,7 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
             "xrft is not installed; see "
             "https://xrft.readthedocs.io/en/latest/installation.html"
         )
+
     return _bootstrap_func(
         varweighted_mean_period,
         control,

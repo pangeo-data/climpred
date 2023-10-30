@@ -1,6 +1,8 @@
-xarray
-dask>=2021.10.0
-cftime>=1.5.0
-xskillscore>=0.0.20
 cf_xarray>=0.6.0
+cftime>=1.5.0
+dask>=2021.10.0
+numpy
+packaging
 pooch>=1.4
+xarray
+xskillscore>=0.0.20

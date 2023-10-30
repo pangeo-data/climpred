@@ -1,0 +1,9 @@
+bias_correction @ git+https://github.com/pankajkarman/bias_correction
+bottleneck @ git+https://github.com/pydata/bottleneck
+cftime @ git+https://github.com/Unidata/cftime
+dask @ git+https://github.com/dask/dask
+nc-time-axis @ git+https://github.com/SciTools/nc-time-axis
+xarray @ git+https://github.com/pydata/xarray
+xclim @ git+https://github.com/Ouranosinc/xclim
+xrft @ git+https://github.com/xgcm/xrft
+xskillscore @ git+https://github.com/xarray-contrib/xskillscore

@@ -19,7 +19,7 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 2
       - uses: xarray-contrib/ci-trigger@v1.2
@@ -48,27 +48,29 @@ jobs:
     outputs:
       artifacts_availability: ${{ steps.status.outputs.ARTIFACTS_AVAILABLE }}
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
         with:
           fetch-depth: 0 # Fetch all history for all branches and tags.
-      - name: Set up conda environment
-        uses: mamba-org/provision-with-micromamba@f347426e5745fe3dfc13ec5baf20496990d0281f
+      - name: Set up conda (micromamba)
+        uses: mamba-org/setup-micromamba@v1
         with:
           environment-file: ci/requirements/climpred-dev.yml
           environment-name: climpred-dev
-          extra-specs: |
+          cache-environment: true
+          create-args: >-
             python=${{ matrix.python-version }}
             pytest-reportlog
+            conda
       - name: Set up conda environment
         run: |
           bash ci/install-upstream-wheels.sh
-      - name: Install climpred
+      - name: Install climpred (no deps)
         run: |
           python -m pip install --no-deps -e .
-      - name: Version info
-        run: |
-          conda info -a
-          conda list
+      - name: Conda info
+        run: conda info -a
+      - name: Conda list
+        run: conda list
       - name: import climpred
         run: |
           python -c 'import climpred; climpred.show_versions()'

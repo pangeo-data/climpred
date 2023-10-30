@@ -1,7 +1,7 @@
 import importlib
-from distutils import version
 
 import pytest
+from packaging import version
 
 
 def _importorskip(modname, minversion=None):
@@ -9,19 +9,12 @@ def _importorskip(modname, minversion=None):
         mod = importlib.import_module(modname)
         has = True
         if minversion is not None:
-            if LooseVersion(mod.__version__) < LooseVersion(minversion):
+            if version.parse(mod.__version__) < version.parse(minversion):
                 raise ImportError("Minimum version not satisfied")
     except ImportError:
         has = False
     func = pytest.mark.skipif(not has, reason=f"requires {modname}")
     return has, func
-
-
-def LooseVersion(vstring):
-    # Our development version is something like '0.10.9+aac7bfc'
-    # This function just ignored the git commit id.
-    vstring = vstring.split("+")[0]
-    return version.LooseVersion(vstring)
 
 
 has_matplotlib, requires_matplotlib = _importorskip("matplotlib")

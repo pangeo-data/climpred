@@ -1,5 +1,5 @@
 # flake8: noqa
-from pkg_resources import DistributionNotFound, get_distribution
+from importlib.metadata import PackageNotFoundError, version as _get_version
 
 from . import (
     bias_removal,
@@ -23,7 +23,7 @@ from .preprocessing import mpi, shared
 from .versioning.print_versions import show_versions
 
 try:
-    __version__ = get_distribution(__name__).version
-except DistributionNotFound:  # pragma: no cover
+    __version__ = _get_version("climpred")
+except PackageNotFoundError:  # pragma: no cover
     # package is not installed
     pass  # pragma: no cover

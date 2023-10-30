@@ -2605,6 +2605,10 @@ class HindcastEnsemble(PredictionEnsemble):
               Defaults to ``False``.
 
                 - ``True/"LOO"``: Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
+
+                    .. note::
+                    Don't use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.
+
                 - ``False``: include all initializations in the calculation of bias,
                   which is much faster and but yields similar skill with a large N of
                   initializations.
@@ -2706,7 +2710,7 @@ class HindcastEnsemble(PredictionEnsemble):
             >>> HindcastEnsemble.remove_bias(
             ...     alignment="same_init",
             ...     group="init",
-            ...     how="DetrendedQuantileMapping",
+            ...     how="EmpiricalQuantileMapping",
             ...     train_test_split="unfair",
             ... ).verify(
             ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
@@ -2717,7 +2721,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
                 skill    <U11 'initialized'
             Data variables:
-                SST      (lead) float64 0.09841 0.09758 0.08238 ... 0.0771 0.08119 0.08322
+                SST      (lead) float64 0.07097 0.07402 0.06653 ... 0.05823 0.06697 0.0707
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2764,6 +2768,11 @@ class HindcastEnsemble(PredictionEnsemble):
                 "http://www.nature.com/articles/s41467-021-23771-z for description and "
                 "https://github.com/pangeo-data/climpred/issues/648 for implementation "
                 "status."
+            )
+
+        if cv == "LOO":
+            warnings.warn(
+                'Do not use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.'  # noqa: E501
             )
 
         alignment = _check_valid_alignment(alignment)

@@ -17,7 +17,7 @@ def test_least_item_cond_true(threshold, expected, input):
     cond = ds <= threshold
     actual = _last_item_cond_true(cond, "lead")
     assert actual == expected
-    assert type(ds) == type(actual)
+    assert isinstance(ds, type(actual))
 
 
 def test_horizon_bootstrap_1d(perfectModelEnsemble_initialized_control):

@@ -26,7 +26,7 @@ XCLIM_BIAS_CORRECTION_METHODS = copy.copy(XCLIM_BIAS_CORRECTION_METHODS)
 XCLIM_BIAS_CORRECTION_METHODS.remove("LOCI")
 XCLIM_BIAS_CORRECTION_METHODS.remove("PrincipalComponents")
 # XCLIM_BIAS_CORRECTION_METHODS.remove("DetrendedQuantileMapping")
-XCLIM_BIAS_CORRECTION_METHODS.remove("QuantileDeltaMapping")
+# XCLIM_BIAS_CORRECTION_METHODS.remove("QuantileDeltaMapping")
 
 
 def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):

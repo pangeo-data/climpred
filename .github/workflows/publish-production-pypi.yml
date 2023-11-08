@@ -20,9 +20,10 @@ jobs:
           python-version: '3.x'
       - name: Install packaging libraries
         run: |
-          pip install setuptools wheel
+          python -m pip install --upgrade pip
+          python -m pip install build
       - name: Build a binary wheel and a source tarball
         run: |
-          python setup.py sdist bdist_wheel
+          python -m build
       - name: Publish distribution 📦 to PyPI
         uses: pypa/gh-action-pypi-publish@release/v1

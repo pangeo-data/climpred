@@ -24,8 +24,8 @@ Contributors
 ============
 * Anderson Banihirwe (`github <https://github.com/andersy005/>`__)
 * Ray Bell (`github <https://github.com/raybellwaves/>`__)
-* Andrew Huang (`github <https://github.com/ahuang11/>`__)
 * Trevor Gamblin (`github <https://github.com/threexc/>`__)
+* Andrew Huang (`github <https://github.com/ahuang11/>`__)
 * Kathy Pegion (`github <https://github.com/kpegion/>`__)
 * Trevor James Smith (`github <https://github.com/Zeitsperre/>`__)
 

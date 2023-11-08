@@ -9,11 +9,11 @@ Contributors
   prediction community. In our past coding journey, collaborative coding, feedbacking
   issues and pull requests advanced our code and thinking about forecast verification
   more than we could have ever expected.
-  `Aaron <https://github.com/aaronspring/>`_ can provide guidance on
+
+  `Aaron`_ can provide guidance on
   implementing new features into climpred. Feel free to implement
-  your own new feature or take a look at the
-  `good first issue <https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22>`_
-  tag in the issues. Please reach out to us via `gitter <https://gitter.im/climpred>`_.
+  your own new feature or take a look at the `good first issue`_ tag in the issues.
+  Please reach out to us via `gitter <https://gitter.im/climpred>`_.
 
 Core Developers
 ===============
@@ -22,11 +22,15 @@ Core Developers
 
 Contributors
 ============
-* Andrew Huang (`github <https://github.com/ahuang11/>`__)
-* Kathy Pegion (`github <https://github.com/kpegion/>`__)
 * Anderson Banihirwe (`github <https://github.com/andersy005/>`__)
 * Ray Bell (`github <https://github.com/raybellwaves/>`__)
+* Andrew Huang (`github <https://github.com/ahuang11/>`__)
 * Trevor Gamblin (`github <https://github.com/threexc/>`__)
+* Kathy Pegion (`github <https://github.com/kpegion/>`__)
+* Trevor James Smith (`github <https://github.com/Zeitsperre/>`__)
 
-For a list of all the contributions, see the github
-`contribution graph <https://github.com/pangeo-data/climpred/graphs/contributors>`_.
+For a list of all the contributions, see the GitHub `contribution graph`_.
+
+.. _Aaron: https://github.com/aaronspring/
+.. _contribution graph: https://github.com/pangeo-data/climpred/graphs/contributors
+.. _good first issue: https://github.com/pangeo-data/climpred/issues?q=is%3Aissue+is%3Aopen+label%3A%22good+first+issue%22

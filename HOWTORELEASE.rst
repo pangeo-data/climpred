@@ -13,20 +13,24 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
 
 #. After all tests pass and the PR has been approved, merge the PR into ``main``
 
-#. Tag a release and push to github::
+#. Tag a release and push it to GitHub::
 
     $ git tag -a v1.0.0 -m "Version 1.0.0"
     $ git push upstream main --tags
 
-#. We use Github Actions to automate the new release being published to PyPI.
-   Simply confirm that the new release is reflected at
-   https://pypi.org/project/climpred/. There is typically a delay, but check Github
-   Actions if there's an issue, and otherwise you can manually do it with the
-   following::
+#. We use Github Actions to automate the new release being published to TestPyPI (staging) and PyPI (production).
+   When a tag is pushed to the repository, the following happens:
+    - A new release is drafted on Github
+    - The library is built and a workflow is staged for publishing to TestPyPI
+        - A maintainer must manually approve the workflow to publish to TestPyPI
+    - If everything clears, maintainers can then finalize the release on GitHub, triggering an upload to PyPI
+
+   If you wish to circumvent the GitHub Actions for whatever reason, you can manually do it by running the following::
 
     $ git clean -xfd  # remove any files not checked into git
-    $ python setup.py sdist bdist_wheel --universal  # build package
-    $ twine upload dist/*  # register and push to pypi
+    $ python -m build  # build package
+    $ python -m twine upload --repository-url https://test.pypi.org/legacy dist/*  # register and push to testpypi
+    $ python -m twine upload dist/*  # register and push to pypi
 
 #. Next, update the stable branch with ``main``. This will trigger a stable build
    for ReadTheDocs::
@@ -36,8 +40,8 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
     $ git push -f upstream stable
     $ git checkout main
 
-#. Go to https://readthedocs.org and add the new version to ``"Active Versions"``
-   under the version tab. Force-build ``"stable"`` if it isn't already building.
+#. Go to https://readthedocs.org and add the new version to ``"Active Versions"`` under the version tab.
+   Force-build ``"stable"`` if it isn't already building.
 
 #. Update climpred conda-forge feedstock
 

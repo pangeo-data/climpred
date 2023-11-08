@@ -21,7 +21,7 @@ Internals/Minor Fixes
   (:issue:`826`, :pr:`827`) `Aaron Spring`_
 - Unpin ``xarray`` and ``xclim`` and update package health.
   (:issue:`815`, `feedstock-issue <https://github.com/conda-forge/climpred-feedstock/issues/26>`_, :pr:`831`, :pr:`832`) `Aaron Spring`_, `Trevor James Smith`_, `Mathias Hauser`_
-
+- Add Trusted Publishing and leverage GitHub deployment environments. (:issue:`839`, :pr:`840`) `Trevor James Smith`_
 
 
 climpred v2.3.0 (2022-11-25)
@@ -1228,10 +1228,13 @@ climpred v0.1 (2018-12-20)
 
 Collaboration between Riley Brady and Aaron Spring begins.
 
+.. _`Aaron Spring`: https://github.com/aaronspring
 .. _`Anderson Banihirwe`: https://github.com/andersy005
+.. _`Andrew Huang`: https://github.com/ahuang11
+.. _`Dougie Squire`: https://github.com/dougiesquire
+.. _`Kathy Pegion`: https://github.com/kpegion
+.. _`Mathias Hauser`: https://github.com/mathause
 .. _`Ray Bell`: https://github.com/raybellwaves
 .. _`Riley X. Brady`: https://github.com/bradyrx
-.. _`Andrew Huang`: https://github.com/ahuang11
-.. _`Kathy Pegion`: https://github.com/kpegion
-.. _`Aaron Spring`: https://github.com/aaronspring
-.. _`Dougie Squire`: https://github.com/dougiesquire
+.. _`Trevor Gamblin`: https://github.com/threexc
+.. _`Trevor James Smith`: https://github.com/Zeitsperre

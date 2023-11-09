@@ -14,6 +14,10 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
+
+climpred v2.4.0 (2023-11-09)
+============================
+
 Internals/Minor Fixes
 ---------------------
 - Fix broken GEFS link (:pr:`807`) `Trevor Gamblin`_
@@ -28,9 +32,7 @@ climpred v2.3.0 (2022-11-25)
 ============================
 
 .. note::
-    As both maintainers moved out of academia into industry,
-    this will be probably the last release for a while.
-    If you are interested in maintaining climpred, please ping us.
+    As both maintainers moved out of academia into industry, this will be probably the last release for a while. If you are interested in maintaining climpred, please ping us.
 
 Bug Fixes
 ---------
@@ -72,7 +74,6 @@ New Features
   to ``data(valid_time, lead)`` to visualize predictability barrier and the reverse
   :py:func:`climpred.utils.convert_valid_time_lead_to_init_lead`.
   (:issue:`774`, :pr:`775`, :pr:`783`) `Aaron Spring`_.
-
 
 Internals/Minor Fixes
 ---------------------
@@ -278,10 +279,7 @@ New Features
 climpred v2.1.5 (2021-08-12)
 ============================
 
-While ``climpred`` has used in the
-`ASP summer colloquium 2021 <https://asp.ucar.edu/asp-colloquia>`_,
-many new features in :py:meth:`.HindcastEnsemble.remove_bias` were
-implemented.
+While ``climpred`` has used in the `ASP summer colloquium 2021 <https://asp.ucar.edu/asp-colloquia>`_, many new features in :py:meth:`.HindcastEnsemble.remove_bias` were implemented.
 
 Breaking changes
 ----------------
@@ -337,7 +335,6 @@ New Features
   :py:meth:`.HindcastEnsemble.bootstrap`.
   (:issue:`509`, :pr:`658`) `Aaron Spring`_.
 - Implement ``PredictionEnsemble.chunks``. (:pr:`658`) `Aaron Spring`_.
-
 
 Documentation
 -------------
@@ -398,7 +395,6 @@ New Features
   ``coords``, ``nbytes``, ``equals``, ``identical``, ``__iter__``, ``__len__``,
   ``__contains__``, ``__delitem__``. (:issue:`568`, :pr:`632`) `Aaron Spring`_.
 
-
 Documentation
 -------------
 - Add `documentation page about publicly available initialized datasets and
@@ -433,9 +429,6 @@ Internals/Minor Fixes
 
 climpred v2.1.3 (2021-03-23)
 ============================
-
-Breaking changes
-----------------
 
 New Features
 ------------
@@ -520,15 +513,7 @@ climpred v2.1.1 (2020-10-13)
 
 Breaking changes
 ----------------
-
-This version introduces a lot of breaking changes. We are trying to overhaul
-``climpred`` to have an intuitive API that also forces users to think about methodology
-choices when running functions. The main breaking changes we introduced are for
-:py:meth:`.HindcastEnsemble.verify` and
-:py:meth:`.PerfectModelEnsemble.verify`. Now, instead of assuming
-defaults for most keywords, we require the user to define ``metric``, ``comparison``,
-``dim``, and ``alignment`` (for hindcast systems). We also require users to designate
-the number of ``iterations`` for bootstrapping.
+This version introduces a lot of breaking changes. We are trying to overhaul ``climpred`` to have an intuitive API that also forces users to think about methodology choices when running functions. The main breaking changes we introduced are for :py:meth:`.HindcastEnsemble.verify` and :py:meth:`.PerfectModelEnsemble.verify`. Now, instead of assuming defaults for most keywords, we require the user to define ``metric``, ``comparison``, ``dim``, and ``alignment`` (for hindcast systems). We also require users to designate the number of ``iterations`` for bootstrapping.
 
 - User now has to designate number of iterations with ``iterations=...`` in
   :py:meth:`.HindcastEnsemble.bootstrap` (:issue:`384`, :pr:`436`)
@@ -564,14 +549,7 @@ the number of ``iterations`` for bootstrapping.
 
 New Features
 ------------
-
-This release is accompanied by a bunch of new features. Math operations can now be used
-with our :py:class:`.PredictionEnsemble` objects and their variables
-can be sub-selected. Users can now quick plot time series forecasts with these objects.
-Bootstrapping is available for :py:class:`.HindcastEnsemble`. Spatial
-dimensions can be passed to metrics to do things like pattern correlation. New metrics
-have been implemented based on Contingency tables. We now include an early version
-of bias removal for :py:class:`.HindcastEnsemble`.
+This release is accompanied by a bunch of new features. Math operations can now be used with our :py:class:`.PredictionEnsemble` objects and their variables can be sub-selected. Users can now quick plot time series forecasts with these objects. Bootstrapping is available for :py:class:`.HindcastEnsemble`. Spatial dimensions can be passed to metrics to do things like pattern correlation. New metrics have been implemented based on Contingency tables. We now include an early version of bias removal for :py:class:`.HindcastEnsemble`.
 
 - Use math operations like ``+-*/`` with :py:class:`.HindcastEnsemble`
   and :py:class:`.PerfectModelEnsemble`. See
@@ -626,9 +604,8 @@ of bias removal for :py:class:`.HindcastEnsemble`.
   respect to observations. See `example <bias_removal.html>`__.
   (:pr:`389`, :pr:`443`, :pr:`459`) `Aaron Spring`_ and `Riley X. Brady`_.
 
-Deprecated
-----------
-
+Depreciated
+-----------
 - ``spatial_smoothing_xrcoarsen`` no longer used for spatial smoothing.
   (:pr:`391`) `Aaron Spring`_.
 - ``compute_metric``, ``compute_uninitialized`` and ``compute_persistence`` no longer
@@ -641,7 +618,6 @@ Deprecated
 
 Bug Fixes
 ---------
-
 - :py:meth:`.PredictionEnsemble.verify` and
   :py:meth:`.PredictionEnsemble.bootstrap` now accept
   ``metric_kwargs``. (:pr:`387`) `Aaron Spring`_.
@@ -700,14 +676,12 @@ climpred v2.1.0 (2020-06-08)
 
 Breaking Changes
 ----------------
-
 - Keyword ``bootstrap`` has been replaced with ``iterations``. We feel that this more
   accurately describes the argument, since "bootstrap" is really the process as a whole.
   (:pr:`354`) `Aaron Spring`_.
 
 New Features
 ------------
-
 - :py:class:`.HindcastEnsemble` and
   :py:class:`.PerfectModelEnsemble` now use an HTML representation,
   following the more recent versions of ``xarray``. (:pr:`371`) `Aaron Spring`_.
@@ -743,11 +717,7 @@ New Features
 
 Performance
 -----------
-
-The major change for this release is a dramatic speedup in bootstrapping functions, led
-by `Aaron Spring`_. We focused on scalability with ``dask`` and found many places we
-could compute skill simultaneously over all bootstrapped ensemble members rather than
-at each iteration.
+The major change for this release is a dramatic speedup in bootstrapping functions, led by `Aaron Spring`_. We focused on scalability with ``dask`` and found many places we could compute skill simultaneously over all bootstrapped ensemble members rather than at each iteration.
 
 - Bootstrapping uninitialized skill in the perfect model framework is now sped up
   significantly for annual lead resolution. (:pr:`332`) `Aaron Spring`_.
@@ -877,7 +847,6 @@ Internals/Minor Fixes
   clear, since ``reference`` usually refers to a type of forecast, such as persistence.
   (:pr:`310`) `Riley X. Brady`_.
 - ``Comparison`` objects can now have aliases. (:pr:`310`) `Riley X. Brady`_.
-
 
 
 climpred v1.2.1 (2020-01-07)
@@ -1116,8 +1085,10 @@ Internals/Minor Fixes
 - Add tests for :py:class:`.HindcastEnsemble` and
   ``PerfectModelEnsemble``. (:pr:`199`) `Riley X. Brady`_
 
+
 climpred v1.0.0 (2019-07-03)
 ============================
+
 ``climpred`` v1.0.0 represents the first stable release of the package. It includes
 :py:class:`.HindcastEnsemble` and ``PerfectModelEnsemble`` objects to
 perform analysis with.
@@ -1217,11 +1188,12 @@ Internals/Minor Fixes
 - Increase code coverage through more testing. (:pr:`167`) `Aaron Spring`_
 - Consolidates checks and constants into modules. (:pr:`173`) `Andrew Huang`_
 
+
 climpred v0.2 (2019-01-11)
 ==========================
 
-Name changed to ``climpred``, developed enough for basic decadal prediction tasks on a
-perfect-model ensemble and reference-based ensemble.
+Name changed to ``climpred``, developed enough for basic decadal prediction tasks on a perfect-model ensemble and reference-based ensemble.
+
 
 climpred v0.1 (2018-12-20)
 ==========================

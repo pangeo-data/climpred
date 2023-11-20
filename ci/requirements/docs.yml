@@ -16,7 +16,7 @@ dependencies:
   - myst-nb
   - nbstripout
   - sphinx
-  - sphinx-book-theme
+  - sphinx-book-theme >=0.3.3
   - sphinx-copybutton
   - sphinxcontrib-bibtex
   - sphinxcontrib-napoleon
@@ -26,8 +26,8 @@ dependencies:
   - bias_correction
   - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
   - esmtools
-  - nc-time-axis>=1.4.0
-  - numba>=0.52
+  - nc-time-axis >=1.4.0
+  - numba >=0.52
   - xclim
   - xesmf
   - xrft

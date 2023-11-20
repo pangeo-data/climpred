@@ -721,8 +721,8 @@ The major change for this release is a dramatic speedup in bootstrapping functio
 
 - Bootstrapping uninitialized skill in the perfect model framework is now sped up
   significantly for annual lead resolution. (:pr:`332`) `Aaron Spring`_.
-- General speedup in :py:func:`~climpred.bootstrap.bootstrap_hindcast` and
-  :py:func:`~climpred.bootstrap.bootstrap_perfect_model`: (:pr:`285`) `Aaron Spring`_.
+- General speedup in ``~climpred.bootstrap.bootstrap_hindcast`` and
+  ``~climpred.bootstrap.bootstrap_perfect_model``: (:pr:`285`) `Aaron Spring`_.
 
     * Properly implemented handling for lazy results when inputs are chunked.
 

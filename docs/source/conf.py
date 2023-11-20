@@ -125,7 +125,6 @@ html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcf
 html_theme_options = {
     "repository_url": "https://github.com/pangeo-data/climpred",
     "use_edit_page_button": True,
-    "navbar_end": "search-field.html",
     "repository_branch": "main",
     "path_to_docs": "docs/source",
     "use_edit_page_button": True,
@@ -151,12 +150,12 @@ html_context = {
 
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
-    "xarray": ("https://xarray.pydata.org/en/stable/", None),
+    "esmtools": ("https://esmtools.readthedocs.io/en/latest", None),
+    "numpy": ("https://numpy.org/doc/stable", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
-    "numpy": ("https://docs.scipy.org/doc/numpy/", None),
+    "xarray": ("https://docs.xarray.dev/en/stable", None),
+    "xclim": ("https://xclim.readthedocs.io/en/latest", None),
     "xskillscore": ("https://xskillscore.readthedocs.io/en/stable", None),
-    "xclim": ("https://xclim.readthedocs.io/en/latest/", None),
-    "esmtools": ("https://esmtools.readthedocs.io/en/latest/", None),
 }
 
 # Should only be uncommented when testing page development while notebooks
@@ -165,8 +164,7 @@ intersphinx_mapping = {
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600
 nbsphinx_execute = "auto"  # "never" "always"
-jupyter_execute_notebooks = "auto"
-
+nb_execution_mode = "auto"
 
 # Napoleon configurations
 napoleon_google_docstring = True

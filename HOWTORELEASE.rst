@@ -18,14 +18,13 @@ changes, a minor version adds functionality, and a patch covers bug fixes.
     $ git tag -a v1.0.0 -m "Version 1.0.0"
     $ git push upstream main --tags
 
-#. We use Github Actions to automate the new release being published to TestPyPI (staging) and PyPI (production).
-   When a tag is pushed to the repository, the following happens:
+#. We use Github Actions to automate the new release being published to TestPyPI (staging) and PyPI (production). When a tag is pushed to the repository, the following happens:
     - A new release is drafted on Github
     - The library is built and a workflow is staged for publishing to TestPyPI
         - A maintainer must manually approve the workflow to publish to TestPyPI
     - If everything clears, maintainers can then finalize the release on GitHub, triggering an upload to PyPI
 
-   If you wish to circumvent the GitHub Actions for whatever reason, you can manually do it by running the following::
+    If you wish to circumvent the GitHub Actions for whatever reason, you can manually do it by running the following::
 
     $ git clean -xfd  # remove any files not checked into git
     $ python -m build  # build package

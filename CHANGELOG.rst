@@ -658,7 +658,7 @@ Internals/Minor Fixes
   (:issue:`402`, :pr:`403`) `Aaron Spring`_.
 - ``dim`` is expected to be a list of strings in
   :py:func:`~climpred.prediction.compute_perfect_model` and
-  :py:func:`~climpred.prediction.compute_hindcast`.
+  `~climpred.prediction.compute_hindcast`.
   (:issue:`282`, :pr:`407`) `Aaron Spring`_.
 - Update ``cartopy`` requirement to 0.0.18 or greater to release lock on
   ``matplotlib`` version. Update ``xskillscore`` requirement to 0.0.18 to
@@ -747,7 +747,7 @@ Internals/Minor Fixes
   (:pr:`330`) `Aaron Spring`_.
 - Remove ``member`` coords for ``m2c`` comparison for probabilistic metrics.
   (:pr:`330`) `Aaron Spring`_.
-- Refactored :py:func:`~climpred.prediction.compute_hindcast` and
+- Refactored ``~climpred.prediction.compute_hindcast`` and
   :py:func:`~climpred.prediction.compute_perfect_model`. (:pr:`330`) `Aaron Spring`_.
 - Changed lead0 coordinate modifications to be compliant with ``xarray=0.15.1`` in
   :py:func:`~climpred.reference.compute_persistence`. (:pr:`348`) `Aaron Spring`_.
@@ -763,8 +763,8 @@ Internals/Minor Fixes
 - Require ``cftime v1.1.2``, which modifies their object handling to create 200-400x
   speedups in some basic operations. (:pr:`356`) `Riley X. Brady`_.
 - Resample first and then calculate skill in
-  :py:func:`~climpred.bootstrap.bootstrap_perfect_model` and
-  :py:func:`~climpred.bootstrap.bootstrap_hindcast` (:pr:`355`) `Aaron Spring`_.
+  `~climpred.bootstrap.bootstrap_perfect_model` and
+  `~climpred.bootstrap.bootstrap_hindcast` (:pr:`355`) `Aaron Spring`_.
 
 Documentation
 -------------

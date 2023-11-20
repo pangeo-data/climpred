@@ -129,7 +129,7 @@ jobs:
           python parse_logs.py logs/**/*-log*
           cat pytest-logs.txt
       - name: Report failures
-        uses: actions/github-script@v6
+        uses: actions/github-script@v7
         with:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           script: |

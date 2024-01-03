@@ -980,7 +980,7 @@ class PredictionEnsemble:
                     ndims.remove(d)
             if len(ndims) > 0:
                 msg += (
-                    f"\nConsider chunking embarassingly parallel dimensions such as "
+                    f"\nConsider chunking embarrassingly parallel dimensions such as "
                     f"{ndims} automatically, i.e. "
                     f'`{name}.chunk({ndims[0]}="auto").verify(...).'
                 )
@@ -988,15 +988,16 @@ class PredictionEnsemble:
 
     def _bootstrap(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
-        alignment: alignmentType = None,
-        reference: referenceType = None,
-        groupby: groupbyType = None,
-        iterations: int = None,
+        *,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
+        alignment: Optional[alignmentType] = None,
+        reference: Optional[referenceType] = None,
+        groupby: Optional[groupbyType] = None,
+        iterations: Optional[int] = None,
         sig: int = 95,
-        resample_dim: str = None,
+        resample_dim: Optional[str] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """PredictionEnsemble.bootstrap() parent method.
@@ -1167,7 +1168,7 @@ class PredictionEnsemble:
         ]
         results_labels = ["verify skill", "low_ci", "high_ci"]
 
-        if reference != []:
+        if reference:
             pvalue = _pvalue_from_distributions(
                 resampled_skills.drop_sel(skill="initialized"),
                 resampled_skills.sel(skill="initialized"),
@@ -1347,11 +1348,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def verify(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
-        reference: referenceType = None,
-        groupby: groupbyType = None,
+        *,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
+        reference: Optional[referenceType] = None,
+        groupby: Optional[groupbyType] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Verify initialized predictions against a configuration of its members.
@@ -1498,9 +1500,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def _compute_uninitialized(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
+        *,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Verify the bootstrapped uninitialized run against itself.
@@ -1554,8 +1557,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def _compute_persistence(
         self,
-        metric: metricType = None,
-        dim: dimType = None,
+        *,
+        metric: metricType,
+        dim: Optional[dimType] = None,
         **metric_kwargs: metric_kwargsType,
     ):
         """Verify a simple persistence forecast of the control run against itself.
@@ -1630,9 +1634,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def _compute_climatology(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
+        *,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Verify a climatology forecast.
@@ -1681,11 +1686,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
-        reference: referenceType = None,
-        groupby: groupbyType = None,
+        *,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
+        reference: Optional[referenceType] = None,
+        groupby: Optional[groupbyType] = None,
         iterations: Optional[int] = None,
         sig: int = 95,
         resample_dim: str = "member",
@@ -2102,12 +2108,13 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def verify(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
-        alignment: alignmentType = None,
-        reference: referenceType = None,
-        groupby: groupbyType = None,
+        *,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
+        alignment: Optional[alignmentType] = None,
+        reference: Optional[referenceType] = None,
+        groupby: Optional[groupbyType] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Verify the initialized ensemble against observations.
@@ -2409,12 +2416,13 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def bootstrap(
         self,
-        metric: metricType = None,
-        comparison: comparisonType = None,
-        dim: dimType = None,
-        alignment: alignmentType = None,
-        reference: referenceType = None,
-        groupby: groupbyType = None,
+        *,
+        alignment: alignmentType,
+        metric: metricType,
+        comparison: comparisonType,
+        dim: Optional[dimType] = None,
+        reference: Optional[referenceType] = None,
+        groupby: Optional[groupbyType] = None,
         iterations: Optional[int] = None,
         sig: int = 95,
         resample_dim: str = "member",
@@ -2541,7 +2549,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
     def remove_bias(
         self,
-        alignment: alignmentType = None,
+        alignment: alignmentType,
         how: str = "additive_mean",
         train_test_split: str = "unfair",
         train_init: Optional[Union[xr.DataArray, slice]] = None,

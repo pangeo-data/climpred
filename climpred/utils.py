@@ -64,7 +64,7 @@ def assign_attrs(
     dim=None,
     **kwargs,
 ):
-    """Write information about prediction skill into attrs.
+    r"""Write information about prediction skill into attrs.
 
     Args:
         skill (`xarray` object): prediction skill.
@@ -75,7 +75,7 @@ def assign_attrs(
         metric (class) : metric used in comparing the forecast and verification data.
         comparison (class): how to compare the forecast and verification data.
         dim (str): Dimension over which metric was applied.
-        kwargs (dict): other information
+        \*\*kwargs : other information
 
     Returns:
        skill (`xarray` object): prediction skill with additional attrs.

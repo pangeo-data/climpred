@@ -20,6 +20,7 @@ climpred v2.5.0 (unreleased)
 Internals/Minor Fixes
 ---------------------
 - Fixed some issues with the documentation build to address rendering errors and reduce the number of warnings on ReadTheDocs. (pr:`843`) `Trevor James Smith`_
+- Fixed some issues with the typing hints of classes functions. (pr:`850`) `Trevor James Smith`_
 
 climpred v2.4.0 (2023-11-09)
 ============================

@@ -144,7 +144,13 @@ def _sanitize_to_list(dim: Union[str, Set, Tuple, List, None]) -> Optional[List[
     return dim
 
 
-def _get_metric_comparison_dim(initialized, metric, comparison, dim, kind):
+def _get_metric_comparison_dim(
+    initialized,
+    metric,
+    comparison,
+    dim: Optional[Union[List[str], str]],
+    kind,
+):
     """Return `metric`, `comparison` and `dim` for compute functions.
 
     Args:

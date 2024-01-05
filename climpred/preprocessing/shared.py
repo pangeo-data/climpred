@@ -1,4 +1,4 @@
-from typing import Any, Callable, Union
+from typing import Any, Callable, Optional, Union
 
 import numpy as np
 import xarray as xr
@@ -10,10 +10,10 @@ from .mpi import get_path as get_path_mpi
 def load_hindcast(
     inits=range(1961, 1965, 1),
     members=range(1, 3, 1),
-    preprocess: Callable = None,
+    preprocess: Optional[Callable] = None,
     lead_offset: int = 1,
     parallel: bool = True,
-    engine: str = None,
+    engine: Optional[str] = None,
     get_path: Callable = get_path_mpi,
     **get_path_kwargs: Any,
 ) -> Union[xr.DataArray, xr.Dataset]:

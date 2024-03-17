@@ -10,7 +10,7 @@ dependencies:
   - h5netcdf
   - pip
   - pooch
-  - pytest
+  - pytest<8
   - pytest-cov
   - pytest-lazy-fixture
   - pytest-xdist

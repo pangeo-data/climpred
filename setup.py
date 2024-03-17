@@ -45,7 +45,7 @@ extras_require["complete"].remove(
 extras_require["test"] = [
     "netcdf4",
     "pre-commit",
-    "pytest",
+    "pytest<8",
     "pytest-cov",
     "pytest-lazy-fixture",
     "pytest-xdist",

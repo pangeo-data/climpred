@@ -36,7 +36,7 @@ dependencies:
   - mypy
   - pre-commit
   - pylint
-  - pytest
+  - pytest<8
   - pytest-cov
   - pytest-lazy-fixture
   - pytest-sugar

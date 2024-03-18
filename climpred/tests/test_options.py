@@ -83,13 +83,13 @@ def test_option_resample_iterations_func(hindcast_recon_1d_ym):
     """Singleton dimension makes resample_iterations_idx fail for py < 3.11"""
     with climpred.set_options(resample_iterations_func="resample_iterations_idx"):
         hindcast_recon_1d_ym.expand_dims("lon").bootstrap(
-                metric="mse",
-                comparison="e2o",
-                dim="init",
-                alignment="maximize",
-                iterations=2,
-                resample_dim="member",
-            )
+            metric="mse",
+            comparison="e2o",
+            dim="init",
+            alignment="maximize",
+            iterations=2,
+            resample_dim="member",
+        )
 
     with climpred.set_options(resample_iterations_func="resample_iterations"):
         hindcast_recon_1d_ym.expand_dims("lon").bootstrap(

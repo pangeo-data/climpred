@@ -147,6 +147,7 @@ jobs:
       - name: Install climpred[complete]
         run: |
           python -m pip install -e .[complete]
+          python -m pip install 'xarray<2024.2.0'
       - name: Conda info
         run: |
           conda info

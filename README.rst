@@ -1,6 +1,6 @@
 .. image:: https://i.imgur.com/HPOdOsR.png
 
-Verification of weather and climate forecasts.
+Verification of weather and climate forecasts
 
 ..
     Table version of badges inspired by pySTEPS.

@@ -1456,9 +1456,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         reference = _check_valid_reference(reference)
         input_dict = {
             "ensemble": self._datasets["initialized"],
-            "control": self._datasets["control"]
-            if isinstance(self._datasets["control"], xr.Dataset)
-            else None,
+            "control": (
+                self._datasets["control"]
+                if isinstance(self._datasets["control"], xr.Dataset)
+                else None
+            ),
             "init": True,
         }
         result = self._apply_climpred_function(
@@ -1535,9 +1537,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         )
         input_dict = {
             "ensemble": self._datasets["uninitialized"],
-            "control": self._datasets["control"]
-            if isinstance(self._datasets["control"], xr.Dataset)
-            else None,
+            "control": (
+                self._datasets["control"]
+                if isinstance(self._datasets["control"], xr.Dataset)
+                else None
+            ),
             "init": False,
         }
         if dim is None:
@@ -1664,9 +1668,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
         """
         input_dict = {
             "ensemble": self._datasets["initialized"],
-            "control": self._datasets["control"]
-            if isinstance(self._datasets["control"], xr.Dataset)
-            else None,
+            "control": (
+                self._datasets["control"]
+                if isinstance(self._datasets["control"], xr.Dataset)
+                else None
+            ),
             "init": True,
         }
         if dim is None:
@@ -2877,11 +2883,9 @@ class HindcastEnsemble(PredictionEnsemble):
             if len(self.get_initialized().coords["valid_time"].dims) == 1 and set(
                 ["init", "lead"]
             ).issubset(set(self.get_initialized().dims)):
-                self._datasets["initialized"].coords[
-                    "valid_time"
-                ] = add_time_from_init_lead(
-                    self.get_initialized().drop("valid_time")
-                ).coords[
-                    "valid_time"
-                ]
+                self._datasets["initialized"].coords["valid_time"] = (
+                    add_time_from_init_lead(
+                        self.get_initialized().drop("valid_time")
+                    ).coords["valid_time"]
+                )
         return self

@@ -415,9 +415,11 @@ def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
         hindcast.get_observations(),
         alignment,
         reference=reference,
-        hist=hindcast.get_uninitialized()
-        if isinstance(hindcast.get_uninitialized(), xr.Dataset)
-        else None,
+        hist=(
+            hindcast.get_uninitialized()
+            if isinstance(hindcast.get_uninitialized(), xr.Dataset)
+            else None
+        ),
     )
 
     verif_dates_xr = xr.concat(

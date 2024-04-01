@@ -1,4 +1,5 @@
 """Test bias_removal.py."""
+
 import copy
 
 import numpy as np

@@ -86,9 +86,9 @@ def assign_attrs(
         skill[v].attrs.update(ds[v].attrs)
 
     # climpred info
-    skill.attrs[
-        "prediction_skill_software"
-    ] = "climpred https://climpred.readthedocs.io/"
+    skill.attrs["prediction_skill_software"] = (
+        "climpred https://climpred.readthedocs.io/"
+    )
     if function_name:
         skill.attrs["skill_calculated_by_function"] = function_name
     if "init" in ds.coords and "init" not in skill.dims:
@@ -138,9 +138,9 @@ def assign_attrs(
     if "pers_sig" in kwargs:
         if kwargs["pers_sig"] is not None:
             _, ci_low_pers, ci_high_pers = _p_ci_from_sig(kwargs["pers_sig"])
-            kwargs[
-                "confidence_interval_levels_persistence"
-            ] = f"{ci_high_pers}-{ci_low_pers}"
+            kwargs["confidence_interval_levels_persistence"] = (
+                f"{ci_high_pers}-{ci_low_pers}"
+            )
     # check for none attrs and remove
     del_list = []
     for key, value in kwargs.items():

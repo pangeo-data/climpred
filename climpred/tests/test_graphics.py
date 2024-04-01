@@ -1,4 +1,5 @@
 """Test graphics.py and PredictionEnsemble.plot()."""
+
 import pytest
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble

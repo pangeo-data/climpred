@@ -1,4 +1,5 @@
 """Test compute_uninitialized."""
+
 import pytest
 
 from climpred.constants import VALID_ALIGNMENTS

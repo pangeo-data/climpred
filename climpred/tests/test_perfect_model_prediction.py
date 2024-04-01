@@ -1,6 +1,5 @@
 """Test compute_perfect_model."""
 
-
 import pytest
 import xarray as xr
 

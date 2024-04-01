@@ -167,9 +167,11 @@ def test_HindcastEnsemble_perfect_forecasts(
         skill = he.verify(
             metric=metric,
             comparison="m2o",
-            dim=["member", "init"]
-            if metric in probabilistic_metrics_requiring_more_than_member_dim
-            else "member",
+            dim=(
+                ["member", "init"]
+                if metric in probabilistic_metrics_requiring_more_than_member_dim
+                else "member"
+            ),
             alignment=alignment,
             **metric_kwargs,
         ).SST

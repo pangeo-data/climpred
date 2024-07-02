@@ -14,6 +14,7 @@ dependencies:
   - matplotlib-base
   - nc-time-axis >=1.4.0
   - h5netcdf
+  - numpy >=1.25.0
   - pip
   - pooch
   - pytest <8.0.0

@@ -23,7 +23,7 @@ dependencies:
   # Miscellaneous
   - cftime >=1.5.0
   # Numerics
-  - numpy
+  - numpy >=1.25.0
   - pandas
   - scipy
   - xarray

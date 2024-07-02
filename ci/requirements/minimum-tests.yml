@@ -8,6 +8,7 @@ dependencies:
   - coveralls
   - dask-core
   - h5netcdf
+  - numpy >=1.25.0
   - pip
   - pooch
   - pytest <8.0.0

@@ -917,7 +917,7 @@ class PredictionEnsemble:
 
         def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
             """Remove the seasonal cycle from the data."""
-            if ds is {}:
+            if ds == {}:
                 return {}
             if seasonality is None:
                 seasonality = OPTIONS["seasonality"]

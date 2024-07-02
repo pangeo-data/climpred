@@ -2829,7 +2829,7 @@ class HindcastEnsemble(PredictionEnsemble):
         else:
             raise NotImplementedError(
                 f"bias removal '{how}' is not implemented, please choose from "
-                f" {INTERNAL_BIAS_CORRECTION_METHODS+BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."  # noqa: E501
+                f" {INTERNAL_BIAS_CORRECTION_METHODS + BIAS_CORRECTION_BIAS_CORRECTION_METHODS}."  # noqa: E501
             )
 
         if train_test_split in ["unfair-cv"]:

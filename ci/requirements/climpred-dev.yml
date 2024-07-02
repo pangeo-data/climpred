@@ -29,7 +29,7 @@ dependencies:
   - xarray
   # Package Management
   - asv
-  - black==19.10b0
+  - black ==24.4.2
   - coveralls
   - flake8
   - isort
@@ -46,13 +46,13 @@ dependencies:
   - dask-core
   - numba
   # Regridding
-  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
+  - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
   - xesmf
   # Statistics
   - bias_correction
   - eofs
   - esmtools >=1.1.3
-  - xclim >=0.30.0
+  - xclim >=0.46.0
   - xrft
   - xskillscore >=0.0.20
   # Visualization

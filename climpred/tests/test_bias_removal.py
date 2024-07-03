@@ -1,12 +1,10 @@
 """Test bias_removal.py."""
 
 import copy
-import warnings
 
 import numpy as np
 import pytest
 import xarray as xr
-from packaging.version import Version
 
 from climpred import set_options
 from climpred.constants import (
@@ -517,11 +515,6 @@ def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
 
 def test_remove_bias_errors(hindcast_NMME_Nino34):
     """Test remove_bias error messaging."""
-    if Version(np.__version__) >= Version("2.0.0") and Version(
-        xr.__version__
-    ) <= Version("2024.6.0"):
-        warnings.warn("Skipping test due to incompatible numpy and xarray versions.")
-        pytest.skip("Changes in numpy v2.0.0 break xarray.")
 
     how = "additive_mean"
     he = (
@@ -564,12 +557,6 @@ def test_remove_bias_errors(hindcast_NMME_Nino34):
 
 def test_remove_bias_dont_drop(hindcast_NMME_Nino34):
     """Test remove_bias doesnt drop single-item lead dimension."""
-    if Version(np.__version__) >= Version("2.0.0") and Version(
-        xr.__version__
-    ) <= Version("2024.6.0"):
-        warnings.warn("Skipping test due to incompatible numpy and xarray versions.")
-        pytest.skip("Changes in numpy v2.0.0 break xarray.")
-
     alignment = "same_inits"
     detrended = hindcast_NMME_Nino34.isel(lead=[0]).remove_bias(
         how="additive_mean", alignment=alignment

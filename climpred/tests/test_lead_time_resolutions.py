@@ -1,7 +1,10 @@
+import warnings
+
 import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+from packaging.version import Version
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 
@@ -101,6 +104,12 @@ def test_HindcastEnsemble_lead_pdTimedelta(hind_ds_initialized_1d, lead_res):
 
 
 def test_monthly_leads_real_example(hindcast_NMME_Nino34):
+    if Version(np.__version__) >= Version("2.0.0") and Version(
+        xr.__version__
+    ) <= Version("2024.6.0"):
+        warnings.warn("Skipping test due to incompatible numpy and xarray versions.")
+        pytest.skip("Changes in numpy v2.0.0 break xarray.")
+
     skill = (
         hindcast_NMME_Nino34.isel(lead=[0, 1, 2])
         .sel(init=slice("2005", "2006"))

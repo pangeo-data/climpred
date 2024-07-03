@@ -10,10 +10,10 @@ dependencies:
   - dask-core
   - eofs
   - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
+  - h5netcdf
   - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - matplotlib-base
   - nc-time-axis >=1.4.0
-  - h5netcdf
   - numpy >=1.25.0
   - pip
   - pooch
@@ -23,8 +23,8 @@ dependencies:
   - pytest-xdist
   - scipy
   - tqdm
+  - xarray >=2022.6.0
   - xclim >=0.46
-  - xarray
   - xesmf
   - xrft
   - xskillscore >=0.0.18

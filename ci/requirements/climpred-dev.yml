@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python >=3.9,<3.12
+  - python >=3.9,<3.13
   # Documentation
   - myst-nb
   - nbstripout
@@ -26,7 +26,7 @@ dependencies:
   - numpy >=1.25.0
   - pandas
   - scipy
-  - xarray
+  - xarray >=2022.6.0
   # Package Management
   - asv
   - black ==24.4.2
@@ -47,6 +47,7 @@ dependencies:
   - numba
   # Regridding
   - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
+  - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - xesmf
   # Statistics
   - bias_correction

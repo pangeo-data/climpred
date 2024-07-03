@@ -1,4 +1,5 @@
 # flake8: noqa
+"""Verification of weather and climate forecasts and prediction."""
 from importlib.metadata import PackageNotFoundError, version as _get_version
 
 from . import (

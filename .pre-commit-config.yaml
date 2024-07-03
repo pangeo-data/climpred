@@ -21,6 +21,11 @@ repos:
         exclude: '.ipynb|asv.conf.json'
       - id: trailing-whitespace
 
+  -   repo: https://github.com/pappasam/toml-sort
+      rev: v0.23.1
+      hooks:
+      - id: toml-sort-fix
+
   -   repo: https://github.com/psf/black-pre-commit-mirror
       rev: 24.4.2
       hooks:
@@ -30,6 +35,7 @@ repos:
       rev: 7.1.0
       hooks:
       - id: flake8
+        args: [ '--max-line-length=93', '--extend-ignore=W503' ]
 
   -   repo: https://github.com/PyCQA/isort
       rev: 5.13.2

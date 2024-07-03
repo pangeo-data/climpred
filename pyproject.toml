@@ -1,14 +1,147 @@
+[build-system]
+requires = [
+  "setuptools>=64",
+  "setuptools_scm>=8",
+  "wheel"
+]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "climpred"
+authors = [
+  {name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de"},
+  {name = "Riley Brady", email = "riley.brady@colorado.edu"}
+]
+maintainers = [
+  {name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de"},
+  {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
+]
+readme = "README.rst"
+license = {file = "LICENSE"}
+requires-python = ">=3.8"
+classifiers = [
+  "Development Status :: 5 - Production/Stable",
+  "Intended Audience :: Education",
+  "Intended Audience :: Science/Research",
+  "License :: OSI Approved :: MIT License",
+  "Natural Language :: English",
+  "Operating System :: OS Independent",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Programming Language :: Python :: 3.9",
+  "Programming Language :: Python :: 3.10",
+  "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Topic :: Scientific/Engineering :: Atmospheric Science"
+]
+dependencies = [
+  "cf_xarray>=0.6.0",
+  "cftime>=1.5.0",
+  "dask>=2021.10.0",
+  "numpy>=1.25.0",
+  "packaging",
+  "pooch>=1.4",
+  "xarray>=0.19.0",
+  "xskillscore>=0.0.20"
+]
+dynamic = ["version", "description"]
+
+[project.optional-dependencies]
+accel = ["numba>=0.52", "bottleneck"]
+bias-correction = ["xclim>=0.46", "bias-correction>=0.4"]
+io = ["netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
+regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
+relative_entropy = ["eofs"]
+test = ["netcdf4", "pre-commit", "pytest<8", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
+viz = ["matplotlib", "nc-time-axis>=1.4.0"]
+vwmp = ["xrft"]
+docs = ["myst_nb", "sphinx", "sphinx-copybutton", "sphinx-book-theme>=0.3.3", "sphinxcontrib-bibtex", "sphinxcontrib-napoleon", "numba>=0.52", "bottleneck", "xclim>=0.46", "bias-correction>=0.4", "matplotlib", "nc-time-axis>=1.4.0", "netcdf4", "eofs", "xrft"]
+complete = ["climpred[accel,bias-correction,viz,io,test,relative_entropy,vwmp]"]
+
+[project.urls]
+"Homepage" = "https://climpred.readthedocs.io/en/stable/"
+"Source" = "https://github.com/pangeo-data/climpred"
+"Changelog" = "https://climpred.readthedocs.io/en/stable/changelog.html"
+"Issue Tracker" = "https://github.com/pangeo-data/climpred/issues"
+
 [tool.black]
 line-length = 88
 
-[build-system]
- requires = [
-     "setuptools>=42",
-     "wheel",
-     "setuptools_scm[toml]>=3.4",
-     "setuptools_scm_git_archive",
- ]
- build-backend = "setuptools.build_meta"
+[tool.isort]
+known_first_party = "climpred"
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
+combine_as_imports = true
+skip = [
+  "docs/source/conf.py"
+]
 
- [tool.setuptools_scm]
- fallback_version = "999"
+[tool.mypy]
+exclude = "asv_bench|doc"
+files = "."
+show_error_codes = true
+ignore_missing_imports = true
+
+[tool.mypy.overrides]
+"bottleneck.*" = {ignore_missing_imports = true}
+"cftime.*" = {ignore_missing_imports = true}
+"mypy-dask.*" = {ignore_missing_imports = true}
+"mypy-distributed.*" = {ignore_missing_imports = true}
+"mypy-fsspec.*" = {ignore_missing_imports = true}
+"mypy-matplotlib.*" = {ignore_missing_imports = true}
+"mypy-nc_time_axis.*" = {ignore_missing_imports = true}
+"mypy-numpy.*" = {ignore_missing_imports = true}
+"mypy-netCDF4.*" = {ignore_missing_imports = true}
+"mypy-pandas.*" = {ignore_missing_imports = true}
+"mypy-pytest.*" = {ignore_missing_imports = true}
+"mypy-scipy.*" = {ignore_missing_imports = true}
+"mypy-setuptools" = {ignore_missing_imports = true}
+"mypy-toolz.*" = {ignore_missing_imports = true}
+
+[tool.pytest.ini_options]
+python_files = ["test_*.py"]
+addopts = [
+  "--color=yes",
+  "--verbose"
+]
+testpaths = [
+  "climpred/tests"
+]
+filterwarnings = [
+  # xarray
+  "ignore: Using a non-tuple sequence for multidimensional indexing is deprecated:FutureWarning",
+  # upstream xarray
+  "ignore: Mean of empty slice:RuntimeWarning",
+  # only shows up during CI: no idea where its coming from, something inside bootstrapping
+  "ignore: `np.alen` is deprecated, use `len` instead:DeprecationWarning",
+  # ignore UserWarnings raise by warnings.warn() which do not break functionality
+  # therefore ignore in testing
+  "ignore::UserWarning",
+  # xarray
+  "ignore: tostring:DeprecationWarning",
+  # properscoring
+  "ignore: invalid value encountered:RuntimeWarning",
+  "ignore: divide by zero:RuntimeWarning",
+  # xarray
+  "ignore: 'base' in .resample():FutureWarning",
+  # matplotlib
+  "ignore: More than 20 figures:RuntimeWarning",
+  # numpy https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064
+  "ignore: elementwise comparison failed",
+  # pydap
+  "ignore: Using or importing the ABCs from",
+  # xarray
+  "ignore: Passing method to CFTimeIndex.get_loc is deprecated",
+  # statsmodels
+  "ignore: pandas.Int64Index is deprecated"
+]
+markers = [
+  "mistral: tests requiring being on MPI supercomputer",
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
+
+[tool.setuptools_scm]
+fallback_version = "999"

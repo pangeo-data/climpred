@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python >=3.9,<3.12
+  - python >=3.9,<3.13
   - bias_correction
   - cftime >=1.5.0
   - coveralls

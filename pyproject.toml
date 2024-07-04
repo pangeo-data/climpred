@@ -17,7 +17,7 @@ maintainers = [
   {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
 ]
 readme = "README.rst"
-license = {file = "LICENSE"}
+license = {file = "LICENSE.txt"}
 requires-python = ">=3.8"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
@@ -35,28 +35,36 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Atmospheric Science"
 ]
 dependencies = [
-  "cf_xarray>=0.6.0",
-  "cftime>=1.5.0",
-  "dask>=2021.10.0",
-  "numpy>=1.25.0",
+  "cf_xarray >=0.6.0",
+  "cftime >=1.5.0",
+  "dask >=2021.10.0",
+  "numpy >=1.25.0",
   "packaging",
-  "pooch>=1.4",
-  "xarray>=0.19.0",
-  "xskillscore>=0.0.20"
+  "pooch >=1.4",
+  "xarray >=0.19.0",
+  "xskillscore >=0.0.20"
 ]
 dynamic = ["version", "description"]
 
 [project.optional-dependencies]
-accel = ["numba>=0.52", "bottleneck"]
-bias-correction = ["xclim>=0.46", "bias-correction>=0.4"]
+accel = ["numba >=0.52", "bottleneck"]
+bias-correction = ["xclim >=0.46", "bias-correction >=0.4"]
 io = ["netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
 regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
 relative_entropy = ["eofs"]
-test = ["netcdf4", "pre-commit", "pytest<8", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
-viz = ["matplotlib", "nc-time-axis>=1.4.0"]
+test = ["netcdf4", "pre-commit", "pytest <8.0.0", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
+viz = ["matplotlib", "nc-time-axis >=1.4.0"]
 vwmp = ["xrft"]
-docs = ["myst_nb", "sphinx", "sphinx-copybutton", "sphinx-book-theme>=0.3.3", "sphinxcontrib-bibtex", "sphinxcontrib-napoleon", "numba>=0.52", "bottleneck", "xclim>=0.46", "bias-correction>=0.4", "matplotlib", "nc-time-axis>=1.4.0", "netcdf4", "eofs", "xrft"]
 complete = ["climpred[accel,bias-correction,viz,io,test,relative_entropy,vwmp]"]
+docs = [
+  "climpred[complete]",
+  "myst_nb",
+  "sphinx",
+  "sphinx-book-theme >=0.3.3",
+  "sphinx-copybutton",
+  "sphinxcontrib-bibtex",
+  "sphinxcontrib-napoleon"
+]
 
 [project.urls]
 "Homepage" = "https://climpred.readthedocs.io/en/stable/"
@@ -143,5 +151,10 @@ markers = [
   "slow: marks tests as slow (deselect with '-m \"not slow\"')"
 ]
 
+[tool.setuptools.dynamic]
+description = {file = "climpred/__init__.py"}
+
 [tool.setuptools_scm]
 fallback_version = "999"
+version_scheme = "post-release"
+local_scheme = "dirty-tag"

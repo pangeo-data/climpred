@@ -908,16 +908,16 @@ class PredictionEnsemble:
             >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
             Initialized:
-                SST      (init, lead, member) float64 -0.2349 -0.216 ... 0.6476 0.6433
+                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
             Uninitialized:
-                SST      (time, member) float64 -0.1789 0.005732 -0.257 ... 0.4359 0.4154
+                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
             Observations:
-                SST      (time) float32 -0.3739 -0.3248 -0.1575 ... 0.2757 0.3736 0.4778
+                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
         """
 
         def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
             """Remove the seasonal cycle from the data."""
-            if ds is {}:
+            if ds == {}:
                 return {}
             if seasonality is None:
                 seasonality = OPTIONS["seasonality"]

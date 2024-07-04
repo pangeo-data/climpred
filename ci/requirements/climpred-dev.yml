@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python >=3.9,<3.12
+  - python >=3.9,<3.13
   # Documentation
   - myst-nb
   - nbstripout
@@ -23,13 +23,13 @@ dependencies:
   # Miscellaneous
   - cftime >=1.5.0
   # Numerics
-  - numpy
+  - numpy >=1.25.0
   - pandas
   - scipy
-  - xarray
+  - xarray >=2022.6.0
   # Package Management
   - asv
-  - black==19.10b0
+  - black ==24.4.2
   - coveralls
   - flake8
   - isort
@@ -46,13 +46,14 @@ dependencies:
   - dask-core
   - numba
   # Regridding
-  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
+  - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
+  - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - xesmf
   # Statistics
   - bias_correction
   - eofs
   - esmtools >=1.1.3
-  - xclim >=0.30.0
+  - xclim >=0.46.0
   - xrft
   - xskillscore >=0.0.20
   # Visualization

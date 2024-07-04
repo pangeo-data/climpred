@@ -152,7 +152,7 @@ markers = [
 ]
 
 [tool.setuptools.dynamic]
-description = {file = "climpred/__init__.py"}
+description = {file = "src/climpred/__init__.py"}
 
 [tool.setuptools_scm]
 fallback_version = "999"

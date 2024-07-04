@@ -36,7 +36,7 @@ jobs:
           shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.9"]
+        python-version: ["3.8", "3.9"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -78,7 +78,6 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        env: [""]
         include:
           - env: "climpred-maximum-tests"
             python-version: "3.9"
@@ -88,6 +87,9 @@ jobs:
             os: ubuntu-latest
           - env: "climpred-maximum-tests-upstream"
             python-version: "3.11"
+            os: ubuntu-latest
+          - env: "climpred-maximum-tests"
+            python-version: "3.12"
             os: ubuntu-latest
     steps:
       - uses: actions/checkout@v4

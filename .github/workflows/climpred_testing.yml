@@ -27,13 +27,16 @@ jobs:
           keyword: "[skip-ci]"
 
   minimum-test:  # Runs testing suite with minimal dependencies
-    name: Test minimum dependencies, Python3.9
+    name: Test minimum dependencies, Python${{ matrix.python-version }}
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
     defaults:
         run:
           shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
         with:
@@ -45,7 +48,7 @@ jobs:
           environment-name: climpred-minimum-tests
           cache-environment: true
           create-args: >-
-            python=3.9
+            python=${{ matrix.python-version }}
             conda
       - name: Install climpred
         run: |
@@ -96,9 +99,9 @@ jobs:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
           cache-environment: true
-          cache-environment-key: "${{runner.os}}-${{runner.arch}}-py${{matrix.python-version}}-${{env.TODAY}}-${{hashFiles(env.CONDA_ENV_FILE)}}"
+          cache-environment-key: "${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}-${{ env.TODAY }}-${{ hashFiles(env.CONDA_ENV_FILE) }}"
           create-args: >-
-            python=${{matrix.python-version}}
+            python=${{ matrix.python-version }}
             conda
       - name: Install climpred[complete]
         run: |
@@ -128,11 +131,14 @@ jobs:
           fail_ci_if_error: false
 
   doctest:  # tests all docstrings
-    name: Doctests, Python3.9
-    runs-on: "ubuntu-latest"
+    name: Doctests, Python${{ matrix.python-version }}
+    runs-on: ubuntu-latest
     defaults:
       run:
         shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
       - name: Setup conda (micromamba)
@@ -142,7 +148,7 @@ jobs:
           environment-name: climpred-maximum-tests
           cache-environment: true
           create-args: >-
-            python=3.9
+            python=${{ matrix.python-version }}
             conda
       - name: Install climpred[complete]
         run: |
@@ -156,14 +162,17 @@ jobs:
           conda list
       - name: Run doctests
         run: |
-          python -m pytest --doctest-modules climpred --ignore climpred/tests
+          python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests
 
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
-    name: Notebooks, Python3.9
+    name: Notebooks, Python${{ matrix.python-version }}
     runs-on: ubuntu-latest
     defaults:
         run:
           shell: bash -l {0}
+    strategy:
+      matrix:
+        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
       - name: Set up conda (micromamba)
@@ -173,7 +182,7 @@ jobs:
           environment-name: climpred-docs
           cache-environment: true
           create-args: >-
-            python=3.9
+            python=${{ matrix.python-version }}
             conda
       - name: Install climpred
         run: |

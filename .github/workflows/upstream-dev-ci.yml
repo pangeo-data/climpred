@@ -28,7 +28,7 @@ jobs:
           keyword: "[test-upstream]"
 
   upstream-dev:
-    name: upstream-dev
+    name: upstream-dev, Python${{ matrix.python-version }}
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: |

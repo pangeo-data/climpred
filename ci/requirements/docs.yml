@@ -29,7 +29,7 @@ dependencies:
   - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - nc-time-axis >=1.4.0
   - numba >=0.52
-  - numpy >=1.25.0
+  - numpy >=1.25.0,<2.0.0  # Pin below v2.0.0 until xclim supports it.
   - xclim
   - xesmf
   - xrft

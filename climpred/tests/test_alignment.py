@@ -43,7 +43,7 @@ def test_same_inits_verification_dates(hindcast_hist_obs_1d, caplog):
             if i >= 2:
                 print(record)
                 assert (
-                    f"verifs: {FIRST_INIT+i}-01-01 00:00:00-{LAST_INIT+i}-01-01"
+                    f"verifs: {FIRST_INIT + i}-01-01 00:00:00-{LAST_INIT + i}-01-01"
                     in record[2]
                 )
 
@@ -124,7 +124,7 @@ def test_same_verifs_initializations(hindcast_hist_obs_1d, caplog):
             if i >= 2:
                 print(record)
                 assert (
-                    f"inits: {FIRST_INIT-i}-01-01 00:00:00-{LAST_INIT-i}-01-01 00:00:00"
+                    f"inits: {FIRST_INIT - i}-01-01 00:00:00-{LAST_INIT - i}-01-01 00:00:00"
                     in record[2]
                 )
 
@@ -156,7 +156,7 @@ def test_maximize_alignment_inits(hindcast_hist_obs_1d, caplog):
             if i >= 1:
                 print(record)
                 assert (
-                    f"inits: 1954-01-01 00:00:00-{2013-i}-01-01 00:00:00" in record[2]
+                    f"inits: 1954-01-01 00:00:00-{2013 - i}-01-01 00:00:00" in record[2]
                 )
 
 
@@ -177,7 +177,8 @@ def test_maximize_alignment_verifs(hindcast_hist_obs_1d, caplog):
             if i >= 1:
                 print(record)
                 assert (
-                    f"verifs: {1956+i}-01-01 00:00:00-2015-01-01 00:00:00" in record[2]
+                    f"verifs: {1956 + i}-01-01 00:00:00-2015-01-01 00:00:00"
+                    in record[2]
                 )
 
 

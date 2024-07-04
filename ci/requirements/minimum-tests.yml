@@ -8,13 +8,14 @@ dependencies:
   - coveralls
   - dask-core
   - h5netcdf
+  - numpy >=1.25.0
   - pip
   - pooch
-  - pytest<8
+  - pytest <8.0.0
   - pytest-cov
   - pytest-lazy-fixture
   - pytest-xdist
   - scipy
-  - xarray
-  - xskillscore >=0.0.18
   - tqdm
+  - xarray >=0.19.0
+  - xskillscore >=0.0.18

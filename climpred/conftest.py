@@ -1,6 +1,9 @@
+import warnings
+
 import numpy as np
 import pytest
 import xarray as xr
+from packaging.version import Version
 
 import climpred
 from climpred import HindcastEnsemble, PerfectModelEnsemble
@@ -319,6 +322,12 @@ def hindcast_S2S_Germany():
 def hindcast_NMME_Nino34():
     """NMME hindcasts with monthly leads and monthly inits and related IOv2
     observations for SST of the Nino34 region."""
+    if Version(np.__version__) >= Version("2.0.0") and Version(
+        xr.__version__
+    ) <= Version("2024.6.0"):
+        warnings.warn("Skipping test due to incompatible numpy and xarray versions.")
+        pytest.skip("Changes in numpy>=2.0.0 break xarray<=2024.6.0.")
+
     init = load_dataset("NMME_hindcast_Nino34_sst")
     obs = load_dataset("NMME_OIv2_Nino34_sst")
     init["sst"].attrs["units"] = "C"

@@ -27,7 +27,7 @@ def test_reset_temporal_axis(PM_ds_control_3d_full):
     first_actual = _reset_temporal_axis(
         PM_ds_control_3d_full, tsmooth_kws=tsmooth_kws, dim="time"
     ).time.values[0]
-    first_expected = f"{first_ori}-{first_ori+smooth*1-1}"
+    first_expected = f"{first_ori}-{first_ori + smooth * 1 - 1}"
     assert first_actual == first_expected
 
 
@@ -40,7 +40,7 @@ def test_reset_temporal_axis_lead(PM_ds_initialized_3d_full):
     first_actual = _reset_temporal_axis(
         PM_ds_initialized_3d_full, tsmooth_kws=tsmooth_kws
     )[dim].values[0]
-    first_expected = f"{first_ori}-{first_ori+smooth*1-1}"
+    first_expected = f"{first_ori}-{first_ori + smooth * 1 - 1}"
     assert first_actual == first_expected
 
 
@@ -141,7 +141,7 @@ def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
     assert pm_smoothed._temporally_smoothed
     skill = pm_smoothed.verify(metric="acc", comparison="m2e", dim=["member", "init"])
     assert skill.lead.size == pm.get_initialized().lead.size - smooth + 1
-    assert skill.lead[0] == f"1-{1+smooth-1}"
+    assert skill.lead[0] == f"1-{1 + smooth - 1}"
 
 
 @pytest.mark.parametrize("dim", ["time", "lead"])
@@ -166,7 +166,7 @@ def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth, dim):
         metric="acc", comparison="e2o", alignment="maximize", dim="init"
     )
     assert skill.lead.size == he.get_initialized().lead.size - smooth + 1
-    assert skill.lead[0] == f"1-{1+smooth-1}"
+    assert skill.lead[0] == f"1-{1 + smooth - 1}"
 
 
 @requires_xesmf

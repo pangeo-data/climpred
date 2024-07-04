@@ -93,7 +93,7 @@ def test_HindcastEnsemble_lead_pdTimedelta(hind_ds_initialized_1d, lead_res):
     initialized = hind_ds_initialized_1d
 
     initialized["lead"] = [
-        pd.Timedelta(f"{i*n} {freq}") for i in initialized.lead.values
+        pd.Timedelta(f"{i * n} {freq}") for i in initialized.lead.values
     ]
     hindcast = HindcastEnsemble(initialized)
 

@@ -422,20 +422,20 @@ def _chunk_before_resample_iterations_idx(
     if isinstance(chunking_dims, str):
         chunking_dims = [chunking_dims]
     # size of CLIMPRED_DIMS
-    climpred_dim_chunksize = 8 * np.product(
+    climpred_dim_chunksize = 8 * np.prod(
         np.array([ds[d].size for d in CLIMPRED_DIMS if d in ds.dims])
     )
     # remaining blocksize for remaining dims considering iteration
     spatial_dim_blocksize = optimal_blocksize / (climpred_dim_chunksize * iterations)
     # size of remaining dims
-    chunking_dims_size = np.product(
+    chunking_dims_size = np.prod(
         np.array([ds[d].size for d in ds.dims if d not in CLIMPRED_DIMS])
     )  # ds.lat.size*ds.lon.size
     # chunks needed to get to optimal blocksize
     chunks_needed = chunking_dims_size / spatial_dim_blocksize
     # get size clon, clat for spatial chunks
     cdim = [1 for i in chunking_dims]
-    nchunks = np.product(cdim)
+    nchunks = np.prod(cdim)
     stepsize = 1
     counter = 0
     while nchunks < chunks_needed:
@@ -444,7 +444,7 @@ def _chunk_before_resample_iterations_idx(
             if c <= ds[d].size:
                 c = c + stepsize
                 cdim[i] = c
-            nchunks = np.product(cdim)
+            nchunks = np.prod(cdim)
         counter += 1
         if counter == 100:
             break

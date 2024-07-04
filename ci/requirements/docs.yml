@@ -24,10 +24,12 @@ dependencies:
   - tqdm
   # optionals
   - bias_correction
-  - esmpy=*=mpi*  # Ensures MPI works with version of esmpy.
+  - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
   - esmtools
+  - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - nc-time-axis >=1.4.0
   - numba >=0.52
+  - numpy >=1.25.0
   - xclim
   - xesmf
   - xrft

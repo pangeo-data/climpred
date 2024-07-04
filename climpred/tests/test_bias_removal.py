@@ -515,6 +515,7 @@ def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
 
 def test_remove_bias_errors(hindcast_NMME_Nino34):
     """Test remove_bias error messaging."""
+
     how = "additive_mean"
     he = (
         hindcast_NMME_Nino34.sel(lead=[4, 5])

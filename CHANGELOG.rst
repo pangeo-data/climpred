@@ -24,7 +24,7 @@ Internals/Minor Fixes
 - Fixed several issues with incompatible dependency configurations in the CI and addressed a few deprecations. (pr:`861`) `Trevor James Smith`_
 - `climpred` has adopted `PEP 621 <https://peps.python.org/pep-0621/>`_ for specifying project metadata. (pr:`862`) `Trevor James Smith`_
 - `climpred` now uses the `src layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_  for the package file structure. (pr:`862`) `Trevor James Smith`_
-
+- Drop ``python<=3.8`` support. (:pr:`862`) `Trevor James Smith`_.
 
 climpred v2.4.0 (2023-11-09)
 ============================

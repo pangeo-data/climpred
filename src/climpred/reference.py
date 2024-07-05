@@ -103,7 +103,9 @@ def climatology(
         init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
         init_lead = init_lead["time"]
     climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
-    with warnings.catch_warnings():  # ignore numpy warning https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064 # noqa: E501
+    with (
+        warnings.catch_warnings()
+    ):  # ignore numpy warning https://stackoverflow.com/questions/40659212/futurewarning-elementwise-comparison-failed-returning-scalar-but-in-the-futur#46721064 # noqa: E501
         warnings.simplefilter(action="ignore", category=FutureWarning)
         # enlarge times to get climatology_forecast times
         # this prevents errors if verification.time and hindcast.init are too much apart

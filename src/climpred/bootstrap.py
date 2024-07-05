@@ -394,7 +394,7 @@ def _maybe_auto_chunk(ds, dims):
         xr.Dataset: auto-chunked along `dims`
 
     """
-    if dask.is_dask_collection(ds) and dims is not []:
+    if dask.is_dask_collection(ds) and dims != []:
         if isinstance(dims, str):
             dims = [dims]
         chunks = [d for d in dims if d in ds.dims]

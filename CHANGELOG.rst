@@ -22,6 +22,9 @@ Internals/Minor Fixes
 - Fixed some issues with the documentation build to address rendering errors and reduce the number of warnings on ReadTheDocs. (pr:`843`) `Trevor James Smith`_
 - Fixed some issues with the typing hints of classes functions. (pr:`850`) `Trevor James Smith`_
 - Fixed several issues with incompatible dependency configurations in the CI and addressed a few deprecations. (pr:`861`) `Trevor James Smith`_
+- `climpred` has adopted `PEP 621 <https://peps.python.org/pep-0621/>`_ for specifying project metadata. (pr:`862`) `Trevor James Smith`_
+- `climpred` now uses the `src layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_  for the package file structure. (pr:`862`) `Trevor James Smith`_
+- Drop ``python<=3.8`` support. (:pr:`862`) `Trevor James Smith`_.
 
 climpred v2.4.0 (2023-11-09)
 ============================
@@ -223,7 +226,6 @@ Data variables:
   ``(PerfectModel_persistence_from_initialized_lead_0=True)`` (``False`` by default)
   using :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
   (:issue:`637`, :pr:`706`) `Aaron Spring`_.
-
 
 Internals/Minor Fixes
 ---------------------
@@ -1038,6 +1040,7 @@ Documentation
 - Add page for `publications <publications.html>`_ and
   `helpful links <helpful-links.html>`_. (:pr:`270`) `Riley X. Brady`_.
 
+
 climpred v1.1.0 (2019-09-23)
 ============================
 
@@ -1071,6 +1074,7 @@ Documentation
 -------------
 - Add scope of package to docs for clarity for users and developers. (:pr:`235`)
   `Riley X. Brady`_.
+
 
 climpred v1.0.1 (2019-07-04)
 ============================

@@ -3,18 +3,18 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python >=3.9
+  - python >=3.9,<3.13
   - bias_correction
   - cftime >=1.5.0
   - coveralls
   - dask-core
   - eofs
-  - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
+  # - esmpy =*=mpi*  # Ensures MPI works with version of esmpy. # Commented out for CI testing.
   - h5netcdf
-  - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
+  - importlib-metadata <8.0.0  # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - matplotlib-base
   - nc-time-axis >=1.4.0
-  - numpy >=1.25.0
+  - numpy >=1.25.0,<2.0.0  # Pin below v2.0.0 until xclim supports it.
   - pip
   - pooch
   - pytest <8.0.0

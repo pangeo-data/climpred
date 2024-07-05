@@ -1,6 +1,6 @@
 .. image:: https://i.imgur.com/HPOdOsR.png
 
-Verification of weather and climate forecasts.
+Verification of weather and climate forecasts
 
 ..
     Table version of badges inspired by pySTEPS.
@@ -128,7 +128,7 @@ You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
 
 .. code-block:: bash
 
-    pip install climpred[complete]
+    python -m pip install climpred[complete]
 
 .. code-block:: bash
 
@@ -141,7 +141,7 @@ repository or installing directly from GitHub:
 
     git clone https://github.com/pangeo-data/climpred.git
     cd climpred
-    pip install . --upgrade
+    python -m pip install . --upgrade
 
 .. code-block:: bash
 

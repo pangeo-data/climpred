@@ -14,7 +14,7 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
-climpred v2.5.0 (unreleased)
+climpred v2.5.0 (2024-07-05)
 ============================
 
 Internals/Minor Fixes
@@ -25,6 +25,7 @@ Internals/Minor Fixes
 - `climpred` has adopted `PEP 621 <https://peps.python.org/pep-0621/>`_ for specifying project metadata. (pr:`862`) `Trevor James Smith`_
 - `climpred` now uses the `src layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_  for the package file structure. (pr:`862`) `Trevor James Smith`_
 - Drop ``python<=3.8`` support. (:pr:`862`) `Trevor James Smith`_.
+
 
 climpred v2.4.0 (2023-11-09)
 ============================

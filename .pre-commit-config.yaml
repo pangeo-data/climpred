@@ -3,7 +3,7 @@ default_language_version:
 
 repos:
   -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.6.0
+      rev: v5.0.0
       hooks:
       - id: check-added-large-files
       - id: check-docstring-first
@@ -27,12 +27,12 @@ repos:
       - id: toml-sort-fix
 
   -   repo: https://github.com/psf/black-pre-commit-mirror
-      rev: 24.4.2
+      rev: 24.10.0
       hooks:
       - id: black
 
   -   repo: https://github.com/PyCQA/flake8
-      rev: 7.1.0
+      rev: 7.1.1
       hooks:
       - id: flake8
         args: [ '--max-line-length=93', '--extend-ignore=W503' ]
@@ -49,7 +49,7 @@ repos:
         additional_dependencies: [ 'black==24.4.2' ]
 
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.10.1
+      rev: v1.11.2
       hooks:
       - id: mypy
         exclude: 'asv_bench'
@@ -65,7 +65,7 @@ repos:
           ]
 
   -  repo: https://github.com/python-jsonschema/check-jsonschema
-     rev: 0.28.1
+     rev: 0.29.3
      hooks:
      - id: check-github-workflows
      - id: check-readthedocs

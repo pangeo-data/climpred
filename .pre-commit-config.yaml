@@ -3,7 +3,7 @@ default_language_version:
 
 repos:
   -   repo: https://github.com/pre-commit/pre-commit-hooks
-      rev: v4.6.0
+      rev: v5.0.0
       hooks:
       - id: check-added-large-files
       - id: check-docstring-first
@@ -27,12 +27,12 @@ repos:
       - id: toml-sort-fix
 
   -   repo: https://github.com/psf/black-pre-commit-mirror
-      rev: 24.4.2
+      rev: 24.8.0
       hooks:
       - id: black
 
   -   repo: https://github.com/PyCQA/flake8
-      rev: 7.1.0
+      rev: 7.1.1
       hooks:
       - id: flake8
         args: [ '--max-line-length=93', '--extend-ignore=W503' ]
@@ -46,26 +46,27 @@ repos:
       rev: v0.3.9
       hooks:
       - id: blackdoc
-        additional_dependencies: [ 'black==24.4.2' ]
+        additional_dependencies: [ 'black==24.8.0' ]
+      - id: blackdoc-autoupdate-black
 
   -   repo: https://github.com/pre-commit/mirrors-mypy
-      rev: v1.10.1
+      rev: v1.11.2
       hooks:
       - id: mypy
         exclude: 'asv_bench'
         additional_dependencies: [
             # Type stubs
             types-PyYAML,
-            types-pkg_resources,
             types-python-dateutil,
             types-pytz,
+            types-setuptools,
             typing-extensions,
             # Dependencies that are typed
             numpy
           ]
 
   -  repo: https://github.com/python-jsonschema/check-jsonschema
-     rev: 0.28.1
+     rev: 0.29.3
      hooks:
      - id: check-github-workflows
      - id: check-readthedocs
@@ -84,5 +85,5 @@ ci:
     autoupdate_branch: ''
     autoupdate_commit_msg: '[pre-commit.ci] pre-commit autoupdate'
     autoupdate_schedule: quarterly
-    skip: []
+    skip: [ ]
     submodules: false

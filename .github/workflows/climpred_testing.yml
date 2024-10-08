@@ -42,7 +42,7 @@ jobs:
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Set up conda (micromamba)
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ci/requirements/minimum-tests.yml
           environment-name: climpred-minimum-tests
@@ -100,7 +100,7 @@ jobs:
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Setup conda (micromamba)
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
@@ -149,7 +149,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Setup conda (micromamba)
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
@@ -183,7 +183,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Set up conda (micromamba)
-        uses: mamba-org/setup-micromamba@v1
+        uses: mamba-org/setup-micromamba@v2
         with:
           environment-file: ci/requirements/docs.yml
           environment-name: climpred-docs

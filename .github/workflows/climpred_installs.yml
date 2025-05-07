@@ -18,7 +18,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          persist-credentials: false
       - uses: xarray-contrib/ci-trigger@v1.2
         id: detect-trigger
         with:
@@ -36,6 +36,8 @@ jobs:
         python-version: ["3.9"]
     steps:
     - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
@@ -58,7 +60,7 @@ jobs:
     steps:
     - uses: actions/checkout@v4
       with:
-        fetch-depth: 0 # Fetch all history for all branches and tags.
+        persist-credentials: false
     - name: Setup Python
       uses: actions/setup-python@v5
       with:

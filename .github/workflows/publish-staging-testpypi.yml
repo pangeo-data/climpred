@@ -5,13 +5,20 @@ on:
     tags:
       - 'v*.*' # Push events to matching v*, i.e. v1.0, v20.15.10
 
+permissions:
+  contents: read
+
 jobs:
   release:
     name: Create Release from tag
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - name: Create Release
         uses: softprops/action-gh-release@v2
         env:
@@ -22,6 +29,7 @@ jobs:
           name: Release ${{ github.ref }}
           draft: true
           prerelease: false
+
   deploy-testpypi:
     name: Build and publish Python 🐍 distributions 📦 to TestPyPI
     needs: release
@@ -31,6 +39,8 @@ jobs:
       id-token: write
     steps:
     - uses: actions/checkout@v4
+      with:
+        persist-credentials: false
     - name: Set up Python3
       uses: actions/setup-python@v5
       with:

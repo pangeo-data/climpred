@@ -21,6 +21,7 @@ dependencies:
   - h5netcdf
   - netcdf4
   # regridding
+  - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - xesmf
   # relative entropy
   - eofs

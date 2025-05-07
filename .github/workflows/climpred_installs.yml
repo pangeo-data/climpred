@@ -34,7 +34,7 @@ jobs:
       matrix:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.9"]
-        install-command: [".", '."[complete]"']
+        install-command: [".", '".[complete]"']
     steps:
     - uses: actions/checkout@v4
       with:

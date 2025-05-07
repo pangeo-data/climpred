@@ -137,7 +137,7 @@ def load_dataset(
               prints out the available datasets to import.
         cache: If ``True``, cache data locally for use on later calls.
         cache_dir: The directory in which to search for and cache the data.
-        github_url: Github repository where the data is stored.
+        github_url: GitHub repository where the data is stored.
         branch: The git branch to download from.
         extension: Subfolder within the repository where the data is stored.
         proxy_dict: Dictionary with keys as either "http" or "https" and values as the

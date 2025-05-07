@@ -4,7 +4,7 @@ channels:
   - nodefaults
 dependencies:
   - python >=3.10,<3.11
-  - pip
+  - pip >=25.0
   - cftime >=1.6.3
   - dask >=2023.4.0
   - numpy >=1.25.0

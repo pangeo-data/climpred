@@ -63,7 +63,7 @@ docs = [
   "sphinx-book-theme >=1.0.0",
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
-  "sphinxext-opengraph >=0.8.0",
+  "sphinxext-opengraph >=0.8.0"
 ]
 dev = [
   "black",
@@ -74,7 +74,7 @@ dev = [
   "mypy",
   "pylint",
   "pytest-sugar",
-  "tqdm",
+  "tqdm"
 ]
 
 [project.urls]

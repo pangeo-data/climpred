@@ -4,58 +4,56 @@ channels:
   - nodefaults
 dependencies:
   - python >=3.9,<3.13
-  # Documentation
-  - myst-nb
-  - nbstripout
-  - sphinx
-  - sphinx-book-theme
-  - sphinx-copybutton
-  - sphinxcontrib-bibtex
-  - sphinxcontrib-napoleon
-  - sphinxext-opengraph
-  # IDE
-  - jupyterlab
-  - nb_conda_kernels # switch conda envs in jupyter
-  - tqdm
-  # Input/Output
-  - netcdf4
-  - pooch
-  # Miscellaneous
-  - cftime >=1.5.0
-  # Numerics
+  - pip
+  - cftime >=1.6.3
+  - dask >=2023.4.0
   - numpy >=1.25.0
-  - pandas
-  - scipy
-  - xarray >=2022.6.0
-  # Package Management
-  - asv
-  - black ==24.4.2
-  - coveralls
-  - flake8
-  - isort
-  - mypy
-  - pre-commit
-  - pylint
-  - pytest<8
-  - pytest-cov
-  - pytest-lazy-fixture
-  - pytest-sugar
-  - pytest-xdist
-  # Performance
+  - pooch >=1.7.0
+  - xarray >=2023.4.0
+  - xskillscore >=0.0.25
+  # accel
   - bottleneck
-  - dask-core
-  - numba
-  # Regridding
+  - numba >=0.57
+  # bias-correction
+  - bias_correction >=0.4.0
+  - xclim >=0.52.0
+  # io
+  - netcdf4
+  # regridding
   - esmpy =*=mpi*  # Ensures MPI works with version of esmpy.
   - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - xesmf
-  # Statistics
-  - bias_correction
+  # relative entropy
   - eofs
-  - esmtools >=1.1.3
-  - xclim >=0.46.0
-  - xrft
-  - xskillscore >=0.0.20
-  # Visualization
+  # test
+  - pre-commit
+  - pytest >=8.0.0
+  - pytest-cov >=5.0
+  - pytest-lazy-fixture
+  - pytest-timeout
+  - pytest-xdist
+  # viz
   - matplotlib-base
-  - nc-time-axis>=1.4.0
+  - nc-time-axis >=1.4.0
+  # vwmp
+  - xrft
+  # docs
+  - jupyterlab
+  - myst-nb
+  - nbstripout
+  - sphinx >=7.0.0
+  - sphinx-book-theme >=1.0.0
+  - sphinx-copybutton
+  - sphinxcontrib-bibtex
+  - sphinxext-opengraph >=0.8.0
+  - tqdm
+  # dev
+  - black
+  - flake8
+  - isort
+  - jupyterlab
+  - mypy
+  - nb_conda_kernels # switch conda envs in jupyter
+  - pylint
+  - pytest-sugar
+  - tqdm

@@ -34,35 +34,47 @@ classifiers = [
   "Topic :: Scientific/Engineering :: Atmospheric Science"
 ]
 dependencies = [
-  "cf_xarray >=0.6.0",
-  "cftime >=1.5.0",
-  "dask >=2021.10.0",
+  "cf_xarray >=0.8.0",
+  "cftime >=1.6.3",
+  "dask >=2023.4.0",
   "numpy >=1.25.0",
-  "packaging",
-  "pooch >=1.4",
-  "xarray >=0.19.0",
-  "xskillscore >=0.0.20"
+  "packaging >=23.0",
+  "pandas >=2.0",
+  "pooch >=1.7",
+  "xarray >=2023.4.0",
+  "xskillscore >=0.0.25"
 ]
 dynamic = ["version", "description"]
 
 [project.optional-dependencies]
-accel = ["numba >=0.52", "bottleneck"]
-bias-correction = ["xclim >=0.46", "bias-correction >=0.4", "numpy >=1.25.0,<2.0.0"] # pinned until xclim supports numpy>=2.0.0
+accel = ["bottleneck", "numba >=0.57"]
+bias-correction = ["bias-correction >=0.4", "xclim >=0.52.0"]
 io = ["netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
 regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
 relative_entropy = ["eofs"]
-test = ["netcdf4", "pre-commit", "pytest <8.0.0", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
+test = ["netcdf4", "pre-commit", "pytest >=8.0.0", "pytest-cov >=5.0", "pytest-lazy-fixture", "pytest-timeout", "pytest-xdist"]
 viz = ["matplotlib", "nc-time-axis >=1.4.0"]
 vwmp = ["xrft"]
 complete = ["climpred[accel,bias-correction,viz,io,test,relative_entropy,vwmp]"]
 docs = [
   "climpred[complete]",
   "myst_nb",
-  "sphinx",
-  "sphinx-book-theme >=0.3.3",
+  "sphinx >=7.0.0",
+  "sphinx-book-theme >=1.0.0",
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
-  "sphinxcontrib-napoleon"
+  "sphinxext-opengraph >=0.8.0",
+]
+dev = [
+  "black",
+  "climpred[docs]",
+  "flake8",
+  "isort",
+  "jupyterlab",
+  "mypy",
+  "pylint",
+  "pytest-sugar",
+  "tqdm",
 ]
 
 [project.urls]

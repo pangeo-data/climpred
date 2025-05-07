@@ -30,7 +30,6 @@ dependencies:
   - pre-commit
   - pytest >=8.0.0
   - pytest-cov >=5.0
-  - pytest-lazy-fixture
   - pytest-timeout
   - pytest-xdist
   # viz

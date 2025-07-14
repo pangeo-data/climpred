@@ -14,16 +14,27 @@ What's New
     # cut border when saving (for maps)
     mpl.rcParams["savefig.bbox"] = "tight"
 
+
+climpred v2.6.0 (unreleased)
+============================
+
+Internals/Minor Fixes
+---------------------
+- Updated `pre-commit` and GitHub CI hooks to more modern versions. (:pr:`866`, :pr:`867`) `Trevor James Smith`_
+- Updated several documentation and CI-related configurations to help with security hardening and maintainability. (:pr:`870`) `Trevor James Smith`_
+- Dependency updates to better synchronize `conda` and `pip` installation environments. (:pr:`870`) `Trevor James Smith`_
+
+
 climpred v2.5.0 (2024-07-05)
 ============================
 
 Internals/Minor Fixes
 ---------------------
-- Fixed some issues with the documentation build to address rendering errors and reduce the number of warnings on ReadTheDocs. (pr:`843`) `Trevor James Smith`_
-- Fixed some issues with the typing hints of classes functions. (pr:`850`) `Trevor James Smith`_
-- Fixed several issues with incompatible dependency configurations in the CI and addressed a few deprecations. (pr:`861`) `Trevor James Smith`_
-- `climpred` has adopted `PEP 621 <https://peps.python.org/pep-0621/>`_ for specifying project metadata. (pr:`862`) `Trevor James Smith`_
-- `climpred` now uses the `src layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_  for the package file structure. (pr:`862`) `Trevor James Smith`_
+- Fixed some issues with the documentation build to address rendering errors and reduce the number of warnings on ReadTheDocs. (:pr:`843`) `Trevor James Smith`_
+- Fixed some issues with the typing hints of classes functions. (:pr:`850`) `Trevor James Smith`_
+- Fixed several issues with incompatible dependency configurations in the CI and addressed a few deprecations. (:pr:`861`) `Trevor James Smith`_
+- `climpred` has adopted `PEP 621 <https://peps.python.org/pep-0621/>`_ for specifying project metadata. (:pr:`862`) `Trevor James Smith`_
+- `climpred` now uses the `src layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_  for the package file structure. (:pr:`862`) `Trevor James Smith`_
 - Drop ``python<=3.8`` support. (:pr:`862`) `Trevor James Smith`_.
 
 

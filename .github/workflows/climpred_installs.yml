@@ -25,7 +25,7 @@ jobs:
           keyword: "[skip-ci]"
 
   install-climpred:  # Installs climpred on various OSes
-    name: Install climpred ('%{{ matrix.install-command }}', ${{ matrix.os }}, Python${{ matrix.python-version }}
+    name: Install climpred ('${{ matrix.install-command }}', ${{ matrix.os }}, Python${{ matrix.python-version }}
     runs-on: ${{ matrix.os }}
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'

@@ -28,4 +28,4 @@ dependencies:
   - xclim >=0.52.0
   - xesmf
   - xrft
-  - xskillscore >=0.0.25
+  - xskillscore >=0.0.27

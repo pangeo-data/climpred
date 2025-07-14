@@ -10,7 +10,7 @@ dependencies:
   - numpy >=1.23.0,<1.25.0
   - pooch >=1.7.0
   - xarray >=2023.4.0
-  - xskillscore >=0.0.25
+  - xskillscore >=0.0.27
   # accel
   - bottleneck
   - numba >=0.57

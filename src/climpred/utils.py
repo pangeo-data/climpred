@@ -250,8 +250,8 @@ def convert_init_lead_to_valid_time_lead(
         ...     lead=[1, 2, 3], init=slice("1990", "2000")
         ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
         >>> skill_init_lead.SST
-        <xarray.DataArray 'SST' (lead: 3, init: 11)>
-        array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
+        <xarray.DataArray 'SST' (lead: 3, init: 11)> Size: 264B
+        array([[       nan,        nan, 0.0766808 , 0.06826988, 0.08174487,
                 0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
                 0.13758603],
                [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
@@ -261,25 +261,25 @@ def convert_init_lead_to_valid_time_lead(
                 0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
                        nan]])
         Coordinates:
-          * init        (init) object 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
-          * lead        (lead) int32 1 2 3
-            valid_time  (lead, init) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
-            skill       <U11 'initialized'
+          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
+          * lead        (lead) int32 12B 1 2 3
+            valid_time  (lead, init) object 264B 1991-01-01 00:00:00 ... 2003-01-01 0...
+            skill       <U11 44B 'initialized'
         Attributes:
             units:    C
         >>> climpred.utils.convert_init_lead_to_valid_time_lead(skill_init_lead).SST
-        <xarray.DataArray 'SST' (lead: 3, valid_time: 9)>
-        array([[0.07668081, 0.06826989, 0.08174487, 0.06208846, 0.1537402 ,
+        <xarray.DataArray 'SST' (lead: 3, valid_time: 9)> Size: 216B
+        array([[0.0766808 , 0.06826988, 0.08174487, 0.06208846, 0.1537402 ,
                 0.15632479, 0.01302786, 0.06343324, 0.13758603],
                [0.07732193, 0.06369554, 0.08282175, 0.0761979 , 0.20424354,
                 0.18043845, 0.06553673, 0.00906034, 0.13045045],
                [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
                 0.19931679, 0.00987793, 0.06375334, 0.07705835]])
         Coordinates:
-          * valid_time  (valid_time) object 1993-01-01 00:00:00 ... 2001-01-01 00:00:00
-          * lead        (lead) int32 1 2 3
-            skill       <U11 'initialized'
-            init        (lead, valid_time) object 1992-01-01 00:00:00 ... 1998-01-01 ...
+          * valid_time  (valid_time) object 72B 1993-01-01 00:00:00 ... 2001-01-01 00...
+          * lead        (lead) int32 12B 1 2 3
+            skill       <U11 44B 'initialized'
+            init        (lead, valid_time) object 216B 1992-01-01 00:00:00 ... 1998-0...
         Attributes:
             units:    C
 
@@ -313,8 +313,8 @@ def convert_valid_time_lead_to_init_lead(
         ...     lead=[1, 2, 3], init=slice("1990", "2000")
         ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
         >>> skill_init_lead.SST
-        <xarray.DataArray 'SST' (lead: 3, init: 11)>
-        array([[       nan,        nan, 0.07668081, 0.06826989, 0.08174487,
+        <xarray.DataArray 'SST' (lead: 3, init: 11)> Size: 264B
+        array([[       nan,        nan, 0.0766808 , 0.06826988, 0.08174487,
                 0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
                 0.13758603],
                [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
@@ -324,10 +324,10 @@ def convert_valid_time_lead_to_init_lead(
                 0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
                        nan]])
         Coordinates:
-          * init        (init) object 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
-          * lead        (lead) int32 1 2 3
-            valid_time  (lead, init) object 1991-01-01 00:00:00 ... 2003-01-01 00:00:00
-            skill       <U11 'initialized'
+          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
+          * lead        (lead) int32 12B 1 2 3
+            valid_time  (lead, init) object 264B 1991-01-01 00:00:00 ... 2003-01-01 0...
+            skill       <U11 44B 'initialized'
         Attributes:
             units:    C
         >>> assert climpred.utils.convert_valid_time_lead_to_init_lead(

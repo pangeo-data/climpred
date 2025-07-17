@@ -341,13 +341,13 @@ def _pearson_r(
         ...     alignment="same_verifs",
         ...     dim=["init"],
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.9272 0.9145 0.9127 0.9319 ... 0.9315 0.9185 0.9112
+            SST      (lead) float64 80B 0.9272 0.9145 0.9127 ... 0.9315 0.9185 0.9112
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -421,13 +421,13 @@ def _pearson_r_p_value(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 5.779e-23 2.753e-21 4.477e-21 ... 8.7e-22 6.781e-21
+            SST      (lead) float64 80B 5.779e-23 2.753e-21 ... 8.7e-22 6.781e-21
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -519,13 +519,13 @@ def _effective_sample_size(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 5.0 4.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0
+            SST      (lead) float64 80B 5.0 4.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0 3.0
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -719,13 +719,13 @@ def _spearman_r(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.9336 0.9311 0.9293 0.9474 ... 0.9465 0.9346 0.9328
+            SST      (lead) float64 80B 0.9336 0.9311 0.9293 ... 0.9465 0.9346 0.9328
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -799,13 +799,13 @@ def _spearman_r_p_value(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 6.248e-24 1.515e-23 ... 4.288e-24 8.254e-24
+            SST      (lead) float64 80B 6.248e-24 1.515e-23 ... 4.288e-24 8.254e-24
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -904,13 +904,13 @@ def _spearman_r_eff_p_value(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.02034 0.0689 0.2408 ... 0.2092 0.2315 0.2347
+            SST      (lead) float64 80B 0.02034 0.0689 0.2408 ... 0.2092 0.2315 0.2347
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -995,13 +995,13 @@ def _mse(
         >>> HindcastEnsemble.verify(
         ...     metric="mse", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.006202 0.006536 0.007771 ... 0.02417 0.02769
+            SST      (lead) float64 80B 0.006202 0.006536 0.007771 ... 0.02417 0.02769
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1067,13 +1067,13 @@ def _me(
         >>> HindcastEnsemble.verify(
         ...     metric="me", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
+            SST      (lead) float64 80B -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1137,13 +1137,13 @@ def _spread(
         ...     alignment="same_verifs",
         ...     dim=["member", "init"],
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.1468 0.1738 0.1922 0.2096 ... 0.2142 0.2178 0.2098
+            SST      (lead) float64 80B 0.1468 0.1738 0.1922 ... 0.2142 0.2178 0.2098
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1209,13 +1209,13 @@ def _rmse(
         >>> HindcastEnsemble.verify(
         ...     metric="rmse", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.07875 0.08085 0.08815 ... 0.1371 0.1555 0.1664
+            SST      (lead) float64 80B 0.07875 0.08085 0.08815 ... 0.1371 0.1555 0.1664
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1285,13 +1285,13 @@ def _mae(
         >>> HindcastEnsemble.verify(
         ...     metric="mae", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.06484 0.06684 0.07407 ... 0.1193 0.1361 0.1462
+            SST      (lead) float64 80B 0.06484 0.06684 0.07407 ... 0.1193 0.1361 0.1462
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1360,13 +1360,13 @@ def _median_absolute_error(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.06077 0.06556 0.06368 ... 0.1131 0.142 0.1466
+            SST      (lead) float64 80B 0.06077 0.06556 0.06368 ... 0.1131 0.142 0.1466
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1453,13 +1453,13 @@ def _nmse(
         >>> HindcastEnsemble.verify(
         ...     metric="nmse", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.1732 0.1825 0.217 0.2309 ... 0.5247 0.6749 0.7732
+            SST      (lead) float64 80B 0.1732 0.1825 0.217 ... 0.5247 0.6749 0.7732
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1557,13 +1557,13 @@ def _nmae(
         >>> HindcastEnsemble.verify(
         ...     metric="nmae", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.3426 0.3532 0.3914 0.3898 ... 0.6303 0.7194 0.7726
+            SST      (lead) float64 80B 0.3426 0.3532 0.3914 ... 0.6303 0.7194 0.7726
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1663,13 +1663,13 @@ def _nrmse(
         >>> HindcastEnsemble.verify(
         ...     metric="nrmse", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.4161 0.4272 0.4658 0.4806 ... 0.7244 0.8215 0.8793
+            SST      (lead) float64 80B 0.4161 0.4272 0.4658 ... 0.7244 0.8215 0.8793
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1770,13 +1770,13 @@ def _msess(
         >>> HindcastEnsemble.verify(
         ...     metric="msess", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.8268 0.8175 0.783 0.7691 ... 0.4753 0.3251 0.2268
+            SST      (lead) float64 80B 0.8268 0.8175 0.783 ... 0.4753 0.3251 0.2268
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1854,13 +1854,13 @@ def _mape(
         >>> HindcastEnsemble.verify(
         ...     metric="mape", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 1.536 1.21 1.421 1.149 ... 1.078 1.369 1.833 1.245
+            SST      (lead) float64 80B 1.536 1.21 1.421 1.149 ... 1.369 1.833 1.245
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -1926,13 +1926,13 @@ def _smape(
         >>> HindcastEnsemble.verify(
         ...     metric="smape", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.3801 0.3906 0.4044 0.3819 ... 0.4822 0.5054 0.5295
+            SST      (lead) float64 80B 0.3801 0.3906 0.4044 ... 0.4822 0.5054 0.5295
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2021,13 +2021,13 @@ def _uacc(
         >>> HindcastEnsemble.verify(
         ...     metric="uacc", comparison="e2o", alignment="same_verifs", dim="init"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.9093 0.9041 0.8849 0.877 ... 0.6894 0.5702 0.4763
+            SST      (lead) float64 80B 0.9093 0.9041 0.8849 ... 0.6894 0.5702 0.4763
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2102,13 +2102,13 @@ def _std_ratio(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.7567 0.8801 0.9726 1.055 ... 1.075 1.094 1.055
+            SST      (lead) float64 80B 0.7567 0.8801 0.9726 1.055 ... 1.075 1.094 1.055
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2175,13 +2175,13 @@ def _unconditional_bias(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
+            SST      (lead) float64 80B -0.01158 -0.02512 -0.0408 ... -0.1322 -0.1445
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2203,13 +2203,13 @@ def _unconditional_bias(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 3.203e-18 -1.068e-18 ... 2.882e-17 -2.776e-17
+            SST      (lead) float64 80B -1.495e-17 -9.608e-18 ... 4.59e-17 4.27e-18
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2274,13 +2274,13 @@ def _mul_bias(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.719 0.9991 1.072 1.434 ... 1.854 2.128 2.325 2.467
+            SST      (lead) float64 80B 0.719 0.9991 1.072 1.434 ... 2.128 2.325 2.467
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2351,13 +2351,13 @@ def _conditional_bias(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.1705 0.03435 -0.05988 ... -0.1436 -0.175 -0.1434
+            SST      (lead) float64 80B 0.1705 0.03435 -0.05988 ... -0.175 -0.1434
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2431,13 +2431,13 @@ def _bias_slope(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.7016 0.8049 0.8877 0.9836 ... 1.002 1.004 0.961
+            SST      (lead) float64 80B 0.7016 0.8049 0.8877 ... 1.002 1.004 0.961
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2520,13 +2520,13 @@ def _msess_murphy(
         ...     dim="init",
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.8306 0.8351 0.8295 0.8532 ... 0.8471 0.813 0.8097
+            SST      (lead) float64 80B 0.8306 0.8351 0.8295 ... 0.8471 0.813 0.8097
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2642,13 +2642,13 @@ def _brier_score(
         ...     alignment="same_verifs",
         ...     logical=pos,
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
+            SST      (lead) float64 80B 0.115 0.1121 0.1363 ... 0.1654 0.1675 0.1873
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2670,13 +2670,13 @@ def _brier_score(
         ...     dim=["member", "init"],
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
+            SST      (lead) float64 80B 0.115 0.1121 0.1363 ... 0.1654 0.1675 0.1873
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2698,13 +2698,13 @@ def _brier_score(
         ...     dim="init",
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.115 0.1121 0.1363 0.125 ... 0.1654 0.1675 0.1873
+            SST      (lead) float64 80B 0.115 0.1121 0.1363 ... 0.1654 0.1675 0.1873
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2793,16 +2793,16 @@ def _threshold_brier_score(
         ...     threshold=0.2,
         ...     alignment="same_inits",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 9kB
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
-            threshold   float64 0.2
-            init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
-            skill       <U11 'initialized'
+          * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
+            threshold   float64 8B 0.2
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+            skill       <U11 44B 'initialized'
         Data variables:
-            SST         (lead, init) float64 0.0 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
+            SST         (lead, init) float64 4kB 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2822,14 +2822,14 @@ def _threshold_brier_score(
         ...     threshold=[0.2, 0.3],
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 260B
         Dimensions:    (lead: 10, threshold: 2)
         Coordinates:
-          * lead       (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * threshold  (threshold) float64 0.2 0.3
-            skill      <U11 'initialized'
+          * lead       (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * threshold  (threshold) float64 16B 0.2 0.3
+            skill      <U11 44B 'initialized'
         Data variables:
-            SST        (lead, threshold) float64 0.08712 0.005769 ... 0.1312 0.01923
+            SST        (lead, threshold) float64 160B 0.08712 0.005769 ... 0.01923
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2923,15 +2923,15 @@ def _crps(
         >>> HindcastEnsemble.verify(
         ...     metric="crps", comparison="m2o", dim="member", alignment="same_inits"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 9kB
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
-            init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
-            skill       <U11 'initialized'
+          * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+            skill       <U11 44B 'initialized'
         Data variables:
-            SST         (lead, init) float64 0.1722 0.1202 0.01764 ... 0.05428 0.1638
+            SST         (lead, init) float64 4kB 0.1722 0.1202 ... 0.05428 0.1638
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3046,15 +3046,15 @@ def _crpss(
         >>> HindcastEnsemble.verify(
         ...     metric="crpss", comparison="m2o", alignment="same_inits", dim="member"
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 9kB
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2015-01-01 00:00:00
-            init        (init) object 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
-            skill       <U11 'initialized'
+          * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+            skill       <U11 44B 'initialized'
         Data variables:
-            SST         (lead, init) float64 0.2644 0.3636 0.7376 ... 0.7702 0.5126
+            SST         (lead, init) float64 4kB 0.2644 0.3636 0.7376 ... 0.7702 0.5126
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3184,15 +3184,15 @@ def _crpss_es(
         ...     alignment="same_verifs",
         ...     dim="member",
         ... )
-        <xarray.Dataset>
-        Dimensions:     (init: 52, lead: 10)
+        <xarray.Dataset> Size: 5kB
+        Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init        (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
-          * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            valid_time  (init) object 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
-            skill       <U11 'initialized'
+          * init        (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            valid_time  (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+            skill       <U11 44B 'initialized'
         Data variables:
-            SST         (lead, init) float64 -0.01121 -0.05575 ... -0.1263 -0.007483
+            SST         (lead, init) float64 4kB -0.01121 -0.05575 ... -0.1263 -0.007483
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3305,15 +3305,15 @@ def _discrimination(
         ...     alignment="same_verifs",
         ...     logical=pos,
         ... )
-        <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
+        <xarray.Dataset> Size: 926B
+        Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-          * event                 (event) bool True False
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill                 <U11 'initialized'
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool 2B True False
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill                 <U11 44B 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.07407...
+            SST                   (lead, event, forecast_probability) float64 800B 0....
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3334,15 +3334,15 @@ def _discrimination(
         ...     dim=["member", "init"],
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
+        <xarray.Dataset> Size: 926B
+        Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-          * event                 (event) bool True False
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill                 <U11 'initialized'
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool 2B True False
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill                 <U11 44B 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.07407...
+            SST                   (lead, event, forecast_probability) float64 800B 0....
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3364,15 +3364,15 @@ def _discrimination(
         ...     dim="init",
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
-        Dimensions:               (forecast_probability: 5, lead: 10, event: 2)
+        <xarray.Dataset> Size: 926B
+        Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-          * event                 (event) bool True False
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill                 <U11 'initialized'
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool 2B True False
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill                 <U11 44B 'initialized'
         Data variables:
-            SST                   (lead, event, forecast_probability) float64 0.07407...
+            SST                   (lead, event, forecast_probability) float64 800B 0....
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3464,15 +3464,15 @@ def _reliability(
         ...     alignment="same_verifs",
         ...     logical=pos,
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 924B
         Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (lead, forecast_probability) float64 22.0 5.0 ... 13.0
-            skill                 <U11 'initialized'
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+            SST_samples           (lead, forecast_probability) float64 400B 22.0 ... ...
+            skill                 <U11 44B 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
+            SST                   (lead, forecast_probability) float64 400B 0.09091 ....
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3493,15 +3493,15 @@ def _reliability(
         ...     dim=["init", "member"],
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 924B
         Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (lead, forecast_probability) float64 22.0 5.0 ... 13.0
-            skill                 <U11 'initialized'
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+            SST_samples           (lead, forecast_probability) float64 400B 22.0 ... ...
+            skill                 <U11 44B 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
+            SST                   (lead, forecast_probability) float64 400B 0.09091 ....
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3523,15 +3523,15 @@ def _reliability(
         ...     dim="init",
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 924B
         Dimensions:               (lead: 10, forecast_probability: 5)
         Coordinates:
-          * lead                  (lead) int32 1 2 3 4 5 6 7 8 9 10
-          * forecast_probability  (forecast_probability) float64 0.1 0.3 0.5 0.7 0.9
-            SST_samples           (lead, forecast_probability) float64 22.0 5.0 ... 13.0
-            skill                 <U11 'initialized'
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+            SST_samples           (lead, forecast_probability) float64 400B 22.0 ... ...
+            skill                 <U11 44B 'initialized'
         Data variables:
-            SST                   (lead, forecast_probability) float64 0.09091 ... 1.0
+            SST                   (lead, forecast_probability) float64 400B 0.09091 ....
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3598,14 +3598,14 @@ def _rank_histogram(
         ...     dim=["member", "init"],
         ...     alignment="same_verifs",
         ... )
-        <xarray.Dataset>
-        Dimensions:  (rank: 11, lead: 10)
+        <xarray.Dataset> Size: 1kB
+        Dimensions:  (lead: 10, rank: 11)
         Coordinates:
-          * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * rank     (rank) float64 88B 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead, rank) int64 12 3 2 1 1 3 1 2 6 5 16 ... 0 1 0 0 3 0 2 6 6 34
+            SST      (lead, rank) int64 880B 12 3 2 1 1 3 1 2 6 5 ... 1 0 0 3 0 2 6 6 34
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3620,13 +3620,13 @@ def _rank_histogram(
         >>> PerfectModelEnsemble.verify(
         ...     metric="rank_histogram", comparison="m2c", dim=["member", "init"]
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 2kB
         Dimensions:  (lead: 20, rank: 10)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-          * rank     (rank) float64 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0
+          * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+          * rank     (rank) float64 80B 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0
         Data variables:
-            tos      (lead, rank) int64 1 4 2 1 2 1 0 0 0 1 2 ... 0 2 0 1 2 1 0 3 1 2 0
+            tos      (lead, rank) int64 2kB 1 4 2 1 2 1 0 0 0 1 ... 2 0 1 2 1 0 3 1 2 0
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  PerfectModelEnsemble.verify()
@@ -3700,15 +3700,15 @@ def _rps(
         ...     alignment="same_verifs",
         ...     category_edges=category_edges,
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 700B
         Dimensions:                     (lead: 10)
         Coordinates:
-          * lead                        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            observations_category_edge  <U67 '[-np.inf, -0.5), [-0.5, 0.0), [0.0, 0.5...
-            forecasts_category_edge     <U67 '[-np.inf, -0.5), [-0.5, 0.0), [0.0, 0.5...
-            skill                       <U11 'initialized'
+          * lead                        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            observations_category_edge  <U67 268B '[-np.inf, -0.5), [-0.5, 0.0), [0.0...
+            forecasts_category_edge     <U67 268B '[-np.inf, -0.5), [-0.5, 0.0), [0.0...
+            skill                       <U11 44B 'initialized'
         Data variables:
-            SST                         (lead) float64 0.115 0.1123 ... 0.1687 0.1875
+            SST                         (lead) float64 80B 0.115 0.1123 ... 0.1875
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3737,14 +3737,14 @@ def _rps(
         ...     dim=["member", "init"],
         ...     category_edges=category_edges,
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 888B
         Dimensions:                     (lead: 20)
         Coordinates:
-          * lead                        (lead) int64 1 2 3 4 5 6 7 ... 15 16 17 18 19 20
-            observations_category_edge  <U71 '[-np.inf, 9.5), [9.5, 10.0), [10.0, 10....
-            forecasts_category_edge     <U71 '[-np.inf, 9.5), [9.5, 10.0), [10.0, 10....
+          * lead                        (lead) int64 160B 1 2 3 4 5 6 ... 16 17 18 19 20
+            observations_category_edge  <U71 284B '[-np.inf, 9.5), [9.5, 10.0), [10.0...
+            forecasts_category_edge     <U71 284B '[-np.inf, 9.5), [9.5, 10.0), [10.0...
         Data variables:
-            tos                         (lead) float64 0.08951 0.1615 ... 0.1399 0.2274
+            tos                         (lead) float64 160B 0.08951 0.1615 ... 0.2274
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  PerfectModelEnsemble.verify()
@@ -3754,7 +3754,7 @@ def _rps(
             comparison:                    m2c
             dim:                           ['member', 'init']
             reference:                     []
-            category_edges:                <xarray.Dataset>\nDimensions:        (cate...
+            category_edges:                <xarray.Dataset> Size: 64B\nDimensions:   ...
 
         Provide ``category_edges`` as tuple for different category edges to categorize
         forecasts and observations.
@@ -3780,15 +3780,15 @@ def _rps(
         ...     alignment="same_verifs",
         ...     category_edges=category_edges,
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 972B
         Dimensions:                     (lead: 10)
         Coordinates:
-          * lead                        (lead) int32 1 2 3 4 5 6 7 8 9 10
-            observations_category_edge  <U101 '[-np.inf, 0.3333333333333333), [0.3333...
-            forecasts_category_edge     <U101 '[-np.inf, 0.3333333333333333), [0.3333...
-            skill                       <U11 'initialized'
+          * lead                        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            observations_category_edge  <U101 404B '[-np.inf, 0.3333333333333333), [0...
+            forecasts_category_edge     <U101 404B '[-np.inf, 0.3333333333333333), [0...
+            skill                       <U11 44B 'initialized'
         Data variables:
-            SST                         (lead) float64 0.1248 0.1756 ... 0.3081 0.3413
+            SST                         (lead) float64 80B 0.1248 0.1756 ... 0.3413
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -3799,7 +3799,7 @@ def _rps(
             comparison:                    m2o
             dim:                           ['member', 'init']
             reference:                     []
-            category_edges:                (<xarray.Dataset>\nDimensions:        (mon...
+            category_edges:                (<xarray.Dataset> Size: 40B\nDimensions:  ...
     """
     if "category_edges" in metric_kwargs:
         category_edges = metric_kwargs.pop("category_edges")
@@ -3887,7 +3887,7 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         ...     forecast_category_edges=category_edges,
         ... ).isel(lead=[0, 1]).SST
         <xarray.DataArray 'SST' (lead: 2, observations_category: 3,
-                                 forecasts_category: 3)>
+                                 forecasts_category: 3)> Size: 144B
         array([[[221,  29,   0],
                 [ 53, 217,   0],
                 [  0,   0,   0]],
@@ -3896,12 +3896,12 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
                 [ 75, 194,   1],
                 [  0,   0,   0]]])
         Coordinates:
-            observations_category_bounds  (observations_category) <U11 '[-0.5, 0.0)' ...
-            forecasts_category_bounds     (forecasts_category) <U11 '[-0.5, 0.0)' ......
-          * observations_category         (observations_category) int64 1 2 3
-          * forecasts_category            (forecasts_category) int64 1 2 3
-          * lead                          (lead) int32 1 2
-            skill                         <U11 'initialized'
+            observations_category_bounds  (observations_category) <U11 132B '[-0.5, 0...
+            forecasts_category_bounds     (forecasts_category) <U11 132B '[-0.5, 0.0)...
+          * observations_category         (observations_category) int64 24B 1 2 3
+          * forecasts_category            (forecasts_category) int64 24B 1 2 3
+          * lead                          (lead) int32 8B 1 2
+            skill                         <U11 44B 'initialized'
         Attributes:
             units:    None
 
@@ -3915,12 +3915,12 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         ...     observation_category_edges=category_edges,
         ...     forecast_category_edges=category_edges,
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 320B
         Dimensions:  (lead: 20)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+          * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
         Data variables:
-            tos      (lead) float64 1.0 1.0 1.0 1.0 0.9091 ... 1.0 1.0 1.0 nan 1.0
+            tos      (lead) float64 160B 1.0 1.0 1.0 1.0 0.9091 ... 1.0 1.0 1.0 nan 1.0
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  PerfectModelEnsemble.verify()
@@ -4024,12 +4024,12 @@ def _roc(
         ...     alignment="same_verifs",
         ...     bin_edges=bin_edges,
         ... ).SST
-        <xarray.DataArray 'SST' (lead: 10)>
+        <xarray.DataArray 'SST' (lead: 10)> Size: 80B
         array([0.84385185, 0.82841667, 0.81358547, 0.8393463 , 0.82551752,
                0.81987778, 0.80719573, 0.80081909, 0.79046553, 0.78037564])
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Attributes:
             units:    None
 
@@ -4046,7 +4046,7 @@ def _roc(
         ...     bin_edges="continuous",
         ...     return_results="all_as_metric_dim",
         ... ).SST.isel(lead=[0, 1])
-        <xarray.DataArray 'SST' (lead: 2, metric: 3, probability_bin: 3)>
+        <xarray.DataArray 'SST' (lead: 2, metric: 3, probability_bin: 3)> Size: 144B
         array([[[0.        , 0.116     , 1.        ],
                 [0.        , 0.8037037 , 1.        ],
                 [0.84385185, 0.84385185, 0.84385185]],
@@ -4055,10 +4055,10 @@ def _roc(
                 [0.        , 0.72222222, 1.        ],
                 [0.82911111, 0.82911111, 0.82911111]]])
         Coordinates:
-          * probability_bin  (probability_bin) float64 2.0 1.0 0.0
-          * lead             (lead) int32 1 2
-          * metric           (metric) <U19 'false positive rate' ... 'area under curve'
-            skill            <U11 'initialized'
+          * probability_bin  (probability_bin) float64 24B 2.0 1.0 0.0
+          * lead             (lead) int32 8B 1 2
+          * metric           (metric) <U19 228B 'false positive rate' ... 'area under...
+            skill            <U11 44B 'initialized'
         Attributes:
             units:    None
 
@@ -4130,12 +4130,12 @@ def _less(
         ...     dim=["member", "init"],
         ...     alignment="same_verifs",
         ... ).SST
-        <xarray.DataArray 'SST' (lead: 10)>
-        array([ 0.12633664, -0.12707636, -0.26143181, -0.25096537, -0.29267366,
-               -0.2905725 , -0.43579508, -0.33774947, -0.46008438, -0.61010386])
+        <xarray.DataArray 'SST' (lead: 10)> Size: 80B
+        array([ 0.12633668, -0.12707633, -0.26143178, -0.25096534, -0.29267364,
+               -0.29057248, -0.43579506, -0.33774944, -0.46008436, -0.61010384])
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Attributes:
             units:    None
 

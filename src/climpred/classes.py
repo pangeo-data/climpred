@@ -784,11 +784,11 @@ class PredictionEnsemble:
             >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})
             <climpred.HindcastEnsemble>
             Initialized:
-                SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
+                SST      (init, lead, lat, lon) float32 123kB -0.3236 -0.3161 ... 0.0 0.0
             Uninitialized:
                 None
             Observations:
-                SST      (time, lat, lon) float32 0.002937 0.001561 0.002587 ... 0.0 0.0 0.0
+                SST      (time, lat, lon) float32 13kB 0.002937 0.001561 ... 0.0 0.0
 
             ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
             ``lat`` and temporally listening to ``lead`` or ``time``.
@@ -797,19 +797,18 @@ class PredictionEnsemble:
             ...     {"lead": 2, "lat": 5, "lon": 4}
             ... ).get_initialized().coords
             Coordinates:
-              * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-              * lead        (lead) int32 1 2 3 4 5 6 7 8 9
-              * lat         (lat) float64 -9.75 -4.75
-              * lon         (lon) float64 250.8 254.8 258.8 262.8
-                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2026-01-01 00:00:00
+              * init        (init) object 512B 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead        (lead) int32 36B 1 2 3 4 5 6 7 8 9
+              * lat         (lat) float64 16B -9.75 -4.75
+              * lon         (lon) float64 32B 250.8 254.8 258.8 262.8
+                valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2026-01-01 00...
             >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords
             Coordinates:
-              * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
-              * lead        (lead) int32 1 2 3 4 5 6 7
-              * lat         (lat) float64 -9.75 -4.75
-              * lon         (lon) float64 250.8 255.8 260.8 265.8
-                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
-
+              * init        (init) object 512B 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+              * lead        (lead) int32 28B 1 2 3 4 5 6 7
+              * lat         (lat) float64 16B -9.75 -4.75
+              * lon         (lon) float64 32B 250.8 255.8 260.8 265.8
+                valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2024-01-01 00...
 
         """
         if not smooth_kws:
@@ -899,20 +898,20 @@ class PredictionEnsemble:
             >>> HindcastEnsemble
             <climpred.HindcastEnsemble>
             Initialized:
-                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+                SST      (init, lead, member) float64 51kB -0.2392 -0.2203 ... 0.618 0.6136
             Uninitialized:
-                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+                SST      (time, member) float64 17kB -0.1969 -0.01221 ... 0.4179 0.3974
             Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+                SST      (time) float64 488B -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
             >>> # example already effectively without seasonal cycle
             >>> HindcastEnsemble.remove_seasonality(seasonality="month")
             <climpred.HindcastEnsemble>
             Initialized:
-                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+                SST      (init, lead, member) float64 51kB -0.2392 -0.2203 ... 0.618 0.6136
             Uninitialized:
-                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+                SST      (time, member) float64 17kB -0.1969 -0.01221 ... 0.4179 0.3974
             Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+                SST      (time) float64 488B -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
         """
 
         def _remove_seasonality(ds, initialized_dim="init", seasonality=None):
@@ -1396,12 +1395,12 @@ class PerfectModelEnsemble(PredictionEnsemble):
             >>> PerfectModelEnsemble.verify(
             ...     metric="rmse", comparison="m2e", dim=["init", "member"]
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 240B
             Dimensions:  (lead: 20)
             Coordinates:
-              * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
-                tos      (lead) float32 0.1028 0.1249 0.1443 0.1707 ... 0.2113 0.2452 0.2297
+                tos      (lead) float32 80B 0.1028 0.1249 0.1443 ... 0.2113 0.2452 0.2297
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  PerfectModelEnsemble.verify()
@@ -1424,13 +1423,13 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ...     dim=["init", "member"],
             ...     reference=["persistence", "climatology", "uninitialized"],
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 1kB
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+              * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                tos      (skill, lead) float64 0.0621 0.07352 0.08678 ... 0.122 0.1246
+                tos      (skill, lead) float64 640B 0.0621 0.07352 0.08678 ... 0.122 0.1246
             Attributes:
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.v...
@@ -1777,14 +1776,14 @@ class PerfectModelEnsemble(PredictionEnsemble):
             ...     resample_dim="member",
             ...     reference=["persistence", "climatology", "uninitialized"],
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 3kB
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
-              * results  (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+              * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
+              * results  (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                tos      (skill, results, lead) float64 0.0621 0.07352 ... 0.117 0.09826
+                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.117 0.09826
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...
@@ -1969,20 +1968,20 @@ class HindcastEnsemble(PredictionEnsemble):
             >>> HindcastEnsemble  # uninitialized from historical simulations
             <climpred.HindcastEnsemble>
             Initialized:
-                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+                SST      (init, lead, member) float64 51kB -0.2392 -0.2203 ... 0.618 0.6136
             Uninitialized:
-                SST      (time, member) float64 -0.1969 -0.01221 -0.275 ... 0.4179 0.3974
+                SST      (time, member) float64 17kB -0.1969 -0.01221 ... 0.4179 0.3974
             Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+                SST      (time) float64 488B -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
 
             >>> HindcastEnsemble.generate_uninitialized()  # newly generated from initialized
             <climpred.HindcastEnsemble>
             Initialized:
-                SST      (init, lead, member) float64 -0.2392 -0.2203 ... 0.618 0.6136
+                SST      (init, lead, member) float64 51kB -0.2392 -0.2203 ... 0.618 0.6136
             Uninitialized:
-                SST      (time, member) float64 0.04868 0.07173 0.09435 ... 0.4158 0.418
+                SST      (time, member) float64 5kB 0.04868 0.07173 0.09435 ... 0.4158 0.418
             Observations:
-                SST      (time) float32 -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
+                SST      (time) float64 488B -0.4015 -0.3524 -0.1851 ... 0.2481 0.346 0.4502
         """
         uninit = resample_uninitialized_from_initialized(
             self._datasets["initialized"], resample_dim=resample_dim
@@ -2034,7 +2033,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         Example:
             >>> HindcastEnsemble.plot_alignment(alignment=None, return_xr=True)
-            <xarray.DataArray 'valid_time' (alignment: 3, lead: 10, init: 61)>
+            <xarray.DataArray 'valid_time' (alignment: 3, lead: 10, init: 61)> Size: 15kB
             array([[[-1826., -1461., -1095., ...,    nan,    nan,    nan],
                     [-1461., -1095.,  -730., ...,    nan,    nan,    nan],
                     [-1095.,  -730.,  -365., ...,    nan,    nan,    nan],
@@ -2057,12 +2056,13 @@ class HindcastEnsemble(PredictionEnsemble):
                     ...,
                     [  731.,  1096.,  1461., ...,    nan,    nan,    nan],
                     [ 1096.,  1461.,  1827., ...,    nan,    nan,    nan],
-                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]])
+                    [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]],
+                  shape=(3, 10, 61))
             Coordinates:
-              * init        (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
-              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * alignment   (alignment) <U10 'same_init' 'same_verif' 'maximize'
-                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
+              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+              * alignment   (alignment) <U10 120B 'same_init' 'same_verif' 'maximize'
+                valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
             Attributes:
                 units:    days since 1960-01-01
 
@@ -2170,13 +2170,13 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment="same_verifs",
             ...     dim=["init", "member"],
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 164B
             Dimensions:  (lead: 10)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-                skill    <U11 'initialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 44B 'initialized'
             Data variables:
-                SST      (lead) float64 0.05208 0.05009 0.05489 ... 0.09261 0.1083 0.1176
+                SST      (lead) float64 80B 0.05208 0.05009 0.05489 ... 0.1083 0.1176
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2201,13 +2201,13 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     dim="init",
             ...     reference=["persistence", "climatology", "uninitialized"],
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 568B
             Dimensions:  (skill: 4, lead: 10)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-              * skill    (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+              * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
-                SST      (skill, lead) float64 0.08135 0.08254 0.086 ... 0.1012 0.1017
+                SST      (skill, lead) float64 320B 0.08135 0.08254 0.086 ... 0.1012 0.1017
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2228,15 +2228,15 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment="same_verifs",
             ...     dim=[],
             ... )
-            <xarray.Dataset>
-            Dimensions:     (init: 61, lead: 10)
+            <xarray.Dataset> Size: 10kB
+            Dimensions:     (lead: 10, init: 61)
             Coordinates:
-              * init        (init) object 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
-              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-                valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2024-01-01 00:00:00
-                skill       <U11 'initialized'
+              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
+                skill       <U11 44B 'initialized'
             Data variables:
-                SST         (lead, init) float64 nan nan nan nan nan ... nan nan nan nan nan
+                SST         (lead, init) float64 5kB nan nan nan nan nan ... nan nan nan nan
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2515,16 +2515,16 @@ class HindcastEnsemble(PredictionEnsemble):
             ...     alignment="same_inits",
             ...     reference=["persistence", "climatology", "uninitialized"],
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 70kB
             Dimensions:     (skill: 4, results: 4, lead: 10, init: 51)
             Coordinates:
-              * lead        (lead) int32 1 2 3 4 5 6 7 8 9 10
-                valid_time  (lead, init) object 1956-01-01 00:00:00 ... 2015-01-01 00:00:00
-              * init        (init) object 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
-              * skill       (skill) <U13 'initialized' 'persistence' ... 'uninitialized'
-              * results     (results) <U12 'verify skill' 'p' 'low_ci' 'high_ci'
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                valid_time  (lead, init) object 4kB 1956-01-01 00:00:00 ... 2015-01-01 00...
+                init        (init) object 408B 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
+              * skill       (skill) <U13 208B 'initialized' ... 'uninitialized'
+              * results     (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
             Data variables:
-                SST         (skill, results, lead, init) float64 0.1202 0.01764 ... 0.07578
+                SST         (skill, results, lead, init) float64 65kB 0.1202 ... 0.07578
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.bootstrap()
@@ -2640,13 +2640,13 @@ class HindcastEnsemble(PredictionEnsemble):
             >>> HindcastEnsemble.verify(
             ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 164B
             Dimensions:  (lead: 10)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-                skill    <U11 'initialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 44B 'initialized'
             Data variables:
-                SST      (lead) float64 0.08359 0.08141 0.08362 ... 0.1361 0.1552 0.1664
+                SST      (lead) float64 80B 0.08359 0.08141 0.08362 ... 0.1361 0.1552 0.1664
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2667,13 +2667,13 @@ class HindcastEnsemble(PredictionEnsemble):
             ... ).verify(
             ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 164B
             Dimensions:  (lead: 10)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-                skill    <U11 'initialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 44B 'initialized'
             Data variables:
-                SST      (lead) float64 0.08349 0.08039 0.07522 ... 0.07305 0.08107 0.08255
+                SST      (lead) float64 80B 0.08349 0.08039 0.07522 ... 0.08107 0.08255
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2699,13 +2699,13 @@ class HindcastEnsemble(PredictionEnsemble):
             ... ).verify(
             ...     metric="rmse", comparison="e2o", alignment="maximize", dim="init"
             ... )
-            <xarray.Dataset>
+            <xarray.Dataset> Size: 164B
             Dimensions:  (lead: 10)
             Coordinates:
-              * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-                skill    <U11 'initialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                skill    <U11 44B 'initialized'
             Data variables:
-                SST      (lead) float64 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
+                SST      (lead) float64 80B 0.132 0.1085 0.08722 ... 0.08209 0.08969 0.08732
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()

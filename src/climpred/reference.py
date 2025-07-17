@@ -433,16 +433,16 @@ def compute_persistence_from_first_lead(
         ...     ).sel(
         ...         skill="persistence"
         ...     )  # persistence sensitive to comparison
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 284B
         Dimensions:  (lead: 20)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-            skill    <U11 'persistence'
+          * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+            skill    <U11 44B 'persistence'
         Data variables:
-            tos      (lead) float32 0.01056 0.01962 0.02925 ... 0.08033 0.08731 0.07578
+            tos      (lead) float32 80B 0.01056 0.01962 0.02925 ... 0.08731 0.07578
         Attributes:
-            prediction_skill_software:                         climpred https://clim...
-            skill_calculated_by_function:                      PerfectModelEnsemble....
+            prediction_skill_software:                         climpred https://climp...
+            skill_calculated_by_function:                      PerfectModelEnsemble.v...
             number_of_initializations:                         12
             number_of_members:                                 10
             metric:                                            mse
@@ -463,16 +463,16 @@ def compute_persistence_from_first_lead(
         ...     ).sel(
         ...         skill="persistence"
         ...     )  # persistence not sensitive to comparison
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 284B
         Dimensions:  (lead: 20)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-            skill    <U11 'persistence'
+          * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+            skill    <U11 44B 'persistence'
         Data variables:
-            tos      (lead) float32 0.02794 0.04554 0.08024 ... 0.06327 0.09077 0.05898
+            tos      (lead) float32 80B 0.02794 0.04554 0.08024 ... 0.09077 0.05898
         Attributes:
-            prediction_skill_software:                         climpred https://clim...
-            skill_calculated_by_function:                      PerfectModelEnsemble....
+            prediction_skill_software:                         climpred https://climp...
+            skill_calculated_by_function:                      PerfectModelEnsemble.v...
             number_of_initializations:                         12
             number_of_members:                                 10
             metric:                                            mse

@@ -214,7 +214,7 @@ class PredictionEnsemble:
                     )
                 )
                 group_label.append(group)
-        new_dim_name = groupby if isinstance(groupby, str) else groupby_str.name
+        new_dim_name = groupby if isinstance(groupby, str) else groupby.name
         skill_group = xr.concat(
             skill_group, dim=new_dim_name, **CONCAT_KWARGS
         ).assign_coords({new_dim_name: group_label})

@@ -72,7 +72,7 @@ dev = [
   "flake8",
   "isort",
   "jupyterlab",
-  "mypy",
+  "mypy >=1.13",
   "pylint",
   "pytest-sugar",
   "tqdm"
@@ -106,21 +106,24 @@ files = "."
 show_error_codes = true
 ignore_missing_imports = true
 
-[tool.mypy.overrides]
-"bottleneck.*" = {ignore_missing_imports = true}
-"cftime.*" = {ignore_missing_imports = true}
-"mypy-dask.*" = {ignore_missing_imports = true}
-"mypy-distributed.*" = {ignore_missing_imports = true}
-"mypy-fsspec.*" = {ignore_missing_imports = true}
-"mypy-matplotlib.*" = {ignore_missing_imports = true}
-"mypy-nc_time_axis.*" = {ignore_missing_imports = true}
-"mypy-numpy.*" = {ignore_missing_imports = true}
-"mypy-netCDF4.*" = {ignore_missing_imports = true}
-"mypy-pandas.*" = {ignore_missing_imports = true}
-"mypy-pytest.*" = {ignore_missing_imports = true}
-"mypy-scipy.*" = {ignore_missing_imports = true}
-"mypy-setuptools" = {ignore_missing_imports = true}
-"mypy-toolz.*" = {ignore_missing_imports = true}
+[[tool.mypy.overrides]]
+module = [
+  "bottleneck.*",
+  "cftime.*",
+  "dask.*",
+  "distributed.*",
+  "fsspec.*",
+  "matplotlib.*",
+  "nc_time_axis.*",
+  "numpy.*",
+  "netCDF4.*",
+  "pandas.*",
+  "pytest.*",
+  "scipy.*",
+  "setuptools",
+  "toolz.*"
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 python_files = ["test_*.py"]

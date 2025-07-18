@@ -41,7 +41,7 @@ metric_kwargsType = Optional[Any]
 
 
 def _maybe_seasons_to_int(
-    ds: Union[xr.Dataset, xr.DataArray]
+    ds: Union[xr.Dataset, xr.DataArray],
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Set season str values or coords to int."""
     seasonal = False

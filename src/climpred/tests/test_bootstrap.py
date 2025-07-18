@@ -3,8 +3,8 @@
 import dask
 import numpy as np
 import pytest
-from pytest_lazy_fixtures import lf as lazy_fixture
 import xarray as xr
+from pytest_lazy_fixtures import lf as lazy_fixture
 from xskillscore.core.resampling import (
     resample_iterations as _resample_iterations,
     resample_iterations_idx as _resample_iterations_idx,

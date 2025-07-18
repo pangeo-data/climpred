@@ -53,7 +53,7 @@ dependencies:
   - flake8
   - isort
   - jupyterlab
-  - mypy
+  - mypy >=1.13.0
   - nb_conda_kernels # switch conda envs in jupyter
   - pylint
   - pytest-sugar

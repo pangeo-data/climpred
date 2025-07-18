@@ -233,7 +233,7 @@ def convert_cftime_to_datetime_coords(ds, dim):
 
 
 def convert_init_lead_to_valid_time_lead(
-    skill: Union[xr.Dataset, xr.DataArray]
+    skill: Union[xr.Dataset, xr.DataArray],
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Convert ``data(init,lead)`` to ``data(valid_time,lead)`` visualizing predict barrier.
 
@@ -300,7 +300,7 @@ def convert_init_lead_to_valid_time_lead(
 
 
 def convert_valid_time_lead_to_init_lead(
-    skill: Union[xr.Dataset, xr.DataArray]
+    skill: Union[xr.Dataset, xr.DataArray],
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Convert ``data(valid_time,lead)`` to ``data(init,lead)``.
     Args:

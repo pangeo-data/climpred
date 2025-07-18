@@ -92,6 +92,9 @@ jobs:
           - env: "climpred-maximum-tests"
             python-version: "3.12"
             extras: "esmpy"  # MPI is not supported in lastest esmpy conda packages for Python3.12
+          - env: "climpred-maximum-tests"
+            python-version: "3.13"
+            extras: "esmpy"  # MPI is not supported in lastest esmpy conda packages for Python3.13
     steps:
       - uses: actions/checkout@v4
         with:

@@ -16,7 +16,8 @@ dependencies:
   - numba >=0.57
   # bias-correction
   - bias_correction >=0.4.0
-  - xclim >=0.52.0
+  - xclim >=0.57.0
+  - xsdba >=0.4.0
   # io
   - h5netcdf
   - netcdf4
@@ -27,9 +28,9 @@ dependencies:
   - eofs
   # test
   - pre-commit
-  - pytest >=7.0,<8.0
+  - pytest >=8.0.0
   - pytest-cov >=5.0
-  - pytest-lazy-fixture
+  - pytest-lazy-fixtures >=1.0.5
   - pytest-timeout
   - pytest-xdist
   # viz

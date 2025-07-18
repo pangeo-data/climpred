@@ -3,6 +3,7 @@
 import dask
 import numpy as np
 import pytest
+from pytest_lazy_fixtures import lf as lazy_fixture
 import xarray as xr
 from xskillscore.core.resampling import (
     resample_iterations as _resample_iterations,
@@ -41,8 +42,8 @@ xr.set_options(display_style="text")
 @pytest.mark.parametrize(
     "initialized",
     [
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
-        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+        lazy_fixture("perfectModelEnsemble_initialized_control"),
+        lazy_fixture("hindcast_hist_obs_1d"),
     ],
     ids=["PerfectModelEnsemble", "HindcastEnsemble"],
 )
@@ -84,8 +85,8 @@ def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment
 @pytest.mark.parametrize(
     "initialized",
     [
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
-        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+        lazy_fixture("perfectModelEnsemble_initialized_control"),
+        lazy_fixture("hindcast_hist_obs_1d"),
     ],
     ids=["PerfectModelEnsemble", "HindcastEnsemble"],
 )
@@ -299,16 +300,16 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical_da(
     "init, control",
     [
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_ym_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+            lazy_fixture("PM_ds_control_1d_ym_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_mm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+            lazy_fixture("PM_ds_control_1d_mm_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_dm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+            lazy_fixture("PM_ds_control_1d_dm_cftime"),
         ),
     ],
 )

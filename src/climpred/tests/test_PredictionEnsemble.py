@@ -1,5 +1,6 @@
 import numpy as np
 import pytest
+from pytest_lazy_fixtures import lf as lazy_fixture
 import xarray as xr
 from xarray.testing import assert_equal
 
@@ -351,8 +352,8 @@ def test_eq_ne(perfectModelEnsemble_3v_initialized_control_1d, equal):
 
 
 pe = [
-    pytest.lazy_fixture("hindcast_hist_obs_1d"),
-    pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+    lazy_fixture("hindcast_hist_obs_1d"),
+    lazy_fixture("perfectModelEnsemble_initialized_control"),
 ]
 pe_ids = ["HindcastEnsemble", "PerfectModelEnsemble"]
 

@@ -216,9 +216,9 @@ def test_shift_cftime_index():
 @pytest.mark.parametrize(
     "init",
     [
-        pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
-        pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
-        pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+        lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+        lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+        lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
     ],
 )
 def test_return_time_series_freq_freq_init_pm(init):
@@ -233,16 +233,16 @@ def test_return_time_series_freq_freq_init_pm(init):
     "init, control",
     [
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_ym_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+            lazy_fixture("PM_ds_control_1d_ym_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_mm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+            lazy_fixture("PM_ds_control_1d_mm_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_dm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+            lazy_fixture("PM_ds_control_1d_dm_cftime"),
         ),
     ],
 )

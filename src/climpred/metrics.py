@@ -617,13 +617,13 @@ def _pearson_r_eff_p_value(
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 164B
         Dimensions:  (lead: 10)
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'initialized'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'initialized'
         Data variables:
-            SST      (lead) float64 0.02333 0.08552 0.2679 ... 0.2369 0.2588 0.2703
+            SST      (lead) float64 80B 0.07628 0.08293 0.08169 ... 0.1577 0.1821 0.2087
         Attributes:
             prediction_skill_software:     climpred https://climpred.readthedocs.io/
             skill_calculated_by_function:  HindcastEnsemble.verify()

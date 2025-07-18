@@ -3,7 +3,7 @@ channels:
   - conda-forge
   - nodefaults
 dependencies:
-  - python >=3.10,<3.13
+  - python >=3.10,<3.14
   - pip >=25.0
   - cftime >=1.6.3
   - dask >=2023.4.0

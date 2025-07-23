@@ -46,7 +46,18 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     x, _, _, _ = np.linalg.lstsq(
         sigma_b, mu_x - mu_b, rcond=None
     )  # sigma_b \ (mu_x - mu_b)
-    signal = fac * np.matmul((mu_x.values - mu_b.values), x)
+    signal = fac * np.matmul((mu_x.values - mu_b.values), x.values)
+    # Alternate dask-compatible approach
+    # signal = fac * xr.apply_ufunc(
+    #     np.matmul,
+    #     mu_x - mu_b,
+    #     x,
+    #     input_core_dims=[["mode"], ["mode"]],
+    #     output_core_dims=[[]],
+    #     vectorize=True,
+    #     dask="allowed",  # only if you want it to work with dask
+    #     output_dtypes=[float],
+    # )
     R = dispersion + signal
     return R, dispersion, signal
 

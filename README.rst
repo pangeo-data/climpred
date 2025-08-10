@@ -27,7 +27,7 @@ Verification of weather and climate forecasts
     :alt: Documentation Status
 
 .. |context7| image:: https://img.shields.io/badge/docs-LLM-008A61
-    :target: https://context7.com/context7/climpred/llms.txt
+    :target: https://context7.com/pangeo-data/climpred/llms.txt
     :alt: context7 docs for LLMs
 
 .. |joss| image:: https://joss.theoj.org/papers/246d440e3fcb19025a3b0e56e1af54ef/status.svg

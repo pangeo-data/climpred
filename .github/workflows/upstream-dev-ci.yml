@@ -19,7 +19,7 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 2
       - uses: xarray-contrib/ci-trigger@v1.2
@@ -48,7 +48,7 @@ jobs:
     outputs:
       artifacts_availability: ${{ steps.status.outputs.ARTIFACTS_AVAILABLE }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Set up conda (micromamba)
@@ -108,7 +108,7 @@ jobs:
       run:
         shell: bash
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: actions/setup-python@v5
         with:
           python-version: "3.x"

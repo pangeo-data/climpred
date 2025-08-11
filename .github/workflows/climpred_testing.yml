@@ -18,7 +18,7 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 2
       - uses: xarray-contrib/ci-trigger@v1.2
@@ -38,7 +38,7 @@ jobs:
       matrix:
         python-version: ["3.9", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Set up conda (micromamba)
@@ -96,7 +96,7 @@ jobs:
             extras: "esmpy"  # MPI is not supported in lastest esmpy conda packages for Python3.12
             os: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Setup conda (micromamba)
@@ -147,7 +147,7 @@ jobs:
       matrix:
         python-version: ["3.9"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Setup conda (micromamba)
         uses: mamba-org/setup-micromamba@v2
         with:
@@ -181,7 +181,7 @@ jobs:
       matrix:
         python-version: ["3.9"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - name: Set up conda (micromamba)
         uses: mamba-org/setup-micromamba@v2
         with:

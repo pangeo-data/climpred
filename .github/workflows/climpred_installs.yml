@@ -16,7 +16,7 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           fetch-depth: 2
       - uses: xarray-contrib/ci-trigger@v1.2
@@ -35,7 +35,7 @@ jobs:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.9"]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
     - name: Setup Python
       uses: actions/setup-python@v5
       with:
@@ -56,7 +56,7 @@ jobs:
         os: ["ubuntu-latest", "macos-latest", "windows-latest"]
         python-version: ["3.9"]
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@v5
       with:
         fetch-depth: 0 # Fetch all history for all branches and tags.
     - name: Setup Python

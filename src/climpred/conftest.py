@@ -15,6 +15,11 @@ CALENDAR = PM_CALENDAR_STR.strip("Datetime").lower()
 
 xr.set_options(display_style="text")
 
+# Session-scoped fixtures optimization:
+# Base dataset loading fixtures use scope='session' to load datasets only once per test session.
+# This significantly improves test performance by avoiding redundant data loading.
+# Dependent fixtures inherit the performance benefit without needing session scope themselves.
+
 
 @pytest.fixture(autouse=True)
 def add_standard_imports(
@@ -41,7 +46,7 @@ def add_standard_imports(
 @pytest.fixture(scope='session')
 def PM_ds3v_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
-    variables."""
+    variables. Session-scoped for performance optimization."""
     return load_dataset("MPI-PM-DP-1D").isel(area=1, period=-1, drop=True)
 
 
@@ -64,7 +69,8 @@ def PM_ds_initialized_1d_lead0(PM_ds_initialized_1d):
 
 @pytest.fixture(scope='session')
 def PM_ds_initialized_3d_full():
-    """MPI Perfect-model-framework initialized global maps xr.Dataset."""
+    """MPI Perfect-model-framework initialized global maps xr.Dataset.
+    Session-scoped for performance optimization."""
     return load_dataset("MPI-PM-DP-3D")
 
 
@@ -78,7 +84,7 @@ def PM_ds_initialized_3d(PM_ds_initialized_3d_full):
 @pytest.fixture(scope='session')
 def PM_ds3v_control_1d():
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
-    three variables."""
+    three variables. Session-scoped for performance optimization."""
     return load_dataset("MPI-control-1D").isel(area=1, period=-1, drop=True)
 
 
@@ -90,7 +96,8 @@ def PM_ds_control_1d(PM_ds3v_control_1d):
 
 @pytest.fixture(scope='session')
 def PM_ds_control_3d_full():
-    """To MPI Perfect-model-framework corresponding control global maps xr.Dataset."""
+    """To MPI Perfect-model-framework corresponding control global maps xr.Dataset.
+    Session-scoped for performance optimization."""
     return load_dataset("MPI-control-3D")
 
 
@@ -127,7 +134,8 @@ def perfectModelEnsemble_3v_initialized_control_1d(
 
 @pytest.fixture(scope='session')
 def hind_ds_initialized_1d():
-    """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
+    """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset.
+    Session-scoped for performance optimization."""
     ds = load_dataset("CESM-DP-SST")
     ds["SST"].attrs["units"] = "C"
     ds["init"] = ds.init.astype("int")
@@ -312,7 +320,8 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
 @pytest.fixture(scope='session')
 def hindcast_S2S_Germany():
     """S2S ECMWF on-the-fly hindcasts with daily leads and weekly inits and related
-    observations from CPC (t2m, pr) and ERA5 (gh_500)."""
+    observations from CPC (t2m, pr) and ERA5 (gh_500). 
+    Session-scoped for performance optimization."""
     init = load_dataset("ECMWF_S2S_Germany")
     obs = load_dataset("Observations_Germany")
     return HindcastEnsemble(init).add_observations(obs)
@@ -321,7 +330,8 @@ def hindcast_S2S_Germany():
 @pytest.fixture(scope='session')
 def hindcast_NMME_Nino34():
     """NMME hindcasts with monthly leads and monthly inits and related IOv2
-    observations for SST of the Nino34 region."""
+    observations for SST of the Nino34 region. 
+    Session-scoped for performance optimization."""
     if Version(np.__version__) >= Version("2.0.0") and Version(
         xr.__version__
     ) <= Version("2024.6.0"):

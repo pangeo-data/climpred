@@ -38,7 +38,7 @@ def add_standard_imports(
     doctest_namespace["PerfectModelEnsemble"] = perfectModelEnsemble_initialized_control
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def PM_ds3v_initialized_1d():
     """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
     variables."""
@@ -62,7 +62,7 @@ def PM_ds_initialized_1d_lead0(PM_ds_initialized_1d):
     return ds
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def PM_ds_initialized_3d_full():
     """MPI Perfect-model-framework initialized global maps xr.Dataset."""
     return load_dataset("MPI-PM-DP-3D")
@@ -75,7 +75,7 @@ def PM_ds_initialized_3d(PM_ds_initialized_3d_full):
     return PM_ds_initialized_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def PM_ds3v_control_1d():
     """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
     three variables."""
@@ -88,7 +88,7 @@ def PM_ds_control_1d(PM_ds3v_control_1d):
     return PM_ds3v_control_1d.drop_vars(["sos", "AMO"])
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def PM_ds_control_3d_full():
     """To MPI Perfect-model-framework corresponding control global maps xr.Dataset."""
     return load_dataset("MPI-control-3D")
@@ -125,7 +125,7 @@ def perfectModelEnsemble_3v_initialized_control_1d(
     return PerfectModelEnsemble(PM_ds3v_initialized_1d).add_control(PM_ds3v_control_1d)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def hind_ds_initialized_1d():
     """CESM-DPLE initialized hindcast timeseries mean removed xr.Dataset."""
     ds = load_dataset("CESM-DP-SST")
@@ -155,7 +155,7 @@ def hind_ds_initialized_1d_lead0(hind_ds_initialized_1d):
     return ds
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def hind_ds_initialized_3d_full():
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
     ds = load_dataset("CESM-DP-SST-3D")
@@ -168,7 +168,7 @@ def hind_ds_initialized_3d(hind_ds_initialized_3d_full):
     return hind_ds_initialized_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def hist_ds_uninitialized_1d():
     """CESM-LE uninitialized historical timeseries members mean removed xr.Dataset."""
     ds = load_dataset("CESM-LE")
@@ -180,7 +180,7 @@ def hist_ds_uninitialized_1d():
     return ds
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def reconstruction_ds_1d():
     """CESM-FOSI historical reconstruction timeseries members mean removed
     xr.Dataset."""
@@ -198,7 +198,7 @@ def reconstruction_ds_1d_cftime(reconstruction_ds_1d):
     return ds
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def reconstruction_ds_3d_full():
     """CESM-FOSI historical Pacific reconstruction maps members mean removed
     xr.Dataset."""
@@ -213,7 +213,7 @@ def reconstruction_ds_3d(reconstruction_ds_3d_full):
     return reconstruction_ds_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def observations_ds_1d():
     """Historical timeseries from observations matching `hind_ds_initialized_1d` and
     `hind_ds_uninitialized_1d` mean removed."""
@@ -309,7 +309,7 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     return hindcast
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def hindcast_S2S_Germany():
     """S2S ECMWF on-the-fly hindcasts with daily leads and weekly inits and related
     observations from CPC (t2m, pr) and ERA5 (gh_500)."""
@@ -318,7 +318,7 @@ def hindcast_S2S_Germany():
     return HindcastEnsemble(init).add_observations(obs)
 
 
-@pytest.fixture()
+@pytest.fixture(scope='session')
 def hindcast_NMME_Nino34():
     """NMME hindcasts with monthly leads and monthly inits and related IOv2
     observations for SST of the Nino34 region."""

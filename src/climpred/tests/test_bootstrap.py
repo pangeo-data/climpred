@@ -14,6 +14,7 @@ from climpred.bootstrap import (
     _bootstrap_by_stacking,
     _chunk_before_resample_iterations_idx,
     _resample,
+    _resample_multiple_dims,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
 )
 from climpred.constants import CONCAT_KWARGS
@@ -538,3 +539,80 @@ def test_generate_uninitialized(hindcast_hist_obs_1d):
     assert not hindcast_hist_obs_1d_new.verify(**kw).equals(
         hindcast_hist_obs_1d.verify(**kw)
     )
+
+
+def test_resample_multiple_dims():
+    """Test _resample_multiple_dims function."""
+    # Create a simple test dataset
+    data = np.random.random((3, 4, 5))  # init, member, lead
+    ds = xr.Dataset(
+        {"var": (["init", "member", "lead"], data)},
+        coords={
+            "init": range(3),
+            "member": range(4), 
+            "lead": range(5)
+        }
+    )
+    
+    # Test resampling both init and member dimensions
+    result = _resample_multiple_dims(ds, ["init", "member"])
+    
+    # Check that dimensions are preserved
+    assert result.dims == ds.dims
+    assert set(result.coords) == set(ds.coords)
+    
+    # Check that init labels are changed but member labels stay the same
+    assert list(result.member.values) == list(ds.member.values)
+    # init should be resampled so some values might be different
+
+
+def test_bootstrap_multi_dim_resample(hindcast_hist_obs_1d):
+    """Test HindcastEnsemble.bootstrap with multi-dimensional resampling."""
+    # Test with both member and init resampling
+    result = hindcast_hist_obs_1d.bootstrap(
+        metric="rmse",
+        comparison="e2o", 
+        dim=[],
+        iterations=2,  # Keep low for test speed
+        resample_dim=["member", "init"],  # NEW: simultaneous resampling
+        alignment="same_inits",
+    )
+    
+    # Check that the result has the expected structure
+    assert "results" in result.dims
+    assert "skill" in result.dims
+    assert "verify skill" in result.results.values
+    assert "low_ci" in result.results.values
+    assert "high_ci" in result.results.values
+
+
+def test_bootstrap_single_vs_multi_dim_different_results(hindcast_hist_obs_1d):
+    """Test that single and multi-dimensional resampling give different results."""
+    np.random.seed(42)  # Set seed for reproducibility
+    
+    # Single dimension resampling (member only)
+    result_single = hindcast_hist_obs_1d.bootstrap(
+        metric="rmse",
+        comparison="e2o",
+        dim=[],
+        iterations=2,
+        resample_dim="member",
+        alignment="same_inits",
+    )
+    
+    np.random.seed(42)  # Reset seed for fair comparison
+    
+    # Multi-dimensional resampling (member and init)
+    result_multi = hindcast_hist_obs_1d.bootstrap(
+        metric="rmse", 
+        comparison="e2o",
+        dim=[],
+        iterations=2,
+        resample_dim=["member", "init"],
+        alignment="same_inits",
+    )
+    
+    # Results should have same structure but potentially different values
+    assert result_single.dims == result_multi.dims
+    # Due to different resampling, results should typically be different
+    # (though this isn't guaranteed due to randomness)

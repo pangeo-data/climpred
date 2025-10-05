@@ -997,7 +997,7 @@ class PredictionEnsemble:
         groupby: Optional[groupbyType] = None,
         iterations: Optional[int] = None,
         sig: int = 95,
-        resample_dim: Optional[str] = None,
+        resample_dim: Optional[Union[str, List[str]]] = None,
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """PredictionEnsemble.bootstrap() parent method.
@@ -1052,93 +1052,106 @@ class PredictionEnsemble:
             self2 = self
         skill = self2.verify(**verify_kwargs)
 
-        # different ways to compute resample_skill
-        if (
-            _metric.name in PEARSON_R_CONTAINING_METRICS
-            and self.kind == "hindcast"
-            and alignment
-        ):
-            if ("same_verif" in alignment) & (resample_dim == "init"):
-                raise KeywordError(
-                    "Cannot have alignment='same_verifs' and resample_dim='init' and "
-                    "metric='pearson_r'. Change `resample_dim` to 'member' to keep "
-                    "common verification alignment or `alignment` to 'same_inits' to "
-                    "resample over initializations."
-                )
+        # Handle multi-dimensional resampling
+        if isinstance(resample_dim, list):
+            # For multi-dimensional resampling, use the loop method
+            # which handles multiple dimensions through _resample_multiple_dims
+            resampled_skills = resample_skill_loop(
+                self2, iterations, resample_dim, verify_kwargs
+            )
+            # Skip the complex conditional logic below for multi-dim case
+            multi_dim_resample = True
+        else:
+            multi_dim_resample = False
 
-        if OPTIONS["bootstrap_resample_skill_func"] == "default":
+        # different ways to compute resample_skill
+        if not multi_dim_resample:
             if (
                 _metric.name in PEARSON_R_CONTAINING_METRICS
                 and self.kind == "hindcast"
-                and resample_dim == "init"
+                and alignment
             ):
-                # slow: loop and verify each time
-                # used for HindcastEnsemble.bootstrap(metric='acc')
-                resampled_skills = resample_skill_loop(
-                    self, iterations, resample_dim, verify_kwargs
-                )
-            elif (
-                alignment in ["same_verifs", "same_verif"]
-                and self.kind == "hindcast"
-                and resample_dim == "init"
-            ):
-                # allow https://github.com/pangeo-data/climpred/issues/582
-                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
-                    self, iterations, resample_dim, verify_kwargs
-                )
+                if ("same_verif" in alignment) & (resample_dim == "init"):
+                    raise KeywordError(
+                        "Cannot have alignment='same_verifs' and resample_dim='init' and "
+                        "metric='pearson_r'. Change `resample_dim` to 'member' to keep "
+                        "common verification alignment or `alignment` to 'same_inits' to "
+                        "resample over initializations."
+                    )
 
-            elif (
-                resample_dim == "init"
-                and self.kind == "hindcast"
-                and not _metric.probabilistic
-                and _metric.name != "rmse"
-            ):
-                # fast way by verify(dim=[]) and then resampling init
-                # used for HindcastEnsemble.bootstrap(resample_dim='init')
-                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
-                    self, iterations, resample_dim, verify_kwargs
-                )
+            if OPTIONS["bootstrap_resample_skill_func"] == "default":
+                if (
+                    _metric.name in PEARSON_R_CONTAINING_METRICS
+                    and self.kind == "hindcast"
+                    and resample_dim == "init"
+                ):
+                    # slow: loop and verify each time
+                    # used for HindcastEnsemble.bootstrap(metric='acc')
+                    resampled_skills = resample_skill_loop(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
+                elif (
+                    alignment in ["same_verifs", "same_verif"]
+                    and self.kind == "hindcast"
+                    and resample_dim == "init"
+                ):
+                    # allow https://github.com/pangeo-data/climpred/issues/582
+                    resampled_skills = resample_skill_exclude_resample_dim_from_dim(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
 
-            elif (
-                resample_dim == "init"
-                and self.kind == "hindcast"
-                and _metric.probabilistic
-                and "member" in dim
-                and _metric.name
-                not in ["rank_histogram", "discrimination", "reliability"]
-            ):
-                # fast way by verify(dim=[]) and then resampling init
-                # used for HindcastEnsemble.bootstrap(resample_dim='init')
-                resampled_skills = resample_skill_exclude_resample_dim_from_dim(
-                    self, iterations, resample_dim, verify_kwargs
-                )
-            elif (
-                resample_dim == "member"
-                and self.kind == "hindcast"
-                and _metric.name
-                in ["threshold_brier_score", "reliability", "rank_histogram"]
-            ):
-                resampled_skills = resample_skill_loop(
-                    self, iterations, resample_dim, verify_kwargs
-                )
+                elif (
+                    resample_dim == "init"
+                    and self.kind == "hindcast"
+                    and not _metric.probabilistic
+                    and _metric.name != "rmse"
+                ):
+                    # fast way by verify(dim=[]) and then resampling init
+                    # used for HindcastEnsemble.bootstrap(resample_dim='init')
+                    resampled_skills = resample_skill_exclude_resample_dim_from_dim(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
 
-            elif resample_dim == "member" or self.kind == "perfect":
-                resampled_skills = resample_skill_resample_before(
-                    self, iterations, resample_dim, verify_kwargs
-                )
+                elif (
+                    resample_dim == "init"
+                    and self.kind == "hindcast"
+                    and _metric.probabilistic
+                    and "member" in dim
+                    and _metric.name
+                    not in ["rank_histogram", "discrimination", "reliability"]
+                ):
+                    # fast way by verify(dim=[]) and then resampling init
+                    # used for HindcastEnsemble.bootstrap(resample_dim='init')
+                    resampled_skills = resample_skill_exclude_resample_dim_from_dim(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
+                elif (
+                    resample_dim == "member"
+                    and self.kind == "hindcast"
+                    and _metric.name
+                    in ["threshold_brier_score", "reliability", "rank_histogram"]
+                ):
+                    resampled_skills = resample_skill_loop(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
 
+                elif resample_dim == "member" or self.kind == "perfect":
+                    resampled_skills = resample_skill_resample_before(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
+
+                else:
+                    # slow: loop and verify each time, but always works
+                    resampled_skills = resample_skill_loop(
+                        self2, iterations, resample_dim, verify_kwargs
+                    )
             else:
-                # slow: loop and verify each time, but always works
-                resampled_skills = resample_skill_loop(
-                    self, iterations, resample_dim, verify_kwargs
+                resample_skill_func = eval(
+                    f"resample_skill_{OPTIONS['bootstrap_resample_skill_func']}"
                 )
-        else:
-            resample_skill_func = eval(
-                f"resample_skill_{OPTIONS['bootstrap_resample_skill_func']}"
-            )
-            resampled_skills = resample_skill_func(
-                self, iterations, resample_dim, verify_kwargs
-            )
+                resampled_skills = resample_skill_func(
+                    self2, iterations, resample_dim, verify_kwargs
+                )
 
         # continue with skill and resampled_skills
 
@@ -1700,7 +1713,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
         groupby: Optional[groupbyType] = None,
         iterations: Optional[int] = None,
         sig: int = 95,
-        resample_dim: str = "member",
+        resample_dim: Union[str, List[str]] = "member",
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Bootstrap with replacement according to :cite:t:`Goddard2013`.
@@ -2431,7 +2444,7 @@ class HindcastEnsemble(PredictionEnsemble):
         groupby: Optional[groupbyType] = None,
         iterations: Optional[int] = None,
         sig: int = 95,
-        resample_dim: str = "member",
+        resample_dim: Union[str, List[str]] = "member",
         **metric_kwargs: metric_kwargsType,
     ) -> xr.Dataset:
         """Bootstrap with replacement according to :cite:t:`Goddard2013`.
@@ -2468,6 +2481,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
                 - ``"member"``: select a different set of members from hind
                 - ``"init"``: select a different set of initializations from hind
+                - ``["member", "init"]``: resample both member and init dimensions simultaneously
 
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.
@@ -2538,6 +2552,18 @@ class HindcastEnsemble(PredictionEnsemble):
                 sig:                           95
                 iterations:                    50
                 confidence_interval_levels:    0.975-0.025
+
+            Simultaneous resampling across member and init dimensions:
+
+            >>> HindcastEnsemble.bootstrap(
+            ...     metric="crps",
+            ...     comparison="m2o",
+            ...     dim="member",
+            ...     iterations=50,
+            ...     resample_dim=["member", "init"],  # NEW: simultaneous resampling
+            ...     alignment="same_inits",
+            ...     reference=["persistence", "climatology", "uninitialized"],
+            ... )
 
         """
         return self._bootstrap(

@@ -69,6 +69,24 @@ def _resample(initialized, resample_dim):
     return smp_initialized
 
 
+def _resample_multiple_dims(initialized, resample_dims):
+    """Resample with replacement across multiple dimensions simultaneously.
+
+    Args:
+        initialized (xr.Dataset): input xr.Dataset to be resampled.
+        resample_dims (list of str): dimensions to resample along.
+
+    Returns:
+        xr.Dataset: resampled along all ``resample_dims``.
+
+    """
+    result = initialized
+    # Resample each dimension sequentially  
+    for dim in resample_dims:
+        result = _resample(result, dim)
+    return result
+
+
 def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
     """Get confidence intervals from bootstrapped distribution.
 
@@ -477,9 +495,14 @@ def resample_skill_loop(self, iterations, resample_dim, verify_kwargs):
         loop = tqdm(loop)
     for i in loop:
         # resample initialized
-        self_for_loop._datasets["initialized"] = _resample(
-            self.get_initialized(), resample_dim
-        )
+        if isinstance(resample_dim, list):
+            self_for_loop._datasets["initialized"] = _resample_multiple_dims(
+                self.get_initialized(), resample_dim
+            )
+        else:
+            self_for_loop._datasets["initialized"] = _resample(
+                self.get_initialized(), resample_dim
+            )
         if "uninitialized" in verify_kwargs["reference"]:
             # resample uninitialized
             if not self.get_uninitialized():

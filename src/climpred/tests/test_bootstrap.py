@@ -15,7 +15,9 @@ from climpred.bootstrap import (
     _chunk_before_resample_iterations_idx,
     _resample,
     _resample_multiple_dims,
+    _resample_multiple_dims_xbootstrap,
     bootstrap_uninit_pm_ensemble_from_control_cftime,
+    XBOOTSTRAP_AVAILABLE,
 )
 from climpred.constants import CONCAT_KWARGS
 from climpred.exceptions import KeywordError
@@ -539,6 +541,56 @@ def test_generate_uninitialized(hindcast_hist_obs_1d):
     assert not hindcast_hist_obs_1d_new.verify(**kw).equals(
         hindcast_hist_obs_1d.verify(**kw)
     )
+
+
+def test_resample_multiple_dims_xbootstrap():
+    """Test _resample_multiple_dims_xbootstrap function if xbootstrap is available."""
+    if not XBOOTSTRAP_AVAILABLE:
+        pytest.skip("xbootstrap not available")
+        
+    # Create a simple test dataset
+    data = np.random.random((3, 4, 5))  # init, member, lead
+    ds = xr.Dataset(
+        {"var": (["init", "member", "lead"], data)},
+        coords={
+            "init": range(3),
+            "member": range(4), 
+            "lead": range(5)
+        }
+    )
+    
+    # Test resampling both init and member dimensions
+    result = _resample_multiple_dims_xbootstrap(ds, ["init", "member"], n_iteration=3)
+    
+    # Check that iteration dimension was added
+    assert "iteration" in result.dims
+    assert result.iteration.size == 3
+    
+    # Check that original dimensions are still there
+    assert "init" in result.dims
+    assert "member" in result.dims
+    assert "lead" in result.dims
+
+
+@pytest.mark.skipif(not XBOOTSTRAP_AVAILABLE, reason="xbootstrap not available")
+def test_bootstrap_multi_dim_resample_xbootstrap(hindcast_hist_obs_1d):
+    """Test HindcastEnsemble.bootstrap with xbootstrap multi-dimensional resampling."""
+    # Test with both member and init resampling using xbootstrap
+    result = hindcast_hist_obs_1d.bootstrap(
+        metric="rmse",
+        comparison="e2o", 
+        dim=[],
+        iterations=2,  # Keep low for test speed
+        resample_dim=["member", "init"],  # Multi-dimensional resampling
+        alignment="same_inits",
+    )
+    
+    # Check that the result has the expected structure
+    assert "results" in result.dims
+    assert "skill" in result.dims
+    assert "verify skill" in result.results.values
+    assert "low_ci" in result.results.values
+    assert "high_ci" in result.results.values
 
 
 def test_resample_multiple_dims():

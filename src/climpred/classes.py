@@ -36,8 +36,10 @@ from .bootstrap import (
     resample_skill_exclude_resample_dim_from_dim,
     resample_skill_loop,
     resample_skill_resample_before,
+    resample_skill_xbootstrap,
     resample_uninitialized_from_initialized,
     warn_if_chunking_would_increase_performance,
+    XBOOTSTRAP_AVAILABLE,
 )
 from .checks import (
     _check_valid_alignment,
@@ -1054,11 +1056,16 @@ class PredictionEnsemble:
 
         # Handle multi-dimensional resampling
         if isinstance(resample_dim, list):
-            # For multi-dimensional resampling, use the loop method
-            # which handles multiple dimensions through _resample_multiple_dims
-            resampled_skills = resample_skill_loop(
-                self2, iterations, resample_dim, verify_kwargs
-            )
+            # For multi-dimensional resampling, prefer xbootstrap if available
+            if XBOOTSTRAP_AVAILABLE:
+                resampled_skills = resample_skill_xbootstrap(
+                    self2, iterations, resample_dim, verify_kwargs
+                )
+            else:
+                # Fallback to loop method if xbootstrap not available
+                resampled_skills = resample_skill_loop(
+                    self2, iterations, resample_dim, verify_kwargs
+                )
             # Skip the complex conditional logic below for multi-dim case
             multi_dim_resample = True
         else:
@@ -2482,6 +2489,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 - ``"member"``: select a different set of members from hind
                 - ``"init"``: select a different set of initializations from hind
                 - ``["member", "init"]``: resample both member and init dimensions simultaneously
+                  (uses xbootstrap if available for efficient block bootstrap resampling)
 
             groupby: group ``init`` before passing ``initialized`` to ``bootstrap``.
             **metric_kwargs: arguments passed to ``metric``.

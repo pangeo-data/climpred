@@ -53,7 +53,7 @@ jobs:
             conda
       - name: FIXME - Remove this step when xskillscore>=0.0.28 is released
         run: |
-          python -m pip install "git+https://github.com/xarray-contrib/xskillscore@main"
+          python -m pip install "git+https://github.com/xarray-contrib/xskillscore@aaronspring-patch-1"
       - name: Install climpred
         run: |
           python -m pip install -e .

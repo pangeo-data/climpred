@@ -57,7 +57,7 @@ jobs:
           python -m pip uninstall netcdf4 -y
       - name: FIXME - Remove this step when xskillscore>=0.0.28 is released
         run: |
-          python -m pip install "git+https://github.com/aaronspring/xskillscore@fix-numpy2-atleast-1d-complete"
+          python -m pip install "git+https://github.com/aaronspring/xskillscore@pr-437"
       - name: Conda info
         run: |
           conda info
@@ -123,7 +123,7 @@ jobs:
           python -m pip install -r requirements_upstream.txt
       - name: FIXME - Remove this step when xskillscore>=0.0.28 is released
         run: |
-          python -m pip install "git+https://github.com/aaronspring/xskillscore@fix-numpy2-atleast-1d-complete"
+          python -m pip install "git+https://github.com/aaronspring/xskillscore@pr-437"
       - name: Conda info
         run: |
           conda info
@@ -168,7 +168,7 @@ jobs:
           python -m pip install -e .[complete]
       - name: FIXME - Remove this step when xskillscore>=0.0.28 is released
         run: |
-          python -m pip install "git+https://github.com/aaronspring/xskillscore@fix-numpy2-atleast-1d-complete"
+          python -m pip install "git+https://github.com/aaronspring/xskillscore@pr-437"
       - name: Conda info
         run: |
           conda info

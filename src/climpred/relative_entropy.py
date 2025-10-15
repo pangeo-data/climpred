@@ -46,7 +46,7 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     x, _, _, _ = np.linalg.lstsq(
         sigma_b, mu_x - mu_b, rcond=None
     )  # sigma_b \ (mu_x - mu_b)
-    signal = fac * np.matmul((mu_x.values - mu_b.values), x.values)
+    signal = fac * np.matmul((mu_x.values - mu_b.values), x.data)
     # Alternate dask-compatible approach
     # signal = fac * xr.apply_ufunc(
     #     np.matmul,

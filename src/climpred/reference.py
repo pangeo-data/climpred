@@ -242,13 +242,17 @@ def compute_climatology(
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    if "iteration" in initialized.dims:
-        initialized = initialized.isel(iteration=0, drop=True)
-
     if comparison.hindcast:
         kind = "hindcast"
     else:
         kind = "perfect"
+
+    # For PerfectModel, climatology is computed from control (not initialized),
+    # so iteration dimension from bootstrap doesn't affect it and should be dropped
+    # to avoid spurious variance in confidence intervals.
+    # For Hindcast, keep iteration dimension to allow resampling over init.
+    if "iteration" in initialized.dims and kind == "perfect":
+        initialized = initialized.isel(iteration=0, drop=True)
 
     if kind == "perfect":
         forecast, verif = comparison.function(initialized, metric=metric)

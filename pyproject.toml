@@ -42,7 +42,7 @@ dependencies = [
   "packaging >=23.0",
   "pandas >=2.0",
   "pooch >=1.8.0",
-  "xarray >=2023.4.0,<2025.0",
+  "xarray >=2023.4.0,<2025.4",
   "xskillscore >=0.0.27"
 ]
 dynamic = ["version", "description"]

@@ -17,5 +17,5 @@ dependencies:
   - pytest-lazy-fixtures >=1.0.5
   - pytest-timeout
   - pytest-xdist
-  - xarray >=2023.4.0,<2025.4
+  - xarray >=2023.4.0,<2025.3.0
   - xskillscore >=0.0.27

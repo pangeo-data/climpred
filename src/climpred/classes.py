@@ -174,9 +174,9 @@ class PredictionEnsemble:
         if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
             initialized = initialized.to_dataset()
-        assert isinstance(
-            initialized, xr.Dataset
-        ), "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
+        assert isinstance(initialized, xr.Dataset), (
+            "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
+        )
         initialized = rename_to_climpred_dims(initialized)
         has_dims(initialized, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to
@@ -1768,6 +1768,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
 
+            >>> import numpy as np
+            >>> np.random.seed(42)
             >>> PerfectModelEnsemble.bootstrap(
             ...     metric="crps",
             ...     comparison="m2m",
@@ -1783,7 +1785,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * results  (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
               * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
-                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.1178 0.1122
+                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.1205 0.1326
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...

@@ -6,6 +6,12 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+dev = [
+  "pytest-lazy-fixtures>=1.4.0",
+  "pytest-xdist>=3.8.0"
+]
+
 [project]
 name = "climpred"
 authors = [
@@ -174,9 +180,3 @@ description = {file = "src/climpred/__init__.py"}
 fallback_version = "999"
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
-
-[dependency-groups]
-dev = [
-    "pytest-lazy-fixtures>=1.4.0",
-    "pytest-xdist>=3.8.0",
-]

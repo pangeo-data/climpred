@@ -45,9 +45,10 @@ jobs:
       with:
         enable-cache: true
     - name: Install dependencies
-      shell: bash
       run: |
-        UV_SYSTEM_PYTHON=1 uv pip install -e .[complete]
+        uv venv .venv
+        source .venv/bin/activate
+        uv pip install -e .[complete]
         python -c "import climpred"
 
   install-climpred:  # Installs climpred on various OS.
@@ -73,7 +74,8 @@ jobs:
       with:
         enable-cache: true
     - name: Install dependencies
-      shell: bash
       run: |
-        UV_SYSTEM_PYTHON=1 uv pip install -e .
+        uv venv .venv
+        source .venv/bin/activate
+        uv pip install -e .
         python -c "import climpred"

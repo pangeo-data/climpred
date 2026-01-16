@@ -44,9 +44,10 @@ jobs:
         with:
           enable-cache: true
       - name: Install climpred
-        shell: bash
         run: |
-          UV_SYSTEM_PYTHON=1 uv pip install -e .
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -e .
           uv pip uninstall netcdf4 -y
       - name: Run tests
         run: |
@@ -86,14 +87,15 @@ jobs:
         with:
           enable-cache: true
       - name: Install climpred[complete]
-        shell: bash
         run: |
-          UV_SYSTEM_PYTHON=1 uv pip install -e .[complete]
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -e .[complete]
           uv pip uninstall netcdf4 -y
       - name: Install bleeding edge
         if: matrix.env == 'climpred-maximum-tests-upstream'
-        shell: bash
         run: |
+          source .venv/bin/activate
           uv pip install -r requirements_upstream.txt
       - name: Run tests
         run: |
@@ -119,9 +121,10 @@ jobs:
         with:
           enable-cache: true
       - name: Install climpred[complete]
-        shell: bash
         run: |
-          UV_SYSTEM_PYTHON=1 uv pip install -e .[complete]
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -e .[complete]
           uv pip install 'xarray<2024.2.0'
       - name: Run doctests
         run: |
@@ -141,9 +144,10 @@ jobs:
         with:
           enable-cache: true
       - name: Install climpred
-        shell: bash
         run: |
-          UV_SYSTEM_PYTHON=1 uv pip install -e .
+          uv venv .venv
+          source .venv/bin/activate
+          uv pip install -e .
       - name: Test notebooks in docs
         run: |
           pushd docs

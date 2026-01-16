@@ -117,8 +117,7 @@ jobs:
           enable-cache: true
       - name: Install climpred[complete]
         run: |
-          uv run pip install -e .[complete]
-          uv run pip install 'xarray<2024.2.0'
+          uv run pip install -e .[complete] 'xarray<2024.2.0'
       - name: Run doctests
         run: |
           uv run python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests

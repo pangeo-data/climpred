@@ -121,4 +121,3 @@ asv_bench/.asv/
 dask-worker-space
 
 # End of https://www.gitignore.io/api/python
-uv.lock

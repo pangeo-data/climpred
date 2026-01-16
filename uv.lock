@@ -987,6 +987,8 @@ dependencies = [
     { name = "xarray", version = "2024.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "xarray", version = "2025.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "xsdba", version = "0.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "xsdba", version = "0.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "xskillscore" },
 ]
 
@@ -1001,7 +1003,7 @@ bias-correction = [
     { name = "bias-correction" },
     { name = "xclim", version = "0.52.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "xclim", version = "0.59.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "xsdba", marker = "python_full_version >= '3.10'" },
+    { name = "xsdba", version = "0.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 complete = [
     { name = "bias-correction" },
@@ -1028,7 +1030,7 @@ complete = [
     { name = "xclim", version = "0.52.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "xclim", version = "0.59.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "xrft" },
-    { name = "xsdba", marker = "python_full_version >= '3.10'" },
+    { name = "xsdba", version = "0.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 dev = [
     { name = "bias-correction" },
@@ -1075,7 +1077,7 @@ dev = [
     { name = "xclim", version = "0.52.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "xclim", version = "0.59.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "xrft" },
-    { name = "xsdba", marker = "python_full_version >= '3.10'" },
+    { name = "xsdba", version = "0.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 docs = [
     { name = "bias-correction" },
@@ -1111,7 +1113,7 @@ docs = [
     { name = "xclim", version = "0.52.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "xclim", version = "0.59.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
     { name = "xrft" },
-    { name = "xsdba", marker = "python_full_version >= '3.10'" },
+    { name = "xsdba", version = "0.5.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
 ]
 io = [
     { name = "h5netcdf" },
@@ -1199,6 +1201,7 @@ requires-dist = [
     { name = "xclim", marker = "extra == 'bias-correction'", specifier = ">=0.52.0" },
     { name = "xesmf", marker = "extra == 'regridding'" },
     { name = "xrft", marker = "extra == 'vwmp'" },
+    { name = "xsdba", specifier = ">=0.1.0" },
     { name = "xsdba", marker = "python_full_version >= '3.10' and extra == 'bias-correction'", specifier = ">=0.4.0" },
     { name = "xskillscore", specifier = ">=0.0.27" },
 ]
@@ -5826,9 +5829,9 @@ name = "rich"
 version = "14.2.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
-    { name = "markdown-it-py", version = "3.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "markdown-it-py", version = "3.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.11'" },
     { name = "markdown-it-py", version = "4.0.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
-    { name = "pygments", marker = "python_full_version >= '3.10'" },
+    { name = "pygments" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/fb/d2/8920e102050a0de7bfabeb4c4614a49248cf8d5d7a8d01885fbb24dc767a/rich-14.2.0.tar.gz", hash = "sha256:73ff50c7c0c1c77c8243079283f4edb376f0f6442433aecb8ce7e6d0b92d1fe4", size = 219990, upload-time = "2025-10-09T14:16:53.064Z" }
 wheels = [
@@ -7254,10 +7257,11 @@ name = "typer"
 version = "0.21.1"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
+    { name = "click", version = "8.1.8", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "click", version = "8.3.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },
-    { name = "rich", marker = "python_full_version >= '3.10'" },
-    { name = "shellingham", marker = "python_full_version >= '3.10'" },
-    { name = "typing-extensions", marker = "python_full_version >= '3.10'" },
+    { name = "rich" },
+    { name = "shellingham" },
+    { name = "typing-extensions" },
 ]
 sdist = { url = "https://files.pythonhosted.org/packages/36/bf/8825b5929afd84d0dabd606c67cd57b8388cb3ec385f7ef19c5cc2202069/typer-0.21.1.tar.gz", hash = "sha256:ea835607cd752343b6b2b7ce676893e5a0324082268b48f27aa058bdb7d2145d", size = 110371, upload-time = "2026-01-06T11:21:10.989Z" }
 wheels = [
@@ -7609,8 +7613,33 @@ wheels = [
 
 [[package]]
 name = "xsdba"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "typer", marker = "python_full_version < '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/46/65/5e93d237dde5d77adb2e487ea1eff3b348a905dc99da4cdc342cfe316042/xsdba-0.1.0.tar.gz", hash = "sha256:bdfbe72235c5bca7a3643f31475e9586170866fdf7d5c0c4f2dfa7bf25ee6324", size = 48415, upload-time = "2024-07-25T21:18:56.891Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/74/c5/3f8acaefd42b1943a8481ae433cfe09c8943de27cce354181234cd6ec6f7/xsdba-0.1.0-py3-none-any.whl", hash = "sha256:417c09ee0d94264c1df98d2771f0b884b2aa27f885e64e6ed3d738e7a80cb7d6", size = 7855, upload-time = "2024-07-25T21:18:55.465Z" },
+]
+
+[[package]]
+name = "xsdba"
 version = "0.5.0"
 source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.14' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version >= '3.14' and platform_machine != 'ARM64') or (python_full_version >= '3.14' and sys_platform != 'win32')",
+    "(python_full_version >= '3.12' and python_full_version < '3.14' and platform_machine != 'ARM64') or (python_full_version >= '3.12' and python_full_version < '3.14' and sys_platform != 'win32')",
+    "python_full_version == '3.11.*' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version == '3.11.*' and platform_machine != 'ARM64') or (python_full_version == '3.11.*' and sys_platform != 'win32')",
+    "python_full_version == '3.10.*' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version == '3.10.*' and platform_machine != 'ARM64') or (python_full_version == '3.10.*' and sys_platform != 'win32')",
+]
 dependencies = [
     { name = "boltons", marker = "python_full_version >= '3.10'" },
     { name = "bottleneck", version = "1.6.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.10'" },

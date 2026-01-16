@@ -1426,8 +1426,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 1kB
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
                 tos      (skill, lead) float64 640B 0.0621 0.07352 0.08678 ... 0.122 0.1246
             Attributes:
@@ -1783,7 +1783,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
               * results  (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
               * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
-                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.1078 0.1266
+                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.1178 0.1122
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...

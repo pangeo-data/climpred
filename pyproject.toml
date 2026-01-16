@@ -51,7 +51,7 @@ bias-correction = ["xclim >=0.46", "bias-correction >=0.4", "numpy >=1.25.0,<2.0
 io = ["netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
 regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
 relative_entropy = ["eofs"]
-test = ["netcdf4", "pre-commit", "pytest <8.0.0", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
+test = ["netcdf4", "h5netcdf", "pre-commit", "pytest <8.0.0", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
 viz = ["matplotlib", "nc-time-axis >=1.4.0"]
 vwmp = ["xrft"]
 complete = ["climpred[accel,bias-correction,viz,io,test,relative_entropy,vwmp]"]

@@ -120,7 +120,7 @@ jobs:
           uv run pip install -e .[complete] 'xarray<2024.2.0'
       - name: Run doctests
         run: |
-          uv run python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests
+          uv run pytest --doctest-modules src/climpred --ignore src/climpred/tests
 
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
     name: Notebooks, Python${{ matrix.python-version }}
@@ -138,6 +138,9 @@ jobs:
       - name: Install climpred
         run: |
           uv run pip install -e .[docs]
+      - name: Install nbstripout
+        run: |
+          uv run pip install nbstripout
       - name: Test notebooks in docs
         run: |
           pushd docs

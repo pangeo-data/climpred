@@ -45,7 +45,7 @@ jobs:
           enable-cache: true
       - name: Install climpred
         run: |
-          uv run pip install -e .
+          uv run pip install -e .[test]
           uv run pip uninstall netcdf4 -y
       - name: Run tests
         run: |
@@ -138,7 +138,7 @@ jobs:
           enable-cache: true
       - name: Install climpred
         run: |
-          uv run pip install -e .
+          uv run pip install -e .[docs]
       - name: Test notebooks in docs
         run: |
           pushd docs

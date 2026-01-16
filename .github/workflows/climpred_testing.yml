@@ -49,7 +49,7 @@ jobs:
           uv run pip uninstall netcdf4 -y
       - name: Run tests
         run: |
-          pytest -n 4 --durations=20
+          uv run pytest -n 4 --durations=20
 
   maximum-test:  # Runs testing suite with all optional dependencies
     name: Test optional dependencies, Python${{ matrix.python-version }}
@@ -94,7 +94,7 @@ jobs:
           uv run pip install -r requirements_upstream.txt
       - name: Run tests
         run: |
-          pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
+          uv run pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
       - name: Upload coverage to codecov
         uses: codecov/codecov-action@v4
         with:
@@ -121,7 +121,7 @@ jobs:
           uv run pip install 'xarray<2024.2.0'
       - name: Run doctests
         run: |
-          python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests
+          uv run python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests
 
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
     name: Notebooks, Python${{ matrix.python-version }}

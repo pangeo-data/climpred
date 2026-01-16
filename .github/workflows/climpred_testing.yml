@@ -31,38 +31,22 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
-    defaults:
-        run:
-          shell: bash -l {0}
-    strategy:
-      matrix:
-        python-version: ["3.9", "3.12"]
     steps:
       - uses: actions/checkout@v4
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
-      - name: Set up conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          environment-file: ci/requirements/minimum-tests.yml
-          environment-name: climpred-minimum-tests
-          cache-environment: true
-          create-args: >-
-            python=${{ matrix.python-version }}
-            conda
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Install climpred
         run: |
-          python -m pip install -e .
-          python -m pip uninstall netcdf4 -y
-      - name: Conda info
-        run: |
-          conda info
-      - name: Conda list
-        run: |
-          conda list
-      - name: Cache datasets  # pytest-xdist fails otherwise
-        run: |
-          python -c "import climpred; climpred.tutorial._cache_all()"
+          uv pip install -e .
+          uv pip uninstall netcdf4 -y
       - name: Run tests
         run: |
           pytest -n 4 --durations=20
@@ -72,61 +56,42 @@ jobs:
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
-    defaults:
-        run:
-          shell: bash -l {0}
     strategy:
       fail-fast: false
       matrix:
         include:
-          - env: "climpred-maximum-tests"
-            python-version: "3.9"
+          - python-version: "3.9"
             extras: "esmpy=*=mpi*"  # Ensures MPI works with version of esmpy.
-            os: ubuntu-latest
-          - env: "climpred-maximum-tests"
-            python-version: "3.10"
+            env: "climpred-maximum-tests"
+          - python-version: "3.10"
             extras: "esmpy=*=mpi*"  # Ensures MPI works with version of esmpy.
-            os: ubuntu-latest
-          - env: "climpred-maximum-tests-upstream"
-            python-version: "3.11"
+            env: "climpred-maximum-tests"
+          - python-version: "3.11"
             extras: "esmpy=*=mpi*"  # Ensures MPI works with version of esmpy.
-            os: ubuntu-latest
-          - env: "climpred-maximum-tests"
-            python-version: "3.12"
+            env: "climpred-maximum-tests-upstream"
+          - python-version: "3.12"
             extras: "esmpy"  # MPI is not supported in lastest esmpy conda packages for Python3.12
-            os: ubuntu-latest
+            env: "climpred-maximum-tests"
     steps:
       - uses: actions/checkout@v4
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
-      - name: Setup conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          environment-file: ci/requirements/maximum-tests.yml
-          environment-name: climpred-maximum-tests
-          cache-environment: true
-          cache-environment-key: "${{ runner.os }}-${{ runner.arch }}-py${{ matrix.python-version }}-${{ env.TODAY }}-${{ hashFiles(env.CONDA_ENV_FILE) }}"
-          create-args: >-
-            conda
-            python=${{ matrix.python-version }}
-            ${{ matrix.extras }}
+          python-version: ${{ matrix.python-version }}
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Install climpred[complete]
         run: |
-          python -m pip install -e .[complete]
-          python -m pip uninstall netcdf4 -y
+          uv pip install -e .[complete]
+          uv pip uninstall netcdf4 -y
       - name: Install bleeding edge
         if: matrix.env == 'climpred-maximum-tests-upstream'
         run: |
-          python -m pip install -r requirements_upstream.txt
-      - name: Conda info
-        run: |
-          conda info
-      - name: Conda list
-        run: |
-          conda list
-      - name: Cache datasets  # pytest-xdist fails otherwise
-        run: |
-          python -c "import climpred; climpred.tutorial._cache_all()"
+          uv pip install -r requirements_upstream.txt
       - name: Run tests
         run: |
           pytest -n 4 --durations=20 --cov=climpred --cov-report=xml
@@ -140,33 +105,20 @@ jobs:
   doctest:  # tests all docstrings
     name: Doctests, Python${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        shell: bash -l {0}
-    strategy:
-      matrix:
-        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
-      - name: Setup conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          environment-file: ci/requirements/maximum-tests.yml
-          environment-name: climpred-maximum-tests
-          cache-environment: true
-          create-args: >-
-            python=${{ matrix.python-version }}
-            conda
+          python-version: "3.9"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Install climpred[complete]
         run: |
-          python -m pip install -e .[complete]
-          python -m pip install 'xarray<2024.2.0'
-      - name: Conda info
-        run: |
-          conda info
-      - name: Conda list
-        run: |
-          conda list
+          uv pip install -e .[complete]
+          uv pip install 'xarray<2024.2.0'
       - name: Run doctests
         run: |
           python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests
@@ -174,32 +126,19 @@ jobs:
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
     name: Notebooks, Python${{ matrix.python-version }}
     runs-on: ubuntu-latest
-    defaults:
-        run:
-          shell: bash -l {0}
-    strategy:
-      matrix:
-        python-version: ["3.9"]
     steps:
       - uses: actions/checkout@v4
-      - name: Set up conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+      - name: Set up Python
+        uses: actions/setup-python@v5
         with:
-          environment-file: ci/requirements/docs.yml
-          environment-name: climpred-docs
-          cache-environment: true
-          create-args: >-
-            python=${{ matrix.python-version }}
-            conda
+          python-version: "3.9"
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
       - name: Install climpred
         run: |
-          python -m pip install -e .
-      - name: Conda info
-        run: |
-          conda info
-      - name: Conda list
-        run: |
-          conda list
+          uv pip install -e .
       - name: Test notebooks in docs
         run: |
           pushd docs

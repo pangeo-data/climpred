@@ -124,11 +124,22 @@ climpred: verification of weather and climate forecasts
 Installation
 ============
 
-You can install the latest release of ``climpred`` using ``pip`` or ``conda``:
+You can install the latest release of ``climpred`` using ``uv``, ``pip`` or ``conda``:
+
+**Recommended (fastest):**
+
+.. code-block:: bash
+
+    curl -LsSf https://astral.sh/uv/install.sh | sh
+    uv pip install climpred[complete]
+
+**Using pip:**
 
 .. code-block:: bash
 
     pip install climpred[complete]
+
+**Using conda:**
 
 .. code-block:: bash
 
@@ -141,11 +152,11 @@ repository or installing directly from GitHub:
 
     git clone https://github.com/pangeo-data/climpred.git
     cd climpred
-    pip install . --upgrade
+    uv pip install . --upgrade
 
 .. code-block:: bash
 
-    pip install git+https://github.com/pangeo-data/climpred.git
+    uv pip install git+https://github.com/pangeo-data/climpred.git
 
 
 

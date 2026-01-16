@@ -42,7 +42,7 @@ dependencies = [
   "pooch >=1.4",
   "pytest-doctestplus[test]>=1.6.0",
   "xarray >=0.19.0",
-  "xskillscore >=0.0.20",
+  "xskillscore >=0.0.20"
 ]
 dynamic = ["version", "description"]
 

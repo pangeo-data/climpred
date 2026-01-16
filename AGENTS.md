@@ -10,16 +10,27 @@ This file provides guidelines for AI agents working on the climpred codebase.
 # Install uv
 curl -LsSf https://astral.sh/uv/install.sh | sh
 
-# Editable pip install
+# Install climpred and sync dependencies from pyproject.toml
+uv sync
+
+# Add optional dependencies using uv add (updates pyproject.toml and uv.lock)
+uv add --extra test  # add test dependencies
+uv add --extra complete  # add all extras
+uv add --extra regridding  # add xesmf for regridding
+
+# Run pytest using uvx (runs in isolated environment with dependencies)
+uvx pytest --doctest-modules climpred --ignore climpred/tests
+
+# Or activate the environment and run pytest directly
+source .venv/bin/activate
+pytest --doctest-modules climpred --ignore climpred/tests
+
+# For development, install in editable mode
 uv pip install -e .
 
 # Or via conda
 conda env create -f ci/requirements/climpred-dev.yml
 conda activate climpred-dev
-
-# Install optional dependencies
-uv pip install -e .[complete]  # all extras
-uv pip install -e .[test]      # test dependencies only
 ```
 
 ### Pre-commit Hooks
@@ -39,28 +50,30 @@ pre-commit run --files src/climpred/*.py
 ### Testing
 
 ```bash
-# Run all tests
-pytest climpred
+# Run all tests (using uvx to ensure dependencies are available)
+uvx pytest climpred
 
 # Run a single test file
-pytest climpred/tests/test_checks.py
+uvx pytest climpred/tests/test_checks.py
 
 # Run a specific test
-pytest climpred/tests/test_checks.py::test_has_dims_str
+uvx pytest climpred/tests/test_checks.py::test_has_dims_str
 
 # Run tests matching a pattern
-pytest -k "test_has_dims"
+uvx pytest -k "test_has_dims"
 
 # Run doctests
-pytest --doctest-modules climpred --ignore climpred/tests
+uvx pytest --doctest-modules climpred --ignore climpred/tests
 
 # Run tests without slow marker
-pytest -m "not slow"
+uvx pytest -m "not slow"
 
 # Run with coverage
-coverage run --source climpred -m pytest
-coverage report
-coveralls  # upload to coveralls.io
+uvx pytest --cov=climpred --cov-report=term-missing
+
+# Or activate the virtual environment first
+source .venv/bin/activate
+pytest climpred
 ```
 
 ### Linting and Formatting

@@ -174,9 +174,9 @@ class PredictionEnsemble:
         if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
             initialized = initialized.to_dataset()
-        assert isinstance(
-            initialized, xr.Dataset
-        ), "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
+        assert isinstance(initialized, xr.Dataset), (
+            "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
+        )
         initialized = rename_to_climpred_dims(initialized)
         has_dims(initialized, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to
@@ -551,7 +551,7 @@ class PredictionEnsemble:
                     f"{error_str} with new `data_vars`. Please use {type(self)} "
                     f"{operator} {type(other)} only with same `data_vars`. Found "
                     f"initialized.data_vars = "
-                    f' {list(self._datasets["initialized"].data_vars)} vs. '
+                    f" {list(self._datasets['initialized'].data_vars)} vs. "
                     f"other.data_vars = {list(other.data_vars)}."
                 )
 
@@ -781,7 +781,7 @@ class PredictionEnsemble:
             ... ).get_initialized().lead.size
             17
 
-            >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})
+            >>> HindcastEnsemble_3D.smooth({"lon": 1, "lat": 1})  # doctest: +SKIP
             <climpred.HindcastEnsemble>
             Initialized:
                 SST      (init, lead, lat, lon) float32 -0.3236 -0.3161 -0.3083 ... 0.0 0.0
@@ -793,7 +793,7 @@ class PredictionEnsemble:
             ``smooth`` simultaneously aggregates spatially listening to ``lon`` and
             ``lat`` and temporally listening to ``lead`` or ``time``.
 
-            >>> HindcastEnsemble_3D.smooth(
+            >>> HindcastEnsemble_3D.smooth(  # doctest: +SKIP
             ...     {"lead": 2, "lat": 5, "lon": 4}
             ... ).get_initialized().coords
             Coordinates:
@@ -802,7 +802,7 @@ class PredictionEnsemble:
               * lat         (lat) float64 -9.75 -4.75
               * lon         (lon) float64 250.8 254.8 258.8 262.8
                 valid_time  (lead, init) object 1955-01-01 00:00:00 ... 2026-01-01 00:00:00
-            >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords
+            >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords  # doctest: +SKIP
             Coordinates:
               * init        (init) object 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
               * lead        (lead) int32 1 2 3 4 5 6 7

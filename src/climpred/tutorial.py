@@ -204,7 +204,7 @@ def load_dataset(
             """
             raise IOError(msg)
 
-    ds = _open_dataset(localfile, **kws)
+    ds = _open_dataset(localfile, engine="h5netcdf", **kws)
 
     if not cache:
         ds = ds.load()

@@ -45,6 +45,7 @@ jobs:
       with:
         enable-cache: true
     - name: Install dependencies
+      shell: bash
       run: |
         UV_SYSTEM_PYTHON=1 uv pip install -e .[complete]
         python -c "import climpred"
@@ -72,6 +73,7 @@ jobs:
       with:
         enable-cache: true
     - name: Install dependencies
+      shell: bash
       run: |
         UV_SYSTEM_PYTHON=1 uv pip install -e .
         python -c "import climpred"

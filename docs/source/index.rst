@@ -152,11 +152,26 @@ repository or installing directly from GitHub:
 
     git clone https://github.com/pangeo-data/climpred.git
     cd climpred
-    uv pip install . --upgrade
+    uv pip install -e .
 
 .. code-block:: bash
 
     uv pip install git+https://github.com/pangeo-data/climpred.git
+
+Testing
+=======
+
+Run tests with ``uv``:
+
+.. code-block:: bash
+
+    uv run pytest climpred
+
+Run doctests:
+
+.. code-block:: bash
+
+    uv run pytest --doctest-modules climpred --ignore climpred/tests
 
 
 

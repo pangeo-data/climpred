@@ -119,31 +119,25 @@ Preparing Pull Requests
    If you need some help with Git, follow this quick start
    `guide <https://git.wiki.kernel.org/index.php/QuickStart>`_.
 
-#. Install dependencies into a new
-   `conda <https://conda.io/projects/conda/en/latest/user-guide/getting-started.html>`_
-   environment::
+#. Install dependencies with ``uv``::
 
-    $ conda env create -f ci/requirements/climpred-dev.yml
-    $ conda activate climpred-dev
+     curl -LsSf https://astral.sh/uv/install.sh | sh
 
 #. Make an editable install of ``climpred`` by running::
 
-    $ pip install -e .
+     uv pip install -e .
 
 #. Install `pre-commit <https://pre-commit.com>`_ and its hook on the
    ``climpred`` repo::
 
-     $ pip install --user pre-commit
-     $ pre-commit install
+     uv pip install pre-commit
+     pre-commit install
 
    ``pre-commit`` automatically beautifies the code, makes it more
    maintainable and catches syntax errors. Afterwards ``pre-commit`` will run
    whenever you commit.
 
-   Now you have an environment called ``climpred-dev`` that you can work in.
-   You’ll need to make sure to activate that environment next time you want
-   to use it after closing the terminal or your system.
-
+   Now you have a working development environment.
    You can now edit your local working copy and run/add tests as necessary.
    Please try to follow
    `PEP-8 <https://www.python.org/dev/peps/pep-0008/#naming-conventions>`_ for
@@ -164,27 +158,26 @@ Preparing Pull Requests
 
 #. Break your edits up into reasonably sized commits::
 
-    $ git commit -a -m "<commit message>"
-    $ git push -u
+     $ git commit -a -m "<commit message>"
+     $ git push -u
 
 #. Run all tests
 
    Once commits are pushed to ``origin``, GitHub Actions runs continuous
-   integration of all tests on all new commits. However, you are already
+   integration of all tests on all new commits. However, you can already
    run tests locally::
 
-    $ pytest climpred
+    $ uv run pytest climpred
 
    Check that `doctests <https://docs.pytest.org/en/stable/doctest.html>`_ are
    passing::
 
-    $ pytest --doctest-modules climpred --ignore climpred/tests
+    $ uv run pytest --doctest-modules climpred --ignore climpred/tests
 
    Check that your contribution is covered by tests and therefore increases
    the overall test coverage::
 
-    $ coverage run --source climpred -m py.test
-    $ coverage report
+    $ uv run pytest --cov climpred --cov-report term-missing
     $ coveralls
 
    Please stick to

@@ -698,6 +698,8 @@ dependencies = [
     { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "packaging" },
     { name = "pooch" },
+    { name = "pytest-doctestplus", version = "1.6.0", source = { registry = "https://pypi.org/simple" }, extra = ["test"], marker = "python_full_version < '3.10'" },
+    { name = "pytest-doctestplus", version = "1.7.0", source = { registry = "https://pypi.org/simple" }, extra = ["test"], marker = "python_full_version >= '3.10'" },
     { name = "xarray", version = "2024.7.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
     { name = "xarray", version = "2025.6.1", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
     { name = "xarray", version = "2025.12.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
@@ -847,6 +849,7 @@ requires-dist = [
     { name = "pre-commit", marker = "extra == 'test'" },
     { name = "pytest", marker = "extra == 'test'", specifier = "<8.0.0" },
     { name = "pytest-cov", marker = "extra == 'test'" },
+    { name = "pytest-doctestplus", extras = ["test"], specifier = ">=1.6.0" },
     { name = "pytest-lazy-fixture", marker = "extra == 'test'" },
     { name = "pytest-xdist", marker = "extra == 'test'" },
     { name = "sphinx", marker = "extra == 'docs'" },
@@ -4481,6 +4484,62 @@ wheels = [
 ]
 
 [[package]]
+name = "pytest-doctestplus"
+version = "1.6.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version < '3.10'",
+]
+dependencies = [
+    { name = "packaging", marker = "python_full_version < '3.10'" },
+    { name = "pytest", marker = "python_full_version < '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ab/ad/896366e91c0b039d1f2d840a821d70aff18e97423188d1d244a9fb1254ae/pytest_doctestplus-1.6.0.tar.gz", hash = "sha256:f893d68370d19b418d58da0047d36a4feedac7ed28bc236858f484e994f1ac66", size = 50186, upload-time = "2025-11-20T10:17:17.269Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/bf/1c/ff1548922bad1f0fc6003567ab7872a70a6e3523b7a3ea331b6fb0ca40ff/pytest_doctestplus-1.6.0-py3-none-any.whl", hash = "sha256:7ea003abfd62a787fee4cae674b0efc77c2fb73518ae60da662dc3b3ec2a47ed", size = 25687, upload-time = "2025-11-20T10:17:15.908Z" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "numpy", version = "2.0.2", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+    { name = "pytest-remotedata", marker = "python_full_version < '3.10'" },
+    { name = "setuptools", marker = "python_full_version < '3.10'" },
+    { name = "sphinx", version = "7.4.7", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version < '3.10'" },
+]
+
+[[package]]
+name = "pytest-doctestplus"
+version = "1.7.0"
+source = { registry = "https://pypi.org/simple" }
+resolution-markers = [
+    "python_full_version >= '3.12' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "python_full_version == '3.11.*' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version >= '3.12' and platform_machine != 'ARM64') or (python_full_version >= '3.12' and sys_platform != 'win32')",
+    "(python_full_version == '3.11.*' and platform_machine != 'ARM64') or (python_full_version == '3.11.*' and sys_platform != 'win32')",
+    "python_full_version == '3.10.*' and platform_machine == 'ARM64' and sys_platform == 'win32'",
+    "(python_full_version == '3.10.*' and platform_machine != 'ARM64') or (python_full_version == '3.10.*' and sys_platform != 'win32')",
+]
+dependencies = [
+    { name = "packaging", marker = "python_full_version >= '3.10'" },
+    { name = "pytest", marker = "python_full_version >= '3.10'" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/a3/1b/0948938381387d810ebcedbbab6c930431996390b09538158d7fcbeef379/pytest_doctestplus-1.7.0.tar.gz", hash = "sha256:eb439436cd59e64d4e8076b5f8615063c23abb6a31e7bd9a287623b755c73841", size = 50078, upload-time = "2026-01-08T05:06:11.411Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/96/77/5202512f57e42c0713af2929b51d077e964f4758c41b2cc2ecefdc501b30/pytest_doctestplus-1.7.0-py3-none-any.whl", hash = "sha256:5327ef66c13f192022121acdc028d0b9448c16103f17371556bb747eae7ff2ea", size = 25488, upload-time = "2026-01-08T05:06:10.192Z" },
+]
+
+[package.optional-dependencies]
+test = [
+    { name = "numpy", version = "2.2.6", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "numpy", version = "2.3.5", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
+    { name = "pytest-remotedata", marker = "python_full_version >= '3.10'" },
+    { name = "setuptools", marker = "python_full_version >= '3.10'" },
+    { name = "sphinx", version = "8.1.3", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.10.*'" },
+    { name = "sphinx", version = "9.0.4", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version == '3.11.*'" },
+    { name = "sphinx", version = "9.1.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.12'" },
+]
+
+[[package]]
 name = "pytest-lazy-fixture"
 version = "0.6.3"
 source = { registry = "https://pypi.org/simple" }
@@ -4490,6 +4549,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/b2/82/ae6d2f6903719c4ec410dcd31ee24e3bce74b2cef3c5b9150ad36e8594b6/pytest-lazy-fixture-0.6.3.tar.gz", hash = "sha256:0e7d0c7f74ba33e6e80905e9bfd81f9d15ef9a790de97993e34213deb5ad10ac", size = 7878, upload-time = "2020-02-01T18:04:02.321Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/2d/a1/2f2c1c2353350d66c4d110d283e422e4943eb5ad10effa9357ba66f7b5b9/pytest_lazy_fixture-0.6.3-py3-none-any.whl", hash = "sha256:e0b379f38299ff27a653f03eaa69b08a6fd4484e46fd1c9907d984b9f9daeda6", size = 4948, upload-time = "2020-02-01T18:04:00.347Z" },
+]
+
+[[package]]
+name = "pytest-remotedata"
+version = "0.4.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "packaging" },
+    { name = "pytest" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/ff/b7/e39d14f37df7303fd6643db638db0e7722a8d168212d6deb36244f844b68/pytest-remotedata-0.4.1.tar.gz", hash = "sha256:05c08bf638cdd1ed66eb01738a1647c3c714737c3ec3abe009d2c1f793b4bb59", size = 13279, upload-time = "2023-09-26T04:00:14.367Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/02/70/9d5e2a5020c4721115b48fa6efa765ffff1cd679ed89049fa4c9a3c62f55/pytest_remotedata-0.4.1-py3-none-any.whl", hash = "sha256:4e840bd8733091c2a84e52528ee2c2a98aa2d4a26376ba20448f211bccd30a35", size = 8583, upload-time = "2023-09-26T04:00:12.927Z" },
 ]
 
 [[package]]
@@ -5393,6 +5465,15 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ef/5e/e565bd73991d42023eb82bb99e51c5b3d9e2c588ca9d4b3e2cc1d3ca62a6/scipy-1.17.0-cp314-cp314t-musllinux_1_2_x86_64.whl", hash = "sha256:f9eb55bb97d00f8b7ab95cb64f873eb0bf54d9446264d9f3609130381233483f", size = 37457743, upload-time = "2026-01-10T21:30:34.819Z" },
     { url = "https://files.pythonhosted.org/packages/58/a8/a66a75c3d8f1fb2b83f66007d6455a06a6f6cf5618c3dc35bc9b69dd096e/scipy-1.17.0-cp314-cp314t-win_amd64.whl", hash = "sha256:1ff269abf702f6c7e67a4b7aad981d42871a11b9dd83c58d2d2ea624efbd1088", size = 37098574, upload-time = "2026-01-10T21:30:40.782Z" },
     { url = "https://files.pythonhosted.org/packages/56/a5/df8f46ef7da168f1bc52cd86e09a9de5c6f19cc1da04454d51b7d4f43408/scipy-1.17.0-cp314-cp314t-win_arm64.whl", hash = "sha256:031121914e295d9791319a1875444d55079885bbae5bdc9c5e0f2ee5f09d34ff", size = 25246266, upload-time = "2026-01-10T21:30:45.923Z" },
+]
+
+[[package]]
+name = "setuptools"
+version = "80.9.0"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/18/5d/3bf57dcd21979b887f014ea83c24ae194cfcd12b9e0fda66b957c69d1fca/setuptools-80.9.0.tar.gz", hash = "sha256:f36b47402ecde768dbfafc46e8e4207b4360c654f1f3bb84475f0a28628fb19c", size = 1319958, upload-time = "2025-05-27T00:56:51.443Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/a3/dc/17031897dae0efacfea57dfd3a82fdd2a2aeb58e0ff71b77b87e44edc772/setuptools-80.9.0-py3-none-any.whl", hash = "sha256:062d34222ad13e0cc312a4c02d73f059e86a4acbfbdea8f8f76b28c99f306922", size = 1201486, upload-time = "2025-05-27T00:56:49.664Z" },
 ]
 
 [[package]]

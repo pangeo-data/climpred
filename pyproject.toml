@@ -37,7 +37,7 @@ dependencies = [
   "cf_xarray >=0.6.0",
   "cftime >=1.5.0",
   "dask >=2021.10.0",
-  "numpy >=1.25.0",
+  "numpy >=2.0.0",
   "packaging",
   "pooch >=1.4",
   "xarray >=0.19.0",
@@ -47,7 +47,7 @@ dynamic = ["version", "description"]
 
 [project.optional-dependencies]
 accel = ["numba >=0.52", "bottleneck"]
-bias-correction = ["xclim >=0.46", "bias-correction >=0.4", "numpy >=1.25.0,<2.0.0"] # pinned until xclim supports numpy>=2.0.0
+bias-correction = ["xclim >=0.46", "bias-correction >=0.4", "numpy >=2.0.0"]
 io = ["netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
 regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
 relative_entropy = ["eofs"]
@@ -62,7 +62,8 @@ docs = [
   "sphinx-book-theme >=0.3.3",
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
-  "sphinxcontrib-napoleon"
+  "sphinxcontrib-napoleon",
+  "sphinxext-opengraph"
 ]
 
 [project.urls]

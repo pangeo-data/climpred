@@ -46,7 +46,7 @@ jobs:
         enable-cache: true
     - name: Install dependencies
       run: |
-        uv pip install -e .[complete]
+        uv pip install --system -e .[complete]
         python -c "import climpred"
 
   install-climpred:  # Installs climpred on various OS.
@@ -73,5 +73,5 @@ jobs:
         enable-cache: true
     - name: Install dependencies
       run: |
-        uv pip install -e .
+        uv pip install --system -e .
         python -c "import climpred"

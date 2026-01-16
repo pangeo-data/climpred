@@ -87,7 +87,7 @@ jobs:
           uv pip install --upgrade git+https://github.com/Ouranosinc/xclim
       - name: Install climpred (no deps)
         run: |
-          uv pip install --no-deps -e .
+          uv pip install --system --no-deps -e .
       - name: import climpred
         run: |
           python -c 'import climpred; climpred.show_versions()'

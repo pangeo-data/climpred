@@ -276,8 +276,8 @@ def convert_init_lead_to_valid_time_lead(
                [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
                 0.19931679, 0.00987793, 0.06375334, 0.07705835]])
         Coordinates:
-          * lead        (lead) int32 12B 1 2 3
           * valid_time  (valid_time) object 72B 1993-01-01 00:00:00 ... 2001-01-01 00...
+          * lead        (lead) int32 12B 1 2 3
             skill       <U11 44B 'initialized'
             init        (lead, valid_time) object 216B 1992-01-01 00:00:00 ... 1998-0...
         Attributes:
@@ -293,6 +293,7 @@ def convert_init_lead_to_valid_time_lead(
     swapped = xr.concat(
         [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
         "lead",
+        join="outer"
     )
     return add_init_from_time_lead(swapped.drop_vars("init")).dropna(
         "valid_time", how="all"

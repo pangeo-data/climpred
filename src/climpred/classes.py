@@ -267,10 +267,10 @@ class PredictionEnsemble:
         See also:
             :py:meth:`~xarray.Dataset.equals`
         """
-        pe_dims = dict(self.get_initialized().dims)
+        pe_dims = dict(self.get_initialized().sizes)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
-                pe_dims.update(dict(ds.dims))
+                pe_dims.update(ds.sizes)
         return pe_dims
 
     @property
@@ -1426,8 +1426,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 1kB
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
-              * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
               * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+              * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
             Data variables:
                 tos      (skill, lead) float64 640B 0.0621 0.07352 0.08678 ... 0.122 0.1246
             Attributes:
@@ -2321,7 +2321,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast["lead"].data
             ]
-            result = xr.concat(metric_over_leads, dim="lead")  # , **CONCAT_KWARGS)
+            result = xr.concat(metric_over_leads, dim="lead", join="outer")  # , **CONCAT_KWARGS)
             result["lead"] = forecast["lead"]
 
             if reference is not None:

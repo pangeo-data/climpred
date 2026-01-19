@@ -2321,7 +2321,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast["lead"].data
             ]
-            result = xr.concat(metric_over_leads, dim="lead", join="outer")  # , **CONCAT_KWARGS)
+            result = xr.concat(
+                metric_over_leads, dim="lead", join="outer"
+            )  # , **CONCAT_KWARGS)
             result["lead"] = forecast["lead"]
 
             if reference is not None:

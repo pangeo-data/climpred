@@ -137,7 +137,7 @@ def test_bootstrap_PM_lazy_results(
     perfectModelEnsemble_initialized_control, chunk, comparison, dim
 ):
     """Test bootstrap_perfect_model works lazily."""
-    pm = perfectModelEnsemble_initialized_control.isel(lead=range(3))
+    pm = perfectModelEnsemble_initialized_control.isel(lead=range(4))
     if chunk:
         pm = pm.chunk({"lead": 2}).chunk({"time": -1})
     else:

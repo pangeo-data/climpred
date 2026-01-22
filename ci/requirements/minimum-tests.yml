@@ -10,7 +10,7 @@ dependencies:
   - h5netcdf
   - netcdf4
   - numpy >=1.25
-  - pandas >=2.0
+  - pandas >=2.0,<3.0
   - pooch >=1.8.0
   - pytest >=8.0.0
   - pytest-cov >=5.0

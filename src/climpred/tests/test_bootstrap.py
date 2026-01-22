@@ -483,7 +483,7 @@ def test_resample_iterations_dix_no_squeeze(PM_ds_initialized_1d):
     assert "test_dim" in actual.dims
 
 
-@pytest.mark.parametrize("metric", ["acc", "mae"])
+@pytest.mark.parametrize("metric", ["rmse", "mae"])
 def test_bootstrap_p_climatology(hindcast_hist_obs_1d, metric):
     """Test that p from bootstrap is close to 0 if skillful."""
     reference = "climatology"

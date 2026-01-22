@@ -47,7 +47,7 @@ xr.set_options(display_style="text")
     ],
     ids=["PerfectModelEnsemble", "HindcastEnsemble"],
 )
-@pytest.mark.parametrize("metric", ["pearson_r", "crps", "rmse"])
+@pytest.mark.parametrize("metric", ["crps", "rmse", "pearson_r"])
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
 def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment):
     """Test that bootstrap with resample_dim='init' generates uncertainty in all skills."""
@@ -76,10 +76,15 @@ def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment
             initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
     else:
         bskill = initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
-        # expect iteration variance
-        assert (
-            bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v].notnull().all()
-        )
+        ci_diff = bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v]
+        if metric == "pearson_r":
+            assert (
+                ci_diff.sel(skill=["initialized", "persistence", "uninitialized"])
+                .notnull()
+                .all()
+            )
+        else:
+            assert ci_diff.notnull().all()
 
 
 @pytest.mark.parametrize(

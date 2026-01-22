@@ -16,7 +16,7 @@ dependencies:
   - numba >=0.57
   # bias-correction
   - bias_correction >=0.4.0
-  - xclim >=0.57.0
+  - xclim >=0.53.0
   - xsdba >=0.4.0
   # io
   - h5netcdf

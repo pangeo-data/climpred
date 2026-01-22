@@ -267,10 +267,10 @@ class PredictionEnsemble:
         See also:
             :py:meth:`~xarray.Dataset.equals`
         """
-        pe_dims = dict(self.get_initialized().dims)
+        pe_dims = dict(self.get_initialized().sizes)
         for ds in self._datasets.values():
             if isinstance(ds, xr.Dataset):
-                pe_dims.update(dict(ds.dims))
+                pe_dims.update(ds.sizes)
         return pe_dims
 
     @property
@@ -551,7 +551,7 @@ class PredictionEnsemble:
                     f"{error_str} with new `data_vars`. Please use {type(self)} "
                     f"{operator} {type(other)} only with same `data_vars`. Found "
                     f"initialized.data_vars = "
-                    f' {list(self._datasets["initialized"].data_vars)} vs. '
+                    f" {list(self._datasets['initialized'].data_vars)} vs. "
                     f"other.data_vars = {list(other.data_vars)}."
                 )
 
@@ -1768,6 +1768,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference forecast performs better than initialized and the lower and
             upper bound of the resample.
 
+            >>> import numpy as np
+            >>> np.random.seed(42)
             >>> PerfectModelEnsemble.bootstrap(
             ...     metric="crps",
             ...     comparison="m2m",
@@ -2319,7 +2321,9 @@ class HindcastEnsemble(PredictionEnsemble):
                 )
                 for lead in forecast["lead"].data
             ]
-            result = xr.concat(metric_over_leads, dim="lead")  # , **CONCAT_KWARGS)
+            result = xr.concat(
+                metric_over_leads, dim="lead", join="outer"
+            )  # , **CONCAT_KWARGS)
             result["lead"] = forecast["lead"]
 
             if reference is not None:

@@ -8,6 +8,7 @@ dependencies:
   - cftime >=1.6.3
   - dask >=2023.4.0
   - numpy >=2.0.0
+  - pandas >=2.0,<3.0
   - pooch >=1.8.0
   - xarray >=2024.2.0  # xarray >=2024.2.0 is needed for nbytes representation in doctests
   - xskillscore >=0.0.27
@@ -16,7 +17,7 @@ dependencies:
   - numba >=0.57
   # bias-correction
   - bias_correction >=0.4.0
-  - xclim >=0.57.0
+  - xclim >=0.53.0
   - xsdba >=0.4.0
   # io
   - h5netcdf

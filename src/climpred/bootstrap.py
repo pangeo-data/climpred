@@ -264,7 +264,7 @@ def resample_uninitialized_from_initialized(init, resample_dim=["init", "member"
         raise ValueError(
             "`resample_uninitialized_from_initialized` only works if the same number "
             " of initializations is present each year, found "
-            f'{init.init.dt.year.groupby("init.year").count()}.'
+            f"{init.init.dt.year.groupby('init.year').count()}."
         )
     if "init" not in resample_dim:
         raise ValueError(
@@ -388,7 +388,7 @@ def _maybe_auto_chunk(ds, dims):
 
     Args:
         ds (xr.Dataset): input data.
-        dims (list of str or str): Dimensions to auto-chunk in.
+        dims (list of str or str): Dimension(s) to auto-chunk in.
 
     Returns:
         xr.Dataset: auto-chunked along `dims`
@@ -397,9 +397,13 @@ def _maybe_auto_chunk(ds, dims):
     if dask.is_dask_collection(ds) and dims != []:
         if isinstance(dims, str):
             dims = [dims]
-        chunks = [d for d in dims if d in ds.dims]
-        chunks = {key: "auto" for key in chunks}
-        ds = ds.chunk(chunks)
+        chunks = {key: "auto" for key in dims if key in ds.dims}
+        if not chunks:
+            return ds
+        for name in ds.data_vars:
+            var = ds[name]
+            if not dask.is_dask_collection(var) and var.dtype != object:
+                ds[name] = var.chunk(chunks)
     return ds
 
 

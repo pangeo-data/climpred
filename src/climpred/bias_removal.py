@@ -404,7 +404,9 @@ def gaussian_bias_removal(
     # keep attrs fix
     hindcast_bias_removed.attrs = hindcast.get_initialized().attrs
     for v in hindcast_bias_removed.get_initialized().data_vars:
-        hindcast_bias_removed._datasets["initialized"][v].attrs = hindcast.get_initialized()[v].attrs
+        hindcast_bias_removed._datasets["initialized"][
+            v
+        ].attrs = hindcast.get_initialized()[v].attrs
     return hindcast_bias_removed
 
 

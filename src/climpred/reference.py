@@ -178,6 +178,7 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
         elif "member" not in lforecast.dims and "member" not in lverif.dims:
             dim = dim.copy()
             dim.remove("member")
+
     # for probabilistic metrics requiring member dim, add single-member dimension
     if metric.requires_member_dim:
         if "member" not in lforecast.dims:
@@ -185,7 +186,8 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
             if "member" not in dim:
                 dim = dim.copy()
                 dim.append("member")
-        assert "member" in lforecast.dims and "member" not in lverif.dims
+        if not ("member" in lforecast.dims and "member" not in lverif.dims):
+            raise ValueError()
     # member not required by metric and not in dim but present in forecast
     if (
         not metric.requires_member_dim and metric.probabilistic

@@ -2719,9 +2719,10 @@ def _brier_score(
         forecast, verif, metric_kwargs, dim
     )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
-    assert (
-        "member" not in forecast.dims
-    )  # require probabilities # TODO: allow fair=True
+
+    if "member" in forecast.dims:
+        raise RuntimeError  # require probabilities # TODO: allow fair=True
+
     return brier_score(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -3388,7 +3389,10 @@ def _discrimination(
         forecast, verif, metric_kwargs, dim
     )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
-    assert "member" not in forecast.dims  # requires probabilities
+
+    if "member" in forecast.dims:
+        raise RuntimeError  # requires probabilities
+
     return discrimination(verif, forecast, dim=dim, **metric_kwargs)
 
 
@@ -3548,7 +3552,10 @@ def _reliability(
             forecast, verif, metric_kwargs, dim
         )
     forecast, dim = _maybe_member_mean_reduce_dim(forecast, dim)
-    assert "member" not in forecast.dims  # requires probabilities
+
+    if "member" in forecast.dims:
+        raise RuntimeError  # requires probabilities
+
     return reliability(verif, forecast, dim=dim, **metric_kwargs)
 
 

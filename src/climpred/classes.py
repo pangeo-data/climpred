@@ -1,5 +1,6 @@
 """Main module instantiating ``PerfectModelEnsemble`` and ``HindcastEnsemble."""
 
+import importlib.util as _util
 import logging
 import warnings
 from copy import deepcopy
@@ -20,6 +21,7 @@ from typing import (
 import cf_xarray  # noqa
 import numpy as np
 import xarray as xr
+from packaging.version import Version
 from xarray.core.coordinates import DatasetCoordinates
 from xarray.core.dataset import DataVariables
 from xarray.core.formatting_html import dataset_repr
@@ -171,12 +173,13 @@ class PredictionEnsemble:
 
     def __init__(self, initialized: Union[xr.DataArray, xr.Dataset]):
         """Create a :py:class:`.PredictionEnsemble` object."""
+        if not isinstance(initialized, (xr.DataArray, xr.Dataset)):
+            raise ValueError(
+                "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
+            )
         if isinstance(initialized, xr.DataArray):
             # makes applying prediction functions easier, etc.
             initialized = initialized.to_dataset()
-        assert isinstance(
-            initialized, xr.Dataset
-        ), "PredictionEnsemble.__init__ requires xr.DataArray or xr.Dataset"
         initialized = rename_to_climpred_dims(initialized)
         has_dims(initialized, ["init", "lead"], "PredictionEnsemble")
         # Check that init is int, cftime, or datetime; convert ints or cftime to
@@ -468,7 +471,8 @@ class PredictionEnsemble:
 
         if x == "time":
             x = "valid_time"
-        assert x in ["valid_time", "init"]
+        if x not in ["valid_time", "init"]:
+            raise ValueError("x must be 'valid_time' or 'init'.")
         if isinstance(self, HindcastEnsemble):
             if cmap is None:
                 cmap = "viridis"
@@ -504,7 +508,8 @@ class PredictionEnsemble:
             - xr.Dataset without new dimensions or variables
 
         """
-        assert isinstance(operator, str)
+        if not isinstance(operator, str):
+            raise ValueError("operator must be of type str.")
 
         def add(a, b):
             return a + b
@@ -2078,6 +2083,16 @@ class HindcastEnsemble(PredictionEnsemble):
         """
         from .graphics import _verif_dates_xr
 
+        if not return_xr:
+            nctimeaxis_installed = _util.find_spec("nc_time_axis")
+            if not nctimeaxis_installed:
+                raise ValueError("nc_time_axis >= 1.4.0 required for plotting.")
+            else:
+                import nc_time_axis  # noqa:
+
+                if Version(nc_time_axis.__version__) < Version("1.4.0"):
+                    raise ImportError("nc_time_axis >= 1.4.0 required for plotting.")
+
         if alignment is None or alignment == []:
             alignment = ["same_init", "same_verif", "maximize"]
         if isinstance(alignment, str):
@@ -2106,13 +2121,7 @@ class HindcastEnsemble(PredictionEnsemble):
 
         if return_xr:
             return add_time_from_init_lead(verif_dates_xr)
-        try:
-            import nc_time_axis  # noqa:
-
-            assert int(nc_time_axis.__version__.replace(".", "")) >= 140
-            return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
-        except ImportError:
-            raise ValueError("nc_time_axis>1.4.0 required for plotting.")
+        return verif_dates_xr.plot(cmap=cmap, edgecolors=edgecolors, **plot_kwargs)
 
     def verify(
         self,

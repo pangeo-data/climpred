@@ -124,7 +124,11 @@ def plot_bootstrapped_skill_over_leadyear(
             bootstrapped = bootstrapped[var]
             bootstrapped.attrs = attrs
 
-    assert isinstance(bootstrapped, xr.DataArray)
+    if not isinstance(bootstrapped, xr.DataArray):
+        raise ValueError(
+            "The 'bootstrapped' variable must be either a xr.Dataset or a xr.DataArray."
+        )
+
     reference = list(bootstrapped.drop_sel(skill="initialized").coords["skill"].values)
 
     sig = bootstrapped.attrs["confidence_interval_levels"].split("-")

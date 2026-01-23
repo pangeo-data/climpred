@@ -323,7 +323,9 @@ def _bootstrap_by_stacking(init_pm, control):
     Fast track of function
     `bootstrap_uninit_pm_ensemble_from_control_cftime` when lead units is 'years'.
     """
-    assert isinstance(init_pm, type(control))
+    if not isinstance(init_pm, type(control)):
+        raise ValueError("Arguments must be of the same type.")
+
     lead_unit = init_pm.lead.attrs["units"]
     if isinstance(init_pm, xr.Dataset):
         init_pm = init_pm.to_array()

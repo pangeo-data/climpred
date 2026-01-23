@@ -53,6 +53,6 @@ def check_dataset_dims_and_data_vars(before, after, dataset):
     before = before._datasets[dataset]
     after = after._datasets[dataset]
 
-    assert before.dims == after.dims
+    assert before.sizes == after.sizes
     assert list(before.data_vars) == list(after.data_vars)
     assert list(before.coords) == list(after.coords)

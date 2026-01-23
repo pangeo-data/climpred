@@ -288,8 +288,10 @@ def convert_init_lead_to_valid_time_lead(
         :py:func:`climpred.utils.convert_valid_time_lead_to_init_lead`
     """
     # ensure valid_time 2d
-    assert "valid_time" in skill.coords
-    assert len(skill.coords["valid_time"].dims) == 2
+    if "valid_time" not in skill.coords:
+        raise ValueError("'valid_time' required in skill coordinates.")
+    if len(skill.coords["valid_time"].dims) != 2:
+        raise ValueError("Skill coordinates must be 2D.")
     swapped = xr.concat(
         [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
         "lead",
@@ -340,8 +342,11 @@ def convert_valid_time_lead_to_init_lead(
         :py:func:`climpred.utils.convert_init_lead_to_valid_time_lead`
     """
     # ensure init 2d
-    assert "init" in skill.coords
-    assert len(skill.coords["init"].dims) == 2
+    if "init" not in skill.coords:
+        raise ValueError("'init' coordinate is not present in skill.")
+    if len(skill.coords["init"].dims) != 2:
+        raise ValueError("'init' coordinate is not 2D.")
+
     swapped = xr.concat(
         [skill.sel(lead=lead).swap_dims({"valid_time": "init"}) for lead in skill.lead],
         "lead",
@@ -710,7 +715,8 @@ def broadcast_metric_kwargs_for_rps(forecast, verif, metric_kwargs):
 
 def my_shift(dim, other_dim="lead", operator="add"):
     """operator(dim,other_dim) adds/subtracts lead to/from time (init/valid_time)."""
-    assert operator in ["add", "subtract"]
+    if operator not in ["add", "subtract"]:
+        raise ValueError("operator must be 'add' or 'subtract'.")
 
     if isinstance(dim, xr.DataArray):
         dim = dim.to_index()

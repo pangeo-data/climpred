@@ -2,7 +2,7 @@
 
 import hashlib
 import os as _os
-import urllib
+import urllib.request
 from typing import Dict, Optional
 from urllib.request import urlretrieve as _urlretrieve
 

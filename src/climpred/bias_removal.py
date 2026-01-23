@@ -341,10 +341,13 @@ def gaussian_bias_removal(
             hindcast_test._datasets["initialized"] = (
                 hindcast.get_initialized().drop_sel(init=train_time_init)
             )
-    else:
-        assert train_test_split in ["unfair", "unfair-cv"]
+    elif train_test_split in ["unfair", "unfair-cv"]:
         hindcast_train = hindcast
         hindcast_test = hindcast
+    else:
+        raise ValueError(
+            "train_test_split must be either 'fair', 'unfair', or 'unfair-cv'."
+        )
 
     if "mean" in how:
         # calculate bias lead-time dependent

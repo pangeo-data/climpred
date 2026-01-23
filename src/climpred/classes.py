@@ -2322,7 +2322,7 @@ class HindcastEnsemble(PredictionEnsemble):
                 for lead in forecast["lead"].data
             ]
             result = xr.concat(
-                metric_over_leads, dim="lead", join="outer"
+                metric_over_leads, dim="lead", join="outer", coords="different", compat="equals"
             )  # , **CONCAT_KWARGS)
             result["lead"] = forecast["lead"]
 

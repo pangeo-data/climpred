@@ -5,12 +5,13 @@ channels:
 dependencies:
   - python >=3.10,<3.11
   - pip >=25.1
+  - cf-xarray >=0.8.0
   - cftime >=1.6.3
   - dask >=2023.4.0
-  - numpy >=2.0.0
+  - numpy >=1.25
   - pandas >=2.0,<3.0
   - pooch >=1.8.0
-  - xarray >=2024.2.0  # xarray >=2024.2.0 is needed for nbytes representation in doctests
+  - xarray >=2024.2.0
   - xskillscore >=0.0.28
   # accel
   - bottleneck
@@ -31,9 +32,9 @@ dependencies:
   - pre-commit
   - pytest >=8.0.0
   - pytest-cov >=5.0
-  - pytest-lazy-fixtures >=1.0.5
+  - pytest-lazy-fixtures >=1.4.0
   - pytest-timeout
-  - pytest-xdist
+  - pytest-xdist >=3.8.0
   # viz
   - matplotlib-base
   - nc-time-axis >=1.4.0

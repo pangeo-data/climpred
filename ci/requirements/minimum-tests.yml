@@ -5,15 +5,18 @@ channels:
 dependencies:
   - python >=3.10,<3.14
   - pip >=25.1
-  - cftime >=1.5.0
+  - cf-xarray >=0.8.0
+  - cftime >=1.6.3
   - dask-core >=2023.4.0
+  - flake8
   - h5netcdf
+  - netcdf4
   - numpy >=1.25
   - pandas >=2.0,<3.0
   - pooch >=1.8.0
   - pytest >=8.0.0
   - pytest-cov >=5.0
-  - pytest-lazy-fixtures >=1.0.5
+  - pytest-lazy-fixtures >=1.4.0
   - pytest-timeout
   - pytest-xdist
   - xarray >=2023.4.0

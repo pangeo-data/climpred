@@ -94,12 +94,13 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
                 assert hindcast.coords[c].size >= hindcast_bias_removed.coords[c].size
             else:
                 assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
-    
+
     def check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed):
         # Check that attributes are maintained
         for v in hindcast.get_initialized().data_vars:
             assert (
-                hindcast.get_initialized()[v].attrs == hindcast_bias_removed.get_initialized()[v].attrs
+                hindcast.get_initialized()[v].attrs
+                == hindcast_bias_removed.get_initialized()[v].attrs
             )
 
     with set_options(seasonality=seasonality):

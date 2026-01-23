@@ -23,8 +23,8 @@ Internals/Minor Fixes
 - Updated `pre-commit` and GitHub CI hooks to more modern versions. (:pr:`866`, :pr:`867`) `Trevor James Smith`_
 - Updated several documentation and CI-related configurations to help with security hardening and maintainability. (:pr:`870`) `Trevor James Smith`_
 - Dependency updates to better synchronize `conda` and `pip` installation environments. (:pr:`870`) `Trevor James Smith`_
-- climatology reference forecast of pearon_r metric isn't tested to be non-NaN anymore (:pr:`884`) `Aaron Spring`_
-- :py:meth:`.HindcastEnsemble.remove_bias` keeps attrs with 'xr>2025.11' (:issue:`885`, :pr:`886`) `Aaron Spring`_
+- Climatology reference forecast of ``pearon_r`` metric isn't tested to be non-NaN anymore. (:pr:`884`) `Aaron Spring`_
+- :py:meth:`.HindcastEnsemble.remove_bias` keeps attrs with `xarray>=2025.11`. (:issue:`885`, :pr:`886`) `Aaron Spring`_
 
 
 climpred v2.5.0 (2024-07-05)

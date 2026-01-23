@@ -16,10 +16,10 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
         with:
           persist-credentials: false
-      - uses: xarray-contrib/ci-trigger@v1.2
+      - uses: xarray-contrib/ci-trigger@10cd2bfec3484946a4058a421ddf9cfad101e715  # v1.2.1
         id: detect-trigger
         with:
           keyword: "[skip-ci]"
@@ -36,11 +36,11 @@ jobs:
         python-version: ["3.9"]
         install-command: [".", '".[complete]"']
     steps:
-    - uses: actions/checkout@v4
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
       with:
         persist-credentials: false
     - name: Setup Python
-      uses: actions/setup-python@v5
+      uses: actions/setup-python@a309ff8b426b58ec0e2a45f0f869d46889d02405  # v6.2.0
       with:
         python-version: ${{ matrix.python-version }}
     - name: Install dependencies

@@ -18,10 +18,10 @@ jobs:
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
         with:
           fetch-depth: 2
-      - uses: xarray-contrib/ci-trigger@v1.2
+      - uses: xarray-contrib/ci-trigger@10cd2bfec3484946a4058a421ddf9cfad101e715  # v1.2.1
         id: detect-trigger
         with:
           keyword: "[skip-ci]"
@@ -39,11 +39,11 @@ jobs:
       matrix:
         python-version: ["3.9", "3.12"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Set up conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@7f29b8b80078b1b601dfa018b0f7425c587c63bb  # v2.0.7
         with:
           environment-file: ci/requirements/minimum-tests.yml
           environment-name: climpred-minimum-tests
@@ -96,11 +96,11 @@ jobs:
             python-version: "3.13"
             extras: "esmpy"  # MPI is not supported in lastest esmpy conda packages for Python3.13
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
         with:
             fetch-depth: 0 # Fetch all history for all branches and tags.
       - name: Setup conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@7f29b8b80078b1b601dfa018b0f7425c587c63bb  # v2.0.7
         with:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
@@ -147,9 +147,9 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
       - name: Setup conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@7f29b8b80078b1b601dfa018b0f7425c587c63bb  # v2.0.7
         with:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
@@ -180,9 +180,9 @@ jobs:
       matrix:
         python-version: ["3.10"]
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8  # v6.0.2
       - name: Set up conda (micromamba)
-        uses: mamba-org/setup-micromamba@v2
+        uses: mamba-org/setup-micromamba@7f29b8b80078b1b601dfa018b0f7425c587c63bb  # v2.0.7
         with:
           environment-file: ci/requirements/docs.yml
           environment-name: climpred-docs

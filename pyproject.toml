@@ -8,8 +8,20 @@ build-backend = "setuptools.build_meta"
 
 [dependency-groups]
 dev = [
+  "black",
+  "climpred[docs]",
+  "flake8",
+  "isort",
+  "jupyterlab",
+  "mypy >=1.13",
+  "pylint",
   "pytest-lazy-fixtures>=1.4.0",
-  "pytest-xdist>=3.8.0"
+  "pytest-sugar",
+  "pytest-xdist>=3.8.0",
+  "tqdm"
+]
+docs = [
+  "climpred[docs]"
 ]
 
 [project]
@@ -71,17 +83,6 @@ docs = [
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
   "sphinxext-opengraph >=0.8.0"
-]
-dev = [
-  "black",
-  "climpred[docs]",
-  "flake8",
-  "isort",
-  "jupyterlab",
-  "mypy >=1.13",
-  "pylint",
-  "pytest-sugar",
-  "tqdm"
 ]
 
 [project.urls]

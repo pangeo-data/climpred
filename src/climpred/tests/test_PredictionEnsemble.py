@@ -189,7 +189,7 @@ def test_HindcastEnsemble_area_weighted_mean(hind_ds_initialized_3d):
     he = HindcastEnsemble(hind_ds_initialized_3d)
     # fake area
     area = hind_ds_initialized_3d["TAREA"]
-    spatial_dims = [d for d in hind_ds_initialized_3d.dims if d not in CLIMPRED_DIMS]
+    spatial_dims = [d for d in hind_ds_initialized_3d.sizes if d not in CLIMPRED_DIMS]
     # PredictionEnsemble doesnt like other data_vars
     he_self_spatial_mean = (he * area).sum(spatial_dims) / area.sum()
     # weighted requires Dataset
@@ -292,7 +292,7 @@ def test_PerfectModelEnsemble_area_weighted_mean(PM_ds_initialized_3d):
     he = PerfectModelEnsemble(PM_ds_initialized_3d)
     # fake area
     area = np.cos(PM_ds_initialized_3d.lat) + 1
-    spatial_dims = [d for d in PM_ds_initialized_3d.dims if d not in CLIMPRED_DIMS]
+    spatial_dims = [d for d in PM_ds_initialized_3d.sizes if d not in CLIMPRED_DIMS]
     # PredictionEnsemble doesnt like other data_vars
     he_self_spatial_mean = (he * area).sum(spatial_dims) / area.sum()
     # weighted requires Dataset

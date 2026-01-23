@@ -5,7 +5,6 @@ import copy
 import numpy as np
 import pytest
 import xarray as xr
-from packaging.version import Version
 
 from climpred import set_options
 from climpred.constants import (
@@ -95,6 +94,14 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
             else:
                 assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
 
+    def check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed):
+        # Check that attributes are maintained
+        for v in hindcast.get_initialized().data_vars:
+            assert (
+                hindcast.get_initialized()[v].attrs
+                == hindcast_bias_removed.get_initialized()[v].attrs
+            )
+
     with set_options(seasonality=seasonality):
         metric = "rmse"
         dim = "init"
@@ -129,6 +136,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
         )
 
         check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed)
+        check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed)
 
         bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
@@ -140,6 +148,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
             check_hindcast_coords_maintained_except_init(
                 hindcast, hindcast_bias_removed_properly
             )
+            check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed_properly)
 
             bias_removed_skill_properly = hindcast_bias_removed_properly.verify(
                 **verify_kwargs
@@ -154,18 +163,10 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
         # keeps data_vars attrs
         for v in hindcast_bias_removed.get_initialized().data_vars:
             if cv:
-                # FIXME: This should be addressed within climpred
-                if Version(xr.__version__) >= Version("2025.11.0"):
-                    hindcast_bias_removed_properly.get_initialized()[v].attrs[
-                        "units"
-                    ] = "test_unit"
                 assert (
                     hindcast_bias_removed_properly.get_initialized()[v].attrs
                     == hindcast.get_initialized()[v].attrs
                 )
-            # FIXME: This should be addressed within climpred
-            if Version(xr.__version__) >= Version("2025.11.0"):
-                hindcast_bias_removed.get_initialized()[v].attrs["units"] = "test_unit"
             assert (
                 hindcast_bias_removed.get_initialized()[v].attrs
                 == hindcast.get_initialized()[v].attrs

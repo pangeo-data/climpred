@@ -5,7 +5,6 @@ import copy
 import numpy as np
 import pytest
 import xarray as xr
-from packaging.version import Version
 
 from climpred import set_options
 from climpred.constants import (

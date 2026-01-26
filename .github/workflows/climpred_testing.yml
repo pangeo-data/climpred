@@ -51,6 +51,7 @@ jobs:
           python -m pip install --upgrade "pip>=25.1"
           python -m pip install -e ".[complete]"
           python -m pip install --group dev
+          python -m pip uninstall --yes netcdf4
       - name: Check dependencies
         run: |
           pip list

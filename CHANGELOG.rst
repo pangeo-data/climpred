@@ -18,14 +18,20 @@ What's New
 climpred v2.6.0 (unreleased)
 ============================
 
+New Features
+------------
+- The `climpred` code base has been updated to better support modern versions of `xarray` (>=2023.4.0), `pytest` (>=8.0.0), as well as Python 3.13. `Aaron Spring`_, `Trevor James Smith`_
+- Required `xskillscore` version has been updated to `0.0.28`. This version maintains Python 3.9 support and addresses a few small regressions introduced in version `0.0.27`. `Aaron Spring`_, `Trevor James Smith`_
+
 Internals/Minor Fixes
 ---------------------
 - Updated `pre-commit` and GitHub CI hooks to more modern versions. (:pr:`866`, :pr:`867`) `Trevor James Smith`_
 - Updated several documentation and CI-related configurations to help with security hardening and maintainability. (:pr:`870`) `Trevor James Smith`_
 - Dependency updates to better synchronize `conda` and `pip` installation environments. (:pr:`870`) `Trevor James Smith`_
-- Climatology reference forecast of ``pearon_r`` metric isn't tested to be non-NaN anymore. (:pr:`884`) `Aaron Spring`_
+- Climatology reference forecast of ``pearson_r`` metric isn't tested to be non-NaN anymore. (:pr:`884`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.remove_bias` keeps attrs with `xarray>=2025.11`. (:issue:`885`, :pr:`886`) `Aaron Spring`_
-
+- `pytest-lazy-fixture` (abandoned) has been replaced by `pytest-lazy-fixtures` (maintained fork).
+- GitHub Workflows have been adjusted to test against Python 3.13, as well as test `pip`-based environments. `Trevor James Smith`_
 
 climpred v2.5.0 (2024-07-05)
 ============================

@@ -22,6 +22,7 @@ dependencies:
   - xsdba >=0.4.0
   # io
   - h5netcdf
+  - h5py
   - netcdf4
   # regridding
   - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374

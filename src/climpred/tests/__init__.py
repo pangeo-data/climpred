@@ -19,7 +19,7 @@ def _importorskip(modname, minversion=None):
 
 has_matplotlib, requires_matplotlib = _importorskip("matplotlib")
 has_nc_time_axis, requires_nc_time_axis = _importorskip("nc_time_axis", "1.4.0")
-has_xclim, requires_xclim = _importorskip("xclim", "0.31")
+has_xclim, requires_xclim = _importorskip("xclim", "0.52.0")
 has_bias_correction, requires_bias_correction = _importorskip("bias_correction")
 has_xesmf, requires_xesmf = _importorskip("xesmf")
 has_xrft, requires_xrft = _importorskip("xrft")

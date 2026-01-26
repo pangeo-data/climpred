@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import xarray as xr
+from pytest_lazy_fixtures import lf as lazy_fixture
 from xarray.testing import assert_equal
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
@@ -188,7 +189,7 @@ def test_HindcastEnsemble_area_weighted_mean(hind_ds_initialized_3d):
     he = HindcastEnsemble(hind_ds_initialized_3d)
     # fake area
     area = hind_ds_initialized_3d["TAREA"]
-    spatial_dims = [d for d in hind_ds_initialized_3d.dims if d not in CLIMPRED_DIMS]
+    spatial_dims = [d for d in hind_ds_initialized_3d.sizes if d not in CLIMPRED_DIMS]
     # PredictionEnsemble doesnt like other data_vars
     he_self_spatial_mean = (he * area).sum(spatial_dims) / area.sum()
     # weighted requires Dataset
@@ -291,7 +292,7 @@ def test_PerfectModelEnsemble_area_weighted_mean(PM_ds_initialized_3d):
     he = PerfectModelEnsemble(PM_ds_initialized_3d)
     # fake area
     area = np.cos(PM_ds_initialized_3d.lat) + 1
-    spatial_dims = [d for d in PM_ds_initialized_3d.dims if d not in CLIMPRED_DIMS]
+    spatial_dims = [d for d in PM_ds_initialized_3d.sizes if d not in CLIMPRED_DIMS]
     # PredictionEnsemble doesnt like other data_vars
     he_self_spatial_mean = (he * area).sum(spatial_dims) / area.sum()
     # weighted requires Dataset
@@ -351,8 +352,8 @@ def test_eq_ne(perfectModelEnsemble_3v_initialized_control_1d, equal):
 
 
 pe = [
-    pytest.lazy_fixture("hindcast_hist_obs_1d"),
-    pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
+    lazy_fixture("hindcast_hist_obs_1d"),
+    lazy_fixture("perfectModelEnsemble_initialized_control"),
 ]
 pe_ids = ["HindcastEnsemble", "PerfectModelEnsemble"]
 

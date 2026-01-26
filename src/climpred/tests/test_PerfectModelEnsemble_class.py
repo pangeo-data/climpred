@@ -192,8 +192,12 @@ def test_bootstrap_metric_kwargs(perfectModelEnsemble_initialized_control):
 def test_calendar_matching_control(PM_ds_initialized_1d, PM_ds_control_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
-    PM_ds_control_1d["time"] = xr.cftime_range(
-        start="1950", periods=PM_ds_control_1d.time.size, freq="MS", calendar="all_leap"
+    PM_ds_control_1d["time"] = xr.date_range(
+        start="1950",
+        periods=PM_ds_control_1d.time.size,
+        freq="MS",
+        calendar="all_leap",
+        use_cftime=True,
     )
     with pytest.raises(ValueError) as excinfo:
         pm = pm.add_control(PM_ds_control_1d)

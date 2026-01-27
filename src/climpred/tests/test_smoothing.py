@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import xarray as xr
+from pytest_lazy_fixtures import lf as lazy_fixture
 
 from climpred.prediction import compute_perfect_model
 from climpred.smoothing import (
@@ -125,9 +126,9 @@ def test_compute_after_smooth_goddard_2013(
 @pytest.mark.parametrize(
     "pm",
     [
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control_1d_ym_cftime"),
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control_1d_mm_cftime"),
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control_1d_dm_cftime"),
+        lazy_fixture("perfectModelEnsemble_initialized_control_1d_ym_cftime"),
+        lazy_fixture("perfectModelEnsemble_initialized_control_1d_mm_cftime"),
+        lazy_fixture("perfectModelEnsemble_initialized_control_1d_dm_cftime"),
     ],
 )
 def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
@@ -149,9 +150,9 @@ def test_PerfectModelEnsemble_temporal_smoothing_cftime_and_skill(pm, smooth):
 @pytest.mark.parametrize(
     "he",
     [
-        pytest.lazy_fixture("hindcast_recon_1d_ym"),
-        pytest.lazy_fixture("hindcast_recon_1d_mm"),
-        pytest.lazy_fixture("hindcast_recon_1d_dm"),
+        lazy_fixture("hindcast_recon_1d_ym"),
+        lazy_fixture("hindcast_recon_1d_mm"),
+        lazy_fixture("hindcast_recon_1d_dm"),
     ],
 )
 def test_HindcastEnsemble_temporal_smoothing_cftime_and_skill(he, smooth, dim):

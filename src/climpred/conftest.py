@@ -311,9 +311,13 @@ def hindcast_recon_1d_dm(hindcast_recon_1d_ym):
     hindcast._datasets["observations"].attrs = hindcast_recon_1d_ym._datasets[
         "observations"
     ]
-    assert "units" in hindcast.get_initialized()["SST"].attrs
-    assert "units" in hindcast_recon_1d_ym.get_observations()["SST"].attrs
-    assert "units" in hindcast.get_observations()["SST"].attrs
+
+    if (
+        "units" not in hindcast.get_initialized()["SST"].attrs
+        or "units" not in hindcast_recon_1d_ym.get_observations()["SST"].attrs
+        or "units" not in hindcast.get_observations()["SST"].attrs
+    ):
+        raise ValueError("Units should be present in hindcast. Verify testing data.")
     return hindcast
 
 

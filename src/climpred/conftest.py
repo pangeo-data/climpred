@@ -1,9 +1,6 @@
-import warnings
-
 import numpy as np
 import pytest
 import xarray as xr
-from packaging.version import Version
 
 import climpred
 from climpred import HindcastEnsemble, PerfectModelEnsemble

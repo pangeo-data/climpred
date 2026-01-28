@@ -31,6 +31,7 @@ from xarray.core.utils import Frozen
 from .alignment import return_inits_and_verif_dates
 from .bias_removal import bias_correction, gaussian_bias_removal, xclim_sdba
 from .bootstrap import (
+    XBOOTSTRAP_AVAILABLE,
     _distribution_to_ci,
     _p_ci_from_sig,
     _pvalue_from_distributions,
@@ -41,7 +42,6 @@ from .bootstrap import (
     resample_skill_xbootstrap,
     resample_uninitialized_from_initialized,
     warn_if_chunking_would_increase_performance,
-    XBOOTSTRAP_AVAILABLE,
 )
 from .checks import (
     _check_valid_alignment,

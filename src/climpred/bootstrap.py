@@ -20,6 +20,7 @@ from xskillscore.core.resampling import (
 
 try:
     import xbootstrap as xb
+
     XBOOTSTRAP_AVAILABLE = True
 except ImportError:
     xb = None
@@ -88,20 +89,22 @@ def _resample_multiple_dims(initialized, resample_dims):
 
     """
     result = initialized
-    # Resample each dimension sequentially  
+    # Resample each dimension sequentially
     for dim in resample_dims:
         result = _resample(result, dim)
     return result
 
 
-def _resample_multiple_dims_xbootstrap(initialized, resample_dims, n_iteration, block_sizes=None):
+def _resample_multiple_dims_xbootstrap(
+    initialized, resample_dims, n_iteration, block_sizes=None
+):
     """Resample with replacement across multiple dimensions using xbootstrap.
 
     Args:
         initialized (xr.Dataset): input xr.Dataset to be resampled.
         resample_dims (list of str): dimensions to resample along.
         n_iteration (int): number of bootstrap iterations.
-        block_sizes (dict, optional): block sizes for each dimension. 
+        block_sizes (dict, optional): block sizes for each dimension.
             If None, uses size 1 for each dimension (equivalent to standard bootstrap).
 
     Returns:
@@ -109,29 +112,33 @@ def _resample_multiple_dims_xbootstrap(initialized, resample_dims, n_iteration, 
 
     """
     if not XBOOTSTRAP_AVAILABLE:
-        raise ImportError("xbootstrap is required for efficient multi-dimensional resampling. "
-                         "Install with: pip install xbootstrap")
-    
+        raise ImportError(
+            "xbootstrap is required for efficient multi-dimensional resampling. "
+            "Install with: pip install xbootstrap"
+        )
+
     # Default to block size 1 for standard bootstrap behavior
     if block_sizes is None:
         block_sizes = {dim: 1 for dim in resample_dims}
-    
+
     # Only include dimensions that exist in the dataset
     available_dims = set(initialized.dims.keys())
-    blocks = {dim: block_sizes.get(dim, 1) for dim in resample_dims if dim in available_dims}
-    
+    blocks = {
+        dim: block_sizes.get(dim, 1) for dim in resample_dims if dim in available_dims
+    }
+
     if not blocks:
         # No dimensions to resample
         return initialized
-    
+
     # Use xbootstrap for multi-dimensional resampling
     resampled = xb.block_bootstrap(
         initialized,
         blocks=blocks,
         n_iteration=n_iteration,
-        circular=True  # Use circular bootstrap
+        circular=True,  # Use circular bootstrap
     )
-    
+
     return resampled
 
 
@@ -533,43 +540,43 @@ def _chunk_before_resample_iterations_idx(
 
 def resample_skill_xbootstrap(self, iterations, resample_dim, verify_kwargs):
     """Bootstrap skill using xbootstrap for efficient multi-dimensional resampling.
-    
+
     This function uses xbootstrap to do all bootstrap iterations at once,
     which is more efficient than the loop-based approach.
     """
     logging.info("use resample_skill_xbootstrap")
-    
+
     if not XBOOTSTRAP_AVAILABLE:
         # Fallback to loop method if xbootstrap not available
         logging.warning("xbootstrap not available, falling back to loop method")
         return resample_skill_loop(self, iterations, resample_dim, verify_kwargs)
-    
+
     # Handle both single dimension and list of dimensions
     if isinstance(resample_dim, str):
         resample_dims = [resample_dim]
     else:
         resample_dims = resample_dim
-    
+
     # Get initialized dataset
     initialized = self.get_initialized()
-    
+
     # Use xbootstrap to generate all resampled versions at once
     resampled_data = _resample_multiple_dims_xbootstrap(
         initialized, resample_dims, iterations
     )
-    
+
     # The result has an 'iteration' dimension, so we need to compute skill
     # for each iteration
     resampled_skills = []
-    
+
     for i in range(iterations):
         # Extract data for this iteration
         iter_data = resampled_data.isel(iteration=i)
-        
+
         # Create a temporary copy of self with this iteration's data
         self_temp = self.copy()
         self_temp._datasets["initialized"] = iter_data
-        
+
         # Handle uninitialized data if needed
         if "uninitialized" in verify_kwargs["reference"]:
             if not self.get_uninitialized():
@@ -581,11 +588,11 @@ def resample_skill_xbootstrap(self, iterations, resample_dim, verify_kwargs):
                 self_temp._datasets["uninitialized"] = _resample(
                     self.get_uninitialized(), "member"
                 )
-        
+
         # Compute skill for this iteration
         skill = self_temp.verify(**verify_kwargs)
         resampled_skills.append(skill)
-    
+
     # Concatenate all skills along iteration dimension
     resampled_skills = xr.concat(resampled_skills, "iteration")
     return resampled_skills

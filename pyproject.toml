@@ -13,9 +13,9 @@ dev = [
   "flake8",
   "isort",
   "jupyterlab",
-  "mypy >=1.13",
   "pylint",
-  "pytest-sugar"
+  "pytest-sugar",
+  "ty >=0.0.1a14"
 ]
 docs = [
   "climpred[docs]"
@@ -105,31 +105,6 @@ skip = [
   "docs/source/conf.py"
 ]
 
-[tool.mypy]
-exclude = "asv_bench|doc"
-files = "."
-show_error_codes = true
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = [
-  "bottleneck.*",
-  "cftime.*",
-  "dask.*",
-  "distributed.*",
-  "fsspec.*",
-  "matplotlib.*",
-  "nc_time_axis.*",
-  "numpy.*",
-  "netCDF4.*",
-  "pandas.*",
-  "pytest.*",
-  "scipy.*",
-  "setuptools",
-  "toolz.*"
-]
-ignore_missing_imports = true
-
 [tool.pytest.ini_options]
 python_files = ["test_*.py"]
 addopts = [
@@ -179,3 +154,29 @@ description = {file = "src/climpred/__init__.py"}
 fallback_version = "999"
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+  "bottleneck.**",
+  "cftime.**",
+  "dask.**",
+  "distributed.**",
+  "fsspec.**",
+  "matplotlib.**",
+  "nc_time_axis.**",
+  "numpy.**",
+  "netCDF4.**",
+  "pandas.**",
+  "pytest.**",
+  "scipy.**",
+  "setuptools.**",
+  "toolz.**",
+  "xarray.**",
+  "xskillscore.**",
+  "pooch.**",
+  "cf_xarray.**",
+  "packaging.**"
+]
+
+[tool.ty.src]
+exclude = ["asv_bench/", "docs/"]

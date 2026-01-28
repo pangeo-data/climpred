@@ -221,7 +221,9 @@ class PredictionEnsemble:
         skill_group = xr.concat(
             skill_group, dim=new_dim_name, **CONCAT_KWARGS
         ).assign_coords({new_dim_name: group_label})
-        skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore # noqa: E501
+        skill_group[new_dim_name] = skill_group[
+            new_dim_name
+        ].assign_attrs(  # noqa: E501
             {
                 "description": "new dimension showing skill grouped by init.{groupby}"
                 " created by .verify(groupby) or .bootstrap(groupby)"
@@ -547,7 +549,9 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore # noqa: E501
+            if not set(other.dims).issubset(
+                self._datasets["initialized"].dims
+            ):  # noqa: E501
                 raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):

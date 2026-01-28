@@ -169,7 +169,7 @@ def _same_inits_alignment(
     inits = {lead: inits for lead in leads}
     verif_dates = {
         lead: shift_cftime_index(inits[lead], "time", n, freq)
-        for (lead, n) in zip(leads, n)  # type: ignore
+        for (lead, n) in zip(leads, n)
     }
     return inits, verif_dates
 

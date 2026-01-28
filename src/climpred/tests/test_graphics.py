@@ -2,7 +2,7 @@
 
 import pytest
 
-from climpred import PerfectModelEnsemble
+from climpred import PerfectModelEnsemble, HindcastEnsemble
 from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
@@ -22,14 +22,14 @@ def cleanup_matplotlib_figures():
 
 @requires_matplotlib
 def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
-    synthetic_pm_1d_small,
+    perfectModelEnsemble_initialized_control,
 ):
     """
     Checks plots from PerfectModelEnsemble.bootstrap().
     """
-    res = synthetic_pm_1d_small.bootstrap(
+    res = perfectModelEnsemble_initialized_control.bootstrap(
         metric="pearson_r",
-        iterations=ITERATIONS * 100,
+        iterations=ITERATIONS * 20,
         reference=["uninitialized", "persistence"],
         comparison="m2e",
         dim=["init", "member"],
@@ -42,19 +42,21 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
 @pytest.mark.parametrize("cmap", ["tab10", "jet"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["tos", None])
-def test_PerfectModelEnsemble_plot(synthetic_pm_1d_small, variable, show_members, cmap):
+def test_PerfectModelEnsemble_plot(PM_ds_initialized_1d, PM_ds_control_1d, variable, show_members, cmap):
     """Test PredictionEnsemble.plot()."""
-    pm = synthetic_pm_1d_small
+    pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     kws = {"cmap": cmap, "show_members": show_members, "variable": variable}
+    pm.plot(**kws)
+    pm = pm.add_control(PM_ds_control_1d)
     pm.plot(**kws)
     pm = pm.generate_uninitialized()
     pm.plot(**kws)
 
 
 @requires_matplotlib
-def test_PerfectModelEnsemble_plot_fails_3d(synthetic_pm_3d_small):
+def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     """Test PredictionEnsemble.plot()."""
-    pm = synthetic_pm_3d_small
+    pm = PM_ds_initialized_3d
     with pytest.raises(DimensionError) as excinfo:
         pm.plot()
     assert "does not allow dimensions other" in str(excinfo.value)
@@ -65,27 +67,26 @@ def test_PerfectModelEnsemble_plot_fails_3d(synthetic_pm_3d_small):
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["SST", None])
 def test_PredictionEnsemble_plot(
-    synthetic_hindcast_1d_small,
-    synthetic_uninitialized_1d_small,
+    hind_ds_initialized_1d,
+    hist_ds_uninitialized_1d,
+    reconstruction_ds_1d,
+    observations_ds_1d,
     variable,
     show_members,
     x,
 ):
     """Test PredictionEnsemble.plot()."""
-    he = synthetic_hindcast_1d_small
-    kws = {"show_members": show_members, "variable": variable, "x": x}
+    he = HindcastEnsemble(hind_ds_initialized_1d)
+    he = he.add_uninitialized(hist_ds_uninitialized_1d)
     he.plot(**kws)
-    # Ensure synthetic_uninitialized_1d_small has the same frequencies as initialized
-    # for plotting to work smoothly if needed, but synthetic_uninitialized_1d_small is YS
-    # and he is MS. Let's make it MS for this test.
-    uninit = synthetic_uninitialized_1d_small.rename("SST")
-    he = he.add_uninitialized(uninit)
+    he = he.add_observations(reconstruction_ds_1d)
     he.plot(**kws)
+    he = he.add_observations(observations_ds_1d)
 
     if x == "time":
-        pm = PerfectModelEnsemble(he.get_initialized())
+        pm = PerfectModelEnsemble(hind_ds_initialized_1d)
         pm.plot(**kws)
-        pm = pm.add_control(he.get_observations())
+        pm = pm.add_control(hist_ds_uninitialized_1d.isel(member=0, drop=True))
         pm.plot(**kws)
 
 
@@ -94,7 +95,7 @@ def test_PredictionEnsemble_plot(
 @pytest.mark.parametrize("alignment", ["same_inits", None])
 @pytest.mark.parametrize("return_xr", [False, True])
 def test_HindcastEnsemble_plot_alignment(
-    synthetic_hindcast_1d_small, alignment, return_xr
+    hindcast_hist_obs_1d, alignment, return_xr
 ):
     """Test HindcastEnsemble.plot_alignment()"""
     import matplotlib
@@ -102,14 +103,14 @@ def test_HindcastEnsemble_plot_alignment(
 
     if return_xr:
         assert isinstance(
-            synthetic_hindcast_1d_small.plot_alignment(
+            hindcast_hist_obs_1d.plot_alignment(
                 alignment=alignment, return_xr=return_xr
             ),
             xr.DataArray,
         )
     else:
         assert isinstance(
-            synthetic_hindcast_1d_small.plot_alignment(
+            hindcast_hist_obs_1d.plot_alignment(
                 alignment=alignment, return_xr=return_xr
             ),
             (xr.plot.facetgrid.FacetGrid, matplotlib.collections.QuadMesh),

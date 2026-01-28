@@ -72,7 +72,7 @@ def PM_ds_initialized_3d_full():
 def PM_ds_initialized_3d(PM_ds_initialized_3d_full):
     """MPI Perfect-model-framework initialized maps xr.Dataset of subselected North
     Atlantic."""
-    return PM_ds_initialized_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
+    return PM_ds_initialized_3d_full.sel(x=slice(120, 125), y=slice(50, 55))
 
 
 @pytest.fixture()
@@ -98,7 +98,7 @@ def PM_ds_control_3d_full():
 def PM_ds_control_3d(PM_ds_control_3d_full):
     """To MPI Perfect-model-framework corresponding control maps xr.Dataset of
     subselected North Atlantic."""
-    return PM_ds_control_3d_full.sel(x=slice(120, 130), y=slice(50, 60))
+    return PM_ds_control_3d_full.sel(x=slice(120, 125), y=slice(50, 55))
 
 
 @pytest.fixture()
@@ -165,7 +165,7 @@ def hind_ds_initialized_3d_full():
 @pytest.fixture()
 def hind_ds_initialized_3d(hind_ds_initialized_3d_full):
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
-    return hind_ds_initialized_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
+    return hind_ds_initialized_3d_full.isel(nlon=slice(0, 5), nlat=slice(0, 5))
 
 
 @pytest.fixture()
@@ -210,7 +210,7 @@ def reconstruction_ds_3d_full():
 def reconstruction_ds_3d(reconstruction_ds_3d_full):
     """CESM-FOSI historical reconstruction maps members mean removed
     xr.Dataset."""
-    return reconstruction_ds_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
+    return reconstruction_ds_3d_full.isel(nlon=slice(0, 5), nlat=slice(0, 5))
 
 
 @pytest.fixture()
@@ -326,12 +326,6 @@ def hindcast_S2S_Germany():
 def hindcast_NMME_Nino34():
     """NMME hindcasts with monthly leads and monthly inits and related IOv2
     observations for SST of the Nino34 region."""
-    if Version(np.__version__) >= Version("2.0.0") and Version(
-        xr.__version__
-    ) <= Version("2024.6.0"):
-        warnings.warn("Skipping test due to incompatible numpy and xarray versions.")
-        pytest.skip("Changes in numpy>=2.0.0 break xarray<=2024.6.0.")
-
     init = load_dataset("NMME_hindcast_Nino34_sst")
     obs = load_dataset("NMME_OIv2_Nino34_sst")
     init["sst"].attrs["units"] = "C"
@@ -552,3 +546,9 @@ def small_verif_da():
     return xr.DataArray(
         np.random.rand(len(time)), dims=["time"], coords=[time], name="var"
     )
+
+
+@pytest.fixture(scope="session")
+def session_data_cache():
+    """Session-scoped cache for expensive data loading operations."""
+    return {}

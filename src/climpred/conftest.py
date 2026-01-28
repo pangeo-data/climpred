@@ -165,7 +165,7 @@ def hind_ds_initialized_3d_full():
 @pytest.fixture()
 def hind_ds_initialized_3d(hind_ds_initialized_3d_full):
     """CESM-DPLE initialized hindcast Pacific maps mean removed xr.Dataset."""
-    return hind_ds_initialized_3d_full.isel(nlon=slice(0, 5), nlat=slice(0, 5))
+    return hind_ds_initialized_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
 
 
 @pytest.fixture()
@@ -210,7 +210,7 @@ def reconstruction_ds_3d_full():
 def reconstruction_ds_3d(reconstruction_ds_3d_full):
     """CESM-FOSI historical reconstruction maps members mean removed
     xr.Dataset."""
-    return reconstruction_ds_3d_full.isel(nlon=slice(0, 5), nlat=slice(0, 5))
+    return reconstruction_ds_3d_full.isel(nlon=slice(0, 10), nlat=slice(0, 12))
 
 
 @pytest.fixture()

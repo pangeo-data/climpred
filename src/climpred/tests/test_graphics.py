@@ -87,6 +87,7 @@ def test_PredictionEnsemble_plot(
     he = he.add_observations(reconstruction_ds_1d)
     he.plot(**kws)
     he = he.add_observations(observations_ds_1d)
+    he.plot()
 
     if x == "time":
         pm = PerfectModelEnsemble(hind_ds_initialized_1d)

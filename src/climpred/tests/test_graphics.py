@@ -79,6 +79,8 @@ def test_PredictionEnsemble_plot(
 ):
     """Test PredictionEnsemble.plot()."""
     he = HindcastEnsemble(hind_ds_initialized_1d)
+    kws = {"show_members": show_members, "variable": variable, "x": x}
+    he.plot(**kws)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
     kws = {"show_members": show_members, "variable": variable, "x": x}
     he.plot(**kws)

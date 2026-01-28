@@ -54,10 +54,11 @@ repos:
       - id: ty
         name: ty (type checker)
         entry: ty check
-        language: system
+        language: python
         types: [python]
         exclude: 'asv_bench'
         pass_filenames: false
+        additional_dependencies: ['ty>=0.0.1a14']
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.2

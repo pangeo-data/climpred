@@ -191,8 +191,8 @@ allowed-unresolved-imports = [
 ]
 
 [tool.ty.rules]
-# Ignore rules that produce too many false positives for this codebase
-# These can be gradually enabled as the codebase gets better type annotations
+# Ignore rules until the codebase has better type annotations
+# These can be gradually enabled as types are added
 possibly-missing-attribute = "ignore"
 invalid-assignment = "ignore"
 not-subscriptable = "ignore"

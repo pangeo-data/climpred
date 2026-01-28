@@ -74,10 +74,10 @@ def horizon(cond):
         ...     reference=["persistence"],
         ... )
         >>> horizon(skill.sel(skill="initialized") > skill.sel(skill="persistence"))
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 8B
         Dimensions:  ()
         Data variables:
-            tos      float64 15.0
+            tos      float64 8B 15.0
         Attributes:
             units:          years
             standard_name:  forecast_period
@@ -94,13 +94,13 @@ def horizon(cond):
         ...     resample_dim="init",
         ... )
         >>> horizon(bskill.sel(skill="uninitialized", results="p") <= 0.05)
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 108B
         Dimensions:  ()
         Coordinates:
-            skill    <U13 'uninitialized'
-            results  <U12 'p'
+            skill    <U13 52B 'uninitialized'
+            results  <U12 48B 'p'
         Data variables:
-            tos      float64 2.0
+            tos      float64 8B 2.0
         Attributes:
             units:          years
             standard_name:  forecast_period

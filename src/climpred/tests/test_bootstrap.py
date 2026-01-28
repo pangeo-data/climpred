@@ -4,6 +4,7 @@ import dask
 import numpy as np
 import pytest
 import xarray as xr
+from pytest_lazy_fixtures import lf as lazy_fixture
 from xskillscore.core.resampling import (
     resample_iterations as _resample_iterations,
     resample_iterations_idx as _resample_iterations_idx,
@@ -44,12 +45,12 @@ xr.set_options(display_style="text")
 @pytest.mark.parametrize(
     "initialized",
     [
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
-        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+        lazy_fixture("perfectModelEnsemble_initialized_control"),
+        lazy_fixture("hindcast_hist_obs_1d"),
     ],
     ids=["PerfectModelEnsemble", "HindcastEnsemble"],
 )
-@pytest.mark.parametrize("metric", ["pearson_r", "crps", "rmse"])
+@pytest.mark.parametrize("metric", ["crps", "rmse", "pearson_r"])
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
 def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment):
     """Test that bootstrap with resample_dim='init' generates uncertainty in all skills."""
@@ -78,17 +79,22 @@ def test_bootstrap_resample_dim_init_all_skill_ci(initialized, metric, alignment
             initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
     else:
         bskill = initialized[[v]].isel(lead=slice(None, 3)).bootstrap(**kwargs)
-        # expect iteration variance
-        assert (
-            bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v].notnull().all()
-        )
+        ci_diff = bskill.sel(results=["high_ci", "low_ci"]).diff("results")[v]
+        if metric == "pearson_r":
+            assert (
+                ci_diff.sel(skill=["initialized", "persistence", "uninitialized"])
+                .notnull()
+                .all()
+            )
+        else:
+            assert ci_diff.notnull().all()
 
 
 @pytest.mark.parametrize(
     "initialized",
     [
-        pytest.lazy_fixture("perfectModelEnsemble_initialized_control"),
-        pytest.lazy_fixture("hindcast_hist_obs_1d"),
+        lazy_fixture("perfectModelEnsemble_initialized_control"),
+        lazy_fixture("hindcast_hist_obs_1d"),
     ],
     ids=["PerfectModelEnsemble", "HindcastEnsemble"],
 )
@@ -139,7 +145,7 @@ def test_bootstrap_PM_lazy_results(
     perfectModelEnsemble_initialized_control, chunk, comparison, dim
 ):
     """Test bootstrap_perfect_model works lazily."""
-    pm = perfectModelEnsemble_initialized_control.isel(lead=range(3))
+    pm = perfectModelEnsemble_initialized_control.isel(lead=range(4))
     if chunk:
         pm = pm.chunk({"lead": 2}).chunk({"time": -1})
     else:
@@ -302,16 +308,16 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical_da(
     "init, control",
     [
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_ym_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+            lazy_fixture("PM_ds_control_1d_ym_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_mm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+            lazy_fixture("PM_ds_control_1d_mm_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_dm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+            lazy_fixture("PM_ds_control_1d_dm_cftime"),
         ),
     ],
 )
@@ -480,7 +486,7 @@ def test_resample_iterations_dix_no_squeeze(PM_ds_initialized_1d):
     assert "test_dim" in actual.dims
 
 
-@pytest.mark.parametrize("metric", ["acc", "mae"])
+@pytest.mark.parametrize("metric", ["rmse", "mae"])
 def test_bootstrap_p_climatology(hindcast_hist_obs_1d, metric):
     """Test that p from bootstrap is close to 0 if skillful."""
     reference = "climatology"

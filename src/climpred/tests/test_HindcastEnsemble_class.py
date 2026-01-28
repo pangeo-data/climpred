@@ -151,11 +151,12 @@ def test_verify_fails_expected_metric_kwargs(hindcast_hist_obs_1d):
 def test_calendar_matching_observations(hind_ds_initialized_1d, reconstruction_ds_1d):
     """Tests that error is thrown if calendars mismatch when adding observations."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    reconstruction_ds_1d["time"] = xr.cftime_range(
+    reconstruction_ds_1d["time"] = xr.date_range(
         start="1950",
         periods=reconstruction_ds_1d.time.size,
         freq="MS",
         calendar="all_leap",
+        use_cftime=True,
     )
     with pytest.raises(ValueError, match="does not match"):
         hindcast.add_observations(reconstruction_ds_1d)
@@ -166,11 +167,12 @@ def test_calendar_matching_uninitialized(
 ):
     """Tests that error is thrown if calendars mismatch when adding uninitialized."""
     hindcast = HindcastEnsemble(hind_ds_initialized_1d)
-    hist_ds_uninitialized_1d["time"] = xr.cftime_range(
+    hist_ds_uninitialized_1d["time"] = xr.date_range(
         start="1950",
         periods=hist_ds_uninitialized_1d.time.size,
         freq="MS",
         calendar="all_leap",
+        use_cftime=True,
     )
     with pytest.raises(ValueError, match="does not match"):
         hindcast.add_uninitialized(hist_ds_uninitialized_1d)
@@ -270,7 +272,9 @@ def test_HindcastEnsemble_instantiating_standard_name(
     init = (
         da_lead.to_dataset(name="var").expand_dims("member").assign_coords(member=[1])
     )
-    init["init"] = xr.cftime_range(start="2000", periods=init.init.size, freq="YS")
+    init["init"] = xr.date_range(
+        start="2000", periods=init.init.size, freq="YS", use_cftime=True
+    )
     init["lead"].attrs["units"] = "years"
     # change to non CLIMPRED_DIMS
     init = init.rename({dim: new_dim})
@@ -292,11 +296,12 @@ def test_HindcastEnsemble_instantiating_standard_name(
 @pytest.mark.parametrize("lead_freq", ["years", "months", "seasons"])
 def test_fractional_leads_360_day(hind_ds_initialized_1d, lead_freq):
     """Test that lead can also contain floats when calendar='360_day'."""
-    hind_ds_initialized_1d["init"] = xr.cftime_range(
+    hind_ds_initialized_1d["init"] = xr.date_range(
         start=str(hind_ds_initialized_1d.init[0].values),
         freq="YS",
         periods=hind_ds_initialized_1d.init.size,
         calendar="360_day",
+        use_cftime=True,
     )
     with xr.set_options(keep_attrs=True):
         hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
@@ -312,11 +317,12 @@ def test_fractional_leads_lower_than_month_lead_units(
     hind_ds_initialized_1d, lead_freq, calendar
 ):
     """Test that lead can contain floats when lead units is lower or equal to weeks'."""
-    hind_ds_initialized_1d["init"] = xr.cftime_range(
+    hind_ds_initialized_1d["init"] = xr.date_range(
         start=str(hind_ds_initialized_1d.init[0].values),
         freq="YS",
         periods=hind_ds_initialized_1d.init.size,
         calendar=calendar,
+        use_cftime=True,
     )
     hind_ds_initialized_1d["lead"] = hind_ds_initialized_1d["lead"] - 0.5
     hind_ds_initialized_1d["lead"].attrs["units"] = lead_freq

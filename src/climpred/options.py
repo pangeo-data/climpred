@@ -110,12 +110,12 @@ class set_options:
         >>> with climpred.set_options(seasonality="month"):
         ...     HindcastEnsemble.verify(**kw).SST.sel(skill="climatology")
         ...
-        <xarray.DataArray 'SST' (lead: 10)>
+        <xarray.DataArray 'SST' (lead: 10)> Size: 80B
         array([0.03712573, 0.03712573, 0.03712573, 0.03712573, 0.03712573,
                0.03712573, 0.03712573, 0.03712573, 0.03712573, 0.03712573])
         Coordinates:
-          * lead     (lead) int32 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 'climatology'
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            skill    <U11 44B 'climatology'
         Attributes:
             units:    (C)^2
 

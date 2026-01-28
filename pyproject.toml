@@ -6,6 +6,21 @@ requires = [
 ]
 build-backend = "setuptools.build_meta"
 
+[dependency-groups]
+dev = [
+  "black",
+  "climpred[docs]",
+  "flake8",
+  "isort",
+  "jupyterlab",
+  "mypy >=1.13",
+  "pylint",
+  "pytest-sugar"
+]
+docs = [
+  "climpred[docs]"
+]
+
 [project]
 name = "climpred"
 authors = [
@@ -31,38 +46,41 @@ classifiers = [
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
   "Topic :: Scientific/Engineering :: Atmospheric Science"
 ]
 dependencies = [
-  "cf_xarray >=0.6.0",
-  "cftime >=1.5.0",
-  "dask >=2021.10.0",
-  "numpy >=1.25.0",
-  "packaging",
-  "pooch >=1.4",
-  "xarray >=0.19.0",
-  "xskillscore >=0.0.20"
+  "cf_xarray >=0.8.0",
+  "cftime >=1.6.3",
+  "dask >=2023.4.0",
+  "numpy >=1.25",
+  "packaging >=23.0",
+  "pandas >=2.0,<3.0",
+  "pooch >=1.8.0",
+  "xarray >=2023.4.0",
+  "xskillscore >=0.0.28"
 ]
 dynamic = ["version", "description"]
 
 [project.optional-dependencies]
-accel = ["numba >=0.52", "bottleneck"]
-bias-correction = ["xclim >=0.46", "bias-correction >=0.4", "numpy >=1.25.0,<2.0.0"] # pinned until xclim supports numpy>=2.0.0
-io = ["netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
+accel = ["bottleneck", "numba >=0.57"]
+bias-correction = ["bias-correction >=0.4", "xclim >=0.52.0", "xsdba >=0.4.0; python_version >= '3.10'"]
+io = ["h5netcdf", "h5py", "netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
 regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
 relative_entropy = ["eofs"]
-test = ["netcdf4", "pre-commit", "pytest <8.0.0", "pytest-cov", "pytest-lazy-fixture", "pytest-xdist"]
+test = ["netcdf4", "pre-commit", "pytest >=8.0.0", "pytest-cov >=5.0", "pytest-lazy-fixtures >=1.4.0", "pytest-timeout", "pytest-xdist >=3.8.0"]
 viz = ["matplotlib", "nc-time-axis >=1.4.0"]
 vwmp = ["xrft"]
 complete = ["climpred[accel,bias-correction,viz,io,test,relative_entropy,vwmp]"]
 docs = [
   "climpred[complete]",
   "myst_nb",
-  "sphinx",
-  "sphinx-book-theme >=0.3.3",
+  "sphinx >=7.0.0",
+  "sphinx-book-theme >=1.0.0",
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
-  "sphinxcontrib-napoleon"
+  "sphinxext-opengraph >=0.8.0",
+  "tqdm"
 ]
 
 [project.urls]
@@ -73,7 +91,7 @@ docs = [
 
 [tool.black]
 line-length = 88
-target-version = ["py39", "py310", "py311", "py312"]
+target-version = ["py39", "py310", "py311", "py312", "py313"]
 
 [tool.isort]
 known_first_party = "climpred"
@@ -93,21 +111,24 @@ files = "."
 show_error_codes = true
 ignore_missing_imports = true
 
-[tool.mypy.overrides]
-"bottleneck.*" = {ignore_missing_imports = true}
-"cftime.*" = {ignore_missing_imports = true}
-"mypy-dask.*" = {ignore_missing_imports = true}
-"mypy-distributed.*" = {ignore_missing_imports = true}
-"mypy-fsspec.*" = {ignore_missing_imports = true}
-"mypy-matplotlib.*" = {ignore_missing_imports = true}
-"mypy-nc_time_axis.*" = {ignore_missing_imports = true}
-"mypy-numpy.*" = {ignore_missing_imports = true}
-"mypy-netCDF4.*" = {ignore_missing_imports = true}
-"mypy-pandas.*" = {ignore_missing_imports = true}
-"mypy-pytest.*" = {ignore_missing_imports = true}
-"mypy-scipy.*" = {ignore_missing_imports = true}
-"mypy-setuptools" = {ignore_missing_imports = true}
-"mypy-toolz.*" = {ignore_missing_imports = true}
+[[tool.mypy.overrides]]
+module = [
+  "bottleneck.*",
+  "cftime.*",
+  "dask.*",
+  "distributed.*",
+  "fsspec.*",
+  "matplotlib.*",
+  "nc_time_axis.*",
+  "numpy.*",
+  "netCDF4.*",
+  "pandas.*",
+  "pytest.*",
+  "scipy.*",
+  "setuptools",
+  "toolz.*"
+]
+ignore_missing_imports = true
 
 [tool.pytest.ini_options]
 python_files = ["test_*.py"]

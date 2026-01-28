@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 
 import climpred
@@ -63,20 +65,30 @@ def test_option_warn_for_failed_PredictionEnsemble_xr_call(
     hindcast_recon_1d_dm, option_bool
 ):
     with climpred.set_options(warn_for_failed_PredictionEnsemble_xr_call=option_bool):
-        with pytest.warns(None if not option_bool else UserWarning) as record:
-            hindcast_recon_1d_dm.sel(lead=[1, 2])
-        if not option_bool:
-            assert len(record) == 0, print(record[0])
+        if option_bool:
+            with pytest.warns(UserWarning) as record:
+                hindcast_recon_1d_dm.sel(lead=[1, 2])
+            assert len(record) > 0
+        else:
+            with warnings.catch_warnings(record=True) as record:
+                warnings.simplefilter("error")
+                hindcast_recon_1d_dm.sel(lead=[1, 2])
+            assert len(record) == 0
 
 
 @pytest.mark.parametrize("option_bool", [False, True])
 def test_climpred_warnings(hindcast_recon_1d_dm, option_bool):
     with climpred.set_options(warn_for_failed_PredictionEnsemble_xr_call=True):
         with climpred.set_options(climpred_warnings=option_bool):
-            with pytest.warns(UserWarning if option_bool else None) as record:
-                hindcast_recon_1d_dm.sel(lead=[1, 2])
-            if not option_bool:
-                assert len(record) == 0, print(record[0])
+            if option_bool:
+                with pytest.warns(UserWarning) as record:
+                    hindcast_recon_1d_dm.sel(lead=[1, 2])
+                assert len(record) > 0
+            else:
+                with warnings.catch_warnings(record=True) as record:
+                    warnings.simplefilter("error")
+                    hindcast_recon_1d_dm.sel(lead=[1, 2])
+                assert len(record) == 0
 
 
 def test_option_resample_iterations_func(hindcast_recon_1d_ym):

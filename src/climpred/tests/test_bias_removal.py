@@ -94,6 +94,14 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
             else:
                 assert hindcast.coords[c].size == hindcast_bias_removed.coords[c].size
 
+    def check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed):
+        # Check that attributes are maintained
+        for v in hindcast.get_initialized().data_vars:
+            assert (
+                hindcast.get_initialized()[v].attrs
+                == hindcast_bias_removed.get_initialized()[v].attrs
+            )
+
     with set_options(seasonality=seasonality):
         metric = "rmse"
         dim = "init"
@@ -128,6 +136,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
         )
 
         check_hindcast_coords_maintained_except_init(hindcast, hindcast_bias_removed)
+        check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed)
 
         bias_removed_skill = hindcast_bias_removed.verify(**verify_kwargs)
 
@@ -139,6 +148,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
             check_hindcast_coords_maintained_except_init(
                 hindcast, hindcast_bias_removed_properly
             )
+            check_hindcast_attrs_maintained(hindcast, hindcast_bias_removed_properly)
 
             bias_removed_skill_properly = hindcast_bias_removed_properly.verify(
                 **verify_kwargs
@@ -561,8 +571,8 @@ def test_remove_bias_dont_drop(hindcast_NMME_Nino34):
     detrended = hindcast_NMME_Nino34.isel(lead=[0]).remove_bias(
         how="additive_mean", alignment=alignment
     )
-    assert "lead" in detrended.get_initialized().dims
-    assert len(detrended.get_initialized().coords["valid_time"].dims) == 2
+    assert "lead" in detrended.get_initialized().sizes
+    assert len(detrended.get_initialized().coords["valid_time"].sizes) == 2
     detrended.verify(
         metric="rmse",
         comparison="e2o",

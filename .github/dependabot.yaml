@@ -5,3 +5,7 @@ updates:
     schedule:
       # Check for updates once a week
       interval: 'quarterly'
+    groups:
+      actions:
+        patterns:
+          - "*"

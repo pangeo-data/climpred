@@ -122,15 +122,15 @@ and `PerfectModelEnsemble`) is standardized into a one-liner:
 ```python
 PredictionEnsemble.verify(
     # Score forecast using the Anomaly Correlation Coefficient.
-    metric='acc',
+    metric="acc",
     # Compare the ensemble mean to observations.
-    comparison='e2o',
+    comparison="e2o",
     # Keep the same set of initializations at each lead time.
-    alignment='same_inits',
+    alignment="same_inits",
     # Reduce the verification over the initialization dimension.
-    dim='init',
+    dim="init",
     # Score performance of a persistence forecast as well.
-    reference='persistence',
+    reference="persistence",
 )
 ```
 

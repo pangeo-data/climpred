@@ -11,6 +11,10 @@ def _importorskip(modname, minversion=None):
         if minversion is not None:
             if version.parse(mod.__version__) < version.parse(minversion):
                 raise ImportError("Minimum version not satisfied")
+            if modname == "matplotlib":
+                import matplotlib
+
+                matplotlib.use("Agg")
     except ImportError:
         has = False
     func = pytest.mark.skipif(not has, reason=f"requires {modname}")

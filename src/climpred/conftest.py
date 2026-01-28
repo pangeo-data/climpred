@@ -545,7 +545,3 @@ def small_verif_da():
     )
 
 
-@pytest.fixture(scope="session")
-def session_data_cache():
-    """Session-scoped cache for expensive data loading operations."""
-    return {}

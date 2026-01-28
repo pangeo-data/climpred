@@ -379,7 +379,7 @@ def hindcast_NMME_Nino34():
 
 
 @pytest.fixture(scope="session")
-def da_lead():
+def _da_lead():
     lead = np.arange(5)
     init = np.arange(5)
     return xr.DataArray(
@@ -389,41 +389,71 @@ def da_lead():
     )
 
 
+@pytest.fixture()
+def da_lead(_da_lead):
+    return _da_lead.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def ds1():
+def _ds1():
     return xr.Dataset(
         {"air": (("lon", "lat"), [[0, 1, 2], [3, 4, 5], [6, 7, 8]])},
         coords={"lon": [1, 3, 4], "lat": [5, 6, 7]},
     )
 
 
+@pytest.fixture()
+def ds1(_ds1):
+    return _ds1.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def ds2():
+def _ds2():
     return xr.Dataset(
         {"air": (("lon", "lat"), [[0, 1, 2], [3, 4, 5], [6, 7, 8]])},
         coords={"lon": [1, 3, 6], "lat": [5, 6, 9]},
     )
 
 
+@pytest.fixture()
+def ds2(_ds2):
+    return _ds2.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def da1():
+def _da1():
     return xr.DataArray([[0, 1], [3, 4], [6, 7]], dims=("x", "y"))
 
 
+@pytest.fixture()
+def da1(_da1):
+    return _da1.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def da2():
+def _da2():
     return xr.DataArray([[0, 1], [5, 6], [6, 7]], dims=("x", "y"))
 
 
+@pytest.fixture()
+def da2(_da2):
+    return _da2.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def multi_dim_ds():
+def _multi_dim_ds():
     ds = xr.tutorial.open_dataset("air_temperature")
     ds = ds.assign(**{"airx2": ds["air"] * 2})
     return ds
 
 
+@pytest.fixture()
+def multi_dim_ds(_multi_dim_ds):
+    return _multi_dim_ds.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def da_SLM():
+def _da_SLM():
     lead = np.arange(5)
     init = np.arange(5)
     member = np.arange(5)
@@ -434,8 +464,13 @@ def da_SLM():
     )
 
 
+@pytest.fixture()
+def da_SLM(_da_SLM):
+    return _da_SLM.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def da_dcpp():
+def _da_dcpp():
     lead = np.arange(5)
     init = np.arange(5)
     member = np.arange(5)
@@ -444,6 +479,11 @@ def da_dcpp():
         dims=["dcpp_init_year", "time", "member_id"],
         coords=[init, lead, member],
     )
+
+
+@pytest.fixture()
+def da_dcpp(_da_dcpp):
+    return _da_dcpp.copy(deep=True)
 
 
 @pytest.fixture(scope="session")
@@ -571,7 +611,7 @@ def perfectModelEnsemble_initialized_control_1d_dm_cftime(
 
 
 @pytest.fixture(scope="session")
-def small_initialized_da():
+def _small_initialized_da():
     inits = [1990, 1991, 1992, 1993]
     lead = [1]
     return xr.DataArray(
@@ -582,9 +622,19 @@ def small_initialized_da():
     )
 
 
+@pytest.fixture()
+def small_initialized_da(_small_initialized_da):
+    return _small_initialized_da.copy(deep=True)
+
+
 @pytest.fixture(scope="session")
-def small_verif_da():
+def _small_verif_da():
     time = [1990, 1991, 1992, 1993, 1994]
     return xr.DataArray(
         np.random.rand(len(time)), dims=["time"], coords=[time], name="var"
     )
+
+
+@pytest.fixture()
+def small_verif_da(_small_verif_da):
+    return _small_verif_da.copy(deep=True)

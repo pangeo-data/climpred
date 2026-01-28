@@ -543,5 +543,3 @@ def small_verif_da():
     return xr.DataArray(
         np.random.rand(len(time)), dims=["time"], coords=[time], name="var"
     )
-
-

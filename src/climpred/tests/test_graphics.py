@@ -82,7 +82,6 @@ def test_PredictionEnsemble_plot(
     kws = {"show_members": show_members, "variable": variable, "x": x}
     he.plot(**kws)
     he = he.add_uninitialized(hist_ds_uninitialized_1d)
-    kws = {"show_members": show_members, "variable": variable, "x": x}
     he.plot(**kws)
     he = he.add_observations(reconstruction_ds_1d)
     he.plot(**kws)

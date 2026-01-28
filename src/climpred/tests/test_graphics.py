@@ -2,7 +2,7 @@
 
 import pytest
 
-from climpred import PerfectModelEnsemble, HindcastEnsemble
+from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
@@ -42,7 +42,9 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
 @pytest.mark.parametrize("cmap", ["tab10", "jet"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["tos", None])
-def test_PerfectModelEnsemble_plot(PM_ds_initialized_1d, PM_ds_control_1d, variable, show_members, cmap):
+def test_PerfectModelEnsemble_plot(
+    PM_ds_initialized_1d, PM_ds_control_1d, variable, show_members, cmap
+):
     """Test PredictionEnsemble.plot()."""
     pm = PerfectModelEnsemble(PM_ds_initialized_1d)
     kws = {"cmap": cmap, "show_members": show_members, "variable": variable}
@@ -94,9 +96,7 @@ def test_PredictionEnsemble_plot(
 @requires_nc_time_axis
 @pytest.mark.parametrize("alignment", ["same_inits", None])
 @pytest.mark.parametrize("return_xr", [False, True])
-def test_HindcastEnsemble_plot_alignment(
-    hindcast_hist_obs_1d, alignment, return_xr
-):
+def test_HindcastEnsemble_plot_alignment(hindcast_hist_obs_1d, alignment, return_xr):
     """Test HindcastEnsemble.plot_alignment()"""
     import matplotlib
     import xarray as xr

@@ -201,7 +201,6 @@ unsupported-operator = "ignore"
 missing-argument = "ignore"
 unknown-argument = "ignore"
 unused-ignore-comment = "ignore"
-deprecated = "ignore"
 
 [tool.ty.src]
 exclude = ["asv_bench/", "docs/"]

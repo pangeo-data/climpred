@@ -1,5 +1,7 @@
 """Test graphics.py and PredictionEnsemble.plot()."""
 
+# Set matplotlib to non-interactive backend for testing to avoid resource leaks
+import matplotlib
 import numpy as np
 import pytest
 import xarray as xr
@@ -9,9 +11,6 @@ from climpred.checks import DimensionError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
 from . import requires_matplotlib, requires_nc_time_axis
-
-# Set matplotlib to non-interactive backend for testing to avoid resource leaks
-import matplotlib
 
 matplotlib.use("Agg")
 
@@ -72,7 +71,11 @@ def test_PerfectModelEnsemble_plot_fails_3d(synthetic_pm_3d_small):
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["SST", None])
 def test_PredictionEnsemble_plot(
-    synthetic_hindcast_1d_small, synthetic_uninitialized_1d_small, variable, show_members, x
+    synthetic_hindcast_1d_small,
+    synthetic_uninitialized_1d_small,
+    variable,
+    show_members,
+    x,
 ):
     """Test PredictionEnsemble.plot()."""
     he = synthetic_hindcast_1d_small

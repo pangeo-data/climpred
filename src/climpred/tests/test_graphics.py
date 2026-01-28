@@ -58,7 +58,7 @@ def test_PerfectModelEnsemble_plot(
 @requires_matplotlib
 def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
     """Test PredictionEnsemble.plot()."""
-    pm = PM_ds_initialized_3d
+    pm = PerfectModelEnsemble(PM_ds_initialized_3d)
     with pytest.raises(DimensionError) as excinfo:
         pm.plot()
     assert "does not allow dimensions other" in str(excinfo.value)

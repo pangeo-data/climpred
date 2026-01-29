@@ -438,5 +438,6 @@ def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
             for k, v in inits.items()
         ],
         dim="lead",
+        join="outer",
     ).assign_coords(lead=hindcast.get_initialized().lead)
     return verif_dates_xr

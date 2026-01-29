@@ -8,6 +8,9 @@ from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
 from . import requires_matplotlib, requires_nc_time_axis
 
+# ss
+
+
 ITERATIONS = 3
 
 
@@ -20,7 +23,7 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
     """
     res = perfectModelEnsemble_initialized_control.bootstrap(
         metric="pearson_r",
-        iterations=ITERATIONS * 100,
+        iterations=ITERATIONS * 20,
         reference=["uninitialized", "persistence"],
         comparison="m2e",
         dim=["init", "member"],

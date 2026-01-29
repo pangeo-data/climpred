@@ -490,6 +490,7 @@ def bias_correction(
                 train_dim = shift_cftime_singular(train_dim[dim], n, freq)
                 data_to_be_corrected = forecast.drop_sel({dim: train_dim})
             elif alignment in ["same_verif"]:
+                assert train_time is not None
                 train_dim = train_time
                 intersection = (
                     train_dim[dim].to_index().intersection(forecast[dim].to_index())
@@ -667,6 +668,7 @@ def xclim_sdba(
                 train_dim = shift_cftime_singular(train_dim[dim], n, freq)
                 data_to_be_corrected = forecast.drop_sel({dim: train_dim})
             elif alignment in ["same_verif"]:
+                assert train_time is not None
                 train_dim = train_time
                 intersection = (
                     train_dim[dim].to_index().intersection(forecast[dim].to_index())

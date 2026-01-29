@@ -195,7 +195,6 @@ allowed-unresolved-imports = [
 # These can be gradually enabled as types are added
 possibly-missing-attribute = "ignore"
 invalid-assignment = "ignore"
-not-subscriptable = "ignore"
 invalid-argument-type = "ignore"
 unsupported-operator = "ignore"
 missing-argument = "ignore"

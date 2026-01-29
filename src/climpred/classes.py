@@ -493,11 +493,13 @@ class PredictionEnsemble:
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
 
-    mathType = Union[int, float, np.ndarray, xr.DataArray, xr.Dataset]
+    mathType = Union[
+        int, float, np.ndarray, xr.DataArray, xr.Dataset, "PredictionEnsemble"
+    ]
 
     def _math(
         self,
-        other: mathType,
+        other: "mathType",
         operator: str,
     ):
         """Help function for __add__, __sub__, __mul__, __truediv__.

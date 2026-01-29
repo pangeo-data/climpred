@@ -112,7 +112,9 @@ def rename_to_climpred_dims(
         renamed = False  # set renamed flag to false initiallly
         if cdim not in xro.dims:  # if a CLIMPRED_ENSEMBLE_DIMS is not found
             for c in xro.dims:  # check in xro.dims for dims
-                if cdim in c:  # containing the string of this CLIMPRED_ENSEMBLE_DIMS
+                if cdim in str(
+                    c
+                ):  # containing the string of this CLIMPRED_ENSEMBLE_DIMS
                     xro = xro.rename({c: cdim})
                     renamed = True
         # special case for hindcast when containing time

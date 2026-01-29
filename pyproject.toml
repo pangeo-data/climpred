@@ -196,7 +196,6 @@ allowed-unresolved-imports = [
 possibly-missing-attribute = "ignore"
 invalid-assignment = "ignore"
 invalid-argument-type = "ignore"
-unsupported-operator = "ignore"
 missing-argument = "ignore"
 unknown-argument = "ignore"
 

@@ -696,9 +696,9 @@ def xclim_sdba(
             data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
         if "group" not in metric_kwargs:
-            metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
+            metric_kwargs["group"] = dim + "." + str(OPTIONS["seasonality"])
         elif metric_kwargs["group"] is None:
-            metric_kwargs["group"] = dim + "." + OPTIONS["seasonality"]
+            metric_kwargs["group"] = dim + "." + str(OPTIONS["seasonality"])
 
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")

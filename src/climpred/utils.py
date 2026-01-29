@@ -228,11 +228,7 @@ def convert_time_index(
 def convert_cftime_to_datetime_coords(ds, dim):
     """Convert dimension coordinate dim from CFTimeIndex to pd.DatetimeIndex."""
     return ds.assign_coords(
-        {
-            dim: xr.DataArray(
-                ds[dim].to_index().to_datetimeindex(time_unit="ns"), dims=dim
-            )
-        }
+        {dim: xr.DataArray(ds[dim].to_index().to_datetimeindex(), dims=dim)}
     )
 
 

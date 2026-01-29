@@ -2112,6 +2112,7 @@ class HindcastEnsemble(PredictionEnsemble):
             xr.concat(
                 alignment_dates,
                 "alignment",
+                join="outer",
             )
             .assign_coords(alignment=alignments_success)
             .squeeze()

@@ -36,7 +36,7 @@ def HindcastEnsemble_time_resolution(request):
     elif request.param == "weeks":
         freq = "7D"
     elif request.param == "minutes":
-        freq = "T"
+        freq = "min"
     elif request.param in "months":
         freq = "MS"
     elif request.param == "seasons":
@@ -45,8 +45,12 @@ def HindcastEnsemble_time_resolution(request):
         freq = "YS"
     else:
         freq = request.param[0].upper()
+        if freq == "H":
+            freq = "h"
+        elif freq == "S":
+            freq = "s"
     # create initialized
-    init = xr.cftime_range(START, freq=freq, periods=NINITS)
+    init = xr.date_range(START, freq=freq, periods=NINITS, use_cftime=True)
     lead = np.arange(NLEADS)
     member = np.arange(NMEMBERS)
     initialized = xr.DataArray(
@@ -57,7 +61,7 @@ def HindcastEnsemble_time_resolution(request):
     initialized.lead.attrs["units"] = request.param
 
     # create observations
-    time = xr.cftime_range(START, freq=freq, periods=NINITS + NLEADS)
+    time = xr.date_range(START, freq=freq, periods=NINITS + NLEADS, use_cftime=True)
     obs = xr.DataArray(
         np.random.rand(len(time)), dims=["time"], coords=[time]
     ).to_dataset(name="var")

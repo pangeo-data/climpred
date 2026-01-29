@@ -193,7 +193,6 @@ allowed-unresolved-imports = [
 [tool.ty.rules]
 # Ignore rules until the codebase has better type annotations
 # These can be gradually enabled as types are added
-possibly-missing-attribute = "ignore"
 invalid-assignment = "ignore"
 invalid-argument-type = "ignore"
 missing-argument = "ignore"

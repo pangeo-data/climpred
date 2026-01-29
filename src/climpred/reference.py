@@ -100,7 +100,7 @@ def climatology(
     if seasonality_str == "weekofyear":
         # convert to datetime for weekofyear operations
         verif = convert_cftime_to_datetime_coords(verif, "time")
-        init_lead["time"] = (init_lead["time"].to_index().to_datetimeindex())
+        init_lead["time"] = init_lead["time"].to_index().to_datetimeindex()
         init_lead = init_lead["time"]
     climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
     with (

@@ -2903,7 +2903,7 @@ class HindcastEnsemble(PredictionEnsemble):
             ).issubset(set(self.get_initialized().dims)):
                 self._datasets["initialized"].coords["valid_time"] = (
                     add_time_from_init_lead(
-                        self.get_initialized().drop("valid_time")
+                        self.get_initialized().drop_vars("valid_time")
                     ).coords["valid_time"]
                 )
         return self

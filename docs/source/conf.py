@@ -2,7 +2,7 @@
 
 This file only contains a selection of the most common options. For a full
 list see the documentation:
-http://www.sphinx-doc.org/en/master/config
+https://www.sphinx-doc.org/en/master/usage/configuration.html
 """
 
 # -- Path setup --------------------------------------------------------------
@@ -39,12 +39,12 @@ version = climpred.__version__
 extensions = [
     "myst_nb",
     "sphinx.ext.autodoc",
+    "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
-    "sphinx.ext.intersphinx",
-    "sphinxcontrib.napoleon",
     "sphinx.ext.imgmath",
-    "sphinx.ext.autosectionlabel",
+    "sphinx.ext.intersphinx",
+    "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
     "sphinx_copybutton",
     "sphinxext.opengraph",
@@ -116,15 +116,15 @@ master_doc = "index"
 #
 html_theme = "sphinx_book_theme"
 html_logo = "images/climpred-logo.png"
-html_theme_options = {"logo_only": False, "style_nav_header_background": "#fcfcfc"}
-
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
+    "logo_only": False,
+    "style_nav_header_background": "#fcfcfc",
+    # theme-specific options below
     "repository_url": "https://github.com/pangeo-data/climpred",
-    "use_edit_page_button": True,
     "repository_branch": "main",
     "path_to_docs": "docs/source",
     "use_edit_page_button": True,
@@ -160,7 +160,7 @@ intersphinx_mapping = {
 
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
-# nbsphinx_kernel_name = "climpred-docs"  # doesnt work
+# nbsphinx_kernel_name = "climpred-docs"  # doesn't work
 nbsphinx_allow_errors = True
 nbsphinx_timeout = 600
 nbsphinx_execute = "auto"  # "never" "always"

@@ -5,6 +5,7 @@ import numpy as np
 import pandas as pd
 import pytest
 import xarray as xr
+from pytest_lazy_fixtures import lf as lazy_fixture
 from xarray.testing import assert_allclose
 
 from climpred.comparisons import PM_COMPARISONS, __m2c
@@ -216,9 +217,9 @@ def test_shift_cftime_index():
 @pytest.mark.parametrize(
     "init",
     [
-        pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
-        pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
-        pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+        lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+        lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+        lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
     ],
 )
 def test_return_time_series_freq_freq_init_pm(init):
@@ -233,16 +234,16 @@ def test_return_time_series_freq_freq_init_pm(init):
     "init, control",
     [
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_ym_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_ym_cftime"),
+            lazy_fixture("PM_ds_control_1d_ym_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_mm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_mm_cftime"),
+            lazy_fixture("PM_ds_control_1d_mm_cftime"),
         ),
         (
-            pytest.lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
-            pytest.lazy_fixture("PM_ds_control_1d_dm_cftime"),
+            lazy_fixture("PM_ds_initialized_1d_dm_cftime"),
+            lazy_fixture("PM_ds_control_1d_dm_cftime"),
         ),
     ],
 )

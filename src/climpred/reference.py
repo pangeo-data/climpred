@@ -41,7 +41,7 @@ metric_kwargsType = Optional[Any]
 
 
 def _maybe_seasons_to_int(
-    ds: Union[xr.Dataset, xr.DataArray]
+    ds: Union[xr.Dataset, xr.DataArray],
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Set season str values or coords to int."""
     seasonal = False
@@ -178,6 +178,7 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
         elif "member" not in lforecast.dims and "member" not in lverif.dims:
             dim = dim.copy()
             dim.remove("member")
+
     # for probabilistic metrics requiring member dim, add single-member dimension
     if metric.requires_member_dim:
         if "member" not in lforecast.dims:
@@ -185,7 +186,8 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
             if "member" not in dim:
                 dim = dim.copy()
                 dim.append("member")
-        assert "member" in lforecast.dims and "member" not in lverif.dims
+        if not ("member" in lforecast.dims and "member" not in lverif.dims):
+            raise ValueError()
     # member not required by metric and not in dim but present in forecast
     if (
         not metric.requires_member_dim and metric.probabilistic
@@ -242,13 +244,17 @@ def compute_climatology(
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    if "iteration" in initialized.dims:
-        initialized = initialized.isel(iteration=0, drop=True)
-
     if comparison.hindcast:
         kind = "hindcast"
     else:
         kind = "perfect"
+
+    # For PerfectModel, climatology is computed from control (not initialized),
+    # so iteration dimension from bootstrap doesn't affect it and should be dropped
+    # to avoid spurious variance in confidence intervals.
+    # For Hindcast, keep iteration dimension to allow resampling over init.
+    if "iteration" in initialized.dims and kind == "perfect":
+        initialized = initialized.isel(iteration=0, drop=True)
 
     if kind == "perfect":
         forecast, verif = comparison.function(initialized, metric=metric)
@@ -433,16 +439,16 @@ def compute_persistence_from_first_lead(
         ...     ).sel(
         ...         skill="persistence"
         ...     )  # persistence sensitive to comparison
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 284B
         Dimensions:  (lead: 20)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-            skill    <U11 'persistence'
+          * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+            skill    <U11 44B 'persistence'
         Data variables:
-            tos      (lead) float32 0.01056 0.01962 0.02925 ... 0.08033 0.08731 0.07578
+            tos      (lead) float32 80B 0.01056 0.01962 0.02925 ... 0.08731 0.07578
         Attributes:
-            prediction_skill_software:                         climpred https://clim...
-            skill_calculated_by_function:                      PerfectModelEnsemble....
+            prediction_skill_software:                         climpred https://climp...
+            skill_calculated_by_function:                      PerfectModelEnsemble.v...
             number_of_initializations:                         12
             number_of_members:                                 10
             metric:                                            mse
@@ -463,16 +469,16 @@ def compute_persistence_from_first_lead(
         ...     ).sel(
         ...         skill="persistence"
         ...     )  # persistence not sensitive to comparison
-        <xarray.Dataset>
+        <xarray.Dataset> Size: 284B
         Dimensions:  (lead: 20)
         Coordinates:
-          * lead     (lead) int64 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15 16 17 18 19 20
-            skill    <U11 'persistence'
+          * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
+            skill    <U11 44B 'persistence'
         Data variables:
-            tos      (lead) float32 0.02794 0.04554 0.08024 ... 0.06327 0.09077 0.05898
+            tos      (lead) float32 80B 0.02794 0.04554 0.08024 ... 0.09077 0.05898
         Attributes:
-            prediction_skill_software:                         climpred https://clim...
-            skill_calculated_by_function:                      PerfectModelEnsemble....
+            prediction_skill_software:                         climpred https://climp...
+            skill_calculated_by_function:                      PerfectModelEnsemble.v...
             number_of_initializations:                         12
             number_of_members:                                 10
             metric:                                            mse

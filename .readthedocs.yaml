@@ -1,14 +1,15 @@
 version: 2
 
 build:
-  os: ubuntu-22.04
+  os: ubuntu-24.04
   tools:
-    python: "mambaforge-22.9"
+    python: "mambaforge-23.11"
 
 conda:
   environment: ci/requirements/docs.yml
 
 sphinx:
+  configuration: docs/source/conf.py
   fail_on_warning: false
 
 formats: []

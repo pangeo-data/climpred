@@ -71,7 +71,7 @@ def load_hindcast(
 
 
 def rename_SLM_to_climpred_dims(
-    xro: Union[xr.DataArray, xr.Dataset]
+    xro: Union[xr.DataArray, xr.Dataset],
 ) -> Union[xr.DataArray, xr.Dataset]:
     """
     Rename ensemble dimensions common to SubX or CESM output.
@@ -93,7 +93,7 @@ def rename_SLM_to_climpred_dims(
 
 
 def rename_to_climpred_dims(
-    xro: Union[xr.DataArray, xr.Dataset]
+    xro: Union[xr.DataArray, xr.Dataset],
 ) -> Union[xr.DataArray, xr.Dataset]:
     """
     Rename existing dimension to `CLIMPRED_ENSEMBLE_DIMS`.

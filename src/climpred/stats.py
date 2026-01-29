@@ -215,10 +215,14 @@ def varweighted_mean_period(
     if isinstance(da, xr.Dataset):
         return da.map(varweighted_mean_period, dim=dim, **kwargs)
     da = da.fillna(0.0)
+
     # dim should be list
-    if isinstance(dim, str):
-        dim = [dim]
-    assert isinstance(dim, list)
+    if isinstance(dim, (str, list)):
+        if isinstance(dim, str):
+            dim = [dim]
+    else:
+        raise ValueError("'dim' should be of tupe list or str.")
+
     ps = power_spectrum(da, dim=dim, **kwargs)
     # take pos
     for d in dim:

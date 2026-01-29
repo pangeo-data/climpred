@@ -32,10 +32,9 @@ def get_path(
     """
     # get experiment_id
     dirs = _os.listdir(dir_base_experiment)
-    experiment_id = [
-        x for x in dirs if (f"{init}" in x and "r" + str(member) + "i" in x)
-    ]
-    assert len(experiment_id) == 1
+    experiment_id = [x for x in dirs if (f"{init}" in x and f"r{member}i" in x)]
+    if len(experiment_id) != 1:
+        raise ValueError("Multiple experiment ids found.")
     experiment_id = experiment_id[0]  # type: ignore
     dir_outdata = f"{dir_base_experiment}/{experiment_id}/outdata/{model}"
     path = f"{dir_outdata}/{experiment_id}_{model}_{output_stream}_{timestr}.{ending}"

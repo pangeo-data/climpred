@@ -1,3 +1,5 @@
+import warnings
+
 import pytest
 import xarray as xr
 
@@ -30,8 +32,10 @@ def test_PredictionEnsemble_xr_calls(hindcast_hist_obs_1d):
 
 def test_PredictionEnsemble_map_dim_or(hindcast_hist_obs_1d):
     """Tests that PredictionEnsemble allows dim0_or_dim1 as kwargs without UserWarning."""
-    with pytest.warns(None):  # no warnings
+    with warnings.catch_warnings(record=True) as record:
+        warnings.simplefilter("error")
         he_or = hindcast_hist_obs_1d.map(rm_poly, dim="init_or_time", deg=2)
+    assert len(record) == 0  # no UserWarnings
     assert he_or != hindcast_hist_obs_1d
 
     with pytest.warns(UserWarning) as record:  # triggers warnings
@@ -41,9 +45,6 @@ def test_PredictionEnsemble_map_dim_or(hindcast_hist_obs_1d):
     assert he_chained != hindcast_hist_obs_1d
 
     assert len(record) >= 3  # for init, uninit and obs
-    # for r in record:
-    #    assert "Error due to " in str(r.message)
-
     assert_PredictionEnsemble(he_or, he_chained)
 
 

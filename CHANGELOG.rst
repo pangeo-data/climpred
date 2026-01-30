@@ -33,6 +33,7 @@ Internals/Minor Fixes
 - `pytest-lazy-fixture` (abandoned) has been replaced by `pytest-lazy-fixtures` (maintained fork).
 - GitHub Workflows have been adjusted to test against Python 3.13, as well as test `pip`-based environments. `Trevor James Smith`_
 - Replaced all `assert` statements found outside of the testing code with appropriate exceptions to be handled. `Trevor James Smith`_
+- Use `ty` instead of `mypy` (:issue:`888`, :pr:`896`) `Aaron Spring`_
 
 climpred v2.5.0 (2024-07-05)
 ============================

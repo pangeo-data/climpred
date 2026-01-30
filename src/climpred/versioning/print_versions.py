@@ -1,7 +1,6 @@
 """utility functions for printing version information
 see pandas/pandas/util/_print_versions.py"""
 
-import codecs
 import importlib
 import locale
 import os
@@ -113,7 +112,7 @@ def show_versions(as_json=False):
         if as_json is True:
             print(j)
         else:
-            with codecs.open(as_json, "wb", encoding="utf8") as f:
+            with open(as_json, "w", encoding="utf8") as f:
                 json.dump(j, f, indent=2)
 
     else:

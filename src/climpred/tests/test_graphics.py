@@ -8,7 +8,7 @@ from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
 from . import requires_matplotlib, requires_nc_time_axis
 
-ITERATIONS = 200
+ITERATIONS = 300
 
 
 @pytest.fixture(autouse=True)

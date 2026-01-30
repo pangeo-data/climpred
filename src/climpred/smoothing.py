@@ -264,6 +264,6 @@ def smooth_goddard_2013(
     # first temporal smoothing
     ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws)
     ds_smoothed_regridded = spatial_smoothing_xesmf(
-        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs  # type: ignore
+        ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs
     )
     return ds_smoothed_regridded

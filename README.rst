@@ -158,3 +158,10 @@ Documentation
 Documentation is in development and can be found on readthedocs_.
 
 .. _readthedocs: https://climpred.readthedocs.io/en/latest/
+
+Star History
+============
+
+.. image:: https://api.star-history.com/svg?repos=pangeo-data/climpred&type=date&legend=top-left
+   :alt: Star History Chart
+   :target: https://www.star-history.com/#pangeo-data/climpred&type=date&legend=top-left

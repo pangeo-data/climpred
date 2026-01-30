@@ -68,8 +68,10 @@ def _apply_metric_at_given_lead(
     """
     # naming:: lforecast: forecast at lead; lverif: verification at lead
     if reference is None:
-        assert initialized is not None
-        assert inits is not None
+        if initialized is None:
+            raise ValueError("initialized must be provided when reference is None")
+        if inits is None:
+            raise ValueError("inits must be provided when reference is None")
         # Use `.where()` instead of `.sel()` to account for resampled inits when
         # bootstrapping.
         lforecast = initialized.sel(lead=lead).where(

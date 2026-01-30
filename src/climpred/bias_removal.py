@@ -490,7 +490,10 @@ def bias_correction(
                 train_dim = shift_cftime_singular(train_dim[dim], n, freq)
                 data_to_be_corrected = forecast.drop_sel({dim: train_dim})
             elif alignment in ["same_verif"]:
-                assert train_time is not None
+                if train_time is None:
+                    raise ValueError(
+                        "train_time must be provided for alignment='same_verif'"
+                    )
                 train_dim = train_time
                 intersection = (
                     train_dim[dim].to_index().intersection(forecast[dim].to_index())
@@ -668,7 +671,10 @@ def xclim_sdba(
                 train_dim = shift_cftime_singular(train_dim[dim], n, freq)
                 data_to_be_corrected = forecast.drop_sel({dim: train_dim})
             elif alignment in ["same_verif"]:
-                assert train_time is not None
+                if train_time is None:
+                    raise ValueError(
+                        "train_time must be provided for alignment='same_verif'"
+                    )
                 train_dim = train_time
                 intersection = (
                     train_dim[dim].to_index().intersection(forecast[dim].to_index())
@@ -696,9 +702,9 @@ def xclim_sdba(
             data_to_be_corrected = leave_one_out(data_to_be_corrected, dim)
 
         if "group" not in metric_kwargs:
-            metric_kwargs["group"] = dim + "." + str(OPTIONS["seasonality"])
+            metric_kwargs["group"] = f"{dim}.{OPTIONS['seasonality']}"
         elif metric_kwargs["group"] is None:
-            metric_kwargs["group"] = dim + "." + str(OPTIONS["seasonality"])
+            metric_kwargs["group"] = f"{dim}.{OPTIONS['seasonality']}"
 
         if "init" in metric_kwargs["group"]:
             metric_kwargs["group"] = metric_kwargs["group"].replace("init", "time")

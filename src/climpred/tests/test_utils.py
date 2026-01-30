@@ -127,7 +127,7 @@ def test_HindcastEnsemble_bootstrap_attrs(hindcast_hist_obs_1d, metric):
 
 def test_cftime_index_unchanged():
     """Tests that a CFTime index going through convert time is unchanged."""
-    inits = xr.cftime_range("1990", "2000", freq="Y", calendar="noleap")
+    inits = xr.date_range("1990", "2000", freq="YE", calendar="noleap", use_cftime=True)
     da = xr.DataArray(np.random.rand(len(inits)), dims="init", coords=[inits])
     new_inits = convert_time_index(da, "init", "")
     assert_allclose(new_inits.init, da.init)
@@ -207,7 +207,7 @@ def test_shift_cftime_singular():
 
 def test_shift_cftime_index():
     """Tests that ``CFTimeIndex`` is shifted by the appropriate amount."""
-    idx = xr.cftime_range("1990", "2000", freq="YS")
+    idx = xr.date_range("1990", "2000", freq="YS", use_cftime=True)
     da = xr.DataArray(np.random.rand(len(idx)), dims="time", coords=[idx])
     expected = idx.shift(3, "YS")
     res = shift_cftime_index(da, "time", 3, "YS")

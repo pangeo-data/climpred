@@ -585,11 +585,12 @@ def perfectModelEnsemble_initialized_control_1d_ym_cftime(
 @pytest.fixture(scope="session")
 def _PM_ds_initialized_1d_mm_cftime(_PM_ds_initialized_1d):
     ds = _PM_ds_initialized_1d.copy(deep=True)
-    ds["init"] = xr.cftime_range(
+    ds["init"] = xr.date_range(
         start="3004",
         periods=ds.init.size,
         freq="MS",
         calendar=CALENDAR,
+        use_cftime=True,
     )
     return ds.load()
 
@@ -606,8 +607,12 @@ def PM_ds_initialized_1d_mm_cftime(_PM_ds_initialized_1d_mm_cftime):
 @pytest.fixture(scope="session")
 def _PM_ds_control_1d_mm_cftime(_PM_ds_control_1d):
     ds = _PM_ds_control_1d.copy(deep=True)
-    ds["time"] = xr.cftime_range(
-        start="3000", periods=ds.time.size, freq="MS", calendar=CALENDAR
+    ds["time"] = xr.date_range(
+        start="3000",
+        periods=ds.time.size,
+        freq="MS",
+        calendar=CALENDAR,
+        use_cftime=True,
     )
     return ds.load()
 
@@ -633,11 +638,12 @@ def perfectModelEnsemble_initialized_control_1d_mm_cftime(
 @pytest.fixture(scope="session")
 def _PM_ds_initialized_1d_dm_cftime(_PM_ds_initialized_1d):
     ds = _PM_ds_initialized_1d.copy(deep=True)
-    ds["init"] = xr.cftime_range(
+    ds["init"] = xr.date_range(
         start="3004",
         periods=ds.init.size,
         freq="D",
         calendar=CALENDAR,
+        use_cftime=True,
     )
     return ds.load()
 
@@ -656,8 +662,8 @@ def _PM_ds_control_1d_dm_cftime(_PM_ds_control_1d):
     ds = _PM_ds_control_1d.copy(deep=True)
     # session scope randomization is fine here as it's just for testing coverage
     ds = ds.isel(time=np.random.randint(0, ds.time.size, 5000))
-    ds["time"] = xr.cftime_range(
-        start="3000", periods=ds.time.size, freq="D", calendar=CALENDAR
+    ds["time"] = xr.date_range(
+        start="3000", periods=ds.time.size, freq="D", calendar=CALENDAR, use_cftime=True
     )
     return ds.load()
 

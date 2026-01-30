@@ -204,6 +204,8 @@ def load_dataset(
             """
             raise IOError(msg)
 
+    kws.update({"decode_timedelta": True})
+
     ds = _open_dataset(localfile, **kws)
 
     if not cache:

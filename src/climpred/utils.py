@@ -296,6 +296,8 @@ def convert_init_lead_to_valid_time_lead(
         [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
         "lead",
         join="outer",
+        coords="different",
+        compat="equals",
     )
     return add_init_from_time_lead(swapped.drop_vars("init")).dropna(
         "valid_time", how="all"
@@ -350,6 +352,9 @@ def convert_valid_time_lead_to_init_lead(
     swapped = xr.concat(
         [skill.sel(lead=lead).swap_dims({"valid_time": "init"}) for lead in skill.lead],
         "lead",
+        coords="different",
+        compat="equals",
+        join="outer",
     )
     return add_time_from_init_lead(swapped.drop_vars("valid_time")).dropna(
         "init", how="all"

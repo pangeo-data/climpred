@@ -207,11 +207,12 @@ class PredictionEnsemble:
 
     def _groupby(self, call: str, groupby: Union[str, xr.DataArray], **kwargs: Any):
         """Help for verify/bootstrap(groupby="month")."""
-        skill_group, group_label = [], []
+        skill_group_list: List[Any] = []
+        group_label: List[Any] = []
         groupby_str = f"init.{groupby}" if isinstance(groupby, str) else groupby
         with set_options(warn_for_failed_PredictionEnsemble_xr_call=False):
             for group, hind_group in self.get_initialized().init.groupby(groupby_str):
-                skill_group.append(
+                skill_group_list.append(
                     getattr(self.sel(init=hind_group), call)(
                         **kwargs,
                     )
@@ -219,9 +220,11 @@ class PredictionEnsemble:
                 group_label.append(group)
         new_dim_name = groupby if isinstance(groupby, str) else groupby.name
         skill_group = xr.concat(
-            skill_group, dim=new_dim_name, **CONCAT_KWARGS
+            skill_group_list, dim=new_dim_name, **CONCAT_KWARGS
         ).assign_coords({new_dim_name: group_label})
-        skill_group[new_dim_name] = skill_group[new_dim_name].assign_attrs(  # type: ignore # noqa: E501
+        skill_group[new_dim_name] = skill_group[
+            new_dim_name
+        ].assign_attrs(  # noqa: E501
             {
                 "description": "new dimension showing skill grouped by init.{groupby}"
                 " created by .verify(groupby) or .bootstrap(groupby)"
@@ -491,11 +494,13 @@ class PredictionEnsemble:
                 self, variable=variable, ax=ax, show_members=show_members, cmap=cmap
             )
 
-    mathType = Union[int, float, np.ndarray, xr.DataArray, xr.Dataset]
+    mathType = Union[
+        int, float, np.ndarray, xr.DataArray, xr.Dataset, "PredictionEnsemble"
+    ]
 
     def _math(
         self,
-        other: mathType,
+        other: "mathType",
         operator: str,
     ):
         """Help function for __add__, __sub__, __mul__, __truediv__.
@@ -547,7 +552,9 @@ class PredictionEnsemble:
             )
         # catch other dimensions in other
         if isinstance(other, tuple([xr.Dataset, xr.DataArray])):
-            if not set(other.dims).issubset(self._datasets["initialized"].dims):  # type: ignore # noqa: E501
+            if not set(other.dims).issubset(
+                self._datasets["initialized"].dims
+            ):  # noqa: E501
                 raise DimensionError(f"{error_str} containing new dimensions.")
         # catch xr.Dataset with different data_vars
         if isinstance(other, xr.Dataset):
@@ -752,11 +759,11 @@ class PredictionEnsemble:
 
     def get_initialized(self) -> xr.Dataset:
         """Return the :py:class:`xarray.Dataset` for the initialized ensemble."""
-        return self._datasets["initialized"]
+        return self._datasets["initialized"]  # type: ignore
 
     def get_uninitialized(self) -> xr.Dataset:
         """Return the :py:class:`xarray.Dataset` for the uninitialized ensemble."""
-        return self._datasets["uninitialized"]
+        return self._datasets["uninitialized"]  # type: ignore
 
     def smooth(
         self,
@@ -1348,7 +1355,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def get_control(self) -> xr.Dataset:
         """Return the control as an :py:class:`xarray.Dataset`."""
-        return self._datasets["control"]
+        return self._datasets["control"]  # type: ignore
 
     def verify(
         self,
@@ -1957,7 +1964,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Returns:
             observations
         """
-        return self._datasets["observations"]
+        return self._datasets["observations"]  # type: ignore
 
     def generate_uninitialized(
         self, resample_dim: List[str] = ["init", "member"]

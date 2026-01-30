@@ -110,10 +110,14 @@ def assign_attrs(
         skill.attrs["dim"] = dim
     if reference is not None:
         skill.attrs["reference"] = reference
-    if "persistence" in reference and "PerfectModelEnsemble" in function_name:
-        skill.attrs["PerfectModel_persistence_from_initialized_lead_0"] = OPTIONS[
-            "PerfectModel_persistence_from_initialized_lead_0"
-        ]
+        if (
+            "persistence" in reference
+            and function_name
+            and "PerfectModelEnsemble" in function_name
+        ):
+            skill.attrs["PerfectModel_persistence_from_initialized_lead_0"] = OPTIONS[
+                "PerfectModel_persistence_from_initialized_lead_0"
+            ]
 
     # change unit power in all variables
     if metric.unit_power == 0:

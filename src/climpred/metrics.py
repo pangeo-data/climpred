@@ -38,6 +38,7 @@ from .constants import CLIMPRED_DIMS
 
 dimType = Optional[Union[str, List[str]]]
 metric_kwargsType = Any
+metricReturnType = Union[xr.Dataset, xr.DataArray]
 
 
 def _get_norm_factor(comparison: Any) -> int:  # Comparison instead of Any
@@ -293,7 +294,7 @@ def _pearson_r(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Pearson product-moment correlation coefficient.
 
     A measure of the linear association between the forecast and verification data that
@@ -383,7 +384,7 @@ def _pearson_r_p_value(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """Probability that forecast and verification data are linearly uncorrelated.
 
     Two-tailed p value associated with the Pearson product-moment correlation
@@ -466,7 +467,7 @@ def _effective_sample_size(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Effective sample size for temporally correlated data.
 
     .. note::
@@ -560,7 +561,7 @@ def _pearson_r_eff_p_value(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""pearson_r_p_value accounting for autocorrelation.
 
     .. note::
@@ -668,7 +669,7 @@ def _spearman_r(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Spearman's rank correlation coefficient.
 
     .. math::
@@ -761,7 +762,7 @@ def _spearman_r_p_value(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Probability that forecast and verification data are monotonically uncorrelated.
 
     Two-tailed p value associated with the Spearman's rank correlation
@@ -844,7 +845,7 @@ def _spearman_r_eff_p_value(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""_spearman_r_p_value accounting for autocorrelation.
 
     .. note::
@@ -955,7 +956,7 @@ def _mse(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Mean Sqaure Error (MSE).
 
     .. math::
@@ -1034,7 +1035,7 @@ def _me(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Mean Error (ME).
 
     .. math::
@@ -1106,7 +1107,7 @@ def _spread(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Ensemble spread taking the standard deviation over the member dimension.
 
     .. math::
@@ -1176,7 +1177,7 @@ def _rmse(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Root Mean Sqaure Error (RMSE).
 
     .. math::
@@ -1248,7 +1249,7 @@ def _mae(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Mean Absolute Error (MAE).
 
     .. math::
@@ -1324,7 +1325,7 @@ def _median_absolute_error(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """Median Absolute Error.
 
     .. math::
@@ -1402,7 +1403,7 @@ def _nmse(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Compte Normalized MSE (NMSE), also known as Normalized Ensemble Variance (NEV).
 
     Mean Square Error (``mse``) normalized by the variance of the verification data.
@@ -1504,7 +1505,7 @@ def _nmae(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Compute Normalized Mean Absolute Error (NMAE).
 
     Mean Absolute Error (``mae``) normalized by the standard deviation of the
@@ -1607,7 +1608,7 @@ def _nrmse(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Compute Normalized Root Mean Square Error (NRMSE).
 
     Root Mean Square Error (``rmse``) normalized by the standard deviation of the
@@ -1713,7 +1714,7 @@ def _msess(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Mean Squared Error Skill Score (MSESS).
 
     .. math::
@@ -1821,7 +1822,7 @@ def _mape(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Mean Absolute Percentage Error (MAPE).
 
     Mean absolute error (``mae``) expressed as the fractional error relative to the
@@ -1893,7 +1894,7 @@ def _smape(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Symmetric Mean Absolute Percentage Error (sMAPE).
 
     Similar to the Mean Absolute Percentage Error (``mape``), but sums the forecast and
@@ -1965,7 +1966,7 @@ def _uacc(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Bushuk's unbiased Anomaly Correlation Coefficient (uACC).
 
     This is typically used in perfect model studies. Because the perfect model Anomaly
@@ -2067,7 +2068,7 @@ def _std_ratio(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Ratio of standard deviations of the forecast over the verification data.
 
     .. math:: \text{std ratio} = \frac{\sigma_f}{\sigma_o},
@@ -2141,7 +2142,7 @@ def _unconditional_bias(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Unconditional additive bias.
 
     .. math::
@@ -2243,7 +2244,7 @@ def _mul_bias(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""
     Multiplicative bias.
 
@@ -2314,7 +2315,7 @@ def _conditional_bias(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Conditional bias between forecast and verification data.
 
     .. math::
@@ -2392,7 +2393,7 @@ def _bias_slope(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Bias slope between verification data and forecast standard deviations.
 
     .. math::
@@ -2472,7 +2473,7 @@ def _msess_murphy(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Murphy's Mean Square Error Skill Score (MSESS).
 
     .. math::
@@ -2570,7 +2571,7 @@ def _brier_score(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """Brier Score for binary events.
 
     The Mean Square Error (``mse``) of probabilistic two-category forecasts where the
@@ -2746,7 +2747,7 @@ def _threshold_brier_score(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Brier score of an ensemble for exceeding given thresholds.
 
     .. math::
@@ -2873,7 +2874,7 @@ def _crps(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Continuous Ranked Probability Score (CRPS).
 
     The CRPS can also be considered as the probabilistic Mean Absolute Error (``mae``).
@@ -2968,7 +2969,7 @@ def _crps_quadrature(
     cdf_or_dist: Callable,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """Compute the continuously ranked probability score (CPRS).
 
     For a given
@@ -2997,7 +2998,7 @@ def _crpss(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Continuous Ranked Probability Skill Score.
 
     This can be used to assess whether the ensemble spread is a useful measure for the
@@ -3091,7 +3092,10 @@ def _crpss(
     """
     if dim is None:
         dim = list(verif.dims)
-    if isinstance(dim, str):
+    elif isinstance(dim, str):
+        dim = [dim]
+    # At this point dim should be a list
+    if not isinstance(dim, list):
         dim = list(dim)
     # available climpred dimensions to take mean and std over
     rdim = [tdim for tdim in verif.dims if tdim in CLIMPRED_DIMS]
@@ -3142,7 +3146,7 @@ def _crpss_es(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Continuous Ranked Probability Skill Score Ensemble Spread.
 
     If the ensemble variance is smaller than the observed ``mse``, the ensemble is
@@ -3206,12 +3210,16 @@ def _crpss_es(
 
     """
     if dim is None:
-        dim = verif.dims
+        dim_list = verif.dims
+    elif isinstance(dim, str):
+        dim_list = [dim]
+    else:
+        dim_list = dim
     # helper dim to calc mu
     rdim = [d for d in verif.dims if d in CLIMPRED_DIMS]
     mu = verif.mean(rdim)
     # forecast, verif_member = xr.broadcast(forecast, verif)
-    dim_no_member = [d for d in dim if d != "member"]
+    dim_no_member = [d for d in dim_list if d != "member"]
     ensemble_spread = forecast.std("member").mean(dim=dim_no_member, **metric_kwargs)
     if forecast.member.size == 1:
         warnings.warn(
@@ -3248,7 +3256,7 @@ def _discrimination(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """
     Discrimination.
 
@@ -3412,7 +3420,7 @@ def _reliability(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """
     Reliability.
 
@@ -3574,7 +3582,7 @@ def _rank_histogram(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """Rank histogram or Talagrand diagram.
 
     Args:
@@ -3665,7 +3673,7 @@ def _rps(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""Ranked Probability Score.
 
     .. math::
@@ -3967,7 +3975,7 @@ def _roc(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     """Receiver Operating Characteristic.
 
     Args:
@@ -4097,7 +4105,7 @@ def _less(
     verif: xr.Dataset,
     dim: dimType = None,
     **metric_kwargs: metric_kwargsType,
-) -> xr.Dataset:
+) -> metricReturnType:
     r"""
     Logarithmic Ensemble Spread Score.
 

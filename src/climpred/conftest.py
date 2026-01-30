@@ -1,9 +1,6 @@
-import warnings
-
 import numpy as np
 import pytest
 import xarray as xr
-from packaging.version import Version
 
 import climpred
 from climpred import HindcastEnsemble, PerfectModelEnsemble
@@ -144,20 +141,20 @@ def _observations_ds_1d():
 
 @pytest.fixture()
 def PM_ds3v_initialized_1d(_PM_ds3v_initialized_1d):
-    """MPI Perfect-model-framework initialized timeseries xr.Dataset with three
+    """MPI-ESM Perfect-model-framework initialized timeseries xr.Dataset with three
     variables."""
     return _PM_ds3v_initialized_1d.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds_initialized_1d(_PM_ds_initialized_1d):
-    """MPI Perfect-model-framework initialized timeseries xr.Dataset."""
+    """MPI-ESM Perfect-model-framework initialized timeseries xr.Dataset."""
     return _PM_ds_initialized_1d.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds_initialized_1d_lead0(PM_ds_initialized_1d):
-    """MPI Perfect-model-framework initialized timeseries in lead-0
+    """MPI-ESM Perfect-model-framework initialized timeseries in lead-0
     framework."""
     ds = PM_ds_initialized_1d
     # Convert to lead zero for testing
@@ -168,39 +165,39 @@ def PM_ds_initialized_1d_lead0(PM_ds_initialized_1d):
 
 @pytest.fixture()
 def PM_ds_initialized_3d_full(_PM_ds_initialized_3d_full):
-    """MPI Perfect-model-framework initialized global maps xr.Dataset."""
+    """MPI-ESM Perfect-model-framework initialized global maps xr.Dataset."""
     return _PM_ds_initialized_3d_full.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds_initialized_3d(_PM_ds_initialized_3d):
-    """MPI Perfect-model-framework initialized maps xr.Dataset of subselected North
+    """MPI-ESM Perfect-model-framework initialized maps xr.Dataset of subselected North
     Atlantic."""
     return _PM_ds_initialized_3d.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds3v_control_1d(_PM_ds3v_control_1d):
-    """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset with
+    """To MPI-ESM Perfect-model-framework corresponding control timeseries xr.Dataset with
     three variables."""
     return _PM_ds3v_control_1d.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds_control_1d(_PM_ds_control_1d):
-    """To MPI Perfect-model-framework corresponding control timeseries xr.Dataset."""
+    """MPI-ESM Perfect-model-framework corresponding control timeseries xr.Dataset."""
     return _PM_ds_control_1d.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds_control_3d_full(_PM_ds_control_3d_full):
-    """To MPI Perfect-model-framework corresponding control global maps xr.Dataset."""
+    """MPI-ESM Perfect-model-framework corresponding control global maps xr.Dataset."""
     return _PM_ds_control_3d_full.copy(deep=True)
 
 
 @pytest.fixture()
 def PM_ds_control_3d(_PM_ds_control_3d):
-    """To MPI Perfect-model-framework corresponding control maps xr.Dataset of
+    """MPI-ESM Perfect-model-framework corresponding control maps xr.Dataset of
     subselected North Atlantic."""
     return _PM_ds_control_3d.copy(deep=True)
 
@@ -413,12 +410,6 @@ def hindcast_S2S_Germany():
 def hindcast_NMME_Nino34():
     """NMME hindcasts with monthly leads and monthly inits and related IOv2
     observations for SST of the Nino34 region."""
-    if Version(np.__version__) >= Version("2.0.0") and Version(
-        xr.__version__
-    ) <= Version("2024.6.0"):
-        warnings.warn("Skipping test due to incompatible numpy and xarray versions.")
-        pytest.skip("Changes in numpy>=2.0.0 break xarray<=2024.6.0.")
-
     init = load_dataset("NMME_hindcast_Nino34_sst")
     obs = load_dataset("NMME_OIv2_Nino34_sst")
     init["sst"].attrs["units"] = "C"

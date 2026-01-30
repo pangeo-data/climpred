@@ -178,7 +178,7 @@ Preparing Pull Requests
    Check that `doctests <https://docs.pytest.org/en/stable/doctest.html>`_ are
    passing::
 
-    $ pytest --doctest-modules climpred --ignore climpred/tests
+    $ pytest --doctest-modules src/climpred/classes.py --ignore src/climpred/tests
 
    Check that your contribution is covered by tests and therefore increases
    the overall test coverage::

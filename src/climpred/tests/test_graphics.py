@@ -11,6 +11,15 @@ from . import requires_matplotlib, requires_nc_time_axis
 ITERATIONS = 300
 
 
+@pytest.fixture(autouse=True)
+def cleanup_matplotlib_figures():
+    """Automatically clean up matplotlib figures after each test."""
+    yield
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
+
+
 @requires_matplotlib
 def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
     perfectModelEnsemble_initialized_control,

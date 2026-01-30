@@ -8,14 +8,14 @@ from climpred import HindcastEnsemble
 @pytest.mark.parametrize(
     "init_freq,lead_unit",
     [
-        ("AS-JUL", "years"),
-        ("AS-JUL", "months"),
-        ("AS-JUL", "seasons"),
+        ("YS-JUL", "years"),
+        ("YS-JUL", "months"),
+        ("YS-JUL", "seasons"),
         ("MS", "months"),
-        ("3M", "days"),
+        ("3ME", "days"),
         ("7D", "days"),
         ("1D", "hours"),
-        ("1H", "seconds"),
+        ("1h", "seconds"),
     ],
 )
 @pytest.mark.parametrize("calendar", ["ProlepticGregorian", "standard", "360_day"])
@@ -26,7 +26,7 @@ def test_hindcastEnsemble_init_time(init_freq, lead_unit, calendar):
     nlead = 2
     lead = [0, 1]
 
-    init = xr.cftime_range(start="2000", freq=init_freq, periods=p)
+    init = xr.date_range(start="2000", freq=init_freq, periods=p, use_cftime=True)
     data = np.random.rand(p, nlead)
     init = xr.DataArray(
         data,
@@ -94,7 +94,7 @@ def test_valid_time_from_larger_than_monthly_init_longer_freq_lead(
     start, freq, units, expected_shift
 ):
     """Raised in https://github.com/pangeo-data/climpred/issues/698"""
-    init = xr.cftime_range(start=start, end="2002-01-01", freq=freq)
+    init = xr.date_range(start=start, end="2002-01-01", freq=freq, use_cftime=True)
     print("init", init)
 
     lead = range(0, 5)

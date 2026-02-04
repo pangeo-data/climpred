@@ -180,7 +180,7 @@ def load_dataset(
         # This will always leave this directory on disk.
         # May want to add an option to remove it.
         if not _os.path.isdir(longdir):
-            _os.mkdir(longdir)
+            _os.mkdirs(longdir)
 
         if extension is not None:
             url = "/".join((github_url, "raw", branch, extension, fullname))

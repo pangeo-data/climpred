@@ -7,9 +7,10 @@ from typing import Dict, Optional
 from urllib.request import urlretrieve as _urlretrieve
 
 import xarray as xr
+from pooch import os_cache
 from xarray.backends.api import open_dataset as _open_dataset
 
-_default_cache_dir: str = _os.sep.join(("~", ".climpred_data"))
+_default_cache_dir = os_cache("climpred-data")
 
 aliases = [
     "MPI-control-1D",

@@ -42,7 +42,11 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
 
 
 @requires_matplotlib
-@pytest.mark.xfail(platform == "win32" and bool(getenv("CI")), reason="TCL errors are random on CI", strict=False)
+@pytest.mark.xfail(
+    platform == "win32" and bool(getenv("CI")),
+    reason="TCL errors are random on CI",
+    strict=False,
+)
 @pytest.mark.parametrize("cmap", ["tab10", "jet"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["tos", None])

@@ -67,7 +67,7 @@ jobs:
           pytest -n auto --durations=20
 
   minimum-test-conda:  # Runs testing suite with minimal dependencies
-    name: Test minimum dependencies (Python${{ matrix.python-version }}, conda)
+    name: Test minimum dependencies (Python${{ matrix.python-version }} ubuntu, conda)
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: needs.detect-ci-trigger.outputs.triggered == 'false'
@@ -169,7 +169,7 @@ jobs:
         uses: codecov/codecov-action@671740ac38dd9b0130fbe1cec585b89eea48d3de  # v5.5.2
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
-          file: ./coverage.xml
+          files: ./coverage.xml
           fail_ci_if_error: false
 
   doctest:  # tests all docstrings

@@ -1,8 +1,8 @@
 """Implement climpred.tutorial.load_dataset to load analysis ready datasets."""
 
 import hashlib
-from pathlib import Path
 import urllib.request
+from pathlib import Path
 from typing import Dict, Optional
 from urllib.request import urlretrieve as _urlretrieve
 
@@ -163,7 +163,7 @@ def load_dataset(
     # https://stackoverflow.com/questions/541390/extracting-extension-from-
     # filename-in-python
     # Allows for generalized file extensions.
-    name, ext = Path(name).stem, Path(name).suffix 
+    name, ext = Path(name).stem, Path(name).suffix
     if not ext.endswith(".nc"):
         ext += ".nc"
 

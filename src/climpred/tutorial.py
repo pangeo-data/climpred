@@ -1,15 +1,16 @@
 """Implement climpred.tutorial.load_dataset to load analysis ready datasets."""
 
 import hashlib
-import os as _os
 import urllib.request
+from pathlib import Path
 from typing import Dict, Optional
 from urllib.request import urlretrieve as _urlretrieve
 
 import xarray as xr
+from pooch import os_cache
 from xarray.backends.api import open_dataset as _open_dataset
 
-_default_cache_dir: str = _os.sep.join(("~", ".climpred_data"))
+_default_cache_dir = os_cache("climpred-data")
 
 aliases = [
     "MPI-control-1D",
@@ -162,24 +163,24 @@ def load_dataset(
     # https://stackoverflow.com/questions/541390/extracting-extension-from-
     # filename-in-python
     # Allows for generalized file extensions.
-    name, ext = _os.path.splitext(name)
+    name, ext = Path(name).stem, Path(name).suffix
     if not ext.endswith(".nc"):
         ext += ".nc"
 
     # use aliases
     if name in FILE_ALIAS_DICT.keys():
         name = FILE_ALIAS_DICT[name]
-    longdir = _os.path.expanduser(cache_dir)
+    longdir = Path(cache_dir).expanduser()
     fullname = name + ext
-    localfile = _os.sep.join((longdir, fullname))
+    localfile = Path(longdir, fullname)
     md5name = name + ".md5"
-    md5file = _os.sep.join((longdir, md5name))
+    md5file = Path(longdir, md5name)
 
-    if not _os.path.exists(localfile):
+    if not Path(localfile).exists():
         # This will always leave this directory on disk.
         # May want to add an option to remove it.
-        if not _os.path.isdir(longdir):
-            _os.mkdir(longdir)
+        if not Path(longdir).is_dir():
+            Path(longdir).mkdir(parents=True, exist_ok=True)
 
         if extension is not None:
             url = "/".join((github_url, "raw", branch, extension, fullname))
@@ -196,7 +197,7 @@ def load_dataset(
         with open(md5file, "r") as f:
             remotemd5 = f.read()
         if localmd5 != remotemd5:
-            _os.remove(localfile)
+            Path(localfile).unlink(missing_ok=True)
             msg = """
             Try downloading the file again. There was a confliction between
             your local .md5 file compared to the one in the remote repository,
@@ -210,5 +211,5 @@ def load_dataset(
 
     if not cache:
         ds = ds.load()
-        _os.remove(localfile)
+        Path(localfile).unlink()
     return ds

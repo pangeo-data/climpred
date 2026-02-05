@@ -30,10 +30,11 @@ Internals/Minor Fixes
 - Dependency updates to better synchronize `conda` and `pip` installation environments. (:pr:`870`) `Trevor James Smith`_
 - Climatology reference forecast of ``pearson_r`` metric isn't tested to be non-`NaN` anymore. (:pr:`884`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.remove_bias` keeps attrs with `xarray>=2025.11`. (:issue:`885`, :pr:`886`) `Aaron Spring`_
-- `pytest-lazy-fixture` (abandoned) has been replaced by `pytest-lazy-fixtures` (maintained fork).
-- GitHub Workflows have been adjusted to test against Python 3.13, as well as test `pip`-based environments. `Trevor James Smith`_
-- Replaced all `assert` statements found outside of the testing code with appropriate exceptions to be handled. `Trevor James Smith`_
-- Use `ty` instead of `mypy` (:issue:`888`, :pr:`896`) `Aaron Spring`_
+- `pytest-lazy-fixture` (abandoned) has been replaced by `pytest-lazy-fixtures` (maintained fork). (:pr:`870`) `Trevor James Smith`_
+- GitHub Workflows have been adjusted to test against Python 3.13, as well as test `pip`-based environments. (:pr:`870`) `Trevor James Smith`_
+- Replaced all `assert` statements found outside of the testing code with appropriate exceptions to be handled. (:pr:`870`) `Trevor James Smith`_
+- Use `ty` instead of `mypy`. (:issue:`888`, :pr:`896`) `Aaron Spring`_
+- `climpred` is now tested against macOS and Windows platforms on GitHub Workflows. (:pr:`902`) `Trevor James Smith`_
 
 climpred v2.5.0 (2024-07-05)
 ============================

@@ -8,7 +8,8 @@ from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.classes import PredictionEnsemble
 from climpred.constants import CF_LONG_NAMES, CF_STANDARD_NAMES, CLIMPRED_DIMS
 from climpred.exceptions import VariableError
-from climpred.testing import assert_PredictionEnsemble, check_dataset_dims_and_data_vars
+from climpred.testing import (assert_PredictionEnsemble,
+                              check_dataset_dims_and_data_vars)
 
 xr.set_options(display_style="text")
 

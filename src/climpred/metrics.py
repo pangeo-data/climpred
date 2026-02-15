@@ -6,33 +6,14 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
 from scipy.stats import norm
-from xskillscore import (
-    Contingency,
-    brier_score,
-    crps_ensemble,
-    crps_gaussian,
-    crps_quadrature,
-    discrimination,
-    effective_sample_size,
-    mae,
-    mape,
-    me,
-    median_absolute_error,
-    mse,
-    pearson_r,
-    pearson_r_eff_p_value,
-    pearson_r_p_value,
-    rank_histogram,
-    reliability,
-    rmse,
-    roc,
-    rps,
-    smape,
-    spearman_r,
-    spearman_r_eff_p_value,
-    spearman_r_p_value,
-    threshold_brier_score,
-)
+from xskillscore import (Contingency, brier_score, crps_ensemble,
+                         crps_gaussian, crps_quadrature, discrimination,
+                         effective_sample_size, mae, mape, me,
+                         median_absolute_error, mse, pearson_r,
+                         pearson_r_eff_p_value, pearson_r_p_value,
+                         rank_histogram, reliability, rmse, roc, rps, smape,
+                         spearman_r, spearman_r_eff_p_value,
+                         spearman_r_p_value, threshold_brier_score)
 
 from .constants import CLIMPRED_DIMS
 

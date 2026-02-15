@@ -3,10 +3,8 @@
 import pytest
 
 from climpred.graphics import plot_relative_entropy
-from climpred.relative_entropy import (
-    bootstrap_relative_entropy,
-    compute_relative_entropy,
-)
+from climpred.relative_entropy import (bootstrap_relative_entropy,
+                                       compute_relative_entropy)
 
 from . import requires_eofs
 

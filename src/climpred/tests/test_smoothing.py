@@ -4,12 +4,8 @@ import xarray as xr
 from pytest_lazy_fixtures import lf as lazy_fixture
 
 from climpred.prediction import compute_perfect_model
-from climpred.smoothing import (
-    _reset_temporal_axis,
-    _set_center_coord,
-    smooth_goddard_2013,
-    temporal_smoothing,
-)
+from climpred.smoothing import (_reset_temporal_axis, _set_center_coord,
+                                smooth_goddard_2013, temporal_smoothing)
 from climpred.testing import assert_PredictionEnsemble
 
 try:

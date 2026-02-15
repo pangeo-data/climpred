@@ -6,13 +6,8 @@ from typing import List, Optional, Union
 import dask
 import xarray as xr
 
-from .constants import (
-    CF_LONG_NAMES,
-    CF_STANDARD_NAMES,
-    VALID_ALIGNMENTS,
-    VALID_LEAD_UNITS,
-    VALID_REFERENCES,
-)
+from .constants import (CF_LONG_NAMES, CF_STANDARD_NAMES, VALID_ALIGNMENTS,
+                        VALID_LEAD_UNITS, VALID_REFERENCES)
 from .exceptions import DatasetError, DimensionError, VariableError
 from .options import OPTIONS
 

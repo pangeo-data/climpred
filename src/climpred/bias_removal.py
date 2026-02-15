@@ -8,12 +8,8 @@ import xarray as xr
 from .constants import GROUPBY_SEASONALITIES
 from .metrics import Metric
 from .options import OPTIONS
-from .utils import (
-    convert_cftime_to_datetime_coords,
-    convert_time_index,
-    get_lead_cftime_shift_args,
-    shift_cftime_singular,
-)
+from .utils import (convert_cftime_to_datetime_coords, convert_time_index,
+                    get_lead_cftime_shift_args, shift_cftime_singular)
 
 try:
     from bias_correction import XBiasCorrection

@@ -8,30 +8,15 @@ import xarray as xr
 
 from .alignment import return_inits_and_verif_dates
 from .checks import has_valid_lead_units
-from .comparisons import (
-    ALL_COMPARISONS,
-    COMPARISON_ALIASES,
-    HINDCAST_COMPARISONS,
-    Comparison,
-    __e2c,
-)
+from .comparisons import (ALL_COMPARISONS, COMPARISON_ALIASES,
+                          HINDCAST_COMPARISONS, Comparison, __e2c)
 from .constants import M2M_MEMBER_DIM
-from .metrics import (
-    ALL_METRICS,
-    DETERMINISTIC_HINDCAST_METRICS,
-    METRIC_ALIASES,
-    Metric,
-    _rename_dim,
-)
+from .metrics import (ALL_METRICS, DETERMINISTIC_HINDCAST_METRICS,
+                      METRIC_ALIASES, Metric, _rename_dim)
 from .options import OPTIONS
-from .utils import (
-    convert_cftime_to_datetime_coords,
-    convert_time_index,
-    get_comparison_class,
-    get_lead_cftime_shift_args,
-    get_metric_class,
-    shift_cftime_index,
-)
+from .utils import (convert_cftime_to_datetime_coords, convert_time_index,
+                    get_comparison_class, get_lead_cftime_shift_args,
+                    get_metric_class, shift_cftime_index)
 
 metricType = Union[str, Metric]
 comparisonType = Union[str, Comparison]

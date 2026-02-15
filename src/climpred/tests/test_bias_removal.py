@@ -7,12 +7,10 @@ import pytest
 import xarray as xr
 
 from climpred import set_options
-from climpred.constants import (
-    BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
-    GROUPBY_SEASONALITIES,
-    INTERNAL_BIAS_CORRECTION_METHODS,
-    XCLIM_BIAS_CORRECTION_METHODS,
-)
+from climpred.constants import (BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
+                                GROUPBY_SEASONALITIES,
+                                INTERNAL_BIAS_CORRECTION_METHODS,
+                                XCLIM_BIAS_CORRECTION_METHODS)
 from climpred.options import OPTIONS
 
 from . import requires_bias_correction, requires_xclim

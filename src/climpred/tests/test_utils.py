@@ -10,19 +10,14 @@ from xarray.testing import assert_allclose
 
 from climpred.comparisons import PM_COMPARISONS, __m2c
 from climpred.metrics import DETERMINISTIC_PM_METRICS, __pearson_r
-from climpred.utils import (
-    convert_init_lead_to_valid_time_lead,
-    convert_time_index,
-    convert_valid_time_lead_to_init_lead,
-    find_start_dates_for_given_init,
-    get_comparison_class,
-    get_metric_class,
-    intersect,
-    lead_units_equal_control_time_stride,
-    return_time_series_freq,
-    shift_cftime_index,
-    shift_cftime_singular,
-)
+from climpred.utils import (convert_init_lead_to_valid_time_lead,
+                            convert_time_index,
+                            convert_valid_time_lead_to_init_lead,
+                            find_start_dates_for_given_init,
+                            get_comparison_class, get_metric_class, intersect,
+                            lead_units_equal_control_time_stride,
+                            return_time_series_freq, shift_cftime_index,
+                            shift_cftime_singular)
 
 
 def test_get_metric_class():

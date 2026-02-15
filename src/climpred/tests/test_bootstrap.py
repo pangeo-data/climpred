@@ -5,18 +5,15 @@ import numpy as np
 import pytest
 import xarray as xr
 from pytest_lazy_fixtures import lf as lazy_fixture
-from xskillscore.core.resampling import (
-    resample_iterations as _resample_iterations,
-    resample_iterations_idx as _resample_iterations_idx,
-)
+from xskillscore.core.resampling import \
+    resample_iterations as _resample_iterations
+from xskillscore.core.resampling import \
+    resample_iterations_idx as _resample_iterations_idx
 
 from climpred import HindcastEnsemble
 from climpred.bootstrap import (
-    _bootstrap_by_stacking,
-    _chunk_before_resample_iterations_idx,
-    _resample,
-    bootstrap_uninit_pm_ensemble_from_control_cftime,
-)
+    _bootstrap_by_stacking, _chunk_before_resample_iterations_idx, _resample,
+    bootstrap_uninit_pm_ensemble_from_control_cftime)
 from climpred.constants import CONCAT_KWARGS
 from climpred.exceptions import KeywordError
 from climpred.utils import _transpose_and_rechunk_to

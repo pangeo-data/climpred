@@ -4,7 +4,8 @@ import xarray as xr
 from xarray.testing import assert_allclose
 
 from climpred.comparisons import PM_COMPARISONS
-from climpred.metrics import __ALL_METRICS__ as all_metrics, Metric, __pearson_r
+from climpred.metrics import __ALL_METRICS__ as all_metrics
+from climpred.metrics import Metric, __pearson_r
 from climpred.stats import rm_poly
 
 

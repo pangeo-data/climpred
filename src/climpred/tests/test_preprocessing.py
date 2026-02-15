@@ -5,12 +5,10 @@ import pytest
 import xarray as xr
 
 from climpred.constants import CLIMPRED_ENSEMBLE_DIMS
-from climpred.preprocessing.shared import (
-    load_hindcast,
-    rename_SLM_to_climpred_dims,
-    rename_to_climpred_dims,
-    set_integer_time_axis,
-)
+from climpred.preprocessing.shared import (load_hindcast,
+                                           rename_SLM_to_climpred_dims,
+                                           rename_to_climpred_dims,
+                                           set_integer_time_axis)
 
 on_mistral = False
 try:

@@ -4,7 +4,8 @@ import xarray as xr
 
 from climpred import PerfectModelEnsemble
 from climpred.exceptions import DatasetError
-from climpred.metrics import DETERMINISTIC_PM_METRICS, PEARSON_R_CONTAINING_METRICS
+from climpred.metrics import (DETERMINISTIC_PM_METRICS,
+                              PEARSON_R_CONTAINING_METRICS)
 
 xr.set_options(display_style="text")
 

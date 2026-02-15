@@ -5,30 +5,18 @@ from typing import List, Optional, Set, Tuple, Union
 from dask import is_dask_collection
 
 from .checks import is_in_list
-from .comparisons import (
-    COMPARISON_ALIASES,
-    HINDCAST_COMPARISONS,
-    PM_COMPARISONS,
-    PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_PM_COMPARISONS,
-)
+from .comparisons import (COMPARISON_ALIASES, HINDCAST_COMPARISONS,
+                          PM_COMPARISONS, PROBABILISTIC_HINDCAST_COMPARISONS,
+                          PROBABILISTIC_PM_COMPARISONS)
 from .constants import M2M_MEMBER_DIM, PM_CALENDAR_STR
 from .exceptions import DimensionError
 from .logging import log_hindcast_verify_inits_and_verifs
 from .metrics import HINDCAST_METRICS, METRIC_ALIASES, PM_METRICS
-from .reference import (
-    _adapt_member_for_reference_forecast,
-    climatology,
-    persistence,
-    uninitialized,
-)
-from .utils import (
-    convert_time_index,
-    get_comparison_class,
-    get_lead_cftime_shift_args,
-    get_metric_class,
-    shift_cftime_singular,
-)
+from .reference import (_adapt_member_for_reference_forecast, climatology,
+                        persistence, uninitialized)
+from .utils import (convert_time_index, get_comparison_class,
+                    get_lead_cftime_shift_args, get_metric_class,
+                    shift_cftime_singular)
 
 
 def _apply_metric_at_given_lead(

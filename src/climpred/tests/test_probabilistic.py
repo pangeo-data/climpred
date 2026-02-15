@@ -2,11 +2,9 @@ import numpy as np
 import pytest
 import xarray as xr
 
-from climpred.comparisons import (
-    NON_PROBABILISTIC_PM_COMPARISONS,
-    PROBABILISTIC_HINDCAST_COMPARISONS,
-    PROBABILISTIC_PM_COMPARISONS,
-)
+from climpred.comparisons import (NON_PROBABILISTIC_PM_COMPARISONS,
+                                  PROBABILISTIC_HINDCAST_COMPARISONS,
+                                  PROBABILISTIC_PM_COMPARISONS)
 from climpred.metrics import PROBABILISTIC_METRICS
 from climpred.prediction import compute_perfect_model
 

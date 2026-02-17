@@ -100,6 +100,7 @@ jobs:
       - name: Install xskillscore from PR
         run: |
           python -m pip install "git+https://github.com/xarray-contrib/xskillscore@aaronspring-patch-2"
+          pip show xskillscore
       - name: Micromamba info
         run: |
           micromamba info
@@ -206,6 +207,7 @@ jobs:
       - name: Install xskillscore from PR
         run: |
           python -m pip install "git+https://github.com/xarray-contrib/xskillscore@aaronspring-patch-2"
+          pip show xskillscore
       - name: Micromamba info
         run: |
           micromamba info
@@ -241,6 +243,7 @@ jobs:
       - name: Install xskillscore from PR
         run: |
           python -m pip install "git+https://github.com/xarray-contrib/xskillscore@aaronspring-patch-2"
+          pip show xskillscore
       - name: Micromamba info
         run: |
           micromamba info

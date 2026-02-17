@@ -1434,7 +1434,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             also calculating reference skill for the ``persistence``, ``climatology``
             and ``uninitialized`` forecast.
 
-            >>> PerfectModelEnsemble.verify(  # doctest: +ELLIPSIS
+            >>> PerfectModelEnsemble.verify(
             ...     metric="crps",
             ...     comparison="m2m",
             ...     dim=["init", "member"],
@@ -1787,7 +1787,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
             >>> import numpy as np
             >>> np.random.seed(42)
-            >>> PerfectModelEnsemble.bootstrap(  # doctest: +ELLIPSIS
+            >>> PerfectModelEnsemble.bootstrap(
             ...     metric="crps",
             ...     comparison="m2m",
             ...     dim=["init", "member"],

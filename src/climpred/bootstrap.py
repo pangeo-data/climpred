@@ -13,13 +13,16 @@ try:
     from tqdm.auto import tqdm
 except ImportError:
     tqdm = None
-from xskillscore.core.resampling import \
-    resample_iterations as _resample_iterations
-from xskillscore.core.resampling import \
-    resample_iterations_idx as _resample_iterations_idx
+from xskillscore.core.resampling import (
+    resample_iterations as _resample_iterations,
+    resample_iterations_idx as _resample_iterations_idx,
+)
 
-from .checks import (has_dims, has_valid_lead_units,
-                     warn_if_chunking_would_increase_performance)
+from .checks import (
+    has_dims,
+    has_valid_lead_units,
+    warn_if_chunking_would_increase_performance,
+)
 from .constants import CLIMPRED_DIMS, CONCAT_KWARGS
 from .options import OPTIONS
 from .stats import dpp
@@ -28,11 +31,14 @@ try:
     from .stats import varweighted_mean_period
 except ImportError:
     varweighted_mean_period = None
-from .utils import (_transpose_and_rechunk_to, find_start_dates_for_given_init,
-                    get_lead_cftime_shift_args,
-                    lead_units_equal_control_time_stride,
-                    rechunk_to_single_chunk_if_more_than_one_chunk_along_dim,
-                    shift_cftime_singular)
+from .utils import (
+    _transpose_and_rechunk_to,
+    find_start_dates_for_given_init,
+    get_lead_cftime_shift_args,
+    lead_units_equal_control_time_stride,
+    rechunk_to_single_chunk_if_more_than_one_chunk_along_dim,
+    shift_cftime_singular,
+)
 
 
 def _p_ci_from_sig(sig):

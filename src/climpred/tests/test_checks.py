@@ -2,9 +2,15 @@
 
 import pytest
 
-from climpred.checks import (has_dataset, has_dims, has_min_len,
-                             has_valid_lead_units, is_in_list,
-                             match_initialized_dims, match_initialized_vars)
+from climpred.checks import (
+    has_dataset,
+    has_dims,
+    has_min_len,
+    has_valid_lead_units,
+    is_in_list,
+    match_initialized_dims,
+    match_initialized_vars,
+)
 from climpred.constants import VALID_LEAD_UNITS
 from climpred.exceptions import DatasetError, DimensionError, VariableError
 

@@ -2,9 +2,11 @@ import pytest
 import xarray as xr
 from xarray.testing import assert_allclose
 
-from climpred.comparisons import (PM_COMPARISONS,
-                                  PROBABILISTIC_HINDCAST_COMPARISONS,
-                                  PROBABILISTIC_PM_COMPARISONS)
+from climpred.comparisons import (
+    PM_COMPARISONS,
+    PROBABILISTIC_HINDCAST_COMPARISONS,
+    PROBABILISTIC_PM_COMPARISONS,
+)
 from climpred.exceptions import DimensionError
 from climpred.metrics import PM_METRICS
 from climpred.utils import get_comparison_class, get_metric_class

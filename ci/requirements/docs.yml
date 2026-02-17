@@ -11,7 +11,7 @@ dependencies:
   - numpy >=2.0.0
   - pandas >=2.0
   - pooch >=1.8.0
-  - xarray >=2024.2.0
+  - xarray >=2024.5.0
   - xskillscore >=0.0.28
   # accel
   - bottleneck

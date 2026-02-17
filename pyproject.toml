@@ -105,6 +105,9 @@ skip = [
   "docs/source/conf.py"
 ]
 
+[tool.pyright]
+typeCheckingMode = "off"
+
 [tool.pytest.ini_options]
 python_files = ["test_*.py"]
 addopts = [

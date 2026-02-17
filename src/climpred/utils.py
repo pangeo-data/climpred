@@ -265,8 +265,8 @@ def convert_init_lead_to_valid_time_lead(
                 0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
                        nan]])
         Coordinates:
-          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
           * lead        (lead) int32 12B 1 2 3
+          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
             valid_time  (lead, init) object 264B 1991-01-01 00:00:00 ... 2003-01-01 0...
             skill       <U11 44B 'initialized'
         Attributes:
@@ -280,9 +280,9 @@ def convert_init_lead_to_valid_time_lead(
                [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
                 0.19931679, 0.00987793, 0.06375334, 0.07705835]])
         Coordinates:
-          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
           * lead        (lead) int32 12B 1 2 3
-            valid_time  (lead, init) object 264B 1991-01-01 00:00:00 ... 2003-01-01 0...
+          * valid_time  (valid_time) object 72B 1993-01-01 00:00:00 ... 2001-01-01 00...
+            init        (lead, valid_time) object 216B 1992-01-01 00:00:00 ... 1998-0...
             skill       <U11 44B 'initialized'
         Attributes:
             units:    C
@@ -333,8 +333,8 @@ def convert_valid_time_lead_to_init_lead(
                 0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
                        nan]])
         Coordinates:
-          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
           * lead        (lead) int32 12B 1 2 3
+          * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
             valid_time  (lead, init) object 264B 1991-01-01 00:00:00 ... 2003-01-01 0...
             skill       <U11 44B 'initialized'
         Attributes:

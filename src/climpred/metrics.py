@@ -3346,9 +3346,9 @@ def _discrimination(
         <xarray.Dataset> Size: 926B
         Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-          * event                 (event) bool 2B True False
           * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool 2B True False
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 44B 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 800B 0....

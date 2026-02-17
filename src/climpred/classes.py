@@ -2250,8 +2250,8 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 10kB
             Dimensions:     (lead: 10, init: 61)
             Coordinates:
-              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
               * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
                 valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
                 skill       <U11 44B 'initialized'
             Data variables:

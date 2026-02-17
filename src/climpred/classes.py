@@ -4,8 +4,19 @@ import importlib.util as _util
 import logging
 import warnings
 from copy import deepcopy
-from typing import (TYPE_CHECKING, Any, Callable, Dict, Hashable, Iterator,
-                    List, Mapping, Optional, Tuple, Union)
+from typing import (
+    TYPE_CHECKING,
+    Any,
+    Callable,
+    Dict,
+    Hashable,
+    Iterator,
+    List,
+    Mapping,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import cf_xarray  # noqa
 import numpy as np
@@ -19,38 +30,67 @@ from xarray.core.utils import Frozen
 
 from .alignment import return_inits_and_verif_dates
 from .bias_removal import bias_correction, gaussian_bias_removal, xclim_sdba
-from .bootstrap import (_distribution_to_ci, _p_ci_from_sig,
-                        _pvalue_from_distributions,
-                        bootstrap_uninit_pm_ensemble_from_control_cftime,
-                        resample_skill_exclude_resample_dim_from_dim,
-                        resample_skill_loop, resample_skill_resample_before,
-                        resample_uninitialized_from_initialized,
-                        warn_if_chunking_would_increase_performance)
-from .checks import (_check_valid_alignment, _check_valid_reference,
-                     attach_long_names, attach_standard_names, has_dataset,
-                     has_dims, has_valid_lead_units, match_calendars,
-                     match_initialized_dims, match_initialized_vars,
-                     rename_to_climpred_dims)
+from .bootstrap import (
+    _distribution_to_ci,
+    _p_ci_from_sig,
+    _pvalue_from_distributions,
+    bootstrap_uninit_pm_ensemble_from_control_cftime,
+    resample_skill_exclude_resample_dim_from_dim,
+    resample_skill_loop,
+    resample_skill_resample_before,
+    resample_uninitialized_from_initialized,
+    warn_if_chunking_would_increase_performance,
+)
+from .checks import (
+    _check_valid_alignment,
+    _check_valid_reference,
+    attach_long_names,
+    attach_standard_names,
+    has_dataset,
+    has_dims,
+    has_valid_lead_units,
+    match_calendars,
+    match_initialized_dims,
+    match_initialized_vars,
+    rename_to_climpred_dims,
+)
 from .comparisons import Comparison
-from .constants import (BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
-                        BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
-                        CLIMPRED_DIMS, CONCAT_KWARGS, CROSS_VALIDATE_METHODS,
-                        INTERNAL_BIAS_CORRECTION_METHODS,
-                        XCLIM_BIAS_CORRECTION_METHODS)
-from .exceptions import (CoordinateError, DimensionError, KeywordError,
-                         VariableError)
+from .constants import (
+    BIAS_CORRECTION_BIAS_CORRECTION_METHODS,
+    BIAS_CORRECTION_TRAIN_TEST_SPLIT_METHODS,
+    CLIMPRED_DIMS,
+    CONCAT_KWARGS,
+    CROSS_VALIDATE_METHODS,
+    INTERNAL_BIAS_CORRECTION_METHODS,
+    XCLIM_BIAS_CORRECTION_METHODS,
+)
+from .exceptions import CoordinateError, DimensionError, KeywordError, VariableError
 from .metrics import PEARSON_R_CONTAINING_METRICS, Metric
 from .options import OPTIONS, set_options
-from .prediction import (_apply_metric_at_given_lead,
-                         _get_metric_comparison_dim, _sanitize_to_list,
-                         compute_perfect_model)
-from .reference import (compute_climatology, compute_persistence,
-                        compute_persistence_from_first_lead)
-from .smoothing import (_reset_temporal_axis, smooth_goddard_2013,
-                        spatial_smoothing_xesmf, temporal_smoothing)
-from .utils import (add_time_from_init_lead, assign_attrs,
-                    broadcast_metric_kwargs_for_rps, convert_time_index,
-                    convert_Timedelta_to_lead_units)
+from .prediction import (
+    _apply_metric_at_given_lead,
+    _get_metric_comparison_dim,
+    _sanitize_to_list,
+    compute_perfect_model,
+)
+from .reference import (
+    compute_climatology,
+    compute_persistence,
+    compute_persistence_from_first_lead,
+)
+from .smoothing import (
+    _reset_temporal_axis,
+    smooth_goddard_2013,
+    spatial_smoothing_xesmf,
+    temporal_smoothing,
+)
+from .utils import (
+    add_time_from_init_lead,
+    assign_attrs,
+    broadcast_metric_kwargs_for_rps,
+    convert_time_index,
+    convert_Timedelta_to_lead_units,
+)
 
 metricType = Union[str, Metric]
 comparisonType = Union[str, Comparison]
@@ -430,8 +470,7 @@ class PredictionEnsemble:
             ax: plt.axes
 
         """
-        from .graphics import (plot_ensemble_perfect_model,
-                               plot_lead_timeseries_hindcast)
+        from .graphics import plot_ensemble_perfect_model, plot_lead_timeseries_hindcast
 
         if x == "time":
             x = "valid_time"
@@ -1390,7 +1429,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
             also calculating reference skill for the ``persistence``, ``climatology``
             and ``uninitialized`` forecast.
 
-            >>> PerfectModelEnsemble.verify(
+            >>> PerfectModelEnsemble.verify(  # doctest: +ELLIPSIS
             ...     metric="crps",
             ...     comparison="m2m",
             ...     dim=["init", "member"],
@@ -1399,10 +1438,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 1kB
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
-                tos      (skill, lead) float64 640B 0.0621 0.07352 0.08678 ... 0.122 0.1246
+                tos      (skill, lead) float64 640B 0.0621 0.07352 0.08678 ...
             Attributes:
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.v...
@@ -1743,7 +1782,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
             >>> import numpy as np
             >>> np.random.seed(42)
-            >>> PerfectModelEnsemble.bootstrap(
+            >>> PerfectModelEnsemble.bootstrap(  # doctest: +ELLIPSIS
             ...     metric="crps",
             ...     comparison="m2m",
             ...     dim=["init", "member"],
@@ -1754,11 +1793,11 @@ class PerfectModelEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 3kB
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
               * results  (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
-                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.117 0.09826
+                tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ...
             Attributes: (12/13)
                 prediction_skill_software:                         climpred https://climp...
                 skill_calculated_by_function:                      PerfectModelEnsemble.b...
@@ -2034,9 +2073,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]],
                   shape=(3, 10, 61))
             Coordinates:
-              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
-              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
               * alignment   (alignment) <U10 120B 'same_init' 'same_verif' 'maximize'
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
                 valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
             Attributes:
                 units:    days since 1960-01-01
@@ -2184,8 +2223,8 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 568B
             Dimensions:  (skill: 4, lead: 10)
             Coordinates:
-              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             Data variables:
                 SST      (skill, lead) float64 320B 0.08135 0.08254 0.086 ... 0.1012 0.1017
             Attributes:
@@ -2211,8 +2250,8 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 10kB
             Dimensions:     (lead: 10, init: 61)
             Coordinates:
-              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
               * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
                 valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
                 skill       <U11 44B 'initialized'
             Data variables:
@@ -2504,11 +2543,11 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 70kB
             Dimensions:     (skill: 4, results: 4, lead: 10, init: 51)
             Coordinates:
-              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-                valid_time  (lead, init) object 4kB 1956-01-01 00:00:00 ... 2015-01-01 00...
-                init        (init) object 408B 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
               * skill       (skill) <U13 208B 'initialized' ... 'uninitialized'
               * results     (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                init        (init) object 408B 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
+                valid_time  (lead, init) object 4kB 1956-01-01 00:00:00 ... 2015-01-01 00...
             Data variables:
                 SST         (skill, results, lead, init) float64 65kB 0.1202 ... 0.07578
             Attributes:

@@ -6,14 +6,33 @@ from typing import Any, Callable, Dict, List, Optional, Tuple, Union
 import numpy as np
 import xarray as xr
 from scipy.stats import norm
-from xskillscore import (Contingency, brier_score, crps_ensemble,
-                         crps_gaussian, crps_quadrature, discrimination,
-                         effective_sample_size, mae, mape, me,
-                         median_absolute_error, mse, pearson_r,
-                         pearson_r_eff_p_value, pearson_r_p_value,
-                         rank_histogram, reliability, rmse, roc, rps, smape,
-                         spearman_r, spearman_r_eff_p_value,
-                         spearman_r_p_value, threshold_brier_score)
+from xskillscore import (
+    Contingency,
+    brier_score,
+    crps_ensemble,
+    crps_gaussian,
+    crps_quadrature,
+    discrimination,
+    effective_sample_size,
+    mae,
+    mape,
+    me,
+    median_absolute_error,
+    mse,
+    pearson_r,
+    pearson_r_eff_p_value,
+    pearson_r_p_value,
+    rank_histogram,
+    reliability,
+    rmse,
+    roc,
+    rps,
+    smape,
+    spearman_r,
+    spearman_r_eff_p_value,
+    spearman_r_p_value,
+    threshold_brier_score,
+)
 
 from .constants import CLIMPRED_DIMS
 
@@ -2780,9 +2799,9 @@ def _threshold_brier_score(
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
             threshold   float64 8B 0.2
-            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 44B 'initialized'
         Data variables:
             SST         (lead, init) float64 4kB 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
@@ -2910,8 +2929,8 @@ def _crps(
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
             init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
             skill       <U11 44B 'initialized'
         Data variables:
             SST         (lead, init) float64 4kB 0.1722 0.1202 ... 0.05428 0.1638
@@ -3033,8 +3052,8 @@ def _crpss(
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
             init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
+            valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
             skill       <U11 44B 'initialized'
         Data variables:
             SST         (lead, init) float64 4kB 0.2644 0.3636 0.7376 ... 0.7702 0.5126
@@ -3173,8 +3192,8 @@ def _crpss_es(
         <xarray.Dataset> Size: 5kB
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * init        (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * init        (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             valid_time  (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill       <U11 44B 'initialized'
         Data variables:
@@ -3298,9 +3317,9 @@ def _discrimination(
         <xarray.Dataset> Size: 926B
         Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
-          * event                 (event) bool 2B True False
           * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * event                 (event) bool 2B True False
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
             skill                 <U11 44B 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 800B 0....
@@ -3327,9 +3346,9 @@ def _discrimination(
         <xarray.Dataset> Size: 926B
         Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
-          * event                 (event) bool 2B True False
           * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * event                 (event) bool 2B True False
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
             skill                 <U11 44B 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 800B 0....
@@ -3357,9 +3376,9 @@ def _discrimination(
         <xarray.Dataset> Size: 926B
         Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
-          * event                 (event) bool 2B True False
           * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * event                 (event) bool 2B True False
+          * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
             skill                 <U11 44B 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 800B 0....
@@ -3597,8 +3616,8 @@ def _rank_histogram(
         <xarray.Dataset> Size: 1kB
         Dimensions:  (lead: 10, rank: 11)
         Coordinates:
-          * rank     (rank) float64 88B 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
           * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+          * rank     (rank) float64 88B 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
             skill    <U11 44B 'initialized'
         Data variables:
             SST      (lead, rank) int64 880B 12 3 2 1 1 3 1 2 6 5 ... 1 0 0 3 0 2 6 6 34
@@ -3892,11 +3911,11 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
                 [ 75, 194,   1],
                 [  0,   0,   0]]])
         Coordinates:
-            observations_category_bounds  (observations_category) <U11 132B '[-0.5, 0...
-            forecasts_category_bounds     (forecasts_category) <U11 132B '[-0.5, 0.0)...
-          * observations_category         (observations_category) int64 24B 1 2 3
-          * forecasts_category            (forecasts_category) int64 24B 1 2 3
           * lead                          (lead) int32 8B 1 2
+          * observations_category         (observations_category) int64 24B 1 2 3
+            observations_category_bounds  (observations_category) <U11 132B '[-0.5, 0...
+          * forecasts_category            (forecasts_category) int64 24B 1 2 3
+            forecasts_category_bounds     (forecasts_category) <U11 132B '[-0.5, 0.0)...
             skill                         <U11 44B 'initialized'
         Attributes:
             units:    None
@@ -4051,9 +4070,9 @@ def _roc(
                 [0.        , 0.72222222, 1.        ],
                 [0.82911111, 0.82911111, 0.82911111]]])
         Coordinates:
-          * probability_bin  (probability_bin) float64 24B 2.0 1.0 0.0
           * lead             (lead) int32 8B 1 2
           * metric           (metric) <U19 228B 'false positive rate' ... 'area under...
+          * probability_bin  (probability_bin) float64 24B 2.0 1.0 0.0
             skill            <U11 44B 'initialized'
         Attributes:
             units:    None

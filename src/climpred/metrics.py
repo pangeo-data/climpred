@@ -3192,8 +3192,8 @@ def _crpss_es(
         <xarray.Dataset> Size: 5kB
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
-          * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
           * init        (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
+          * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             valid_time  (init) object 416B 1964-01-01 00:00:00 ... 2015-01-01 00:00:00
             skill       <U11 44B 'initialized'
         Data variables:
@@ -3317,9 +3317,9 @@ def _discrimination(
         <xarray.Dataset> Size: 926B
         Dimensions:               (lead: 10, event: 2, forecast_probability: 5)
         Coordinates:
-          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-          * event                 (event) bool 2B True False
           * forecast_probability  (forecast_probability) float64 40B 0.1 0.3 0.5 0.7 0.9
+          * event                 (event) bool 2B True False
+          * lead                  (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             skill                 <U11 44B 'initialized'
         Data variables:
             SST                   (lead, event, forecast_probability) float64 800B 0....
@@ -3913,9 +3913,9 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
         Coordinates:
             observations_category_bounds  (observations_category) <U11 132B '[-0.5, 0...
             forecasts_category_bounds     (forecasts_category) <U11 132B '[-0.5, 0.0)...
-          * lead                          (lead) int32 8B 1 2
           * observations_category         (observations_category) int64 24B 1 2 3
           * forecasts_category            (forecasts_category) int64 24B 1 2 3
+          * lead                          (lead) int32 8B 1 2
             skill                         <U11 44B 'initialized'
         Attributes:
             units:    None
@@ -4070,9 +4070,9 @@ def _roc(
                 [0.        , 0.72222222, 1.        ],
                 [0.82911111, 0.82911111, 0.82911111]]])
         Coordinates:
+          * probability_bin  (probability_bin) float64 24B 2.0 1.0 0.0
           * lead             (lead) int32 8B 1 2
           * metric           (metric) <U19 228B 'false positive rate' ... 'area under...
-          * probability_bin  (probability_bin) float64 24B 2.0 1.0 0.0
             skill            <U11 44B 'initialized'
         Attributes:
             units:    None

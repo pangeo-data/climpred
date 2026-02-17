@@ -114,11 +114,11 @@ ci/requirements/        # Conda environment files
 ## Dependencies
 
 Managed via `pyproject.toml`. Core dependencies include:
-- xarray >=2023.4.0
-- dask >=2023.4.0
-- numpy >=1.25
-- pandas >=2.0
-- xskillscore >=0.0.28
+- xarray
+- dask
+- numpy
+- pandas
+- xskillscore
 
 ## CI/CD
 

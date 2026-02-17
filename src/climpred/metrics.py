@@ -2799,9 +2799,9 @@ def _threshold_brier_score(
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
             threshold   float64 8B 0.2
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 44B 'initialized'
         Data variables:
             SST         (lead, init) float64 4kB 0.0 0.0 0.0 0.0 ... 0.25 0.36 0.09 0.01
@@ -2929,8 +2929,8 @@ def _crps(
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 44B 'initialized'
         Data variables:
             SST         (lead, init) float64 4kB 0.1722 0.1202 ... 0.05428 0.1638
@@ -3052,8 +3052,8 @@ def _crpss(
         Dimensions:     (lead: 10, init: 52)
         Coordinates:
           * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2015-01-01 00...
+            init        (init) object 416B 1954-01-01 00:00:00 ... 2005-01-01 00:00:00
             skill       <U11 44B 'initialized'
         Data variables:
             SST         (lead, init) float64 4kB 0.2644 0.3636 0.7376 ... 0.7702 0.5126
@@ -3616,8 +3616,8 @@ def _rank_histogram(
         <xarray.Dataset> Size: 1kB
         Dimensions:  (lead: 10, rank: 11)
         Coordinates:
-          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
           * rank     (rank) float64 88B 1.0 2.0 3.0 4.0 5.0 6.0 7.0 8.0 9.0 10.0 11.0
+          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             skill    <U11 44B 'initialized'
         Data variables:
             SST      (lead, rank) int64 880B 12 3 2 1 1 3 1 2 6 5 ... 1 0 0 3 0 2 6 6 34
@@ -3911,11 +3911,11 @@ def _contingency(forecast, verif, score="table", dim=None, **metric_kwargs):
                 [ 75, 194,   1],
                 [  0,   0,   0]]])
         Coordinates:
+            observations_category_bounds  (observations_category) <U11 132B '[-0.5, 0...
+            forecasts_category_bounds     (forecasts_category) <U11 132B '[-0.5, 0.0)...
           * lead                          (lead) int32 8B 1 2
           * observations_category         (observations_category) int64 24B 1 2 3
-            observations_category_bounds  (observations_category) <U11 132B '[-0.5, 0...
           * forecasts_category            (forecasts_category) int64 24B 1 2 3
-            forecasts_category_bounds     (forecasts_category) <U11 132B '[-0.5, 0.0)...
             skill                         <U11 44B 'initialized'
         Attributes:
             units:    None

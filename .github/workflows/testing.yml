@@ -198,7 +198,7 @@ jobs:
         with:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
-          cache-environment: false
+          cache-environment: true
           create-args: >-
             python=${{ matrix.python-version }}
       - name: Install climpred (no deps)

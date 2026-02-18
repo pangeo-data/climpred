@@ -1,6 +1,8 @@
 """Implement climpred.tutorial.load_dataset to load analysis ready datasets."""
 
 import hashlib
+import time
+import urllib.error
 import urllib.request
 from pathlib import Path
 from typing import Dict, Optional
@@ -100,9 +102,20 @@ def _get_datasets():
 
 
 def _cache_all():
-    """Cache all datasets for pytest -n auto woth pytest-xdist."""
+    """Cache all datasets for pytest -n auto with pytest-xdist."""
+    max_retries = 3
     for d in aliases:
-        load_dataset(d)
+        for attempt in range(max_retries):
+            try:
+                load_dataset(d)
+                break
+            except (urllib.error.HTTPError, urllib.error.URLError) as e:
+                if attempt < max_retries - 1:
+                    wait_time = 2**attempt
+                    print(f"Failed to cache {d}: {e}. Retrying in {wait_time}s...")
+                    time.sleep(wait_time)
+                else:
+                    print(f"Failed to cache {d} after {max_retries} attempts: {e}")
 
 
 def _initialize_proxy(proxy_dict):

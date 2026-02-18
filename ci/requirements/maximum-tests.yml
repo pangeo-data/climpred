@@ -32,4 +32,4 @@ dependencies:
   - xesmf
   - xrft
   - xsdba >=0.4.0
-  - xskillscore >=0.0.28
+  - xskillscore >=0.0.29

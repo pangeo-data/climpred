@@ -21,4 +21,4 @@ dependencies:
   - pytest-timeout
   - pytest-xdist
   - xarray >=2024.5.0
-  - xskillscore >=0.0.28
+  - xskillscore >=0.0.29

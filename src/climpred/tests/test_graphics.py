@@ -105,6 +105,11 @@ def test_PredictionEnsemble_plot(
 
 @requires_matplotlib
 @requires_nc_time_axis
+@pytest.mark.xfail(
+    platform == "win32" and bool(getenv("CI")),
+    reason="TCL errors are random on CI",
+    strict=False,
+)
 @pytest.mark.parametrize("alignment", ["same_inits", None])
 @pytest.mark.parametrize("return_xr", [False, True])
 def test_HindcastEnsemble_plot_alignment(hindcast_hist_obs_1d, alignment, return_xr):

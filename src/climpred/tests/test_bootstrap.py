@@ -274,7 +274,7 @@ def test_bootstrap_uninit_pm_ensemble_from_control_cftime_annual_identical(
         assert (cftime_res[d] == noncftime_res[d]).all()
     # init same size
     assert cftime_res["init"].size == noncftime_res["init"].size
-    assert cftime_res.dims == noncftime_res.dims
+    assert cftime_res.sizes == noncftime_res.sizes
     assert list(cftime_res.data_vars) == list(noncftime_res.data_vars)
 
 
@@ -423,7 +423,7 @@ def test_resample_iterations_same(PM_ds_initialized_1d, chunk, replace):
         ds = ds.chunk()
     ds_r_idx = _resample_iterations_idx(ds, ITERATIONS, "member", replace=replace)
     ds_r = _resample_iterations(ds, ITERATIONS, "member", replace=replace)
-    for d in ds.dims:
+    for d in ds.sizes:
         xr.testing.assert_identical(ds_r[d], ds_r_idx[d])
         assert ds_r.tos.size == ds_r_idx.tos.size
 
@@ -480,7 +480,7 @@ def test_resample_iterations_dix_no_squeeze(PM_ds_initialized_1d):
     ds = PM_ds_initialized_1d.expand_dims("test_dim")
     print(ds)
     actual = _resample_iterations_idx(ds, iterations=ITERATIONS)
-    assert "test_dim" in actual.dims
+    assert "test_dim" in actual.sizes
 
 
 @pytest.mark.parametrize("metric", ["rmse", "mae"])

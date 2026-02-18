@@ -641,8 +641,8 @@ def convert_Timedelta_to_lead_units(ds):
 
     Converts to longest integer lead unit possible.
     """
-    if ds["lead"].dtype == "<m8[ns]":
-        ds["lead"] = (ds.lead * 1e-9).astype(int)
+    if np.issubdtype(ds["lead"].dtype, np.timedelta64):
+        ds["lead"] = (ds.lead / np.timedelta64(1, "s")).astype(int)
         ds["lead"].attrs["units"] = "seconds"
 
     if (ds["lead"] % 60 == 0).all() and ds["lead"].attrs["units"] == "seconds":

@@ -17,6 +17,7 @@ from typing import (
     Tuple,
     Union,
 )
+from xml.etree import ElementTree
 
 import cf_xarray  # noqa
 import numpy as np
@@ -193,10 +194,14 @@ class PredictionEnsemble:
         # add metadata
         initialized = attach_standard_names(initialized)
         initialized = attach_long_names(initialized)
-        initialized = initialized.cf.add_canonical_attributes(
-            verbose=False, override=True, skip="units"
-        )
-        del initialized.attrs["history"]  # better only delete xclim message or not?
+        try:
+            initialized = initialized.cf.add_canonical_attributes(
+                verbose=False, override=True, skip="units"
+            )
+        except ElementTree.ParseError:
+            pass
+        else:
+            initialized.attrs.pop("history", None)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
         self._datasets = {"initialized": initialized, "uninitialized": {}}

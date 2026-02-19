@@ -15,7 +15,7 @@ What's New
     mpl.rcParams["savefig.bbox"] = "tight"
 
 
-climpred v2.6.0 (unreleased)
+climpred v2.6.0 (2026-02-19)
 ============================
 
 New Features
@@ -35,7 +35,9 @@ Internals/Minor Fixes
 - Replaced all `assert` statements found outside of the testing code with appropriate exceptions to be handled. (:pr:`870`) `Trevor James Smith`_
 - Use `ty` instead of `mypy`. (:issue:`888`, :pr:`896`) `Aaron Spring`_
 - `climpred` is now tested against macOS and Windows platforms on GitHub Workflows. (:pr:`902`) `Trevor James Smith`_
-- Updated dependencies to support numpy 2.x and pandas 3.0: numpy>=2.0.0, pandas>=2.0, xarray>=2024.5.0, xskillscore>=0.0.29. Fixed timedelta dtype detection using ``np.issubdtype()`` and added error handling for corrupted XML downloads. (:pr:`904`) `Aaron Spring`_
+- Updated dependencies to support `numpy`version 2.x and `pandas` version 3.0: `numpy>=2.0.0`, `pandas>=2.0`, `xarray>=2024.5.0`, `xskillscore>=0.0.29`. Fixed timedelta dtype detection using ``np.issubdtype()`` and added error handling for corrupted XML downloads. (:pr:`904`) `Aaron Spring`_
+- `climpred` metadata now adheres to `PEP 639 <https://peps.python.org/pep-0639/>`_. (:pr:`906`) `Trevor James Smith`_
+
 
 climpred v2.5.0 (2024-07-05)
 ============================
@@ -47,7 +49,7 @@ Internals/Minor Fixes
 - Fixed several issues with incompatible dependency configurations in the CI and addressed a few deprecations. (:pr:`861`) `Trevor James Smith`_
 - `climpred` has adopted `PEP 621 <https://peps.python.org/pep-0621/>`_ for specifying project metadata. (:pr:`862`) `Trevor James Smith`_
 - `climpred` now uses the `src layout <https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/>`_  for the package file structure. (:pr:`862`) `Trevor James Smith`_
-- Drop ``python<=3.8`` support. (:pr:`862`) `Trevor James Smith`_.
+- Drop ``python<=3.8`` support. (:pr:`862`) `Trevor James Smith`_
 
 
 climpred v2.4.0 (2023-11-09)

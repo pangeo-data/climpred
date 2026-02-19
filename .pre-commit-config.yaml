@@ -21,10 +21,10 @@ repos:
         exclude: '.ipynb|asv.conf.json'
       - id: trailing-whitespace
 
-  - repo: https://github.com/pappasam/toml-sort
-    rev: v0.24.2
+  - repo: https://github.com/tox-dev/pyproject-fmt
+    rev: v2.16.1
     hooks:
-      - id: toml-sort-fix
+      - id: pyproject-fmt
 
   - repo: https://github.com/psf/black-pre-commit-mirror
     rev: 25.1.0

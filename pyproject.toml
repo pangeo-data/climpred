@@ -1,44 +1,25 @@
 [build-system]
-requires = [
-  "setuptools>=64",
-  "setuptools_scm>=8",
-  "wheel"
-]
 build-backend = "setuptools.build_meta"
-
-[dependency-groups]
-dev = [
-  "black",
-  "climpred[docs]",
-  "flake8",
-  "isort",
-  "jupyterlab",
-  "pylint",
-  "pytest-sugar",
-  "ty >=0.0.1a14"
-]
-docs = [
-  "climpred[docs]"
-]
+requires = [ "setuptools>=77", "setuptools-scm>=8", "wheel" ]
 
 [project]
 name = "climpred"
-authors = [
-  {name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de"},
-  {name = "Riley Brady", email = "riley.brady@colorado.edu"}
-]
+readme = { file = "README.rst", content-type = "text/x-rst" }
+license = "MIT"
+license-files = [ "LICENSE.txt" ]
 maintainers = [
-  {name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de"},
-  {name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca"}
+  { name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de" },
+  { name = "Trevor James Smith", email = "smith.trevorj@ouranos.ca" },
 ]
-readme = "README.rst"
-license = {file = "LICENSE.txt"}
+authors = [
+  { name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de" },
+  { name = "Riley Brady", email = "riley.brady@colorado.edu" },
+]
 requires-python = ">=3.9"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Education",
   "Intended Audience :: Science/Research",
-  "License :: OSI Approved :: MIT License",
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
@@ -47,51 +28,70 @@ classifiers = [
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
-  "Topic :: Scientific/Engineering :: Atmospheric Science"
+  "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
+dynamic = [ "description", "version" ]
 dependencies = [
-  "cf_xarray >=0.8.0",
-  "cftime >=1.6.3",
-  "dask >=2023.4.0",
-  "numpy >=2.0.0",
-  "packaging >=23.0",
-  "pandas >=2.0",
-  "pooch >=1.8.0",
-  "xarray >=2024.5.0",
-  "xskillscore >=0.0.29"
+  "cf-xarray>=0.8",
+  "cftime>=1.6.3",
+  "dask>=2023.4",
+  "numpy>=2",
+  "packaging>=23",
+  "pandas>=2",
+  "pooch>=1.8",
+  "xarray>=2024.5",
+  "xskillscore>=0.0.29"
 ]
-dynamic = ["version", "description"]
-
 [project.optional-dependencies]
-accel = ["bottleneck", "numba >=0.57"]
-bias-correction = ["bias-correction >=0.4", "xclim >=0.52.0", "xsdba >=0.4.0; python_version >= '3.10'"]
-io = ["h5netcdf", "h5py", "netcdf4"] # use h5netcdf when encountering seg faults as in GitHub Actions CI
-regridding = ["xesmf"] # for installation see https://pangeo-xesmf.readthedocs.io/
-relative_entropy = ["eofs"]
-test = ["netcdf4", "pre-commit", "pytest >=8.0.0", "pytest-cov >=5.0", "pytest-lazy-fixtures >=1.4.0", "pytest-timeout", "pytest-xdist >=3.8.0"]
-viz = ["matplotlib", "nc-time-axis >=1.4.0"]
-vwmp = ["xrft"]
-complete = ["climpred[accel,bias-correction,viz,io,test,relative_entropy,vwmp]"]
+accel = [ "bottleneck", "numba>=0.57" ]
+bias-correction = [ "bias-correction>=0.4", "xclim>=0.52", "xsdba>=0.4; python_version>='3.10'" ]
+complete = [ "climpred[accel,bias-correction,io,relative_entropy,test,viz,vwmp]" ]
 docs = [
   "climpred[complete]",
-  "myst_nb",
-  "sphinx >=7.0.0",
-  "sphinx-book-theme >=1.0.0",
+  "myst-nb",
+  "sphinx>=7",
+  "sphinx-book-theme>=1",
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
-  "sphinxext-opengraph >=0.8.0",
+  "sphinxext-opengraph>=0.8",
   "tqdm"
 ]
-
+io = [ "h5netcdf", "h5py", "netcdf4" ]  # use h5netcdf when encountering seg faults as in GitHub Actions CI
+regridding = [ "xesmf" ]  # for installation see https://pangeo-xesmf.readthedocs.io/
+relative-entropy = [ "eofs" ]
+test = [
+  "netcdf4",
+  "pre-commit",
+  "pytest>=8",
+  "pytest-cov>=5",
+  "pytest-lazy-fixtures>=1.4",
+  "pytest-timeout",
+  "pytest-xdist>=3.8"
+]
+viz = [ "matplotlib", "nc-time-axis>=1.4" ]
+vwmp = [ "xrft" ]
 [project.urls]
-"Homepage" = "https://climpred.readthedocs.io/en/stable/"
-"Source" = "https://github.com/pangeo-data/climpred"
 "Changelog" = "https://climpred.readthedocs.io/en/stable/changelog.html"
+"Homepage" = "https://climpred.readthedocs.io/en/stable/"
 "Issue Tracker" = "https://github.com/pangeo-data/climpred/issues"
+"Source" = "https://github.com/pangeo-data/climpred"
+
+[dependency-groups]
+dev = [ "black", "climpred[docs]", "flake8", "isort", "jupyterlab", "pylint", "pytest-sugar", "ty>=0.0.1a14" ]
+docs = [ "climpred[docs]" ]
+
+[tool.setuptools]
+[tool.setuptools.dynamic]
+description = { file = "src/climpred/__init__.py" }
+
+[tool.setuptools_scm]
+fallback_version = "999"
+version_scheme = "post-release"
+local_scheme = "dirty-tag"
 
 [tool.black]
 line-length = 88
-target-version = ["py39", "py310", "py311", "py312", "py313"]
+target-version = [ "py39", "py310", "py311", "py312", "py313" ]
 
 [tool.isort]
 known_first_party = "climpred"
@@ -101,22 +101,19 @@ force_grid_wrap = 0
 use_parentheses = true
 line_length = 88
 combine_as_imports = true
-skip = [
-  "docs/source/conf.py"
-]
+skip = [ "docs/source/conf.py" ]
 
-[tool.pyright]
-typeCheckingMode = "off"
+[tool.pyproject-fmt]
+table_format = "long"
+collapse_tables = [ "project" ]
+expand_tables = [ "project.optional-dependencies", "project.urls" ]
+max_supported_python = "3.13"
 
+[tool.pytest]
 [tool.pytest.ini_options]
-python_files = ["test_*.py"]
-addopts = [
-  "--color=yes",
-  "--verbose"
-]
-testpaths = [
-  "climpred/tests"
-]
+python_files = [ "test_*.py" ]
+addopts = [ "--color=yes", "--verbose" ]
+testpaths = [ "climpred/tests" ]
 filterwarnings = [
   # xarray
   "ignore: Using a non-tuple sequence for multidimensional indexing is deprecated:FutureWarning",
@@ -150,14 +147,10 @@ markers = [
   "slow: marks tests as slow (deselect with '-m \"not slow\"')"
 ]
 
-[tool.setuptools.dynamic]
-description = {file = "src/climpred/__init__.py"}
+[tool.pyright]
+typeCheckingMode = "off"
 
-[tool.setuptools_scm]
-fallback_version = "999"
-version_scheme = "post-release"
-local_scheme = "dirty-tag"
-
+[tool.ty]
 [tool.ty.analysis]
 allowed-unresolved-imports = [
   "bias_correction.**",
@@ -192,14 +185,10 @@ allowed-unresolved-imports = [
   "xsdba.**",
   "xskillscore.**"
 ]
-
 [tool.ty.rules]
-# Ignore rules until the codebase has better type annotations
-# These can be gradually enabled as types are added
 invalid-assignment = "ignore"
 invalid-argument-type = "ignore"
 missing-argument = "ignore"
 unknown-argument = "ignore"
-
 [tool.ty.src]
-exclude = ["asv_bench/", "docs/"]
+exclude = [ "asv_bench/", "docs/" ]

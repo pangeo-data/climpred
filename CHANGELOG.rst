@@ -20,8 +20,8 @@ climpred v2.6.0 (unreleased)
 
 New Features
 ------------
-- The `climpred` code base has been updated to better support modern versions of `xarray` (>=2023.4.0), `pytest` (>=8.0.0), as well as Python 3.13. `Aaron Spring`_, `Trevor James Smith`_
-- Required `xskillscore` version has been updated to `0.0.28`. This version maintains Python 3.9 support and addresses a few small regressions introduced in version `0.0.27`. `Aaron Spring`_, `Trevor James Smith`_
+- The `climpred` code base has been updated to better support modern versions of `xarray` (>=2024.5.0), `pytest` (>=8.0.0), as well as Python 3.13. `Aaron Spring`_, `Trevor James Smith`_
+- Required `xskillscore` version has been updated to `0.0.29`. This version maintains Python 3.9 support and addresses a few small regressions introduced in version `0.0.27`. Furthermore now numpy and pandas are unpinned. `Aaron Spring`_, `Trevor James Smith`_
 
 Internals/Minor Fixes
 ---------------------
@@ -35,6 +35,7 @@ Internals/Minor Fixes
 - Replaced all `assert` statements found outside of the testing code with appropriate exceptions to be handled. (:pr:`870`) `Trevor James Smith`_
 - Use `ty` instead of `mypy`. (:issue:`888`, :pr:`896`) `Aaron Spring`_
 - `climpred` is now tested against macOS and Windows platforms on GitHub Workflows. (:pr:`902`) `Trevor James Smith`_
+- Updated dependencies to support numpy 2.x and pandas 3.0: numpy>=2.0.0, pandas>=2.0, xarray>=2024.5.0, xskillscore>=0.0.29. Fixed timedelta dtype detection using ``np.issubdtype()`` and added error handling for corrupted XML downloads. (:pr:`904`) `Aaron Spring`_
 
 climpred v2.5.0 (2024-07-05)
 ============================

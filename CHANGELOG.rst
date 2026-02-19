@@ -20,8 +20,8 @@ climpred v2.6.0 (unreleased)
 
 New Features
 ------------
-- The `climpred` code base has been updated to better support modern versions of `xarray` (>=2023.4.0), `pytest` (>=8.0.0), as well as Python 3.13. `Aaron Spring`_, `Trevor James Smith`_
-- Required `xskillscore` version has been updated to `0.0.28`. This version maintains Python 3.9 support and addresses a few small regressions introduced in version `0.0.27`. `Aaron Spring`_, `Trevor James Smith`_
+- The `climpred` code base has been updated to better support modern versions of `xarray` (>=2024.5.0), `pytest` (>=8.0.0), as well as Python 3.13. `Aaron Spring`_, `Trevor James Smith`_
+- Required `xskillscore` version has been updated to `0.0.29`. This version maintains Python 3.9 support and addresses a few small regressions introduced in version `0.0.27`. Furthermore now numpy and pandas are unpinned. `Aaron Spring`_, `Trevor James Smith`_
 
 Internals/Minor Fixes
 ---------------------

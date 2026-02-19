@@ -49,21 +49,16 @@ repos:
         additional_dependencies: [ 'black==25.1.0' ]
       - id: blackdoc-autoupdate-black
 
-  - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.17.0
+  - repo: local
     hooks:
-      - id: mypy
+      - id: ty
+        name: ty (type checker)
+        entry: ty check
+        language: python
+        types: [python]
         exclude: 'asv_bench'
-        additional_dependencies: [
-          # Type stubs
-          types-PyYAML,
-          types-python-dateutil,
-          types-pytz,
-          types-setuptools,
-          typing-extensions,
-          # Dependencies that are typed
-          numpy
-        ]
+        pass_filenames: false
+        additional_dependencies: ['ty>=0.0.1a14']
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
     rev: 0.33.2

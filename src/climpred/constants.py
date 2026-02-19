@@ -24,7 +24,7 @@ HINDCAST_CALENDAR_STR = "DatetimeProlepticGregorian"
 
 # default kwargs when using concat
 # data_vars='minimal' could be added but needs to check that xr.Dataset
-CONCAT_KWARGS = {"coords": "minimal", "compat": "override"}
+CONCAT_KWARGS = {"coords": "minimal", "compat": "override", "join": "outer"}
 
 # name for additional dimension in m2m comparison
 M2M_MEMBER_DIM = "forecast_member"

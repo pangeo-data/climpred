@@ -36,7 +36,7 @@ def HindcastEnsemble_time_resolution(request):
     elif request.param == "weeks":
         freq = "7D"
     elif request.param == "minutes":
-        freq = "T"
+        freq = "min"
     elif request.param in "months":
         freq = "MS"
     elif request.param == "seasons":
@@ -45,8 +45,12 @@ def HindcastEnsemble_time_resolution(request):
         freq = "YS"
     else:
         freq = request.param[0].upper()
+        if freq == "H":
+            freq = "h"
+        elif freq == "S":
+            freq = "s"
     # create initialized
-    init = xr.cftime_range(START, freq=freq, periods=NINITS)
+    init = xr.date_range(START, freq=freq, periods=NINITS, use_cftime=True)
     lead = np.arange(NLEADS)
     member = np.arange(NMEMBERS)
     initialized = xr.DataArray(
@@ -57,7 +61,7 @@ def HindcastEnsemble_time_resolution(request):
     initialized.lead.attrs["units"] = request.param
 
     # create observations
-    time = xr.cftime_range(START, freq=freq, periods=NINITS + NLEADS)
+    time = xr.date_range(START, freq=freq, periods=NINITS + NLEADS, use_cftime=True)
     obs = xr.DataArray(
         np.random.rand(len(time)), dims=["time"], coords=[time]
     ).to_dataset(name="var")
@@ -87,7 +91,9 @@ def test_PerfectModelEnsemble_time_resolution_verify(HindcastEnsemble_time_resol
 def test_HindcastEnsemble_lead_pdTimedelta(hind_ds_initialized_1d, lead_res):
     """Test to see HindcastEnsemble can be initialized with lead as pd.Timedelta."""
     if lead_res == "pentads":
-        n, freq = 5, "d"
+        n, freq = 5, "D"
+    elif lead_res in ["days", "weeks"]:
+        n, freq = 1, lead_res[0].upper()
     else:
         n, freq = 1, lead_res[0].lower()
     initialized = hind_ds_initialized_1d

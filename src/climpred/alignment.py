@@ -22,27 +22,27 @@ def _isin(
     if isinstance(init_lead_matrix, xr.DataArray):
         if init_lead_matrix.time.size < 100:  # previous behavior for few inits
             return init_lead_matrix.isin(all_verifs)
+        init_lead_da = init_lead_matrix
+    else:
+        raise TypeError("init_lead_matrix must be a DataArray")
+
     if not isinstance(all_verifs, xr.CFTimeIndex):
         all_verifs = all_verifs.to_index()
-    if len(init_lead_matrix.dims) == 2:
+    if len(init_lead_da.dims) == 2:
         init_lead_asi8 = np.vstack(
-            [
-                init_lead_matrix.sel(lead=i).to_index().asi8
-                for i in init_lead_matrix.lead
-            ]
+            [init_lead_da.sel(lead=i).to_index().asi8 for i in init_lead_da.lead]
         )
         isin = np.isin(init_lead_asi8, all_verifs.asi8)
-    elif len(init_lead_matrix.dims) == 1:
-        if not isinstance(init_lead_matrix, xr.CFTimeIndex):
-            init_lead_matrix2 = init_lead_matrix.to_index()
-        else:
-            init_lead_matrix2 = init_lead_matrix
-        isin = np.isin(init_lead_matrix2.asi8, all_verifs.asi8)
+    elif len(init_lead_da.dims) == 1:
+        init_lead_da_idx: xr.CFTimeIndex = init_lead_da.to_index()
+        isin = np.isin(init_lead_da_idx.asi8, all_verifs.asi8)
+    else:
+        raise ValueError("init_lead_matrix must have 1 or 2 dimensions")
     return xr.DataArray(
         data=isin,
-        dims=init_lead_matrix.dims,
-        coords=init_lead_matrix.coords,
-        attrs=init_lead_matrix.attrs,
+        dims=init_lead_da.dims,
+        coords=init_lead_da.coords,
+        attrs=init_lead_da.attrs,
     )
 
 
@@ -169,7 +169,7 @@ def _same_inits_alignment(
     inits = {lead: inits for lead in leads}
     verif_dates = {
         lead: shift_cftime_index(inits[lead], "time", n, freq)
-        for (lead, n) in zip(leads, n)  # type: ignore
+        for (lead, n) in zip(leads, n)
     }
     return inits, verif_dates
 

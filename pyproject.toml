@@ -13,9 +13,9 @@ dev = [
   "flake8",
   "isort",
   "jupyterlab",
-  "mypy >=1.13",
   "pylint",
-  "pytest-sugar"
+  "pytest-sugar",
+  "ty >=0.0.1a14"
 ]
 docs = [
   "climpred[docs]"
@@ -53,12 +53,12 @@ dependencies = [
   "cf_xarray >=0.8.0",
   "cftime >=1.6.3",
   "dask >=2023.4.0",
-  "numpy >=1.25",
+  "numpy >=2.0.0",
   "packaging >=23.0",
-  "pandas >=2.0,<3.0",
+  "pandas >=2.0",
   "pooch >=1.8.0",
-  "xarray >=2023.4.0",
-  "xskillscore >=0.0.28"
+  "xarray >=2024.5.0",
+  "xskillscore >=0.0.29"
 ]
 dynamic = ["version", "description"]
 
@@ -105,30 +105,8 @@ skip = [
   "docs/source/conf.py"
 ]
 
-[tool.mypy]
-exclude = "asv_bench|doc"
-files = "."
-show_error_codes = true
-ignore_missing_imports = true
-
-[[tool.mypy.overrides]]
-module = [
-  "bottleneck.*",
-  "cftime.*",
-  "dask.*",
-  "distributed.*",
-  "fsspec.*",
-  "matplotlib.*",
-  "nc_time_axis.*",
-  "numpy.*",
-  "netCDF4.*",
-  "pandas.*",
-  "pytest.*",
-  "scipy.*",
-  "setuptools",
-  "toolz.*"
-]
-ignore_missing_imports = true
+[tool.pyright]
+typeCheckingMode = "off"
 
 [tool.pytest.ini_options]
 python_files = ["test_*.py"]
@@ -179,3 +157,49 @@ description = {file = "src/climpred/__init__.py"}
 fallback_version = "999"
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
+
+[tool.ty.analysis]
+allowed-unresolved-imports = [
+  "bias_correction.**",
+  "bottleneck.**",
+  "cf_xarray.**",
+  "cftime.**",
+  "dask.**",
+  "distributed.**",
+  "eofs.**",
+  "fsspec.**",
+  "intake.**",
+  "intake_esm.**",
+  "matplotlib.**",
+  "nc_time_axis.**",
+  "netCDF4.**",
+  "numba.**",
+  "numpy.**",
+  "packaging.**",
+  "pandas.**",
+  "pooch.**",
+  "properscoring.**",
+  "pytest.**",
+  "pytest_lazy_fixtures.**",
+  "scipy.**",
+  "setuptools.**",
+  "toolz.**",
+  "tqdm.**",
+  "xarray.**",
+  "xclim.**",
+  "xesmf.**",
+  "xrft.**",
+  "xsdba.**",
+  "xskillscore.**"
+]
+
+[tool.ty.rules]
+# Ignore rules until the codebase has better type annotations
+# These can be gradually enabled as types are added
+invalid-assignment = "ignore"
+invalid-argument-type = "ignore"
+missing-argument = "ignore"
+unknown-argument = "ignore"
+
+[tool.ty.src]
+exclude = ["asv_bench/", "docs/"]

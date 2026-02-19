@@ -173,12 +173,12 @@ Preparing Pull Requests
    integration of all tests on all new commits. However, you are already
    run tests locally::
 
-    $ pytest climpred
+    $ pytest -n auto climpred
 
    Check that `doctests <https://docs.pytest.org/en/stable/doctest.html>`_ are
    passing::
 
-    $ pytest --doctest-modules climpred --ignore climpred/tests
+    $ pytest -n auto --doctest-modules src/climpred/classes.py --ignore src/climpred/tests
 
    Check that your contribution is covered by tests and therefore increases
    the overall test coverage::

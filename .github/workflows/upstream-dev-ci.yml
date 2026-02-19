@@ -1,4 +1,4 @@
-name: CI Upstream
+name: Upstream Test
 
 on:
   push:
@@ -13,7 +13,7 @@ concurrency:
 
 jobs:
   detect-ci-trigger:
-    name: detect upstream-dev ci trigger
+    name: Detect upstream-dev CI trigger
     runs-on: ubuntu-slim
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     outputs:
@@ -28,7 +28,7 @@ jobs:
           keyword: "[test-upstream]"
 
   upstream-dev:
-    name: upstream-dev, Python${{ matrix.python-version }}
+    name: upstream-dev (Python${{ matrix.python-version }}, ubuntu)
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
     if: |

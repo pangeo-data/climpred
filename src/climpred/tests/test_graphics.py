@@ -1,5 +1,8 @@
 """Test graphics.py and PredictionEnsemble.plot()."""
 
+from os import getenv
+from sys import platform
+
 import pytest
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
@@ -8,7 +11,16 @@ from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
 from . import requires_matplotlib, requires_nc_time_axis
 
-ITERATIONS = 3
+ITERATIONS = 300
+
+
+@pytest.fixture(autouse=True)
+def cleanup_matplotlib_figures():
+    """Automatically clean up matplotlib figures after each test."""
+    yield
+    import matplotlib.pyplot as plt
+
+    plt.close("all")
 
 
 @requires_matplotlib
@@ -20,7 +32,7 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
     """
     res = perfectModelEnsemble_initialized_control.bootstrap(
         metric="pearson_r",
-        iterations=ITERATIONS * 100,
+        iterations=ITERATIONS,
         reference=["uninitialized", "persistence"],
         comparison="m2e",
         dim=["init", "member"],
@@ -30,6 +42,11 @@ def test_PerfectModelEnsemble_plot_bootstrapped_skill_over_leadyear(
 
 
 @requires_matplotlib
+@pytest.mark.xfail(
+    platform == "win32" and bool(getenv("CI")),
+    reason="TCL errors are random on CI",
+    strict=False,
+)
 @pytest.mark.parametrize("cmap", ["tab10", "jet"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["tos", None])
@@ -56,6 +73,11 @@ def test_PerfectModelEnsemble_plot_fails_3d(PM_ds_initialized_3d):
 
 
 @requires_matplotlib
+@pytest.mark.xfail(
+    platform == "win32" and bool(getenv("CI")),
+    reason="TCL errors are random on CI",
+    strict=False,
+)
 @pytest.mark.parametrize("x", ["time", "init"])
 @pytest.mark.parametrize("show_members", [True, False])
 @pytest.mark.parametrize("variable", ["SST", None])
@@ -88,6 +110,11 @@ def test_PredictionEnsemble_plot(
 
 @requires_matplotlib
 @requires_nc_time_axis
+@pytest.mark.xfail(
+    platform == "win32" and bool(getenv("CI")),
+    reason="TCL errors are random on CI",
+    strict=False,
+)
 @pytest.mark.parametrize("alignment", ["same_inits", None])
 @pytest.mark.parametrize("return_xr", [False, True])
 def test_HindcastEnsemble_plot_alignment(hindcast_hist_obs_1d, alignment, return_xr):

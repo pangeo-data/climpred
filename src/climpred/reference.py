@@ -118,7 +118,7 @@ def climatology(
             .sel(
                 {
                     seasonality_str: _maybe_seasons_to_int(
-                        getattr(verif_hind_union.time.dt, seasonality_str)  # type: ignore
+                        getattr(verif_hind_union.time.dt, seasonality_str)
                     )
                 },
                 method="nearest",  # nearest may be a bit incorrect but doesnt error
@@ -510,7 +510,7 @@ def compute_persistence_from_first_lead(
         comparison = COMPARISON_ALIASES.get(comparison, comparison)
         comparison = get_comparison_class(comparison, ALL_COMPARISONS)
 
-    forecast, observations = comparison.function(initialized, metric=metric)  # type: ignore
+    forecast, observations = comparison.function(initialized, metric=metric)
     forecast, dim = _adapt_member_for_reference_forecast(
         forecast, observations, metric, comparison, dim
     )

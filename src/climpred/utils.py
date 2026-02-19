@@ -110,10 +110,14 @@ def assign_attrs(
         skill.attrs["dim"] = dim
     if reference is not None:
         skill.attrs["reference"] = reference
-    if "persistence" in reference and "PerfectModelEnsemble" in function_name:
-        skill.attrs["PerfectModel_persistence_from_initialized_lead_0"] = OPTIONS[
-            "PerfectModel_persistence_from_initialized_lead_0"
-        ]
+        if (
+            "persistence" in reference
+            and function_name
+            and "PerfectModelEnsemble" in function_name
+        ):
+            skill.attrs["PerfectModel_persistence_from_initialized_lead_0"] = OPTIONS[
+                "PerfectModel_persistence_from_initialized_lead_0"
+            ]
 
     # change unit power in all variables
     if metric.unit_power == 0:
@@ -296,6 +300,8 @@ def convert_init_lead_to_valid_time_lead(
         [skill.sel(lead=lead).swap_dims({"init": "valid_time"}) for lead in skill.lead],
         "lead",
         join="outer",
+        coords="different",
+        compat="equals",
     )
     return add_init_from_time_lead(swapped.drop_vars("init")).dropna(
         "valid_time", how="all"
@@ -350,6 +356,9 @@ def convert_valid_time_lead_to_init_lead(
     swapped = xr.concat(
         [skill.sel(lead=lead).swap_dims({"valid_time": "init"}) for lead in skill.lead],
         "lead",
+        coords="different",
+        compat="equals",
+        join="outer",
     )
     return add_time_from_init_lead(swapped.drop_vars("valid_time")).dropna(
         "init", how="all"
@@ -632,8 +641,8 @@ def convert_Timedelta_to_lead_units(ds):
 
     Converts to longest integer lead unit possible.
     """
-    if ds["lead"].dtype == "<m8[ns]":
-        ds["lead"] = (ds.lead * 1e-9).astype(int)
+    if np.issubdtype(ds["lead"].dtype, np.timedelta64):
+        ds["lead"] = (ds.lead / np.timedelta64(1, "s")).astype(int)
         ds["lead"].attrs["units"] = "seconds"
 
     if (ds["lead"] % 60 == 0).all() and ds["lead"].attrs["units"] == "seconds":

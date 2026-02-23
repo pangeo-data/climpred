@@ -16,6 +16,12 @@ list!
 
 :cite:empty:`Brady2020,Krumhardt2020,Spring2020,Brady2021,Spring2021a,Spring2021b,Zhao2024,Higgins2024,Lesinger2025,Schroers2026,Mangolte2025,Arsenault2023`
 
+2026
+####
+
+.. bibliography::
+  :filter: cited and year and (year == "2026") and docname in docnames
+
 2025
 ####
 

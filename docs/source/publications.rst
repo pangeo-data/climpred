@@ -6,10 +6,7 @@ Below is a list of publications that have made use of ``climpred`` in their anal
 We appreciate a reference to ``climpred``, e.g., in your acknowledgements section to
 help build the community. Please cite :cite:p:`Brady2021`.
 
-You can also check which papers cite ``climpred`` on Google Scholar:
-
-- https://scholar.google.com/scholar?oi=bibs&hl=en&cites=7715684476250557195&as_sdt=5
-- https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6049472562346270775&as_sdt=5
+You can also check which papers cite ``climpred`` on `Google <https://scholar.google.com/scholar?oi=bibs&hl=en&cites=7715684476250557195&as_sdt=5>`_ `Scholar <https://scholar.google.com/scholar?oi=bibs&hl=en&cites=6049472562346270775&as_sdt=5>`_.
 
 Feel free to open a `Pull Request <contributing.html>`_ to add your publication to the
 list!

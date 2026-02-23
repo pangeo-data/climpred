@@ -31,6 +31,18 @@ pytest src/climpred/tests/test_HindcastEnsemble_class.py -x
 
 # Pre-commit checks (formatting, linting, type checking)
 pre-commit run --all-files
+
+# Check CI status of a PR
+gh pr checks <PR_NUMBER>
+
+# View CI run logs for a failed job
+gh run view <RUN_ID> --log-failed
+
+# List recent CI workflow runs
+gh run list --limit 5
+
+# Watch a running workflow
+gh run watch <RUN_ID>
 ```
 
 ## Code Style & Conventions
@@ -56,6 +68,14 @@ pre-commit run --all-files
 - Core: xarray, dask, numpy, pandas, cftime, xskillscore, cf-xarray, pooch
 - Optional groups: `accel`, `bias-correction`, `io`, `viz`, `vwmp`, `relative-entropy`
 - Do not add new core dependencies without discussion. Use optional dependency groups for non-essential features.
+
+## Documentation & Architectural Changes
+
+When making architectural changes, adding/removing public API, or changing project structure:
+
+- Update `README.rst` if the change affects project overview, installation, or usage examples.
+- Update this `AGENTS.md` (and its symlink `CLAUDE.md`) if the change affects development commands, conventions, dependencies, or project layout.
+- Update `docs/` if the change affects user-facing functionality (add/modify API docs, tutorials, or changelog entries in `CHANGELOG.rst`).
 
 ## Git Workflow
 

@@ -161,7 +161,7 @@ intersphinx_mapping = {
 # Should only be uncommented when testing page development while notebooks
 # are breaking.
 # nbsphinx_kernel_name = "climpred-docs"  # doesn't work
-nbsphinx_allow_errors = True
+nbsphinx_allow_errors = False
 nbsphinx_timeout = 600
 nbsphinx_execute = "auto"  # "never" "always"
 nb_execution_mode = "auto"

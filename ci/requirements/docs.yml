@@ -42,7 +42,6 @@ dependencies:
   # vwmp
   - xrft
   # docs
-  - pip >=25.1
   - nb_black
   - jupyterlab
   - myst-nb

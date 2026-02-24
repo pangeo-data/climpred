@@ -349,3 +349,9 @@ ds["lead"].attrs["units"] = "years"
 6. **Lead starting at 0 vs 1**: `lead` can start at 0 or 1 — just be consistent. `lead=0` represents the initialization itself (analysis time).
 
 7. **`valid_time`**: climpred computes `valid_time = init + lead` automatically. Do not set this manually.
+
+8. **Observation time must cover verification period**: The `time` dimension in observations should span the entire period you want to verify against. climpred aligns `init + lead` to find matching observation times. You only need to provide observations with a `time` coordinate — do NOT include a `lead` dimension in observations.
+
+9. **Unique time indices**: Observation time indices must be unique. Avoid duplicate timestamps in the `time` dimension.
+
+10. **Avoid integer coordinates for annual data**: When creating toy data, prefer `pd.date_range` for both `init` and observation `time` rather than using integer coordinates. This avoids ambiguity and ensures proper datetime alignment.

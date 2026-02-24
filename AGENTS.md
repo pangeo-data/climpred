@@ -17,6 +17,12 @@ climpred is a Python package for verification of weather and climate forecasts a
 ## Development Commands
 
 ```bash
+# (optional) create venv with uv
+uv venv
+
+# (optional) activate venv
+source .venv/bin/activate
+
 # Install in development mode
 pip install -e ".[complete]"
 

@@ -42,6 +42,7 @@ dependencies:
   # vwmp
   - xrft
   # docs
+  - nb_black
   - jupyterlab
   - myst-nb
   - nbstripout

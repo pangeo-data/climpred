@@ -15,6 +15,14 @@ What's New
     mpl.rcParams["savefig.bbox"] = "tight"
 
 
+climpred v2.7.0 (unreleased)
+============================
+
+New Features
+------------
+- Added new `.agents/skills/climpred-forecast-verification/` skill for AI coding agents (e.g., Claude Code, OpenCode). Includes SKILL.md with core concepts, classes, methods, and workflows, plus reference documentation for metrics, comparisons, bias removal, and data setup. (:pr:`910`) `Aaron Spring`_
+
+
 climpred v2.6.0 (2026-02-19)
 ============================
 

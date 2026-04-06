@@ -845,10 +845,8 @@ class PredictionEnsemble:
                         "`goddard2013` smoothing only available for annual leads."
                     )
             else:
-                raise ValueError(
-                    'Please provide from list of available smoothings: \
-                     ["goddard2013"]'
-                )
+                raise ValueError('Please provide from list of available smoothings: \
+                     ["goddard2013"]')
         # TODO: actively searches for lot and lat in dims. Maybe this part of the code
         # could be more robust in how it finds these two spatial dimensions regardless
         # of name. Optional work in progress comment.
@@ -877,10 +875,8 @@ class PredictionEnsemble:
                 d_lon_lat_kws = None
                 tsmooth_kws = smooth_kws
             else:
-                raise ValueError(
-                    'Please provide kwargs to fulfill functions: \
-                     ["spatial_smoothing_xesmf", "temporal_smoothing"].'
-                )
+                raise ValueError('Please provide kwargs to fulfill functions: \
+                     ["spatial_smoothing_xesmf", "temporal_smoothing"].')
         else:
             raise ValueError(
                 "Please provide kwargs as dict or str and not", type(smooth_kws)

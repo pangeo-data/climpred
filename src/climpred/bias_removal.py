@@ -118,6 +118,7 @@ def _multiplicative_std_correction(hind, spread, dim, obs=None):
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
 
+    assert obs is not None
     init_groupby = f"init.{seasonality}"
     obs_groupby = f"time.{seasonality}"
 
@@ -482,6 +483,7 @@ def bias_correction(
 
         if train_test_split in ["fair"]:
             if alignment in ["same_inits", "maximize"]:
+                assert train_init is not None
                 train_dim = train_init.rename({"init": "time"})
                 # shift init to time
                 n, freq = get_lead_cftime_shift_args(
@@ -663,6 +665,7 @@ def xclim_sdba(
 
         if train_test_split in ["fair"]:
             if alignment in ["same_inits", "maximize"]:
+                assert train_init is not None
                 train_dim = train_init.rename({"init": "time"})
                 # shift init to time
                 n, freq = get_lead_cftime_shift_args(

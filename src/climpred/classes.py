@@ -204,7 +204,10 @@ class PredictionEnsemble:
             initialized.attrs.pop("history", None)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
-        self._datasets = {"initialized": initialized, "uninitialized": {}}
+        self._datasets: Dict[str, Any] = {
+            "initialized": initialized,
+            "uninitialized": {},
+        }
         self.kind = "prediction"
         self._temporally_smoothed: Optional[Dict[str, int]] = None
         self._is_annual_lead = None
@@ -764,11 +767,11 @@ class PredictionEnsemble:
 
     def get_initialized(self) -> xr.Dataset:
         """Return the :py:class:`xarray.Dataset` for the initialized ensemble."""
-        return self._datasets["initialized"]  # type: ignore
+        return self._datasets["initialized"]
 
     def get_uninitialized(self) -> xr.Dataset:
         """Return the :py:class:`xarray.Dataset` for the uninitialized ensemble."""
-        return self._datasets["uninitialized"]  # type: ignore
+        return self._datasets["uninitialized"]
 
     def smooth(
         self,
@@ -1356,7 +1359,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def get_control(self) -> xr.Dataset:
         """Return the control as an :py:class:`xarray.Dataset`."""
-        return self._datasets["control"]  # type: ignore
+        return self._datasets["control"]
 
     def verify(
         self,
@@ -1965,7 +1968,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Returns:
             observations
         """
-        return self._datasets["observations"]  # type: ignore
+        return self._datasets["observations"]
 
     def generate_uninitialized(
         self, resample_dim: List[str] = ["init", "member"]

@@ -118,6 +118,7 @@ def _multiplicative_std_correction(hind, spread, dim, obs=None):
         spread = convert_cftime_to_datetime_coords(spread, "init")
         obs = convert_cftime_to_datetime_coords(obs, "time")
 
+    assert obs is not None
     init_groupby = f"init.{seasonality}"
     obs_groupby = f"time.{seasonality}"
 
@@ -164,7 +165,7 @@ def _std_multiplicative_bias_removal_func_cv(hind, spread, dim, obs, cv="LOO"):
 
     Reference:
         * Jolliffe, Ian T., and David B. Stephenson. Forecast Verification: A
-          Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
+          Practitioner's Guide in Atmospheric Science. Chichester, UK: John Wiley &
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
     seasonality = OPTIONS["seasonality"]
@@ -231,7 +232,7 @@ def _mean_bias_removal_func_cv(hind, bias, dim, how, cv="LOO"):
 
     Reference:
         * Jolliffe, Ian T., and David B. Stephenson. Forecast Verification: A
-          Practitioner’s Guide in Atmospheric Science. Chichester, UK: John Wiley &
+          Practitioner's Guide in Atmospheric Science. Chichester, UK: John Wiley &
           Sons, Ltd, 2011. https://doi.org/10.1002/9781119960003., Chapter: 5.3.1, p.80
     """
     how_operator = sub if how == "additive" else div
@@ -482,6 +483,7 @@ def bias_correction(
 
         if train_test_split in ["fair"]:
             if alignment in ["same_inits", "maximize"]:
+                assert train_init is not None
                 train_dim = train_init.rename({"init": "time"})
                 # shift init to time
                 n, freq = get_lead_cftime_shift_args(
@@ -663,6 +665,7 @@ def xclim_sdba(
 
         if train_test_split in ["fair"]:
             if alignment in ["same_inits", "maximize"]:
+                assert train_init is not None
                 train_dim = train_init.rename({"init": "time"})
                 # shift init to time
                 n, freq = get_lead_cftime_shift_args(

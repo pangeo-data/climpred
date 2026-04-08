@@ -1,6 +1,8 @@
 """Prediction module: _apply_metric_at_given_lead and compute functions."""
 
-from typing import List, Optional, Set, Tuple, Union
+from __future__ import annotations
+
+from typing import TYPE_CHECKING, List, Optional, Set, Tuple, Union
 
 from dask import is_dask_collection
 
@@ -30,6 +32,10 @@ from .utils import (
     shift_cftime_singular,
 )
 
+if TYPE_CHECKING:
+    from .comparisons import Comparison
+    from .metrics import Metric
+
 
 def _apply_metric_at_given_lead(
     verif,
@@ -39,8 +45,8 @@ def _apply_metric_at_given_lead(
     hist=None,
     inits=None,
     reference=None,
-    metric=None,
-    comparison=None,
+    metric: Metric | None = None,
+    comparison: Comparison | None = None,
     dim=None,
     **metric_kwargs,
 ):
@@ -97,6 +103,7 @@ def _apply_metric_at_given_lead(
     dim = _rename_dim(
         dim, initialized, verif
     )  # dim should be much clearer once time_valid in initialized.coords
+    assert metric is not None
     if metric.normalize or metric.allows_logical:
         metric_kwargs["comparison"] = comparison
 
@@ -105,6 +112,7 @@ def _apply_metric_at_given_lead(
     log_hindcast_verify_inits_and_verifs(dim, lead, inits, verif_dates, reference)
     # push time (later renamed to init) back by lead
     if "time" in result.dims:
+        assert initialized is not None
         n, freq = get_lead_cftime_shift_args(initialized.lead.attrs["units"], lead)
         result = result.assign_coords(time=shift_cftime_singular(result.time, -n, freq))
     if "valid_time" in result.coords:

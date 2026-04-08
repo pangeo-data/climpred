@@ -1,8 +1,14 @@
 """Bootstrap or resampling operators for functional compute_ functions."""
 
+from __future__ import annotations
+
 import logging
 import warnings
 from copy import copy
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from .metrics import Metric
 
 import dask
 import numpy as np
@@ -95,7 +101,7 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
     return ds.quantile(q=[ci_low, ci_high], dim=dim, skipna=False)
 
 
-def _pvalue_from_distributions(ref_skill, init_skill, metric=None):
+def _pvalue_from_distributions(ref_skill, init_skill, metric: Metric | None = None):
     """Get probability that reference forecast skill is larger than initialized skill.
 
     Needed for bootstrapping confidence intervals and p_values of a metric in
@@ -114,6 +120,7 @@ def _pvalue_from_distributions(ref_skill, init_skill, metric=None):
             than initialized forecast.
     """
     pv = ((ref_skill - init_skill) > 0).mean("iteration")
+    assert metric is not None
     if not metric.positive:
         pv = 1 - pv
     return pv

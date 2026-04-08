@@ -108,6 +108,7 @@ def spatial_smoothing_xesmf(
                 "lon": (["lon"], np.arange(lon.min(), lon.max() + d_lon, d_lon)),
             }
         )
+        assert xe is not None, "xesmf is required for spatial smoothing"
         regridder = xe.Regridder(da, grid_out, **kwargs)
         return regridder(da, keep_attrs=True)
 

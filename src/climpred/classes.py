@@ -204,7 +204,10 @@ class PredictionEnsemble:
             initialized.attrs.pop("history", None)
         # Add initialized dictionary and reserve sub-dictionary for an uninitialized
         # run.
-        self._datasets = {"initialized": initialized, "uninitialized": {}}
+        self._datasets: Dict[str, Any] = {
+            "initialized": initialized,
+            "uninitialized": {},
+        }
         self.kind = "prediction"
         self._temporally_smoothed: Optional[Dict[str, int]] = None
         self._is_annual_lead = None
@@ -764,11 +767,11 @@ class PredictionEnsemble:
 
     def get_initialized(self) -> xr.Dataset:
         """Return the :py:class:`xarray.Dataset` for the initialized ensemble."""
-        return self._datasets["initialized"]  # type: ignore
+        return self._datasets["initialized"]
 
     def get_uninitialized(self) -> xr.Dataset:
         """Return the :py:class:`xarray.Dataset` for the uninitialized ensemble."""
-        return self._datasets["uninitialized"]  # type: ignore
+        return self._datasets["uninitialized"]
 
     def smooth(
         self,
@@ -845,10 +848,8 @@ class PredictionEnsemble:
                         "`goddard2013` smoothing only available for annual leads."
                     )
             else:
-                raise ValueError(
-                    'Please provide from list of available smoothings: \
-                     ["goddard2013"]'
-                )
+                raise ValueError('Please provide from list of available smoothings: \
+                     ["goddard2013"]')
         # TODO: actively searches for lot and lat in dims. Maybe this part of the code
         # could be more robust in how it finds these two spatial dimensions regardless
         # of name. Optional work in progress comment.
@@ -877,10 +878,8 @@ class PredictionEnsemble:
                 d_lon_lat_kws = None
                 tsmooth_kws = smooth_kws
             else:
-                raise ValueError(
-                    'Please provide kwargs to fulfill functions: \
-                     ["spatial_smoothing_xesmf", "temporal_smoothing"].'
-                )
+                raise ValueError('Please provide kwargs to fulfill functions: \
+                     ["spatial_smoothing_xesmf", "temporal_smoothing"].')
         else:
             raise ValueError(
                 "Please provide kwargs as dict or str and not", type(smooth_kws)
@@ -1360,7 +1359,7 @@ class PerfectModelEnsemble(PredictionEnsemble):
 
     def get_control(self) -> xr.Dataset:
         """Return the control as an :py:class:`xarray.Dataset`."""
-        return self._datasets["control"]  # type: ignore
+        return self._datasets["control"]
 
     def verify(
         self,
@@ -1969,7 +1968,7 @@ class HindcastEnsemble(PredictionEnsemble):
         Returns:
             observations
         """
-        return self._datasets["observations"]  # type: ignore
+        return self._datasets["observations"]
 
     def generate_uninitialized(
         self, resample_dim: List[str] = ["init", "member"]

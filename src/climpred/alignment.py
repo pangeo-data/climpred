@@ -157,7 +157,7 @@ def _same_inits_alignment(
     valid_inits: xr.DataArray,
     all_verifs: xr.DataArray,
     leads: xr.DataArray,
-    n: int,
+    n: Tuple[int, ...],
     freq: str,
 ) -> returnType:
     """Return inits and verif dates, maintaining a common set of inits at all leads.
@@ -168,8 +168,8 @@ def _same_inits_alignment(
     inits = valid_inits.where(verifies_at_all_leads, drop=True)
     inits = {lead: inits for lead in leads}
     verif_dates = {
-        lead: shift_cftime_index(inits[lead], "time", n, freq)
-        for (lead, n) in zip(leads, n)
+        lead: shift_cftime_index(inits[lead], "time", n_i, freq)
+        for (lead, n_i) in zip(leads, n)
     }
     return inits, verif_dates
 
@@ -179,7 +179,7 @@ def _same_verifs_alignment(
     valid_inits: xr.DataArray,
     all_verifs: xr.DataArray,
     leads: xr.DataArray,
-    n: int,
+    n: Tuple[int, ...],
     freq: str,
 ) -> returnType:
     """Return inits and verifs, maintaining a common verification window at all leads.

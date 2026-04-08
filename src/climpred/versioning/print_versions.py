@@ -39,7 +39,7 @@ def get_sys_info():
     blob.append(("commit", commit))
 
     try:
-        (sysname, _, release, _, machine, processor) = platform.uname()
+        sysname, _, release, _, machine, processor = platform.uname()
         blob.extend(
             [
                 ("python", sys.version),
@@ -139,7 +139,7 @@ def main():
         help="Save output as JSON into file, pass in " "'-' to output to stdout",
     )
 
-    (options, args) = parser.parse_args()
+    options, args = parser.parse_args()
 
     if options.json == "-":
         options.json = True

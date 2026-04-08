@@ -33,6 +33,7 @@ def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):
     if metric_kwargs is None:
         metric_kwargs = {}
     if how in ["LOCI"] and "thresh" not in metric_kwargs:
+        assert he is not None
         v = list(he.data_vars)[0]
         metric_kwargs["thresh"] = he.get_observations().quantile(0.1)[v]
     return metric_kwargs
@@ -190,10 +191,8 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
 
 @requires_xclim
 @requires_bias_correction
-@pytest.mark.skip(
-    reason="""LOO deprecated:
-    https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832"""
-)
+@pytest.mark.skip(reason="""LOO deprecated:
+    https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832""")
 @pytest.mark.parametrize(
     "alignment", ["same_inits", "maximize"]
 )  # same_verifs  # no overlap here for same_verifs

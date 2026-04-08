@@ -3,7 +3,7 @@ default_language_version:
 
 repos:
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v5.0.0
+    rev: v6.0.0
     hooks:
       - id: check-added-large-files
       - id: check-docstring-first
@@ -22,12 +22,12 @@ repos:
       - id: trailing-whitespace
 
   - repo: https://github.com/tox-dev/pyproject-fmt
-    rev: v2.16.1
+    rev: v2.21.0
     hooks:
       - id: pyproject-fmt
 
   - repo: https://github.com/psf/black-pre-commit-mirror
-    rev: 25.1.0
+    rev: 26.3.1
     hooks:
       - id: black
 
@@ -38,15 +38,15 @@ repos:
         args: [ '--max-line-length=93', '--extend-ignore=W503' ]
 
   - repo: https://github.com/PyCQA/isort
-    rev: 6.0.1
+    rev: 8.0.1
     hooks:
       - id: isort
 
   - repo: https://github.com/keewis/blackdoc
-    rev: v0.4.1
+    rev: v0.4.6
     hooks:
       - id: blackdoc
-        additional_dependencies: [ 'black==25.1.0' ]
+        additional_dependencies: [ 'black==26.3.1' ]
       - id: blackdoc-autoupdate-black
 
   - repo: local
@@ -61,7 +61,7 @@ repos:
         additional_dependencies: ['ty>=0.0.1a14']
 
   - repo: https://github.com/python-jsonschema/check-jsonschema
-    rev: 0.33.2
+    rev: 0.37.1
     hooks:
       - id: check-github-workflows
       - id: check-readthedocs

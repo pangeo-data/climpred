@@ -1,3 +1,5 @@
+from typing import Any, Dict
+
 import numpy as np
 import pytest
 import xarray as xr
@@ -58,19 +60,19 @@ def test_HindcastEnsemble_verify_bootstrap_probabilistic(
         def f(x):
             return x > 0
 
-        kwargs = {"logical": f}
+        kwargs: Dict[str, Any] = {"logical": f}
     elif metric == "threshold_brier_score":
-        kwargs = {"threshold": 0}
+        kwargs: Dict[str, Any] = {"threshold": 0}
     elif metric == "contingency":
-        kwargs = {
+        kwargs: Dict[str, Any] = {
             "forecast_category_edges": category_edges,
             "observation_category_edges": category_edges,
             "score": "accuracy",
         }
     elif metric == "rps":
-        kwargs = {"category_edges": category_edges}
+        kwargs: Dict[str, Any] = {"category_edges": category_edges}
     else:
-        kwargs = {}
+        kwargs: Dict[str, Any] = {}
     dim = (
         ["member", "init"]
         if metric in probabilistic_metrics_requiring_more_than_member_dim

@@ -33,6 +33,7 @@ def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):
     if metric_kwargs is None:
         metric_kwargs = {}
     if how in ["LOCI"] and "thresh" not in metric_kwargs:
+        assert he is not None
         v = list(he.data_vars)[0]
         metric_kwargs["thresh"] = he.get_observations().quantile(0.1)[v]
     return metric_kwargs

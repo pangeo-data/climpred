@@ -16,11 +16,16 @@ What's New
 
 
 climpred v2.7.0 (unreleased)
-============================
+===========================
 
 New Features
 ------------
 - Added new `.agents/skills/climpred-forecast-verification/` skill for AI coding agents (e.g., Claude Code, OpenCode). Includes SKILL.md with core concepts, classes, methods, and workflows, plus reference documentation for metrics, comparisons, bias removal, and data setup. (:pr:`910`) `Aaron Spring`_
+- :py:meth:`.PredictionEnsemble.smooth` gained a new ``drop`` keyword. When ``True`` and a temporal ``lead`` smoothing is applied, the resulting overlapping rolling windows are subsampled to non-overlapping windows (e.g. ``smooth({"lead": 3}, drop=True)`` yields leads ``"1-3", "4-6", "7-9"`` instead of ``"1-3", "2-4", ..., "8-10"``). ``lead_center`` now also carries ``long_name`` and ``units`` attributes after smoothing and verification. `Aaron Spring`_
+
+Internals/Minor Fixes
+---------------------
+- :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
 
 
 climpred v2.6.0 (2026-02-19)

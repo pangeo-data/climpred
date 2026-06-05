@@ -262,3 +262,89 @@ def test_PredictionEnsemble_smooth_None(
     pm = perfectModelEnsemble_initialized_control_1d_ym_cftime
     pm_smoothed = pm.smooth(None)
     assert_PredictionEnsemble(pm, pm_smoothed)
+
+
+@pytest.mark.parametrize("smooth", [2, 3, 4])
+def test_PerfectModelEnsemble_smooth_drop(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime, smooth
+):
+    """``drop=True`` subsamples smoothed leads to non-overlapping windows."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime.isel(lead=range(10))
+    pm_default = pm.smooth({"lead": smooth})
+    pm_dropped = pm.smooth({"lead": smooth}, drop=True)
+    smoothed_size = pm.get_initialized().lead.size - smooth + 1
+    expected_size = int(np.ceil(smoothed_size / smooth))
+    assert pm_dropped.get_initialized().lead.size == expected_size
+    assert pm_default.get_initialized().lead.size == smoothed_size
+    skill_default = pm_default.verify(metric="rmse", comparison="m2e", dim="init")
+    skill_dropped = pm_dropped.verify(metric="rmse", comparison="m2e", dim="init")
+    assert skill_dropped.lead.size == expected_size
+    assert skill_default.lead.size == smoothed_size
+    assert skill_dropped.lead[0] == f"1-{smooth}"
+    expected_last_start = (expected_size - 1) * smooth + 1
+    assert (
+        skill_dropped.lead[-1]
+        == f"{expected_last_start}-{expected_last_start + smooth - 1}"
+    )  # noqa: E501
+
+
+@pytest.mark.parametrize("smooth", [2, 3])
+def test_HindcastEnsemble_smooth_drop(hindcast_recon_1d_ym, smooth):
+    """``drop=True`` subsamples smoothed leads to non-overlapping windows
+    and propagate to ``verify`` skill (HindcastEnsemble)."""
+    he = hindcast_recon_1d_ym.isel(lead=range(10))
+    he_default = he.smooth({"lead": smooth})
+    he_dropped = he.smooth({"lead": smooth}, drop=True)
+    smoothed_size = he.get_initialized().lead.size - smooth + 1
+    expected_size = int(np.ceil(smoothed_size / smooth))
+    assert he_dropped.get_initialized().lead.size == expected_size
+    assert he_default.get_initialized().lead.size == smoothed_size
+    skill_default = he_default.verify(
+        metric="rmse", comparison="e2o", dim="init", alignment="same_inits"
+    )
+    skill_dropped = he_dropped.verify(
+        metric="rmse", comparison="e2o", dim="init", alignment="same_inits"
+    )
+    assert skill_default.lead.size == smoothed_size
+    assert skill_dropped.lead.size == expected_size
+    assert skill_dropped.lead[0] == f"1-{smooth}"
+
+
+def test_smooth_drop_false_default(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    """``drop=False`` (the default) preserves overlapping rolling windows."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime.isel(lead=range(8))
+    pm_smoothed = pm.smooth({"lead": 3})
+    assert pm_smoothed.get_initialized().lead.size == 6
+    skill = pm_smoothed.verify(metric="rmse", comparison="m2e", dim="init")
+    assert list(skill.lead.values) == [
+        "1-3",
+        "2-4",
+        "3-5",
+        "4-6",
+        "5-7",
+        "6-8",
+    ]
+
+
+def test_smooth_drop_keeps_lead_attrs_units(
+    perfectModelEnsemble_initialized_control_1d_ym_cftime,
+):
+    """``drop=True`` does not corrupt the ``units`` attribute on ``lead``."""
+    pm = perfectModelEnsemble_initialized_control_1d_ym_cftime.isel(lead=range(10))
+    pm_dropped = pm.smooth({"lead": 3}, drop=True)
+    assert pm_dropped.get_initialized().lead.attrs.get("units") == "years"
+
+
+def test_smooth_set_center_coord_attrs():
+    """``_set_center_coord`` adds ``long_name`` and copies ``units`` onto ``lead_center``."""
+    da = xr.DataArray(
+        np.arange(4),
+        dims="lead",
+        coords={"lead": ["1-3", "2-4", "3-5", "4-6"]},
+    )
+    da["lead"].attrs["units"] = "years"
+    actual = _set_center_coord(da)
+    assert actual["lead_center"].attrs["long_name"] == "lead center of rolling window"
+    assert actual["lead_center"].attrs["units"] == "years"

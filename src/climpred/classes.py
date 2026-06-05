@@ -777,6 +777,7 @@ class PredictionEnsemble:
         self,
         smooth_kws: Optional[Union[str, Dict[str, int]]] = None,
         how: str = "mean",
+        drop: bool = False,
         **xesmf_kwargs: str,
     ):
         """Smooth in space and/or aggregate in time in ``PredictionEnsemble``.
@@ -790,6 +791,13 @@ class PredictionEnsemble:
                 Defaults to ``None``.
             how: how to smooth temporally. From Choose from ``["mean", "sum"]``.
                 Defaults to ``"mean"``.
+            drop: If ``True`` and ``"lead"`` is in ``smooth_kws``, subsample
+                the smoothed rolling windows to non-overlapping windows
+                (every ``n``-th lead, where ``n`` is the smoothing length).
+                For example, ``smooth({"lead": 3}, drop=True)`` on a forecast
+                with leads ``1..10`` yields leads ``"1-3", "4-6", "7-9"``
+                instead of the default overlapping ``"1-3", "2-4", ...,
+                "8-10"``. Defaults to ``False``.
             **xesmf_kwargs: kwargs passed to
                 :py:func:`~climpred.smoothing.spatial_smoothing_xesmf`
 
@@ -897,6 +905,15 @@ class PredictionEnsemble:
             del self._datasets["initialized"].coords["valid_time"]
             self._datasets["initialized"] = add_time_from_init_lead(
                 self._datasets["initialized"]
+            )
+        if drop and tsmooth_kws is not None and "lead" in tsmooth_kws:
+            # drop overlapping lead if temporally smoothed
+            n = tsmooth_kws["lead"]
+            keep_leads = [
+                i for i in range(self._datasets["initialized"].lead.size) if i % n == 0
+            ]  # noqa: E501
+            self._datasets["initialized"] = self._datasets["initialized"].isel(
+                lead=keep_leads
             )
         return self
 
@@ -1513,6 +1530,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
             reference=reference,
             **metric_kwargs,
         )
+        if "lead_center" in result.coords:
+            result.coords["lead_center"].attrs["units"] = result.coords[
+                "lead"
+            ].attrs.get("units", "")
         return result.squeeze()
 
     def _compute_uninitialized(
@@ -2447,6 +2468,10 @@ class HindcastEnsemble(PredictionEnsemble):
             reference=reference,
             **metric_kwargs,
         )
+        if "lead_center" in res.coords:
+            res.coords["lead_center"].attrs["units"] = res.coords["lead"].attrs.get(
+                "units", ""
+            )
         return res
 
     def bootstrap(

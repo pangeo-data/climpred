@@ -153,7 +153,7 @@ invalid-argument-type = "ignore"
 missing-argument = "ignore"
 unknown-argument = "ignore"
 [tool.ty.src]
-exclude = [ "asv_bench/", "docs/" ]
+exclude = [ "asv_bench/", "docs/", "debug_notebooks/" ]
 
 [tool.pytest]
 [tool.pytest.ini_options]

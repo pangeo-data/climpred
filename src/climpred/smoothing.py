@@ -230,6 +230,8 @@ def _set_center_coord(ds: xr.Dataset, dim: str = "lead") -> xr.Dataset:
     for i in old_dim:
         new_dim.append(eval(i.replace("-", "+")) / 2)
     ds.coords[f"{dim}_center"] = (dim, np.array(new_dim))
+    ds.coords[f"{dim}_center"].attrs["long_name"] = f"{dim} center of rolling window"
+    ds.coords[f"{dim}_center"].attrs["units"] = ds.coords[dim].attrs.get("units", "")
     return ds
 
 

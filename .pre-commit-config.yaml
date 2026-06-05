@@ -56,7 +56,7 @@ repos:
         entry: ty check
         language: python
         types: [python]
-        exclude: 'asv_bench'
+        exclude: 'asv_bench|debug_notebooks'
         pass_filenames: false
         additional_dependencies: ['ty>=0.0.1a14']
 

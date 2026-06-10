@@ -2140,6 +2140,12 @@ class HindcastEnsemble(PredictionEnsemble):
                 alignments_success.append(a)
             except CoordinateError as e:
                 warnings.warn(f"alignment='{a}' failed. CoordinateError: {e}")
+        if not alignment_dates:
+            raise CoordinateError(
+                "no overlap between hindcast valid_time and verification time for all "
+                "leads. Please try plot_alignment with less leads or longer "
+                "verification time."
+            )
         verif_dates_xr = (
             xr.concat(
                 alignment_dates,

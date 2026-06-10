@@ -5,9 +5,7 @@
 
 .. autoclass:: Metric
 
-
    .. automethod:: __init__
-
 
    .. rubric:: Methods
 

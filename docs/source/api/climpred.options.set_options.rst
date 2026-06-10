@@ -5,9 +5,7 @@
 
 .. autoclass:: set_options
 
-
    .. automethod:: __init__
-
 
    .. rubric:: Methods
 

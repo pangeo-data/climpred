@@ -5,9 +5,7 @@
 
 .. autoclass:: PredictionEnsemble
 
-
    .. automethod:: __init__
-
 
    .. rubric:: Methods
 
@@ -21,10 +19,6 @@
       ~PredictionEnsemble.plot
       ~PredictionEnsemble.remove_seasonality
       ~PredictionEnsemble.smooth
-
-
-
-
 
    .. rubric:: Attributes
 

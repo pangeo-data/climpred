@@ -1,4 +1,4 @@
-climpred.classes.PredictionEnsemble.\_\_truediv\_\_
+﻿climpred.classes.PredictionEnsemble.\_\_truediv\_\_
 ===================================================
 
 .. currentmodule:: climpred.classes

@@ -1,4 +1,4 @@
-climpred.classes.HindcastEnsemble.add\_observations
+﻿climpred.classes.HindcastEnsemble.add\_observations
 ===================================================
 
 .. currentmodule:: climpred.classes

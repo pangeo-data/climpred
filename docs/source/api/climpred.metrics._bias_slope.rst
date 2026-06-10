@@ -1,4 +1,4 @@
-climpred.metrics.\_bias\_slope
+﻿climpred.metrics.\_bias\_slope
 ==============================
 
 .. currentmodule:: climpred.metrics

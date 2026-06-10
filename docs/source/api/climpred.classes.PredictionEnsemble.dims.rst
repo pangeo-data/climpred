@@ -1,4 +1,4 @@
-climpred.classes.PredictionEnsemble.dims
+﻿climpred.classes.PredictionEnsemble.dims
 ========================================
 
 .. currentmodule:: climpred.classes

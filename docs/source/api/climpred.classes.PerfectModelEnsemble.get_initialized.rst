@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.get\_initialized
+﻿climpred.classes.PerfectModelEnsemble.get\_initialized
 ======================================================
 
 .. currentmodule:: climpred.classes

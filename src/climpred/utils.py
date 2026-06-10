@@ -312,26 +312,30 @@ def convert_valid_time_lead_to_init_lead(
     skill: Union[xr.Dataset, xr.DataArray],
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Convert ``data(valid_time,lead)`` to ``data(init,lead)``.
+
     Args:
-        skill with dimensions valid_time and lead and coordinate init(valid_time, lead).
+        skill: skill with dims valid_time and lead and coordinate init(valid_time, lead).
+
     Returns:
         skill with dimensions init and lead
+
     Examples:
         Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
+
         >>> skill_init_lead = HindcastEnsemble.sel(
         ...     lead=[1, 2, 3], init=slice("1990", "2000")
         ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")
         >>> skill_init_lead.SST
         <xarray.DataArray 'SST' (lead: 3, init: 11)> Size: 264B
         array([[       nan,        nan, 0.0766808 , 0.06826988, 0.08174487,
-                0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
-                0.13758603],
-               [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
-                0.20424354, 0.18043845, 0.06553673, 0.00906034, 0.13045045,
-                       nan],
-               [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
-                0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
-                       nan]])
+                 0.06208846, 0.1537402 , 0.15632479, 0.01302786, 0.06343324,
+                 0.13758603],
+                [       nan, 0.07732193, 0.06369554, 0.08282175, 0.0761979 ,
+                 0.20424354, 0.18043845, 0.06553673, 0.00906034, 0.13045045,
+                        nan],
+                [0.06212777, 0.11822992, 0.15282457, 0.05752934, 0.20133476,
+                 0.19931679, 0.00987793, 0.06375334, 0.07705835,        nan,
+                        nan]])
         Coordinates:
           * init        (init) object 88B 1990-01-01 00:00:00 ... 2000-01-01 00:00:00
           * lead        (lead) int32 12B 1 2 3

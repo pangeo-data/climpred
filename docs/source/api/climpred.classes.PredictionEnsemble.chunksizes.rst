@@ -1,4 +1,4 @@
-climpred.classes.PredictionEnsemble.chunksizes
+﻿climpred.classes.PredictionEnsemble.chunksizes
 ==============================================
 
 .. currentmodule:: climpred.classes

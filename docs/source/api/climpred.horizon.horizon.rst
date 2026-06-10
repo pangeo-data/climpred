@@ -1,4 +1,4 @@
-climpred.horizon.horizon
+﻿climpred.horizon.horizon
 ========================
 
 .. currentmodule:: climpred.horizon

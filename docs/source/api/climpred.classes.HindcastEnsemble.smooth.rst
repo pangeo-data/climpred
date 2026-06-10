@@ -1,4 +1,4 @@
-climpred.classes.HindcastEnsemble.smooth
+﻿climpred.classes.HindcastEnsemble.smooth
 ========================================
 
 .. currentmodule:: climpred.classes

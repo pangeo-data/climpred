@@ -1,4 +1,4 @@
-climpred.metrics.\_brier\_score
+﻿climpred.metrics.\_brier\_score
 ===============================
 
 .. currentmodule:: climpred.metrics

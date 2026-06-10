@@ -1,4 +1,4 @@
-climpred.metrics.\_std\_ratio
+﻿climpred.metrics.\_std\_ratio
 =============================
 
 .. currentmodule:: climpred.metrics

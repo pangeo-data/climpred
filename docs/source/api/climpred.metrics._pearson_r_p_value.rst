@@ -1,4 +1,4 @@
-climpred.metrics.\_pearson\_r\_p\_value
+﻿climpred.metrics.\_pearson\_r\_p\_value
 =======================================
 
 .. currentmodule:: climpred.metrics

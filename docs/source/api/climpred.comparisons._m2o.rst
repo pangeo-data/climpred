@@ -1,5 +1,5 @@
 ﻿climpred.comparisons.\_m2o
-===========================
+==========================
 
 .. currentmodule:: climpred.comparisons
 

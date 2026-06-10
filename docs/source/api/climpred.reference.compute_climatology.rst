@@ -1,4 +1,4 @@
-climpred.reference.compute\_climatology
+﻿climpred.reference.compute\_climatology
 =======================================
 
 .. currentmodule:: climpred.reference

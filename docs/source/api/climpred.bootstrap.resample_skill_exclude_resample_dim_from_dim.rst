@@ -1,4 +1,4 @@
-climpred.bootstrap.resample\_skill\_exclude\_resample\_dim\_from\_dim
+﻿climpred.bootstrap.resample\_skill\_exclude\_resample\_dim\_from\_dim
 =====================================================================
 
 .. currentmodule:: climpred.bootstrap

@@ -1,4 +1,4 @@
-climpred.classes.PredictionEnsemble.\_\_getattr\_\_
+﻿climpred.classes.PredictionEnsemble.\_\_getattr\_\_
 ===================================================
 
 .. currentmodule:: climpred.classes

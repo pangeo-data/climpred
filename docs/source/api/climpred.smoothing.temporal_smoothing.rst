@@ -1,4 +1,4 @@
-climpred.smoothing.temporal\_smoothing
+﻿climpred.smoothing.temporal\_smoothing
 ======================================
 
 .. currentmodule:: climpred.smoothing

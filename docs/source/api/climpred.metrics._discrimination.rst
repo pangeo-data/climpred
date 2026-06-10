@@ -1,4 +1,4 @@
-climpred.metrics.\_discrimination
+﻿climpred.metrics.\_discrimination
 =================================
 
 .. currentmodule:: climpred.metrics

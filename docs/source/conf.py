@@ -42,7 +42,7 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
-    "sphinx.ext.imgmath",
+    "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
@@ -53,9 +53,15 @@ extensions = [
     "sphinxcontrib.bibtex",
 ]
 
+autosectionlabel_prefix_document = True
+autosectionlabel_maxdepth = 2
+
 suppress_warnings = [
     "bibtex.duplicate_label",
     "bibtex.duplicate_citation",
+    "myst.xref_missing",
+    "myst.header",
+    "mystnb.unknown_mime_type",
 ]
 
 # bibtex options
@@ -103,6 +109,7 @@ exclude_patterns = [
     "**.ipynb_checkpoints",
     "Thumbs.db",
     ".DS_Store",
+    "images/alignment_plots/*",
 ]
 
 pygments_style = "sphinx"
@@ -121,9 +128,6 @@ html_logo = "images/climpred-logo.png"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "logo_only": False,
-    "style_nav_header_background": "#fcfcfc",
-    # theme-specific options below
     "repository_url": "https://github.com/pangeo-data/climpred",
     "repository_branch": "main",
     "path_to_docs": "docs/source",
@@ -131,8 +135,6 @@ html_theme_options = {
     "use_repository_button": True,
     "use_issues_button": True,
     "home_page_in_toc": False,
-    "extra_navbar": "",
-    "navbar_footer_text": "",
 }
 
 html_context = {
@@ -165,6 +167,13 @@ nbsphinx_allow_errors = False
 nbsphinx_timeout = 600
 nbsphinx_execute = "auto"  # "never" "always"
 nb_execution_mode = "auto"
+nb_execution_excludepatterns = [
+    "examples/NWP/*",
+    "examples/misc/climpred_gpu*",
+    "examples/misc/setup_your_own_data*",
+    "examples/subseasonal/daily-S2S-ECMWF*",
+    "examples/subseasonal/daily-subx-example*",
+]
 
 # Napoleon configurations
 napoleon_google_docstring = True

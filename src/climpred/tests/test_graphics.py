@@ -7,6 +7,7 @@ import pytest
 
 from climpred import HindcastEnsemble, PerfectModelEnsemble
 from climpred.checks import DimensionError
+from climpred.exceptions import CoordinateError
 from climpred.graphics import plot_bootstrapped_skill_over_leadyear
 
 from . import requires_matplotlib, requires_nc_time_axis
@@ -136,3 +137,57 @@ def test_HindcastEnsemble_plot_alignment(hindcast_hist_obs_1d, alignment, return
             ),
             (xr.plot.facetgrid.FacetGrid, matplotlib.collections.QuadMesh),
         )
+
+
+def test_plot_alignment_no_overlap_same_inits():
+    """plot_alignment raises CoordinateError for single alignment with no overlap."""
+    import numpy as np
+    import xarray as xr
+
+    from climpred import HindcastEnsemble
+
+    inits = [1990, 1991, 1992, 1993]
+    lead = [1, 2, 3]
+    init_da = xr.DataArray(
+        np.random.rand(len(inits), len(lead)),
+        dims=["init", "lead"],
+        coords=[inits, lead],
+        name="var",
+    )
+    init_da["lead"].attrs["units"] = "years"
+    obs_da = xr.DataArray(
+        np.random.rand(3),
+        dims=["time"],
+        coords=[list(range(2000, 2003))],
+        name="var",
+    )
+    he = HindcastEnsemble(init_da.to_dataset()).add_observations(obs_da.to_dataset())
+    with pytest.raises(CoordinateError, match="no overlap between hindcast"):
+        he.plot_alignment(alignment="same_inits", return_xr=True)
+
+
+def test_plot_alignment_no_overlap_all_alignments():
+    """plot_alignment raises ValueError when all alignments fail with no overlap."""
+    import numpy as np
+    import xarray as xr
+
+    from climpred import HindcastEnsemble
+
+    inits = [1990, 1991, 1992, 1993]
+    lead = [1, 2, 3]
+    init_da = xr.DataArray(
+        np.random.rand(len(inits), len(lead)),
+        dims=["init", "lead"],
+        coords=[inits, lead],
+        name="var",
+    )
+    init_da["lead"].attrs["units"] = "years"
+    obs_da = xr.DataArray(
+        np.random.rand(3),
+        dims=["time"],
+        coords=[list(range(2000, 2003))],
+        name="var",
+    )
+    he = HindcastEnsemble(init_da.to_dataset()).add_observations(obs_da.to_dataset())
+    with pytest.raises(CoordinateError, match="no overlap between hindcast"):
+        he.plot_alignment(alignment=None, return_xr=True)

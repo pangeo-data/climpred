@@ -10,6 +10,7 @@ from .alignment import return_inits_and_verif_dates
 from .checks import DimensionError
 from .classes import HindcastEnsemble, PerfectModelEnsemble
 from .constants import CLIMPRED_DIMS
+from .exceptions import CoordinateError
 from .metrics import ALL_METRICS
 from .utils import get_metric_class
 
@@ -425,6 +426,13 @@ def _verif_dates_xr(hindcast, alignment, reference, date2num_units):
             else None
         ),
     )
+
+    if not inits or all(v.size == 0 for v in inits.values()):
+        raise CoordinateError(
+            "no overlap between hindcast valid_time and verification time for all "
+            "leads. Please try plot_alignment with less leads or longer verification "
+            "time."
+        )
 
     verif_dates_xr = xr.concat(
         [

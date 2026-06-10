@@ -19,9 +19,12 @@ ITERATIONS = 300
 def cleanup_matplotlib_figures():
     """Automatically clean up matplotlib figures after each test."""
     yield
-    import matplotlib.pyplot as plt
-
-    plt.close("all")
+    try:
+        import matplotlib.pyplot as plt
+    except ImportError:
+        pass
+    else:
+        plt.close("all")
 
 
 @requires_matplotlib

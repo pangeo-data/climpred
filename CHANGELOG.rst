@@ -25,6 +25,7 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
+- Dropped support for Python 3.9 (EOL October 2025). Minimum supported Python is now 3.10. (:issue:`919`, :pr:`920`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.plot_alignment` now raises a clear error message when there is no overlap between hindcast ``valid_time`` and verification ``time``, instead of a cryptic ``ValueError`` about ``CFTimeIndex`` ambiguity. (:issue:`912`, :pr:`921`) `Aaron Spring`_
 

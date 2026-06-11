@@ -416,6 +416,8 @@ Continuous Ranked Probability Skill Score (CRPSS)
     # Enter any of the below keywords in ``metric=...`` for the compute functions.
     print(f"Keywords: {metric_aliases['crpss']}")
 
+.. autolink-skip:: section
+
 .. autofunction:: _crpss
    :noindex:
 

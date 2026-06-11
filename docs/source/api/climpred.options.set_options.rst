@@ -1,4 +1,6 @@
-﻿climpred.options.set\_options
+﻿.. autolink-skip:: file
+
+climpred.options.set\_options
 =============================
 
 .. currentmodule:: climpred.options

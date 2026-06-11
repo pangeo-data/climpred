@@ -1,4 +1,6 @@
-﻿climpred.metrics.\_get\_norm\_factor
+﻿.. autolink-skip:: file
+
+climpred.metrics.\_get\_norm\_factor
 ====================================
 
 .. currentmodule:: climpred.metrics

@@ -63,6 +63,10 @@ suppress_warnings = [
     "myst.xref_missing",
     "myst.header",
     "mystnb.unknown_mime_type",
+    # codeautolink warns when doctest output lines don't match HTML exactly.
+    # This is a known false-positive: the code renders correctly but codeautolink
+    # can't link identifiers in the block. Suppress to keep the build clean.
+    "codeautolink.match_block",
 ]
 
 # bibtex options

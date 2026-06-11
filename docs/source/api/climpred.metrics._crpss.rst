@@ -1,6 +1,4 @@
-﻿.. autolink-skip:: file
-
-climpred.metrics.\_crpss
+﻿climpred.metrics.\_crpss
 ========================
 
 .. currentmodule:: climpred.metrics

@@ -1,6 +1,4 @@
-﻿.. autolink-skip:: file
-
-climpred.classes.HindcastEnsemble.plot\_alignment
+﻿climpred.classes.HindcastEnsemble.plot\_alignment
 =================================================
 
 .. currentmodule:: climpred.classes

@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.add\_control
+﻿climpred.classes.PerfectModelEnsemble.add\_control
 ==================================================
 
 .. currentmodule:: climpred.classes

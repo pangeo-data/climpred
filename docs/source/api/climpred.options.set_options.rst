@@ -1,13 +1,11 @@
-climpred.options.set\_options
+﻿climpred.options.set\_options
 =============================
 
 .. currentmodule:: climpred.options
 
 .. autoclass:: set_options
 
-
    .. automethod:: __init__
-
 
    .. rubric:: Methods
 

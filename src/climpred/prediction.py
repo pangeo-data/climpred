@@ -246,10 +246,11 @@ def compute_perfect_model(
         control (xr.Dataset): NOTE that this is a legacy argument from a former
             release. ``control`` is not used in ``compute_perfect_model`` anymore.
         metric (str): `metric` name, see
-         :py:func:`climpred.utils.get_metric_class` and (see :ref:`Metrics`).
+         :py:func:`climpred.utils.get_metric_class` and (see :ref:`metrics:metrics`).
         comparison (str): `comparison` name defines what to take as forecast
             and verification (see
-            :py:func:`climpred.utils.get_comparison_class` and :ref:`Comparisons`).
+            :py:func:`climpred.utils.get_comparison_class` and
+            :ref:`comparisons:comparisons`).
         dim (str or list of str): dimension to apply metric over.
             default: ['member', 'init']
         ** metric_kwargs (dict): additional keywords to be passed to metric.

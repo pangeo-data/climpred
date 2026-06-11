@@ -1,4 +1,4 @@
-climpred.classes.PredictionEnsemble.equals
+﻿climpred.classes.PredictionEnsemble.equals
 ==========================================
 
 .. currentmodule:: climpred.classes

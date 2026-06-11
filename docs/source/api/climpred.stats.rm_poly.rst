@@ -1,4 +1,4 @@
-climpred.stats.rm\_poly
+﻿climpred.stats.rm\_poly
 =======================
 
 .. currentmodule:: climpred.stats

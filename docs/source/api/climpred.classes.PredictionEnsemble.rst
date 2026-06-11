@@ -1,13 +1,11 @@
-climpred.classes.PredictionEnsemble
+﻿climpred.classes.PredictionEnsemble
 ===================================
 
 .. currentmodule:: climpred.classes
 
 .. autoclass:: PredictionEnsemble
 
-
    .. automethod:: __init__
-
 
    .. rubric:: Methods
 
@@ -21,10 +19,6 @@ climpred.classes.PredictionEnsemble
       ~PredictionEnsemble.plot
       ~PredictionEnsemble.remove_seasonality
       ~PredictionEnsemble.smooth
-
-
-
-
 
    .. rubric:: Attributes
 

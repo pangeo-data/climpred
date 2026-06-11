@@ -1,4 +1,4 @@
-climpred.reference.compute\_persistence\_from\_first\_lead
+﻿climpred.reference.compute\_persistence\_from\_first\_lead
 ==========================================================
 
 .. currentmodule:: climpred.reference

@@ -1,4 +1,4 @@
-climpred.classes.HindcastEnsemble.get\_initialized
+﻿climpred.classes.HindcastEnsemble.get\_initialized
 ==================================================
 
 .. currentmodule:: climpred.classes

@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.plot
+﻿climpred.classes.PerfectModelEnsemble.plot
 ==========================================
 
 .. currentmodule:: climpred.classes

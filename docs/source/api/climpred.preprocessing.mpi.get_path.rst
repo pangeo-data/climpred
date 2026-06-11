@@ -1,4 +1,4 @@
-climpred.preprocessing.mpi.get\_path
+﻿climpred.preprocessing.mpi.get\_path
 ====================================
 
 .. currentmodule:: climpred.preprocessing.mpi

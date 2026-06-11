@@ -22,7 +22,7 @@ def get_path(
             Allowed: ['echam6', 'jsbach', 'mpiom', 'hamocc'].
         output_stream (str): output_stream name. Defaults to "monitoring_ym".
             Allowed: ['data_2d_mm', 'data_3d_ym', 'BOT_mm', ...]
-        timestr (str): timestr likely including *. Defaults to "*1231".
+        timestr (str): timestr likely including ``*``. Defaults to ``"*1231"``.
         ending (str): ending indicating file format. Defaults to "nc".
             Allowed: ['nc', 'grb'].
 

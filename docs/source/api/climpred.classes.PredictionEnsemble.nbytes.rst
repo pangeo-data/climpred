@@ -1,4 +1,4 @@
-climpred.classes.PredictionEnsemble.nbytes
+﻿climpred.classes.PredictionEnsemble.nbytes
 ==========================================
 
 .. currentmodule:: climpred.classes

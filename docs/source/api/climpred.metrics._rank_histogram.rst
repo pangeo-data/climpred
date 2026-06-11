@@ -1,4 +1,4 @@
-climpred.metrics.\_rank\_histogram
+﻿climpred.metrics.\_rank\_histogram
 ==================================
 
 .. currentmodule:: climpred.metrics

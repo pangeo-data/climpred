@@ -29,7 +29,6 @@ inherit the common base functionality.
     :toctree: api/
 
     PredictionEnsemble
-    PredictionEnsemble.__init__
 
 -------
 Builtin
@@ -79,11 +78,10 @@ more about the terminology `here <terminology.html>`_.
     :toctree: api/
 
     HindcastEnsemble
-    HindcastEnsemble.__init__
 
--------------------------
-Add and Retrieve Datasets
--------------------------
+-------------------------------------------
+HindcastEnsemble: Add and Retrieve Datasets
+-------------------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -94,9 +92,9 @@ Add and Retrieve Datasets
     HindcastEnsemble.get_observations
     HindcastEnsemble.get_uninitialized
 
-------------------
-Analysis Functions
-------------------
+------------------------------------
+HindcastEnsemble: Analysis Functions
+------------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -104,18 +102,18 @@ Analysis Functions
     HindcastEnsemble.verify
     HindcastEnsemble.bootstrap
 
--------------
-Generate Data
--------------
+-------------------------------
+HindcastEnsemble: Generate Data
+-------------------------------
 
 .. autosummary::
     :toctree: api/
 
     HindcastEnsemble.generate_uninitialized
 
---------------
-Pre-Processing
---------------
+--------------------------------
+HindcastEnsemble: Pre-Processing
+--------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -124,9 +122,9 @@ Pre-Processing
     HindcastEnsemble.remove_bias
     HindcastEnsemble.remove_seasonality
 
--------------
-Visualization
--------------
+-------------------------------
+HindcastEnsemble: Visualization
+-------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -148,11 +146,10 @@ original control run. Read more about the terminology `here <terminology.html>`_
     :toctree: api/
 
     PerfectModelEnsemble
-    PerfectModelEnsemble.__init__
 
--------------------------
-Add and Retrieve Datasets
--------------------------
+-----------------------------------------------
+PerfectModelEnsemble: Add and Retrieve Datasets
+-----------------------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -162,9 +159,9 @@ Add and Retrieve Datasets
     PerfectModelEnsemble.get_control
     PerfectModelEnsemble.get_uninitialized
 
-------------------
-Analysis Functions
-------------------
+----------------------------------------
+PerfectModelEnsemble: Analysis Functions
+----------------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -172,18 +169,18 @@ Analysis Functions
     PerfectModelEnsemble.verify
     PerfectModelEnsemble.bootstrap
 
--------------
-Generate Data
--------------
+-----------------------------------
+PerfectModelEnsemble: Generate Data
+-----------------------------------
 
 .. autosummary::
     :toctree: api/
 
     PerfectModelEnsemble.generate_uninitialized
 
---------------
-Pre-Processing
---------------
+------------------------------------
+PerfectModelEnsemble: Pre-Processing
+------------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -191,9 +188,9 @@ Pre-Processing
     PerfectModelEnsemble.smooth
     PerfectModelEnsemble.remove_seasonality
 
--------------
-Visualization
--------------
+-----------------------------------
+PerfectModelEnsemble: Visualization
+-----------------------------------
 
 .. autosummary::
     :toctree: api/
@@ -343,8 +340,6 @@ For a thorough look at our metrics library, please see the
     :toctree: api/
 
     Metric
-    Metric.__init__
-    Metric.__repr__
     _get_norm_factor
     _pearson_r
     _pearson_r_p_value
@@ -396,8 +391,6 @@ For a thorough look at our metrics library, please see the
     :toctree: api/
 
     Comparison
-    Comparison.__init__
-    Comparison.__repr__
     _e2o
     _m2o
     _m2m

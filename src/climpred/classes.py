@@ -1763,10 +1763,10 @@ class PerfectModelEnsemble(PredictionEnsemble):
                 :py:func:`~climpred.reference.compute_persistence_from_first_lead`.
             iterations: Number of resampling iterations for bootstrapping with
                 replacement. Recommended >= 500.
-            resample_dim: dimension to resample from. Defaults to `"member"``.
+            resample_dim: dimension to resample from. Defaults to ``"member"``.
 
-                - "member": select a different set of members from forecast
-                - "init': select a different set of initializations from forecast
+                - ``"member"``: select a different set of members from forecast
+                - ``"init"``: select a different set of initializations from forecast
 
             sig: Significance level in percent for deciding whether
                 uninitialized and persistence beat initialized skill.
@@ -1774,23 +1774,22 @@ class PerfectModelEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            :py:class:`xarray.Dataset` with dimensions ``results`` (holding
-            ``verify skill``, ``p``, ``low_ci`` and ``high_ci``) and ``skill``
-            (holding ``initialized``, ``persistence`` and/or ``uninitialized``):
-                * results="verify skill", skill="initialized":
-                    mean initialized skill
-                * results="high_ci", skill="initialized":
-                    high confidence interval boundary for initialized skill
-                * results="p", skill="uninitialized":
-                    p value of the hypothesis that the
-                    difference of skill between the initialized and
-                    uninitialized simulations is smaller or equal to zero
-                    based on bootstrapping with replacement.
-                * results="p", skill="persistence":
-                    p value of the hypothesis that the
-                    difference of skill between the initialized and persistenceistence
-                    simulations is smaller or equal to zero based on
-                    bootstrapping with replacement.
+            Dataset with dimensions ``results`` and ``skill``.
+
+            * results="verify skill", skill="initialized":
+                mean initialized skill
+            * results="high_ci", skill="initialized":
+                high confidence interval boundary for initialized skill
+            * results="p", skill="uninitialized":
+                p value of the hypothesis that the
+                difference of skill between the initialized and
+                uninitialized simulations is smaller or equal to zero
+                based on bootstrapping with replacement.
+            * results="p", skill="persistence":
+                p value of the hypothesis that the
+                difference of skill between the initialized and persistence
+                simulations is smaller or equal to zero based on
+                bootstrapping with replacement.
 
         Reference:
             :cite:t:`Goddard2013`
@@ -2533,23 +2532,22 @@ class HindcastEnsemble(PredictionEnsemble):
             **metric_kwargs: arguments passed to ``metric``.
 
         Returns:
-            :py:class:`xarray.Dataset` with dimensions ``results`` (holding ``skill``,
-            ``p``, ``low_ci`` and ``high_ci``) and ``skill`` (holding ``initialized``,
-            ``persistence`` and/or ``uninitialized``):
-                * results="verify skill", skill="initialized":
-                    mean initialized skill
-                * results="high_ci", skill="initialized":
-                    high confidence interval boundary for initialized skill
-                * results="p", skill="uninitialized":
-                    p value of the hypothesis that the
-                    difference of skill between the initialized and
-                    uninitialized simulations is smaller or equal to zero
-                    based on bootstrapping with replacement.
-                * results="p", skill="persistence":
-                    p value of the hypothesis that the
-                    difference of skill between the initialized and persistence
-                    simulations is smaller or equal to zero based on
-                    bootstrapping with replacement.
+            Dataset with dimensions ``results`` and ``skill``.
+
+            * results="verify skill", skill="initialized":
+                mean initialized skill
+            * results="high_ci", skill="initialized":
+                high confidence interval boundary for initialized skill
+            * results="p", skill="uninitialized":
+                p value of the hypothesis that the
+                difference of skill between the initialized and
+                uninitialized simulations is smaller or equal to zero
+                based on bootstrapping with replacement.
+            * results="p", skill="persistence":
+                p value of the hypothesis that the
+                difference of skill between the initialized and persistence
+                simulations is smaller or equal to zero based on
+                bootstrapping with replacement.
 
         References:
             :cite:t:`Goddard2013`
@@ -2649,10 +2647,10 @@ class HindcastEnsemble(PredictionEnsemble):
                   multiplicatively
                 - ``"multiplicative_std"``: correcting the standard deviation
                   multiplicatively
-                - ``"modified_quantile"``: `Reference <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`_
-                - ``"basic_quantile"``: `Reference <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`_
-                - ``"gamma_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
-                - ``"normal_mapping"``: `Reference <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`_
+                - ``"modified_quantile"``: `Ref <https://www.sciencedirect.com/science/article/abs/pii/S0034425716302000?via%3Dihub>`__
+                - ``"basic_quantile"``: `Ref <https://rmets.onlinelibrary.wiley.com/doi/pdf/10.1002/joc.2168>`__
+                - ``"gamma_mapping"``: `Ref <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`__
+                - ``"normal_mapping"``: `Ref <https://www.hydrol-earth-syst-sci.net/21/2649/2017/>`__
                 - :py:class:`xclim.sdba.adjustment.EmpiricalQuantileMapping`
                 - :py:class:`xclim.sdba.adjustment.DetrendedQuantileMapping`
                 - :py:class:`xclim.sdba.adjustment.PrincipalComponents`
@@ -2664,10 +2662,10 @@ class HindcastEnsemble(PredictionEnsemble):
                 and test period to apply bias correction to? For a detailed
                 description, see `Risbey et al. 2021 <http://www.nature.com/articles/s41467-021-23771-z>`_:
 
-                - ``"fair"```: no overlap between ``train`` and ``test`` (recommended).
+                - ``"fair"``: no overlap between ``train`` and ``test`` (recommended).
                   Set either ``train_init`` or ``train_time``.
                 - ``"unfair"``: completely overlapping ``train`` and ``test`` (default).
-                - ``"unfair-cv"```: overlapping ``train`` and ``test`` except for
+                - ``"unfair-cv"``: overlapping ``train`` and ``test`` except for
                   current `init`, which is
                   `left out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
                   (set ``cv="LOO"``).
@@ -2681,7 +2679,8 @@ class HindcastEnsemble(PredictionEnsemble):
                 - ``True/"LOO"``: Calculate bias by `leaving given initialization out <https://en.wikipedia.org/wiki/Cross-validation_(statistics)#Leave-one-out_cross-validation>`_
 
                     .. note::
-                    Don't use ``cv="LOO"``, see `comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.
+
+                       Don't use ``cv="LOO"``, see `this comment <https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832>`_.
 
                 - ``False``: include all initializations in the calculation of bias,
                   which is much faster and but yields similar skill with a large N of

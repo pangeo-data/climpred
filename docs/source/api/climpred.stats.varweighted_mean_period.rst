@@ -1,4 +1,4 @@
-climpred.stats.varweighted\_mean\_period
+﻿climpred.stats.varweighted\_mean\_period
 ========================================
 
 .. currentmodule:: climpred.stats

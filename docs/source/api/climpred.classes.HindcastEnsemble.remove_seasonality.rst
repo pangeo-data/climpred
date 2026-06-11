@@ -1,4 +1,4 @@
-climpred.classes.HindcastEnsemble.remove\_seasonality
+﻿climpred.classes.HindcastEnsemble.remove\_seasonality
 =====================================================
 
 .. currentmodule:: climpred.classes

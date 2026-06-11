@@ -1,4 +1,4 @@
-climpred.metrics.\_spearman\_r\_p\_value
+﻿climpred.metrics.\_spearman\_r\_p\_value
 ========================================
 
 .. currentmodule:: climpred.metrics

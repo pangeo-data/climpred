@@ -1,4 +1,4 @@
-climpred.metrics.\_msess\_murphy
+﻿climpred.metrics.\_msess\_murphy
 ================================
 
 .. currentmodule:: climpred.metrics

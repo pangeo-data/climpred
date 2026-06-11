@@ -1,4 +1,4 @@
-climpred.bootstrap.varweighted\_mean\_period\_threshold
+﻿climpred.bootstrap.varweighted\_mean\_period\_threshold
 =======================================================
 
 .. currentmodule:: climpred.bootstrap

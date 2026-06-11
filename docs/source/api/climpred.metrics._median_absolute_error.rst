@@ -1,4 +1,4 @@
-climpred.metrics.\_median\_absolute\_error
+﻿climpred.metrics.\_median\_absolute\_error
 ==========================================
 
 .. currentmodule:: climpred.metrics

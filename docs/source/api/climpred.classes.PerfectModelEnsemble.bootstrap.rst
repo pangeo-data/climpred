@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.bootstrap
+﻿climpred.classes.PerfectModelEnsemble.bootstrap
 ===============================================
 
 .. currentmodule:: climpred.classes

@@ -1,4 +1,4 @@
-climpred.metrics.\_mse
+﻿climpred.metrics.\_mse
 ======================
 
 .. currentmodule:: climpred.metrics

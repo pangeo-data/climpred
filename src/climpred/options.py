@@ -33,6 +33,8 @@ _VALIDATORS = {
     in [True, False],
 }
 
+__all__ = ["set_options"]
+
 
 class set_options:
     """

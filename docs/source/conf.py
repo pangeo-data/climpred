@@ -158,6 +158,7 @@ html_context = {
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "esmtools": ("https://esmtools.readthedocs.io/en/latest", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
     "numpy": ("https://numpy.org/doc/stable", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "xarray": ("https://docs.xarray.dev/en/stable", None),

@@ -109,6 +109,9 @@ else:
     optionalaxisType = Optional[Any]
 
 
+__all__ = ["PredictionEnsemble", "PerfectModelEnsemble", "HindcastEnsemble"]
+
+
 def _display_metadata(self) -> str:
     """
     Print the contents of the :py:class:`.PredictionEnsemble` as text.

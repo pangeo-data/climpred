@@ -46,6 +46,7 @@ extensions = [
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "sphinx_codeautolink",
     "sphinx_copybutton",
     "sphinxext.opengraph",
     "IPython.sphinxext.ipython_directive",
@@ -62,6 +63,10 @@ suppress_warnings = [
     "myst.xref_missing",
     "myst.header",
     "mystnb.unknown_mime_type",
+    # codeautolink warns when doctest output lines don't match HTML exactly.
+    # This is a known false-positive: the code renders correctly but codeautolink
+    # can't link identifiers in the block. Suppress to keep the build clean.
+    "codeautolink.match_block",
 ]
 
 # bibtex options
@@ -153,6 +158,7 @@ html_context = {
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "esmtools": ("https://esmtools.readthedocs.io/en/latest", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
     "numpy": ("https://numpy.org/doc/stable", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "xarray": ("https://docs.xarray.dev/en/stable", None),

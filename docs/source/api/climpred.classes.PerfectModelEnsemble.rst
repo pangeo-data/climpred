@@ -5,7 +5,9 @@
 
 .. autoclass:: PerfectModelEnsemble
 
+
    .. automethod:: __init__
+
 
    .. rubric:: Methods
 
@@ -24,6 +26,10 @@
       ~PerfectModelEnsemble.remove_seasonality
       ~PerfectModelEnsemble.smooth
       ~PerfectModelEnsemble.verify
+
+
+
+
 
    .. rubric:: Attributes
 

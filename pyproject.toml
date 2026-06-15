@@ -50,6 +50,7 @@ docs = [
   "myst-nb",
   "sphinx>=7",
   "sphinx-book-theme>=1",
+  "sphinx-codeautolink",
   "sphinx-copybutton",
   "sphinxcontrib-bibtex",
   "sphinxext-opengraph>=0.8",

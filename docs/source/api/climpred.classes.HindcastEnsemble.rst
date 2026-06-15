@@ -5,7 +5,9 @@
 
 .. autoclass:: HindcastEnsemble
 
+
    .. automethod:: __init__
+
 
    .. rubric:: Methods
 
@@ -28,6 +30,10 @@
       ~HindcastEnsemble.remove_seasonality
       ~HindcastEnsemble.smooth
       ~HindcastEnsemble.verify
+
+
+
+
 
    .. rubric:: Attributes
 

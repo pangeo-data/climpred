@@ -48,6 +48,7 @@ dependencies:
   - nbstripout
   - sphinx >=7.0.0
   - sphinx-book-theme >=1.0.0
+  - sphinx-codeautolink
   - sphinx-copybutton
   - sphinxcontrib-bibtex
   - sphinxext-opengraph >=0.8.0

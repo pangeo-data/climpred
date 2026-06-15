@@ -23,9 +23,10 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Project information -----------------------------------------------------
+author = "climpred development team"
 current_year = datetime.datetime.now().year
 project = "climpred"
-copyright = f"2019-{current_year}, climpred development team"
+copyright = f"2019-{current_year}, Riley X. Brady, Aaron Spring, and contributors"
 today_fmt = "%Y-%m-%d"
 
 version = climpred.__version__

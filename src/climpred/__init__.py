@@ -1,5 +1,13 @@
 """Verification of weather and climate forecasts and prediction."""
 
+# Breadcrumbs for humans and AI coding agents:
+# - Docs (HTML):   https://climpred.readthedocs.io/en/stable/
+# - Docs (LLM):    https://climpred.readthedocs.io/en/latest/llms.txt
+# - Dev guide:     AGENTS.md (symlinked as CLAUDE.md) at the repository root
+# - Agent skill:   .agents/skills/climpred-forecast-verification/SKILL.md
+# Main entry points are the classes climpred.HindcastEnsemble and
+# climpred.PerfectModelEnsemble in src/climpred/classes.py.
+
 # flake8: noqa
 from importlib.metadata import PackageNotFoundError, version as _get_version
 

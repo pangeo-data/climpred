@@ -109,6 +109,11 @@ pygments_style = "sphinx"
 source_suffix = ".rst"
 master_doc = "index"
 
+# Publish ``llms.txt`` verbatim at the site root so AI agents and LLM tools can
+# discover a curated, machine-readable index of the documentation following the
+# https://llmstxt.org standard (served at climpred.readthedocs.io/en/latest/llms.txt).
+html_extra_path = ["llms.txt"]
+
 # -- Options for HTML output -------------------------------------------------
 
 # The theme to use for HTML and HTML Help pages.  See the documentation for

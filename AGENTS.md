@@ -16,7 +16,7 @@ climpred is a Python package for verification of weather and climate forecasts a
   output tracks the docs automatically.
 - **Agent skill**: `.agents/skills/climpred-forecast-verification/` holds a task-oriented
   skill for AI coding agents.
-- **Python**: ≥3.9
+- **Python**: ≥3.10
 
 ## Key Classes
 

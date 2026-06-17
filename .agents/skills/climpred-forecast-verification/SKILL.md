@@ -8,7 +8,7 @@ license: MIT
 
 climpred verifies weather and climate forecasts. Built on xarray, dask, and xskillscore.
 
-**Docs**: https://climpred.readthedocs.io | **API for LLMs**: https://context7.com/pangeo-data/climpred/llms.txt
+**Docs**: https://climpred.readthedocs.io | **Docs for LLMs**: https://climpred.readthedocs.io/en/latest/llms.txt
 
 ## Install
 

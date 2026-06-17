@@ -1,4 +1,4 @@
-climpred.metrics.\_get\_norm\_factor
+﻿climpred.metrics.\_get\_norm\_factor
 ====================================
 
 .. currentmodule:: climpred.metrics

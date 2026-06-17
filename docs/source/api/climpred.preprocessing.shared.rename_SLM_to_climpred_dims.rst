@@ -1,4 +1,4 @@
-climpred.preprocessing.shared.rename\_SLM\_to\_climpred\_dims
+﻿climpred.preprocessing.shared.rename\_SLM\_to\_climpred\_dims
 =============================================================
 
 .. currentmodule:: climpred.preprocessing.shared

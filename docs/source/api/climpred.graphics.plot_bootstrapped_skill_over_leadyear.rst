@@ -1,4 +1,4 @@
-climpred.graphics.plot\_bootstrapped\_skill\_over\_leadyear
+﻿climpred.graphics.plot\_bootstrapped\_skill\_over\_leadyear
 ===========================================================
 
 .. currentmodule:: climpred.graphics

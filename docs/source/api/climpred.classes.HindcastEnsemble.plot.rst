@@ -1,4 +1,4 @@
-climpred.classes.HindcastEnsemble.plot
+﻿climpred.classes.HindcastEnsemble.plot
 ======================================
 
 .. currentmodule:: climpred.classes

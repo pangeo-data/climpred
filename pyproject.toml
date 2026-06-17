@@ -15,7 +15,7 @@ authors = [
   { name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de" },
   { name = "Riley Brady", email = "riley.brady@colorado.edu" },
 ]
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Education",
@@ -23,7 +23,6 @@ classifiers = [
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
@@ -44,13 +43,14 @@ dependencies = [
 ]
 [project.optional-dependencies]
 accel = [ "bottleneck", "numba>=0.57" ]
-bias-correction = [ "bias-correction>=0.4", "xclim>=0.52", "xsdba>=0.4; python_version>='3.10'" ]
+bias-correction = [ "bias-correction>=0.4", "xclim>=0.52", "xsdba>=0.4" ]
 complete = [ "climpred[accel,bias-correction,io,relative_entropy,test,viz,vwmp]" ]
 docs = [
   "climpred[complete]",
   "myst-nb",
   "sphinx>=7",
   "sphinx-book-theme>=1",
+  "sphinx-codeautolink",
   "sphinx-copybutton",
   "sphinx-llm>=0.4",
   "sphinxcontrib-bibtex",
@@ -92,7 +92,7 @@ local_scheme = "dirty-tag"
 
 [tool.black]
 line-length = 88
-target-version = [ "py39", "py310", "py311", "py312", "py313" ]
+target-version = [ "py310", "py311", "py312", "py313" ]
 
 [tool.isort]
 known_first_party = "climpred"

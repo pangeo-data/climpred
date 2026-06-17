@@ -20,8 +20,8 @@ Core Developers
 * Aaron Spring (`github <https://github.com/aaronspring/>`__)
 * Riley X. Brady (`github <https://github.com/bradyrx/>`__)
 
-Contributors
-============
+All Contributors
+================
 * Anderson Banihirwe (`github <https://github.com/andersy005/>`__)
 * Ray Bell (`github <https://github.com/raybellwaves/>`__)
 * Trevor Gamblin (`github <https://github.com/threexc/>`__)

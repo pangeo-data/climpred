@@ -223,7 +223,7 @@ def compute_climatology(
             Default: 'pearson_r'
         dim: dimension to apply metric over.
         ** metric_kwargs: additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
+            (see the arguments required for a given metric in :ref:`metrics:metrics`).
 
     Returns:
         clim: Results of climatology forecast with the input metric
@@ -319,7 +319,7 @@ def compute_persistence(
 
         dim: dimension to apply metric over.
         ** metric_kwargs: additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
+            (see the arguments required for a given metric in :ref:`metrics:metrics`).
 
     Returns:
         pers: Results of persistence forecast with the input metric
@@ -421,7 +421,7 @@ def compute_persistence_from_first_lead(
 
         dim: dimension to apply metric over.
         ** metric_kwargs: additional keywords to be passed to metric
-            (see the arguments required for a given metric in :ref:`Metrics`).
+            (see the arguments required for a given metric in :ref:`metrics:metrics`).
 
     Returns:
         pers: Results of persistence forecast with the input metric

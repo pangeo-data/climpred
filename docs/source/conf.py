@@ -23,9 +23,10 @@ sys.path.insert(0, os.path.abspath("../.."))
 
 
 # -- Project information -----------------------------------------------------
+author = "climpred development team"
 current_year = datetime.datetime.now().year
 project = "climpred"
-copyright = f"2019-{current_year}, climpred development team"
+copyright = f"2019-{current_year}, Riley X. Brady, Aaron Spring, and contributors"
 today_fmt = "%Y-%m-%d"
 
 version = climpred.__version__
@@ -42,10 +43,11 @@ extensions = [
     "sphinx.ext.autosectionlabel",
     "sphinx.ext.autosummary",
     "sphinx.ext.extlinks",
-    "sphinx.ext.imgmath",
+    "sphinx.ext.mathjax",
     "sphinx.ext.intersphinx",
     "sphinx.ext.napoleon",
     "sphinx.ext.viewcode",
+    "sphinx_codeautolink",
     "sphinx_copybutton",
     "sphinxext.opengraph",
     "IPython.sphinxext.ipython_directive",
@@ -56,9 +58,19 @@ extensions = [
     "sphinx_llm.txt",
 ]
 
+autosectionlabel_prefix_document = True
+autosectionlabel_maxdepth = 2
+
 suppress_warnings = [
     "bibtex.duplicate_label",
     "bibtex.duplicate_citation",
+    "myst.xref_missing",
+    "myst.header",
+    "mystnb.unknown_mime_type",
+    # codeautolink warns when doctest output lines don't match HTML exactly.
+    # This is a known false-positive: the code renders correctly but codeautolink
+    # can't link identifiers in the block. Suppress to keep the build clean.
+    "codeautolink.match_block",
 ]
 
 # bibtex options
@@ -106,6 +118,7 @@ exclude_patterns = [
     "**.ipynb_checkpoints",
     "Thumbs.db",
     ".DS_Store",
+    "images/alignment_plots/*",
 ]
 
 pygments_style = "sphinx"
@@ -124,9 +137,6 @@ html_logo = "images/climpred-logo.png"
 # further.  For a list of options available for each theme, see the
 # documentation.
 html_theme_options = {
-    "logo_only": False,
-    "style_nav_header_background": "#fcfcfc",
-    # theme-specific options below
     "repository_url": "https://github.com/pangeo-data/climpred",
     "repository_branch": "main",
     "path_to_docs": "docs/source",
@@ -134,8 +144,6 @@ html_theme_options = {
     "use_repository_button": True,
     "use_issues_button": True,
     "home_page_in_toc": False,
-    "extra_navbar": "",
-    "navbar_footer_text": "",
 }
 
 html_context = {
@@ -154,6 +162,7 @@ html_context = {
 intersphinx_mapping = {
     "python": ("https://docs.python.org/3/", None),
     "esmtools": ("https://esmtools.readthedocs.io/en/latest", None),
+    "matplotlib": ("https://matplotlib.org/stable", None),
     "numpy": ("https://numpy.org/doc/stable", None),
     "pandas": ("https://pandas.pydata.org/pandas-docs/stable", None),
     "xarray": ("https://docs.xarray.dev/en/stable", None),
@@ -168,6 +177,13 @@ nbsphinx_allow_errors = False
 nbsphinx_timeout = 600
 nbsphinx_execute = "auto"  # "never" "always"
 nb_execution_mode = "auto"
+nb_execution_excludepatterns = [
+    "examples/NWP/*",
+    "examples/misc/climpred_gpu*",
+    "examples/misc/setup_your_own_data*",
+    "examples/subseasonal/daily-S2S-ECMWF*",
+    "examples/subseasonal/daily-subx-example*",
+]
 
 # Napoleon configurations
 napoleon_google_docstring = True

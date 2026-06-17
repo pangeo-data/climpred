@@ -1,4 +1,4 @@
-climpred.graphics.plot\_ensemble\_perfect\_model
+﻿climpred.graphics.plot\_ensemble\_perfect\_model
 ================================================
 
 .. currentmodule:: climpred.graphics

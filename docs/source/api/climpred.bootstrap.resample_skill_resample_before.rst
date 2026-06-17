@@ -1,4 +1,4 @@
-climpred.bootstrap.resample\_skill\_resample\_before
+﻿climpred.bootstrap.resample\_skill\_resample\_before
 ====================================================
 
 .. currentmodule:: climpred.bootstrap

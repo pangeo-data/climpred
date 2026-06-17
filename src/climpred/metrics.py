@@ -199,7 +199,7 @@ def _maybe_member_mean_reduce_dim(
 
 
 class Metric:
-    """Master class for all metrics. See :ref:`metrics`."""
+    """Master class for all metrics. See :ref:`metrics:metrics`."""
 
     def __init__(
         self,
@@ -217,7 +217,7 @@ class Metric:
         allows_logical: bool = False,
         requires_member_dim: bool = False,
     ):
-        """Metric initialization. See :ref:`metrics`.
+        """Metric initialization. See :ref:`metrics:metrics`.
 
         Args:
             name: name of metric.
@@ -3273,7 +3273,7 @@ def _discrimination(
         dim: Dimensions to aggregate. Requires ``member`` if ``logical``
             provided in ``metric_kwargs`` to create probability forecasts.
             If ``logical`` not provided in ``metric_kwargs``, should not include
-            ``member``. At least one dimension other than ``member``is required.
+            ``member``. At least one dimension other than ``member`` is required.
         logical: Function with bool result to be applied to
             verification data and forecasts and then ``mean("member")`` to get
             forecasts and verification data in interval ``[0, 1]``.

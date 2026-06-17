@@ -1,4 +1,4 @@
-climpred.metrics.\_contingency
+﻿climpred.metrics.\_contingency
 ==============================
 
 .. currentmodule:: climpred.metrics

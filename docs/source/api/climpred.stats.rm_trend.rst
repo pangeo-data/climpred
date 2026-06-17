@@ -1,4 +1,4 @@
-climpred.stats.rm\_trend
+﻿climpred.stats.rm\_trend
 ========================
 
 .. currentmodule:: climpred.stats

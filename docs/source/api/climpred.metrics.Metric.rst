@@ -1,5 +1,5 @@
 ﻿climpred.metrics.Metric
-========================
+=======================
 
 .. currentmodule:: climpred.metrics
 

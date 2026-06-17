@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.remove\_seasonality
+﻿climpred.classes.PerfectModelEnsemble.remove\_seasonality
 =========================================================
 
 .. currentmodule:: climpred.classes

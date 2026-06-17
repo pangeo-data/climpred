@@ -33,7 +33,7 @@ that has to be called to determine which metric is used in computing predictabil
 Internally, all metric functions require ``forecast`` and ``observations`` as inputs.
 The dimension ``dim`` has to be set to specify over which dimensions
 the ``metric`` is applied and are hence reduced.
-See :ref:`comparisons` for more on the ``dim`` argument.
+See :ref:`comparisons:comparisons` for more on the ``dim`` argument.
 
 *************
 Deterministic
@@ -73,6 +73,7 @@ Pearson Product-Moment Correlation Coefficient
     print(f"Keywords: {metric_aliases['pearson_r']}")
 
 .. autofunction:: _pearson_r
+   :noindex:
 
 Pearson Correlation p value
 ---------------------------
@@ -83,6 +84,7 @@ Pearson Correlation p value
     print(f"Keywords: {metric_aliases['pearson_r_p_value']}")
 
 .. autofunction:: _pearson_r_p_value
+   :noindex:
 
 Effective Sample Size
 ---------------------
@@ -93,6 +95,7 @@ Effective Sample Size
     print(f"Keywords: {metric_aliases['effective_sample_size']}")
 
 .. autofunction:: _effective_sample_size
+   :noindex:
 
 Pearson Correlation Effective p value
 -------------------------------------
@@ -103,6 +106,7 @@ Pearson Correlation Effective p value
     print(f"Keywords: {metric_aliases['pearson_r_eff_p_value']}")
 
 .. autofunction:: _pearson_r_eff_p_value
+   :noindex:
 
 
 Spearman's Rank Correlation Coefficient
@@ -114,6 +118,7 @@ Spearman's Rank Correlation Coefficient
     print(f"Keywords: {metric_aliases['spearman_r']}")
 
 .. autofunction:: _spearman_r
+   :noindex:
 
 
 Spearman's Rank Correlation Coefficient p value
@@ -125,6 +130,7 @@ Spearman's Rank Correlation Coefficient p value
     print(f"Keywords: {metric_aliases['spearman_r_p_value']}")
 
 .. autofunction:: _spearman_r_p_value
+   :noindex:
 
 Spearman's Rank Correlation Effective p value
 ---------------------------------------------
@@ -135,6 +141,7 @@ Spearman's Rank Correlation Effective p value
     print(f"Keywords: {metric_aliases['spearman_r_eff_p_value']}")
 
 .. autofunction:: _spearman_r_eff_p_value
+   :noindex:
 
 Distance Metrics
 ================
@@ -151,6 +158,7 @@ Mean Squared Error (MSE)
     print(f"Keywords: {metric_aliases['mse']}")
 
 .. autofunction:: _mse
+   :noindex:
 
 
 Root Mean Square Error (RMSE)
@@ -162,6 +170,7 @@ Root Mean Square Error (RMSE)
     print(f"Keywords: {metric_aliases['rmse']}")
 
 .. autofunction:: _rmse
+   :noindex:
 
 
 Mean Absolute Error (MAE)
@@ -173,6 +182,7 @@ Mean Absolute Error (MAE)
     print(f"Keywords: {metric_aliases['mae']}")
 
 .. autofunction:: _mae
+   :noindex:
 
 
 Mean Error (ME)
@@ -184,6 +194,7 @@ Mean Error (ME)
     print(f"Keywords: {metric_aliases['me']}")
 
 .. autofunction:: _me
+   :noindex:
 
 
 Median Absolute Error
@@ -195,6 +206,7 @@ Median Absolute Error
     print(f"Keywords: {metric_aliases['median_absolute_error']}")
 
 .. autofunction:: _median_absolute_error
+   :noindex:
 
 
 Spread
@@ -206,6 +218,7 @@ Spread
     print(f"Keywords: {metric_aliases['spread']}")
 
 .. autofunction:: _spread
+   :noindex:
 
 
 Multiplicative bias
@@ -217,6 +230,7 @@ Multiplicative bias
     print(f"Keywords: {metric_aliases['mul_bias']}")
 
 .. autofunction:: _mul_bias
+   :noindex:
 
 
 
@@ -237,6 +251,7 @@ Normalized Mean Square Error (NMSE)
     print(f"Keywords: {metric_aliases['nmse']}")
 
 .. autofunction:: _nmse
+   :noindex:
 
 
 Normalized Mean Absolute Error (NMAE)
@@ -248,6 +263,7 @@ Normalized Mean Absolute Error (NMAE)
     print(f"Keywords: {metric_aliases['nmae']}")
 
 .. autofunction:: _nmae
+   :noindex:
 
 
 Normalized Root Mean Square Error (NRMSE)
@@ -259,6 +275,7 @@ Normalized Root Mean Square Error (NRMSE)
     print(f"Keywords: {metric_aliases['nrmse']}")
 
 .. autofunction:: _nrmse
+   :noindex:
 
 
 Mean Square Error Skill Score (MSESS)
@@ -270,6 +287,7 @@ Mean Square Error Skill Score (MSESS)
     print(f"Keywords: {metric_aliases['msess']}")
 
 .. autofunction:: _msess
+   :noindex:
 
 
 Mean Absolute Percentage Error (MAPE)
@@ -281,6 +299,7 @@ Mean Absolute Percentage Error (MAPE)
     print(f"Keywords: {metric_aliases['mape']}")
 
 .. autofunction:: _mape
+   :noindex:
 
 Symmetric Mean Absolute Percentage Error (sMAPE)
 ------------------------------------------------
@@ -291,6 +310,7 @@ Symmetric Mean Absolute Percentage Error (sMAPE)
     print(f"Keywords: {metric_aliases['smape']}")
 
 .. autofunction:: _smape
+   :noindex:
 
 
 Unbiased Anomaly Correlation Coefficient (uACC)
@@ -302,6 +322,7 @@ Unbiased Anomaly Correlation Coefficient (uACC)
     print(f"Keywords: {metric_aliases['uacc']}")
 
 .. autofunction:: _uacc
+   :noindex:
 
 
 Murphy Decomposition Metrics
@@ -320,6 +341,7 @@ Standard Ratio
     print(f"Keywords: {metric_aliases['std_ratio']}")
 
 .. autofunction:: _std_ratio
+   :noindex:
 
 Conditional Bias
 ----------------
@@ -330,6 +352,7 @@ Conditional Bias
     print(f"Keywords: {metric_aliases['conditional_bias']}")
 
 .. autofunction:: _conditional_bias
+   :noindex:
 
 Unconditional Bias
 ------------------
@@ -342,6 +365,7 @@ Unconditional Bias
 Simple bias of the forecast minus the observations.
 
 .. autofunction:: _unconditional_bias
+   :noindex:
 
 Bias Slope
 ----------
@@ -352,6 +376,7 @@ Bias Slope
     print(f"Keywords: {metric_aliases['bias_slope']}")
 
 .. autofunction:: _bias_slope
+   :noindex:
 
 Murphy's Mean Square Error Skill Score
 --------------------------------------
@@ -362,6 +387,7 @@ Murphy's Mean Square Error Skill Score
     print(f"Keywords: {metric_aliases['msess_murphy']}")
 
 .. autofunction:: _msess_murphy
+   :noindex:
 
 *************
 Probabilistic
@@ -380,6 +406,7 @@ Continuous Ranked Probability Score (CRPS)
     print(f"Keywords: {metric_aliases['crps']}")
 
 .. autofunction:: _crps
+   :noindex:
 
 Continuous Ranked Probability Skill Score (CRPSS)
 =================================================
@@ -390,6 +417,7 @@ Continuous Ranked Probability Skill Score (CRPSS)
     print(f"Keywords: {metric_aliases['crpss']}")
 
 .. autofunction:: _crpss
+   :noindex:
 
 Continuous Ranked Probability Skill Score Ensemble Spread
 =========================================================
@@ -400,6 +428,7 @@ Continuous Ranked Probability Skill Score Ensemble Spread
     print(f"Keywords: {metric_aliases['crpss_es']}")
 
 .. autofunction:: _crpss_es
+   :noindex:
 
 Brier Score
 ===========
@@ -410,6 +439,7 @@ Brier Score
     print(f"Keywords: {metric_aliases['brier_score']}")
 
 .. autofunction:: _brier_score
+   :noindex:
 
 Threshold Brier Score
 =====================
@@ -420,6 +450,7 @@ Threshold Brier Score
     print(f"Keywords: {metric_aliases['threshold_brier_score']}")
 
 .. autofunction:: _threshold_brier_score
+   :noindex:
 
 Ranked Probability Score
 ========================
@@ -430,6 +461,7 @@ Ranked Probability Score
     print(f"Keywords: {metric_aliases['rps']}")
 
 .. autofunction:: _rps
+   :noindex:
 
 Reliability
 ===========
@@ -440,6 +472,7 @@ Reliability
     print(f"Keywords: {metric_aliases['reliability']}")
 
 .. autofunction:: _reliability
+   :noindex:
 
 Discrimination
 ==============
@@ -450,6 +483,7 @@ Discrimination
     print(f"Keywords: {metric_aliases['discrimination']}")
 
 .. autofunction:: _discrimination
+   :noindex:
 
 Rank Histogram
 ==============
@@ -460,6 +494,7 @@ Rank Histogram
     print(f"Keywords: {metric_aliases['rank_histogram']}")
 
 .. autofunction:: _rank_histogram
+   :noindex:
 
 Logarithmic Ensemble Spread Score
 =================================
@@ -470,6 +505,7 @@ Logarithmic Ensemble Spread Score
     print(f"Keywords: {metric_aliases['less']}")
 
 .. autofunction:: _less
+   :noindex:
 
 *************************
 Contingency-based metrics
@@ -481,6 +517,7 @@ Contingency
 A number of metrics can be derived from a `contingency table <https://www.cawcr.gov.au/projects/verification/#Contingency_table>`_. To use this in ``climpred``, run ``.verify(metric='contingency', score=...)`` where score can be chosen from `xskillscore <https://xskillscore.readthedocs.io/en/stable/api.html#contingency-based-metrics>`_.
 
 .. autofunction:: _contingency
+   :noindex:
 
 Receiver Operating Characteristic
 =================================
@@ -491,6 +528,7 @@ Receiver Operating Characteristic
     print(f"Keywords: {metric_aliases['roc']}")
 
 .. autofunction:: _roc
+   :noindex:
 
 
 ********************
@@ -531,9 +569,9 @@ Once you come up with an useful metric for your problem, consider contributing
 this metric to `climpred`, so all users can benefit from your metric, see
 `contributing <contributing.html>`_.
 
-**********
-References
-**********
+******************
+Metrics References
+******************
 
 .. bibliography::
   :filter: docname in docnames

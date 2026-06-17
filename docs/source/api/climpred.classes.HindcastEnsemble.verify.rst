@@ -1,4 +1,4 @@
-climpred.classes.HindcastEnsemble.verify
+﻿climpred.classes.HindcastEnsemble.verify
 ========================================
 
 .. currentmodule:: climpred.classes

@@ -12,7 +12,7 @@ from .metrics import Metric
 
 
 class Comparison:
-    """Master class for all comparisons. See :ref:`comparisons`."""
+    """Master class for all comparisons. See :ref:`comparisons:comparisons`."""
 
     def __init__(
         self,
@@ -23,7 +23,7 @@ class Comparison:
         long_name: Optional[str] = None,
         aliases: Optional[List[str]] = None,
     ) -> None:
-        """Comparison initialization See :ref:`comparisons`.
+        """Comparison initialization See :ref:`comparisons:comparisons`.
 
         Args:
             name: name of comparison.
@@ -72,7 +72,7 @@ def _m2m(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare all members to all others in turn while leaving out verification member.
 
-    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
+    :ref:`comparisons:comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: initialized with ``member`` dimension.
@@ -123,7 +123,7 @@ def _m2e(
     """
     Compare all members to ensemble mean while leaving out the verif in ensemble mean.
 
-    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
+    :ref:`comparisons:comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.
@@ -175,7 +175,7 @@ def _m2c(
     is taken from the control simulation, this compares all other member forecasts
     to the control simulation.
 
-    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
+    :ref:`comparisons:comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.
@@ -218,7 +218,7 @@ def _e2c(
     is taken from the control simulation, this compares the member mean of all
     other member forecasts to the control simulation.
 
-    :ref:`comparisons` for :py:class:`.PerfectModelEnsemble`
+    :ref:`comparisons:comparisons` for :py:class:`.PerfectModelEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.
@@ -255,7 +255,7 @@ def _e2o(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare the ensemble mean forecast to the verification data.
 
-    :ref:`comparisons` for :py:class:`.HindcastEnsemble`
+    :ref:`comparisons:comparisons` for :py:class:`.HindcastEnsemble`
 
     Args:
         initialized: Hindcast with optional ``member`` dimension.
@@ -288,7 +288,7 @@ def _m2o(
 ) -> Tuple[xr.Dataset, xr.Dataset]:
     """Compare each ensemble member individually to the verification data.
 
-    :ref:`comparisons` for :py:class:`.HindcastEnsemble`
+    :ref:`comparisons:comparisons` for :py:class:`.HindcastEnsemble`
 
     Args:
         initialized: ``initialized`` with ``member`` dimension.

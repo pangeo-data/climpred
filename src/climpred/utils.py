@@ -312,12 +312,16 @@ def convert_valid_time_lead_to_init_lead(
     skill: Union[xr.Dataset, xr.DataArray],
 ) -> Union[xr.Dataset, xr.DataArray]:
     """Convert ``data(valid_time,lead)`` to ``data(init,lead)``.
+
     Args:
-        skill with dimensions valid_time and lead and coordinate init(valid_time, lead).
+        skill: skill with dims valid_time and lead and coordinate init(valid_time, lead).
+
     Returns:
         skill with dimensions init and lead
+
     Examples:
         Calculate skill at each ``init``, i.e. do not reduce ``init`` and set ``dim=[]``.
+
         >>> skill_init_lead = HindcastEnsemble.sel(
         ...     lead=[1, 2, 3], init=slice("1990", "2000")
         ... ).verify(metric="rmse", comparison="e2o", dim=[], alignment="same_verifs")

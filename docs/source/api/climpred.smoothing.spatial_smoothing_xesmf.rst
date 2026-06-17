@@ -1,4 +1,4 @@
-climpred.smoothing.spatial\_smoothing\_xesmf
+﻿climpred.smoothing.spatial\_smoothing\_xesmf
 ============================================
 
 .. currentmodule:: climpred.smoothing

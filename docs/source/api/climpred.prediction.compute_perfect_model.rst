@@ -1,4 +1,4 @@
-climpred.prediction.compute\_perfect\_model
+﻿climpred.prediction.compute\_perfect\_model
 ===========================================
 
 .. currentmodule:: climpred.prediction

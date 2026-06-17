@@ -1,4 +1,4 @@
-climpred.metrics.\_reliability
+﻿climpred.metrics.\_reliability
 ==============================
 
 .. currentmodule:: climpred.metrics

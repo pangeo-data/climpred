@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.smooth
+﻿climpred.classes.PerfectModelEnsemble.smooth
 ============================================
 
 .. currentmodule:: climpred.classes

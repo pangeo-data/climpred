@@ -1,4 +1,4 @@
-climpred.classes.PerfectModelEnsemble.verify
+﻿climpred.classes.PerfectModelEnsemble.verify
 ============================================
 
 .. currentmodule:: climpred.classes

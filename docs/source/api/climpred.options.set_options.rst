@@ -1,4 +1,4 @@
-climpred.options.set\_options
+﻿climpred.options.set\_options
 =============================
 
 .. currentmodule:: climpred.options

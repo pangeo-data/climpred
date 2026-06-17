@@ -7,10 +7,13 @@ climpred is a Python package for verification of weather and climate forecasts a
 - **Source layout**: `src/climpred/` (src-layout)
 - **Tests**: `src/climpred/tests/` (pytest)
 - **Docs**: `docs/` (Sphinx with myst-nb)
-- **Docs for LLMs**: `docs/source/llms.txt` is a curated, machine-readable index of
-  the documentation following the [llms.txt standard](https://llmstxt.org). It is
-  published verbatim at `https://climpred.readthedocs.io/en/latest/llms.txt`. Keep it in
-  sync when adding, removing or renaming user-facing documentation pages.
+- **Docs for LLMs**: the [`sphinx-llm`](https://github.com/NVIDIA/sphinx-llm)
+  extension (`sphinx_llm.txt` in `docs/source/conf.py`) auto-generates machine-readable
+  documentation following the [llms.txt standard](https://llmstxt.org) during the HTML
+  build: `llms.txt` (index), `llms-full.txt` (full concatenated docs) and a `.md` version
+  of every page. These are published at the docs root, e.g.
+  `https://climpred.readthedocs.io/en/latest/llms.txt`. No manual upkeep needed — the
+  output tracks the docs automatically.
 - **Agent skill**: `.agents/skills/climpred-forecast-verification/` holds a task-oriented
   skill for AI coding agents.
 - **Python**: ≥3.9

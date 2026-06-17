@@ -49,6 +49,7 @@ dependencies:
   - sphinx >=7.0.0
   - sphinx-book-theme >=1.0.0
   - sphinx-copybutton
+  - sphinx-llm >=0.4.0
   - sphinxcontrib-bibtex
   - sphinxext-opengraph >=0.8.0
   - tqdm

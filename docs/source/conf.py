@@ -51,6 +51,9 @@ extensions = [
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxcontrib.bibtex",
+    # Generate machine-readable docs (llms.txt, llms-full.txt and per-page .md)
+    # for AI agents and LLM tools following the https://llmstxt.org standard.
+    "sphinx_llm.txt",
 ]
 
 suppress_warnings = [
@@ -108,11 +111,6 @@ exclude_patterns = [
 pygments_style = "sphinx"
 source_suffix = ".rst"
 master_doc = "index"
-
-# Publish ``llms.txt`` verbatim at the site root so AI agents and LLM tools can
-# discover a curated, machine-readable index of the documentation following the
-# https://llmstxt.org standard (served at climpred.readthedocs.io/en/latest/llms.txt).
-html_extra_path = ["llms.txt"]
 
 # -- Options for HTML output -------------------------------------------------
 

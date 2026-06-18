@@ -53,6 +53,9 @@ extensions = [
     "IPython.sphinxext.ipython_directive",
     "IPython.sphinxext.ipython_console_highlighting",
     "sphinxcontrib.bibtex",
+    # Generate machine-readable docs (llms.txt, llms-full.txt and per-page .md)
+    # for AI agents and LLM tools following the https://llmstxt.org standard.
+    "sphinx_llm.txt",
 ]
 
 autosectionlabel_prefix_document = True

@@ -1,6 +1,6 @@
 [build-system]
 build-backend = "setuptools.build_meta"
-requires = [ "setuptools>=77", "setuptools-scm>=8", "wheel" ]
+requires = [ "setuptools>=77", "setuptools-scm>=8" ]
 
 [project]
 name = "climpred"
@@ -86,22 +86,22 @@ docs = [ "climpred[docs]" ]
 description = { file = "src/climpred/__init__.py" }
 
 [tool.setuptools_scm]
-fallback_version = "999"
 version_scheme = "post-release"
 local_scheme = "dirty-tag"
+fallback_version = "999"
 
 [tool.black]
-line-length = 88
 target-version = [ "py310", "py311", "py312", "py313" ]
+line-length = 88
 
 [tool.isort]
-known_first_party = "climpred"
+line_length = 88
 multi_line_output = 3
+use_parentheses = true
 include_trailing_comma = true
 force_grid_wrap = 0
-use_parentheses = true
-line_length = 88
 combine_as_imports = true
+known_first_party = "climpred"
 skip = [ "docs/source/conf.py" ]
 
 [tool.pyproject-fmt]

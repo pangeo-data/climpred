@@ -33,7 +33,15 @@ jobs:
     name: Test minimum dependencies (Python${{ matrix.python-version }}, ${{ matrix.os }}, pip)
     runs-on: ${{ matrix.os }}-latest
     needs: detect-ci-trigger
-    if: needs.detect-ci-trigger.outputs.triggered == 'false'
+    # ``detect-ci-trigger`` only runs for push/pull_request, so on ``schedule``
+    # and ``workflow_dispatch`` it is skipped and ``triggered`` is empty. Without
+    # ``always()`` the skipped dependency would skip this job too, which silently
+    # reduced the weekly run to the doctest and notebook jobs.
+    if: |
+      always()
+      && needs.detect-ci-trigger.result != 'failure'
+      && needs.detect-ci-trigger.result != 'cancelled'
+      && needs.detect-ci-trigger.outputs.triggered != 'true'
     defaults:
         run:
           shell: bash -l {0}
@@ -70,7 +78,15 @@ jobs:
     name: Test minimum dependencies (Python${{ matrix.python-version }} ubuntu, conda)
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
-    if: needs.detect-ci-trigger.outputs.triggered == 'false'
+    # ``detect-ci-trigger`` only runs for push/pull_request, so on ``schedule``
+    # and ``workflow_dispatch`` it is skipped and ``triggered`` is empty. Without
+    # ``always()`` the skipped dependency would skip this job too, which silently
+    # reduced the weekly run to the doctest and notebook jobs.
+    if: |
+      always()
+      && needs.detect-ci-trigger.result != 'failure'
+      && needs.detect-ci-trigger.result != 'cancelled'
+      && needs.detect-ci-trigger.outputs.triggered != 'true'
     defaults:
         run:
           shell: bash -l {0}
@@ -111,7 +127,15 @@ jobs:
     name: Test optional dependencies (Python${{ matrix.python-version }}, ubuntu, conda)
     runs-on: ubuntu-latest
     needs: detect-ci-trigger
-    if: needs.detect-ci-trigger.outputs.triggered == 'false'
+    # ``detect-ci-trigger`` only runs for push/pull_request, so on ``schedule``
+    # and ``workflow_dispatch`` it is skipped and ``triggered`` is empty. Without
+    # ``always()`` the skipped dependency would skip this job too, which silently
+    # reduced the weekly run to the doctest and notebook jobs.
+    if: |
+      always()
+      && needs.detect-ci-trigger.result != 'failure'
+      && needs.detect-ci-trigger.result != 'cancelled'
+      && needs.detect-ci-trigger.outputs.triggered != 'true'
     defaults:
         run:
           shell: bash -l {0}

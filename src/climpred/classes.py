@@ -2824,7 +2824,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
                 skill    <U11 44B 'initialized'
             Data variables:
-                SST      (lead) float64 80B 0.07628 0.08293 0.08169 ... 0.1577 0.1821 0.2087
+                SST      (lead) float64 80B 0.0766 0.08275 0.08152 ... 0.1573 0.1817 0.2085
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()

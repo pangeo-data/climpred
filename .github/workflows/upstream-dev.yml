@@ -46,10 +46,7 @@ jobs:
       matrix:
         # Upstream mains follow SPEC 0 and have dropped Python 3.10 (xclim
         # requires >=3.11), so testing upstream on 3.10 fails at install time.
-        # TEMPORARY: 3.12 alongside 3.13 to establish whether the netCDF4
-        # segfault in the upstream env is specific to 3.13. Drop back to a
-        # single version once the answer is in.
-        python-version: ["3.12", "3.13"]
+        python-version: ["3.13"]
     outputs:
       artifacts_availability: ${{ steps.status.outputs.ARTIFACTS_AVAILABLE }}
     steps:

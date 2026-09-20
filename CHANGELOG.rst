@@ -34,6 +34,8 @@ Internals/Minor Fixes
 - The ``Upstream Test`` workflow reports failures again: the removed ``::set-output`` syntax was replaced by ``$GITHUB_OUTPUT``, so the ``report`` job receives ``ARTIFACTS_AVAILABLE`` and opens/updates the upstream-CI failure issue. (:pr:`929`) `Aaron Spring`_
 - Updated the :py:meth:`.HindcastEnsemble.remove_bias` doctest values for ``how="modified_quantile"`` to match current `bias_correction` output. (:pr:`929`) `Aaron Spring`_
 - Removed a dangling always-true ``and "lead"`` clause in ``_rps`` that made the ``ty`` pre-commit hook fail. The condition is unchanged. (:pr:`929`) `Aaron Spring`_
+- Renamed ``.github/workflows/testing.yml`` to ``ci.yml`` and ``upstream-dev-ci.yml`` to ``upstream-dev.yml``. GitHub had disabled both workflows for repository inactivity (``disabled_inactivity``), a state that is tied to the workflow's file path and cannot be cleared by pushing commits. Registering them at new paths brings them back as fresh, active workflows. (:pr:`929`) `Aaron Spring`_
+- Fixed the CI badge in ``README.rst`` and ``docs/source/index.rst``, which still pointed at ``climpred_testing.yml`` after an earlier rename and therefore rendered no status. Both badges now track the current workflow paths. (:pr:`929`) `Aaron Spring`_
 
 
 climpred v2.6.0 (2026-02-19)

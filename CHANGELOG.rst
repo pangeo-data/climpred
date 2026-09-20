@@ -29,13 +29,8 @@ Internals/Minor Fixes
 - Dropped support for Python 3.9 (EOL October 2025). Minimum supported Python is now 3.10. (:issue:`919`, :pr:`920`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.plot_alignment` now raises a clear error message when there is no overlap between hindcast ``valid_time`` and verification ``time``, instead of a cryptic ``ValueError`` about ``CFTimeIndex`` ambiguity. (:issue:`912`, :pr:`921`) `Aaron Spring`_
-- Fixed the weekly ``CI`` workflow silently skipping every test job. ``detect-ci-trigger`` only runs for ``push``/``pull_request``, so on ``schedule`` and ``workflow_dispatch`` the dependent matrix jobs were skipped and only the doctest and notebook jobs ran. (:pr:`929`) `Aaron Spring`_
-- The ``Upstream Test`` workflow now runs on Python 3.13. Upstream ``xclim`` requires ``>=3.11``, so the environment setup failed on Python 3.10 before any test could run. (:pr:`929`) `Aaron Spring`_
-- The ``Upstream Test`` workflow reports failures again: the removed ``::set-output`` syntax was replaced by ``$GITHUB_OUTPUT``, so the ``report`` job receives ``ARTIFACTS_AVAILABLE`` and opens/updates the upstream-CI failure issue. (:pr:`929`) `Aaron Spring`_
+- Restored GitHub Actions CI, which had been disabled for repository inactivity. Both workflows are re-registered as ``ci.yml`` and ``upstream-dev.yml``, scheduled and manual runs no longer skip the test matrix, and the upstream test runs on Python 3.13. (:pr:`929`) `Aaron Spring`_
 - Updated the :py:meth:`.HindcastEnsemble.remove_bias` doctest values for ``how="modified_quantile"`` to match current `bias_correction` output. (:pr:`929`) `Aaron Spring`_
-- Removed a dangling always-true ``and "lead"`` clause in ``_rps`` that made the ``ty`` pre-commit hook fail. The condition is unchanged. (:pr:`929`) `Aaron Spring`_
-- Renamed ``.github/workflows/testing.yml`` to ``ci.yml`` and ``upstream-dev-ci.yml`` to ``upstream-dev.yml``. GitHub had disabled both workflows for repository inactivity (``disabled_inactivity``), a state that is tied to the workflow's file path and cannot be cleared by pushing commits. Registering them at new paths brings them back as fresh, active workflows. (:pr:`929`) `Aaron Spring`_
-- Fixed the CI badge in ``README.rst`` and ``docs/source/index.rst``, which still pointed at ``climpred_testing.yml`` after an earlier rename and therefore rendered no status. Both badges now track the current workflow paths. (:pr:`929`) `Aaron Spring`_
 
 
 climpred v2.6.0 (2026-02-19)

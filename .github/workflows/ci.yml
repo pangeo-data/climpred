@@ -195,7 +195,6 @@ jobs:
           environment-file: ci/requirements/maximum-tests.yml
           environment-name: climpred-maximum-tests
           cache-environment: true
-          cache-environment-key: "ubuntu-latest-${{ runner.arch }}-py${{ matrix.python-version }}-${{ env.TODAY }}-${{ hashFiles(env.CONDA_ENV_FILE) }}"
           create-args: >-
             python=${{ matrix.python-version }}
             esmpy

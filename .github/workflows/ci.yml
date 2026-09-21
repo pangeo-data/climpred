@@ -1,6 +1,18 @@
 name: CI  # based on https://github.com/pydata/xarray/blob/master/.github/workflows/ci.yaml
 
 on:
+  # ``push`` is scoped to ``main`` so that merges get a run of their own. That
+  # is what the README/docs badge resolves against -- it reads the latest run
+  # on the default branch, and without this it showed no status at all. The
+  # duplicate-run problem that made ``upstream-dev.yml`` drop its ``push``
+  # trigger does not apply here: an unscoped ``push`` fires alongside the
+  # ``pull_request`` run for the same branch and the two never deduplicate
+  # (the concurrency group keys on ``github.ref``, which differs between
+  # refs/heads/<branch> and refs/pull/<n>/merge), but ``main`` has no open
+  # pull request of its own.
+  push:
+    branches:
+      - main
   pull_request:
   schedule:
     - cron: "0 23 * * 0" # Sun 23:00 UTC

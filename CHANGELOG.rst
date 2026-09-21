@@ -31,6 +31,7 @@ Internals/Minor Fixes
 - :py:meth:`.HindcastEnsemble.plot_alignment` now raises a clear error message when there is no overlap between hindcast ``valid_time`` and verification ``time``, instead of a cryptic ``ValueError`` about ``CFTimeIndex`` ambiguity. (:issue:`912`, :pr:`921`) `Aaron Spring`_
 - Restored GitHub Actions CI, which had been disabled for repository inactivity. Both workflows are re-registered as ``ci.yml`` and ``upstream-dev.yml``, scheduled and manual runs no longer skip the test matrix, and the upstream test runs on Python 3.13. (:pr:`929`) `Aaron Spring`_
 - Updated the :py:meth:`.HindcastEnsemble.remove_bias` doctest values for ``how="modified_quantile"`` to match current `bias_correction` output, fixing the ``Doctests`` CI job. (:pr:`930`) `Aaron Spring`_
+- The ``CI`` workflow now also runs on pushes to ``main``, so merges are covered and the CI badge in ``README.rst`` and the docs shows a status again. Previously the workflow only ran on pull requests, the weekly schedule and manual dispatch, so the default branch never had a run for the badge to resolve against. `Aaron Spring`_
 
 
 climpred v2.6.0 (2026-02-19)

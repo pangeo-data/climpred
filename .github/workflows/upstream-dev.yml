@@ -19,6 +19,7 @@ jobs:
   detect-ci-trigger:
     name: Detect upstream-dev CI trigger
     runs-on: ubuntu-slim
+    timeout-minutes: 5
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
@@ -34,6 +35,7 @@ jobs:
   upstream-dev:
     name: upstream-dev (Python${{ matrix.python-version }}, ubuntu)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: detect-ci-trigger
     if: |
       always()
@@ -110,6 +112,7 @@ jobs:
       && github.repository == 'pangeo-data/climpred'
       && needs.upstream-dev.outputs.artifacts_availability == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 15
     defaults:
       run:
         shell: bash

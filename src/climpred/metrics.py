@@ -3837,7 +3837,7 @@ def _rps(
         )
 
     # get corresponding category_edges for lead
-    if "lead" not in forecast.dims and "lead" in forecast.coords and "lead":
+    if "lead" not in forecast.dims and "lead" in forecast.coords:
         if isinstance(category_edges, tuple):
             if "lead" in category_edges[1].dims:
                 forecast_edges = (

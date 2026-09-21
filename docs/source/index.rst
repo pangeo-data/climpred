@@ -37,12 +37,12 @@ climpred: verification of weather and climate forecasts
     :target: https://doi.org/10.5281/zenodo.4556085
     :alt: DOI
 
-.. |ci|  image:: https://github.com/pangeo-data/climpred/workflows/climpred%20testing/badge.svg
-    :target: https://github.com/pangeo-data/climpred/actions/workflows/climpred_testing.yml
+.. |ci|  image:: https://github.com/pangeo-data/climpred/actions/workflows/ci.yml/badge.svg
+    :target: https://github.com/pangeo-data/climpred/actions/workflows/ci.yml
     :alt: CI
 
-.. |upstream| image:: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml/badge.svg
-    :target: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev-ci.yml
+.. |upstream| image:: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev.yml/badge.svg
+    :target: https://github.com/pangeo-data/climpred/actions/workflows/upstream-dev.yml
     :alt: CI upstream
 
 .. |codecov| image:: https://codecov.io/gh/pangeo-data/climpred/branch/main/graph/badge.svg

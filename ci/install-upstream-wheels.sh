@@ -14,8 +14,14 @@ conda uninstall -y --force \
     climpred
 
 # to limit the runtime of Upstream CI
+# numpy and pandas nightlies live in scientific-python-nightly-wheels (the same
+# index used for matplotlib below). The old scipy-wheels-nightly channel is no
+# longer updated, so resolving against it pulled a numpy far older than the
+# `numpy >=2.0` the conda environment was solved with. Replacing numpy under
+# conda-built extensions that were compiled against 2.x segfaults the suite.
 python -m pip install \
-    -i https://pypi.anaconda.org/scipy-wheels-nightly/simple \
+    --index-url https://pypi.anaconda.org/scientific-python-nightly-wheels/simple \
+    --extra-index-url https://pypi.org/simple \
     --no-deps \
     --pre \
     --upgrade \

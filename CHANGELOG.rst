@@ -30,6 +30,8 @@ Internals/Minor Fixes
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.plot_alignment` now raises a clear error message when there is no overlap between hindcast ``valid_time`` and verification ``time``, instead of a cryptic ``ValueError`` about ``CFTimeIndex`` ambiguity. (:issue:`912`, :pr:`921`) `Aaron Spring`_
 - Restored GitHub Actions CI, which had been disabled for repository inactivity. Both workflows are re-registered as ``ci.yml`` and ``upstream-dev.yml``, scheduled and manual runs no longer skip the test matrix, and the upstream test runs on Python 3.13. (:pr:`929`) `Aaron Spring`_
+- Reduced GitHub Actions runner-minute usage. Pull requests now run a lean test matrix (Linux, Python 3.10 and 3.13); the full matrix across macOS, Windows and Python 3.10-3.13 runs on the weekly schedule, on manual dispatch and on pull requests labelled ``full-ci``. Coverage is measured and uploaded once instead of four times, tutorial datasets and ``pip`` wheels are cached between runs, and every job has a ``timeout-minutes`` cap. `Aaron Spring`_
+- Fixed ``tool.pytest.ini_options.testpaths``, which still pointed at the pre-src-layout ``climpred/tests``. `pytest` found nothing there and silently rescanned the whole repository on every run. `Aaron Spring`_
 - Updated the :py:meth:`.HindcastEnsemble.remove_bias` doctest values for ``how="modified_quantile"`` to match current `bias_correction` output, fixing the ``Doctests`` CI job. (:pr:`930`) `Aaron Spring`_
 
 

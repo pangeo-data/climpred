@@ -60,6 +60,24 @@ gh run list --limit 5
 gh run watch <RUN_ID>
 ```
 
+## Continuous Integration
+
+Runner minutes are treated as a scarce resource, so `ci.yml` sizes its matrices
+by event:
+
+- **Pull requests** run a lean matrix: Linux only, Python 3.10 and 3.13. macOS
+  bills at 10x and Windows at 2x Linux runner minutes.
+- **The weekly schedule and `workflow_dispatch`** run the full matrix: Linux,
+  macOS and Windows, Python 3.10 through 3.13.
+- **A pull request that needs the full matrix before merging** can opt in with
+  the `full-ci` label. Labels are read from the event payload, so add the label
+  first and then re-run the workflow (or push again).
+- Coverage is measured and uploaded by the Python 3.13 `maximum-test-conda`
+  entry only.
+- `[skip-ci]` in a commit message skips the test jobs; `[test-upstream]` opts a
+  pull request into `upstream-dev.yml`; the `run-benchmark` label opts it into
+  `benchmarks.yml`.
+
 ## Code Style & Conventions
 
 - **Formatter**: Black (line-length 88)

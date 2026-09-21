@@ -6,6 +6,19 @@ on:
     - cron: "0 23 * * 0" # Sun 23:00 UTC
   workflow_dispatch: # allows you to trigger the workflow run manually
 
+# Runner minutes are the scarce resource here, so the matrices below are
+# deliberately event-dependent:
+#
+# * a pull request runs the *lean* matrix -- Linux only, oldest and newest
+#   supported Python. macOS bills at 10x and Windows at 2x the runner minutes
+#   of Linux, so those two platforms alone used to account for ~70% of the cost
+#   of a single CI run while catching almost nothing Linux did not.
+# * the weekly schedule and a manual ``workflow_dispatch`` run the *full*
+#   matrix: every supported Python on Linux, macOS and Windows.
+# * a pull request that needs the full matrix before merging can opt in with
+#   the ``full-ci`` label. Labels are read from the event payload, so add the
+#   label first and then re-run the workflow (or push again).
+
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
@@ -17,6 +30,7 @@ jobs:
   detect-ci-trigger:
     name: Detect CI trigger
     runs-on: ubuntu-slim
+    timeout-minutes: 5
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     outputs:
       triggered: ${{ steps.detect-trigger.outputs.trigger-found }}
@@ -32,6 +46,7 @@ jobs:
   minimum-test-pypi:  # Runs testing suite with minimal dependencies
     name: Test minimum dependencies (Python${{ matrix.python-version }}, ${{ matrix.os }}, pip)
     runs-on: ${{ matrix.os }}-latest
+    timeout-minutes: 45
     needs: detect-ci-trigger
     # ``detect-ci-trigger`` only runs for push/pull_request, so on ``schedule``
     # and ``workflow_dispatch`` it is skipped and ``triggered`` is empty. Without
@@ -48,7 +63,10 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: ["ubuntu", "macos", "windows"]
+        # See the comment at the top of the file: Linux only on pull requests,
+        # every platform on the weekly schedule, on manual dispatch and on
+        # pull requests labelled ``full-ci``.
+        os: ${{ fromJSON(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'full-ci') && '["ubuntu"]' || '["ubuntu", "macos", "windows"]') }}
         python-version: ["3.10", "3.13"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
@@ -58,6 +76,8 @@ jobs:
         uses: actions/setup-python@ece7cb06caefa5fff74198d8649806c4678c61a1  # v6.3.0
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
+          cache-dependency-path: pyproject.toml
       - name: Install climpred (complete and dev dependencies)
         run: |
           python -m pip install --upgrade "pip>=25.1"
@@ -67,7 +87,16 @@ jobs:
       - name: Check dependencies
         run: |
           pip list
-      - name: Cache datasets  # pytest-xdist fails otherwise
+      - name: Locate tutorial data cache
+        id: tutorial-cache
+        run: |
+          python -c "from pooch import os_cache; print('dir=' + str(os_cache('climpred-data')))" >> "$GITHUB_OUTPUT"
+      - name: Restore tutorial datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ${{ steps.tutorial-cache.outputs.dir }}
+          key: climpred-data-${{ runner.os }}-${{ hashFiles('src/climpred/tutorial.py') }}
+      - name: Download missing tutorial datasets  # pytest-xdist fails otherwise
         run: |
           python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
@@ -77,6 +106,7 @@ jobs:
   minimum-test-conda:  # Runs testing suite with minimal dependencies
     name: Test minimum dependencies (Python${{ matrix.python-version }} ubuntu, conda)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: detect-ci-trigger
     # ``detect-ci-trigger`` only runs for push/pull_request, so on ``schedule``
     # and ``workflow_dispatch`` it is skipped and ``triggered`` is empty. Without
@@ -116,7 +146,16 @@ jobs:
       - name: Micromamba list
         run: |
           micromamba list
-      - name: Cache datasets  # pytest-xdist fails otherwise
+      - name: Locate tutorial data cache
+        id: tutorial-cache
+        run: |
+          python -c "from pooch import os_cache; print('dir=' + str(os_cache('climpred-data')))" >> "$GITHUB_OUTPUT"
+      - name: Restore tutorial datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ${{ steps.tutorial-cache.outputs.dir }}
+          key: climpred-data-${{ runner.os }}-${{ hashFiles('src/climpred/tutorial.py') }}
+      - name: Download missing tutorial datasets  # pytest-xdist fails otherwise
         run: |
           python -c "import climpred; climpred.tutorial._cache_all()"
       - name: Run tests
@@ -126,6 +165,7 @@ jobs:
   maximum-test-conda:  # Runs testing suite with all optional dependencies
     name: Test optional dependencies (Python${{ matrix.python-version }}, ubuntu, conda)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     needs: detect-ci-trigger
     # ``detect-ci-trigger`` only runs for push/pull_request, so on ``schedule``
     # and ``workflow_dispatch`` it is skipped and ``triggered`` is empty. Without
@@ -142,19 +182,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        include:
-          - env: "climpred-maximum-tests"
-            python-version: "3.10"
-            extras: "esmpy"
-          - env: "climpred-maximum-tests"
-            python-version: "3.11"
-            extras: "esmpy"
-          - env: "climpred-maximum-tests"
-            python-version: "3.12"
-            extras: "esmpy"
-          - env: "climpred-maximum-tests"
-            python-version: "3.13"
-            extras: "esmpy"
+        # Oldest and newest supported Python on pull requests, the full range
+        # on the weekly schedule, on manual dispatch and on ``full-ci`` PRs.
+        python-version: ${{ fromJSON(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'full-ci') && '["3.10", "3.13"]' || '["3.10", "3.11", "3.12", "3.13"]') }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
@@ -168,28 +198,42 @@ jobs:
           cache-environment-key: "ubuntu-latest-${{ runner.arch }}-py${{ matrix.python-version }}-${{ env.TODAY }}-${{ hashFiles(env.CONDA_ENV_FILE) }}"
           create-args: >-
             python=${{ matrix.python-version }}
-            ${{ matrix.extras }}
+            esmpy
       - name: Install climpred (no deps) + remove netcdf4
         run: |
           python -m pip install --no-deps -e .
           python -m pip uninstall --yes netcdf4
-      - name: Install bleeding edge
-        if: matrix.env == 'climpred-maximum-tests-upstream'
-        run: |
-          python -m pip install -r requirements_upstream.txt
       - name: Micromamba info
         run: |
           micromamba info
       - name: Micromamba list
         run: |
           micromamba list
-      - name: Cache datasets  # pytest-xdist fails otherwise
+      - name: Locate tutorial data cache
+        id: tutorial-cache
+        run: |
+          python -c "from pooch import os_cache; print('dir=' + str(os_cache('climpred-data')))" >> "$GITHUB_OUTPUT"
+      - name: Restore tutorial datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ${{ steps.tutorial-cache.outputs.dir }}
+          key: climpred-data-${{ runner.os }}-${{ hashFiles('src/climpred/tutorial.py') }}
+      - name: Download missing tutorial datasets  # pytest-xdist fails otherwise
         run: |
           python -c "import climpred; climpred.tutorial._cache_all()"
+      # Coverage instrumentation slows the suite down measurably and four
+      # identical reports tell us nothing the newest Python alone does not, so
+      # only that entry measures and uploads coverage.
       - name: Run tests
+        if: matrix.python-version != '3.13'
+        run: |
+          pytest -n auto --durations=20
+      - name: Run tests with coverage
+        if: matrix.python-version == '3.13'
         run: |
           pytest -n auto --durations=20 --cov=climpred --cov-report=xml
       - name: Upload coverage to codecov
+        if: matrix.python-version == '3.13'
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -199,6 +243,7 @@ jobs:
   doctest:  # tests all docstrings
     name: Doctests (Python${{ matrix.python-version }}, ubuntu)
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     defaults:
       run:
         shell: bash -l {0}
@@ -224,6 +269,15 @@ jobs:
       - name: Micromamba list
         run: |
           micromamba list
+      - name: Locate tutorial data cache
+        id: tutorial-cache
+        run: |
+          python -c "from pooch import os_cache; print('dir=' + str(os_cache('climpred-data')))" >> "$GITHUB_OUTPUT"
+      - name: Restore tutorial datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ${{ steps.tutorial-cache.outputs.dir }}
+          key: climpred-data-${{ runner.os }}-${{ hashFiles('src/climpred/tutorial.py') }}
       - name: Run doctests
         run: |
           python -m pytest --doctest-modules src/climpred --ignore src/climpred/tests
@@ -231,6 +285,7 @@ jobs:
   notebooks:  # Checks that pre-compiled notebooks in docs still work.
     name: Notebooks (Python${{ matrix.python-version }}, ubuntu)
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     defaults:
         run:
           shell: bash -l {0}
@@ -256,6 +311,15 @@ jobs:
       - name: Micromamba list
         run: |
           micromamba list
+      - name: Locate tutorial data cache
+        id: tutorial-cache
+        run: |
+          python -c "from pooch import os_cache; print('dir=' + str(os_cache('climpred-data')))" >> "$GITHUB_OUTPUT"
+      - name: Restore tutorial datasets
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9  # v6.1.0
+        with:
+          path: ${{ steps.tutorial-cache.outputs.dir }}
+          key: climpred-data-${{ runner.os }}-${{ hashFiles('src/climpred/tutorial.py') }}
       - name: Test notebooks in docs
         run: |
           pushd docs

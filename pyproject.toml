@@ -160,7 +160,7 @@ exclude = [ "asv_bench/", "docs/", "debug_notebooks/" ]
 [tool.pytest.ini_options]
 python_files = [ "test_*.py" ]
 addopts = [ "--color=yes", "--verbose" ]
-testpaths = [ "climpred/tests" ]
+testpaths = [ "src/climpred/tests" ]
 filterwarnings = [
   # xarray
   "ignore: Using a non-tuple sequence for multidimensional indexing is deprecated:FutureWarning",

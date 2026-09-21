@@ -6,11 +6,16 @@ on:
     types: [opened, reopened, synchronize, labeled]
   workflow_dispatch:
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   benchmark:
     if: ${{ contains( github.event.pull_request.labels.*.name, 'run-benchmark') && github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' }}
     name: Linux
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     env:
       ASV_DIR: "./asv_bench"
     defaults:

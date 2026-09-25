@@ -15,7 +15,7 @@ authors = [
   { name = "Aaron Spring", email = "aaron.spring@mpimet.mpg.de" },
   { name = "Riley Brady", email = "riley.brady@colorado.edu" },
 ]
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Intended Audience :: Education",
@@ -23,10 +23,10 @@ classifiers = [
   "Natural Language :: English",
   "Operating System :: OS Independent",
   "Programming Language :: Python :: 3 :: Only",
-  "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
   "Programming Language :: Python :: 3.13",
+  "Programming Language :: Python :: 3.14",
   "Topic :: Scientific/Engineering :: Atmospheric Science",
 ]
 dynamic = [ "description", "version" ]
@@ -91,7 +91,7 @@ local_scheme = "dirty-tag"
 fallback_version = "999"
 
 [tool.black]
-target-version = [ "py310", "py311", "py312", "py313" ]
+target-version = [ "py311", "py312", "py313", "py314" ]
 line-length = 88
 
 [tool.isort]
@@ -108,7 +108,7 @@ skip = [ "docs/source/conf.py" ]
 table_format = "long"
 collapse_tables = [ "project" ]
 expand_tables = [ "project.optional-dependencies", "project.urls" ]
-max_supported_python = "3.13"
+max_supported_python = "3.14"
 
 [tool.pyright]
 typeCheckingMode = "off"

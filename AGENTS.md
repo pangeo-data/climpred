@@ -16,7 +16,7 @@ climpred is a Python package for verification of weather and climate forecasts a
   output tracks the docs automatically.
 - **Agent skill**: `.agents/skills/climpred-forecast-verification/` holds a task-oriented
   skill for AI coding agents.
-- **Python**: ≥3.10
+- **Python**: ≥3.11 (tested on 3.11–3.14, following xarray)
 
 ## Key Classes
 
@@ -65,14 +65,14 @@ gh run watch <RUN_ID>
 Runner minutes are treated as a scarce resource, so `ci.yml` sizes its matrices
 by event:
 
-- **Pull requests** run a lean matrix: Linux only, Python 3.10 and 3.13. macOS
+- **Pull requests** run a lean matrix: Linux only, Python 3.11 and 3.14. macOS
   bills at 10x and Windows at 2x Linux runner minutes.
 - **The weekly schedule and `workflow_dispatch`** run the full matrix: Linux,
-  macOS and Windows, Python 3.10 through 3.13.
+  macOS and Windows, Python 3.11 through 3.14.
 - **A pull request that needs the full matrix before merging** can opt in with
   the `full-ci` label. Labels are read from the event payload, so add the label
   first and then re-run the workflow (or push again).
-- Coverage is measured and uploaded by the Python 3.13 `maximum-test-conda`
+- Coverage is measured and uploaded by the Python 3.14 `maximum-test-conda`
   entry only.
 - `[skip-ci]` in a commit message skips the test jobs; `[test-upstream]` opts a
   pull request into `upstream-dev.yml`; the `run-benchmark` label opts it into

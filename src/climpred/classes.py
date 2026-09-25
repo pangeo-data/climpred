@@ -829,17 +829,17 @@ class PredictionEnsemble:
             ... ).get_initialized().coords
             Coordinates:
               * init        (init) object 512B 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+                valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2026-01-01 00...
               * lead        (lead) int32 36B 1 2 3 4 5 6 7 8 9
               * lat         (lat) float64 16B -9.75 -4.75
               * lon         (lon) float64 32B 250.8 254.8 258.8 262.8
-                valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2026-01-01 00...
             >>> HindcastEnsemble_3D.smooth("goddard2013").get_initialized().coords
             Coordinates:
               * init        (init) object 512B 1954-01-01 00:00:00 ... 2017-01-01 00:00:00
+                valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2024-01-01 00...
               * lead        (lead) int32 28B 1 2 3 4 5 6 7
               * lat         (lat) float64 16B -9.75 -4.75
               * lon         (lon) float64 32B 250.8 255.8 260.8 265.8
-                valid_time  (lead, init) object 4kB 1955-01-01 00:00:00 ... 2024-01-01 00...
 
         """
         if not smooth_kws:
@@ -1462,8 +1462,8 @@ class PerfectModelEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 1kB
             Dimensions:  (skill: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
                 tos      (skill, lead) float64 640B 0.0621 0.07352 0.08678 ... 0.122 0.1246
             Attributes:
@@ -1820,9 +1820,9 @@ class PerfectModelEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 3kB
             Dimensions:  (skill: 4, results: 4, lead: 20)
             Coordinates:
-              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
               * results  (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
+              * lead     (lead) int64 160B 1 2 3 4 5 6 7 8 9 ... 12 13 14 15 16 17 18 19 20
             Data variables:
                 tos      (skill, results, lead) float64 3kB 0.0621 0.07352 ... 0.117 0.09826
             Attributes: (12/13)
@@ -2100,9 +2100,9 @@ class HindcastEnsemble(PredictionEnsemble):
                     [ 1461.,  1827.,  2192., ...,    nan,    nan,    nan]]],
                   shape=(3, 10, 61))
             Coordinates:
-              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
-              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
               * alignment   (alignment) <U10 120B 'same_init' 'same_verif' 'maximize'
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
                 valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
             Attributes:
                 units:    days since 1960-01-01
@@ -2256,8 +2256,8 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 568B
             Dimensions:  (skill: 4, lead: 10)
             Coordinates:
-              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
+              * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             Data variables:
                 SST      (skill, lead) float64 320B 0.08135 0.08254 0.086 ... 0.1012 0.1017
             Attributes:
@@ -2283,8 +2283,8 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 10kB
             Dimensions:     (lead: 10, init: 61)
             Coordinates:
-              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
               * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+              * init        (init) object 488B 1954-01-01 00:00:00 ... 2014-01-01 00:00:00
                 valid_time  (lead, init) object 5kB 1955-01-01 00:00:00 ... 2024-01-01 00...
                 skill       <U11 44B 'initialized'
             Data variables:
@@ -2579,11 +2579,11 @@ class HindcastEnsemble(PredictionEnsemble):
             <xarray.Dataset> Size: 70kB
             Dimensions:     (skill: 4, results: 4, lead: 10, init: 51)
             Coordinates:
-              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-                valid_time  (lead, init) object 4kB 1956-01-01 00:00:00 ... 2015-01-01 00...
-                init        (init) object 408B 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
               * skill       (skill) <U13 208B 'initialized' ... 'uninitialized'
               * results     (results) <U12 192B 'verify skill' 'p' 'low_ci' 'high_ci'
+              * lead        (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
+                init        (init) object 408B 1955-01-01 00:00:00 ... 2005-01-01 00:00:00
+                valid_time  (lead, init) object 4kB 1956-01-01 00:00:00 ... 2015-01-01 00...
             Data variables:
                 SST         (skill, results, lead, init) float64 65kB 0.1202 ... 0.07578
             Attributes:

@@ -67,7 +67,7 @@ jobs:
         # every platform on the weekly schedule, on manual dispatch and on
         # pull requests labelled ``full-ci``.
         os: ${{ fromJSON(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'full-ci') && '["ubuntu"]' || '["ubuntu", "macos", "windows"]') }}
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
@@ -123,7 +123,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        python-version: ["3.10", "3.13"]
+        python-version: ["3.11", "3.14"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
@@ -184,7 +184,7 @@ jobs:
       matrix:
         # Oldest and newest supported Python on pull requests, the full range
         # on the weekly schedule, on manual dispatch and on ``full-ci`` PRs.
-        python-version: ${{ fromJSON(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'full-ci') && '["3.10", "3.13"]' || '["3.10", "3.11", "3.12", "3.13"]') }}
+        python-version: ${{ fromJSON(github.event_name == 'pull_request' && !contains(github.event.pull_request.labels.*.name, 'full-ci') && '["3.11", "3.14"]' || '["3.11", "3.12", "3.13", "3.14"]') }}
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
         with:
@@ -224,15 +224,15 @@ jobs:
       # identical reports tell us nothing the newest Python alone does not, so
       # only that entry measures and uploads coverage.
       - name: Run tests
-        if: matrix.python-version != '3.13'
+        if: matrix.python-version != '3.14'
         run: |
           pytest -n auto --durations=20
       - name: Run tests with coverage
-        if: matrix.python-version == '3.13'
+        if: matrix.python-version == '3.14'
         run: |
           pytest -n auto --durations=20 --cov=climpred --cov-report=xml
       - name: Upload coverage to codecov
-        if: matrix.python-version == '3.13'
+        if: matrix.python-version == '3.14'
         uses: codecov/codecov-action@fb8b3582c8e4def4969c97caa2f19720cb33a72f  # v7.0.0
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
@@ -248,7 +248,7 @@ jobs:
         shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Set up micromamba
@@ -290,7 +290,7 @@ jobs:
           shell: bash -l {0}
     strategy:
       matrix:
-        python-version: ["3.10"]
+        python-version: ["3.11"]
     steps:
       - uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0  # v7.0.0
       - name: Set up micromamba

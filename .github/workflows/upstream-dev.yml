@@ -52,7 +52,7 @@ jobs:
       matrix:
         # Upstream mains follow SPEC 0 and have dropped Python 3.10 (xclim
         # requires >=3.11), so testing upstream on 3.10 fails at install time.
-        python-version: ["3.13"]
+        python-version: ["3.14"]
     outputs:
       artifacts_availability: ${{ steps.status.outputs.ARTIFACTS_AVAILABLE }}
     steps:

@@ -18,6 +18,10 @@ What's New
 climpred v2.7.0 (unreleased)
 ============================
 
+Breaking changes
+----------------
+- Dropped support for Python 3.10. Minimum supported Python is now 3.11, and CI tests Python 3.11 through 3.14, following `xarray <https://docs.xarray.dev>`_ and `xskillscore <https://github.com/xarray-contrib/xskillscore/pull/469>`_. Pull requests run Python 3.11 and 3.14; coverage is measured on 3.14; doctests, notebooks, docs and benchmarks run on 3.11; the upstream-dev job runs on 3.14. `Aaron Spring`_
+
 New Features
 ------------
 - Documentation is now machine-readable for AI agents and LLM tools. The `sphinx-llm <https://github.com/NVIDIA/sphinx-llm>`_ extension auto-generates ``llms.txt``, ``llms-full.txt`` and a markdown version of every page (`llms.txt standard <https://llmstxt.org>`_) during the docs build, published at e.g. https://climpred.readthedocs.io/en/latest/llms.txt. Documentation breadcrumbs were added to ``climpred/__init__.py`` pointing humans and agents to the docs, ``llms.txt``, ``AGENTS.md`` and the agent skill. `Aaron Spring`_

@@ -20,7 +20,7 @@ climpred v2.7.0 (unreleased)
 
 Breaking changes
 ----------------
-- Dropped support for Python 3.10. Minimum supported Python is now 3.11, and CI tests Python 3.11 through 3.14, following `xarray <https://docs.xarray.dev>`_ and `xskillscore <https://github.com/xarray-contrib/xskillscore/pull/469>`_. Pull requests run Python 3.11 and 3.14; coverage is measured on 3.14; doctests, notebooks, docs and benchmarks run on 3.11; the upstream-dev job runs on 3.14. `Aaron Spring`_
+- Dropped support for Python 3.10. Minimum supported Python is now 3.11, and CI tests Python 3.11 through 3.14, following `xarray <https://docs.xarray.dev>`_ and `xskillscore <https://github.com/xarray-contrib/xskillscore/pull/469>`_ (:pr:`932`). Pull requests run Python 3.11 and 3.14; coverage is measured on 3.14; doctests, notebooks, docs and benchmarks run on 3.11; the upstream-dev job runs on 3.14. `Aaron Spring`_
 
 New Features
 ------------
@@ -36,6 +36,7 @@ Internals/Minor Fixes
 - Restored GitHub Actions CI, which had been disabled for repository inactivity. Both workflows are re-registered as ``ci.yml`` and ``upstream-dev.yml``, scheduled and manual runs no longer skip the test matrix, and the upstream test runs on Python 3.13. (:pr:`929`) `Aaron Spring`_
 - Reduced GitHub Actions runner-minute usage. Pull requests now run a lean test matrix (Linux, Python 3.10 and 3.13); the full matrix across macOS, Windows and Python 3.10-3.13 runs on the weekly schedule, on manual dispatch and on pull requests labelled ``full-ci``. Coverage is measured and uploaded once instead of four times, tutorial datasets and ``pip`` wheels are cached between runs, and every job has a ``timeout-minutes`` cap. The ``maximum-test-conda`` job also dropped a hand-rolled ``cache-environment-key`` that interpolated two undefined variables; ``setup-micromamba`` already appends a hash of the environment file, the ``create-args``, the environment name and the OS to the cache key. (:pr:`931`) `Aaron Spring`_
 - Fixed ``tool.pytest.ini_options.testpaths``, which still pointed at the pre-src-layout ``climpred/tests``. `pytest` found nothing there and silently rescanned the whole repository on every run. (:pr:`931`) `Aaron Spring`_
+- Fixed the Read the Docs build with ``sphinx`` 9 (the docs environment now uses Python 3.11) and ``sphinx-llm`` 1.1. ``sphinx-llm`` warns on bibtex ``citation`` and ``abbreviation`` nodes it cannot write as markdown, which ``fail_on_warning`` turned into a failed build; these warnings are now suppressed and ``llms-full.txt``, no longer built by default, is re-enabled with ``llms_txt_full_build``. (:pr:`932`) `Aaron Spring`_
 - Updated the :py:meth:`.HindcastEnsemble.remove_bias` doctest values for ``how="modified_quantile"`` to match current `bias_correction` output, fixing the ``Doctests`` CI job. (:pr:`930`) `Aaron Spring`_
 
 

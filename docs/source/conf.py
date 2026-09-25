@@ -58,6 +58,13 @@ extensions = [
     "sphinx_llm.txt",
 ]
 
+# sphinx-llm's markdown writer has no handler for bibtex ``citation`` or
+# ``abbreviation`` nodes and warns once per page, which ``fail_on_warning``
+# turns into a failed Read the Docs build. The HTML output is unaffected.
+llms_txt_suppress_unknown_node_warnings = ["citation", "abbreviation"]
+# sphinx-llm >=1.1 no longer writes llms-full.txt unless asked to.
+llms_txt_full_build = True
+
 autosectionlabel_prefix_document = True
 autosectionlabel_maxdepth = 2
 

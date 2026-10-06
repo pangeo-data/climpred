@@ -105,15 +105,22 @@ known_first_party = "climpred"
 skip = [ "docs/source/conf.py" ]
 
 [tool.pyproject-fmt]
-table_format = "long"
-collapse_tables = [ "project" ]
-expand_tables = [ "project.optional-dependencies", "project.urls" ]
 max_supported_python = "3.14"
+table_format = "long"
+expand_tables = [ "project.optional-dependencies", "project.urls" ]
+collapse_tables = [ "project" ]
 
 [tool.pyright]
 typeCheckingMode = "off"
 
 [tool.ty]
+[tool.ty.src]
+exclude = [ "asv_bench/", "docs/", "debug_notebooks/" ]
+[tool.ty.rules]
+invalid-assignment = "ignore"
+invalid-argument-type = "ignore"
+missing-argument = "ignore"
+unknown-argument = "ignore"
 [tool.ty.analysis]
 allowed-unresolved-imports = [
   "bias_correction.**",
@@ -148,19 +155,16 @@ allowed-unresolved-imports = [
   "xsdba.**",
   "xskillscore.**"
 ]
-[tool.ty.rules]
-invalid-assignment = "ignore"
-invalid-argument-type = "ignore"
-missing-argument = "ignore"
-unknown-argument = "ignore"
-[tool.ty.src]
-exclude = [ "asv_bench/", "docs/", "debug_notebooks/" ]
 
 [tool.pytest]
 [tool.pytest.ini_options]
+testpaths = [ "src/climpred/tests" ]
 python_files = [ "test_*.py" ]
 addopts = [ "--color=yes", "--verbose" ]
-testpaths = [ "src/climpred/tests" ]
+markers = [
+  "mistral: tests requiring being on MPI supercomputer",
+  "slow: marks tests as slow (deselect with '-m \"not slow\"')"
+]
 filterwarnings = [
   # xarray
   "ignore: Using a non-tuple sequence for multidimensional indexing is deprecated:FutureWarning",
@@ -188,8 +192,4 @@ filterwarnings = [
   "ignore: Passing method to CFTimeIndex.get_loc is deprecated",
   # statsmodels
   "ignore: pandas.Int64Index is deprecated"
-]
-markers = [
-  "mistral: tests requiring being on MPI supercomputer",
-  "slow: marks tests as slow (deselect with '-m \"not slow\"')"
 ]

@@ -26,6 +26,7 @@ All Contributors
 * Ray Bell (`github <https://github.com/raybellwaves/>`__)
 * Trevor Gamblin (`github <https://github.com/threexc/>`__)
 * Andrew Huang (`github <https://github.com/ahuang11/>`__)
+* Anish Pentyala (`github <https://github.com/anishpentyala/>`__)
 * Kathy Pegion (`github <https://github.com/kpegion/>`__)
 * Trevor James Smith (`github <https://github.com/Zeitsperre/>`__)
 

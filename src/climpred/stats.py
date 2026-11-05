@@ -20,15 +20,16 @@ def rm_poly(
     coord = ds[dim]
     fits = []
     if isinstance(ds, xr.Dataset):
-        for v in coefficients:
-            name = v.replace("_polyfit_coefficients", "")
+        for name in ds.data_vars:
+            v = f"{name}_polyfit_coefficients"
+            if v not in coefficients:
+                continue
             fit = xr.polyval(coord, coefficients[v]).rename(name)
             fits.append(fit)
         fits = xr.merge(fits)
     elif isinstance(ds, xr.DataArray):
         name = ds.name
-        v = list(coefficients.data_vars)[0]
-        fits = xr.polyval(coord, coefficients[v]).rename(name)
+        fits = xr.polyval(coord, coefficients["polyfit_coefficients"]).rename(name)
     with xr.set_options(keep_attrs=True):
         ds_rm_poly = ds - fits
     return ds_rm_poly

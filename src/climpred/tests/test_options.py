@@ -3,6 +3,7 @@ import warnings
 import pytest
 
 import climpred
+from climpred.options import OPTIONS
 
 
 @pytest.mark.skip  # some error when unpinning xarray <= 2022.10.0
@@ -112,3 +113,37 @@ def test_option_resample_iterations_func(hindcast_recon_1d_ym):
             iterations=2,
             resample_dim="member",
         )
+
+
+class TestWarningContextRestore:
+    @pytest.fixture(autouse=True)
+    def add_standard_imports(self):
+        # These state-only tests need no ensemble fixtures; isolate OPTIONS.
+        original = OPTIONS.copy()
+        yield
+        OPTIONS.clear()
+        OPTIONS.update(original)
+
+    def test_plain_exit(self):
+        OPTIONS.update({key: True for key in OPTIONS if "warn" in key})
+        before = OPTIONS.copy()
+        with climpred.set_options(climpred_warnings=False):
+            assert all(not OPTIONS[key] for key in OPTIONS if "warn" in key)
+        assert OPTIONS == before
+
+    def test_mixed_previous_state(self):
+        flags = [key for key in OPTIONS if "warn" in key]
+        OPTIONS.update({key: False for key in flags})
+        OPTIONS[next(key for key in flags if key != "climpred_warnings")] = True
+        before = OPTIONS.copy()
+        with climpred.set_options(climpred_warnings=False):
+            assert all(not OPTIONS[key] for key in flags)
+        assert OPTIONS == before
+
+    def test_exception_exit(self):
+        OPTIONS.update({key: True for key in OPTIONS if "warn" in key})
+        before = OPTIONS.copy()
+        with pytest.raises(RuntimeError, match="context exit"):
+            with climpred.set_options(climpred_warnings=False):
+                raise RuntimeError("context exit")
+        assert OPTIONS == before

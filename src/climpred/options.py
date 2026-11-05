@@ -144,6 +144,9 @@ class set_options:
                     f"option {k!r} given an invalid value: {v!r}. " + expected
                 )
             self.old[k] = OPTIONS[k]
+        if "climpred_warnings" in kwargs and not kwargs["climpred_warnings"]:
+            # The master switch also changes warning flags not named by the caller.
+            self.old.update({k: v for k, v in OPTIONS.items() if "warn" in k})
         self._apply_update(kwargs)
 
     def _apply_update(self, options_dict):
@@ -159,4 +162,6 @@ class set_options:
         return
 
     def __exit__(self, type, value, traceback):
-        self._apply_update(self.old)
+        # Restore exact saved values without applying the master switch again:
+        # a previously false master can coexist with individually enabled flags.
+        OPTIONS.update(self.old)

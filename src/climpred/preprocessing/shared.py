@@ -30,6 +30,7 @@ def load_hindcast(
         preprocess (Callable): ``preprocess`` function accepting and returning
             :py:class:`xarray.Dataset` only. To be passed to
             :py:func:`xarray.open_dataset`. Defaults to None.
+        lead_offset (int): First integer lead label after loading. Defaults to 1.
         parallel (bool): passed to `xr.open_mfdataset`. Defaults to ``True``.
         engine (str): passed to `xr.open_mfdataset`. Defaults to ``None``.
         get_path (callable): ``get_path`` function specific to modelling center output
@@ -60,7 +61,7 @@ def load_hindcast(
                 compat="override",  # speed up
             ).squeeze()
             # set new integer time
-            member_ds = set_integer_time_axis(member_ds)
+            member_ds = set_integer_time_axis(member_ds, offset=lead_offset)
             member_list.append(member_ds)
         member_ds = xr.concat(member_list, "member")
         init_list.append(member_ds)

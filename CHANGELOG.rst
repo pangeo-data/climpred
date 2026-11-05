@@ -1266,8 +1266,8 @@ Collaboration between Riley Brady and Aaron Spring begins.
 
 .. _`Aaron Spring`: https://github.com/aaronspring
 .. _`Anderson Banihirwe`: https://github.com/andersy005
-.. _`Anish Pentyala`: https://github.com/anishpentyala
 .. _`Andrew Huang`: https://github.com/ahuang11
+.. _`Anish Pentyala`: https://github.com/anishpentyala
 .. _`Dougie Squire`: https://github.com/dougiesquire
 .. _`Kathy Pegion`: https://github.com/kpegion
 .. _`Mathias Hauser`: https://github.com/mathause

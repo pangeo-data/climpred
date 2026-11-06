@@ -265,7 +265,7 @@ def smooth_goddard_2013(
         :cite:t:`Goddard2013`
     """
     # first temporal smoothing
-    ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws)
+    ds_smoothed = temporal_smoothing(ds, tsmooth_kws=tsmooth_kws, how=how)
     ds_smoothed_regridded = spatial_smoothing_xesmf(
         ds_smoothed, d_lon_lat_kws=d_lon_lat_kws, **xesmf_kwargs
     )

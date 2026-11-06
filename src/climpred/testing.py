@@ -21,19 +21,10 @@ def assert_PredictionEnsemble(he, he2, how="equal", **assert_how_kwargs):
 
     for dataset in he._datasets:
         if he._datasets[dataset]:
-            if dataset == "observations":
-                for obs_dataset in he._datasets["observations"]:
-                    logging.info("check observations", obs_dataset)
-                    assert_func(
-                        he2._datasets["observations"][obs_dataset],
-                        he2._datasets["observations"][obs_dataset],
-                        **assert_how_kwargs,
-                    )
-            else:
-                logging.info("check", dataset)
-                assert_func(
-                    he2._datasets[dataset], he._datasets[dataset], **assert_how_kwargs
-                )
+            logging.info("check %s", dataset)
+            assert_func(
+                he2._datasets[dataset], he._datasets[dataset], **assert_how_kwargs
+            )
 
 
 def check_dataset_dims_and_data_vars(before, after, dataset):

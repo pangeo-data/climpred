@@ -345,7 +345,7 @@ def _bootstrap_by_stacking(init_pm, control):
     init_size = init_pm.init.size * init_pm.member.size * init_pm.lead.size
     # select random start points
     new_time = np.random.randint(
-        0, control.time.size - init_pm.lead.size, init_size // (init_pm.lead.size)
+        0, control.time.size - init_pm.lead.size + 1, init_size // (init_pm.lead.size)
     )
     new_time = np.array(
         [np.arange(s, s + init_pm.lead.size) for s in new_time]

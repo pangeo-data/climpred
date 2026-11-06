@@ -237,7 +237,7 @@ def compute_relative_entropy(
             ).rename({"time": "lead"})
 
             mu_b = pc_b.mean("lead")
-            sigma_b = xr.DataArray(np.cov(pc_b.T))
+            sigma_b = xr.DataArray(np.atleast_2d(np.cov(pc_b.T)))
 
             # P_x init distribution
             pc_x = solver.projectField(
@@ -250,7 +250,7 @@ def compute_relative_entropy(
             ).rename({"time": "lead"})
 
             mu_x = pc_x.mean("lead")
-            sigma_x = xr.DataArray(np.cov(pc_x.T))
+            sigma_x = xr.DataArray(np.atleast_2d(np.cov(pc_x.T)))
 
             r, d, s = _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs)
 

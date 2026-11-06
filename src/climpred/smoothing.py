@@ -1,5 +1,6 @@
 """Spatial/temporal smoothing implemented in PredictionEnsemble.smooth()."""
 
+import re
 from typing import Dict, Optional
 
 import numpy as np
@@ -227,8 +228,13 @@ def _set_center_coord(ds: xr.Dataset, dim: str = "lead") -> xr.Dataset:
     """Set lead_center as a new coordinate."""
     new_dim = []
     old_dim = ds[dim].values
-    for i in old_dim:
-        new_dim.append(eval(i.replace("-", "+")) / 2)
+    number = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?"
+    for label in old_dim:
+        endpoints = re.fullmatch(rf"({number})-({number})", str(label))
+        if endpoints is None:
+            raise ValueError(f"Invalid temporal window label: {label!r}")
+        start, end = map(float, endpoints.groups())
+        new_dim.append((start + end) / 2)
     ds.coords[f"{dim}_center"] = (dim, np.array(new_dim))
     ds.coords[f"{dim}_center"].attrs["long_name"] = f"{dim} center of rolling window"
     ds.coords[f"{dim}_center"].attrs["units"] = ds.coords[dim].attrs.get("units", "")

@@ -277,6 +277,20 @@ def compute_climatology(
         climatology_day_forecast, verif, metric, comparison, dim
     )
 
+    # Grouping and selecting climatology can split an existing single
+    # reduction chunk. Restore it without combining spatial chunks or
+    # overriding multi-chunk verification inputs.
+    if kind == "perfect" and verif.chunks:
+        restore = {
+            d: -1
+            for d in dim
+            if d in verif.chunks
+            and len(verif.chunks[d]) == 1
+            and d in climatology_day_forecast.dims
+        }
+        if restore and climatology_day_forecast.chunks:
+            climatology_day_forecast = climatology_day_forecast.chunk(restore)
+
     clim_skill = metric.function(
         climatology_day_forecast, verif, dim=dim, **metric_kwargs
     )

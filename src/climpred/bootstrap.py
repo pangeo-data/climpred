@@ -387,6 +387,13 @@ def _get_resample_func(ds):
         for d in ds.dims:
             if ds.sizes[d] == 1:
                 resample_func = _resample_iterations
+        # The vectorized backend squeezes each computed NumPy chunk. A
+        # singleton Dask chunk can therefore lose an axis even when the full
+        # dimension has several values.
+        if dask.is_dask_collection(ds) and any(
+            1 in chunks for chunks in ds.chunksizes.values()
+        ):
+            resample_func = _resample_iterations
     else:
         resample_func = getattr(xs, OPTIONS["resample_iterations_func"])
     return resample_func

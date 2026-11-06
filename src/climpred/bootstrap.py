@@ -665,7 +665,7 @@ def _bootstrap_func(
         psig = sig / 100
 
     resample_func = _get_resample_func(ds)
-    bootstraped_ds = resample_func(ds, iterations, dim=resample_dim, replace=False)
+    bootstraped_ds = resample_func(ds, iterations, dim=resample_dim, replace=True)
     bootstraped_results = func(bootstraped_ds, *func_args, **func_kwargs)
     bootstraped_results = rechunk_to_single_chunk_if_more_than_one_chunk_along_dim(
         bootstraped_results, dim="iteration"

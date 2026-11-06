@@ -37,7 +37,7 @@ def _relative_entropy_formula(sigma_b, sigma_x, mu_x, mu_b, neofs):
     fac = 0.5
     dispersion = fac * (
         np.log(np.linalg.det(sigma_b) / np.linalg.det(sigma_x))
-        + np.trace(sigma_x / sigma_b)
+        + np.trace(np.linalg.solve(sigma_b, sigma_x))
         - neofs
     )
     # https://stackoverflow.com/questions/

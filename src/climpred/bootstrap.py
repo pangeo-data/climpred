@@ -94,10 +94,10 @@ def _distribution_to_ci(ds, ci_low, ci_high, dim="iteration"):
     if isinstance(ds, xr.Dataset):
         for v in ds.data_vars:
             if np.issubdtype(ds[v].dtype, np.bool_):
-                ds[v] = ds[v].astype(np.float_)  # fails on py>36 if boolean dtype
+                ds[v] = ds[v].astype(np.float64)
     else:
         if np.issubdtype(ds.dtype, np.bool_):
-            ds = ds.astype(np.float_)  # fails on py>36 if boolean dtype
+            ds = ds.astype(np.float64)
     return ds.quantile(q=[ci_low, ci_high], dim=dim, skipna=False)
 
 
@@ -708,4 +708,4 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
         time_dim,
         sig=sig,
         iterations=iterations,
-    )
+                )

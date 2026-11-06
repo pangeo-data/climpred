@@ -115,6 +115,7 @@ def climatology(
 
         climatology_forecast = (
             _maybe_seasons_to_int(climatology_day)
+            .sortby(seasonality_str)
             .sel(
                 {
                     seasonality_str: _maybe_seasons_to_int(

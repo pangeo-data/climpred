@@ -29,8 +29,9 @@ def _isin(
     if not isinstance(all_verifs, xr.CFTimeIndex):
         all_verifs = all_verifs.to_index()
     if len(init_lead_da.dims) == 2:
-        init_lead_asi8 = np.vstack(
-            [init_lead_da.sel(lead=i).to_index().asi8 for i in init_lead_da.lead]
+        init_lead_asi8 = np.stack(
+            [init_lead_da.sel(lead=i).to_index().asi8 for i in init_lead_da.lead],
+            axis=init_lead_da.get_axis_num("lead"),
         )
         isin = np.isin(init_lead_asi8, all_verifs.asi8)
     elif len(init_lead_da.dims) == 1:

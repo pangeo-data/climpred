@@ -58,7 +58,16 @@ def load_hindcast(
                 coords="minimal",  # expecting identical coords
                 data_vars="minimal",  # expecting identical vars
                 compat="override",  # speed up
-            ).squeeze()
+            )
+            # Only remove the per-file ensemble axes that are rebuilt below.
+            # A singleton spatial or vertical axis still describes the source grid.
+            member_ds = member_ds.squeeze(
+                [
+                    d
+                    for d in ["init", "member"]
+                    if d in member_ds.dims and member_ds.sizes[d] == 1
+                ]
+            )
             # set new integer time
             member_ds = set_integer_time_axis(member_ds)
             member_list.append(member_ds)

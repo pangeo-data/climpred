@@ -177,7 +177,9 @@ def convert_time_index(
         assumes annual resolution and returns year-start ``cftime.ProlepticGregorian``.
 
     Raises:
-        ValueError: If ``time_index`` is not an ``xr.CFTimeIndex``, ``pd.Int64Index``,
+        ValueError: If timestamps contain precision finer than the microseconds
+            supported by cftime, or if ``time_index`` is not an ``xr.CFTimeIndex``,
+            ``pd.Int64Index``,
             ``pd.Float64Index``, or ``pd.DatetimeIndex``.
     """
     xobj = xobj.copy()  # Ensures that main object index is not overwritten.
@@ -185,11 +187,13 @@ def convert_time_index(
 
     if not isinstance(time_index, xr.CFTimeIndex):
         if isinstance(time_index, pd.DatetimeIndex):
-            # Extract year, month, day strings from datetime.
-            time_strings = [str(t) for t in time_index]
-            split_dates = [d.split(" ")[0].split("-") for d in time_strings]
+            if (time_index.nanosecond != 0).any():
+                raise ValueError(
+                    "Cannot convert timestamps with sub-microsecond precision to "
+                    "cftime without losing precision."
+                )
             split_dates = [
-                d.split("-") for d in time_index.strftime("%Y-%m-%d-%H-%M-%S")
+                d.split("-") for d in time_index.strftime("%Y-%m-%d-%H-%M-%S-%f")
             ]
 
         # If pd.Index, assume annual and convert accordingly.
@@ -203,7 +207,7 @@ def convert_time_index(
                 )
             # TODO: What about decimal time? E.g. someone has 1955.5 or something?
             # hard to maintain a clear rule below seasonality
-            dates = [str(int(t)) + "-01-01-00-00-00" for t in time_index]
+            dates = [str(int(t)) + "-01-01-00-00-00-0" for t in time_index]
             split_dates = [d.split("-") for d in dates]
             if "lead" in xobj.dims:
                 # Probably the only case we can assume lead units, since `lead` does not
@@ -217,8 +221,10 @@ def convert_time_index(
                 "pd.DatetimeIndex."
             )
         cftime_dates = [
-            getattr(cftime, calendar)(int(y), int(m), int(d), int(H), int(M), int(S))
-            for (y, m, d, H, M, S) in split_dates
+            getattr(cftime, calendar)(
+                int(y), int(m), int(d), int(H), int(M), int(S), int(us)
+            )
+            for (y, m, d, H, M, S, us) in split_dates
         ]
         time_index = xr.CFTimeIndex(cftime_dates)
         xobj[time_string] = time_index

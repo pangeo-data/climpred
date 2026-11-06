@@ -30,6 +30,7 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
+- Preserve microseconds when converting pandas datetime coordinates to cftime, and reject finer precision instead of silently truncating it (:pr:`954`). `Anish Pentyala`_.
 - Restore individual warning options after leaving ``set_options(climpred_warnings=False)``, including mixed previous states and exception exits (:issue:`936`, :pr:`938`). `Anish Pentyala`_
 - Dropped support for Python 3.9 (EOL October 2025). Minimum supported Python is now 3.10. (:issue:`919`, :pr:`920`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
@@ -1275,3 +1276,5 @@ Collaboration between Riley Brady and Aaron Spring begins.
 .. _`Riley X. Brady`: https://github.com/bradyrx
 .. _`Trevor Gamblin`: https://github.com/threexc
 .. _`Trevor James Smith`: https://github.com/Zeitsperre
+
+.. _Anish Pentyala: https://github.com/anishpentyala

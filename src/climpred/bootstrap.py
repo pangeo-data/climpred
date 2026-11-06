@@ -685,7 +685,7 @@ def dpp_threshold(control, sig=95, iterations=500, dim="time", **dpp_kwargs):
         * :py:func:`.climpred.stats.dpp`
     """
     return _bootstrap_func(
-        dpp, control, dim, sig=sig, iterations=iterations, **dpp_kwargs
+        dpp, control, dim, sig=sig, iterations=iterations, dim=dim, **dpp_kwargs
     )
 
 
@@ -708,4 +708,5 @@ def varweighted_mean_period_threshold(control, sig=95, iterations=500, time_dim=
         time_dim,
         sig=sig,
         iterations=iterations,
+        dim=time_dim,
     )

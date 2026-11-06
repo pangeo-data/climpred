@@ -78,7 +78,7 @@ def _bootstrap_dim(control, nlead_years, dim, dim_label):
         return new
 
     def create_pseudo_members(control):
-        startlist = np.random.randint(c_start, c_end - nlead_years - 1, len(dim_label))
+        startlist = np.random.randint(c_start, c_end - nlead_years + 1, len(dim_label))
         return xr.concat([isel_years(control, start) for start in startlist], dim)
 
     control_uninitialized = create_pseudo_members(control)

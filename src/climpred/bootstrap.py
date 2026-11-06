@@ -351,14 +351,18 @@ def _bootstrap_by_stacking(init_pm, control):
         [np.arange(s, s + init_pm.lead.size) for s in new_time]
     ).flatten()[:init_size]
     larger = control.isel(time=new_time)
-    fake_init = init_pm.stack(time=tuple(d for d in init_pm.dims if d in CLIMPRED_DIMS))
+    # Each sampled block advances along lead. Keep lead last in the stacked
+    # index regardless of the input dimension order.
+    fake_init = init_pm.stack(
+        time=tuple(d for d in ["init", "member", "lead"] if d in init_pm.dims)
+    )
     # exchange values
     transpose_kwargs = (
         {"transpose_coords": False} if isinstance(init_pm, xr.DataArray) else {}
     )
     larger = larger.transpose(*fake_init.dims, **transpose_kwargs)
     fake_init.data = larger.data
-    fake_uninit = fake_init.unstack()
+    fake_uninit = fake_init.unstack().transpose(*init_pm.dims)
     if init_was_dataset:
         fake_uninit = fake_uninit.to_dataset(dim="variable")
     fake_uninit["lead"] = init_pm["lead"]

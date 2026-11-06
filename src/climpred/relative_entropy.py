@@ -217,7 +217,7 @@ def compute_relative_entropy(
         # PM_control
         base_to_calc_eofs = control
 
-    solver = Eof(base_to_calc_eofs, weights=wgts)
+    solver = Eof(base_to_calc_eofs.transpose("time", ...), weights=wgts)
 
     re_leadtime_list = []
     leads = initialized.lead.values[:nlead]
@@ -230,7 +230,8 @@ def compute_relative_entropy(
             pc_b = solver.projectField(
                 anom_b.sel(init=init, lead=lead)
                 .drop_vars("lead")
-                .rename({"member": "time"}),
+                .rename({"member": "time"})
+                .transpose("time", ...),
                 neofs=neofs,
                 eofscaling=0,
                 weighted=False,
@@ -243,7 +244,8 @@ def compute_relative_entropy(
             pc_x = solver.projectField(
                 anom_x.sel(init=init, lead=lead)
                 .drop_vars("lead")
-                .rename({"member": "time"}),
+                .rename({"member": "time"})
+                .transpose("time", ...),
                 neofs=neofs,
                 eofscaling=0,
                 weighted=False,

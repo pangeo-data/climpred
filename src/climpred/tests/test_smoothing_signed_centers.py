@@ -62,4 +62,4 @@ def test_public_smoothed_verify_reports_correct_centers(
     )
     np.testing.assert_array_equal(
         result.lead_center, np.arange(start, start + result.sizes["lead"]) + 1
-)
+    )

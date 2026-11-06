@@ -1,6 +1,7 @@
 import numpy as np
 import pytest
 import xarray as xr
+
 from climpred import HindcastEnsemble, set_options
 from climpred.reference import climatology
 
@@ -12,7 +13,8 @@ def test_direct_climatology_group_lookup(dataset, seasonality, periods):
     time = xr.date_range(
         "1999-01-01", periods=48, freq="MS", calendar="noleap", use_cftime=True
     )
-    dates = time[12 : 12 + periods]
+    stop = 12 + periods
+    dates = time[12:stop]
     obs = xr.DataArray(
         np.arange(48.0) ** 2, dims="time", coords={"time": time}, name="a"
     )

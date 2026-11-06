@@ -22,7 +22,9 @@ def test_transposed_hindcast_verification(size, alignment):
     initialized.lead.attrs["units"] = "years"
     observations = xr.Dataset(
         {"a": ("time", np.arange(size + 3.0))},
-        coords={"time": xr.date_range("1900", periods=size + 3, freq="YS", use_cftime=True)},
+        coords={
+            "time": xr.date_range("1900", periods=size + 3, freq="YS", use_cftime=True)
+        },
     ).isel(time=[i for i in range(size + 3) if i % 7])
     original = HindcastEnsemble(initialized)
     transposed = original.transpose("init", "lead", "member")
@@ -35,9 +37,13 @@ def test_transposed_hindcast_verification(size, alignment):
 @pytest.mark.parametrize("transpose", [False, True])
 @pytest.mark.parametrize("calendar", ["noleap", "360_day"])
 def test_large_isin_preserves_axis_order(transpose, calendar):
-    times = xr.date_range("1900", periods=101, freq="YS", use_cftime=True, calendar=calendar)
+    times = xr.date_range(
+        "1900", periods=101, freq="YS", use_cftime=True, calendar=calendar
+    )
     values = np.array([times, times.shift(1, "YS")], dtype=object)
-    matrix = xr.DataArray(values, dims=("lead", "time"), coords={"lead": [2, 1], "time": times})
+    matrix = xr.DataArray(
+        values, dims=("lead", "time"), coords={"lead": [2, 1], "time": times}
+    )
     if transpose:
         matrix = matrix.transpose("time", "lead")
     verifs = xr.DataArray(times[::3], dims="time", coords={"time": times[::3]})

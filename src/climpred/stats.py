@@ -149,18 +149,16 @@ def dpp(
         """
         if number_chunks and not chunk_length:
             chunk_length = np.floor(ds[dim].size / number_chunks)
-            cmin = int(ds[dim].min())
         elif not number_chunks and chunk_length:
-            cmin = int(ds[dim].min())
             number_chunks = int(np.floor(ds[dim].size / chunk_length))
         else:
             raise KeyError("set number_chunks or chunk_length to True")
-        c = ds.sel({dim: slice(cmin, cmin + chunk_length - 1)})
+        c = ds.isel({dim: slice(0, int(chunk_length))})
         c = c.expand_dims("c")
         c["c"] = [0]
         for i in range(1, number_chunks):
-            c2 = ds.sel(
-                {dim: slice(cmin + chunk_length * i, cmin + (i + 1) * chunk_length - 1)}
+            c2 = ds.isel(
+                {dim: slice(int(chunk_length * i), int((i + 1) * chunk_length))}
             )
             c2 = c2.expand_dims("c")
             c2["c"] = [i]

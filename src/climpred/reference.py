@@ -263,8 +263,10 @@ def compute_climatology(
         forecast, verif = comparison.function(initialized, verif, metric=metric)
         climatology_day = verif.groupby(f"time.{seasonality_str}").mean()
 
+    # Season labels are categorical strings, so nearest lookup is undefined.
     climatology_day_forecast = climatology_day.sel(
-        {seasonality_str: getattr(forecast.init.dt, seasonality_str)}, method="nearest"
+        {seasonality_str: getattr(forecast.init.dt, seasonality_str)},
+        method=None if seasonality_str == "season" else "nearest",
     ).drop_vars(seasonality_str)
 
     if kind == "hindcast":

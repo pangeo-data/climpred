@@ -146,19 +146,35 @@ def plot_bootstrapped_skill_over_leadyear(
 
     if ax is None:
         _, ax = plt.subplots(figsize=figsize)
-    # plot init
-    ax.errorbar(
-        init_skill.lead,
-        init_skill,
-        yerr=[
-            init_skill - init_ci.isel(quantile=0),
-            init_ci.isel(quantile=1) - init_skill,
-        ],
-        fmt=fmt,
-        capsize=capsize,
-        c=color_initialized,
-        label="initialized",
-    )
+
+    def plot_interval(skill, ci, color, label):
+        low, high = ci.isel(quantile=0), ci.isel(quantile=1)
+        errors = [skill - low, high - skill]
+        if any(bool((error < 0).any()) for error in errors):
+            # Percentile intervals need not contain the original estimate.
+            # Draw the interval at its own midpoint, keeping the estimate separate.
+            center = (low + high) / 2
+            ax.errorbar(
+                skill.lead,
+                center,
+                yerr=[center - low, high - center],
+                fmt="none",
+                capsize=capsize,
+                c=color,
+            )
+            ax.errorbar(skill.lead, skill, fmt=fmt, c=color, label=label)
+        else:
+            ax.errorbar(
+                skill.lead,
+                skill,
+                yerr=errors,
+                fmt=fmt,
+                capsize=capsize,
+                c=color,
+                label=label,
+            )
+
+    plot_interval(init_skill, init_ci, color_initialized, "initialized")
     # plot references
     for r in reference:
         r_skill = bootstrapped.sel(skill=r, results="verify skill")
@@ -181,20 +197,7 @@ def plot_bootstrapped_skill_over_leadyear(
                 fontsize=fontsize,
                 color=c,
             )
-        yerr = [
-            r_skill - r_ci.isel(quantile=0),
-            r_ci.isel(quantile=1) - r_skill,
-        ]
-        x = r_skill.lead
-        ax.errorbar(
-            x,
-            r_skill,
-            yerr=yerr,
-            fmt=fmt,
-            capsize=capsize,
-            c=c,
-            label=r,
-        )
+        plot_interval(r_skill, r_ci, c, r)
 
     ax.xaxis.set_ticks(bootstrapped.lead.values)
     ax.legend(frameon=False, title=f"skill with {sig}% confidence interval:")

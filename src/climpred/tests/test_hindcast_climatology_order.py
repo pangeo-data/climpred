@@ -104,4 +104,4 @@ def test_sparse_seasons_preserve_nearest_integer_policy(months, reverse):
         xr.DataArray(expected, dims="time", coords={"time": dates}, name="a").sortby(
             "time"
         ),
-  )
+    )

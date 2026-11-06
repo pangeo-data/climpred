@@ -109,7 +109,7 @@ def rename_to_climpred_dims(
         ``climpred`` compatible with dimensions: ``member``, ``init``, ``lead``.
     """
     for cdim in CLIMPRED_ENSEMBLE_DIMS:
-        renamed = False  # set renamed flag to false initiallly
+        renamed = cdim in xro.dims
         if cdim not in xro.dims:  # if a CLIMPRED_ENSEMBLE_DIMS is not found
             for c in xro.dims:  # check in xro.dims for dims
                 if cdim in str(

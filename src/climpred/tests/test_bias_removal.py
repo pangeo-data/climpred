@@ -15,7 +15,7 @@ from climpred.constants import (
 )
 from climpred.options import OPTIONS
 
-from . import requires_bias_correction, requires_xclim
+from . import requires_bias_correction, requires_xsdba
 
 BIAS_CORRECTION_METHODS = (
     BIAS_CORRECTION_BIAS_CORRECTION_METHODS + INTERNAL_BIAS_CORRECTION_METHODS
@@ -39,7 +39,7 @@ def _adjust_metric_kwargs(metric_kwargs=None, how=None, he=None):
     return metric_kwargs
 
 
-@requires_xclim
+@requires_xsdba
 @requires_bias_correction
 @pytest.mark.parametrize("how", BIAS_CORRECTION_METHODS)
 def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
@@ -76,7 +76,7 @@ def test_remove_bias_difference_seasonality(hindcast_recon_1d_mm, how):
                 )
 
 
-@requires_xclim
+@requires_xsdba
 @requires_bias_correction
 @pytest.mark.parametrize("cv", [False, "LOO"])
 @pytest.mark.parametrize("seasonality", GROUPBY_SEASONALITIES)
@@ -189,7 +189,7 @@ def test_remove_bias(hindcast_recon_1d_mm, alignment, how, seasonality, cv):
         )
 
 
-@requires_xclim
+@requires_xsdba
 @requires_bias_correction
 @pytest.mark.skip(reason="""LOO deprecated:
     https://github.com/pangeo-data/climpred/pull/832#issuecomment-1752473832""")
@@ -217,7 +217,7 @@ def test_monthly_leads_remove_bias_LOO(
         )
 
 
-@requires_xclim
+@requires_xsdba
 @requires_bias_correction
 @pytest.mark.slow
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
@@ -289,7 +289,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair(
         # )
 
 
-@requires_xclim
+@requires_xsdba
 @pytest.mark.slow
 @pytest.mark.parametrize("alignment", ["same_inits", "maximize", "same_verifs"])
 @pytest.mark.parametrize("seasonality", ["month", None])
@@ -380,7 +380,7 @@ def test_remove_bias_unfair_artificial_skill_over_fair_xclim(
         pass
 
 
-@requires_xclim
+@requires_xsdba
 def test_remove_bias_xclim_grouper_diff(
     hindcast_NMME_Nino34,
 ):
@@ -419,7 +419,7 @@ def test_remove_bias_xclim_grouper_diff(
     xr.testing.assert_equal(he_init.get_initialized(), he_time.get_initialized())
 
 
-@requires_xclim
+@requires_xsdba
 def test_remove_bias_xclim_adjust_kwargs_diff(
     hindcast_NMME_Nino34,
 ):
@@ -452,7 +452,7 @@ def test_remove_bias_xclim_adjust_kwargs_diff(
     assert not he_interp_nearest.equals(he_interp_linear)
 
 
-@requires_xclim
+@requires_xsdba
 def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
     """Testing kwargs are used."""
     he = (
@@ -477,7 +477,7 @@ def test_remove_bias_xclim_kwargs(hindcast_NMME_Nino34):
     assert not hind_kw.equals(hind)
 
 
-@requires_xclim
+@requires_xsdba
 def test_remove_bias_group(hindcast_NMME_Nino34):
     """Test group=None equals not providing group."""
     he = (
@@ -500,7 +500,7 @@ def test_remove_bias_group(hindcast_NMME_Nino34):
     assert hind_no.equals(hind_None)
 
 
-@requires_xclim
+@requires_xsdba
 def test_remove_bias_compare_scaling_and_mean(hindcast_recon_1d_mm):
     """Compare Scaling and additive_mean to be similar."""
     he = hindcast_recon_1d_mm.isel(lead=[0, 1])

@@ -225,7 +225,9 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
 
     def sel_time(start_year_int, suitable_start_dates):
         """Select time of control from suitable_start_dates based on start_year_int."""
-        start_time = suitable_start_dates.time.sel(time=str(start_year_int))
+        start_time = suitable_start_dates.time.where(
+            suitable_start_dates.time.dt.year == start_year_int, drop=True
+        )
         end_time = shift_cftime_singular(start_time, block_length - 1, freq)
         new = control.sel(time=slice(*start_time, *end_time))
         new["time"] = init_pm.lead.values

@@ -11,12 +11,13 @@ from climpred.bootstrap import bootstrap_uninit_pm_ensemble_from_control_cftime
 
 @pytest.fixture(autouse=True)
 def add_standard_imports():
-    """Synthetic control tests need no downloaded ensemble fixtures."""
+    """Replace the inherited doctest setup with isolated synthetic-test RNG state.
 
-
-@pytest.fixture(autouse=True)
-def restore_random_state():
+    The parent fixture loads downloaded ensemble data for doctest examples. These
+    tests build their own inputs, so they need only repeatable random draws.
+    """
     state = np.random.get_state()
+    np.random.seed(11)
     yield
     np.random.set_state(state)
 
@@ -52,11 +53,7 @@ def make_inputs(year, calendar, units):
 @pytest.mark.parametrize("units", ["months", "days"])
 def test_numeric_year_bootstrap(year, calendar, units):
     initialized, control = make_inputs(year, calendar, units)
-    np.random.seed(11)
-    try:
-        result = bootstrap_uninit_pm_ensemble_from_control_cftime(initialized, control)
-    except ValueError as error:
-        assert False, f"valid control year must be selectable: {error}"
+    result = bootstrap_uninit_pm_ensemble_from_control_cftime(initialized, control)
     assert dict(result.sizes) == dict(initialized.sizes)
     assert result.v.notnull().all()
     xr.testing.assert_identical(result.lead, initialized.lead)
@@ -68,28 +65,21 @@ def test_numeric_year_bootstrap(year, calendar, units):
 @pytest.mark.parametrize("calendar", ["noleap", "360_day", "all_leap"])
 def test_public_generate_uninitialized_early_year(calendar):
     initialized, control = make_inputs(300, calendar, "months")
-    np.random.seed(11)
-    try:
-        result = (
-            PerfectModelEnsemble(initialized)
-            .add_control(control)
-            .generate_uninitialized()
-        )
-    except ValueError as error:
-        assert False, f"public early-year workflow must succeed: {error}"
+    result = (
+        PerfectModelEnsemble(initialized).add_control(control).generate_uninitialized()
+    )
     assert result.get_uninitialized().v.notnull().all()
 
 
 @pytest.mark.parametrize("calendar", ["noleap", "360_day", "all_leap"])
 @pytest.mark.parametrize("units", ["months", "days"])
-def test_sampled_values_match_modern_years(calendar, units):
+def test_calendar_year_shift_preserves_sampled_control_values(calendar, units):
+    """Identical random draws must select the same positions after a year shift."""
     early, early_control = make_inputs(300, calendar, units)
     modern, modern_control = make_inputs(2000, calendar, units)
-    np.random.seed(11)
     expected = bootstrap_uninit_pm_ensemble_from_control_cftime(modern, modern_control)
+    # Replay the modern-control draw for the otherwise identical early control.
+    # Values are positional control samples, not verification skill scores.
     np.random.seed(11)
-    try:
-        actual = bootstrap_uninit_pm_ensemble_from_control_cftime(early, early_control)
-    except ValueError as error:
-        assert False, f"early-year sample must match modern-year sample: {error}"
+    actual = bootstrap_uninit_pm_ensemble_from_control_cftime(early, early_control)
     np.testing.assert_array_equal(actual.v.values, expected.v.values)

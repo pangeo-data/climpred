@@ -30,6 +30,7 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
+- Fixed CI against ``xclim`` 1.0 and ``xarray`` 2026.9. ``xclim`` 1.0 removed ``xclim.sdba``, so :py:meth:`.HindcastEnsemble.remove_bias` with ``xclim`` methods now imports the standalone `xsdba <https://xsdba.readthedocs.io>`_ package and ``xclim`` is no longer a dependency of the ``bias-correction`` extra (``xsdba`` 0.7 cannot be imported alongside ``xclim`` 1.0). The ERSST observations test fixture is cast to ``float64``, because ``xarray`` 2026.9 keeps its ``float32`` anomalies in ``float32``, which changed doctest outputs. The ``unconditional_bias`` doctest after bias removal now checks the result is close to zero instead of printing rounding noise. `Aaron Spring`_
 - Restore individual warning options after leaving ``set_options(climpred_warnings=False)``, including mixed previous states and exception exits (:issue:`936`, :pr:`938`). `Anish Pentyala`_
 - Dropped support for Python 3.9 (EOL October 2025). Minimum supported Python is now 3.10. (:issue:`919`, :pr:`920`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_

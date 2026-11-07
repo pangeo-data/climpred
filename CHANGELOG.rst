@@ -31,6 +31,9 @@ New Features
 Internals/Minor Fixes
 ---------------------
 - Select control start dates by numeric year when generating perfect-model uninitialized ensembles, supporting years outside four-digit date strings (:issue:`859`, :pr:`939`). `Anish Pentyala`_
+- Preserve singleton spatial dimensions and coordinates when computing the predictability horizon of a Dataset, matching the DataArray path. (:pr:`948`) `Anish Pentyala`_
+- Fixed CI against ``xclim`` 1.0 and ``xarray`` 2026.9. ``xclim`` 1.0 removed ``xclim.sdba``, so :py:meth:`.HindcastEnsemble.remove_bias` with ``xclim`` methods now imports the standalone `xsdba <https://xsdba.readthedocs.io>`_ package and ``xclim`` is no longer a dependency of the ``bias-correction`` extra (``xsdba`` 0.7 cannot be imported alongside ``xclim`` 1.0). The ERSST observations test fixture is cast to ``float64``, because ``xarray`` 2026.9 keeps its ``float32`` anomalies in ``float32``, which changed doctest outputs. The ``unconditional_bias`` doctest after bias removal now checks the result is close to zero instead of printing rounding noise. `Aaron Spring`_
+- Restore individual warning options after leaving ``set_options(climpred_warnings=False)``, including mixed previous states and exception exits (:issue:`936`, :pr:`938`). `Anish Pentyala`_
 - Dropped support for Python 3.9 (EOL October 2025). Minimum supported Python is now 3.10. (:issue:`919`, :pr:`920`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.plot_alignment` now raises a clear error message when there is no overlap between hindcast ``valid_time`` and verification ``time``, instead of a cryptic ``ValueError`` about ``CFTimeIndex`` ambiguity. (:issue:`912`, :pr:`921`) `Aaron Spring`_
@@ -1268,6 +1271,7 @@ Collaboration between Riley Brady and Aaron Spring begins.
 .. _`Anderson Banihirwe`: https://github.com/andersy005
 .. _`Anish Pentyala`: https://github.com/anishpentyala
 .. _`Andrew Huang`: https://github.com/ahuang11
+.. _`Anish Pentyala`: https://github.com/anishpentyala
 .. _`Dougie Squire`: https://github.com/dougiesquire
 .. _`Kathy Pegion`: https://github.com/kpegion
 .. _`Mathias Hauser`: https://github.com/mathause

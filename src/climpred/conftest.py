@@ -130,7 +130,9 @@ def _reconstruction_ds_3d(_reconstruction_ds_3d_full):
 
 @pytest.fixture(scope="session")
 def _observations_ds_1d():
-    ds = load_dataset("ERSST").load()
+    # stored as float32; cast so results do not depend on xarray's dtype promotion
+    # (xarray>=2026.9 no longer upcasts float32 anomalies to float64)
+    ds = load_dataset("ERSST").astype("float64").load()
     ds = (ds - ds.mean("time")).load()
     ds["SST"].attrs["units"] = "C"
     return ds

@@ -43,7 +43,7 @@ dependencies = [
 ]
 [project.optional-dependencies]
 accel = [ "bottleneck", "numba>=0.57" ]
-bias-correction = [ "bias-correction>=0.4", "xclim>=0.52", "xsdba>=0.4" ]
+bias-correction = [ "bias-correction>=0.4", "xsdba>=0.4" ]
 complete = [ "climpred[accel,bias-correction,io,relative_entropy,test,viz,vwmp]" ]
 docs = [
   "climpred[complete]",

@@ -33,7 +33,7 @@ Closes #(issue)
 ## Checklist (while developing)
 
 -   [ ]  An issue with a use case exists and a maintainer agreed ([AI policy](https://github.com/pangeo-data/climpred/discussions/972)).
--   [ ]  I reviewed and understand every line.
+-   [ ]  I reviewed and understand each code block.
 -   [ ]  Tests and `pre-commit` pass locally.
 -   [ ]  I have added docstrings to all new functions.
 -   [ ]  I have commented my code, particularly in hard-to-understand areas.

@@ -1,8 +1,12 @@
-# Description
+# Gist
 
-Please include a summary of the change and which issue is fixed. Please also include relevant motivation and context. List any dependencies that are required for this change.
+<!-- 2-3 sentences written by you, not by an AI: what and why. AI-assisted? Read https://github.com/pangeo-data/climpred/discussions/972 -->
 
 Closes #(issue)
+
+## Prompt (if AI-assisted)
+
+<!-- Your initial prompt, edited for readability. -->
 
 ## To-Do List
 
@@ -28,6 +32,9 @@ Closes #(issue)
 
 ## Checklist (while developing)
 
+-   [ ]  An issue with a use case exists and a maintainer agreed ([AI policy](https://github.com/pangeo-data/climpred/discussions/972)).
+-   [ ]  I reviewed and understand each code block.
+-   [ ]  Tests and `pre-commit` pass locally.
 -   [ ]  I have added docstrings to all new functions.
 -   [ ]  I have commented my code, particularly in hard-to-understand areas.
 -   [ ]  I have updated the sphinx documentation, if necessary.

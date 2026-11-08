@@ -15,6 +15,27 @@ Nothing here is set in stone and can't be changed.
 Feel free to suggest improvements or changes in the workflow.
 
 
+.. _ai-contributions:
+
+AI-assisted contributions
+-------------------------
+
+AI coding agents are welcome, but review time is limited
+(`discussion #972 <https://github.com/pangeo-data/climpred/discussions/972>`__). Every pull request must tick this checklist:
+
+* An issue explains why this matters for how you use ``climpred``, and a
+  maintainer agreed. "An AI found a bug" is not a use case.
+* Simple rather than easy: fewer lines, more xarray, less numpy; avoid
+  ``try``/``except``.
+* You reviewed and understand each code block. You are the first human reviewer.
+* The description starts with a short gist you wrote yourself, followed by
+  your (edited) initial prompt.
+* Tests and ``pre-commit`` pass locally before you push. CI minutes are
+  limited.
+* Only one or a few open pull requests at a time.
+
+Pull requests that skip this may be closed without review.
+
 .. _submitfeedback:
 
 Feature requests and feedback
@@ -41,10 +62,12 @@ label "bug".
 
 If you are reporting a bug, please include:
 
+* How you hit the bug and why it matters for how you use ``climpred``. This
+  context is more important than the example itself.
 * Any details about your local setup that might be helpful in troubleshooting,
   specifically the Python interpreter version, installed libraries, and
   ``climpred`` version.
-* Detailed steps to reproduce the bug.
+* A reproducible example. It is required, ideally with a small dummy dataset.
 
 If you can write a demonstration test that currently fails but should pass,
 that is a very useful commit to make as well, even if you cannot fix the bug
@@ -59,7 +82,8 @@ Bug Fix
 Look through the
 `GitHub issues for bugs <https://github.com/pangeo-data/climpred/labels/bug>`_.
 
-Talk to developers to find out how you can fix specific bugs.
+Talk to developers to find out how you can fix specific bugs. If you found a
+bug yourself, open an issue first (see :ref:`ai-contributions`).
 
 
 Write documentation
@@ -100,6 +124,9 @@ adding functions to ``api.rst``.
 
 Preparing Pull Requests
 -----------------------
+
+#. Make sure there is an issue that a maintainer agreed to work on
+   (see :ref:`ai-contributions`).
 
 #. Fork the `climpred GitHub repository <https://github.com/pangeo-data/climpred>`__.
    It's fine to use ``climpred`` as your fork repository name because it will
@@ -169,9 +196,9 @@ Preparing Pull Requests
 
 #. Run all tests
 
-   Once commits are pushed to ``origin``, GitHub Actions runs continuous
-   integration of all tests on all new commits. However, you are already
-   run tests locally::
+   Run the tests locally before you push. Once commits are pushed to
+   ``origin``, GitHub Actions runs continuous integration on all new commits.
+   CI minutes are limited, so do not use CI as your first test run::
 
     $ pytest -n auto climpred
 

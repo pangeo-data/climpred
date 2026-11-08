@@ -8,7 +8,7 @@ assignees: ''
 ---
 
 **How did you hit this, and why does it matter?**
-Describe how you use climpred and where this got in your way. This context matters more to us than the example below. "An AI tool found it" is not enough.
+Your use case. "An AI found it" is not enough.
 
 **Describe the bug**
 A clear and concise description of what the bug is.

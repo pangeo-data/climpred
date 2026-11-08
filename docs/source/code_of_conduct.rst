@@ -32,6 +32,9 @@ Examples of unacceptable behavior by participants include:
 -   Public or private harassment
 -   Publishing others' private information, such as a physical or electronic
     address, without explicit permission
+-   Flooding maintainers with high volumes of automated or AI-generated pull
+    requests, issues or comments, or posting AI output that you have not
+    reviewed and understood yourself
 -   Other conduct which could reasonably be considered inappropriate in a
     professional setting
 

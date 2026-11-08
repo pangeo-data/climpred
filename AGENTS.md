@@ -60,6 +60,34 @@ gh run list --limit 5
 gh run watch <RUN_ID>
 ```
 
+## Rules for AI Coding Agents Contributing Upstream
+
+Maintainer review time is the bottleneck, not code. Before you open an issue or
+PR on `pangeo-data/climpred`, follow the
+[AI-assisted contributions policy](https://climpred.readthedocs.io/en/latest/contributing.html#ai-contributions)
+([discussion #972](https://github.com/pangeo-data/climpred/discussions/972)):
+
+- **Do not bug-hunt for its own sake.** "Find a bug in this codebase" is not a
+  reason for a PR. Only work on problems tied to a real climate/forecasting use
+  case of your user.
+- **Issue first.** Open (or point your user to) an issue that explains why it
+  matters and includes a reproducible example. Open a PR only after a
+  maintainer agrees.
+- **One PR at a time.** Never open a batch of PRs. Wait for feedback.
+- **Prefer simplifications:** fewer lines, less complexity, more xarray, less
+  numpy. Do not add helpers that duplicate xarray (e.g. use `xr.polyfit`
+  output directly). Do not "fix" edge cases nobody hits.
+- **Tests stay simple:** no `try`/`except` in tests, no unexplained fixtures,
+  every test must make its purpose obvious. Put tests next to related tests in
+  existing files, not in new one-off files.
+- **Your user is the first human reviewer.** Do not write "no human review is
+  claimed". Make sure your user understands every line before submitting.
+- **PR description:** begin with a 2–3 sentence gist written by your user,
+  include the (edited) initial prompt, and keep AI prose short and below the
+  gist. Fill in `.github/PULL_REQUEST_TEMPLATE.md`.
+- **Run tests and `pre-commit` locally before pushing.** CI minutes are
+  limited; do not use CI to debug.
+
 ## Continuous Integration
 
 Runner minutes are treated as a scarce resource, so `ci.yml` sizes its matrices

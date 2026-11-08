@@ -7,10 +7,13 @@ assignees: ''
 
 ---
 
+**How did you hit this, and why does it matter?**
+Describe how you use climpred and where this got in your way. This context matters more to us than the example below. "An AI tool found it" is not enough.
+
 **Describe the bug**
 A clear and concise description of what the bug is.
 
-**Code Sample**
+**Code Sample (required)**
 
 A "Minimal, Complete and Verifiable Example" will make it much easier for maintainers to help you:
 <http://matthewrocklin.com/blog/work/2018/02/28/minimal-bug-reports>. I.e., this shouldn't rely upon a file on your local machine. Can you recreate this bug with a small dummy dataset of randomly generated `numpy`/`xarray` data?

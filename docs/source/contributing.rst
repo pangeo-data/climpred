@@ -25,7 +25,8 @@ AI coding agents are welcome, but review time is limited
 
 * An issue explains why this matters for how you use ``climpred``, and a
   maintainer agreed. "An AI found a bug" is not a use case.
-* Simple is better: fewer lines, more xarray, less numpy.
+* Simple rather than easy: fewer lines, more xarray, less numpy; avoid
+  ``try``/``except``.
 * You reviewed and understand each code block. You are the first human reviewer.
 * The description starts with a short gist you wrote yourself, followed by
   your (edited) initial prompt.

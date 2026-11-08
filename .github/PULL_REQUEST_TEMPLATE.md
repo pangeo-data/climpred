@@ -1,16 +1,12 @@
 # Gist
 
-<!-- 2-3 sentences, written by you (not by an AI): what does this PR do and why does it matter for your use of climpred? -->
+<!-- 2-3 sentences written by you, not by an AI: what and why. AI-assisted? Read https://github.com/pangeo-data/climpred/discussions/972 -->
 
-Closes #(issue) <!-- required: please open an issue first, see https://climpred.readthedocs.io/en/latest/contributing.html#ai-contributions -->
-
-# Description
-
-<!-- Details, motivation and context. Longer AI-generated text goes here, below the gist. -->
+Closes #(issue)
 
 ## Prompt (if AI-assisted)
 
-<!-- Your initial prompt or prompt history, edited for readability. -->
+<!-- Your initial prompt, edited for readability. -->
 
 ## To-Do List
 
@@ -36,9 +32,9 @@ Closes #(issue) <!-- required: please open an issue first, see https://climpred.
 
 ## Checklist (while developing)
 
--   [ ]  I opened or linked an issue first, and the change addresses a real use case.
--   [ ]  I reviewed every line of this PR myself and understand it.
--   [ ]  I ran the relevant tests and `pre-commit` locally before pushing.
+-   [ ]  An issue with a use case exists and a maintainer agreed ([AI policy](https://github.com/pangeo-data/climpred/discussions/972)).
+-   [ ]  I reviewed and understand every line.
+-   [ ]  Tests and `pre-commit` pass locally.
 -   [ ]  I have added docstrings to all new functions.
 -   [ ]  I have commented my code, particularly in hard-to-understand areas.
 -   [ ]  I have updated the sphinx documentation, if necessary.

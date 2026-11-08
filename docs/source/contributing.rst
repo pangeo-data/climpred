@@ -17,67 +17,23 @@ Feel free to suggest improvements or changes in the workflow.
 
 .. _ai-contributions:
 
-Issues first, and AI-assisted contributions
--------------------------------------------
+AI-assisted contributions
+-------------------------
 
-``climpred`` is maintained by volunteers with limited review time. AI coding
-agents are welcome tools and make changes easy, but they also make it easy to
-open more pull requests than anyone can review. These rules apply to every
-contribution, whether or not AI was involved. The background is discussed in
-`discussion #972 <https://github.com/pangeo-data/climpred/discussions/972>`__.
+AI coding agents are welcome, but review time is limited
+(`discussion #972 <https://github.com/pangeo-data/climpred/discussions/972>`__). Every pull request must tick this checklist:
 
-**Open an issue first, a pull request later.**
-Start with an issue that says *why* something is a problem for how you use
-``climpred``, or what does not work for you. Wait until a maintainer agrees
-it is worth changing before you open a pull request. Small documentation fixes
-and typos do not need an issue.
+* An issue explains why this matters for how you use ``climpred``, and a
+  maintainer agreed. "An AI found a bug" is not a use case.
+* Simple is better: fewer lines, more xarray, less numpy.
+* You reviewed and understand every line. You are the first human reviewer.
+* The description starts with a short gist you wrote yourself, followed by
+  your (edited) initial prompt.
+* Tests and ``pre-commit`` pass locally before you push. CI minutes are
+  limited.
+* Only one or a few open pull requests at a time.
 
-**Bring a use case.**
-Not every bug an AI finds needs fixing. Running an agent with "find a bug in
-this codebase" is not a reason to open a pull request. Explain the climate or
-forecasting use case where you hit the problem. Fixes for problems nobody
-cares about will not be merged.
-
-**Prefer simplifications.**
-Use agents mainly for simple changes. Pull requests that simplify the codebase
-are especially welcome:
-
-* fewer lines of code and less complexity,
-* more readable code, without AI over-verboseness,
-* more xarray and less numpy,
-* no new code where ``xarray`` already does the job.
-
-**Be the first human reviewer.**
-Only submit code that you understand and have reviewed line by line yourself.
-Maintainers review afterwards, as a second pass. "No human review is claimed"
-is not acceptable.
-
-**Write the gist yourself.**
-Start the pull request description with two or three human-written sentences:
-what the change does and why it matters. Put any long AI-generated text below
-that. Keep comments short.
-
-**Share your prompt.**
-Please include your initial prompt, or the prompt history, edited for
-readability: remove parts such as asking the AI to explain things. It shows the
-intent of the pull request.
-
-**Keep the volume reviewable.**
-Open one or a few pull requests at a time. Wait for feedback before you
-submit more of the same kind.
-
-**Run tests locally before using CI.**
-GitHub Actions minutes are shared and limited. Install the development
-environment and run the relevant tests and ``pre-commit`` locally before you
-push. Do not use CI to debug your changes.
-
-Maintainers may close pull requests that do not follow these rules without a
-detailed review. You can reopen them, or open new ones, once an issue has been
-agreed on.
-
-AI coding agents should also read
-`AGENTS.md <https://github.com/pangeo-data/climpred/blob/main/AGENTS.md>`__.
-
+Pull requests that skip this may be closed without review.
 
 .. _submitfeedback:
 

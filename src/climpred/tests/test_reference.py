@@ -68,7 +68,7 @@ def test_PerfectModelEnsemble_persistence_from_first_lead_warning_lead_non_zero(
                 - 1
             )
         getattr(perfectModelEnsemble_initialized_control, call)(**kw)
-        
+
 
 def _toy_hindcast(nmem=10, seed=1):
     rng = np.random.default_rng(seed)
@@ -123,4 +123,3 @@ def test_e2o_uninitialized_reference_uses_ensemble_mean():
     np.testing.assert_allclose(
         skill.x.sel(skill="uninitialized").values, expected, rtol=1e-6
     )
-

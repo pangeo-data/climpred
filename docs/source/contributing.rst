@@ -26,7 +26,7 @@ AI coding agents are welcome, but review time is limited
 * An issue explains why this matters for how you use ``climpred``, and a
   maintainer agreed. "An AI found a bug" is not a use case.
 * Simple is better: fewer lines, more xarray, less numpy.
-* You reviewed and understand every line. You are the first human reviewer.
+* You reviewed and understand each code block. You are the first human reviewer.
 * The description starts with a short gist you wrote yourself, followed by
   your (edited) initial prompt.
 * Tests and ``pre-commit`` pass locally before you push. CI minutes are

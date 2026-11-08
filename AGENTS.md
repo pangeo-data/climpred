@@ -66,7 +66,7 @@ Policy: [discussion #972](https://github.com/pangeo-data/climpred/discussions/97
 [PR checklist](https://climpred.readthedocs.io/en/latest/contributing.html#ai-contributions):
 
 - [ ] Issue with a real use case exists and a maintainer agreed. No bug-hunting for its own sake.
-- [ ] Simplest change: fewer lines, more xarray, less numpy; no `try`/`except` in tests.
+- [ ] Simple rather than easy: fewer lines, more xarray, less numpy; avoid `try`/`except`.
 - [ ] Your user reviewed and understands each code block.
 - [ ] PR starts with a short gist your user wrote, then the (edited) initial prompt.
 - [ ] Tests and `pre-commit` pass locally before pushing.

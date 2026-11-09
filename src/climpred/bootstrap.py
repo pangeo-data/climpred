@@ -205,6 +205,13 @@ def bootstrap_uninit_pm_ensemble_from_control_cftime(init_pm, control):
     Returns:
         uninit_pm (xr.Dataset): uninitialized ensemble generated from control run.
     """
+    if init_pm.lead.attrs["units"] == "months" and (control.time.dt.day != 1).any():
+        raise ValueError(
+            "Monthly leads require control.time on the first of the month. Move it, "
+            'e.g. control["time"] = xr.date_range(control.time[0].dt.strftime('
+            '"%Y-%m").item(), periods=control.time.size, freq="MS", '
+            "calendar=control.time.dt.calendar, use_cftime=True)"
+        )
     lead_units_equal_control_time_stride(init_pm, control)
     # short cut if annual leads
     if init_pm.lead.attrs["units"] == "years":

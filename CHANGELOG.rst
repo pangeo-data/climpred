@@ -31,6 +31,7 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
+- :py:meth:`.PerfectModelEnsemble.generate_uninitialized` and ``bootstrap`` raise a clear ``ValueError`` when monthly leads meet a ``control`` that is not on the first of the month. (:issue:`858`, :pr:`973`) `Roman Claudiu`_
 - Added an AI-assisted contributions PR checklist to the contribution guide, ``AGENTS.md``, the PR template and the Code of Conduct (`discussion #972 <https://github.com/pangeo-data/climpred/discussions/972>`_). `Aaron Spring`_
 - Preserve singleton spatial dimensions and coordinates when computing the predictability horizon of a Dataset, matching the DataArray path. (:pr:`948`) `Anish Pentyala`_
 - Fixed CI against ``xclim`` 1.0 and ``xarray`` 2026.9. ``xclim`` 1.0 removed ``xclim.sdba``, so :py:meth:`.HindcastEnsemble.remove_bias` with ``xclim`` methods now imports the standalone `xsdba <https://xsdba.readthedocs.io>`_ package and ``xclim`` is no longer a dependency of the ``bias-correction`` extra (``xsdba`` 0.7 cannot be imported alongside ``xclim`` 1.0). The ERSST observations test fixture is cast to ``float64``, because ``xarray`` 2026.9 keeps its ``float32`` anomalies in ``float32``, which changed doctest outputs. The ``unconditional_bias`` doctest after bias removal now checks the result is close to zero instead of printing rounding noise. `Aaron Spring`_
@@ -1278,5 +1279,6 @@ Collaboration between Riley Brady and Aaron Spring begins.
 .. _`Mathias Hauser`: https://github.com/mathause
 .. _`Ray Bell`: https://github.com/raybellwaves
 .. _`Riley X. Brady`: https://github.com/bradyrx
+.. _`Roman Claudiu`: https://github.com/RClaudiuM
 .. _`Trevor Gamblin`: https://github.com/threexc
 .. _`Trevor James Smith`: https://github.com/Zeitsperre

@@ -46,9 +46,7 @@ def _last_item_cond_true(cond, dim):
         reached_notnull, other=np.nan
     )  # cleanup replace dim:0 with nan again
     if was_dataset:
-        reached_dim_space = reached_dim_space.to_dataset(dim="variable").squeeze(
-            drop=True
-        )
+        reached_dim_space = reached_dim_space.to_dataset(dim="variable")
         if "lead" in reached_dim_space.coords:
             reached_dim_space = reached_dim_space.drop_vars("lead")
     return reached_dim_space

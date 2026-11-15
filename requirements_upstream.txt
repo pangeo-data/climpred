@@ -4,7 +4,6 @@ cftime @ git+https://github.com/Unidata/cftime
 dask @ git+https://github.com/dask/dask
 nc-time-axis @ git+https://github.com/SciTools/nc-time-axis
 xarray @ git+https://github.com/pydata/xarray
-xclim @ git+https://github.com/Ouranosinc/xclim
 xsdba @ git+https://github.com/Ouranosinc/xsdba
 xrft @ git+https://github.com/xgcm/xrft
 xskillscore @ git+https://github.com/xarray-contrib/xskillscore

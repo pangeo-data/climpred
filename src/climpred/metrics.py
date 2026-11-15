@@ -2198,29 +2198,14 @@ def _unconditional_bias(
         :py:meth:`.HindcastEnsemble.remove_bias`.
 
         >>> HindcastEnsemble = HindcastEnsemble.remove_bias(alignment="same_verifs")
-        >>> HindcastEnsemble.verify(
+        >>> bias = HindcastEnsemble.verify(
         ...     metric="unconditional_bias",
         ...     comparison="e2o",
         ...     alignment="same_verifs",
         ...     dim="init",
         ... )
-        <xarray.Dataset> Size: 164B
-        Dimensions:  (lead: 10)
-        Coordinates:
-          * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
-            skill    <U11 44B 'initialized'
-        Data variables:
-            SST      (lead) float64 80B -1.495e-17 -9.608e-18 ... 4.59e-17 4.27e-18
-        Attributes:
-            prediction_skill_software:     climpred https://climpred.readthedocs.io/
-            skill_calculated_by_function:  HindcastEnsemble.verify()
-            number_of_initializations:     64
-            number_of_members:             10
-            alignment:                     same_verifs
-            metric:                        unconditional_bias
-            comparison:                    e2o
-            dim:                           init
-            reference:                     []
+        >>> bool(np.allclose(bias.SST, 0))
+        True
     """
     return (forecast - verif).mean(dim=dim, **metric_kwargs)
 

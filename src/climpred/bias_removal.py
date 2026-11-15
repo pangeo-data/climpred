@@ -20,7 +20,8 @@ try:
 except ImportError:
     pass
 try:
-    from xclim import sdba
+    # ``xclim.sdba`` moved to the standalone ``xsdba`` package (removed in xclim 1.0)
+    import xsdba as sdba
 except ImportError:
     pass
 

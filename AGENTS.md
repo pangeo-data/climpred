@@ -60,6 +60,18 @@ gh run list --limit 5
 gh run watch <RUN_ID>
 ```
 
+## Rules for AI Coding Agents Contributing Upstream
+
+Policy: [discussion #972](https://github.com/pangeo-data/climpred/discussions/972). Before opening a PR, check the
+[PR checklist](https://climpred.readthedocs.io/en/latest/contributing.html#ai-contributions):
+
+- Issue with a real use case exists and a maintainer agreed. No bug-hunting for its own sake.
+- Simple rather than easy: fewer lines, more xarray, less numpy; avoid `try`/`except`.
+- Your user reviewed and understands each code block.
+- PR starts with a short gist your user wrote, then the (edited) initial prompt.
+- Tests and `pre-commit` pass locally before pushing.
+- Only one or a few open PRs at a time.
+
 ## Continuous Integration
 
 Runner minutes are treated as a scarce resource, so `ci.yml` sizes its matrices

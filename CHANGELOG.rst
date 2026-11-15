@@ -21,6 +21,7 @@ climpred v2.7.0 (unreleased)
 Breaking changes
 ----------------
 - Dropped support for Python 3.10. Minimum supported Python is now 3.11, and CI tests Python 3.11 through 3.14, following `xarray <https://docs.xarray.dev>`_ and `xskillscore <https://github.com/xarray-contrib/xskillscore/pull/469>`_ (:pr:`932`). Pull requests run Python 3.11 and 3.14; coverage is measured on 3.14; doctests, notebooks, docs and benchmarks run on 3.11; the upstream-dev job runs on 3.14. `Aaron Spring`_
+- :py:meth:`.HindcastEnsemble.verify` and :py:meth:`.HindcastEnsemble.bootstrap` with ``comparison="e2o"`` and ``reference="uninitialized"`` now score the uninitialized ensemble mean, consistent with the initialized ensemble mean, instead of averaging single-member skill. Uninitialized skill and ``bootstrap`` p-values change. (:issue:`969`, :pr:`970`) `klemmeri`_
 
 New Features
 ------------
@@ -31,6 +32,10 @@ New Features
 Internals/Minor Fixes
 ---------------------
 - Preserve singleton lead, spatial and vertical axes while loading hindcasts, removing only per-file singleton init/member axes before concatenation (:pr:`957`). `Anish Pentyala`_.
+- :py:meth:`.PerfectModelEnsemble.generate_uninitialized` and ``bootstrap`` raise a clear ``ValueError`` when monthly leads meet a ``control`` that is not on the first of the month. (:issue:`858`, :pr:`973`) `Roman Claudiu`_
+- Added an AI-assisted contributions PR checklist to the contribution guide, ``AGENTS.md``, the PR template and the Code of Conduct (`discussion #972 <https://github.com/pangeo-data/climpred/discussions/972>`_). `Aaron Spring`_
+- Preserve singleton spatial dimensions and coordinates when computing the predictability horizon of a Dataset, matching the DataArray path. (:pr:`948`) `Anish Pentyala`_
+- Fixed CI against ``xclim`` 1.0 and ``xarray`` 2026.9. ``xclim`` 1.0 removed ``xclim.sdba``, so :py:meth:`.HindcastEnsemble.remove_bias` with ``xclim`` methods now imports the standalone `xsdba <https://xsdba.readthedocs.io>`_ package and ``xclim`` is no longer a dependency of the ``bias-correction`` extra (``xsdba`` 0.7 cannot be imported alongside ``xclim`` 1.0). The ERSST observations test fixture is cast to ``float64``, because ``xarray`` 2026.9 keeps its ``float32`` anomalies in ``float32``, which changed doctest outputs. The ``unconditional_bias`` doctest after bias removal now checks the result is close to zero instead of printing rounding noise. `Aaron Spring`_
 - Restore individual warning options after leaving ``set_options(climpred_warnings=False)``, including mixed previous states and exception exits (:issue:`936`, :pr:`938`). `Anish Pentyala`_
 - Dropped support for Python 3.9 (EOL October 2025). Minimum supported Python is now 3.10. (:issue:`919`, :pr:`920`) `Aaron Spring`_
 - :py:meth:`.HindcastEnsemble.smooth` and :py:meth:`.PerfectModelEnsemble.smooth` propagate the ``lead`` ``units`` attribute onto the ``lead_center`` coordinate that is added during verification of temporally smoothed ensembles. `Aaron Spring`_
@@ -1271,9 +1276,11 @@ Collaboration between Riley Brady and Aaron Spring begins.
 .. _`Anish Pentyala`: https://github.com/anishpentyala
 .. _`Dougie Squire`: https://github.com/dougiesquire
 .. _`Kathy Pegion`: https://github.com/kpegion
+.. _`klemmeri`: https://github.com/klemmeri
 .. _`Mathias Hauser`: https://github.com/mathause
 .. _`Ray Bell`: https://github.com/raybellwaves
 .. _`Riley X. Brady`: https://github.com/bradyrx
+.. _`Roman Claudiu`: https://github.com/RClaudiuM
 .. _`Trevor Gamblin`: https://github.com/threexc
 .. _`Trevor James Smith`: https://github.com/Zeitsperre
 

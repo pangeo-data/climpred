@@ -2259,7 +2259,7 @@ class HindcastEnsemble(PredictionEnsemble):
               * skill    (skill) <U13 208B 'initialized' 'persistence' ... 'uninitialized'
               * lead     (lead) int32 40B 1 2 3 4 5 6 7 8 9 10
             Data variables:
-                SST      (skill, lead) float64 320B 0.08135 0.08254 0.086 ... 0.1012 0.1017
+                SST      (skill, lead) float64 320B 0.08135 0.08254 ... 0.07377 0.07409
             Attributes:
                 prediction_skill_software:     climpred https://climpred.readthedocs.io/
                 skill_calculated_by_function:  HindcastEnsemble.verify()
@@ -2403,15 +2403,6 @@ class HindcastEnsemble(PredictionEnsemble):
                     ref = xr.concat(
                         metric_over_leads, dim="lead", **CONCAT_KWARGS
                     ).assign_coords(lead=forecast.lead.values)
-                    # fix to get no member dim for uninitialized e2o skill #477
-                    if (
-                        r == "uninitialized"
-                        and comparison.name == "e2o"
-                        and "member" in ref.dims
-                    ):
-                        ref = ref.mean("member")
-                        if "time" in ref.dims and "time" not in result.dims:
-                            ref = ref.rename({"time": "init"})
                     # fix #735
                     if (
                         r == "uninitialized"

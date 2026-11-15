@@ -28,7 +28,6 @@ dependencies:
   - pytest-timeout
   - pytest-xdist >=3.8.0
   - xarray >=2024.5.0
-  - xclim >=0.57.0
   - xesmf
   - xrft
   - xsdba >=0.4.0

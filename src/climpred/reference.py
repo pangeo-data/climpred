@@ -163,6 +163,14 @@ def _adapt_member_for_reference_forecast(lforecast, lverif, metric, comparison, 
 
     Used in reference forecasts: climatology, uninitialized, persistence.
     """
+    # e2o: score the uninitialized ensemble mean, like the initialized
+    # ensemble mean, rather than averaging single-member skill (GH #969)
+    if (
+        comparison.name == "e2o"
+        and not metric.probabilistic
+        and "member" in lforecast.dims
+    ):
+        lforecast = lforecast.mean("member")
     # persistence or climatology forecasts wont have member dimension, create if
     # required
     # some metrics dont allow member dimension, remove and try mean

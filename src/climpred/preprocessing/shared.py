@@ -60,7 +60,6 @@ def load_hindcast(
                 compat="override",  # speed up
             )
             # Only remove the per-file ensemble axes that are rebuilt below.
-            # A singleton spatial or vertical axis still describes the source grid.
             member_ds = member_ds.squeeze(
                 [
                     d

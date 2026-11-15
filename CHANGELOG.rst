@@ -1284,4 +1284,3 @@ Collaboration between Riley Brady and Aaron Spring begins.
 .. _`Trevor Gamblin`: https://github.com/threexc
 .. _`Trevor James Smith`: https://github.com/Zeitsperre
 
-.. _Anish Pentyala: https://github.com/anishpentyala

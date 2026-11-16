@@ -44,7 +44,7 @@ dependencies = [
 [project.optional-dependencies]
 accel = [ "bottleneck", "numba>=0.57" ]
 bias-correction = [ "bias-correction>=0.4", "xsdba>=0.4" ]
-complete = [ "climpred[accel,bias-correction,io,relative_entropy,test,viz,vwmp]" ]
+complete = [ "climpred[accel,bias-correction,io,test,viz,vwmp]" ]
 docs = [
   "climpred[complete]",
   "myst-nb",
@@ -59,7 +59,6 @@ docs = [
 ]
 io = [ "h5netcdf", "h5py", "netcdf4" ]  # use h5netcdf when encountering seg faults as in GitHub Actions CI
 regridding = [ "xesmf" ]  # for installation see https://pangeo-xesmf.readthedocs.io/
-relative-entropy = [ "eofs" ]
 test = [
   "netcdf4",
   "pre-commit",
@@ -129,7 +128,6 @@ allowed-unresolved-imports = [
   "cftime.**",
   "dask.**",
   "distributed.**",
-  "eofs.**",
   "fsspec.**",
   "intake.**",
   "intake_esm.**",

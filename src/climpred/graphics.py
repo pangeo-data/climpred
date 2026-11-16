@@ -20,67 +20,6 @@ except ImportError:
     pass
 
 
-def plot_relative_entropy(rel_ent, rel_ent_threshold=None, **kwargs):
-    """
-    Plot relative entropy results.
-
-    Args:
-        rel_ent (xr.Dataset): relative entropy from compute_relative_entropy
-        rel_ent_threshold (xr.Dataset): threshold from
-                                          bootstrap_relative_entropy
-        **kwargs: for plt.subplots( **kwargs)
-
-    """
-    colors = ["royalblue", "indianred", "goldenrod"]
-    _, ax = plt.subplots(ncols=3, **kwargs)
-
-    for i, dim in enumerate(["R", "S", "D"]):
-        m = rel_ent[dim].median("init")
-        std = rel_ent[dim].std("init")
-        ax[i].plot(
-            rel_ent.lead,
-            rel_ent[dim].to_dataframe().unstack(0),
-            c="gray",
-            label="individual initializations",
-            linewidth=0.5,
-            alpha=0.5,
-        )
-        ax[i].plot(rel_ent.lead, m, c=colors[i], label=dim, linewidth=2.5)
-        ax[i].plot(
-            rel_ent.lead,
-            (m - std),
-            c=colors[i],
-            label=dim + " median +/- std",
-            linewidth=2.5,
-            ls="--",
-        )
-        ax[i].plot(
-            rel_ent.lead,
-            (m + std),
-            c=colors[i],
-            label="",
-            linewidth=2.5,
-            ls="--",
-        )
-        if rel_ent_threshold is not None:
-            ax[i].axhline(
-                y=rel_ent_threshold[dim].values,
-                label="bootstrapped threshold",
-                c="gray",
-                ls="--",
-            )
-        handles, labels = ax[i].get_legend_handles_labels()
-        by_label = OrderedDict(zip(labels, handles))
-        ax[i].legend(by_label.values(), by_label.keys(), frameon=False)
-        ax[i].set_xlabel("Lead")
-    ax[0].set_title("Relative Entropy")
-    ax[1].set_title("Signal")
-    ax[2].set_title("Dispersion")
-    ax[0].set_ylabel("Relative Entropy [ ]")
-    ax[0].set_ylim(bottom=0)
-    return ax
-
-
 def plot_bootstrapped_skill_over_leadyear(
     bootstrapped: xr.Dataset,
     ax: Optional["plt.Axes"] = None,

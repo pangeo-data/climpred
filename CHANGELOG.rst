@@ -32,6 +32,7 @@ New Features
 
 Internals/Minor Fixes
 ---------------------
+- Preserve the valid-time coordinate dimension order in the large-array alignment membership check so transposed hindcasts with at least 100 initializations can be verified. (:pr:`951`). `Anish Pentyala`_
 - :py:meth:`.PerfectModelEnsemble.generate_uninitialized` and ``bootstrap`` raise a clear ``ValueError`` when monthly leads meet a ``control`` that is not on the first of the month. (:issue:`858`, :pr:`973`) `Roman Claudiu`_
 - Added an AI-assisted contributions PR checklist to the contribution guide, ``AGENTS.md``, the PR template and the Code of Conduct (`discussion #972 <https://github.com/pangeo-data/climpred/discussions/972>`_). `Aaron Spring`_
 - Preserve singleton spatial dimensions and coordinates when computing the predictability horizon of a Dataset, matching the DataArray path. (:pr:`948`) `Anish Pentyala`_

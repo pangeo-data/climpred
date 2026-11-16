@@ -72,6 +72,16 @@ Policy: [discussion #972](https://github.com/pangeo-data/climpred/discussions/97
 - Tests and `pre-commit` pass locally before pushing.
 - Only one or a few open PRs at a time.
 
+Also follow the [AI policy](CONTRIBUTING.md#ai-policy) (aipolicy.1mb.dev "standard" preset):
+
+- Stay within the scope of the task; prefer editing existing files over creating new ones.
+- One logical change per commit; reference the issue.
+- Add an `Assisted-by: <tool name>` (or `Co-authored-by:`) trailer to AI-assisted commits.
+- Do not write the PR gist or review comments on other contributors' PRs.
+- Never weaken or skip tests or CI checks to make them pass.
+- Ask for clarification when requirements are ambiguous.
+- Your user reviews all AI-generated code before asking maintainers to review.
+
 ## Continuous Integration
 
 Runner minutes are treated as a scarce resource, so `ci.yml` sizes its matrices

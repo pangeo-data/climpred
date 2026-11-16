@@ -121,7 +121,7 @@ by event:
 ## Dependencies
 
 - Core: xarray, dask, numpy, pandas, cftime, xskillscore, cf-xarray, pooch
-- Optional groups: `accel`, `bias-correction`, `io`, `viz`, `vwmp`, `relative-entropy`
+- Optional groups: `accel`, `bias-correction`, `io`, `viz`, `vwmp`
 - Do not add new core dependencies without discussion. Use optional dependency groups for non-essential features.
 
 ## Documentation & Architectural Changes

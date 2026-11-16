@@ -26,8 +26,6 @@ dependencies:
   # regridding
   - importlib-metadata <8.0.0 # Pin needed for esmpy compatibility. See: https://github.com/pangeo-data/xESMF/issues/374
   - xesmf
-  # relative entropy
-  - eofs
   # test
   - pre-commit
   - pytest >=8.0.0

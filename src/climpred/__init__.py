@@ -21,7 +21,6 @@ from . import (
     horizon,
     metrics,
     prediction,
-    relative_entropy,
     smoothing,
     stats,
     testing,

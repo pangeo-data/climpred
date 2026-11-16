@@ -15,7 +15,7 @@ Based on the "standard" preset of [aipolicy.1mb.dev](https://aipolicy.1mb.dev/?p
 - **Accountability**: you are responsible for every line you submit, however it was
   produced. Review and verify all AI output before committing.
 - **Usage**: AI tools are permitted. The normal review process applies.
-- **Review**: AI-generated code is reviewed by a human maintainer before merging.
+- **Review**: AI-generated code is reviewed by a human before asking maintainers to review.
   Keep changes atomic; you must be able to explain any line on request.
 - **Disclosure**: mark AI involvement in commit messages with a trailer, e.g.
   `Assisted-by: <tool name>` or `Co-authored-by: <tool> <email>`.

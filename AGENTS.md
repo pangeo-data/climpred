@@ -80,7 +80,7 @@ Also follow the [AI policy](CONTRIBUTING.md#ai-policy) (aipolicy.1mb.dev "standa
 - Do not write the PR gist or review comments on other contributors' PRs.
 - Never weaken or skip tests or CI checks to make them pass.
 - Ask for clarification when requirements are ambiguous.
-- Changes touching more than one module need explicit human review.
+- Your user reviews all AI-generated code before asking maintainers to review.
 
 ## Continuous Integration
 

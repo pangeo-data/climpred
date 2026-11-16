@@ -26,7 +26,6 @@ Based on the "standard" preset of [aipolicy.1mb.dev](https://aipolicy.1mb.dev/?p
   - AI-generated PR gists: write the gist yourself (the prompt may follow it)
   - AI-generated review comments on other contributors' PRs
 - **CI/CD**: AI tools may be used in CI for code analysis and test generation.
-- **Training data**: we ask AI tool providers not to use this code for model training.
 - **Licensing**: AI-assisted contributions must be compatible with the MIT license,
   and you must be able to certify them under it.
 - **Enforcement**: maintainers may close AI-generated PRs that do not meet these
